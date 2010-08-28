@@ -9,17 +9,12 @@ vows.describe('Packet').addBatch({
         },
         'read a byte from a buffer': function (t) {
             t.packet('one-byte', 'n8');
-            t.read('one-byte', [ 1 ], function(field) {
-            });
         },
         'parse a 16 bit pattern': function (t) {
             t.packet('two-bytes', 'n16');
         },
         'read 16 bit number from a buffer': function (t) {
             t.packet('two-bytes', 'n16');
-            t.read('two-bytes', [ 0xA0, 0xBB ], function(field) {
-              asssert.equals(field, 0xA0BB);
-            });
         }
     }
 }).export(module);
