@@ -4,17 +4,50 @@ var vows = require('vows'),
 vows.describe('Packet').addBatch({
     'Packet can': {
         topic: require('packet').create(),
-        'parse a byte pattern': function (t) {
-            t.packet('one-byte', 'n8');
+        'read a byte from a buffer': function (topic) {
+            var invoked = false;
+            topic.reset();
+            topic.packet('n8', function (field, engine) {
+                assert.equal(engine.bytesRead, 1);
+                assert.equal(field, 1);
+                invoked = true;
+            });
+            topic.read([ 1 ]);
+            assert.isTrue(invoked);
         },
-        'read a byte from a buffer': function (t) {
-            t.packet('one-byte', 'n8');
+        'read a 16 bit number from a buffer': function (topic) {
+            var invoked = false;
+            topic.reset();
+            topic.packet('n16', function (field, engine) {
+                assert.equal(engine.bytesRead, 2);
+                assert.equal(field, 0xA0B0);
+                invoked = true;
+            });
+            topic.read([ 0xA0, 0xB0 ]);
+            assert.isTrue(invoked);
         },
-        'parse a 16 bit pattern': function (t) {
-            t.packet('two-bytes', 'n16');
+        'read a 16 bit big-endian number from a buffer': function (topic) {
+            var invoked = false;
+            topic.reset();
+            topic.packet('b16', function (field, engine) {
+                assert.equal(engine.bytesRead, 2);
+                assert.equal(field, 0xA0B0);
+                invoked = true;
+            });
+            topic.read([ 0xA0, 0xB0 ]);
+            assert.isTrue(invoked);
         },
-        'read 16 bit number from a buffer': function (t) {
-            t.packet('two-bytes', 'n16');
+        'read a 16 bit litte-endian number from a buffer': function (topic) {
+            var invoked = false;
+            topic.reset();
+            topic.packet('l16n8', function (a, b, engine) {
+                assert.equal(engine.bytesRead, 3);
+                assert.equal(a, 0xB0A0);
+                assert.equal(b, 0xAA);
+                invoked = true;
+            });
+            topic.read([ 0xA0, 0xB0, 0xAA ]);
+            assert.isTrue(invoked);
         }
     }
 }).export(module);
