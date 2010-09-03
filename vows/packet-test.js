@@ -48,6 +48,36 @@ vows.describe('Packet').addBatch({
             });
             topic.read([ 0xA0, 0xB0, 0xAA ]);
             assert.isTrue(invoked);
+        },
+        'read a signed byte from a buffer': function (topic) {
+            function readSigned(bytes, value) {
+              var invoked = false;
+              topic.reset();
+              topic.packet('-n8', function (field, engine) {
+                  assert.equal(engine.bytesRead, 1);
+                  assert.equal(field, value);
+                  invoked = true;
+              });
+              topic.read(bytes);
+              assert.isTrue(invoked);
+            }
+            readSigned([ 0x80 ], -128);
+            readSigned([ 0xff ], -1);
+        },
+        'read a signed short from a buffer': function (topic) {
+            function readSigned(bytes, value) {
+              var invoked = false;
+              topic.reset();
+              topic.packet('-n16', function (field, engine) {
+                  assert.equal(engine.bytesRead, 2);
+                  assert.equal(field, value);
+                  invoked = true;
+              });
+              topic.read(bytes);
+              assert.isTrue(invoked);
+            }
+            readSigned([ 0x80, 0x00 ], -32768);
+            readSigned([ 0xff, 0xff ], -1);
         }
     }
 }).export(module);

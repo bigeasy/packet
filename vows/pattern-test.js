@@ -17,6 +17,7 @@ vows.describe('Pattern').addBatch({
           , bits: 8
           , endianness: 'b'
           , bytes: 1
+          , arrayed: false
           }
         ]);
       }
@@ -27,6 +28,7 @@ vows.describe('Pattern').addBatch({
           , bits: 8
           , endianness: 'b'
           , bytes: 1
+          , arrayed: true
           }
         ]);
       }
@@ -37,6 +39,7 @@ vows.describe('Pattern').addBatch({
           , bits: 16
           , endianness: 'b'
           , bytes: 2
+          , arrayed: false
           }
         ]);
       }
@@ -47,6 +50,7 @@ vows.describe('Pattern').addBatch({
           , bits: 16
           , endianness: 'b'
           , bytes: 2
+          , arrayed: true
           }
         ]);
       }
@@ -57,6 +61,7 @@ vows.describe('Pattern').addBatch({
           , bits: 16
           , endianness: 'b'
           , bytes: 2
+          , arrayed: false
           }
         ]);
       }
@@ -67,6 +72,7 @@ vows.describe('Pattern').addBatch({
           , bits: 16
           , endianness: 'l'
           , bytes: 2
+          , arrayed: false
           }
         ]);
       }
@@ -77,6 +83,7 @@ vows.describe('Pattern').addBatch({
           , bits: 16
           , endianness: 'l'
           , bytes: 2
+          , arrayed: true
           }
         ]);
       }
@@ -87,6 +94,7 @@ vows.describe('Pattern').addBatch({
           , bits: 16
           , endianness: 's'
           , bytes: 2
+          , arrayed: false
           }
         ]);
       }
@@ -97,11 +105,13 @@ vows.describe('Pattern').addBatch({
           , bits: 16
           , endianness: 'l'
           , bytes: 2
+          , arrayed: true
           }
         , { signed: false
           , bits: 8
           , endianness: 'b'
           , bytes: 1
+          , arrayed: false
           }
         ]);
       }
