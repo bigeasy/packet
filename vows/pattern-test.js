@@ -137,6 +137,14 @@ vows.describe('Pattern').addBatch({
           }
         ]);
       }
+    },
+    'Pattern cannot parse':
+    { topic: require('__internal/pattern')
+    , 'a 7 bit pattern.': function (topic) {
+        assert.throws(function () {
+          topic.parse("b7");   
+        }, Error);
+      }
     }
 }).export(module);
 
