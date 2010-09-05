@@ -110,8 +110,23 @@ vows.describe('Packet').addBatch({
             readHexString([ 0x80, 0x00, 0x00, 0x00 ], '80000000');
             readHexString([ 0xff, 0xff, 0xff, 0xff ], 'ffffffff');
             readHexString([ 0xA0, 0xB0, 0xC0, 0xD0 ], 'a0b0c0d0');
+        },
+        'read a 64 bit float from a buffer': function (topic) {
+          function readSingleFloat(bytes, value) {
+            var invoked = false;
+            topic.reset();
+            topic.packet("b64f", function (field, engine) {
+              assert.equal(engine.bytesRead, 8);
+              assert.equal(field, value);
+              invoked = true;
+            });
+            topic.read(bytes);
+            assert.isTrue(invoked);
+          }
+          readSingleFloat([ 0xdb, 0x01, 0x32, 0xcf, 0xf6, 0xee, 0xc1, 0xc0 ], -9.1819281981e3);
+          readSingleFloat([ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x24, 0xc0 ], -10); 
         }
     }
 }).export(module);
 
-/* vim: set ts=2 sw=2 et tw=0: */
+/* vim: set ts=2 sw=2 et tw=0 nowrap: */

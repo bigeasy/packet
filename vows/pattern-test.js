@@ -137,12 +137,41 @@ vows.describe('Pattern').addBatch({
           }
         ]);
       }
+    , 'a single 32 bit float pattern.': function (topic) {
+        var field = topic.parse('b32f');
+        assert.deepEqual(field, [
+          { signed: true
+          , bits: 32
+          , endianness: 'b'
+          , bytes: 4
+          , type: 'f'
+          , arrayed: true
+          }
+        ]);
+      }
+    , 'a single 64 bit float pattern.': function (topic) {
+        var field = topic.parse('b64f');
+        assert.deepEqual(field, [
+          { signed: true
+          , bits: 64
+          , endianness: 'b'
+          , bytes: 8
+          , type: 'f'
+          , arrayed: true
+          }
+        ]);
+      }
     },
     'Pattern cannot parse':
     { topic: require('__internal/pattern')
     , 'a 7 bit pattern.': function (topic) {
         assert.throws(function () {
           topic.parse("b7");   
+        }, Error);
+      }
+    , 'a float pattern other than 32 or 64 bits.': function (topic) {
+        assert.throws(function () {
+          topic.parse('b16f');
         }, Error);
       }
     }
