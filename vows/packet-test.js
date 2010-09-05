@@ -68,7 +68,7 @@ vows.describe('Packet').addBatch({
             function readSigned(bytes, value) {
               var invoked = false;
               topic.reset();
-              topic.packet('-n16', function (field, engine) {
+              topic.packet('-b16', function (field, engine) {
                   assert.equal(engine.bytesRead, 2);
                   assert.equal(field, value);
                   invoked = true;
@@ -78,6 +78,38 @@ vows.describe('Packet').addBatch({
             }
             readSigned([ 0x80, 0x00 ], -32768);
             readSigned([ 0xff, 0xff ], -1);
+        },
+        'read a little-endian 32 bit hex string from a buffer': function (topic) {
+            function readHexString(bytes, value) {
+              var invoked = false;
+              topic.reset();
+              topic.packet('l32h', function (field, engine) {
+                  assert.equal(engine.bytesRead, 4);
+                  assert.equal(field, value);
+                  invoked = true;
+              });
+              topic.read(bytes);
+              assert.isTrue(invoked);
+            }
+            readHexString([ 0x80, 0x00, 0x00, 0x00 ], '00000080');
+            readHexString([ 0xff, 0xff, 0xff, 0xff ], 'ffffffff');
+            readHexString([ 0xA0, 0xB0, 0xC0, 0xD0 ], 'd0c0b0a0');
+        },
+        'read a big-endian 32 bit hex string from a buffer': function (topic) {
+            function readHexString(bytes, value) {
+              var invoked = false;
+              topic.reset();
+              topic.packet('b32h', function (field, engine) {
+                  assert.equal(engine.bytesRead, 4);
+                  assert.equal(field, value);
+                  invoked = true;
+              });
+              topic.read(bytes);
+              assert.isTrue(invoked);
+            }
+            readHexString([ 0x80, 0x00, 0x00, 0x00 ], '80000000');
+            readHexString([ 0xff, 0xff, 0xff, 0xff ], 'ffffffff');
+            readHexString([ 0xA0, 0xB0, 0xC0, 0xD0 ], 'a0b0c0d0');
         }
     }
 }).export(module);

@@ -17,6 +17,7 @@ vows.describe('Pattern').addBatch({
           , bits: 8
           , endianness: 'b'
           , bytes: 1
+          , type: 'n'
           , arrayed: false
           }
         ]);
@@ -28,6 +29,7 @@ vows.describe('Pattern').addBatch({
           , bits: 8
           , endianness: 'b'
           , bytes: 1
+          , type: 'n'
           , arrayed: true
           }
         ]);
@@ -39,6 +41,7 @@ vows.describe('Pattern').addBatch({
           , bits: 16
           , endianness: 'b'
           , bytes: 2
+          , type: 'n'
           , arrayed: false
           }
         ]);
@@ -50,6 +53,7 @@ vows.describe('Pattern').addBatch({
           , bits: 16
           , endianness: 'b'
           , bytes: 2
+          , type: 'n'
           , arrayed: true
           }
         ]);
@@ -61,6 +65,7 @@ vows.describe('Pattern').addBatch({
           , bits: 16
           , endianness: 'b'
           , bytes: 2
+          , type: 'n'
           , arrayed: false
           }
         ]);
@@ -72,6 +77,7 @@ vows.describe('Pattern').addBatch({
           , bits: 16
           , endianness: 'l'
           , bytes: 2
+          , type: 'n'
           , arrayed: false
           }
         ]);
@@ -83,6 +89,7 @@ vows.describe('Pattern').addBatch({
           , bits: 16
           , endianness: 'l'
           , bytes: 2
+          , type: 'n'
           , arrayed: true
           }
         ]);
@@ -94,6 +101,7 @@ vows.describe('Pattern').addBatch({
           , bits: 16
           , endianness: 's'
           , bytes: 2
+          , type: 'n'
           , arrayed: false
           }
         ]);
@@ -105,13 +113,27 @@ vows.describe('Pattern').addBatch({
           , bits: 16
           , endianness: 'l'
           , bytes: 2
+          , type: 'n'
           , arrayed: true
           }
         , { signed: false
           , bits: 8
           , endianness: 'b'
           , bytes: 1
+          , type: 'n'
           , arrayed: false
+          }
+        ]);
+      }
+    , 'a 16 bit hex string.': function (topic) {
+        var field = topic.parse('l16h');
+        assert.deepEqual(field, [
+          { signed: false
+          , bits: 16
+          , endianness: 'l'
+          , bytes: 2
+          , type: 'h'
+          , arrayed: true
           }
         ]);
       }
