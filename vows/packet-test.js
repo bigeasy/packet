@@ -127,6 +127,18 @@ vows.describe('Packet').addBatch({
           readSingleFloat([ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x24, 0xc0 ], -10); 
         }
     }
+    , 'Packet can write':
+        { topic: require('packet').create()
+        , 'a byte': function (topic) {
+            var buffer = [];
+            topic.reset();
+            topic.send("n8", 0x01, function (engine) { 
+                assert.equal(engine.bytesWritten, 1);
+            });
+            topic.write(buffer, 0, 1);
+            assert.equal(buffer[0], 0x01);
+        }
+    }
 }).export(module);
 
 /* vim: set ts=2 sw=2 et tw=0 nowrap: */
