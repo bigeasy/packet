@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>@font-face Background Clip Text</title>
+<style type="text/css">
+body {
+	background: #ccc;
+  text-align: center;
+}
+@font-face {
+    font-family: telegrama;
+    src: url("telegren.ttf") format("truetype");
+}
+h1 {
+  background: #f0f0f0 url("punched_card.jpg");
+  color: transparent;
+  -webkit-background-clip: text;
+  -moz-background-clip: text;
+  text-align: center;
+  margin: 0;
+  margin-top: 36px;
+  white-space: nowrap;
+  font-family: "telegrama", Courier, Sans-Serif;
+  font-size: 96px;
+}
+p.photo {
+  font-size: 0.65em;
+  margin-right: 36px;
+}
+p {
+  font-family: "Helvetica Neue", "telegrama", Courier, Sans-Serif;
+  text-align: right;
+  margin-right: 36px;
+  color: #2c2a15;
+/*  text-shadow: 3px 3px 7px #2c2a15; */
+}
+a {
+  color: #2c2a15;
+}
+h1 a {
+  text-decoration: none;
+  color: #2c2a15;
+  text-shadow: 3px 3px 7px #2c2a15;
+/*  border-bottom: 1px dotted black; */
+}
+table {
+  margin: auto auto;
+}
+</style>
+</head>
+<body>
+<table>
+  <tr>
+    <td>
+      <h1>11101011001101<br>101<a
+      href="http://github.com/bigeasy/node-packet">node-</a>010011<br>11010<a
+      href="http://github.com/bigeasy/node-packet">packet</a>101<br>01010101110001</h1>
+      <p>An evented, binary packet parser for Node.js.</p>
+      <p class="photo">Photo by <a href="http://bootload.posterous.com/">Peter Renshaw</a>.</p>
+    </td>
+  </tr>
+</table>
+</body>
+</html>
+<!-- vim: set et ts=2 sw=2: -->
