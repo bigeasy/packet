@@ -156,6 +156,15 @@ vows.describe('Packet').addBatch({
             topic.write(buffer, 0, 2);
             assert.deepEqual(buffer, [  0x01, 0xFF ]);
         }
+        , 'a little-endian 16 bit integer followed by a big-endian 16 bit integer': function (topic) {
+            var buffer = [];
+            topic.reset();
+            topic.send("l16b16", 0x1FF, 0x1FF, function (engine) { 
+                assert.equal(engine.bytesWritten, 4);
+            });
+            topic.write(buffer, 0, 4);
+            assert.deepEqual(buffer, [  0xFF, 0x01, 0x01, 0xFF ]);
+        }
     }
 }).export(module);
 
