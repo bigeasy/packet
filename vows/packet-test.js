@@ -138,6 +138,24 @@ vows.describe('Packet').addBatch({
             topic.write(buffer, 0, 1);
             assert.equal(buffer[0], 0x01);
         }
+        , 'a little-endian 16 bit integer': function (topic) {
+            var buffer = [];
+            topic.reset();
+            topic.send("l16", 0x1FF, function (engine) { 
+                assert.equal(engine.bytesWritten, 2);
+            });
+            topic.write(buffer, 0, 2);
+            assert.deepEqual(buffer, [  0xFF, 0x01 ]);
+        }
+        , 'a big-endian 16 bit integer': function (topic) {
+            var buffer = [];
+            topic.reset();
+            topic.send("b16", 0x1FF, function (engine) { 
+                assert.equal(engine.bytesWritten, 2);
+            });
+            topic.write(buffer, 0, 2);
+            assert.deepEqual(buffer, [  0x01, 0xFF ]);
+        }
     }
 }).export(module);
 
