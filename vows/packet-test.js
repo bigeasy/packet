@@ -164,6 +164,24 @@ vows.describe('Packet').addBatch({
             });
             topic.write(buffer, 0, 4);
             assert.deepEqual(buffer, [  0xFF, 0x01, 0x01, 0xFF ]);
+        },
+        'a little-endian 64 bit IEEE 754 float': function (topic) {
+            function writeDoubleFloat(bytes, value) {
+                var buffer = [];
+
+                var invoked = false;
+                topic.reset();
+                topic.send("b64f", value, function (engine) {
+                    assert.equal(engine.bytesWritten, 8);
+                    invoked = true;
+                });
+                topic.write(buffer, 0, 8);
+
+                assert.isTrue(invoked);
+                assert.deepEqual(buffer, bytes);
+            }
+            writeDoubleFloat([ 0xdb, 0x01, 0x32, 0xcf, 0xf6, 0xee, 0xc1, 0xc0 ], -9.1819281981e3);
+            writeDoubleFloat([ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x24, 0xc0 ], -10); 
         }
     }
 }).export(module);
