@@ -166,9 +166,19 @@ vows.describe('Pattern').addBatch({
     },
     'Pattern cannot parse': {
         topic: require('__internal/pattern'),
+        'utter nonsense.': function (topic) {
+            assert.throws(function () {
+                topic.parse("blurdy");   
+            }, Error);
+        },
         'a 7 bit pattern.': function (topic) {
             assert.throws(function () {
                 topic.parse("b7");   
+            }, Error);
+        },
+        'a 0 bit pattern.': function (topic) {
+            assert.throws(function () {
+                topic.parse("b0");   
             }, Error);
         },
         'a float pattern other than 32 or 64 bits.': function (topic) {
