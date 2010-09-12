@@ -127,6 +127,18 @@ vows.describe('Pattern').addBatch({
                 }
             ]);
         },
+        'a pattern greater than 64 bits with no type.': function (topic) {
+            var field =  topic.parse('b128');
+            assert.deepEqual(field, [
+                { signed: false
+                , bits: 128
+                , endianness: 'b'
+                , bytes: 16
+                , type: 'a'
+                , arrayed: true
+                }
+            ]);
+        },
         'a 16 bit hex string.': function (topic) {
             var field = topic.parse('l16h');
             assert.deepEqual(field, [
