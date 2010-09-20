@@ -452,7 +452,28 @@ vows.describe('Pattern').addBatch({
                 }
             ]);
         },
-        'a transform with a quoted string parameter.': function (topic) {
+        'a transform with a single quoted string parameter.': function (topic) {
+            var field = topic.parse("n8z|twiddle('a \\u00DF b \\' c')");
+            assert.deepEqual(field, [
+                { signed: false
+                , bits: 8
+                , endianness: 'b'
+                , bytes: 1
+                , type: 'n'
+                , unpacked: false
+                , arrayed: true
+                , repeat: Number.MAX_VALUE
+                , terminator: "\0"
+                , transforms:
+                  [
+                    { name: "twiddle"
+                    , parameters: [ "a \u00DF b \" c" ],
+                    }
+                  ]
+                }
+            ]);
+        },
+        'a transform with a single quoted string parameter.': function (topic) {
             var field = topic.parse('n8z|twiddle("a \\u00DF b \\" c")');
             assert.deepEqual(field, [
                 { signed: false

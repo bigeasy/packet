@@ -3,7 +3,7 @@
 
 # Regular expression to match a JavaScript scalar taken in part from
 # [json2.js](http://www.JSON.org/json2.js).
-scalar = /("(?:[^\\"]|\\.)+"|true|false|null|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)(\s*,\s*|\s*\))?(.*)/
+scalar = /('(?:[^\\']|\\.)+'|("(?:[^\\"]|\\.)+"|true|false|null|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)(\s*,\s*|\s*\))?(.*)/
 
 ##### field(fields, pattern, index) 
 # Parse a field from what remains of the `pattern` and add it to the list of
@@ -83,7 +83,7 @@ field = (fields, pattern, index) ->
 
     while hasArgument
       arg         = scalar.exec(rest)
-      value       = JSON.parse(arg[1])
+      value       = eval(arg[1])
       hasArgument = arg[2].indexOf(")") is -1
       rest        = arg[3]
 
