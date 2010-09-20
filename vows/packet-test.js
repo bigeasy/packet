@@ -3,12 +3,12 @@ var vows = require('vows'),
 
 vows.describe('Packet').addBatch({
     'Packet can read': {
-        topic: require('packet').create(),
+        topic: require(__dirname + '/../lib/packet__').create(),
         'a byte': function (topic) {
               var invoked = false;
               topic.reset();
               topic.packet('n8', function (field, engine) {
-                  assert.equal(engine.bytesRead, 1);
+                  assert.equal(engine.getBytesRead(), 1);
                   assert.equal(field, 1);
                   invoked = true;
               });
@@ -19,7 +19,7 @@ vows.describe('Packet').addBatch({
             var invoked = false;
             topic.reset();
             topic.packet('n16', function (field, engine) {
-                assert.equal(engine.bytesRead, 2);
+                assert.equal(engine.getBytesRead(), 2);
                 assert.equal(field, 0xA0B0);
                 invoked = true;
             });
@@ -30,7 +30,7 @@ vows.describe('Packet').addBatch({
             var invoked = false;
             topic.reset();
             topic.packet('b16', function (field, engine) {
-                assert.equal(engine.bytesRead, 2);
+                assert.equal(engine.getBytesRead(), 2);
                 assert.equal(field, 0xA0B0);
                 invoked = true;
             });
@@ -41,7 +41,7 @@ vows.describe('Packet').addBatch({
             var invoked = false;
             topic.reset();
             topic.packet('l16n8', function (a, b, engine) {
-                assert.equal(engine.bytesRead, 3);
+                assert.equal(engine.getBytesRead(), 3);
                 assert.equal(a, 0xB0A0);
                 assert.equal(b, 0xAA);
                 invoked = true;
@@ -54,22 +54,22 @@ vows.describe('Packet').addBatch({
                 var invoked = false;
                 topic.reset();
                 topic.packet('-n8', function (field, engine) {
-                    assert.equal(engine.bytesRead, 1);
+                    assert.equal(engine.getBytesRead(), 1);
                     assert.equal(field, value);
                     invoked = true;
                 });
                 topic.read(bytes);
                 assert.isTrue(invoked);
             }
-            readSigned([ 0x80 ], -128);
             readSigned([ 0xff ], -1);
+            readSigned([ 0x80 ], -128);
         },
         'a signed short': function (topic) {
             function readSigned(bytes, value) {
                 var invoked = false;
                 topic.reset();
                 topic.packet('-b16', function (field, engine) {
-                    assert.equal(engine.bytesRead, 2);
+                    assert.equal(engine.getBytesRead(), 2);
                     assert.equal(field, value);
                     invoked = true;
                 });
@@ -84,7 +84,7 @@ vows.describe('Packet').addBatch({
                 var invoked = false;
                 topic.reset();
                 topic.packet('l32h', function (field, engine) {
-                    assert.equal(engine.bytesRead, 4);
+                    assert.equal(engine.getBytesRead(), 4);
                     assert.equal(field, value);
                     invoked = true;
                 });
@@ -100,7 +100,7 @@ vows.describe('Packet').addBatch({
                 var invoked = false;
                 topic.reset();
                 topic.packet('b32h', function (field, engine) {
-                    assert.equal(engine.bytesRead, 4);
+                    assert.equal(engine.getBytesRead(), 4);
                     assert.equal(field, value);
                     invoked = true;
                 });
@@ -116,7 +116,7 @@ vows.describe('Packet').addBatch({
                 var invoked = false;
                 topic.reset();
                 topic.packet("b64f", function (field, engine) {
-                    assert.equal(engine.bytesRead, 8);
+                    assert.equal(engine.getBytesRead(), 8);
                     assert.equal(field, value);
                     invoked = true;
                 });
@@ -128,12 +128,12 @@ vows.describe('Packet').addBatch({
         }
     },
     'Packet can write': {
-        topic: require('packet').create(),
+        topic: require(__dirname + '/../lib/packet__').create(),
         'a byte': function (topic) {
             var buffer = [];
             topic.reset();
             topic.send("n8", 0x01, function (engine) { 
-                assert.equal(engine.bytesWritten, 1);
+                assert.equal(engine.getBytesWritten(), 1);
             });
             topic.write(buffer, 0, 1);
             assert.equal(buffer[0], 0x01);
@@ -142,7 +142,7 @@ vows.describe('Packet').addBatch({
             var buffer = [];
             topic.reset();
             topic.send("l16", 0x1FF, function (engine) { 
-                assert.equal(engine.bytesWritten, 2);
+                assert.equal(engine.getBytesWritten(), 2);
             });
             topic.write(buffer, 0, 2);
             assert.deepEqual(buffer, [  0xFF, 0x01 ]);
@@ -151,7 +151,7 @@ vows.describe('Packet').addBatch({
             var buffer = [];
             topic.reset();
             topic.send("b16", 0x1FF, function (engine) { 
-                assert.equal(engine.bytesWritten, 2);
+                assert.equal(engine.getBytesWritten(), 2);
             });
             topic.write(buffer, 0, 2);
             assert.deepEqual(buffer, [  0x01, 0xFF ]);
@@ -160,7 +160,7 @@ vows.describe('Packet').addBatch({
             var buffer = [];
             topic.reset();
             topic.send("l16b16", 0x1FF, 0x1FF, function (engine) { 
-                assert.equal(engine.bytesWritten, 4);
+                assert.equal(engine.getBytesWritten(), 4);
             });
             topic.write(buffer, 0, 4);
             assert.deepEqual(buffer, [  0xFF, 0x01, 0x01, 0xFF ]);
@@ -172,7 +172,7 @@ vows.describe('Packet').addBatch({
                 var invoked = false;
                 topic.reset();
                 topic.send("b64f", value, function (engine) {
-                    assert.equal(engine.bytesWritten, 8);
+                    assert.equal(engine.getBytesWritten(), 8);
                     invoked = true;
                 });
                 topic.write(buffer, 0, 8);

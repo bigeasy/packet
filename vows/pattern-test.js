@@ -3,13 +3,13 @@ var vows = require('vows'),
 
 vows.describe('Pattern').addBatch({
     'Pattern provides': {
-        topic: require('__internal/pattern'),
+        topic: require(__dirname + '/../lib/pattern'),
         'the parse method': function (topic) {
           assert.isFunction(topic.parse);
         }
     },
     'Pattern can parse': {
-        topic: require('__internal/pattern'),
+        topic: require(__dirname + '/../lib/pattern'),
         'a single byte pattern': function (topic) {
             var field = topic.parse('n8');
             assert.deepEqual(field, [
@@ -177,7 +177,7 @@ vows.describe('Pattern').addBatch({
         }
     },
     'Pattern cannot parse': {
-        topic: require('__internal/pattern'),
+        topic: require(__dirname + '/../lib/pattern'),
         'utter nonsense.': function (topic) {
             assert.throws(function () {
                 topic.parse("blurdy");   
