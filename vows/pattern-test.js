@@ -252,6 +252,268 @@ vows.describe('Pattern').addBatch({
                   ]
                 }
             ]);
+        },
+        'a transform a with a single parameter.': function (topic) {
+            var field = topic.parse('n8z|str("utf8")');
+            assert.deepEqual(field, [
+                { signed: false
+                , bits: 8
+                , endianness: 'b'
+                , bytes: 1
+                , type: 'n'
+                , unpacked: false
+                , arrayed: true
+                , repeat: Number.MAX_VALUE
+                , terminator: "\0"
+                , transforms:
+                  [
+                    { name: "str"
+                    , parameters: [ "utf8" ] 
+                    }
+                  ]
+                }
+            ]);
+        },
+        'a transform followed by a 16 bit number.': function (topic) {
+            var field = topic.parse('n8z|str("utf8")b16');
+            assert.deepEqual(field, [
+                { signed: false
+                , bits: 8
+                , endianness: 'b'
+                , bytes: 1
+                , type: 'n'
+                , unpacked: false
+                , arrayed: true
+                , repeat: Number.MAX_VALUE
+                , terminator: "\0"
+                , transforms:
+                  [
+                    { name: "str"
+                    , parameters: [ "utf8" ] 
+                    }
+                  ]
+                }
+            , 
+                { signed: false
+                , bits: 16
+                , endianness: 'b'
+                , bytes: 2
+                , type: 'n'
+                , unpacked: false
+                , arrayed: false
+                , repeat: 1
+                }
+            ]);
+        },
+        'a transform with an integer parameter.': function (topic) {
+            var field = topic.parse('n8z|twiddle(8)');
+            assert.deepEqual(field, [
+                { signed: false
+                , bits: 8
+                , endianness: 'b'
+                , bytes: 1
+                , type: 'n'
+                , unpacked: false
+                , arrayed: true
+                , repeat: Number.MAX_VALUE
+                , terminator: "\0"
+                , transforms:
+                  [
+                    { name: "twiddle"
+                    , parameters: [ 8 ] 
+                    }
+                  ]
+                }
+            ]);
+        },
+        'a transform with a negative integer parameter.': function (topic) {
+            var field = topic.parse('n8z|twiddle(-8)');
+            assert.deepEqual(field, [
+                { signed: false
+                , bits: 8
+                , endianness: 'b'
+                , bytes: 1
+                , type: 'n'
+                , unpacked: false
+                , arrayed: true
+                , repeat: Number.MAX_VALUE
+                , terminator: "\0"
+                , transforms:
+                  [
+                    { name: "twiddle"
+                    , parameters: [ -8 ] 
+                    }
+                  ]
+                }
+            ]);
+        },
+        'a transform with an float parameter.': function (topic) {
+            var field = topic.parse('n8z|twiddle(' + Number.MAX_VALUE + ')');
+            assert.deepEqual(field, [
+                { signed: false
+                , bits: 8
+                , endianness: 'b'
+                , bytes: 1
+                , type: 'n'
+                , unpacked: false
+                , arrayed: true
+                , repeat: Number.MAX_VALUE
+                , terminator: "\0"
+                , transforms:
+                  [
+                    { name: "twiddle"
+                    , parameters: [ Number.MAX_VALUE ] 
+                    }
+                  ]
+                }
+            ]);
+        },
+        'a transform with a negative float parameter.': function (topic) {
+            var field = topic.parse('n8z|twiddle(' + Number.MIN_VALUE + ')');
+            assert.deepEqual(field, [
+                { signed: false
+                , bits: 8
+                , endianness: 'b'
+                , bytes: 1
+                , type: 'n'
+                , unpacked: false
+                , arrayed: true
+                , repeat: Number.MAX_VALUE
+                , terminator: "\0"
+                , transforms:
+                  [
+                    { name: "twiddle"
+                    , parameters: [ Number.MIN_VALUE ] 
+                    }
+                  ]
+                }
+            ]);
+        },
+        'a transform with a null parameter.': function (topic) {
+            var field = topic.parse('n8z|twiddle(null)');
+            assert.deepEqual(field, [
+                { signed: false
+                , bits: 8
+                , endianness: 'b'
+                , bytes: 1
+                , type: 'n'
+                , unpacked: false
+                , arrayed: true
+                , repeat: Number.MAX_VALUE
+                , terminator: "\0"
+                , transforms:
+                  [
+                    { name: "twiddle"
+                    , parameters: [ null ],
+                    }
+                  ]
+                }
+            ]);
+        },
+        'a transform with a true parameter.': function (topic) {
+            var field = topic.parse('n8z|twiddle(true)');
+            assert.deepEqual(field, [
+                { signed: false
+                , bits: 8
+                , endianness: 'b'
+                , bytes: 1
+                , type: 'n'
+                , unpacked: false
+                , arrayed: true
+                , repeat: Number.MAX_VALUE
+                , terminator: "\0"
+                , transforms:
+                  [
+                    { name: "twiddle"
+                    , parameters: [ true ],
+                    }
+                  ]
+                }
+            ]);
+        },
+        'a transform with a false parameter.': function (topic) {
+            var field = topic.parse('n8z|twiddle(false)');
+            assert.deepEqual(field, [
+                { signed: false
+                , bits: 8
+                , endianness: 'b'
+                , bytes: 1
+                , type: 'n'
+                , unpacked: false
+                , arrayed: true
+                , repeat: Number.MAX_VALUE
+                , terminator: "\0"
+                , transforms:
+                  [
+                    { name: "twiddle"
+                    , parameters: [ false ],
+                    }
+                  ]
+                }
+            ]);
+        },
+        'a transform with a quoted string parameter.': function (topic) {
+            var field = topic.parse('n8z|twiddle("a \\u00DF b \\" c")');
+            assert.deepEqual(field, [
+                { signed: false
+                , bits: 8
+                , endianness: 'b'
+                , bytes: 1
+                , type: 'n'
+                , unpacked: false
+                , arrayed: true
+                , repeat: Number.MAX_VALUE
+                , terminator: "\0"
+                , transforms:
+                  [
+                    { name: "twiddle"
+                    , parameters: [ "a \u00DF b \" c" ],
+                    }
+                  ]
+                }
+            ]);
+        },
+        'a transform with a two parameters.': function (topic) {
+            var field = topic.parse('n8z|twiddle("utf8", 8)');
+            assert.deepEqual(field, [
+                { signed: false
+                , bits: 8
+                , endianness: 'b'
+                , bytes: 1
+                , type: 'n'
+                , unpacked: false
+                , arrayed: true
+                , repeat: Number.MAX_VALUE
+                , terminator: "\0"
+                , transforms:
+                  [
+                    { name: "twiddle"
+                    , parameters: [ "utf8", 8 ],
+                    }
+                  ]
+                }
+            ]);
+        },
+        'a transform with many parameters.': function (topic) {
+            var field = topic.parse('n8z|twiddle("utf8", 8, 8.1, false)');
+            assert.deepEqual(field, [
+                { signed: false
+                , bits: 8
+                , endianness: 'b'
+                , bytes: 1
+                , type: 'n'
+                , unpacked: false
+                , arrayed: true
+                , repeat: Number.MAX_VALUE
+                , terminator: "\0"
+                , transforms:
+                  [
+                    { name: "twiddle"
+                    , parameters: [ "utf8", 8, 8.1, false ],
+                    }
+                  ]
+                }
+            ]);
         }
     },
     'Pattern cannot parse': {
