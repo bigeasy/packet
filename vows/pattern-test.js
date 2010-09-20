@@ -227,7 +227,7 @@ vows.describe('Pattern').addBatch({
                 , type: 'n'
                 , unpacked: false
                 , arrayed: true
-                , repeat: 1
+                , repeat: Number.MAX_VALUE
                 , terminator: "\0"
                 }
             ]);

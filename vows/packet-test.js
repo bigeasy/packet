@@ -137,6 +137,30 @@ vows.describe('Packet').addBatch({
             });
             topic.read(bytes);
             assert.isTrue(invoked);
+        },
+        'an array of bytes terminated by zero': function (topic) {
+            var invoked = false;
+            var bytes = [ 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x00 ]
+            topic.reset();
+            topic.parse("n8z", function (field, engine) {
+                assert.equal(engine.getBytesRead(), 8);
+                assert.deepEqual(field, bytes);
+                invoked = true;
+            });
+            topic.read(bytes);
+            assert.isTrue(invoked);
+        },
+        'an array of 8 bytes terminated by zero': function (topic) {
+            var invoked = false;
+            var bytes = [ 0x01, 0x02, 0x03, 0x00, 0x05, 0x06, 0x07, 0x08 ]
+            topic.reset();
+            topic.parse("n8[8]z", function (field, engine) {
+                assert.equal(engine.getBytesRead(), 8);
+                assert.deepEqual(field, bytes.slice(0, 4));
+                invoked = true;
+            });
+            topic.read(bytes);
+            assert.isTrue(invoked);
         }
     },
     'Packet can write': {

@@ -64,6 +64,8 @@ field = (fields, pattern, index) ->
     f.terminator = tz[1] or "\0"
     f.arrayed = true
     rest = tz[2]
+    if f.repeat is 1
+      f.repeat = Number.MAX_VALUE
 
   # Record the new field pattern object.
   fields.push(f)
