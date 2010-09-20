@@ -18,7 +18,9 @@ vows.describe('Pattern').addBatch({
                 , endianness: 'b'
                 , bytes: 1
                 , type: 'n'
+                , unpacked: false
                 , arrayed: false
+                , repeat: 1
                 }
             ]);
         },
@@ -30,7 +32,9 @@ vows.describe('Pattern').addBatch({
                 , endianness: 'b'
                 , bytes: 1
                 , type: 'n'
-                , arrayed: true
+                , unpacked: true
+                , arrayed: false
+                , repeat: 1
                 }
             ]);
         },
@@ -42,7 +46,9 @@ vows.describe('Pattern').addBatch({
                 , endianness: 'b'
                 , bytes: 2
                 , type: 'n'
+                , unpacked: false
                 , arrayed: false
+                , repeat: 1
                 }
             ]);
         },
@@ -54,7 +60,9 @@ vows.describe('Pattern').addBatch({
                 , endianness: 'b'
                 , bytes: 2
                 , type: 'n'
-                , arrayed: true
+                , unpacked: true
+                , arrayed: false
+                , repeat: 1
                 }
             ]);
         },
@@ -66,7 +74,9 @@ vows.describe('Pattern').addBatch({
                 , endianness: 'b'
                 , bytes: 2
                 , type: 'n'
+                , unpacked: false
                 , arrayed: false
+                , repeat: 1
                 }
             ]);
         },
@@ -78,7 +88,9 @@ vows.describe('Pattern').addBatch({
                 , endianness: 'l'
                 , bytes: 2
                 , type: 'n'
+                , unpacked: false
                 , arrayed: false
+                , repeat: 1
                 }
             ]);
         },
@@ -90,7 +102,9 @@ vows.describe('Pattern').addBatch({
               , endianness: 'l'
               , bytes: 2
               , type: 'n'
-              , arrayed: true
+              , unpacked: true
+              , arrayed: false
+              , repeat: 1
               }
             ]);
         },
@@ -102,7 +116,9 @@ vows.describe('Pattern').addBatch({
                 , endianness: 's'
                 , bytes: 2
                 , type: 'n'
+                , unpacked: false
                 , arrayed: false
+                , repeat: 1
                 }
             ]);
         },
@@ -115,7 +131,9 @@ vows.describe('Pattern').addBatch({
                 , endianness: 'l'
                 , bytes: 2
                 , type: 'n'
-                , arrayed: true
+                , unpacked: true
+                , arrayed: false
+                , repeat: 1
                 }
             , 
                 { signed: false
@@ -123,7 +141,9 @@ vows.describe('Pattern').addBatch({
                 , endianness: 'b'
                 , bytes: 1
                 , type: 'n'
+                , unpacked: false
                 , arrayed: false
+                , repeat: 1
                 }
             ]);
         },
@@ -135,7 +155,9 @@ vows.describe('Pattern').addBatch({
                 , endianness: 'b'
                 , bytes: 16
                 , type: 'a'
-                , arrayed: true
+                , unpacked: true
+                , arrayed: false
+                , repeat: 1
                 }
             ]);
         },
@@ -147,7 +169,9 @@ vows.describe('Pattern').addBatch({
                 , endianness: 'l'
                 , bytes: 2
                 , type: 'h'
-                , arrayed: true
+                , unpacked: true
+                , arrayed: false
+                , repeat: 1
                 }
             ]);
         },
@@ -159,7 +183,9 @@ vows.describe('Pattern').addBatch({
                 , endianness: 'b'
                 , bytes: 4
                 , type: 'f'
-                , arrayed: true
+                , unpacked: true
+                , arrayed: false
+                , repeat: 1
                 }
             ]);
         },
@@ -171,7 +197,9 @@ vows.describe('Pattern').addBatch({
                 , endianness: 'b'
                 , bytes: 8
                 , type: 'f'
-                , arrayed: true
+                , unpacked: true
+                , arrayed: false
+                , repeat: 1
                 }
             ]);
         }

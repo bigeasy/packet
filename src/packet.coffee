@@ -19,7 +19,7 @@ class Machine
     little      = pattern.endianness == 'l'
     bytes       = pattern.bytes
 
-    if pattern.arrayed
+    if pattern.unpacked
       if reading
         value = []
       else
@@ -109,7 +109,7 @@ module.exports.Parser = class Parser extends Packet
     machine   = @machine
     b
     while @machine != null and offset < length
-      if machine.pattern[machine.index].arrayed
+      if machine.pattern[machine.index].unpacked
         loop
           b = buffer[offset]
           @bytesRead++
@@ -162,7 +162,7 @@ module.exports.Serializer = class Serializer extends Packet
     machine  = @machine
     while @machine and offset < length
       pattern = machine.pattern[machine.index]
-      if pattern.arrayed
+      if pattern.unpacked
         loop
           buffer[offset] = machine.value[machine.offset]
           machine.offset += machine.increment

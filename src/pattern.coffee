@@ -41,7 +41,20 @@ field = (fields, pattern, index) ->
   if (f.bits > 64 && f.type == "n")
     f.type = "a"
   f.bytes = f.bits / 8
-  f.arrayed = f.signed || f.bytes > 8 || "ha".indexOf(f.type) != -1
+  f.unpacked = f.signed || f.bytes > 8 || "ha".indexOf(f.type) != -1
+
+  # Check for structure modifiers.
+  arrayed = /^[(\d+)](.*)/.exec(rest)
+  if arrayed
+    f.arrayed = true
+    f.repeat = parseInt(arrayed[1], 10)
+    index++
+    if f.repeat == 0
+      throw new Error("array length must be non-zero at " + index)
+    index += arrayed[1].length + 1
+  else
+    f.arrayed = false
+    f.repeat = 1
 
   # Record the new field pattern object.
   fields.push(f)
