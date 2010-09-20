@@ -125,6 +125,18 @@ vows.describe('Packet').addBatch({
             }
             readSingleFloat([ 0xdb, 0x01, 0x32, 0xcf, 0xf6, 0xee, 0xc1, 0xc0 ], -9.1819281981e3);
             readSingleFloat([ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x24, 0xc0 ], -10); 
+        },
+        'an array of 8 bytes': function (topic) {
+            var invoked = false;
+            var bytes = [ 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08 ]
+            topic.reset();
+            topic.parse("n8[8]", function (field, engine) {
+                assert.equal(engine.getBytesRead(), 8);
+                assert.deepEqual(field, bytes);
+                invoked = true;
+            });
+            topic.read(bytes);
+            assert.isTrue(invoked);
         }
     },
     'Packet can write': {

@@ -9,9 +9,29 @@ hex = (bytes) ->
       b.toString(16)
   h.join("")
 
-class Machine
-  constructor: (@pattern, @callback) ->
-    @index = 0
+noop = (value) -> value
+
+class Packet
+  constructor: ->
+    @packets = {}
+    @reset()
+    @fields = []
+
+  clone: ->
+    copy            = new (this.constructor)()
+    copy.packets    = Object.create(packets)
+    copy
+
+  packet: (name, pattern, callback) ->
+    callback      or= noop
+    pattern         = parsePattern(pattern)
+    @packets[name]  = {pattern, callback}
+
+  reset: ->
+    @bytesRead = 0
+    @bytesWritten = 0
+    @pattern = null
+    @callback = null
 
   next: (value) ->
     reading     = not value?
@@ -33,7 +53,7 @@ class Machine
     @terminal   = if little then bytes else -1
 
   unpack: ->
-    bytes =  @value
+    bytes   = @value
     pattern = @pattern[@index]
     if pattern.type == "h"
       return hex bytes.reverse()
@@ -67,29 +87,6 @@ class Machine
     else
       value
 
-noop = (value) -> value
-
-class Packet
-  constructor: ->
-    @packets = {}
-    @reset()
-    @fields = []
-
-  clone: ->
-    copy            = new (this.constructor)()
-    copy.packets    = Object.create(packets)
-    copy
-
-  packet: (name, pattern, callback) ->
-    callback      or= noop
-    pattern         = parsePattern(pattern)
-    @packets[name]  = {pattern, callback}
-
-  reset: ->
-    @bytesRead = 0
-    @bytesWritten = 0
-    @machine = null
-
 module.exports.Parser = class Parser extends Packet
   data: (data...)   -> @user = data
 
@@ -99,44 +96,56 @@ module.exports.Parser = class Parser extends Packet
     packet      = @packets[nameOrPattern] or {}
     pattern     = packet.pattern or parsePattern(nameOrPattern)
     callback  or= packet.callback or noop
-    @machine    = new Machine pattern, callback
 
-    @machine.next()
+    @pattern    = pattern
+    @callback   = callback
+    @index      = 0
+    @repeat     = 0
+
+    @next()
+    if @pattern[@index].arrayed
+      @fields.push([])
 
   read: (buffer, offset, length) ->
     offset or= 0
     length or= buffer.length
-    machine   = @machine
     b
-    while @machine != null and offset < length
-      if machine.pattern[machine.index].unpacked
+    while @pattern != null and offset < length
+      if @pattern[@index].unpacked
         loop
           b = buffer[offset]
           @bytesRead++
           offset++
-          machine.value[machine.offset] = b
-          machine.offset += machine.increment
-          break if machine.offset is machine.terminal
+          @value[@offset] = b
+          @offset += @increment
+          break if @offset is @terminal
           return false if offset is length
       else
         loop
           b = buffer[offset]
           @bytesRead++
           offset++
-          machine.value += Math.pow(256, machine.offset) * b
-          machine.offset += machine.increment
-          break if machine.offset == machine.terminal
+          @value += Math.pow(256, @offset) * b
+          @offset += @increment
+          break if @offset == @terminal
           return true if offset == length
-      @fields.push(machine.unpack())
-      if  ++machine.index == machine.pattern.length
+      if @pattern[@index].arrayed
+        @fields[@fields.length - 1].push(@unpack())
+      else
+        @fields.push(@unpack())
+      if ++@repeat <  @pattern[@index].repeat
+        @next()
+      else if ++@index == @pattern.length
         @fields.push(this)
         for p in @user or []
           @fields.push(p)
-        machine.callback.apply null, @fields
+        @callback.apply null, @fields
         @fields.length = 0
-        @machine = null
       else
-        machine.next()
+        @next()
+        @repeat = 0
+        if @pattern[@index].arrayed
+          @fields.push([])
     true
 
 module.exports.Serializer = class Serializer extends Packet
@@ -151,38 +160,38 @@ module.exports.Serializer = class Serializer extends Packet
     pattern       = packet.pattern or parsePattern(nameOrPattern)
     callback    or= packet.callback or noop
 
-    @machine      = new Machine pattern, callback
+    @pattern      = pattern
+    @callback     = callback
+    @index        = 0
+    @repeat       = 0
     @outgoing     = shiftable
 
-    @machine.next(shiftable[0])
+    @next(shiftable[0])
 
   write: (buffer, offset, length) ->
     offset or= 0
     length or= buffer.length
-    machine  = @machine
-    while @machine and offset < length
-      pattern = machine.pattern[machine.index]
-      if pattern.unpacked
+    while @pattern and offset < length
+      if @pattern[@index].unpacked
         loop
-          buffer[offset] = machine.value[machine.offset]
-          machine.offset += machine.increment
+          buffer[offset] = @value[@offset]
+          @offset += @increment
           @bytesWritten++
           offset++
-          break if machine.offset is machine.terminal
+          break if @offset is @terminal
           return true if offset is length
       else
         loop
-          buffer[offset] = Math.floor(machine.value / Math.pow(256, machine.offset)) & 0xff
-          machine.offset += machine.increment
+          buffer[offset] = Math.floor(@value / Math.pow(256, @offset)) & 0xff
+          @offset += @increment
           @bytesWritten++
           offset++
-          break if machine.offset is machine.terminal
+          break if @offset is @terminal
           return true if offset is length
-      if ++machine.index is machine.pattern.length
-        machine.callback.apply null, [ this ]
-        @machine = null
+      if ++@index is @pattern.length
+        @callback.apply null, [ this ]
       else
-        machine.next(@outgoing[machine.index])
+        @next(@outgoing[@index])
     true
 
 module.exports.Structure = class Structure
