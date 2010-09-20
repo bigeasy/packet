@@ -116,7 +116,7 @@ module.exports.Parser = class Parser extends Packet
     if @pattern[@patternIndex].arrayed
       @fields.push([])
 
-##### packet.read(buffer[, offset][, length])
+##### parser.read(buffer[, offset][, length])
 # The `read` method reads from the buffer, returning when the current pattern is
 # read, or the end of the buffer is reached.
 
@@ -241,9 +241,17 @@ module.exports.Serializer = class Serializer extends Packet
 
     @next(shiftable[0])
 
+##### serializer.write(buffer[, offset][, length])
+# The `write` method writes to the buffer, returning when the current pattern is
+# written, or the end of the buffer is reached.
+
+  # Write to the `buffer` in the region defined by the given `offset` and `length`.
   write: (buffer, offset, length) ->
     offset or= 0
     length or= buffer.length
+
+    # We set the pattern to null when all the fields have been written, so while
+    # there is a pattern to fill and space to write.
     while @pattern and offset < length
       if @pattern[@patternIndex].unpacked
         loop
