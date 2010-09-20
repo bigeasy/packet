@@ -3,7 +3,7 @@ var vows = require('vows'),
 
 vows.describe('Packet').addBatch({
     'Packet can read': {
-        topic: new (require(__dirname + '/../lib/packet').Parser)(),
+        topic: new (require('packet').Parser)(),
         'a byte': function (topic) {
             var invoked = false;
             topic.reset();
@@ -128,7 +128,7 @@ vows.describe('Packet').addBatch({
         }
     },
     'Packet can write': {
-        topic: new (require(__dirname + '/../lib/packet').Serializer)(),
+        topic: new (require('packet').Serializer)(),
         'a byte': function (topic) {
             var buffer = [];
             topic.reset();
