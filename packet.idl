@@ -1,0 +1,22 @@
+# Node Packet
+
+An evented binary packet and structure parser for Node.js.
+
+## Synopsis
+
+Use tar as an example?
+
+## Installing
+
+## Reference
+
+namespace: packet
+
+Node Packet exports the ec2 namespace, which provides the {{Structure}},
+{{Parser}} and {{Serializer}} classes.
+
+class: Structure
+
+class: Parser
+
+class: Serializer
