@@ -133,7 +133,6 @@ module.exports.Parser = class Parser extends Packet
     while @pattern != null and offset < end
       if @skipping
         advance      = Math.min(@skipping, end - offset)
-        console.log("ADVANCE: " + advance + " " + @skipping)
         offset      += advance
         @skipping   -= advance
         @bytesRead  += advance
