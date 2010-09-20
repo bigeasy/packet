@@ -10,11 +10,15 @@ scalar = /('(?:[^\\']|\\.)+'|"(?:[^\\"]|\\.)+"|true|false|null|-?\d+(?:\.\d*)?(?
 
 # The `pattern` is the pattern to parse.
 module.exports.parse = (pattern) ->
+
   fields  = []
+
+  # We chip away at the pattern, removing the parts we.ve match, while keeping
+  # track of the index separately for error messages.
   rest    = pattern
   index   = 0
-
   while rest.length
+
     # Match a packet pattern.
     match = /^(-?)([snbl])(\d+)([fha]?)(.*)$/.exec(rest)
     if !match
