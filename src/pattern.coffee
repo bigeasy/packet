@@ -1,12 +1,20 @@
 # This module is separated for isolation during testing. It is meant to be
 # exposed as part of the public API.
 
-# Parse the `pattern` and add it to the list of `fields`.
-# 
+# Regular expression to match a JavaScript scalar taken in part from
+# [json2.js](http://www.JSON.org/json2.js).
+scalar = /('(?:[^']|\\')*'|"(?:[^"]|\\")*"|true|false|null|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)(\s*,\s*)?(.*)/
+
+##### field(fields, pattern, index) 
+# Parse a field from what remains of the `pattern` and add it to the list of
+# fields.
+#
 # The `pattern` points to the first character of field in the packet pattern.
 # Each recursive call to `field` will pass the remaining unmached part. The
 # `index` is the current position in the string used to report errors, but not
 # to index into the string.
+
+# Parse the `pattern` and add it to the list of `fields`.
 field = (fields, pattern, index) ->
 
   # Match a packet pattern.
@@ -66,6 +74,26 @@ field = (fields, pattern, index) ->
     rest = tz[2]
     if f.repeat is 1
       f.repeat = Number.MAX_VALUE
+
+  # Parse piplines.
+  while pipe = /^\|(.*)\((\)?)(.*)/.exec(rest)
+    transform       = { name: pipe[1], parameters: [] }
+    rest            = pipe[3]
+    hasArgument     = not pipe[2]
+
+    console.log(pipe)
+
+    while hasArgument
+      console.log(rest)
+      arg         = scalar.exec(rest)
+      console.log(arg)
+      value       = JSON.parse(arg[1])
+      hasArgument = arg[2]
+      rest        = arg[3]
+
+      parameters.push(value)
+
+    (f.transforms or= []).push(transform)
 
   # Record the new field pattern object.
   fields.push(f)

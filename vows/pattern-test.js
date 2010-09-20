@@ -231,6 +231,27 @@ vows.describe('Pattern').addBatch({
                 , terminator: "\0"
                 }
             ]);
+        },
+        'an list of bytes termianted by zero piped to a transform.': function (topic) {
+            var field = topic.parse('n8z|str()');
+            assert.deepEqual(field, [
+                { signed: false
+                , bits: 8
+                , endianness: 'b'
+                , bytes: 1
+                , type: 'n'
+                , unpacked: false
+                , arrayed: true
+                , repeat: Number.MAX_VALUE
+                , terminator: "\0"
+                , transforms:
+                  [
+                    { name: "str"
+                    , parameters: [] 
+                    }
+                  ]
+                }
+            ]);
         }
     },
     'Pattern cannot parse': {
