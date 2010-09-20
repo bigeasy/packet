@@ -3,7 +3,7 @@ var vows = require('vows'),
 
 vows.describe('Packet').addBatch({
     'Packet can read': {
-        topic: require(__dirname + '/../lib/packet__').create(),
+        topic: require(__dirname + '/../lib/packet').create(),
         'a byte': function (topic) {
               var invoked = false;
               topic.reset();
@@ -128,7 +128,7 @@ vows.describe('Packet').addBatch({
         }
     },
     'Packet can write': {
-        topic: require(__dirname + '/../lib/packet__').create(),
+        topic: require(__dirname + '/../lib/packet').create(),
         'a byte': function (topic) {
             var buffer = [];
             topic.reset();
