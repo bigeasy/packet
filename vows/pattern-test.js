@@ -8,9 +8,9 @@ vows.describe('Pattern').addBatch({
           assert.isFunction(topic.parse);
         }
     },
-    'Pattern can parse': {
+    'Pattern can parse a pattern that describes': {
         topic: require('pattern'),
-        'a single byte pattern': function (topic) {
+        'a single byte': function (topic) {
             var field = topic.parse('n8');
             assert.deepEqual(field, [
                 { signed: false
@@ -24,7 +24,7 @@ vows.describe('Pattern').addBatch({
                 }
             ]);
         },
-        'a single signed byte pattern': function (topic) {
+        'a single signed byte': function (topic) {
             var field = topic.parse('-n8');
             assert.deepEqual(field, [
                 { signed: true
@@ -38,7 +38,7 @@ vows.describe('Pattern').addBatch({
                 }
             ]);
         },
-        'a single 16 bit number pattern': function (topic) {
+        'a single 16 bit number': function (topic) {
             var field = topic.parse('n16');
             assert.deepEqual(field, [
                 { signed: false
@@ -52,7 +52,7 @@ vows.describe('Pattern').addBatch({
                 }
             ]);
         },
-        'a single signed 16 bit number pattern': function (topic) {
+        'a single signed 16 bit number': function (topic) {
             var field = topic.parse('-n16');
             assert.deepEqual(field, [
                 { signed: true
@@ -66,7 +66,7 @@ vows.describe('Pattern').addBatch({
                 }
             ]);
         },
-        'a single big-endian 16 bit number pattern': function (topic) {
+        'a single big-endian 16 bit number': function (topic) {
             var field = topic.parse('b16');
             assert.deepEqual(field, [
                 { signed: false
@@ -80,7 +80,7 @@ vows.describe('Pattern').addBatch({
                 }
             ]);
         },
-        'a single little-endian 16 bit number pattern': function (topic) {
+        'a single little-endian 16 bit number': function (topic) {
             var field = topic.parse('l16');
             assert.deepEqual(field, [
                 { signed: false
@@ -94,7 +94,7 @@ vows.describe('Pattern').addBatch({
                 }
             ]);
         },
-        'a single signed little-endian 16 bit number pattern': function (topic) {
+        'a single signed little-endian 16 bit number': function (topic) {
             var field = topic.parse('-l16');
             assert.deepEqual(field, [
               { signed: true
@@ -108,7 +108,7 @@ vows.describe('Pattern').addBatch({
               }
             ]);
         },
-        'a single 16 bit skip pattern': function (topic) {
+        'a single 16 bit skip': function (topic) {
             var field = topic.parse('s16');
             assert.deepEqual(field, [
                 { signed: false
@@ -122,7 +122,7 @@ vows.describe('Pattern').addBatch({
                 }
             ]);
         },
-        'a signed little-endian 16 bit number followed by a byte pattern': function (topic) {
+        'a signed little-endian 16 bit number followed by a byte': function (topic) {
             var field = topic.parse('-l16n8');
             assert.deepEqual(field,
             [
@@ -147,7 +147,7 @@ vows.describe('Pattern').addBatch({
                 }
             ]);
         },
-        'a pattern greater than 64 bits with no type.': function (topic) {
+        'a number greater than 64 bits with no type.': function (topic) {
             var field =  topic.parse('b128');
             assert.deepEqual(field, [
                 { signed: false
@@ -175,7 +175,7 @@ vows.describe('Pattern').addBatch({
                 }
             ]);
         },
-        'a single 32 bit float pattern.': function (topic) {
+        'a single 32 bit float.': function (topic) {
             var field = topic.parse('b32f');
             assert.deepEqual(field, [
                 { signed: true
@@ -189,7 +189,7 @@ vows.describe('Pattern').addBatch({
                 }
             ]);
         },
-        'a single 64 bit float pattern.': function (topic) {
+        'a single 64 bit float.': function (topic) {
             var field = topic.parse('b64f');
             assert.deepEqual(field, [
                 { signed: true
