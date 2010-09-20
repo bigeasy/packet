@@ -36,6 +36,7 @@ task "gitignore", "create a .gitignore for node-ec2 based on git branch", ->
     else if branch is "master"
       gitignore += '''
                    documentation
+                   site
                    index.html
                    lib/packet.js
                    lib/pattern.js
