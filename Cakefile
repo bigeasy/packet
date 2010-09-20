@@ -61,5 +61,5 @@ task "compile", "compile the CoffeeScript into JavaScript", ->
 task "clean", "rebuild the CoffeeScript docco documentation.", ->
   currentBranch (branch) ->
     if branch is "master"
-      exec "rm -rf documentation lib lib/packet.js lib/pattern.js", (err) ->
+      exec "rm -rf documentation lib/packet.js lib/pattern.js", (err) ->
         throw err if err
