@@ -141,6 +141,7 @@ module.exports.Parser = class Parser extends Packet
           @fields.push(p)
         @callback.apply null, @fields
         @fields.length = 0
+        @pattern = null
       else
         @next()
         @repeat = 0

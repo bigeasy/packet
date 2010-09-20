@@ -58,6 +58,13 @@ field = (fields, pattern, index) ->
     f.arrayed = false
     f.repeat = 1
 
+  # Check for zero termination.
+  tz = /^z(?:<(.*?)>)?(.*)$/.exec(rest)
+  if tz
+    f.terminator = tz[1] or "\0"
+    f.arrayed = true
+    rest = tz[2]
+
   # Record the new field pattern object.
   fields.push(f)
 
