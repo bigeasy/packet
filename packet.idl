@@ -8,6 +8,20 @@ Use tar as an example?
 
 ## Installing
 
+## Rationale
+
+Node Packet aspires to be the go to library for converting binary data into
+JavaScript or CoffeeScript primitives.
+
+The following rationale is offered for the following questions that may or may
+not be asked frequenty.
+
+### Why didn't you derive from EventEmitter?
+
+EventEmitter is well suited for classes that have a set of API defined event
+types. It does not at all suited for classes that emit of any number of event
+types defined by the API user.
+
 ## Reference
 
 namespace: packet
@@ -65,5 +79,36 @@ The `sizeOf` method does not expect and will not correctly calculate the size of
 the structure if fixed size value are given.
 
 class: Parser
+
+function: packet
+
+  parameter: name
+
+  The name of the packet type.
+
+  parameter: pattern
+
+  The packet pattern.
+
+  parameter: callback optional
+
+  Called when a packet of this type has been read from a buffer.
+
+Defines a named packet type optionally assigning a default response for the
+packet type.
+
+function: parse
+
+  parameter: nameOrPattern
+
+  Either the name of a named packet or a one off 
+
+function: clone
+
+Clone the packet parser to create a packet parser that shares the named packet
+definitions but has its own parser state.
+
+This allows a packet parser prototype to be used to efficently create initialized
+instances.
 
 class: Serializer
