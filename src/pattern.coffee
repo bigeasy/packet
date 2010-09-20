@@ -26,7 +26,7 @@ field = (fields, pattern, index) ->
 
   # Move the character position up to the bit count.
   index++ if f.signed
-  index +=  f.endianness.length
+  index++
 
   # Check for a valid character
   if f.bits == 0 or f.bits % 8
@@ -35,7 +35,8 @@ field = (fields, pattern, index) ->
     throw Error("floats can only be 32 or 64 bits at " + index)
 
   # Move the character position up to the rest of the patternx.
-  index += f.bits.length
+  index += match[3].length
+  index ++ if match[4]
 
   # Set the implicit fields.
   if (f.bits > 64 && f.type == "n")
@@ -44,7 +45,7 @@ field = (fields, pattern, index) ->
   f.unpacked = f.signed || f.bytes > 8 || "ha".indexOf(f.type) != -1
 
   # Check for structure modifiers.
-  arrayed = /^[(\d+)](.*)/.exec(rest)
+  arrayed = /^\[(\d+)\](.*)$/.exec(rest)
   if arrayed
     f.arrayed = true
     f.repeat = parseInt(arrayed[1], 10)
@@ -52,6 +53,7 @@ field = (fields, pattern, index) ->
     if f.repeat == 0
       throw new Error("array length must be non-zero at " + index)
     index += arrayed[1].length + 1
+    rest = arrayed[2]
   else
     f.arrayed = false
     f.repeat = 1

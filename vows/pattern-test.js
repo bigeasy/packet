@@ -202,6 +202,20 @@ vows.describe('Pattern').addBatch({
                 , repeat: 1
                 }
             ]);
+        },
+        'an array of 8 bytes.': function (topic) {
+            var field = topic.parse('n8[8]');
+            assert.deepEqual(field, [
+                { signed: false
+                , bits: 8
+                , endianness: 'b'
+                , bytes: 1
+                , type: 'n'
+                , unpacked: false
+                , arrayed: true
+                , repeat: 8
+                }
+            ]);
         }
     },
     'Pattern cannot parse': {
