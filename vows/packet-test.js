@@ -161,6 +161,18 @@ vows.describe('Packet').addBatch({
             });
             topic.read(bytes);
             assert.isTrue(invoked);
+        },
+        'a 3 transformed to ASCII': function (topic) {
+            var invoked = false;
+            var bytes = [ 0x41, 0x42, 0x43 ]
+            topic.reset();
+            topic.parse("n8[3]|str('ascii')", function (field, engine) {
+                assert.equal(engine.getBytesRead(), 3);
+                assert.equal(field, "ABC")
+                invoked = true;
+            });
+            topic.read(bytes);
+            assert.isTrue(invoked);
         }
     },
     'Packet can write': {

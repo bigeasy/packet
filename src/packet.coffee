@@ -16,6 +16,7 @@ class Packet
     @packets = {}
     @reset()
     @fields = []
+    @transforms = Object.create(transforms)
 
   clone: ->
     copy            = new (this.constructor)()
@@ -60,7 +61,7 @@ class Packet
     bytes   = @value
     pattern = @pattern[@patternIndex]
     if pattern.type == "h"
-      return hex bytes.reverse()
+      hex bytes.reverse()
     else if pattern.type == "f"
       if pattern.bits == 32
         ieee754.fromIEEE754Single(bytes)
@@ -90,6 +91,33 @@ class Packet
         ieee754.toIEEE754Double value
     else
       value
+
+bufferize = (array) ->
+  buffer = new Buffer(array.length)
+  for b, i in array
+    buffer[i] = b
+  buffer
+
+transforms =
+  str: (encoding, parsing, field, value) ->
+    if parsing
+      length = value.length
+      length-- if field.terminator
+      value.toString(encoding, 0, length)
+    else
+      value += "\0" if field.terminator
+      new Buffer(value, encoding)
+  pad: (character, length, parsing, field, value) ->
+    if not parsing
+      while value.length < length
+        value = character + value
+    value
+
+  atoi: (base, parsing, field, value) ->
+    if parsing then parseInt(value, base) else value.toString()
+
+  atof: (base, parsing, field, value) ->
+    if parsing then parseFloat(value) else value.toString()
 
 module.exports.Parser = class Parser extends Packet
   data: (data...)   -> @user = data
@@ -172,6 +200,7 @@ module.exports.Parser = class Parser extends Packet
         else
           @fields.push(field)
 
+
       # If we've not yet hit our terminator, check for the terminator. If we've
       # hit the terminator, and we do not have a maximum size to fill, then
       # terminate by setting up the array to terminate.
@@ -197,6 +226,19 @@ module.exports.Parser = class Parser extends Packet
       # The pattern is set to null, our terminal condition, before the callback,
       # because the callback may specify a subsequent packet to parse.
       else if ++@patternIndex == @pattern.length
+        # Run the piplines for parsing.
+        if @pattern[@patternIndex - 1].transforms
+          field = @fields[@fields.length - 1]
+          field = bufferize(field) if field.length
+          for transform in @pattern[@patternIndex - 1].transforms or []
+            parameters = []
+            for constant in transform.parameters
+              parameters.push(constant)
+            parameters.push(true)
+            parameters.push(@pattern[@patternIndex - 1])
+            parameters.push(field)
+            field = @transforms[transform.name].apply null, parameters
+          @fields[@fields.length - 1] = field
 
         @fields.push(this)
         for p in @user or []
