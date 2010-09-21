@@ -27,6 +27,10 @@
         
       
         
+          <h2 class="heading">Rationale</h3>
+        
+      
+        
           <h2 class="heading">Reference</h3>
         
       
@@ -39,7 +43,31 @@
         
       
         
+          <h3 class="function depth-2">read</h3>
+        
+      
+        
+          <h3 class="function depth-2">write</h3>
+        
+      
+        
+          <h3 class="function depth-2">sizeOf</h3>
+        
+      
+        
           <h3 class="class depth-1">Parser</h3>
+        
+      
+        
+          <h3 class="function depth-2">packet</h3>
+        
+      
+        
+          <h3 class="function depth-2">parse</h3>
+        
+      
+        
+          <h3 class="function depth-2">clone</h3>
         
       
         
@@ -90,6 +118,24 @@
         
         
         
+          <h2>Rationale</h2>
+
+<p>Node Packet aspires to be the go to library for converting binary data into
+JavaScript or CoffeeScript primitives.</p>
+
+<p>The following rationale is offered for the following questions that may or may
+not be asked frequenty.</p>
+
+<h3>Why didn't you derive from EventEmitter?</h3>
+
+<p>EventEmitter is well suited for classes that have a set of API defined event
+types. It does not at all suited for classes that emit of any number of event
+types defined by the API user.</p>
+        
+      
+        
+        
+        
           <h2>Reference</h2>
         
       
@@ -103,24 +149,183 @@
         
       
         
-          <h3 class="class">packet.Structure</h3>
+          <h3 class="class">packet.Structure(pattern)</h3>
         
+        
+            
+                <div class="parameter">
+                  <h4>pattern</h4>
+                  
+                    <p>The packet pattern.</p>
+                  
+                </div>
+            
+        
+        
+          <p>A structure is an object that both reads from and writes to a buffer
+syncrhonously. When reading, buffer must contain the entire contents of the
+structure. When writing, the buffer must have enough space to accomdoate the
+structure.</p>
+        
+      
+        
+          
+            <h3 class="function">read(buffer[, offset], callback)</h3>
+          
+        
+        
+            
+                <div class="parameter">
+                  <h4>buffer</h4>
+                  
+                    <p>The byte buffer.</p>
+                  
+                </div>
+            
+                <div class="parameter">
+                  <h4>offset</h4>
+                  
+                    <p>The optional offset into the byte buffer. Defaults to <code>0</code>.</p>
+                  
+                </div>
+            
+                <div class="parameter">
+                  <h4>callback</h4>
+                  
+                    <p>Called with the parameters read from the byte buffer.</p>
+                  
+                </div>
+            
+        
+        
+          <p>The read method accepts a buffer with an optional offset. The number of
+arguments is determined by the structure packet pattern, and must match
+the number of arguments expected by the packet pattern.</p>
+
+<p>The callback will be called with the fields read from the buffer, with the
+actual count of bytes read as the last parameter.</p>
+        
+      
+        
+          
+            <h3 class="function">write(buffer)</h3>
+          
+        
+        
+            
+                <div class="parameter">
+                  <h4>buffer</h4>
+                  
+                    <p>The byte buffer.</p>
+                  
+                </div>
+            
+        
+        
+          <p>Write the arguments to the  buffer at the optional offset. The arguments are
+determined by the structure bit pattern. Returns the number of bytes written.</p>
+        
+      
+        
+          
+            <h3 class="function">sizeOf()</h3>
+          
+        
+        
+            
+        
+        
+          <p>Get the size of the structure for the given variable length values. A structure
+can have 0 or more variable length values.</p>
+
+<p>The <code>sizeOf</code> method does not expect and will not correctly calculate the size of
+the structure if fixed size value are given.</p>
+        
+      
+        
+          <h3 class="class">packet.Parser()</h3>
+        
+        
+            
         
         
           
         
       
         
-          <h3 class="class">packet.Parser</h3>
+          
+            <h3 class="function">packet(name, pattern[, callback])</h3>
+          
         
+        
+            
+                <div class="parameter">
+                  <h4>name</h4>
+                  
+                    <p>The name of the packet type.</p>
+                  
+                </div>
+            
+                <div class="parameter">
+                  <h4>pattern</h4>
+                  
+                    <p>The packet pattern.</p>
+                  
+                </div>
+            
+                <div class="parameter">
+                  <h4>callback</h4>
+                  
+                    <p>Called when a packet of this type has been read from a buffer.</p>
+                  
+                </div>
+            
+        
+        
+          <p>Defines a named packet type optionally assigning a default response for the
+packet type.</p>
+        
+      
+        
+          
+            <h3 class="function">parse(nameOrPattern)</h3>
+          
+        
+        
+            
+                <div class="parameter">
+                  <h4>nameOrPattern</h4>
+                  
+                    <p>Either the name of a named packet or a one off </p>
+                  
+                </div>
+            
         
         
           
         
       
         
-          <h3 class="class">packet.Serializer</h3>
+          
+            <h3 class="function">clone()</h3>
+          
         
+        
+            
+        
+        
+          <p>Clone the packet parser to create a packet parser that shares the named packet
+definitions but has its own parser state.</p>
+
+<p>This allows a packet parser prototype to be used to efficently create initialized
+instances.</p>
+        
+      
+        
+          <h3 class="class">packet.Serializer()</h3>
+        
+        
+            
         
         
           
