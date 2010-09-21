@@ -232,6 +232,54 @@ vows.describe('Pattern').addBatch({
                 }
             ]);
         },
+        'a zero terminated array of 8 bytes zero filled.': function (topic) {
+            var field = topic.parse('n8[8]{0}z');
+            assert.deepEqual(field, [
+                { signed: false
+                , bits: 8
+                , endianness: 'b'
+                , bytes: 1
+                , type: 'n'
+                , unpacked: false
+                , arrayed: true
+                , repeat: 8
+                , terminator: "\0"
+                , padding: 0
+                }
+            ]);
+        },
+        'a zero terminated array of 8 bytes 0x10 filled.': function (topic) {
+            var field = topic.parse('n8[8]{0x10}z');
+            assert.deepEqual(field, [
+                { signed: false
+                , bits: 8
+                , endianness: 'b'
+                , bytes: 1
+                , type: 'n'
+                , unpacked: false
+                , arrayed: true
+                , repeat: 8
+                , terminator: "\0"
+                , padding: 16
+                }
+            ]);
+        },
+        'a zero terminated array of 8 bytes 010 filled.': function (topic) {
+            var field = topic.parse('n8[8]{010}z');
+            assert.deepEqual(field, [
+                { signed: false
+                , bits: 8
+                , endianness: 'b'
+                , bytes: 1
+                , type: 'n'
+                , unpacked: false
+                , arrayed: true
+                , repeat: 8
+                , terminator: "\0"
+                , padding: 8
+                }
+            ]);
+        },
         'an list of bytes termianted by zero piped to a transform.': function (topic) {
             var field = topic.parse('n8z|str()');
             assert.deepEqual(field, [

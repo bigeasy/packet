@@ -68,6 +68,21 @@ module.exports.parse = (pattern) ->
       f.arrayed = false
       f.repeat = 1
 
+    # Check for a padding value.
+    padding = /^{(0x|0)?(\d+)}(.*)$/.exec(rest)
+    if padding
+      base      = padding[1]
+      pad       = padding[2]
+      rest      = padding[3]
+
+      if base
+        if base == "0x"
+          f.padding = parseInt(pad, 16)
+        else
+          f.padding = parseInt(pad, 8)
+      else
+        f.padding = parseInt(pad, 10)
+
     # Check for zero termination.
     tz = /^z(?:<(.*?)>)?(.*)$/.exec(rest)
     if tz
