@@ -111,7 +111,7 @@ vows.describe('Packet').addBatch({
             readHexString([ 0xff, 0xff, 0xff, 0xff ], 'ffffffff');
             readHexString([ 0xA0, 0xB0, 0xC0, 0xD0 ], 'a0b0c0d0');
         },
-        'a 64 bit float': function (topic) {
+        'a big-endian 64 bit float': function (topic) {
             function readSingleFloat(bytes, value) {
                 var invoked = false;
                 topic.reset();
@@ -230,6 +230,22 @@ vows.describe('Packet').addBatch({
             }
             writeDoubleFloat([ 0xdb, 0x01, 0x32, 0xcf, 0xf6, 0xee, 0xc1, 0xc0 ], -9.1819281981e3);
             writeDoubleFloat([ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x24, 0xc0 ], -10); 
+        },
+        'an array of 8 bytes': function (topic) {
+            var buffer = [];
+
+            var invoked = false;
+            var bytes = [ 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08 ]
+            topic.reset();
+            topic.serialize("n8[8]", bytes, function (engine) {
+                assert.equal(engine.getBytesWritten(), 8);
+                invoked = true;
+            });
+
+            topic.write(buffer, 0, 10);
+
+            assert.isTrue(invoked);
+            assert.deepEqual(buffer, bytes);
         }
     }
 }).export(module);

@@ -38,19 +38,24 @@ class Packet
     @callback = null
 
   # Setup the next field in the current pattern to read or write.
-  next: (value) ->
-    reading     = not value?
+  next: ->
+    reading     = not @outgoing
     pattern     = @pattern[@patternIndex]
     little      = pattern.endianness == 'l'
     bytes       = pattern.bytes
 
-    if pattern.unpacked
-      if reading
+    if @outgoing
+      if pattern.arrayed
+        value = @outgoing[@patternIndex][@index]
+      else
+        value = @outgoing[@patternIndex]
+      if pattern.unpacked
+        value = @pack(value)
+    else
+      if pattern.unpacked
         value = []
       else
-        value = @pack(value)
-    else if reading
-      value = 0
+        value = 0
 
     @value      = value
     @offset     = if little then 0 else bytes - 1
@@ -178,8 +183,8 @@ module.exports.Parser = class Parser extends Packet
             break if @offset is @terminal
             return @bytesRead - start if offset is end
 
-        # Otherwise we're packing bytes into an unsigned integer, the most common
-        # case.
+        # Otherwise we're packing bytes into an unsigned integer, the most
+        # common case.
         else
           loop
             b = buffer[offset]
@@ -215,7 +220,7 @@ module.exports.Parser = class Parser extends Packet
             continue
 
       # If we are reading an arrayed pattern and we have not read all of the
-      # array elements, we repeat the current field.
+      # array elements, we repeat the current field type.
       if ++@index <  @repeat
         @next()
 
@@ -279,9 +284,10 @@ module.exports.Serializer = class Serializer extends Packet
     @patternIndex = 0
     @repeat       = pattern[@patternIndex].repeat
     @element      = 0
+    @index        = 0
     @outgoing     = shiftable
 
-    @next(shiftable[0])
+    @next()
 
 ##### serializer.write(buffer[, offset][, length])
 # The `write` method writes to the buffer, returning when the current pattern is
@@ -295,6 +301,7 @@ module.exports.Serializer = class Serializer extends Packet
     # We set the pattern to null when all the fields have been written, so while
     # there is a pattern to fill and space to write.
     while @pattern and offset < length
+      # If the pattern is unpacked, the value we're writing is an array.
       if @pattern[@patternIndex].unpacked
         loop
           buffer[offset] = @value[@offset]
@@ -302,7 +309,10 @@ module.exports.Serializer = class Serializer extends Packet
           @bytesWritten++
           offset++
           break if @offset is @terminal
-          return true if offset is length
+          return if offset is length
+
+      # Otherwise we're unpacking bytes of an unsigned integer, the most common
+      # case.
       else
         loop
           buffer[offset] = Math.floor(@value / Math.pow(256, @offset)) & 0xff
@@ -310,12 +320,26 @@ module.exports.Serializer = class Serializer extends Packet
           @bytesWritten++
           offset++
           break if @offset is @terminal
-          return true if offset is length
-      if ++@patternIndex is @pattern.length
+          return if offset is length
+
+      # If we are reading an arrayed pattern and we have not read all of the
+      # array elements, we repeat the current field type.
+      if ++@index < @repeat
+        @next()
+
+      # If we have written all of the packet fields, call the associated
+      # callback with this parser.
+      #
+      # The pattern is set to null, our terminal condition, before the callback,
+      # because the callback may specify a subsequent packet to parse.
+      else if ++@patternIndex is @pattern.length
+        @pattern = null
         @callback.apply null, [ this ]
+
       else
-        @next(@outgoing[@patternIndex])
-    true
+        @next()
+
+    @outgoing = null
 
 module.exports.Structure = class Structure
   constructor: (pattern) ->
