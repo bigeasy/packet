@@ -138,7 +138,7 @@ vows.describe('Packet').addBatch({
             topic.read(bytes);
             assert.isTrue(invoked);
         },
-        'an zero termianted array of bytes': function (topic) {
+        'a zero terminated array of bytes': function (topic) {
             var invoked = false;
             var bytes = [ 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x00 ]
             topic.reset();
@@ -150,7 +150,7 @@ vows.describe('Packet').addBatch({
             topic.read(bytes);
             assert.isTrue(invoked);
         },
-        'an zero terminated array of 8 bytes': function (topic) {
+        'a zero terminated array of 8 bytes': function (topic) {
             var invoked = false;
             var bytes = [ 0x01, 0x02, 0x03, 0x00, 0x05, 0x06, 0x07, 0x08 ]
             topic.reset();
@@ -180,6 +180,18 @@ vows.describe('Packet').addBatch({
             topic.reset();
             topic.parse("n8z|ascii()", function (field, engine) {
                 assert.equal(engine.getBytesRead(), 4);
+                assert.equal(field, "ABC")
+                invoked = true;
+            });
+            topic.read(bytes, 0, 10);
+            assert.isTrue(invoked);
+        },
+        'a zero terminated 8 byte padded ASCII string': function (topic) {
+            var invoked = false;
+            var bytes = [ 0x41, 0x42, 0x43, 0x00, 0x00, 0x00, 0x00, 0x00 ]
+            topic.reset();
+            topic.parse("n8[8]z|ascii()", function (field, engine) {
+                assert.equal(engine.getBytesRead(), 8);
                 assert.equal(field, "ABC")
                 invoked = true;
             });
@@ -328,7 +340,7 @@ vows.describe('Packet').addBatch({
             assert.isTrue(invoked);
             assert.deepEqual(buffer, [ 0x41, 0x42, 0x43 ]);
         },
-        'a zero termianted UTF-8 string': function (topic) {
+        'a zero terminated UTF-8 string': function (topic) {
             var buffer = [];
 
             var invoked = false;
@@ -340,6 +352,19 @@ vows.describe('Packet').addBatch({
             topic.write(buffer, 0, 10);
             assert.isTrue(invoked);
             assert.deepEqual(buffer, [ 0x41, 0x42, 0x43, 0x00 ]);
+        },
+        'a zero terminated 8 byte padded UTF-8 string': function (topic) {
+            var buffer = [];
+
+            var invoked = false;
+            topic.reset();
+            topic.serialize("n8[8]{1}z|utf8()", "ABC", function (engine) {
+                assert.equal(engine.getBytesWritten(), 8);
+                invoked = true;
+            });
+            topic.write(buffer, 0, 10);
+            assert.isTrue(invoked);
+            assert.deepEqual(buffer, [ 0x41, 0x42, 0x43, 0x00, 0x01, 0x01, 0x01, 0x01 ]);
         }
     }
 }).export(module);
