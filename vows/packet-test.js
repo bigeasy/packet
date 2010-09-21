@@ -173,6 +173,18 @@ vows.describe('Packet').addBatch({
             });
             topic.read(bytes);
             assert.isTrue(invoked);
+        },
+        'a zero terminated ASCII string': function (topic) {
+            var invoked = false;
+            var bytes = [ 0x41, 0x42, 0x43, 0x00 ]
+            topic.reset();
+            topic.parse("n8z|ascii()", function (field, engine) {
+                assert.equal(engine.getBytesRead(), 4);
+                assert.equal(field, "ABC")
+                invoked = true;
+            });
+            topic.read(bytes, 0, 10);
+            assert.isTrue(invoked);
         }
     },
     'Packet can write': {
@@ -315,6 +327,19 @@ vows.describe('Packet').addBatch({
             topic.write(buffer, 0, 10);
             assert.isTrue(invoked);
             assert.deepEqual(buffer, [ 0x41, 0x42, 0x43 ]);
+        },
+        'a zero termianted UTF-8 string': function (topic) {
+            var buffer = [];
+
+            var invoked = false;
+            topic.reset();
+            topic.serialize("n8z|utf8()", "ABC", function (engine) {
+                assert.equal(engine.getBytesWritten(), 4);
+                invoked = true;
+            });
+            topic.write(buffer, 0, 10);
+            assert.isTrue(invoked);
+            assert.deepEqual(buffer, [ 0x41, 0x42, 0x43, 0x00 ]);
         }
     }
 }).export(module);

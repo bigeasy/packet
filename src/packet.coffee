@@ -124,13 +124,20 @@ transforms =
       if not (value instanceof Buffer)
         value = bufferize(value)
       length = value.length
-      length-- if field.terminator
+      length -= field.terminator.length if field.terminator
       value.toString(encoding, 0, length)
     else
-      value += "\0" if field.terminator
+      if field.terminator
+        value += field.terminator
       new Buffer(value, encoding)
+
+  # Broken and waiting on #[297](http://github.com/ry/node/issues/issue/297).
   ascii: (parsing, field, value) ->
     transforms.str("ascii", parsing, field, value)
+
+  utf8: (parsing, field, value) ->
+    transforms.str("utf8", parsing, field, value)
+
   pad: (character, length, parsing, field, value) ->
     if not parsing
       while value.length < length
