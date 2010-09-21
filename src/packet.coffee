@@ -37,6 +37,19 @@ class Packet
     @pattern = null
     @callback = null
 
+  pipeline: (pattern, value) ->
+    # Run the piplines for parsing.
+    if pattern.transforms
+      for transform in pattern.transforms
+        parameters = []
+        for constant in transform.parameters
+          parameters.push(constant)
+        parameters.push(not @outgoing)
+        parameters.push(pattern)
+        parameters.push(value)
+        value = @transforms[transform.name].apply null, parameters
+    value
+
   # Setup the next field in the current pattern to read or write.
   next: ->
     reading     = not @outgoing
@@ -108,12 +121,16 @@ bufferize = (array) ->
 transforms =
   str: (encoding, parsing, field, value) ->
     if parsing
+      if not (value instanceof Buffer)
+        value = bufferize(value)
       length = value.length
       length-- if field.terminator
       value.toString(encoding, 0, length)
     else
       value += "\0" if field.terminator
       new Buffer(value, encoding)
+  ascii: (parsing, field, value) ->
+    transforms.str("ascii", parsing, field, value)
   pad: (character, length, parsing, field, value) ->
     if not parsing
       while value.length < length
@@ -233,19 +250,7 @@ module.exports.Parser = class Parser extends Packet
       # The pattern is set to null, our terminal condition, before the callback,
       # because the callback may specify a subsequent packet to parse.
       else if ++@patternIndex == @pattern.length
-        # Run the piplines for parsing.
-        if @pattern[@patternIndex - 1].transforms
-          field = @fields[@fields.length - 1]
-          field = bufferize(field) if field.length
-          for transform in @pattern[@patternIndex - 1].transforms or []
-            parameters = []
-            for constant in transform.parameters
-              parameters.push(constant)
-            parameters.push(true)
-            parameters.push(@pattern[@patternIndex - 1])
-            parameters.push(field)
-            field = @transforms[transform.name].apply null, parameters
-          @fields[@fields.length - 1] = field
+        @fields.push(@pipeline(@pattern[@patternIndex -1 ], @fields.pop()))
 
         @fields.push(this)
         for p in @user or []
@@ -259,6 +264,8 @@ module.exports.Parser = class Parser extends Packet
 
       # Otherwise we proceed to the next field in the packet pattern.
       else
+        @fields.push(@pipeline(@pattern[@patternIndex - 1], @fields.pop()))
+
         @next()
         @repeat       = @pattern[@patternIndex].repeat
         @index        = 0
@@ -272,6 +279,12 @@ module.exports.Parser = class Parser extends Packet
 module.exports.Serializer = class Serializer extends Packet
   getBytesWritten: -> @bytesWritten
 
+  packet: (name, pattern, callback) ->
+    super name, pattern, callback
+    for part in @packets[name].pattern
+      if part.transforms
+        part.transforms.reverse()
+
   serialize: (shiftable...) ->
     if typeof shiftable[shiftable.length - 1] == 'function'
       callback = shiftable.pop()
@@ -280,6 +293,11 @@ module.exports.Serializer = class Serializer extends Packet
     packet        = @packets[nameOrPattern] or {}
     pattern       = packet.pattern or parsePattern(nameOrPattern)
     callback    or= packet.callback or noop
+
+    if not packet.pattern
+      for part in pattern
+        if part.transforms
+          part.transforms.reverse()
 
     @pattern      = pattern
     @callback     = callback
@@ -290,6 +308,9 @@ module.exports.Serializer = class Serializer extends Packet
     @terminated   = not pattern[@patternIndex].terminator
     @index        = 0
     delete        @padding
+
+    for value, i in @outgoing
+      @outgoing[i] = @pipeline(pattern[i], value)
 
     @next()
 
@@ -396,4 +417,3 @@ module.exports.Structure = class Structure
 
   write: (values...) ->
     buffer = values.shift()
-

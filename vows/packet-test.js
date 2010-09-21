@@ -162,11 +162,11 @@ vows.describe('Packet').addBatch({
             topic.read(bytes);
             assert.isTrue(invoked);
         },
-        'a 3 transformed to ASCII': function (topic) {
+        'a 3 byte ASCII string': function (topic) {
             var invoked = false;
             var bytes = [ 0x41, 0x42, 0x43 ]
             topic.reset();
-            topic.parse("n8[3]|str('ascii')", function (field, engine) {
+            topic.parse("n8[3]|ascii()", function (field, engine) {
                 assert.equal(engine.getBytesRead(), 3);
                 assert.equal(field, "ABC")
                 invoked = true;
@@ -302,6 +302,19 @@ vows.describe('Packet').addBatch({
 
             assert.isTrue(invoked);
             assert.deepEqual(buffer, [ 0x01, 0x02, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00 ]);
+        },
+        'a 3 byte ASCII string': function (topic) {
+            var buffer = [];
+
+            var invoked = false;
+            topic.reset();
+            topic.serialize("n8[3]|ascii()", "ABC", function (engine) {
+                assert.equal(engine.getBytesWritten(), 3);
+                invoked = true;
+            });
+            topic.write(buffer, 0, 10);
+            assert.isTrue(invoked);
+            assert.deepEqual(buffer, [ 0x41, 0x42, 0x43 ]);
         }
     }
 }).export(module);
