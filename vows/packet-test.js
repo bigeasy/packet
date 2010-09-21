@@ -282,6 +282,26 @@ vows.describe('Packet').addBatch({
 
             assert.isTrue(invoked);
             assert.deepEqual(buffer, [ 0x01, 0x02, 0x03, 0x00, 0x01, 0x01, 0x01, 0x01 ]);
+        },
+        'a zero terminated array of 8 bytes zero filled': function (topic) {
+            var buffer = [];
+
+            var invoked = false;
+            var bytes = [ 0x01, 0x02, 0x03, 0x00 ]
+            topic.reset();
+            topic.serialize("n8[8]{0}z", bytes, function (engine) {
+                assert.equal(engine.getBytesWritten(), 8);
+                invoked = true;
+            });
+
+            buffer = []
+            for (var i = 0; i < 8; i++) {
+              buffer[i] = 0x01;
+            }
+            topic.write(buffer, 0, 10);
+
+            assert.isTrue(invoked);
+            assert.deepEqual(buffer, [ 0x01, 0x02, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00 ]);
         }
     }
 }).export(module);

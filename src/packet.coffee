@@ -45,7 +45,9 @@ class Packet
     bytes       = pattern.bytes
 
     if @outgoing
-      if pattern.arrayed
+      if @padding?
+        value = @padding
+      else if pattern.arrayed
         value = @outgoing[@patternIndex][@index]
       else
         value = @outgoing[@patternIndex]
@@ -282,11 +284,12 @@ module.exports.Serializer = class Serializer extends Packet
     @pattern      = pattern
     @callback     = callback
     @patternIndex = 0
+    @outgoing     = shiftable
+
     @repeat       = pattern[@patternIndex].repeat
     @terminated   = not pattern[@patternIndex].terminator
-    @element      = 0
     @index        = 0
-    @outgoing     = shiftable
+    delete        @padding
 
     @next()
 
@@ -341,6 +344,8 @@ module.exports.Serializer = class Serializer extends Packet
           @terminated = true
           if @repeat == Number.MAX_VALUE
             @repeat = @index + 1
+          else if @pattern[@patternIndex].padding?
+            @padding = @pattern[@patternIndex].padding
           else
             @skipping = (@repeat - (++@index)) * @pattern[@patternIndex].bytes
             @repeat = @index + 1
@@ -361,6 +366,12 @@ module.exports.Serializer = class Serializer extends Packet
         @callback.apply null, [ this ]
 
       else
+
+        delete        @padding
+        @repeat       = @pattern[@patternIndex].repeat
+        @terminated   = not @pattern[@patternIndex].terminator
+        @index        = 0
+
         @next()
 
     @outgoing = null
