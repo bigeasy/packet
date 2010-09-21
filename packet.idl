@@ -8,6 +8,20 @@ Use tar as an example?
 
 ## Installing
 
+## Rationale
+
+Node Packet aspires to be the go to library for converting binary data into
+JavaScript or CoffeeScript primitives.
+
+The following rationale is offered for the following questions that may or may
+not be asked frequenty.
+
+### Why didn't you derive from EventEmitter?
+
+EventEmitter is well suited for classes that have a set of API defined event
+types. It does not at all suited for classes that emit of any number of event
+types defined by the API user.
+
 ## Reference
 
 namespace: packet
@@ -17,6 +31,84 @@ Node Packet exports the ec2 namespace, which provides the {{Structure}},
 
 class: Structure
 
+  parameter: pattern
+
+  The packet pattern.
+
+A structure is an object that both reads from and writes to a buffer
+syncrhonously. When reading, buffer must contain the entire contents of the
+structure. When writing, the buffer must have enough space to accomdoate the
+structure.
+
+function: read
+
+  parameter: buffer
+
+  The byte buffer.
+
+  parameter: offset optional
+
+  The optional offset into the byte buffer. Defaults to `0`.
+
+  parameter: callback
+
+  Called with the parameters read from the byte buffer.
+
+The read method accepts a buffer with an optional offset. The number of
+arguments is determined by the structure packet pattern, and must match
+the number of arguments expected by the packet pattern.
+
+The callback will be called with the fields read from the buffer, with the
+actual count of bytes read as the last parameter.
+
+function: write
+
+  parameter: buffer
+
+  The byte buffer.
+
+Write the arguments to the  buffer at the optional offset. The arguments are
+determined by the structure bit pattern. Returns the number of bytes written.
+
+function: sizeOf
+
+Get the size of the structure for the given variable length values. A structure
+can have 0 or more variable length values.
+
+The `sizeOf` method does not expect and will not correctly calculate the size of
+the structure if fixed size value are given.
+
 class: Parser
+
+function: packet
+
+  parameter: name
+
+  The name of the packet type.
+
+  parameter: pattern
+
+  The packet pattern.
+
+  parameter: callback optional
+
+  Called when a packet of this type has been read from a buffer.
+
+Defines a named packet type optionally assigning a default response for the
+packet type.
+
+function: parse
+
+  parameter: nameOrPattern
+
+  Either the name of a named packet or a one off 
+
+function: clone
+
+Clone the packet parser to create a packet parser that shares the named packet
+definitions but has its own parser state.
+
+This allows a packet parser prototype to be used to efficently create initialized
+instances.
 
 class: Serializer

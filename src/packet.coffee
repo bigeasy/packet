@@ -1,12 +1,6 @@
 parsePattern = require('./pattern').parse
 ieee754 = require('./ieee754')
 
-shiftify = (arrayish, start, end) ->
-  a = []
-  while start < end
-    a.push arrayish[start++]
-  return a
-
 hex = (bytes) ->
   h = bytes.map (b) ->
     if b < 10
@@ -15,190 +9,420 @@ hex = (bytes) ->
       b.toString(16)
   h.join("")
 
-pack = (pattern, value) ->
-  if pattern.type == "f"
-    if pattern.bits == 32
-      ieee754.toIEEE754Single value
-    else
-      ieee754.toIEEE754Double value
-  else
+noop = (value) -> value
+
+class Packet
+  constructor: ->
+    @packets = {}
+    @reset()
+    @fields = []
+    @transforms = Object.create(transforms)
+
+  clone: ->
+    copy            = new (this.constructor)()
+    copy.packets    = Object.create(packets)
+    copy
+
+  packet: (name, pattern, callback) ->
+    callback      or= noop
+    pattern         = parsePattern(pattern)
+    @packets[name]  = {pattern, callback}
+
+  # Resets the bytes read, bytes written and the current pattern. Used to
+  # recover from exceptional conditions and generally a good idea to call this
+  # method before starting a new series of packet parsing transitions.
+  reset: ->
+    @bytesRead = 0
+    @bytesWritten = 0
+    @pattern = null
+    @callback = null
+
+  pipeline: (pattern, value) ->
+    # Run the piplines for parsing.
+    if pattern.transforms
+      for transform in pattern.transforms
+        parameters = []
+        for constant in transform.parameters
+          parameters.push(constant)
+        parameters.push(not @outgoing)
+        parameters.push(pattern)
+        parameters.push(value)
+        value = @transforms[transform.name].apply null, parameters
     value
 
-unpack = (bytes, pattern) ->
-  if pattern.type == "h"
-    return hex bytes.reverse()
-  else if pattern.type == "f"
-    if pattern.bits == 32
-      ieee754.fromIEEE754Single(bytes)
+  # Setup the next field in the current pattern to read or write.
+  next: ->
+    reading     = not @outgoing
+    pattern     = @pattern[@patternIndex]
+    little      = pattern.endianness == 'l'
+    bytes       = pattern.bytes
+
+    if @outgoing
+      if @padding?
+        value = @padding
+      else if pattern.arrayed
+        value = @outgoing[@patternIndex][@index]
+      else
+        value = @outgoing[@patternIndex]
+      if pattern.unpacked
+        value = @pack(value)
     else
-      ieee754.fromIEEE754Double(bytes)
-  else if pattern.signed
-    value = 0
-    if (bytes[bytes.length - 1] & 0x80) == 0x80
-      top = bytes.length - 1
-      for i in [0...top]
-        value += (~bytes[i] & 0xff)  * Math.pow(256, i)
-      # ~1 == -2.
-      # To get the two's compliment as a positive value you use ~1 & 0xff == 254. 
-      value += (~(bytes[top] & 0x7f) & 0xff & 0x7f) * Math.pow(256, top)
-      value += 1
-      value *= -1
-    return value
-
-instance = (packets) ->
-  machine = null
-  user = shiftify arguments, 1, arguments.length
-
-  mechanize = (definition, index, value) ->
-    reading = arguments.length == 2
-    pattern = definition.pattern[index]
-    little = pattern.endianness == 'l'
-    bytes = pattern.bytes
-    if pattern.arrayed
-      if reading
+      if pattern.unpacked
         value = []
       else
-        value = pack pattern, value
-    else if reading
+        value = 0
+
+    @value      = value
+    @offset     = if little then 0 else bytes - 1
+    @increment  = if little then 1 else -1
+    @terminal   = if little then bytes else -1
+
+  unpack: ->
+    bytes   = @value
+    pattern = @pattern[@patternIndex]
+    if pattern.type == "h"
+      hex bytes.reverse()
+    else if pattern.type == "f"
+      if pattern.bits == 32
+        ieee754.fromIEEE754Single(bytes)
+      else
+        ieee754.fromIEEE754Double(bytes)
+    else if pattern.signed
       value = 0
-    machine =
-      value: value
-      unpack: if pattern.arrayed then unpack else noop
-      definition: definition
-      index: index
-      offset: if little then 0 else bytes - 1
-      increment: if little then 1 else -1
-      terminal: if little then bytes else -1
-    return machine
-
-  clone = ->
-    args = shiftify arguments, 0, arguments.length
-    args.unshift Object.create(packets)
-    return instance.apply null, args
-
-  noop = (value) -> value
-
-  # Like packet, but no ability to define new named patterns.
-  next = ->
-    shiftable = shiftify arguments, 0, arguments.length
-    nameOrPattern = shiftable.shift()
-    if shiftable.length == 0
-      machine = mechanize packets[nameOrPattern], 0
+      if (bytes[bytes.length - 1] & 0x80) == 0x80
+        top = bytes.length - 1
+        for i in [0...top]
+          value += (~bytes[i] & 0xff)  * Math.pow(256, i)
+        # ~1 == -2.
+        # To get the two's compliment as a positive value you use ~1 & 0xff == 254. 
+        value += (~(bytes[top] & 0x7f) & 0xff & 0x7f) * Math.pow(256, top)
+        value += 1
+        value *= -1
+      value
     else
-      definition =
-        pattern: packets[nameOrPattern] && packets[nameOrPattern].pattern || parsePattern(nameOrPattern)
-        callback: shiftable.shift()
-      machine = mechanize(definition, 0)
-    packet.apply this, arguments
+      bytes
 
-  packet = ->
-    shiftable = shiftify arguments, 0, arguments.length
-    nameOrPattern = shiftable.shift()
-    if shiftable.length == 0
-      machine = mechanize(packets[nameOrPattern], 0)
-    else
-      patternOrCallback = shiftable.shift()
-      if typeof(patternOrCallback) == 'function'
-        definition  =
-          pattern: parsePattern(nameOrPattern)
-          callback: patternOrCallback
-        machine = mechanize definition, 0
+  pack: (value) ->
+    pattern = @pattern[@patternIndex]
+    if pattern.type == "f"
+      if pattern.bits == 32
+        ieee754.toIEEE754Single value
       else
-        packets[name] =
-          pattern: parsePattern(pattern)
-          callback: shiftable.shift() || noop
-
-  outgoing = null
-  send = () ->
-    shiftable = shiftify arguments, 0, arguments.length
-    nameOrPattern = shiftable.shift()
-    if typeof shiftable[shiftable.length - 1] == 'function'
-      definition =
-        pattern: parsePattern(nameOrPattern)
-        callback: shiftable.pop()
-      machine = mechanize(definition , 0, shiftable[0])
+        ieee754.toIEEE754Double value
     else
-      machine = mechanize(packets[nameOrPattern], 0, shiftable[0])
-    outgoing = shiftable
+      value
 
-  write = (buffer, offset, length) ->
+bufferize = (array) ->
+  buffer = new Buffer(array.length)
+  for b, i in array
+    buffer[i] = b
+  buffer
+
+transforms =
+  str: (encoding, parsing, field, value) ->
+    if parsing
+      if not (value instanceof Buffer)
+        value = bufferize(value)
+      length = value.length
+      length -= field.terminator.length if field.terminator
+      value.toString(encoding, 0, length)
+    else
+      if field.terminator
+        value += field.terminator
+      new Buffer(value, encoding)
+
+  # Broken and waiting on #[297](http://github.com/ry/node/issues/issue/297).
+  ascii: (parsing, field, value) ->
+    transforms.str("ascii", parsing, field, value)
+
+  utf8: (parsing, field, value) ->
+    transforms.str("utf8", parsing, field, value)
+
+  pad: (character, length, parsing, field, value) ->
+    if not parsing
+      while value.length < length
+        value = character + value
+    value
+
+  atoi: (base, parsing, field, value) ->
+    if parsing then parseInt(value, base) else value.toString(base)
+
+  atof: (parsing, field, value) ->
+    if parsing then parseFloat(value) else value.toString()
+
+module.exports.Parser = class Parser extends Packet
+  data: (data...)   -> @user = data
+
+  getBytesRead:     -> @bytesRead
+
+  # Set the next packet to parse by providing a named packet name or a packet
+  # pattern, with an optional `callback`. The optional `callback` will override
+  # the callback assigned to a named pattern.
+  parse: (nameOrPattern, callback) ->
+    packet        = @packets[nameOrPattern] or {}
+    pattern       = packet.pattern or parsePattern(nameOrPattern)
+    callback    or= packet.callback or noop
+
+    @pattern      = pattern
+    @callback     = callback
+    @patternIndex = 0
+    @repeat       = pattern[0].repeat
+    @skipping     = 0
+    @index        = 0
+    @terminated   = !@pattern[0].terminator
+
+    @next()
+    if @pattern[@patternIndex].arrayed
+      @fields.push([])
+
+##### parser.read(buffer[, offset][, length])
+# The `read` method reads from the buffer, returning when the current pattern is
+# read, or the end of the buffer is reached.
+
+  # Read from the `buffer` for the given `offset` and length.
+  read: (buffer, offset, length) ->
     offset or= 0
     length or= buffer.length
-    while machine and offset < length
-      pattern = machine.definition.pattern[machine.index]
-      if pattern.arrayed
-        loop
-          buffer[offset] = machine.value[machine.offset]
-          machine.offset += machine.increment
-          bytesWritten++
-          offset++
-          break if machine.offset is machine.terminal
-          return true if offset is length
-      else
-        loop
-          buffer[offset] = Math.floor(machine.value / Math.pow(256, machine.offset)) & 0xff
-          machine.offset += machine.increment
-          bytesWritten++
-          offset++
-          break if machine.offset is machine.terminal
-          return true if offset is length
-      if ++machine.index is machine.definition.pattern.length
-        machine.definition.callback.apply null, [ engine ]
-        machine = null
-      else
-        machine = mechanize machine.definition, machine.index, outgoing[machine.index]
-    true
+    start    = @bytesRead
+    end      = offset + length
 
-  fields = []
-  bytesRead = 0
-  bytesWritten = 0
-  reset = () ->
-    bytesRead = 0
-    bytesWritten = 0
-    machine = null
-
-  engine =
-    next: next
-    getBytesRead: ->
-      bytesRead
-    getBytesWritten: -> bytesWritten
-
-  read  = (buffer, offset, length) ->
-    offset or= 0
-    length or= buffer.length
+    # We set the pattern to null when all the fields have been read, so while
+    # there is a pattern to fill and bytes to read.
     b
-    while machine != null and offset < length
-      if machine.definition.pattern[machine.index].arrayed
-        loop
-          b = buffer[offset]
-          bytesRead++
-          offset++
-          machine.value[machine.offset] = b
-          machine.offset += machine.increment
-          break if machine.offset is machine.terminal
-          return true if offset is length
-      else
-        loop
-          b = buffer[offset]
-          bytesRead++
-          offset++
-          machine.value += Math.pow(256, machine.offset) * b
-          machine.offset += machine.increment
-          break if machine.offset == machine.terminal
-          return true if offset == length
-      fields.push(machine.unpack(machine.value, machine.definition.pattern[machine.index]))
-      if  ++machine.index == machine.definition.pattern.length
-        fields.push(engine)
-        for p in user
-          fields.push(p)
-        machine.definition.callback.apply null, fields
-        machine = null
-        fields.length = 0
-      else
-        machine = mechanize machine.definition, machine.index
-    true
+    while @pattern != null and offset < end
+      if @skipping
+        advance      = Math.min(@skipping, end - offset)
+        offset      += advance
+        @skipping   -= advance
+        @bytesRead  += advance
+        return @bytesRead - start if @skipping
 
-  { clone, packet, reset, send, write, read }
+      else
+        # If the pattern is unpacked, the value we're populating is an array.
+        if @pattern[@patternIndex].unpacked
+          loop
+            b = buffer[offset]
+            @bytesRead++
+            offset++
+            @value[@offset] = b
+            @offset += @increment
+            break if @offset is @terminal
+            return @bytesRead - start if offset is end
 
-module.exports.create = () ->
-  instance({})
+        # Otherwise we're packing bytes into an unsigned integer, the most
+        # common case.
+        else
+          loop
+            b = buffer[offset]
+            @bytesRead++
+            offset++
+            @value += Math.pow(256, @offset) * b
+            @offset += @increment
+            break if @offset == @terminal
+            return @bytesRead - start if offset is end
+
+        # Unpack the field value.
+        field = @unpack()
+
+        # If we are filling an array field the current fields is an array,
+        # otherwise current field is the value we've just read.
+        if @pattern[@patternIndex].arrayed
+          @fields[@fields.length - 1].push(field)
+        else
+          @fields.push(field)
+
+
+      # If we've not yet hit our terminator, check for the terminator. If we've
+      # hit the terminator, and we do not have a maximum size to fill, then
+      # terminate by setting up the array to terminate.
+      if not @terminated
+        if @pattern[@patternIndex].terminator.charCodeAt(0) == field
+          @terminated = true
+          if @repeat == Number.MAX_VALUE
+            @repeat = @index + 1
+          else
+            @skipping = (@repeat - (++@index)) * @pattern[@patternIndex].bytes
+            if @skipping
+              @repeat = @index + 1
+              continue
+
+      # If we are reading an arrayed pattern and we have not read all of the
+      # array elements, we repeat the current field type.
+      if ++@index <  @repeat
+        @next()
+
+      # If we have read all of the pattern fields, call the associated callback.
+      # We add the parser and the user suppilied additional arguments onto the
+      # callback arguments.
+      #
+      # The pattern is set to null, our terminal condition, before the callback,
+      # because the callback may specify a subsequent packet to parse.
+      else if ++@patternIndex == @pattern.length
+        @fields.push(@pipeline(@pattern[@patternIndex -1 ], @fields.pop()))
+
+        @fields.push(this)
+        for p in @user or []
+          @fields.push(p)
+
+        @pattern        = null
+
+        @callback.apply null, @fields
+
+        @fields.length  = 0
+
+      # Otherwise we proceed to the next field in the packet pattern.
+      else
+        @fields.push(@pipeline(@pattern[@patternIndex - 1], @fields.pop()))
+
+        @next()
+        @repeat       = @pattern[@patternIndex].repeat
+        @index        = 0
+        @skipping     = 0
+        @terminated   = !@pattern[@patternIndex].terminator
+        if @pattern[@patternIndex].arrayed
+          @fields.push([])
+
+    @bytesRead - start
+
+module.exports.Serializer = class Serializer extends Packet
+  getBytesWritten: -> @bytesWritten
+
+  packet: (name, pattern, callback) ->
+    super name, pattern, callback
+    for part in @packets[name].pattern
+      if part.transforms
+        part.transforms.reverse()
+
+  serialize: (shiftable...) ->
+    if typeof shiftable[shiftable.length - 1] == 'function'
+      callback = shiftable.pop()
+
+    nameOrPattern = shiftable.shift()
+    packet        = @packets[nameOrPattern] or {}
+    pattern       = packet.pattern or parsePattern(nameOrPattern)
+    callback    or= packet.callback or noop
+
+    if not packet.pattern
+      for part in pattern
+        if part.transforms
+          part.transforms.reverse()
+
+    @pattern      = pattern
+    @callback     = callback
+    @patternIndex = 0
+    @outgoing     = shiftable
+
+    @repeat       = pattern[@patternIndex].repeat
+    @terminated   = not pattern[@patternIndex].terminator
+    @index        = 0
+    delete        @padding
+
+    for value, i in @outgoing
+      @outgoing[i] = @pipeline(pattern[i], value)
+
+    @next()
+
+##### serializer.write(buffer[, offset][, length])
+# The `write` method writes to the buffer, returning when the current pattern is
+# written, or the end of the buffer is reached.
+
+  # Write to the `buffer` in the region defined by the given `offset` and `length`.
+  write: (buffer, offset, length) ->
+    offset  or= 0
+    length  or= buffer.length
+    start     = offset
+    end       = offset + length
+
+    # We set the pattern to null when all the fields have been written, so while
+    # there is a pattern to fill and space to write.
+    while @pattern and offset < end
+      if @skipping
+        advance         = Math.min(@skipping, end - offset)
+        offset         += advance
+        @skipping      -= advance
+        @bytesWritten  += advance
+        return offset - start if @skipping
+
+      else
+        # If the pattern is unpacked, the value we're writing is an array.
+        if @pattern[@patternIndex].unpacked
+          loop
+            buffer[offset] = @value[@offset]
+            @offset += @increment
+            @bytesWritten++
+            offset++
+            break if @offset is @terminal
+            return offset - start if offset is end
+
+        # Otherwise we're unpacking bytes of an unsigned integer, the most common
+        # case.
+        else
+          loop
+            buffer[offset] = Math.floor(@value / Math.pow(256, @offset)) & 0xff
+            @offset += @increment
+            @bytesWritten++
+            offset++
+            break if @offset is @terminal
+            return offset - start if offset is end
+
+      # If we have not terminated, check for the termination state change.
+      # Termination will simply change the loop settings, so types that have no
+      # terminater start out as terminated, and this does nothing.
+      if not @terminated
+        if @pattern[@patternIndex].terminator.charCodeAt(0) == @value
+          @terminated = true
+          if @repeat == Number.MAX_VALUE
+            @repeat = @index + 1
+          else if @pattern[@patternIndex].padding?
+            @padding = @pattern[@patternIndex].padding
+          else
+            @skipping = (@repeat - (++@index)) * @pattern[@patternIndex].bytes
+            if @skipping
+              @repeat = @index + 1
+              continue
+
+      # If we are reading an arrayed pattern and we have not read all of the
+      # array elements, we repeat the current field type.
+      if ++@index < @repeat
+        @next()
+
+      # If we have written all of the packet fields, call the associated
+      # callback with this parser.
+      #
+      # The pattern is set to null, our terminal condition, before the callback,
+      # because the callback may specify a subsequent packet to parse.
+      else if ++@patternIndex is @pattern.length
+        @pattern = null
+        @callback.apply null, [ this ]
+
+      else
+
+        delete        @padding
+        @repeat       = @pattern[@patternIndex].repeat
+        @terminated   = not @pattern[@patternIndex].terminator
+        @index        = 0
+
+        @next()
+
+    @outgoing = null
+
+    offset - start
+
+module.exports.Structure = class Structure
+  constructor: (pattern) ->
+    @parser = new Parser()
+    @parser.packet("structure", pattern)
+
+    @serializer = new Serializer()
+    @serializer.packet("structure", pattern)
+
+  sizeOf: (values...) -> 0
+
+  read: (buffer, offset, callback) ->
+    callback = offset if typeof callback is "function" and not callback?
+    @parser.reset()
+    @parser.parse("structure", callback)
+    @parser.read(buffer, offset, Number.MAX_VALUE)
+
+  write: (values...) ->
+    buffer = values.shift()
