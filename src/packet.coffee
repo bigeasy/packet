@@ -283,6 +283,7 @@ module.exports.Serializer = class Serializer extends Packet
     @callback     = callback
     @patternIndex = 0
     @repeat       = pattern[@patternIndex].repeat
+    @terminated   = not pattern[@patternIndex].terminator
     @element      = 0
     @index        = 0
     @outgoing     = shiftable
@@ -321,6 +322,16 @@ module.exports.Serializer = class Serializer extends Packet
           offset++
           break if @offset is @terminal
           return if offset is length
+
+      if not @terminated
+        if @pattern[@patternIndex].terminator.charCodeAt(0) == @value
+          @terminated = true
+          if @repeat == Number.MAX_VALUE
+            @repeat = @index + 1
+          else
+            @skipping = (@repeat - (++@index)) * @pattern[@patternIndex].bytes
+            @repeat = @index + 1
+            continue
 
       # If we are reading an arrayed pattern and we have not read all of the
       # array elements, we repeat the current field type.

@@ -246,6 +246,22 @@ vows.describe('Packet').addBatch({
 
             assert.isTrue(invoked);
             assert.deepEqual(buffer, bytes);
+        },
+        'an zero terminated array of bytes': function (topic) {
+            var buffer = [];
+
+            var invoked = false;
+            var bytes = [ 0x01, 0x02, 0x03, 0x00 ]
+            topic.reset();
+            topic.serialize("n8z", bytes, function (engine) {
+                assert.equal(engine.getBytesWritten(), 4);
+                invoked = true;
+            });
+
+            topic.write(buffer, 0, 10);
+
+            assert.isTrue(invoked);
+            assert.deepEqual(buffer, bytes);
         }
     }
 }).export(module);
