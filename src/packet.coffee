@@ -296,33 +296,46 @@ module.exports.Serializer = class Serializer extends Packet
 
   # Write to the `buffer` in the region defined by the given `offset` and `length`.
   write: (buffer, offset, length) ->
-    offset or= 0
-    length or= buffer.length
+    offset  or= 0
+    length  or= buffer.length
+    start     = offset
+    end       = offset + length
 
     # We set the pattern to null when all the fields have been written, so while
     # there is a pattern to fill and space to write.
-    while @pattern and offset < length
-      # If the pattern is unpacked, the value we're writing is an array.
-      if @pattern[@patternIndex].unpacked
-        loop
-          buffer[offset] = @value[@offset]
-          @offset += @increment
-          @bytesWritten++
-          offset++
-          break if @offset is @terminal
-          return if offset is length
+    while @pattern and offset < end
+      if @skipping
+        advance         = Math.min(@skipping, end - offset)
+        offset         += advance
+        @skipping      -= advance
+        @bytesWritten  += advance
+        return offset - start if @skipping
 
-      # Otherwise we're unpacking bytes of an unsigned integer, the most common
-      # case.
       else
-        loop
-          buffer[offset] = Math.floor(@value / Math.pow(256, @offset)) & 0xff
-          @offset += @increment
-          @bytesWritten++
-          offset++
-          break if @offset is @terminal
-          return if offset is length
+        # If the pattern is unpacked, the value we're writing is an array.
+        if @pattern[@patternIndex].unpacked
+          loop
+            buffer[offset] = @value[@offset]
+            @offset += @increment
+            @bytesWritten++
+            offset++
+            break if @offset is @terminal
+            return offset - start if offset is end
 
+        # Otherwise we're unpacking bytes of an unsigned integer, the most common
+        # case.
+        else
+          loop
+            buffer[offset] = Math.floor(@value / Math.pow(256, @offset)) & 0xff
+            @offset += @increment
+            @bytesWritten++
+            offset++
+            break if @offset is @terminal
+            return offset - start if offset is end
+
+      # If we have not terminated, check for the termination state change.
+      # Termination will simply change the loop settings, so types that have no
+      # terminater start out as terminated, and this does nothing.
       if not @terminated
         if @pattern[@patternIndex].terminator.charCodeAt(0) == @value
           @terminated = true
@@ -351,6 +364,8 @@ module.exports.Serializer = class Serializer extends Packet
         @next()
 
     @outgoing = null
+
+    offset - start
 
 module.exports.Structure = class Structure
   constructor: (pattern) ->

@@ -138,7 +138,7 @@ vows.describe('Packet').addBatch({
             topic.read(bytes);
             assert.isTrue(invoked);
         },
-        'an array of bytes terminated by zero': function (topic) {
+        'an zero termianted array of bytes': function (topic) {
             var invoked = false;
             var bytes = [ 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x00 ]
             topic.reset();
@@ -150,7 +150,7 @@ vows.describe('Packet').addBatch({
             topic.read(bytes);
             assert.isTrue(invoked);
         },
-        'an array of 8 bytes terminated by zero': function (topic) {
+        'an zero terminated array of 8 bytes': function (topic) {
             var invoked = false;
             var bytes = [ 0x01, 0x02, 0x03, 0x00, 0x05, 0x06, 0x07, 0x08 ]
             topic.reset();
@@ -247,7 +247,7 @@ vows.describe('Packet').addBatch({
             assert.isTrue(invoked);
             assert.deepEqual(buffer, bytes);
         },
-        'an zero terminated array of bytes': function (topic) {
+        'a zero terminated array of bytes': function (topic) {
             var buffer = [];
 
             var invoked = false;
@@ -262,6 +262,26 @@ vows.describe('Packet').addBatch({
 
             assert.isTrue(invoked);
             assert.deepEqual(buffer, bytes);
+        },
+        'a zero terminated array of 8 bytes': function (topic) {
+            var buffer = [];
+
+            var invoked = false;
+            var bytes = [ 0x01, 0x02, 0x03, 0x00 ]
+            topic.reset();
+            topic.serialize("n8[8]z", bytes, function (engine) {
+                assert.equal(engine.getBytesWritten(), 8);
+                invoked = true;
+            });
+
+            buffer = []
+            for (var i = 0; i < 8; i++) {
+              buffer[i] = 0x01;
+            }
+            topic.write(buffer, 0, 10);
+
+            assert.isTrue(invoked);
+            assert.deepEqual(buffer, [ 0x01, 0x02, 0x03, 0x00, 0x01, 0x01, 0x01, 0x01 ]);
         }
     }
 }).export(module);
