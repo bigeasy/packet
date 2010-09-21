@@ -145,9 +145,9 @@ transforms =
     value
 
   atoi: (base, parsing, field, value) ->
-    if parsing then parseInt(value, base) else value.toString()
+    if parsing then parseInt(value, base) else value.toString(base)
 
-  atof: (base, parsing, field, value) ->
+  atof: (parsing, field, value) ->
     if parsing then parseFloat(value) else value.toString()
 
 module.exports.Parser = class Parser extends Packet
@@ -242,8 +242,9 @@ module.exports.Parser = class Parser extends Packet
             @repeat = @index + 1
           else
             @skipping = (@repeat - (++@index)) * @pattern[@patternIndex].bytes
-            @repeat = @index + 1
-            continue
+            if @skipping
+              @repeat = @index + 1
+              continue
 
       # If we are reading an arrayed pattern and we have not read all of the
       # array elements, we repeat the current field type.
@@ -376,8 +377,9 @@ module.exports.Serializer = class Serializer extends Packet
             @padding = @pattern[@patternIndex].padding
           else
             @skipping = (@repeat - (++@index)) * @pattern[@patternIndex].bytes
-            @repeat = @index + 1
-            continue
+            if @skipping
+              @repeat = @index + 1
+              continue
 
       # If we are reading an arrayed pattern and we have not read all of the
       # array elements, we repeat the current field type.

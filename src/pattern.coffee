@@ -93,7 +93,7 @@ module.exports.parse = (pattern) ->
         f.repeat = Number.MAX_VALUE
 
     # Parse piplines.
-    while pipe = /^\|(.*)\((\)?)(.*)/.exec(rest)
+    while pipe = /^\|(\w[\w\d]*)\((\)?)(.*)/.exec(rest)
       transform       = { name: pipe[1], parameters: [] }
       rest            = pipe[3]
       hasArgument     = not pipe[2]

@@ -197,6 +197,48 @@ vows.describe('Packet').addBatch({
             });
             topic.read(bytes, 0, 10);
             assert.isTrue(invoked);
+        },
+        'a zero terminated 8 byte padded ASCII string that is 7 characters long': function (topic) {
+            var invoked = false;
+            var bytes = [  0x30, 0x30, 0x30, 0x30, 0x41, 0x42, 0x43, 0x00 ]
+
+            topic.reset();
+            topic.parse("n8[8]z|ascii()", function (field, engine) {
+                assert.equal(engine.getBytesRead(), 8);
+                assert.equal(field, "0000ABC")
+                invoked = true;
+            });
+            topic.read(bytes, 0, 10);
+
+            assert.isTrue(invoked);
+        },
+        'a zero terminated ASCII string converted to integer': function (topic) {
+            var invoked = false;
+            var bytes = [ 0x34, 0x32, 0x00 ]
+
+            topic.reset();
+            topic.parse("n8z|ascii()|atoi(10)", function (field, engine) {
+                assert.equal(engine.getBytesRead(), 3);
+                assert.equal(field, 42)
+                invoked = true;
+            });
+            topic.read(bytes, 0, 10);
+
+            assert.isTrue(invoked);
+        },
+        'a zero character padded zero terminated ASCII string converted to integer': function (topic) {
+            var invoked = false;
+            var bytes = [ 0x30, 0x30, 0x30, 0x30, 0x30, 0x34, 0x32, 0x00 ]
+
+            topic.reset();
+            topic.parse("n8[8]z|ascii()|pad('0', 7)|atoi(10)", function (field, engine) {
+                assert.equal(engine.getBytesRead(), 8);
+                assert.equal(field, 42)
+                invoked = true;
+            });
+            topic.read(bytes, 0, 10);
+
+            assert.isTrue(invoked);
         }
     },
     'Packet can write': {
@@ -363,8 +405,51 @@ vows.describe('Packet').addBatch({
                 invoked = true;
             });
             topic.write(buffer, 0, 10);
+
             assert.isTrue(invoked);
             assert.deepEqual(buffer, [ 0x41, 0x42, 0x43, 0x00, 0x01, 0x01, 0x01, 0x01 ]);
+        },
+        'a zero terminated 8 byte padded UTF-8 string that is 7 characters long': function (topic) {
+            var buffer = [];
+
+            var invoked = false;
+            topic.reset();
+            topic.serialize("n8[8]{0}z|utf8()", "0000ABC", function (engine) {
+                assert.equal(engine.getBytesWritten(), 8);
+                invoked = true;
+            });
+            topic.write(buffer, 0, 10);
+
+            assert.isTrue(invoked);
+            assert.deepEqual(buffer, [ 0x30, 0x30, 0x30, 0x30, 0x41, 0x42, 0x43, 0x00 ]);
+        },
+        'an integer converted to a zero terminated UTF-8 string': function (topic) {
+            var buffer = [];
+
+            var invoked = false;
+            topic.reset();
+            topic.serialize("n8z|utf8()|atoi(10)", "42", function (engine) {
+                assert.equal(engine.getBytesWritten(), 3);
+                invoked = true;
+            });
+            topic.write(buffer, 0, 10);
+
+            assert.isTrue(invoked);
+            assert.deepEqual(buffer, [ 0x34, 0x32, 0x00 ]);
+        },
+        'an integer converted to a zero padded zero terminated UTF-8 string': function (topic) {
+            var buffer = [];
+
+            var invoked = false;
+            topic.reset();
+            topic.serialize("n8z|utf8()|pad('0', 7)|atoi(10)", "42", function (engine) {
+                assert.equal(engine.getBytesWritten(), 8);
+                invoked = true;
+            });
+            topic.write(buffer, 0, 10);
+
+            assert.isTrue(invoked);
+            assert.deepEqual(buffer, [ 0x30, 0x30, 0x30, 0x30, 0x30, 0x34, 0x32, 0x00 ]);
         }
     }
 }).export(module);

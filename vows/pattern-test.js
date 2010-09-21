@@ -583,6 +583,31 @@ vows.describe('Pattern').addBatch({
                   ]
                 }
             ]);
+        },
+        'a two transforms in a row.': function (topic) {
+            var field = topic.parse('n8z|utf8()|atoi(8)');
+            assert.deepEqual(field, [
+                { signed: false
+                , bits: 8
+                , endianness: 'b'
+                , bytes: 1
+                , type: 'n'
+                , unpacked: false
+                , arrayed: true
+                , repeat: Number.MAX_VALUE
+                , terminator: "\0"
+                , transforms:
+                  [
+                    { name: "utf8"
+                    , parameters: []
+                    }
+                    ,
+                    { name: "atoi"
+                    , parameters: [ 8 ]
+                    }
+                  ]
+                }
+            ]);
         }
     },
     'Pattern cannot parse': {
