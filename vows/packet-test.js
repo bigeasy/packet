@@ -111,6 +111,20 @@ vows.describe('Packet').addBatch({
             readHexString([ 0xff, 0xff, 0xff, 0xff ], 'ffffffff');
             readHexString([ 0xA0, 0xB0, 0xC0, 0xD0 ], 'a0b0c0d0');
         },
+        'a 16 bit integer after skipping two bytes': function (topic) {
+            var invoked = false;
+            var bytes = [ 0x01, 0x02, 0x00, 0x01 ];
+
+            topic.reset();
+            topic.parse("x16b16", function (field, engine) {
+                assert.equal(engine.getBytesRead(), 4);
+                assert.equal(field, 1);
+                invoked = true;
+            });
+            topic.read(bytes);
+
+            assert.isTrue(invoked);
+        },
         'a big-endian 64 bit float': function (topic) {
             function readSingleFloat(bytes, value) {
                 var invoked = false;
@@ -126,9 +140,24 @@ vows.describe('Packet').addBatch({
             readSingleFloat([ 0xdb, 0x01, 0x32, 0xcf, 0xf6, 0xee, 0xc1, 0xc0 ], -9.1819281981e3);
             readSingleFloat([ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x24, 0xc0 ], -10); 
         },
+        'a 16 bit integer after skipping four bytes': function (topic) {
+            var invoked = false;
+            var bytes = [ 0x01, 0x02, 0x03, 0x04, 0x00, 0x01 ];
+
+            topic.reset();
+            topic.parse("x16[2]b16", function (field, engine) {
+                assert.equal(engine.getBytesRead(), 6);
+                assert.equal(field, 1);
+                invoked = true;
+            });
+            topic.read(bytes);
+
+            assert.isTrue(invoked);
+        },
         'an array of 8 bytes': function (topic) {
             var invoked = false;
             var bytes = [ 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08 ]
+
             topic.reset();
             topic.parse("b8[8]", function (field, engine) {
                 assert.equal(engine.getBytesRead(), 8);
@@ -136,6 +165,7 @@ vows.describe('Packet').addBatch({
                 invoked = true;
             });
             topic.read(bytes);
+
             assert.isTrue(invoked);
         },
         'a length encoded array of bytes': function (topic) {
@@ -286,12 +316,36 @@ vows.describe('Packet').addBatch({
         },
         'a little-endian 16 bit integer followed by a big-endian 16 bit integer': function (topic) {
             var buffer = [];
+
             topic.reset();
             topic.serialize("l16b16", 0x1FF, 0x1FF, function (engine) { 
                 assert.equal(engine.getBytesWritten(), 4);
             });
             topic.write(buffer, 0, 4);
+
             assert.deepEqual(buffer, [  0xFF, 0x01, 0x01, 0xFF ]);
+        },
+        'a 16 bit integer after skipping two bytes': function (topic) {
+            var buffer = [ 0xff, 0xff, 0xff, 0xff ];
+
+            topic.reset();
+            topic.serialize("x16b16", 1, function (engine) { 
+                assert.equal(engine.getBytesWritten(), 4);
+            });
+            topic.write(buffer, 0, 6);
+
+            assert.deepEqual(buffer, [  0xff, 0xff, 0x00, 0x01 ]);
+        },
+        'a 16 bit integer after filling two bytes': function (topic) {
+            var buffer = [ 0xff, 0xff, 0xff, 0xff ];
+
+            topic.reset();
+            topic.serialize("x16{0}b16", 1, function (engine) { 
+                assert.equal(engine.getBytesWritten(), 4);
+            });
+            topic.write(buffer, 0, 4);
+
+            assert.deepEqual(buffer, [  0x00, 0x00, 0x00, 0x01 ]);
         },
         'a little-endian 64 bit IEEE 754 float': function (topic) {
             function writeDoubleFloat(bytes, value) {
@@ -326,6 +380,28 @@ vows.describe('Packet').addBatch({
 
             assert.isTrue(invoked);
             assert.deepEqual(buffer, bytes);
+        },
+        'a 16 bit integer after skipping four bytes': function (topic) {
+            var buffer = [ 0xff, 0xff, 0xff, 0xff ];
+
+            topic.reset();
+            topic.serialize("x16[2]b16", 1, function (engine) { 
+                assert.equal(engine.getBytesWritten(), 6);
+            });
+            topic.write(buffer, 0, 7);
+
+            assert.deepEqual(buffer, [ 0xff, 0xff, 0xff, 0xff, 0x00, 0x01 ]);
+        },
+        'a 16 bit integer after filling four bytes': function (topic) {
+            var buffer = [];
+
+            topic.reset();
+            topic.serialize("x16[2]{0}b16", 1, function (engine) { 
+                assert.equal(engine.getBytesWritten(), 6);
+            });
+            topic.write(buffer, 0, 7);
+
+            assert.deepEqual(buffer, [ 0x00, 0x00, 0x00, 0x00, 0x00, 0x01 ]);
         },
         'a length encoded array of bytes': function (topic) {
             var buffer = [];

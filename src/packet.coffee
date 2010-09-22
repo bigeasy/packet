@@ -52,30 +52,10 @@ class Packet
     value
 
   # Setup the next field in the current pattern to read or write.
-  next: ->
-    reading     = not @outgoing
+  nextValue: (value) ->
     pattern     = @pattern[@patternIndex]
     little      = pattern.endianness == 'l'
     bytes       = pattern.bytes
-
-    if @outgoing
-      if @padding?
-        value = @padding
-      else if pattern.arrayed
-        value = @outgoing[@patternIndex][@index]
-      else
-        if pattern.length
-          repeat = @outgoing[@patternIndex].length
-          @outgoing.splice @patternIndex, 0, repeat
-          @pattern[@patternIndex + 1].repeat = repeat
-        value = @outgoing[@patternIndex]
-      if pattern.unpacked
-        value = @pack(value)
-    else
-      if pattern.unpacked
-        value = []
-      else
-        value = 0
 
     @value      = value
     @offset     = if little then 0 else bytes - 1
@@ -160,6 +140,32 @@ module.exports.Parser = class Parser extends Packet
 
   getBytesRead:     -> @bytesRead
 
+  nextField: ->
+    pattern       = @pattern[@patternIndex]
+    @repeat       = pattern.repeat
+    @index        = 0
+    @skipping     = 0
+    @terminated   = not pattern.terminator
+
+    @fields.push [] if pattern.arrayed and pattern.endianness isnt "x"
+
+  nextValue: ->
+    reading = not @outgoing
+    pattern = @pattern[@patternIndex]
+
+    if pattern.endianness is "x"
+      @skipping = pattern.bytes
+    else
+      little    = pattern.endianness == "l"
+      bytes     = pattern.bytes
+
+      if pattern.unpacked
+        value = []
+      else
+        value = 0
+
+      super value
+
   # Set the next packet to parse by providing a named packet name or a packet
   # pattern, with an optional `callback`. The optional `callback` will override
   # the callback assigned to a named pattern.
@@ -171,14 +177,9 @@ module.exports.Parser = class Parser extends Packet
     @pattern      = pattern
     @callback     = callback
     @patternIndex = 0
-    @repeat       = pattern[0].repeat
-    @skipping     = 0
-    @index        = 0
-    @terminated   = !@pattern[0].terminator
 
-    @next()
-    if @pattern[@patternIndex].arrayed
-      @fields.push([])
+    @nextField()
+    @nextValue()
 
 ##### parser.read(buffer[, offset][, length])
 # The `read` method reads from the buffer, returning when the current pattern is
@@ -254,7 +255,7 @@ module.exports.Parser = class Parser extends Packet
       # If we are reading an arrayed pattern and we have not read all of the
       # array elements, we repeat the current field type.
       if ++@index <  @repeat
-        @next()
+        @nextValue()
 
       # If we have read all of the pattern fields, call the associated callback.
       # We add the parser and the user suppilied additional arguments onto the
@@ -277,18 +278,14 @@ module.exports.Parser = class Parser extends Packet
 
       # Otherwise we proceed to the next field in the packet pattern.
       else
-        if @pattern[@patternIndex - 1].length
-          @pattern[@patternIndex].repeat = @fields.pop()
-        else
-          @fields.push(@pipeline(@pattern[@patternIndex - 1], @fields.pop()))
+        if @pattern[@patternIndex - 1].endianness isnt "x"
+          if @pattern[@patternIndex - 1].length
+            @pattern[@patternIndex].repeat = @fields.pop()
+          else
+            @fields.push(@pipeline(@pattern[@patternIndex - 1], @fields.pop()))
 
-        @next()
-        @repeat       = @pattern[@patternIndex].repeat
-        @index        = 0
-        @skipping     = 0
-        @terminated   = !@pattern[@patternIndex].terminator
-        if @pattern[@patternIndex].arrayed
-          @fields.push([])
+        @nextField()
+        @nextValue()
 
     @bytesRead - start
 
@@ -300,6 +297,42 @@ module.exports.Serializer = class Serializer extends Packet
     for part in @packets[name].pattern
       if part.transforms
         part.transforms.reverse()
+
+  nextField: ->
+    pattern       = @pattern[@patternIndex]
+    @repeat       = pattern.repeat
+    @terminated   = not pattern.terminator
+    @index        = 0
+
+    delete        @padding
+
+    if pattern.endianness is "x"
+      @outgoing.splice @patternIndex, 0, null
+      if pattern.padding?
+        @padding = pattern.padding
+
+  # Setup the next field in the current pattern to read or write.
+  nextValue: ->
+    pattern = @pattern[@patternIndex]
+
+    if pattern.endianness is "x" and not @padding?
+        @skipping = pattern.bytes
+    else
+
+      if @padding?
+        value = @padding
+      else if pattern.arrayed
+        value = @outgoing[@patternIndex][@index]
+      else
+        if pattern.length
+          repeat = @outgoing[@patternIndex].length
+          @outgoing.splice @patternIndex, 0, repeat
+          @pattern[@patternIndex + 1].repeat = repeat
+        value = @outgoing[@patternIndex]
+      if pattern.unpacked
+        value = @pack(value)
+
+      super value
 
   serialize: (shiftable...) ->
     if typeof shiftable[shiftable.length - 1] == 'function'
@@ -320,15 +353,11 @@ module.exports.Serializer = class Serializer extends Packet
     @patternIndex = 0
     @outgoing     = shiftable
 
-    @repeat       = pattern[@patternIndex].repeat
-    @terminated   = not pattern[@patternIndex].terminator
-    @index        = 0
-    delete        @padding
-
     for value, i in @outgoing
       @outgoing[i] = @pipeline(pattern[i], value)
 
-    @next()
+    @nextField()
+    @nextValue()
 
 ##### serializer.write(buffer[, offset][, length])
 # The `write` method writes to the buffer, returning when the current pattern is
@@ -392,7 +421,7 @@ module.exports.Serializer = class Serializer extends Packet
       # If we are reading an arrayed pattern and we have not read all of the
       # array elements, we repeat the current field type.
       if ++@index < @repeat
-        @next()
+        @nextValue()
 
       # If we have written all of the packet fields, call the associated
       # callback with this parser.
@@ -410,7 +439,7 @@ module.exports.Serializer = class Serializer extends Packet
         @terminated   = not @pattern[@patternIndex].terminator
         @index        = 0
 
-        @next()
+        @nextValue()
 
     @outgoing = null
 
