@@ -36,6 +36,7 @@ class Packet
     @bytesWritten = 0
     @pattern = null
     @callback = null
+    @fields = []
 
   pipeline: (pattern, value) ->
     # Run the piplines for parsing.
@@ -272,7 +273,10 @@ module.exports.Parser = class Parser extends Packet
 
       # Otherwise we proceed to the next field in the packet pattern.
       else
-        @fields.push(@pipeline(@pattern[@patternIndex - 1], @fields.pop()))
+        if @pattern[@patternIndex - 1].length
+          @pattern[@patternIndex].repeat = @fields.pop()
+        else
+          @fields.push(@pipeline(@pattern[@patternIndex - 1], @fields.pop()))
 
         @next()
         @repeat       = @pattern[@patternIndex].repeat

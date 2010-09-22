@@ -138,6 +138,20 @@ vows.describe('Packet').addBatch({
             topic.read(bytes);
             assert.isTrue(invoked);
         },
+        'a length encoded array of bytes': function (topic) {
+            var invoked = false;
+            var bytes = [ 0x03, 0x02, 0x03, 0x04 ]
+
+            topic.reset();
+            topic.parse("b8/b8", function (field, engine) {
+                assert.equal(engine.getBytesRead(), 4);
+                assert.deepEqual(field, bytes.slice(1));
+                invoked = true;
+            });
+            topic.read(bytes);
+
+            assert.isTrue(invoked);
+        },
         'a zero terminated array of bytes': function (topic) {
             var invoked = false;
             var bytes = [ 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x00 ]

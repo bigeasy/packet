@@ -21,12 +21,13 @@ packing = (pattern) ->
 # The `pattern` is the pattern to parse.
 module.exports.parse = (pattern) ->
 
-  fields  = []
+  fields          = []
+  lengthEncoded   = false
 
   # We chip away at the pattern, removing the parts we.ve match, while keeping
   # track of the index separately for error messages.
-  rest    = pattern
-  index   = 0
+  rest            = pattern
+  index           = 0
   while rest.length
 
     # Match a packet pattern.
@@ -75,28 +76,26 @@ module.exports.parse = (pattern) ->
     if length
       f.length = true
       rest = length[1]
-
-    # Nothing else can apply to a length encoding.
-    if f.length
       f.arrayed = false
       f.repeat = 1
+      lengthEncoded = true
       fields.push(f)
+      # Nothing else can apply to a length encoding.
       continue
 
-    # Check for structure modifiers.
-    arrayed = /^\[(\d+)\](.*)$/.exec(rest)
-    if arrayed
-      f.arrayed = true
-      f.repeat = parseInt(arrayed[1], 10)
-      index++
-      if f.repeat == 0
-        throw new Error("array length must be non-zero at " + index)
-      index += arrayed[1].length + 1
-      rest = arrayed[2]
-    else
-      f.arrayed   = not not (fields.length > 0 and
-                             fields[fields.length - 1].length)
-      f.repeat    = 1
+    f.repeat    = 1
+    f.arrayed   = lengthEncoded
+    if not lengthEncoded
+      # Check for structure modifiers.
+      arrayed = /^\[(\d+)\](.*)$/.exec(rest)
+      if arrayed
+        f.arrayed = true
+        f.repeat = parseInt(arrayed[1], 10)
+        index++
+        if f.repeat == 0
+          throw new Error("array length must be non-zero at " + index)
+        index += arrayed[1].length + 1
+        rest = arrayed[2]
 
     # Check for a padding value.
     padding = /^{(0x|0)?(\d+)}(.*)$/.exec(rest)
@@ -140,5 +139,7 @@ module.exports.parse = (pattern) ->
 
     # Record the new field pattern object.
     fields.push(f)
+
+    lengthEncoded = false
 
   fields
