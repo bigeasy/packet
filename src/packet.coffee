@@ -177,6 +177,7 @@ module.exports.Parser = class Parser extends Packet
     @pattern      = pattern
     @callback     = callback
     @patternIndex = 0
+    @fields       = []
 
     @nextField()
     @nextValue()
@@ -261,22 +262,18 @@ module.exports.Parser = class Parser extends Packet
       # We add the parser and the user suppilied additional arguments onto the
       # callback arguments.
       #
-      # The pattern is set to null, our terminal condition, before the callback,
-      # and the fields are defensively copied, because the callback may specify
-      # a subsequent packet to parse.
+      # The pattern is set to null, our terminal condition, because the callback
+      # may specify a subsequent packet to parse.
       else if ++@patternIndex == @pattern.length
-        fields = @fields.slice()
+        @fields.push(@pipeline(@pattern[@patternIndex -1 ], @fields.pop()))
 
-        fields.push(@pipeline(@pattern[@patternIndex -1 ], fields.pop()))
-
-        fields.push(this)
+        @fields.push(this)
         for p in @user or []
-          fields.push(p)
+          @fields.push(p)
 
         @pattern        = null
-        @fields.length  = 0
 
-        @callback.apply null, fields
+        @callback.apply null, @fields
 
       # Otherwise we proceed to the next field in the packet pattern.
       else
