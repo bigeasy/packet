@@ -262,19 +262,21 @@ module.exports.Parser = class Parser extends Packet
       # callback arguments.
       #
       # The pattern is set to null, our terminal condition, before the callback,
-      # because the callback may specify a subsequent packet to parse.
+      # and the fields are defensively copied, because the callback may specify
+      # a subsequent packet to parse.
       else if ++@patternIndex == @pattern.length
-        @fields.push(@pipeline(@pattern[@patternIndex -1 ], @fields.pop()))
+        fields = @fields.slice()
 
-        @fields.push(this)
+        fields.push(@pipeline(@pattern[@patternIndex -1 ], fields.pop()))
+
+        fields.push(this)
         for p in @user or []
-          @fields.push(p)
+          fields.push(p)
 
         @pattern        = null
-
-        @callback.apply null, @fields
-
         @fields.length  = 0
+
+        @callback.apply null, fields
 
       # Otherwise we proceed to the next field in the packet pattern.
       else
