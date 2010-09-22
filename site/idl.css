@@ -124,6 +124,7 @@ table td {
 .highlight {
     border: 1px dashed gray;
     padding: 1em;
+    margin-bottom: 1.5em;
 }
 #container {
     text-align: left;
