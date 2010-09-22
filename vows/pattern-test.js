@@ -11,7 +11,7 @@ vows.describe('Pattern').addBatch({
     'Pattern can parse a pattern that describes': {
         topic: require('pattern'),
         'a single byte': function (topic) {
-            var field = topic.parse('n8');
+            var field = topic.parse('b8');
             assert.deepEqual(field, [
                 { signed: false
                 , bits: 8
@@ -25,7 +25,7 @@ vows.describe('Pattern').addBatch({
             ]);
         },
         'a single signed byte': function (topic) {
-            var field = topic.parse('-n8');
+            var field = topic.parse('-b8');
             assert.deepEqual(field, [
                 { signed: true
                 , bits: 8
@@ -39,7 +39,7 @@ vows.describe('Pattern').addBatch({
             ]);
         },
         'a single 16 bit number': function (topic) {
-            var field = topic.parse('n16');
+            var field = topic.parse('b16');
             assert.deepEqual(field, [
                 { signed: false
                 , bits: 16
@@ -53,7 +53,7 @@ vows.describe('Pattern').addBatch({
             ]);
         },
         'a single signed 16 bit number': function (topic) {
-            var field = topic.parse('-n16');
+            var field = topic.parse('-b16');
             assert.deepEqual(field, [
                 { signed: true
                 , bits: 16
@@ -109,11 +109,11 @@ vows.describe('Pattern').addBatch({
             ]);
         },
         'a single 16 bit skip': function (topic) {
-            var field = topic.parse('s16');
+            var field = topic.parse('x16');
             assert.deepEqual(field, [
                 { signed: false
                 , bits: 16
-                , endianness: 's'
+                , endianness: 'x'
                 , bytes: 2
                 , type: 'n'
                 , unpacked: false
@@ -123,7 +123,7 @@ vows.describe('Pattern').addBatch({
             ]);
         },
         'a signed little-endian 16 bit number followed by a byte': function (topic) {
-            var field = topic.parse('-l16n8');
+            var field = topic.parse('-l16b8');
             assert.deepEqual(field,
             [
                 { signed: true
@@ -204,7 +204,7 @@ vows.describe('Pattern').addBatch({
             ]);
         },
         'an array of 8 bytes.': function (topic) {
-            var field = topic.parse('n8[8]');
+            var field = topic.parse('b8[8]');
             assert.deepEqual(field, [
                 { signed: false
                 , bits: 8
@@ -217,8 +217,33 @@ vows.describe('Pattern').addBatch({
                 }
             ]);
         },
+        'a length encoded array of 16 bit numbers.': function (topic) {
+            var field = topic.parse('b8/b16');
+            assert.deepEqual(field, [
+                { signed: false
+                , bits: 8
+                , endianness: 'b'
+                , bytes: 1
+                , type: 'n'
+                , unpacked: false
+                , arrayed: false
+                , repeat: 1
+                , length: true
+                }
+                ,
+                { signed: false
+                , bits: 16
+                , endianness: 'b'
+                , bytes: 2
+                , type: 'n'
+                , unpacked: false
+                , arrayed: true
+                , repeat: 1
+                }
+            ]);
+        },
         'an list of bytes terminated by zero.': function (topic) {
-            var field = topic.parse('n8z');
+            var field = topic.parse('b8z');
             assert.deepEqual(field, [
                 { signed: false
                 , bits: 8
@@ -233,7 +258,7 @@ vows.describe('Pattern').addBatch({
             ]);
         },
         'a zero terminated array of 8 bytes zero filled.': function (topic) {
-            var field = topic.parse('n8[8]{0}z');
+            var field = topic.parse('b8[8]{0}z');
             assert.deepEqual(field, [
                 { signed: false
                 , bits: 8
@@ -249,7 +274,7 @@ vows.describe('Pattern').addBatch({
             ]);
         },
         'a zero terminated array of 8 bytes 0x10 filled.': function (topic) {
-            var field = topic.parse('n8[8]{0x10}z');
+            var field = topic.parse('b8[8]{0x10}z');
             assert.deepEqual(field, [
                 { signed: false
                 , bits: 8
@@ -265,7 +290,7 @@ vows.describe('Pattern').addBatch({
             ]);
         },
         'a zero terminated array of 8 bytes 010 filled.': function (topic) {
-            var field = topic.parse('n8[8]{010}z');
+            var field = topic.parse('b8[8]{010}z');
             assert.deepEqual(field, [
                 { signed: false
                 , bits: 8
@@ -281,7 +306,7 @@ vows.describe('Pattern').addBatch({
             ]);
         },
         'an list of bytes termianted by zero piped to a transform.': function (topic) {
-            var field = topic.parse('n8z|str()');
+            var field = topic.parse('b8z|str()');
             assert.deepEqual(field, [
                 { signed: false
                 , bits: 8
@@ -302,7 +327,7 @@ vows.describe('Pattern').addBatch({
             ]);
         },
         'a transform a with a single parameter.': function (topic) {
-            var field = topic.parse('n8z|str("utf8")');
+            var field = topic.parse('b8z|str("utf8")');
             assert.deepEqual(field, [
                 { signed: false
                 , bits: 8
@@ -323,7 +348,7 @@ vows.describe('Pattern').addBatch({
             ]);
         },
         'a transform followed by a 16 bit number.': function (topic) {
-            var field = topic.parse('n8z|str("utf8")b16');
+            var field = topic.parse('b8z|str("utf8")b16');
             assert.deepEqual(field, [
                 { signed: false
                 , bits: 8
@@ -354,7 +379,7 @@ vows.describe('Pattern').addBatch({
             ]);
         },
         'a transform with an integer parameter.': function (topic) {
-            var field = topic.parse('n8z|twiddle(8)');
+            var field = topic.parse('b8z|twiddle(8)');
             assert.deepEqual(field, [
                 { signed: false
                 , bits: 8
@@ -375,7 +400,7 @@ vows.describe('Pattern').addBatch({
             ]);
         },
         'a transform with a negative integer parameter.': function (topic) {
-            var field = topic.parse('n8z|twiddle(-8)');
+            var field = topic.parse('b8z|twiddle(-8)');
             assert.deepEqual(field, [
                 { signed: false
                 , bits: 8
@@ -396,7 +421,7 @@ vows.describe('Pattern').addBatch({
             ]);
         },
         'a transform with an float parameter.': function (topic) {
-            var field = topic.parse('n8z|twiddle(' + Number.MAX_VALUE + ')');
+            var field = topic.parse('b8z|twiddle(' + Number.MAX_VALUE + ')');
             assert.deepEqual(field, [
                 { signed: false
                 , bits: 8
@@ -417,7 +442,7 @@ vows.describe('Pattern').addBatch({
             ]);
         },
         'a transform with a negative float parameter.': function (topic) {
-            var field = topic.parse('n8z|twiddle(' + Number.MIN_VALUE + ')');
+            var field = topic.parse('b8z|twiddle(' + Number.MIN_VALUE + ')');
             assert.deepEqual(field, [
                 { signed: false
                 , bits: 8
@@ -438,7 +463,7 @@ vows.describe('Pattern').addBatch({
             ]);
         },
         'a transform with a null parameter.': function (topic) {
-            var field = topic.parse('n8z|twiddle(null)');
+            var field = topic.parse('b8z|twiddle(null)');
             assert.deepEqual(field, [
                 { signed: false
                 , bits: 8
@@ -459,7 +484,7 @@ vows.describe('Pattern').addBatch({
             ]);
         },
         'a transform with a true parameter.': function (topic) {
-            var field = topic.parse('n8z|twiddle(true)');
+            var field = topic.parse('b8z|twiddle(true)');
             assert.deepEqual(field, [
                 { signed: false
                 , bits: 8
@@ -480,7 +505,7 @@ vows.describe('Pattern').addBatch({
             ]);
         },
         'a transform with a false parameter.': function (topic) {
-            var field = topic.parse('n8z|twiddle(false)');
+            var field = topic.parse('b8z|twiddle(false)');
             assert.deepEqual(field, [
                 { signed: false
                 , bits: 8
@@ -501,7 +526,7 @@ vows.describe('Pattern').addBatch({
             ]);
         },
         'a transform with a single quoted string parameter.': function (topic) {
-            var field = topic.parse("n8z|twiddle('a \\u00DF b \\' c')");
+            var field = topic.parse("b8z|twiddle('a \\u00DF b \\' c')");
             assert.deepEqual(field, [
                 { signed: false
                 , bits: 8
@@ -522,7 +547,7 @@ vows.describe('Pattern').addBatch({
             ]);
         },
         'a transform with a single quoted string parameter.': function (topic) {
-            var field = topic.parse('n8z|twiddle("a \\u00DF b \\" c")');
+            var field = topic.parse('b8z|twiddle("a \\u00DF b \\" c")');
             assert.deepEqual(field, [
                 { signed: false
                 , bits: 8
@@ -543,7 +568,7 @@ vows.describe('Pattern').addBatch({
             ]);
         },
         'a transform with a two parameters.': function (topic) {
-            var field = topic.parse('n8z|twiddle("utf8", 8)');
+            var field = topic.parse('b8z|twiddle("utf8", 8)');
             assert.deepEqual(field, [
                 { signed: false
                 , bits: 8
@@ -564,7 +589,7 @@ vows.describe('Pattern').addBatch({
             ]);
         },
         'a transform with many parameters.': function (topic) {
-            var field = topic.parse('n8z|twiddle("utf8", 8, 8.1, false)');
+            var field = topic.parse('b8z|twiddle("utf8", 8, 8.1, false)');
             assert.deepEqual(field, [
                 { signed: false
                 , bits: 8
@@ -585,7 +610,7 @@ vows.describe('Pattern').addBatch({
             ]);
         },
         'a two transforms in a row.': function (topic) {
-            var field = topic.parse('n8z|utf8()|atoi(8)');
+            var field = topic.parse('b8z|utf8()|atoi(8)');
             assert.deepEqual(field, [
                 { signed: false
                 , bits: 8
