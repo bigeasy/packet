@@ -64,6 +64,10 @@ class Packet
       else if pattern.arrayed
         value = @outgoing[@patternIndex][@index]
       else
+        if pattern.length
+          repeat = @outgoing[@patternIndex].length
+          @outgoing.splice @patternIndex, 0, repeat
+          @pattern[@patternIndex + 1].repeat = repeat
         value = @outgoing[@patternIndex]
       if pattern.unpacked
         value = @pack(value)
