@@ -85,7 +85,7 @@ The floating-point numbers can be stored in little-endian or big-endian byte ord
 
 ### Arrays of Raw Bytes
 
-A value will be converted to a big-endian array of bytes if followed by an `a'
+A value will be converted to a big-endian array of bytes if followed by an `a`
 suffix. **Mnemonic**: The letter `a` stands for *array*.
 
 ```javascript
@@ -169,12 +169,13 @@ letter `z` stands for zero.
 
 ### Transforms
 
-Sometimes there are transformations that you need to perform on an field to get
-it to its final state. You can easily perform these transformation in your
-callback functions when you read, and prior to serializing the value.
+Often there are transformations that you need to perform on an field to get
+it to its final state. You may need to convert a byte array to string of a
+particular character encoding, for example. This is done with a tranformation
+functions which are specified with a transformation pipeline.
 
-If the transformation is a fixed transformation, you can also perform the
-transformation by defining a pipeline. A pipeline defiens one or more
+If the transformation is a fixed transformation, you can perform the
+transformation by defining a pipeline. A pipeline defines one or more
 tranformations that are invoked on the value after parsing and before
 serialization. The transformations can accept scalar JavaScript parameters.
 
