@@ -82,10 +82,10 @@
         <h2 class="heading">Docco</h3>
         
           
-        
-          
             
             <h3 class="docco depth-0"><a href="./documentation/packet.html">packet.coffee</a></h3>
+          
+        
           
         
           
@@ -203,8 +203,8 @@ This is indicated with a <code>f</code> suffix.  <strong>Mnemonic</strong>: The 
 
 <h3>Arrays of Raw Bytes</h3>
 
-<p>A value will be converted to a big-endian array of bytes if followed by an <code>a'
-suffix. **Mnemonic**: The letter</code>a` stands for <em>array</em>.</p>
+<p>A value will be converted to a big-endian array of bytes if followed by an <code>a</code>
+suffix. <strong>Mnemonic</strong>: The letter <code>a</code> stands for <em>array</em>.</p>
         
           <div class="highlight"><pre><span class="s2">&quot;l128a&quot;</span>           <span class="c1">// Unsigned little-endian 128 bit integer as big-endian array</span>
                   <span class="c1">// of bytes.</span>
@@ -287,12 +287,13 @@ letter <code>z</code> stands for zero.</p>
         
           <h3>Transforms</h3>
 
-<p>Sometimes there are transformations that you need to perform on an field to get
-it to its final state. You can easily perform these transformation in your
-callback functions when you read, and prior to serializing the value.</p>
+<p>Often there are transformations that you need to perform on an field to get
+it to its final state. You may need to convert a byte array to string of a
+particular character encoding, for example. This is done with a tranformation
+functions which are specified with a transformation pipeline.</p>
 
-<p>If the transformation is a fixed transformation, you can also perform the
-transformation by defining a pipeline. A pipeline defiens one or more
+<p>If the transformation is a fixed transformation, you can perform the
+transformation by defining a pipeline. A pipeline defines one or more
 tranformations that are invoked on the value after parsing and before
 serialization. The transformations can accept scalar JavaScript parameters.</p>
         
