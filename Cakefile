@@ -1,7 +1,6 @@
 fs              = require("fs")
 {exec, spawn}   = require("child_process")
 path            = require("path")
-idl             = require("idl")
 
 compile = (sources) ->
   coffee =          spawn "coffee", "-c -o lib".split(/\s/).concat(sources)
@@ -44,7 +43,8 @@ task "gitignore", "create a .gitignore for node-ec2 based on git branch", ->
     fs.writeFile(".gitignore", gitignore)
 
 task "index", "rebuild the Node IDL landing page.", ->
-  package = JSON.parse fs.readFileSync "package.json", "utf8"
+  idl       = require("idl")
+  package   = JSON.parse fs.readFileSync "package.json", "utf8"
   idl.generate "#{package.name}.idl", "index.html"
 
 task "docco", "rebuild the CoffeeScript docco documentation.", ->
@@ -59,9 +59,15 @@ task "compile", "compile the CoffeeScript into JavaScript", ->
     compile sources
 
 task "coverage", "run coverage", ->
-  exec "expresso coverage.js  --coverage", (err, stdout) ->
-    throw err if err
-    process.stdout.write(stdout)
+#  exec "expresso coverage.js  --coverage", (err, stdout, stderr) ->
+#    throw err if err
+#    process.stdout.write(stdout)
+#    process.stdout.write(stderr)
+#    process.stdout.write("\n")
+  coffee =          spawn "expresso", [ "coverage.js", "--coverage" ]
+  coffee.stdout.on  "data", (buffer) -> process.stdout.write(buffer)
+  coffee.stderr.on  "data", (buffer) -> process.stdout.write(buffer)
+  coffee.on         "exit", (status) -> process.exit(1) if status != 0
 
 task "test", "run tests", ->
   env = {}
