@@ -1,0 +1,9 @@
+HACKING
+
+Run tests with:
+
+    NODE_PATH=./lib vows vows/*.js --spec
+
+Check coverage with:
+
+    expresso coverage.js --coverage

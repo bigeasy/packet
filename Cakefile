@@ -45,7 +45,6 @@ task "gitignore", "create a .gitignore for node-ec2 based on git branch", ->
 
 task "index", "rebuild the Node IDL landing page.", ->
   package = JSON.parse fs.readFileSync "package.json", "utf8"
-  console.log(package)
   idl.generate "#{package.name}.idl", "index.html"
 
 task "docco", "rebuild the CoffeeScript docco documentation.", ->
@@ -59,11 +58,20 @@ task "compile", "compile the CoffeeScript into JavaScript", ->
     sources = "src/" + source for source in sources when source.match(/\.coffee$/)
     compile sources
 
-task "coverage", "run coverage"
-  exec "expresso coverage.js  --coverage"
+task "coverage", "run coverage", ->
+  exec "expresso coverage.js  --coverage", (err, stdout) ->
+    throw err if err
+    process.stdout.write(stdout)
 
-task "test", "run tests"
-  exec "vows vows/*.js  --spec"
+task "test", "run tests", ->
+  env = {}
+  for key, value of process.env
+    env[key] = value
+  env.NODE_PATH = "./lib"
+  exec "vows vows/*.js  --spec", { env }, (err, stdout, stderr) ->
+    throw err if err
+    process.stdout.write(stdout)
+    process.stdout.write(stderr)
 
 task "clean", "rebuild the CoffeeScript docco documentation.", ->
   currentBranch (branch) ->
