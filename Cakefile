@@ -59,6 +59,12 @@ task "compile", "compile the CoffeeScript into JavaScript", ->
     sources = "src/" + source for source in sources when source.match(/\.coffee$/)
     compile sources
 
+task "coverage", "run coverage"
+  exec "expresso coverage.js  --coverage"
+
+task "test", "run tests"
+  exec "vows vows/*.js  --spec"
+
 task "clean", "rebuild the CoffeeScript docco documentation.", ->
   currentBranch (branch) ->
     if branch is "master"
