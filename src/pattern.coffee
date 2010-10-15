@@ -28,7 +28,7 @@ module.exports.parse = (pattern) ->
   # track of the index separately for error messages.
   rest            = pattern
   index           = 0
-  while rest.length
+  loop
 
     # Match a packet pattern.
     match = /^(-?)([xbl])(\d+)([fha]?)(.*)$/.exec(rest)
@@ -37,10 +37,10 @@ module.exports.parse = (pattern) ->
 
     # Convert the match into an object.
     f =
-      signed: !!match[1] || match[4] == "f"
+      signed:     !!match[1] || match[4] == "f"
       endianness: if match[2] == 'n' then 'b' else match[2]
-      bits: parseInt(match[3], 10)
-      type: match[4] || 'n'
+      bits:       parseInt(match[3], 10)
+      type:       match[4] || 'n'
 
     # The remainder of the pattern, if any.
     rest = match[5]
@@ -140,6 +140,15 @@ module.exports.parse = (pattern) ->
     # Record the new field pattern object.
     fields.push(f)
 
+    # A comma indicates that we're to continue.
+    more = /\s*,\s*(.*)/.exec(rest)
+    break if not more
+
+    # Reset for the next iteration.
+    rest = more[1]
     lengthEncoded = false
+
+  if /\S/.test(rest)
+    throw  new Error "invalid pattern at #{index}"
 
   fields

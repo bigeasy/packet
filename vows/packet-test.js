@@ -40,7 +40,7 @@ vows.describe('Packet').addBatch({
         'a 16 bit litte-endian number': function (topic) {
             var invoked = false;
             topic.reset();
-            topic.parse('l16b8', function (a, b, engine) {
+            topic.parse('l16, b8', function (a, b, engine) {
                 assert.equal(engine.getBytesRead(), 3);
                 assert.equal(a, 0xB0A0);
                 assert.equal(b, 0xAA);
@@ -116,7 +116,7 @@ vows.describe('Packet').addBatch({
             var bytes = [ 0x01, 0x02, 0x00, 0x01 ];
 
             topic.reset();
-            topic.parse("x16b16", function (field, engine) {
+            topic.parse("x16, b16", function (field, engine) {
                 assert.equal(engine.getBytesRead(), 4);
                 assert.equal(field, 1);
                 invoked = true;
@@ -145,7 +145,7 @@ vows.describe('Packet').addBatch({
             var bytes = [ 0x01, 0x02, 0x03, 0x04, 0x00, 0x01 ];
 
             topic.reset();
-            topic.parse("x16[2]b16", function (field, engine) {
+            topic.parse("x16[2], b16", function (field, engine) {
                 assert.equal(engine.getBytesRead(), 6);
                 assert.equal(field, 1);
                 invoked = true;
@@ -318,7 +318,7 @@ vows.describe('Packet').addBatch({
             var buffer = [];
 
             topic.reset();
-            topic.serialize("l16b16", 0x1FF, 0x1FF, function (engine) { 
+            topic.serialize("l16, b16", 0x1FF, 0x1FF, function (engine) { 
                 assert.equal(engine.getBytesWritten(), 4);
             });
             topic.write(buffer, 0, 4);
@@ -329,7 +329,7 @@ vows.describe('Packet').addBatch({
             var buffer = [ 0xff, 0xff, 0xff, 0xff ];
 
             topic.reset();
-            topic.serialize("x16b16", 1, function (engine) { 
+            topic.serialize("x16, b16", 1, function (engine) { 
                 assert.equal(engine.getBytesWritten(), 4);
             });
             topic.write(buffer, 0, 6);
@@ -340,7 +340,7 @@ vows.describe('Packet').addBatch({
             var buffer = [ 0xff, 0xff, 0xff, 0xff ];
 
             topic.reset();
-            topic.serialize("x16{0}b16", 1, function (engine) { 
+            topic.serialize("x16{0}, b16", 1, function (engine) { 
                 assert.equal(engine.getBytesWritten(), 4);
             });
             topic.write(buffer, 0, 4);
@@ -385,7 +385,7 @@ vows.describe('Packet').addBatch({
             var buffer = [ 0xff, 0xff, 0xff, 0xff ];
 
             topic.reset();
-            topic.serialize("x16[2]b16", 1, function (engine) { 
+            topic.serialize("x16[2], b16", 1, function (engine) { 
                 assert.equal(engine.getBytesWritten(), 6);
             });
             topic.write(buffer, 0, 7);
@@ -396,7 +396,7 @@ vows.describe('Packet').addBatch({
             var buffer = [];
 
             topic.reset();
-            topic.serialize("x16[2]{0}b16", 1, function (engine) { 
+            topic.serialize("x16[2]{0}, b16", 1, function (engine) { 
                 assert.equal(engine.getBytesWritten(), 6);
             });
             topic.write(buffer, 0, 7);
