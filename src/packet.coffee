@@ -1,6 +1,7 @@
 parsePattern = require('./pattern').parse
 ieee754 = require('./ieee754')
 
+# Convert an array of bytes into an hex string, two characters for each byte.
 hex = (bytes) ->
   h = bytes.map (b) ->
     if b < 10
@@ -9,20 +10,29 @@ hex = (bytes) ->
       b.toString(16)
   h.join("")
 
+# Default callback, when no callback is provided.
 noop = (value) -> value
 
+
+# Base class for `Serializer` and `Parser`.
 class Packet
+
   constructor: ->
     @packets = {}
     @reset()
     @fields = []
     @transforms = Object.create(transforms)
 
+  # Create a copy that will adopt the packets defined in this object, through
+  # prototype inheritence. This is used to efficently create parsers and
+  # serializers that can run concurrently, from a pre-configured prototype,
+  # following classic GoF prototype creational pattern.
   clone: ->
     copy            = new (this.constructor)()
     copy.packets    = Object.create(packets)
     copy
 
+  # Map a named packet with the given `name` to the given `pattern`. 
   packet: (name, pattern, callback) ->
     callback      or= noop
     pattern         = parsePattern(pattern)
