@@ -118,15 +118,24 @@ transforms =
     if parsing
       if not (value instanceof Buffer)
         value = bufferize(value)
+      if /^ascii$/i.test(encoding)
+        # Broken and waiting on [297](http://github.com/ry/node/issues/issue/297).
+        # If the top bit is set, it is not ASCII, so we zero the value.
+        for i in [0...value.length]
+          value[i] = 0 if value[i] & 0x80
+        encoding = "utf8"
       length = value.length
       length -= field.terminator.length if field.terminator
       value.toString(encoding, 0, length)
     else
       if field.terminator
         value += field.terminator
-      new Buffer(value, encoding)
+      buffer = new Buffer(value, encoding)
+      if encoding is "ascii"
+        for i in [0...buffer.length]
+          buffer[i] = 0 if value.charAt(i) is '\0'
+      buffer
 
-  # Broken and waiting on #[297](http://github.com/ry/node/issues/issue/297).
   ascii: (parsing, field, value) ->
     transforms.str("ascii", parsing, field, value)
 
