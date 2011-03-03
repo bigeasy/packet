@@ -57,7 +57,7 @@ module.exports.parse = (pattern) ->
 
     # Move the character position up to the rest of the pattern.
     index += match[3].length
-    index ++ if match[4]
+    index++ if match[4]
 
     # Set the implicit fields.
     f.type      = "a" if f.bits > 64 and f.type == "n"
