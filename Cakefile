@@ -4,14 +4,14 @@ path            = require("path")
 
 compile = (sources) ->
   coffee =          spawn "coffee", "-c -o lib".split(/\s/).concat(sources)
-  coffee.stderr.on  "data", (buffer) -> puts buffer.toString()
+  coffee.stderr.on  "data", (buffer) -> process.stdout.write buffer.toString()
   coffee.on         "exit", (status) -> process.exit(1) if status != 0
 
 currentBranch = (callback) ->
   branches =        ""
   git =             spawn "git", [ "branch" ]
   git.stdout.on     "data", (buffer) -> branches += buffer.toString()
-  git.stderr.on     "data", (buffer) -> puts buffer.toString()
+  git.stderr.on     "data", (buffer) -> process.stdout.write buffer.toString()
   git.on            "exit", (status) ->
     process.exit(1) if status != 0
     branch = /\*\s+(.*)/.exec(branches)[1]
@@ -55,7 +55,7 @@ task "compile", "compile the CoffeeScript into JavaScript", ->
   path.exists "./lib", (exists) ->
     fs.mkdirSync("./lib", parseInt(755, 8)) if not exists
     sources = fs.readdirSync("src")
-    sources = "src/" + source for source in sources when source.match(/\.coffee$/)
+    sources = ("src/" + source for source in sources when source.match(/\.coffee$/))
     compile sources
 
 task "coverage", "run coverage", ->
