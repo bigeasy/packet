@@ -474,7 +474,7 @@ module.exports.Structure = class Structure
   sizeOf: (values...) -> 0
 
   read: (buffer, offset, callback) ->
-    callback = offset if typeof callback is "function" and not callback?
+    callback = offset if typeof offset is "function" and not callback?
     @parser.reset()
     @parser.parse("structure", callback)
     @parser.read(buffer, offset, Number.MAX_VALUE)
