@@ -284,7 +284,7 @@ module.exports.Parser = class Parser extends Packet
       # The pattern is set to null, our terminal condition, because the callback
       # may specify a subsequent packet to parse.
       else if ++@patternIndex == @pattern.length
-        @fields.push(@pipeline(@pattern[@patternIndex -1 ], @fields.pop()))
+        @fields.push(@pipeline(@pattern[@patternIndex - 1 ], @fields.pop()))
 
         @fields.push(this)
         for p in @user or []
