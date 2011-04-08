@@ -63,6 +63,8 @@ vows.describe('Packet').addBatch({
             }
             readSigned([ 0xff ], -1);
             readSigned([ 0x80 ], -128);
+            readSigned([ 0x7f ], 127);
+            readSigned([ 0x02 ], 2);
         },
         'a signed short': function (topic) {
             function readSigned(bytes, value) {
@@ -78,6 +80,8 @@ vows.describe('Packet').addBatch({
             }
             readSigned([ 0x80, 0x00 ], -32768);
             readSigned([ 0xff, 0xff ], -1);
+            readSigned([ 0x7f, 0xff ],  32767);
+            readSigned([ 0x01, 0x02 ],  258);
         },
         'a little-endian 32 bit hex string': function (topic) {
             function readHexString(bytes, value) {
