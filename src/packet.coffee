@@ -83,7 +83,6 @@ class Packet
       else
         ieee754.fromIEEE754Double(bytes)
     else if pattern.signed
-      console.log("-------- signed")
       value = 0
       if (bytes[bytes.length - 1] & 0x80) == 0x80
         top = bytes.length - 1
