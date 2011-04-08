@@ -83,6 +83,7 @@ class Packet
       else
         ieee754.fromIEEE754Double(bytes)
     else if pattern.signed
+      console.log("-------- signed")
       value = 0
       if (bytes[bytes.length - 1] & 0x80) == 0x80
         top = bytes.length - 1
@@ -93,6 +94,11 @@ class Packet
         value += (~(bytes[top] & 0x7f) & 0xff & 0x7f) * Math.pow(256, top)
         value += 1
         value *= -1
+      else
+        top = bytes.length - 1
+        for i in [0...top]
+          value += (bytes[i] & 0xff)  * Math.pow(256, i)
+        value += (bytes[top] & 0x7f) * Math.pow(256, top)
       value
     else
       bytes
