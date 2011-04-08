@@ -74,6 +74,7 @@ class Packet
 
   unpack: ->
     bytes   = @value
+    return null unless bytes?
     pattern = @pattern[@patternIndex]
     if pattern.type == "h"
       hex bytes.reverse()
@@ -240,6 +241,13 @@ module.exports.Parser = class Parser extends Packet
             break if @offset is @terminal
             return @bytesRead - start if offset is end
 
+        # If we are parsing an array, and repeat is 0
+        # It is essentially an empty array
+        # We don't parse anything
+        else if @pattern[@patternIndex].arrayed and @pattern[@patternIndex].repeat == 0
+          @value = null
+          @terminated = true
+
         # Otherwise we're packing bytes into an unsigned integer, the most
         # common case.
         else
@@ -258,7 +266,7 @@ module.exports.Parser = class Parser extends Packet
         # If we are filling an array field the current fields is an array,
         # otherwise current field is the value we've just read.
         if @pattern[@patternIndex].arrayed
-          @fields[@fields.length - 1].push(field)
+          @fields[@fields.length - 1].push(field) if field?
         else
           @fields.push(field)
 

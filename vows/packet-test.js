@@ -186,6 +186,20 @@ vows.describe('Packet').addBatch({
 
             assert.isTrue(invoked);
         },
+        'a length encoded array of bytes that is empty': function (topic) {
+            var invoked = false;
+            var bytes = [ 0x00, 0x00, 0x01, 0x02]
+
+            topic.reset();
+            topic.parse("b16/b8", function (field, engine) {
+                assert.equal(engine.getBytesRead(), 2);
+                assert.equal(field.length, 0);
+                invoked = true;
+            });
+            topic.read(bytes);
+
+            assert.isTrue(invoked);
+        },
         'a zero terminated array of bytes': function (topic) {
             var invoked = false;
             var bytes = [ 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x00 ]
