@@ -17,7 +17,7 @@ noop = (value) -> value
 # Base class for `Serializer` and `Parser`.
 class Packet
 
-  constructor: ->
+  constructor: (@self) ->
     @packets = {}
     @reset()
     @fields = []
@@ -161,6 +161,8 @@ transforms =
     if parsing then parseFloat(value) else value.toString()
 
 module.exports.Parser = class Parser extends Packet
+  constructor: (self) -> super self
+
   data: (data...)   -> @user = data
 
   getBytesRead:     -> @bytesRead
@@ -304,7 +306,7 @@ module.exports.Parser = class Parser extends Packet
 
         @pattern        = null
 
-        @callback.apply null, @fields
+        @callback.apply @self, @fields
 
       # Otherwise we proceed to the next field in the packet pattern.
       else
@@ -320,6 +322,8 @@ module.exports.Parser = class Parser extends Packet
     @bytesRead - start
 
 module.exports.Serializer = class Serializer extends Packet
+  constructor: (self) -> super self
+
   getBytesWritten: -> @bytesWritten
 
   packet: (name, pattern, callback) ->
@@ -467,7 +471,7 @@ module.exports.Serializer = class Serializer extends Packet
       # because the callback may specify a subsequent packet to parse.
       else if ++@patternIndex is @pattern.length
         @pattern = null
-        @callback.apply null, [ this ]
+        @callback.apply @self, [ this ]
 
       else
 

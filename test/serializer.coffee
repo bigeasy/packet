@@ -240,3 +240,14 @@ class module.exports.SerializerTest extends TwerpTest
     @ok invoked
     @deepEqual buffer, [ 0x30, 0x30, 0x30, 0x30, 0x30, 0x34, 0x32, 0x00 ]
     done 3
+
+  "test: set self": (done) ->
+    self = {}
+    serializer = new Serializer(self)
+    invoked = false
+    serializer.reset()
+    serializer.serialize "b8", 0x01, (engine) ->
+      invoked = self is this
+    serializer.write [ 1 ]
+    @ok invoked
+    done 1

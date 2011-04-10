@@ -291,3 +291,14 @@ class exports.PacketTest extends TwerpTest
     @parser.read bytes, 0, 10
     @ok invoked
     done 3
+
+  "test: set self": (done) ->
+    self = {}
+    parser = new Parser(self)
+    invoked = false
+    parser.reset()
+    parser.parse "b8", (field, engine) ->
+      invoked = self is this
+    parser.read [ 1 ]
+    @ok invoked
+    done 1
