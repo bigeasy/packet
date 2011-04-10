@@ -332,6 +332,7 @@ module.exports.Serializer = class Serializer extends Packet
     pattern       = @pattern[@patternIndex]
     @repeat       = pattern.repeat
     @terminated   = not pattern.terminator
+    @terminates   = not @terminated
     @index        = 0
 
     delete        @padding
@@ -348,7 +349,6 @@ module.exports.Serializer = class Serializer extends Packet
     if pattern.endianness is "x" and not @padding?
         @skipping = pattern.bytes
     else
-
       if @padding?
         value = @padding
       else if pattern.arrayed
@@ -433,20 +433,27 @@ module.exports.Serializer = class Serializer extends Packet
             return offset - start if offset is end
 
       # If we have not terminated, check for the termination state change.
-      # Termination will simply change the loop settings, so types that have no
-      # terminater start out as terminated, and this does nothing.
-      if not @terminated
-        if @pattern[@patternIndex].terminator.charCodeAt(0) == @value
-          @terminated = true
-          if @repeat == Number.MAX_VALUE
+      # Termination will change the loop settings.
+      if @terminates
+        if @terminated
+          if @repeat is Number.MAX_VALUE
             @repeat = @index + 1
-          else if @pattern[@patternIndex].padding?
+          else if @pattern[@patternIndex].padding
             @padding = @pattern[@patternIndex].padding
           else
             @skipping = (@repeat - (++@index)) * @pattern[@patternIndex].bytes
             if @skipping
               @repeat = @index + 1
               continue
+        else
+          # If we are at the end of the series, then we create an empty outgoing
+          # array to hold the terminator, because the outgoing series may be a
+          # buffer. We insert the terminator at next index in the outgoing array.
+          # We then set repeat to allow one more iteration before callback.
+          if @outgoing[@patternIndex].length is @index + 1
+            @terminated = true
+            @outgoing[@patternIndex] = []
+            @outgoing[@patternIndex][@index + 1] = @pattern[@patternIndex].terminator.charCodeAt(0)
 
       # If we are reading an arrayed pattern and we have not read all of the
       # array elements, we repeat the current field type.
@@ -467,6 +474,7 @@ module.exports.Serializer = class Serializer extends Packet
         delete        @padding
         @repeat       = @pattern[@patternIndex].repeat
         @terminated   = not @pattern[@patternIndex].terminator
+        @terminates   = not @terminated
         @index        = 0
 
         @nextValue()
