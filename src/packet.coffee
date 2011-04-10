@@ -175,7 +175,6 @@ module.exports.Parser = class Parser extends Packet
     @fields.push [] if pattern.arrayed and pattern.endianness isnt "x"
 
   nextValue: ->
-    reading = not @outgoing
     pattern = @pattern[@patternIndex]
 
     if pattern.endianness is "x"
