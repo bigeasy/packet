@@ -7,3 +7,7 @@ Run tests with:
 Check coverage with:
 
     expresso coverage.js --coverage
+
+Sun Apr 10 18:00:03 CDT 2011: Discussing changes to Twerp with maintainer.
+Currently using a patched Twerp to run Twerp tests. Leaving Vows tests in place
+until Twerp testing for Packet has stabilized.
