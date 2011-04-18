@@ -1,3 +1,9 @@
+.gitignore
+lib-cov
+.DS_Store
+**/.DS_Store
+documentation
+site
+index.html
 lib/packet.js
 lib/pattern.js
-lib-cov

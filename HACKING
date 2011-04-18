@@ -1,5 +1,9 @@
 HACKING
 
+Create a .gitignore:
+
+    cake gitignore
+
 Run tests with:
 
     NODE_PATH=./lib vows vows/*.js --spec
