@@ -2,16 +2,16 @@ NODE PACKET
 
 An evended packet parser for Node.js
 
-    Home: http://bigeasy.github.com/node-packet
-    Source: http://github.com/bigeasy/node-packet
-    Documentation: http://github.com/bigeasy/node-packet/wiki
+    Home:           http://bigeasy.github.com/node-packet
+    Source:         http://github.com/bigeasy/node-packet
+    Documentation:  http://github.com/bigeasy/node-packet/wiki
 
-    Issues: http://github.com/bigeasy/node-packet/issues
+    Issues:         http://github.com/bigeasy/node-packet/issues
 
-    License: The MIT License
+    License:        The MIT License
 
-    Contributors: Ben Hockey ~ @neonstalwart
-                  Aaron Qian ~ @aq1018
+    Contributors:   Ben Hockey ~ @neonstalwart
+                    Aaron Qian ~ @aq1018
 
 PURPOSE
 
