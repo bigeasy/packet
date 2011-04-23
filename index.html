@@ -264,20 +264,15 @@ terse to fit with the brevity of the pattern language.</p>
         
       
         
-          <h3 class="class">packet.Structure(pattern)</h3>
+          <h3 class="class">packet.Structure()</h3>
         
         
             
-                <div class="parameter">
-                  <h4>pattern</h4>
-                  
-                    <p>The packet pattern.</p>
-                  
-                </div>
-            
         
         
-          <p>A structure is an object that both reads from and writes to a buffer
+          <p>The packet pattern.</p>
+
+<p>A structure is an object that both reads from and writes to a buffer
 syncrhonously. When reading, buffer must contain the entire contents of the
 structure. When writing, the buffer must have enough space to accomdoate the
 structure.</p>
@@ -323,7 +318,7 @@ actual count of bytes read as the last parameter.</p>
       
         
           
-            <h3 class="function">write(buffer)</h3>
+            <h3 class="function">write(buffer,  [offset],  value...)</h3>
           
         
         
@@ -335,6 +330,20 @@ actual count of bytes read as the last parameter.</p>
                   
                 </div>
             
+                <div class="parameter">
+                  <h4>offset</h4>
+                  
+                    <p>The optional offset into the byte buffer. Defaults to <code>0</code>.</p>
+                  
+                </div>
+            
+                <div class="parameter">
+                  <h4>value</h4>
+                  
+                    <p>The values of the structure.</p>
+                  
+                </div>
+            
         
         
           <p>Write the arguments to the  buffer at the optional offset. The arguments are
@@ -343,10 +352,17 @@ determined by the structure bit pattern. Returns the number of bytes written.</p
       
         
           
-            <h3 class="function">sizeOf()</h3>
+            <h3 class="function">sizeOf( value...)</h3>
           
         
         
+            
+                <div class="parameter">
+                  <h4>value</h4>
+                  
+                    <p>The values of the structure.</p>
+                  
+                </div>
             
         
         
@@ -364,7 +380,7 @@ the structure if fixed size value are given.</p>
             
         
         
-          
+          <p>Parses a buffer and emits events based on patterns.</p>
         
       
         
