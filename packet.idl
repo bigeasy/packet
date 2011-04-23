@@ -265,19 +265,11 @@ the structure if fixed size value are given.
 
 Parses a buffer and emits events based on patterns.
 
-function: packet
+~ packet(name, pattern, callback)
 
-  parameter: name
-
-  The name of the packet type.
-
-  parameter: pattern
-
-  The packet pattern.
-
-  parameter: callback optional
-
-  Called when a packet of this type has been read from a buffer.
+  ~ name - The name of the packet type.
+  ~ pattern - The packet pattern.
+  ~ callback? - Called when a packet of this type has been read from a buffer.
 
 Defines a named packet type optionally assigning a default response for the
 packet type.
