@@ -1,6 +1,7 @@
 parsePattern = require('./pattern').parse
 ieee754 = require('./ieee754')
 
+# Convert an array of bytes into an hex string, two characters for each byte.
 hex = (bytes) ->
   h = bytes.map (b) ->
     if b < 10
@@ -9,20 +10,29 @@ hex = (bytes) ->
       b.toString(16)
   h.join("")
 
+# Default callback, when no callback is provided.
 noop = (value) -> value
 
+
+# Base class for `Serializer` and `Parser`.
 class Packet
-  constructor: ->
+
+  constructor: (@self) ->
     @packets = {}
     @reset()
     @fields = []
     @transforms = Object.create(transforms)
 
+  # Create a copy that will adopt the packets defined in this object, through
+  # prototype inheritence. This is used to efficently create parsers and
+  # serializers that can run concurrently, from a pre-configured prototype,
+  # following classic GoF prototype creational pattern.
   clone: ->
     copy            = new (this.constructor)()
     copy.packets    = Object.create(packets)
     copy
 
+  # Map a named packet with the given `name` to the given `pattern`. 
   packet: (name, pattern, callback) ->
     callback      or= noop
     pattern         = parsePattern(pattern)
@@ -64,6 +74,7 @@ class Packet
 
   unpack: ->
     bytes   = @value
+    return null unless bytes?
     pattern = @pattern[@patternIndex]
     if pattern.type == "h"
       hex bytes.reverse()
@@ -83,6 +94,11 @@ class Packet
         value += (~(bytes[top] & 0x7f) & 0xff & 0x7f) * Math.pow(256, top)
         value += 1
         value *= -1
+      else
+        top = bytes.length - 1
+        for i in [0...top]
+          value += (bytes[i] & 0xff)  * Math.pow(256, i)
+        value += (bytes[top] & 0x7f) * Math.pow(256, top)
       value
     else
       bytes
@@ -108,15 +124,24 @@ transforms =
     if parsing
       if not (value instanceof Buffer)
         value = bufferize(value)
+      if /^ascii$/i.test(encoding)
+        # Broken and waiting on [297](http://github.com/ry/node/issues/issue/297).
+        # If the top bit is set, it is not ASCII, so we zero the value.
+        for i in [0...value.length]
+          value[i] = 0 if value[i] & 0x80
+        encoding = "utf8"
       length = value.length
       length -= field.terminator.length if field.terminator
       value.toString(encoding, 0, length)
     else
       if field.terminator
         value += field.terminator
-      new Buffer(value, encoding)
+      buffer = new Buffer(value, encoding)
+      if encoding is "ascii"
+        for i in [0...buffer.length]
+          buffer[i] = 0 if value.charAt(i) is '\0'
+      buffer
 
-  # Broken and waiting on #[297](http://github.com/ry/node/issues/issue/297).
   ascii: (parsing, field, value) ->
     transforms.str("ascii", parsing, field, value)
 
@@ -136,6 +161,8 @@ transforms =
     if parsing then parseFloat(value) else value.toString()
 
 module.exports.Parser = class Parser extends Packet
+  constructor: (self) -> super self
+
   data: (data...)   -> @user = data
 
   getBytesRead:     -> @bytesRead
@@ -150,7 +177,6 @@ module.exports.Parser = class Parser extends Packet
     @fields.push [] if pattern.arrayed and pattern.endianness isnt "x"
 
   nextValue: ->
-    reading = not @outgoing
     pattern = @pattern[@patternIndex]
 
     if pattern.endianness is "x"
@@ -216,6 +242,13 @@ module.exports.Parser = class Parser extends Packet
             break if @offset is @terminal
             return @bytesRead - start if offset is end
 
+        # If we are parsing an array, and repeat is 0
+        # It is essentially an empty array
+        # We don't parse anything
+        else if @pattern[@patternIndex].arrayed and @pattern[@patternIndex].repeat == 0
+          @value = null
+          @terminated = true
+
         # Otherwise we're packing bytes into an unsigned integer, the most
         # common case.
         else
@@ -234,7 +267,7 @@ module.exports.Parser = class Parser extends Packet
         # If we are filling an array field the current fields is an array,
         # otherwise current field is the value we've just read.
         if @pattern[@patternIndex].arrayed
-          @fields[@fields.length - 1].push(field)
+          @fields[@fields.length - 1].push(field) if field?
         else
           @fields.push(field)
 
@@ -265,7 +298,7 @@ module.exports.Parser = class Parser extends Packet
       # The pattern is set to null, our terminal condition, because the callback
       # may specify a subsequent packet to parse.
       else if ++@patternIndex == @pattern.length
-        @fields.push(@pipeline(@pattern[@patternIndex -1 ], @fields.pop()))
+        @fields.push(@pipeline(@pattern[@patternIndex - 1 ], @fields.pop()))
 
         @fields.push(this)
         for p in @user or []
@@ -273,7 +306,7 @@ module.exports.Parser = class Parser extends Packet
 
         @pattern        = null
 
-        @callback.apply null, @fields
+        @callback.apply @self, @fields
 
       # Otherwise we proceed to the next field in the packet pattern.
       else
@@ -289,6 +322,8 @@ module.exports.Parser = class Parser extends Packet
     @bytesRead - start
 
 module.exports.Serializer = class Serializer extends Packet
+  constructor: (self) -> super self
+
   getBytesWritten: -> @bytesWritten
 
   packet: (name, pattern, callback) ->
@@ -301,6 +336,7 @@ module.exports.Serializer = class Serializer extends Packet
     pattern       = @pattern[@patternIndex]
     @repeat       = pattern.repeat
     @terminated   = not pattern.terminator
+    @terminates   = not @terminated
     @index        = 0
 
     delete        @padding
@@ -317,7 +353,6 @@ module.exports.Serializer = class Serializer extends Packet
     if pattern.endianness is "x" and not @padding?
         @skipping = pattern.bytes
     else
-
       if @padding?
         value = @padding
       else if pattern.arrayed
@@ -402,20 +437,27 @@ module.exports.Serializer = class Serializer extends Packet
             return offset - start if offset is end
 
       # If we have not terminated, check for the termination state change.
-      # Termination will simply change the loop settings, so types that have no
-      # terminater start out as terminated, and this does nothing.
-      if not @terminated
-        if @pattern[@patternIndex].terminator.charCodeAt(0) == @value
-          @terminated = true
-          if @repeat == Number.MAX_VALUE
+      # Termination will change the loop settings.
+      if @terminates
+        if @terminated
+          if @repeat is Number.MAX_VALUE
             @repeat = @index + 1
-          else if @pattern[@patternIndex].padding?
+          else if @pattern[@patternIndex].padding
             @padding = @pattern[@patternIndex].padding
           else
             @skipping = (@repeat - (++@index)) * @pattern[@patternIndex].bytes
             if @skipping
               @repeat = @index + 1
               continue
+        else
+          # If we are at the end of the series, then we create an empty outgoing
+          # array to hold the terminator, because the outgoing series may be a
+          # buffer. We insert the terminator at next index in the outgoing array.
+          # We then set repeat to allow one more iteration before callback.
+          if @outgoing[@patternIndex].length is @index + 1
+            @terminated = true
+            @outgoing[@patternIndex] = []
+            @outgoing[@patternIndex][@index + 1] = @pattern[@patternIndex].terminator.charCodeAt(0)
 
       # If we are reading an arrayed pattern and we have not read all of the
       # array elements, we repeat the current field type.
@@ -429,13 +471,14 @@ module.exports.Serializer = class Serializer extends Packet
       # because the callback may specify a subsequent packet to parse.
       else if ++@patternIndex is @pattern.length
         @pattern = null
-        @callback.apply null, [ this ]
+        @callback.apply @self, [ this ]
 
       else
 
         delete        @padding
         @repeat       = @pattern[@patternIndex].repeat
         @terminated   = not @pattern[@patternIndex].terminator
+        @terminates   = not @terminated
         @index        = 0
 
         @nextValue()
@@ -455,7 +498,7 @@ module.exports.Structure = class Structure
   sizeOf: (values...) -> 0
 
   read: (buffer, offset, callback) ->
-    callback = offset if typeof callback is "function" and not callback?
+    callback = offset if typeof offset is "function" and not callback
     @parser.reset()
     @parser.parse("structure", callback)
     @parser.read(buffer, offset, Number.MAX_VALUE)

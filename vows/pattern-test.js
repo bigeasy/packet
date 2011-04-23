@@ -123,7 +123,7 @@ vows.describe('Pattern').addBatch({
             ]);
         },
         'a signed little-endian 16 bit number followed by a byte': function (topic) {
-            var field = topic.parse('-l16b8');
+            var field = topic.parse('-l16, b8');
             assert.deepEqual(field,
             [
                 { signed: true
@@ -348,7 +348,7 @@ vows.describe('Pattern').addBatch({
             ]);
         },
         'a transform followed by a 16 bit number.': function (topic) {
-            var field = topic.parse('b8z|str("utf8")b16');
+            var field = topic.parse('b8z|str("utf8"), b16');
             assert.deepEqual(field, [
                 { signed: false
                 , bits: 8
@@ -655,6 +655,11 @@ vows.describe('Pattern').addBatch({
         'a float pattern other than 32 or 64 bits.': function (topic) {
             assert.throws(function () {
                 topic.parse('b16f');
+            }, Error);
+        },
+        'two patterns together without a comma.': function (topic) {
+            assert.throws(function () {
+                topic.parse('l16b8');
             }, Error);
         }
     }

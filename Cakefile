@@ -1,18 +1,17 @@
 fs              = require("fs")
 {exec, spawn}   = require("child_process")
 path            = require("path")
-idl             = require("idl")
 
 compile = (sources) ->
   coffee =          spawn "coffee", "-c -o lib".split(/\s/).concat(sources)
-  coffee.stderr.on  "data", (buffer) -> puts buffer.toString()
+  coffee.stderr.on  "data", (buffer) -> process.stdout.write buffer.toString()
   coffee.on         "exit", (status) -> process.exit(1) if status != 0
 
 currentBranch = (callback) ->
   branches =        ""
   git =             spawn "git", [ "branch" ]
   git.stdout.on     "data", (buffer) -> branches += buffer.toString()
-  git.stderr.on     "data", (buffer) -> puts buffer.toString()
+  git.stderr.on     "data", (buffer) -> process.stdout.write buffer.toString()
   git.on            "exit", (status) ->
     process.exit(1) if status != 0
     branch = /\*\s+(.*)/.exec(branches)[1]
@@ -44,8 +43,8 @@ task "gitignore", "create a .gitignore for node-ec2 based on git branch", ->
     fs.writeFile(".gitignore", gitignore)
 
 task "index", "rebuild the Node IDL landing page.", ->
-  package = JSON.parse fs.readFileSync "package.json", "utf8"
-  console.log(package)
+  idl       = require("idl")
+  package   = JSON.parse fs.readFileSync "package.json", "utf8"
   idl.generate "#{package.name}.idl", "index.html"
 
 task "docco", "rebuild the CoffeeScript docco documentation.", ->
@@ -56,8 +55,29 @@ task "compile", "compile the CoffeeScript into JavaScript", ->
   path.exists "./lib", (exists) ->
     fs.mkdirSync("./lib", parseInt(755, 8)) if not exists
     sources = fs.readdirSync("src")
-    sources = "src/" + source for source in sources when source.match(/\.coffee$/)
+    sources = ("src/" + source for source in sources when source.match(/\.coffee$/))
     compile sources
+
+task "coverage", "run coverage", ->
+#  exec "expresso coverage.js  --coverage", (err, stdout, stderr) ->
+#    throw err if err
+#    process.stdout.write(stdout)
+#    process.stdout.write(stderr)
+#    process.stdout.write("\n")
+  coffee =          spawn "expresso", [ "coverage.js", "--coverage" ]
+  coffee.stdout.on  "data", (buffer) -> process.stdout.write(buffer)
+  coffee.stderr.on  "data", (buffer) -> process.stdout.write(buffer)
+  coffee.on         "exit", (status) -> process.exit(1) if status != 0
+
+task "test", "run tests", ->
+  env = {}
+  for key, value of process.env
+    env[key] = value
+  env.NODE_PATH = "./lib"
+  exec "vows vows/*.js  --spec", { env }, (err, stdout, stderr) ->
+    throw err if err
+    process.stdout.write(stdout)
+    process.stdout.write(stderr)
 
 task "clean", "rebuild the CoffeeScript docco documentation.", ->
   currentBranch (branch) ->

@@ -213,14 +213,14 @@ terse to fit with the brevity of the pattern language.
 
 ## Reference
 
-namespace: packet
+@ packet
 
 Node Packet exports the ec2 namespace, which provides the {{Structure}},
 {{Parser}} and {{Serializer}} classes.
 
-class: Structure
+~ new Structure(pattern)
 
-  parameter: pattern
+  ~ pattern
 
   The packet pattern.
 
@@ -229,19 +229,11 @@ syncrhonously. When reading, buffer must contain the entire contents of the
 structure. When writing, the buffer must have enough space to accomdoate the
 structure.
 
-function: read
+~ read(buffer, offset, callback)
 
-  parameter: buffer
-
-  The byte buffer.
-
-  parameter: offset optional
-
-  The optional offset into the byte buffer. Defaults to `0`.
-
-  parameter: callback
-
-  Called with the parameters read from the byte buffer.
+  ~ buffer    - The byte buffer.
+  ~ offset?   - The optional offset into the byte buffer. Defaults to `0`.
+  ~ callback  - Called with the parameters read from the byte buffer.
 
 The read method accepts a buffer with an optional offset. The number of
 arguments is determined by the structure packet pattern, and must match
@@ -250,16 +242,18 @@ the number of arguments expected by the packet pattern.
 The callback will be called with the fields read from the buffer, with the
 actual count of bytes read as the last parameter.
 
-function: write
+~ write(buffer, offset, value...)
 
-  parameter: buffer
-
-  The byte buffer.
+  ~ buffer    - The byte buffer.
+  ~ offset?   - The optional offset into the byte buffer. Defaults to `0`.
+  ~ value...  - The values of the structure.
 
 Write the arguments to the  buffer at the optional offset. The arguments are
 determined by the structure bit pattern. Returns the number of bytes written.
 
-function: sizeOf
+~ sizeOf(value...)
+
+  ~ value...  - The values of the structure.
 
 Get the size of the structure for the given variable length values. A structure
 can have 0 or more variable length values.
@@ -267,21 +261,15 @@ can have 0 or more variable length values.
 The `sizeOf` method does not expect and will not correctly calculate the size of
 the structure if fixed size value are given.
 
-class: Parser
+~ new Parser()
 
-function: packet
+Parses a buffer and emits events based on patterns.
 
-  parameter: name
+~ packet(name, pattern, callback)
 
-  The name of the packet type.
-
-  parameter: pattern
-
-  The packet pattern.
-
-  parameter: callback optional
-
-  Called when a packet of this type has been read from a buffer.
+  ~ name - The name of the packet type.
+  ~ pattern - The packet pattern.
+  ~ callback? - Called when a packet of this type has been read from a buffer.
 
 Defines a named packet type optionally assigning a default response for the
 packet type.
