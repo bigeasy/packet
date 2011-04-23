@@ -67,6 +67,7 @@ h1, h2, h3, h4, h5, h6 {
       }
         #jump_page .source:hover {
           background: #f5f5ff;
+
         }
         #jump_page .source:first-child {
         }
@@ -124,15 +125,17 @@ table td {
 .highlight {
     border: 1px dashed gray;
     padding: 1em;
-    margin-bottom: 1.5em;
+    margin-bottom: 1.0em;
 }
 #container {
     text-align: left;
 }
 #api {
     width: 280px; 
+    float: right;
     position: fixed;
-    top: 0px;
+    margin-left: 640px;
+    margin-top: 40px;
 }
 #api h1 {
     font-size: 1.2em;
@@ -143,22 +146,35 @@ table td {
 #api h2 {
     font-size: 1.1em;
     margin: 0.5em 0 0.5em 0.25em;
-    padding: 3px 8px;
+    margin: 0;
+    padding: 8px 8px 6px 8px;
     border-bottom: 2px solid gray;
 }
 #narrative {
+    float: left;
     width: 600px;
-    margin-left: 350px;
+}
+#narrative ul {
+    padding-left: 1.5em;
+}
+#narrative li {
+    margin-bottom: 1em;
 }
 
-#api .depth-0 {
+#api .depth-0- {
   margin-left: 1.0em;
 }
-#api .depth-1 {
-  margin-left: 1.5em;
+#api .depth-1- {
+  margin-left: 1.0em;
 }
 #api .depth-2 {
-  margin-left: 2.0em;
+  margin-left: 1.0em;
+}
+
+#api .selected {
+/*    background: #F4B460;
+    background: #F4BF7A;*/
+    background: #FFDE9E;
 }
 
 #api h3 a {
