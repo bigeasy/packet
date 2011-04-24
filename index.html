@@ -5,6 +5,8 @@
   <title>Node Packet</title>
   <meta http-equiv="content-type" content="text/html; charset=UTF-8">
   <link rel="stylesheet" media="all" href="site/idl.css">
+  <script src="http://code.jquery.com/jquery-1.5.2.js" type="text/javascript"></script>
+  <script src="site/idl.js" type="text/javascript"></script>
 </head>
 <body>
   
@@ -16,6 +18,8 @@
     <div id="narrative">
       
         
+          <h2 class="namespace"><a name=""></a></h2>
+        
         
         
           <h1>Node Packet</h1>
@@ -24,25 +28,27 @@
         
       
         
-        
-        
-          <h2>Synopsis</h2>
-
-<p>Use tar as an example?</p>
-        
-      
+          <h2 class="namespace"><a name="Synopsis">Synopsis</a></h2>
         
         
         
-          <h2>Installing</h2>
+          <p>Use tar as an example?</p>
         
       
         
+          <h2 class="namespace"><a name="Installing">Installing</a></h2>
         
         
-          <h2>Rationale</h2>
-
-<p>Node Packet aspires to be the go to library for converting binary data into
+        
+          
+        
+      
+        
+          <h2 class="namespace"><a name="Rationale">Rationale</a></h2>
+        
+        
+        
+          <p>Node Packet aspires to be the go to library for converting binary data into
 JavaScript or CoffeeScript primitives.</p>
 
 <p>The following rationale is offered for the following questions that may or may
@@ -56,11 +62,11 @@ types defined by the API user.</p>
         
       
         
+          <h2 class="namespace"><a name="Bit Pattern Language">Bit Pattern Language</a></h2>
         
         
-          <h2>Bit Pattern Language</h2>
-
-<h3>Big-Endian Byte Ordering</h3>
+        
+          <h3>Big-Endian Byte Ordering</h3>
 
 <p>To define a big-endian byte ordering for a field, prefix the bit size with <code>b</code>.
 <strong>Mnemonic</strong>: The letter <code>b</code> stands for big-endian.</p>
@@ -249,13 +255,15 @@ terse to fit with the brevity of the pattern language.</p>
         
       
         
+          <h2 class="namespace"><a name="Reference">Reference</a></h2>
         
         
-          <h2>Reference</h2>
+        
+          
         
       
         
-          <h3 class="namespace">packet</h3>
+          <h3 class="namespace"><a name="packet">packet</a></h3>
         
         
         
@@ -264,7 +272,7 @@ terse to fit with the brevity of the pattern language.</p>
         
       
         
-          <h3 class="class">packet.Structure()</h3>
+          <h3 class="class"><a name="Structure">packet.Structure()</a></h3>
         
         
             
@@ -280,7 +288,7 @@ structure.</p>
       
         
           
-            <h3 class="function">read(buffer,  [offset], callback)</h3>
+            <h3 class="function"><a name="read_buffer_offset_callback">read(buffer,  [offset], callback)</a></h3>
           
         
         
@@ -318,7 +326,7 @@ actual count of bytes read as the last parameter.</p>
       
         
           
-            <h3 class="function">write(buffer,  [offset],  value...)</h3>
+            <h3 class="function"><a name="write_buffer_offset_value">write(buffer,  [offset],  value...)</a></h3>
           
         
         
@@ -352,7 +360,7 @@ determined by the structure bit pattern. Returns the number of bytes written.</p
       
         
           
-            <h3 class="function">sizeOf( value...)</h3>
+            <h3 class="function"><a name="sizeOf_value">sizeOf( value...)</a></h3>
           
         
         
@@ -374,7 +382,7 @@ the structure if fixed size value are given.</p>
         
       
         
-          <h3 class="class">packet.Parser()</h3>
+          <h3 class="class"><a name="Parser">packet.Parser()</a></h3>
         
         
             
@@ -385,7 +393,7 @@ the structure if fixed size value are given.</p>
       
         
           
-            <h3 class="function">packet(name, pattern,  [callback])</h3>
+            <h3 class="function"><a name="packet_name_pattern_callback">packet(name, pattern,  [callback])</a></h3>
           
         
         
@@ -419,7 +427,7 @@ packet type.</p>
       
         
           
-            <h3 class="function">parse(nameOrPattern)</h3>
+            <h3 class="function"><a name="parse_nameOrPattern">parse(nameOrPattern)</a></h3>
           
         
         
@@ -438,7 +446,7 @@ packet type.</p>
       
         
           
-            <h3 class="function">clone()</h3>
+            <h3 class="function"><a name="clone">clone()</a></h3>
           
         
         
@@ -453,7 +461,7 @@ instances.</p>
         
       
         
-          <h3 class="class">packet.Serializer()</h3>
+          <h3 class="class"><a name="Serializer">packet.Serializer()</a></h3>
         
         
             
@@ -468,63 +476,63 @@ instances.</p>
         
       
         
-          <h2 class="heading">Synopsis</h3>
+          <h2 class="heading"><a href="#Synopsis">Synopsis</a></h3>
         
       
         
-          <h2 class="heading">Installing</h3>
+          <h2 class="heading"><a href="#Installing">Installing</a></h3>
         
       
         
-          <h2 class="heading">Rationale</h3>
+          <h2 class="heading"><a href="#Rationale">Rationale</a></h3>
         
       
         
-          <h2 class="heading">Bit Pattern Language</h3>
+          <h2 class="heading"><a href="#Bit Pattern Language">Bit Pattern Language</a></h3>
         
       
         
-          <h2 class="heading">Reference</h3>
+          <h2 class="heading"><a href="#Reference">Reference</a></h3>
         
       
         
-          <h3 class="namespace depth-0">packet</h3>
+          <h3 class="namespace depth-0"><a href="#packet">packet</a></h3>
         
       
         
-          <h3 class="class depth-1">Structure</h3>
+          <h3 class="class depth-1"><a href="#Structure">Structure</a></h3>
         
       
         
-          <h3 class="function depth-2">read</h3>
+          <h3 class="function depth-2"><a href="#read_buffer_offset_callback">read</a></h3>
         
       
         
-          <h3 class="function depth-2">write</h3>
+          <h3 class="function depth-2"><a href="#write_buffer_offset_value">write</a></h3>
         
       
         
-          <h3 class="function depth-2">sizeOf</h3>
+          <h3 class="function depth-2"><a href="#sizeOf_value">sizeOf</a></h3>
         
       
         
-          <h3 class="class depth-1">Parser</h3>
+          <h3 class="class depth-1"><a href="#Parser">Parser</a></h3>
         
       
         
-          <h3 class="function depth-2">packet</h3>
+          <h3 class="function depth-2"><a href="#packet_name_pattern_callback">packet</a></h3>
         
       
         
-          <h3 class="function depth-2">parse</h3>
+          <h3 class="function depth-2"><a href="#parse_nameOrPattern">parse</a></h3>
         
       
         
-          <h3 class="function depth-2">clone</h3>
+          <h3 class="function depth-2"><a href="#clone">clone</a></h3>
         
       
         
-          <h3 class="class depth-1">Serializer</h3>
+          <h3 class="class depth-1"><a href="#Serializer">Serializer</a></h3>
         
       
       

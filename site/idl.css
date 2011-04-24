@@ -132,20 +132,19 @@ table td {
 }
 #api {
     width: 280px; 
+    margin-left: 640px;
     float: right;
     position: fixed;
-    margin-left: 640px;
     margin-top: 40px;
 }
 #api h1 {
     font-size: 1.2em;
 }
 #api h3 {
-    margin: 0.5em 0;
+    margin: 0;
 }
 #api h2 {
     font-size: 1.1em;
-    margin: 0.5em 0 0.5em 0.25em;
     margin: 0;
     padding: 8px 8px 6px 8px;
     border-bottom: 2px solid gray;
@@ -177,11 +176,11 @@ table td {
     background: #FFDE9E;
 }
 
-#api h3 a {
+#api h3 a, #api h2 a {
     text-decoration: none;
 }
 
-#api h3 a:hover {
+#api h3 a:hover, #api h2 a:hover {
     text-decoration: underline;
 }
 h3.namespace, h3.function, h3.event, h3.class, h3.docco {
