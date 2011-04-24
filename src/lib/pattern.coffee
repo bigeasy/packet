@@ -1,17 +1,9 @@
-# This module is separated for isolation during testing. It is meant to be
+# This module is separated for isolation during testing. It is not meant to be
 # exposed as part of the public API.
 
 # Regular expression to match a pipeline argument, expressed as a JavaScript
 # scalar, taken in part from [json2.js](http://www.JSON.org/json2.js). 
-argument = ///
-  ( '(?:[^\\']|\\.)+'|"(?:[^\\"]|\\.)+"   # string
-  | true | false                          # boolean
-  | null                                  # null
-  | -?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?     # number
-  )    
-  (\s*,\s*|\s*\))?                      # remaining arguments
-  (.*)                                  # remaining pattern
-///
+argument = require "./argument"
 
 ##### packing(pattern)
 # Parse bit packing.
