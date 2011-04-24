@@ -12,6 +12,40 @@ currentBranch = (callback) ->
     branch = /\*\s+(.*)/.exec(branches)[1]
     callback branch
 
+copySearch = (from, to, include, exclude, commands) ->
+  if not commands? and (exclude instanceof Array)
+    commands = exclude
+    exclude = null
+  # Gather up the CoffeeScript files and directories in the source directory.
+  files = []
+  dirs = []
+  for file in fs.readdirSync from
+    source = "#{from}/#{file}"
+    if include.test(source) and not (exclude and exclude.test(source))
+      try
+        if fs.statSync(source).mtime > fs.statSync("#{to}/#{file}").mtime
+          files.push source
+      catch e
+        files.push source
+    else
+      try
+        stat = fs.statSync "#{from}/#{file}"
+        if stat.isDirectory()
+          dirs.push file # Create the destination directory if it does not exist.
+      catch e
+        console.warn "Cannot stat: #{from}/#{file}"
+        throw e if e.number != process.binding("net").ENOENT
+        console.warn "File disappeared: #{from}/#{file}"
+  if files.length
+    try
+      fs.statSync to
+    catch e
+      fs.mkdirSync to, parseInt(755, 8)
+    commands.push [ "cp", files.concat(to) ]
+
+  for dir in dirs
+    copySearch "#{from}/#{dir}",  "#{to}/#{dir}", include, exclude, commands
+
 # Cheap `make`. Why not use real `make`? Because real make solves a more
 # complicated problem, building an artifact that has multiple dependencies,
 # which in turn have dependencies. Here we build artifacts that each have a
