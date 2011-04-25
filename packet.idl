@@ -72,6 +72,7 @@ defined callback.
 ### Big-Endian Byte Ordering
 
 To define a big-endian byte ordering for a field, prefix the bit size with `b`.
+
 **Mnemonic**: The letter `b` stands for big-endian.
 
 ```javascript
@@ -83,6 +84,7 @@ To define a big-endian byte ordering for a field, prefix the bit size with `b`.
 ### Little-Endian Byte Ordering
 
 To define a little-endian byte ordering for a field, prefix the bit size with `l`.
+
 **Mnemonic**: The letter `l` stands for little-endian.
 
 ```javascript
@@ -93,17 +95,19 @@ To define a little-endian byte ordering for a field, prefix the bit size with `l
 
 ### Skipping Bytes
 
-You can skip over bytes your pattern with `x`. **Mnemonic**: The letter `x`
-means to cross-out, which is kind of like skipping.
+You can skip over bytes your pattern with `x`.
+
+**Mnemonic**: The letter `x` means to cross-out, which is kind of like skipping.
 
 ```javascript
-"b8, x16, l16"    // A byte separated from a little-endian 16 bit integer by 16
-                  // two bytes.
+"b8, x16, l16"    // A byte, two skipped bytes, and a little-endian 16 bit
+                  // integer.
 ```
 
 ### Signed Versus Unsigned Integers
 
 All numbers are assumed to be unsigned, unless prefixed by a negative symbol.
+
 **Mnemonic**: The `-` symbol indicates the possiblity of negative numbers.
 
 ```javascript
@@ -118,7 +122,9 @@ The number type for JavaScript is the  64 bit IEEE 754 floating point. Node
 Packet can read write 64 bit and 32 bit IEEE 754 floating point numbers.
 
 To indicated that the type is a floating point number, use the `f` type suffix.
-This is indicated with a `f` suffix.  **Mnemonic**: The letter `f` stands for
+This is indicated with a `f` suffix.
+
+**Mnemonic**: The letter `f` stands for
 *floating-point*.
 
 ```javascript
@@ -131,7 +137,9 @@ The floating-point numbers can be stored in little-endian or big-endian byte ord
 ### Arrays of Raw Bytes
 
 A value will be converted to a big-endian array of bytes if followed by an `a`
-suffix. **Mnemonic**: The letter `a` stands for *array*.
+suffix.
+
+**Mnemonic**: The letter `a` stands for *array*.
 
 ```javascript
 "l128a"           // Unsigned little-endian 128 bit integer as big-endian array
@@ -147,8 +155,9 @@ all about. (Big-endian orders like Arabic numerals, while little-endian orders
 like offsets into memory.)
 
 If you'd prefer a little-endian array, you can reverse the array with the `@`
-qualifier. **Mnemonic**: The `@` character is a swirl and we want to turn our
-array around.
+qualifier.
+
+**Mnemonic**: The `@` character is a swirl and we want to turn our array around.
 
 ```javascript
 "l128a@"          // Unsigned little-endian 128 bit integer as little-endian
@@ -167,8 +176,9 @@ suffix.
 
 Like the raw byte of arrays, the hex string is in big-endian order with the most 
 significant bytes at the top. It is less likely that you'll want to reverse a
-hex string, but if you, you can use the `@` qualifier. **Mnemonic**: The `@`
-character is a swirl and we want to turn our string  around.
+hex string, but if you, you can use the `@` qualifier.
+
+**Mnemonic**: The `@` character is a swirl and we want to turn our string  around.
 
 ```javascript
 "l128h@"          // Unsigned little-endian 128 bit integer as a little-endian
@@ -180,9 +190,10 @@ character is a swirl and we want to turn our string  around.
 It is often the case that a binary format contains an array of values. The most
 common case are arrays of bytes represnting ASCII or UTF-8 strings.
 
-Arrays are specified with an subscript and a count. **Menmonic**: The square
-brackets are used as array subscripts in JavaScript, and used to declare array
-length in other C dialect languages.
+Arrays are specified with an subscript and a count.
+
+**Mnemonic**: The square brackets are used as array subscripts in JavaScript,
+and used to declare array length in other C dialect languages.
 
 ```javascript
 "b32[4]"          // An array of four big-endian 32 bit numbers.
@@ -191,25 +202,48 @@ length in other C dialect languages.
 
 The array notation produces an array of the type before the subscript.
 
-### Length Encoded Arrays
-
-Length encoded arrays are specified by joining a count type and a value type
-with a `/`. **Mnemonic**: Inspired by Perl's `pack`, this count and type
-separator character is as good as any.
-
-```javascript
-"b8/b8"           // Length encoded byte array with a byte length.
-"l16/b8"          // Length encoded byte array with 16 bit little-endian length.
-```
-
 ### Zero Terminated Arrays
 
-Zero terminated series are speified with a `z` qualifier. **Mnemonic**: The
-letter `z` stands for zero.
+Zero terminated series are speified with a `z` qualifier.
+
+You can specify both terminiation and width together. Why would you need this?
+This occurs in underlying C structures when there is a fixed width character
+array in a structure, but the structure still contains a zero terminated string.
+
+**Upcoming**: Chose your own terminator.
+
+**Mnemonic**: The letter `z` stands for zero.
 
 ```javascript
 "l16z"            // Little-endian 16 bit numbers terminated by a zero value.
 "b8z"             // Byte string terminated by zero.
+"b8[12]z"         // Byte string terminated by zero in a field 12 bytes long.
+```
+
+### Array Padding
+
+You can specify a padding value immediately after the array brackets using curly
+braces. This should be the numeric value, or character code for padding. If you
+want to zero pad, use `0`. If you want to pad with ASCII spaces use `32`.
+
+**Mnemonic**: Curly braces are used to define array literals in C.
+
+```javascript
+"b16[12]{0}"      // Array of 12 big-endian 16 bit integers, zero padded.
+"b8[12]{32}z"     // Byte string terminated by zero in a field 12 bytes long
+                  // ascii space padded.
+```
+### Length Encoded Arrays
+
+Length encoded arrays are specified by joining a count type and a value type
+with a `/`.
+
+**Mnemonic**: Inspired by Perl's `pack`, which uses the slash to separate count
+and type.
+
+```javascript
+"b8/b8"           // Length encoded byte array with a byte length.
+"l16/b8"          // Length encoded byte array with 16 bit little-endian length.
 ```
 
 ### Transforms
