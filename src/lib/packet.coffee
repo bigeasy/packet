@@ -601,6 +601,7 @@ module.exports.Serializer = class Serializer extends Packet
         @terminates   = not @terminated
         @index        = 0
 
+        @nextField()
         @nextValue()
 
     @outgoing = null

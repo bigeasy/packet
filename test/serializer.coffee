@@ -98,12 +98,21 @@ class module.exports.SerializerTest extends TwerpTest
     done 2
 
   'test: write a 16 bit integer after filling four bytes': (done) ->
-    buffer = []
+    buffer = [ 0x01, 0x01, 0x01, 0x01 ]
     @parser.reset()
     @parser.serialize "x16[2]{0}, b16", 1, (engine) =>
       @equal engine.getBytesWritten(), 6
     @parser.write buffer, 0, 7
     @deepEqual buffer, [ 0x00, 0x00, 0x00, 0x00, 0x00, 0x01 ]
+    done 2
+
+  'test: write 2 zero filled bytes then two 2 filled bytes': (done) ->
+    buffer = [ 0x01, 0x01, 0x01, 0x01, 0x01, 0x01 ]
+    @parser.reset()
+    @parser.serialize "x8[2]{0},x8[2]{2}", (engine) =>
+      @equal engine.getBytesWritten(), 4
+    @parser.write buffer, 0, 7
+    @deepEqual buffer, [ 0x00, 0x00, 0x02, 0x02, 0x01, 0x01 ]
     done 2
 
   'test: write a length encoded array of bytes': (done) ->
