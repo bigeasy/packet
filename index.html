@@ -36,37 +36,82 @@
         
       
         
+          <h2 class="namespace"><a name="Objectives">Objectives</a></h2>
+        
+        
+        
+          <p>Node Packet simplifies the construction an maintainence of libraries that
+convert binary to JavaScript and back. The name Packet may make you think that
+it is desinged solely for binary network protocols, but it is also used to read
+and write binary file formats.</p>
+
+<p><strong>Incremental</strong> ~ Node packet creates incremental parsers and serailizers that
+are almost as fast as the parser you'd write by hand, but a lot easier to define
+and maintain.</p>
+
+<p><strong>Declarative</strong> ~ Packet defines a binary structure using a pattern language
+inspired by Perl's <code>pack</code>. The binary patterns can be used to define both
+parsers and serializers. If you have a protocol specificationre, or even just a
+C header file with structures that define your binary data, you can probably
+transalte that directly into Node Packet patterns.</p>
+
+<p>For parsers, you match the patterns to actions you want to take when the pattern
+is matched. For serializers you simply give the values to write the pattern to
+follow when writing them.</p>
+
+<p><strong>Expressive</strong> ~ The pattern language can express</p>
+
+<ul>
+<li>signed and unsigned integers, </li>
+<li>endianess of singed and unsigned integers,</li>
+<li>floats and doubles,</li>
+<li>fixed length arrays of characters or numbers,</li>
+<li>length encoded strings of characters or numbers,</li>
+<li>zero terminated strings of characters or numbers,</li>
+<li>said strings terminated any fixed length terminator you specify,</li>
+<li>padding of said strings with any padding value you specify,</li>
+<li>singed and unsigned integers extracted from bit packed integers,</li>
+<li>conditions based on bit patterns</li>
+<li>character encodings,</li>
+<li>custom tranformations,</li>
+<li>and pipelines of character encodings and custom tranformations.</li>
+</ul>
+
+<p><strong>Streaming</strong> ~ Node Packet implements the Node.js <a href="http://nodejs.org/docs/v0.4.7/api/streams.html">stream
+interface</a> in both the <code>Parser</code>
+and the <code>Serializer</code>. You can pump a stream into a Packet <code>Parser</code> and it will
+invoke your packet handlers.  </p>
+        
+      
+        
           <h2 class="namespace"><a name="Installing">Installing</a></h2>
         
         
+        
+          <p>Install Packet using NPM. The source is available on
+<a href="https://github.com/bigeasy/node-packet">GitHub</a>.</p>
+        
+          <div class='highlight'><pre>npm install packet</pre></div>
         
           
         
       
         
-          <h2 class="namespace"><a name="Rationale">Rationale</a></h2>
+          <h2 class="namespace"><a name="Binary Pattern Language">Binary Pattern Language</a></h2>
         
         
         
-          <p>Node Packet aspires to be the go to library for converting binary data into
-JavaScript or CoffeeScript primitives.</p>
+          <p>Node Packet defines a binrary format using a binary pattern language inspried by
+Perl's <code>pack</code> function. The pattern language is used in a <code>Parser</code> to define the
+parameters passed to callback when enough bytes are read from the input stream
+to satisfy the pattern. The pattern language is used in a <code>Serializer</code> to define
+how JavaScript primitives passed to the <code>serialize</code> method are written to stream.</p>
 
-<p>The following rationale is offered for the following questions that may or may
-not be asked frequenty.</p>
+<p>The pattern works with a <code>Parser</code> to deconstruct a binary stream and turn it
+into JavaScript primitives, passing those primitives as the arguments to a user
+defined callback.</p>
 
-<h3>Why didn't you derive from EventEmitter?</h3>
-
-<p>EventEmitter is well suited for classes that have a set of API defined event
-types. It does not at all suited for classes that emit of any number of event
-types defined by the API user.</p>
-        
-      
-        
-          <h2 class="namespace"><a name="Bit Pattern Language">Bit Pattern Language</a></h2>
-        
-        
-        
-          <h3>Big-Endian Byte Ordering</h3>
+<h3>Big-Endian Byte Ordering</h3>
 
 <p>To define a big-endian byte ordering for a field, prefix the bit size with <code>b</code>.
 <strong>Mnemonic</strong>: The letter <code>b</code> stands for big-endian.</p>
@@ -480,15 +525,15 @@ instances.</p>
         
       
         
+          <h2 class="heading"><a href="#Objectives">Objectives</a></h3>
+        
+      
+        
           <h2 class="heading"><a href="#Installing">Installing</a></h3>
         
       
         
-          <h2 class="heading"><a href="#Rationale">Rationale</a></h3>
-        
-      
-        
-          <h2 class="heading"><a href="#Bit Pattern Language">Bit Pattern Language</a></h3>
+          <h2 class="heading"><a href="#Binary Pattern Language">Binary Pattern Language</a></h3>
         
       
         
@@ -548,6 +593,11 @@ instances.</p>
           
             
             <h3 class="docco depth-0"><a href="./documentation/pattern.html">pattern.coffee</a></h3>
+          
+        
+          
+            
+            <h3 class="docco depth-0"><a href="./documentation/argument.html">argument.coffee</a></h3>
           
         
       
