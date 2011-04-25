@@ -113,8 +113,9 @@ defined callback.</p>
 
 <h3>Big-Endian Byte Ordering</h3>
 
-<p>To define a big-endian byte ordering for a field, prefix the bit size with <code>b</code>.
-<strong>Mnemonic</strong>: The letter <code>b</code> stands for big-endian.</p>
+<p>To define a big-endian byte ordering for a field, prefix the bit size with <code>b</code>.</p>
+
+<p><strong>Mnemonic</strong>: The letter <code>b</code> stands for big-endian.</p>
         
           <div class="highlight"><pre><span class="s2">&quot;b16&quot;</span>             <span class="c1">// Big-endian 32 bit number.</span>
 <span class="s2">&quot;b8&quot;</span>              <span class="c1">// Endianess of a single byte is irrelevant.</span>
@@ -124,8 +125,9 @@ defined callback.</p>
         
           <h3>Little-Endian Byte Ordering</h3>
 
-<p>To define a little-endian byte ordering for a field, prefix the bit size with <code>l</code>.
-<strong>Mnemonic</strong>: The letter <code>l</code> stands for little-endian.</p>
+<p>To define a little-endian byte ordering for a field, prefix the bit size with <code>l</code>.</p>
+
+<p><strong>Mnemonic</strong>: The letter <code>l</code> stands for little-endian.</p>
         
           <div class="highlight"><pre><span class="s2">&quot;l32&quot;</span>             <span class="c1">// Little-endian 32 bit integer.</span>
 <span class="s2">&quot;l8&quot;</span>              <span class="c1">// Endianess of a single byte is irrelevant.</span>
@@ -135,18 +137,20 @@ defined callback.</p>
         
           <h3>Skipping Bytes</h3>
 
-<p>You can skip over bytes your pattern with <code>x</code>. <strong>Mnemonic</strong>: The letter <code>x</code>
-means to cross-out, which is kind of like skipping.</p>
+<p>You can skip over bytes your pattern with <code>x</code>.</p>
+
+<p><strong>Mnemonic</strong>: The letter <code>x</code> means to cross-out, which is kind of like skipping.</p>
         
-          <div class="highlight"><pre><span class="s2">&quot;b8, x16, l16&quot;</span>    <span class="c1">// A byte separated from a little-endian 16 bit integer by 16</span>
-                  <span class="c1">// two bytes.</span>
+          <div class="highlight"><pre><span class="s2">&quot;b8, x16, l16&quot;</span>    <span class="c1">// A byte, two skipped bytes, and a little-endian 16 bit</span>
+                  <span class="c1">// integer.</span>
 </pre></div>
 
         
           <h3>Signed Versus Unsigned Integers</h3>
 
-<p>All numbers are assumed to be unsigned, unless prefixed by a negative symbol.
-<strong>Mnemonic</strong>: The <code>-</code> symbol indicates the possiblity of negative numbers.</p>
+<p>All numbers are assumed to be unsigned, unless prefixed by a negative symbol.</p>
+
+<p><strong>Mnemonic</strong>: The <code>-</code> symbol indicates the possiblity of negative numbers.</p>
         
           <div class="highlight"><pre><span class="s2">&quot;-b32&quot;</span>            <span class="c1">// Big-endian 32 bit signed integer.</span>
 <span class="s2">&quot;-l32&quot;</span>            <span class="c1">// Little-endian 32 bit signed integer.</span>
@@ -160,7 +164,9 @@ means to cross-out, which is kind of like skipping.</p>
 Packet can read write 64 bit and 32 bit IEEE 754 floating point numbers.</p>
 
 <p>To indicated that the type is a floating point number, use the <code>f</code> type suffix.
-This is indicated with a <code>f</code> suffix.  <strong>Mnemonic</strong>: The letter <code>f</code> stands for
+This is indicated with a <code>f</code> suffix.</p>
+
+<p><strong>Mnemonic</strong>: The letter <code>f</code> stands for
 <em>floating-point</em>.</p>
         
           <div class="highlight"><pre><span class="s2">&quot;b64f&quot;</span>            <span class="c1">// Big-endian 64 bit IEEE 754 double floating point number.</span>
@@ -173,7 +179,9 @@ This is indicated with a <code>f</code> suffix.  <strong>Mnemonic</strong>: The 
 <h3>Arrays of Raw Bytes</h3>
 
 <p>A value will be converted to a big-endian array of bytes if followed by an <code>a</code>
-suffix. <strong>Mnemonic</strong>: The letter <code>a</code> stands for <em>array</em>.</p>
+suffix.</p>
+
+<p><strong>Mnemonic</strong>: The letter <code>a</code> stands for <em>array</em>.</p>
         
           <div class="highlight"><pre><span class="s2">&quot;l128a&quot;</span>           <span class="c1">// Unsigned little-endian 128 bit integer as big-endian array</span>
                   <span class="c1">// of bytes.</span>
@@ -189,8 +197,9 @@ all about. (Big-endian orders like Arabic numerals, while little-endian orders
 like offsets into memory.)</p>
 
 <p>If you'd prefer a little-endian array, you can reverse the array with the <code>@</code>
-qualifier. <strong>Mnemonic</strong>: The <code>@</code> character is a swirl and we want to turn our
-array around.</p>
+qualifier.</p>
+
+<p><strong>Mnemonic</strong>: The <code>@</code> character is a swirl and we want to turn our array around.</p>
         
           <div class="highlight"><pre><span class="s2">&quot;l128a@&quot;</span>          <span class="c1">// Unsigned little-endian 128 bit integer as little-endian</span>
                   <span class="c1">// array of bytes.</span>
@@ -209,8 +218,9 @@ suffix. </p>
         
           <p>Like the raw byte of arrays, the hex string is in big-endian order with the most 
 significant bytes at the top. It is less likely that you'll want to reverse a
-hex string, but if you, you can use the <code>@</code> qualifier. <strong>Mnemonic</strong>: The <code>@</code>
-character is a swirl and we want to turn our string  around.</p>
+hex string, but if you, you can use the <code>@</code> qualifier.</p>
+
+<p><strong>Mnemonic</strong>: The <code>@</code> character is a swirl and we want to turn our string  around.</p>
         
           <div class="highlight"><pre><span class="s2">&quot;l128h@&quot;</span>          <span class="c1">// Unsigned little-endian 128 bit integer as a little-endian</span>
                   <span class="c1">// hex string.</span>
@@ -222,9 +232,10 @@ character is a swirl and we want to turn our string  around.</p>
 <p>It is often the case that a binary format contains an array of values. The most
 common case are arrays of bytes represnting ASCII or UTF-8 strings.</p>
 
-<p>Arrays are specified with an subscript and a count. <strong>Menmonic</strong>: The square
-brackets are used as array subscripts in JavaScript, and used to declare array
-length in other C dialect languages.</p>
+<p>Arrays are specified with an subscript and a count.</p>
+
+<p><strong>Mnemonic</strong>: The square brackets are used as array subscripts in JavaScript,
+and used to declare array length in other C dialect languages.</p>
         
           <div class="highlight"><pre><span class="s2">&quot;b32[4]&quot;</span>          <span class="c1">// An array of four big-endian 32 bit numbers.</span>
 <span class="s2">&quot;b8[16]&quot;</span>          <span class="c1">// An array of 16 bytes.</span>
@@ -233,24 +244,48 @@ length in other C dialect languages.</p>
         
           <p>The array notation produces an array of the type before the subscript.</p>
 
-<h3>Length Encoded Arrays</h3>
+<h3>Zero Terminated Arrays</h3>
 
-<p>Length encoded arrays are specified by joining a count type and a value type
-with a <code>/</code>. <strong>Mnemonic</strong>: Inspired by Perl's <code>pack</code>, this count and type
-separator character is as good as any.</p>
-        
-          <div class="highlight"><pre><span class="s2">&quot;b8/b8&quot;</span>           <span class="c1">// Length encoded byte array with a byte length.</span>
-<span class="s2">&quot;l16/b8&quot;</span>          <span class="c1">// Length encoded byte array with 16 bit little-endian length.</span>
-</pre></div>
+<p>Zero terminated series are speified with a <code>z</code> qualifier.</p>
 
-        
-          <h3>Zero Terminated Arrays</h3>
+<p>You can specify both terminiation and width together. Why would you need this?
+This occurs in underlying C structures when there is a fixed width character
+array in a structure, but the structure still contains a zero terminated string.</p>
 
-<p>Zero terminated series are speified with a <code>z</code> qualifier. <strong>Mnemonic</strong>: The
-letter <code>z</code> stands for zero.</p>
+<p><strong>Upcoming</strong>: Chose your own terminator.</p>
+
+<p><strong>Mnemonic</strong>: The letter <code>z</code> stands for zero.</p>
         
           <div class="highlight"><pre><span class="s2">&quot;l16z&quot;</span>            <span class="c1">// Little-endian 16 bit numbers terminated by a zero value.</span>
 <span class="s2">&quot;b8z&quot;</span>             <span class="c1">// Byte string terminated by zero.</span>
+<span class="s2">&quot;b8[12]z&quot;</span>         <span class="c1">// Byte string terminated by zero in a field 12 bytes long.</span>
+</pre></div>
+
+        
+          <h3>Array Padding</h3>
+
+<p>You can specify a padding value immediately after the array brackets using curly
+braces. This should be the numeric value, or character code for padding. If you
+want to zero pad, use <code>0</code>. If you want to pad with ASCII spaces use <code>32</code>.</p>
+
+<p><strong>Mnemonic</strong>: Curly braces are used to define array literals in C.</p>
+        
+          <div class="highlight"><pre><span class="s2">&quot;b16[12]{0}&quot;</span>      <span class="c1">// Array of 12 big-endian 16 bit integers, zero padded.</span>
+<span class="s2">&quot;b8[12]{32}z&quot;</span>     <span class="c1">// Byte string terminated by zero in a field 12 bytes long</span>
+                  <span class="c1">// ascii space padded.</span>
+</pre></div>
+
+        
+          <h3>Length Encoded Arrays</h3>
+
+<p>Length encoded arrays are specified by joining a count type and a value type
+with a <code>/</code>.</p>
+
+<p><strong>Mnemonic</strong>: Inspired by Perl's <code>pack</code>, which uses the slash to separate count
+and type.</p>
+        
+          <div class="highlight"><pre><span class="s2">&quot;b8/b8&quot;</span>           <span class="c1">// Length encoded byte array with a byte length.</span>
+<span class="s2">&quot;l16/b8&quot;</span>          <span class="c1">// Length encoded byte array with 16 bit little-endian length.</span>
 </pre></div>
 
         
