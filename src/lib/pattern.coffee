@@ -1,9 +1,9 @@
-# This module is separated for isolation during testing. It is meant to be
+# This module is separated for isolation during testing. It is not meant to be
 # exposed as part of the public API.
 
-# Regular expression to match a JavaScript scalar taken in part from
-# [json2.js](http://www.JSON.org/json2.js).
-scalar = /('(?:[^\\']|\\.)+'|"(?:[^\\"]|\\.)+"|true|false|null|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)(\s*,\s*|\s*\))?(.*)/
+# Regular expression to match a pipeline argument, expressed as a JavaScript
+# scalar, taken in part from [json2.js](http://www.JSON.org/json2.js). 
+argument = require "./argument"
 
 ##### packing(pattern)
 # Parse bit packing.
@@ -128,7 +128,7 @@ module.exports.parse = (pattern) ->
       hasArgument     = not pipe[2]
 
       while hasArgument
-        arg         = scalar.exec(rest)
+        arg         = argument.exec(rest)
         value       = eval(arg[1])
         hasArgument = arg[2].indexOf(")") is -1
         rest        = arg[3]

@@ -1,5 +1,6 @@
-parsePattern = require('./pattern').parse
-ieee754 = require('./ieee754')
+parsePattern = require("./pattern").parse
+ieee754 = require "./ieee754"
+stream = require "stream"
 
 # Convert an array of bytes into an hex string, two characters for each byte.
 hex = (bytes) ->
@@ -13,10 +14,9 @@ hex = (bytes) ->
 # Default callback, when no callback is provided.
 noop = (value) -> value
 
-
 # Base class for `Serializer` and `Parser`.
-class Packet
-
+class Packet extends stream.Stream
+  # Construct a packet that sends events using the given `self` as `this`.
   constructor: (@self) ->
     @packets = {}
     @reset()
@@ -160,8 +160,37 @@ transforms =
   atof: (parsing, field, value) ->
     if parsing then parseFloat(value) else value.toString()
 
+class ReadableStream extends stream.Stream
+  constructor: (@parser, @length) ->
+  setEncoding: (encoding) ->
+    @_decoder = new (require("string_decoder").StringDecoder)(encoding)
+  _delegate: (method) -> @parser.piped[method]() if @parser.piped
+  pause: ->
+    @_delegate "pause"
+    @parser.paused = true
+  resume: ->
+    @_delegate "resume"
+    @parser.paused = false
+  destroySoon: ->
+    @_delegate "destroySoon"
+    @parser.piped.destroySoon() if @parser.piped
+  destroy: ->
+    @_delegate "destroy"
+    @aprser.destroyed = false
+  _end: ->
+    @emit "end"
+    @parser._stream = null
+  _write: (slice) ->
+    if @_decoder
+      string = @_decoder.write(slice)
+      @emit "data", string if string.length
+    else
+      @emit "data", slice
+
 module.exports.Parser = class Parser extends Packet
-  constructor: (self) -> super self
+  constructor: (self) ->
+    super self
+    @writable = true
 
   data: (data...)   -> @user = data
 
@@ -171,7 +200,7 @@ module.exports.Parser = class Parser extends Packet
     pattern       = @pattern[@patternIndex]
     @repeat       = pattern.repeat
     @index        = 0
-    @skipping     = 0
+    @_skipping    = null
     @terminated   = not pattern.terminator
 
     @fields.push [] if pattern.arrayed and pattern.endianness isnt "x"
@@ -180,10 +209,10 @@ module.exports.Parser = class Parser extends Packet
     pattern = @pattern[@patternIndex]
 
     if pattern.endianness is "x"
-      @skipping = pattern.bytes
+      @_skipping  = pattern.bytes
     else
-      little    = pattern.endianness == "l"
-      bytes     = pattern.bytes
+      little      = pattern.endianness == "l"
+      bytes       = pattern.bytes
 
       if pattern.unpacked
         value = []
@@ -208,6 +237,30 @@ module.exports.Parser = class Parser extends Packet
     @nextField()
     @nextValue()
 
+  skip: (length, @callback) ->
+    # Create a bogus pattern to enter the parse loop where the stream is fed in
+    # the skipping branch. The length is passed to the callback simply because
+    # the parse loop expects there to be a field.
+    @pattern = [ {} ]
+    @terminated   = true
+    @index        = 0
+    @repeat       = 1
+    @patternIndex = 0
+    @fields = [ length ]
+
+    @_skipping = length
+
+  # Construct a readable stream for the next length bytes calling callback when
+  # they have been read.
+  stream: (length, callback) ->
+    @skip(length, callback)
+    @_stream = new ReadableStream(@, length, callback)
+    
+  write: (buffer, encoding) ->
+    if typeof buffer is "string"
+      buffer = new Buffer(buffer, encoding or "utf8")
+    @read(buffer, 0, buffer.length)
+
 ##### parser.read(buffer[, offset][, length])
 # The `read` method reads from the buffer, returning when the current pattern is
 # read, or the end of the buffer is reached.
@@ -223,12 +276,19 @@ module.exports.Parser = class Parser extends Packet
     # there is a pattern to fill and bytes to read.
     b
     while @pattern != null and offset < end
-      if @skipping
-        advance      = Math.min(@skipping, end - offset)
+      if @_skipping?
+        advance      = Math.min(@_skipping, end - offset)
+        begin        = offset
         offset      += advance
-        @skipping   -= advance
+        @_skipping  -= advance
         @bytesRead  += advance
-        return @bytesRead - start if @skipping
+        if @_stream
+          @_stream._write(buffer.slice(begin, begin + advance)) if advance
+          @_stream._end() if not @_skipping
+        if @_skipping
+          return @bytesRead - start
+        else
+          @_skipping = null
 
       else
         # If the pattern is unpacked, the value we're populating is an array.
@@ -281,8 +341,8 @@ module.exports.Parser = class Parser extends Packet
           if @repeat == Number.MAX_VALUE
             @repeat = @index + 1
           else
-            @skipping = (@repeat - (++@index)) * @pattern[@patternIndex].bytes
-            if @skipping
+            @_skipping = (@repeat - (++@index)) * @pattern[@patternIndex].bytes
+            if @_skipping
               @repeat = @index + 1
               continue
 
@@ -304,7 +364,7 @@ module.exports.Parser = class Parser extends Packet
         for p in @user or []
           @fields.push(p)
 
-        @pattern        = null
+        @pattern = null
 
         @callback.apply @self, @fields
 
@@ -321,8 +381,40 @@ module.exports.Parser = class Parser extends Packet
 
     @bytesRead - start
 
+  close: ->
+    @emit "close"
+
+  end: (string, encoding) ->
+    @write(string, encoding) if string
+    @emit "end"
+
+class WritableStream extends stream.Stream
+  constructor: (@_length, @_serializer, @_callback) ->
+    @writable = true
+    @_written = 0
+
+  write: (buffer, encoding) ->
+    if typeof buffer is "string"
+      buffer = new Buffer(buffer, encoding or "utf8")
+    @_written += buffer.length
+    @_serializer._write buffer
+    if @_written > @_length
+      throw new Error "buffer overflow"
+    else if @_wrtten == @_length
+      @_serializer._stream = null
+      if @_callback
+        @_callback.apply @_serializer.self, @_length
+
+
+  end: (splat...) ->
+    @write.apply @, splat if splat.length
+  
+
 module.exports.Serializer = class Serializer extends Packet
-  constructor: (self) -> super self
+  constructor: (self) ->
+    super self
+    @readable = true
+    @_buffer = new Buffer(1024)
 
   getBytesWritten: -> @bytesWritten
 
@@ -351,7 +443,7 @@ module.exports.Serializer = class Serializer extends Packet
     pattern = @pattern[@patternIndex]
 
     if pattern.endianness is "x" and not @padding?
-        @skipping = pattern.bytes
+        @_skipping = pattern.bytes
     else
       if @padding?
         value = @padding
@@ -367,6 +459,17 @@ module.exports.Serializer = class Serializer extends Packet
         value = @pack(value)
 
       super value
+
+  stream: (length) ->
+    @_stream = new WritableStream(length, @)
+
+  skip: (length, fill) ->
+    while length
+      size = Math.min(length, @_buffer.length)
+      length -= size
+      for i in [0...size]
+        @_buffer[i] = fill
+      @_write @_buffer.slice 0, size
 
   serialize: (shiftable...) ->
     if typeof shiftable[shiftable.length - 1] == 'function'
@@ -393,6 +496,21 @@ module.exports.Serializer = class Serializer extends Packet
     @nextField()
     @nextValue()
 
+    # Implementing pause requires callbacks.
+    while @pattern
+      read = @write(@_buffer, 0, @_buffer.length)
+      @_write @_buffer.slice 0, read
+
+  _write: (slice) ->
+    if @_decoder
+      string = @_decoder.write(slice)
+      @emit "data", string if string.length
+    else
+      @emit "data", slice
+
+  close: ->
+    @emit "end"
+
 ##### serializer.write(buffer[, offset][, length])
 # The `write` method writes to the buffer, returning when the current pattern is
 # written, or the end of the buffer is reached.
@@ -407,12 +525,12 @@ module.exports.Serializer = class Serializer extends Packet
     # We set the pattern to null when all the fields have been written, so while
     # there is a pattern to fill and space to write.
     while @pattern and offset < end
-      if @skipping
-        advance         = Math.min(@skipping, end - offset)
+      if @_skipping
+        advance         = Math.min(@_skipping, end - offset)
         offset         += advance
-        @skipping      -= advance
+        @_skipping      -= advance
         @bytesWritten  += advance
-        return offset - start if @skipping
+        return offset - start if @_skipping
 
       else
         # If the pattern is unpacked, the value we're writing is an array.
@@ -445,8 +563,8 @@ module.exports.Serializer = class Serializer extends Packet
           else if @pattern[@patternIndex].padding
             @padding = @pattern[@patternIndex].padding
           else
-            @skipping = (@repeat - (++@index)) * @pattern[@patternIndex].bytes
-            if @skipping
+            @_skipping = (@repeat - (++@index)) * @pattern[@patternIndex].bytes
+            if @_skipping
               @repeat = @index + 1
               continue
         else
