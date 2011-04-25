@@ -254,7 +254,7 @@ module.exports.Parser = class Parser extends Packet
   # they have been read.
   stream: (length, callback) ->
     @skip(length, callback)
-    @_stream = new ReadableStream(@, length)
+    @_stream = new ReadableStream(@, length, callback)
     
   write: (buffer, encoding) ->
     if typeof buffer is "string"
@@ -388,8 +388,33 @@ module.exports.Parser = class Parser extends Packet
     @write(string, encoding) if string
     @emit "end"
 
+class WritableStream extends stream.Stream
+  constructor: (@_length, @_serializer, @_callback) ->
+    @writable = true
+    @_written = 0
+
+  write: (buffer, encoding) ->
+    if typeof buffer is "string"
+      buffer = new Buffer(buffer, encoding or "utf8")
+    @_written += buffer.length
+    @_serializer._write buffer
+    if @_written > @_length
+      throw new Error "buffer overflow"
+    else if @_wrtten == @_length
+      @_serializer._stream = null
+      if @_callback
+        @_callback.apply @_serializer.self, @_length
+
+
+  end: (splat...) ->
+    @write.apply @, splat if splat.length
+  
+
 module.exports.Serializer = class Serializer extends Packet
-  constructor: (self) -> super self
+  constructor: (self) ->
+    super self
+    @readable = true
+    @_buffer = new Buffer(1024)
 
   getBytesWritten: -> @bytesWritten
 
@@ -435,6 +460,17 @@ module.exports.Serializer = class Serializer extends Packet
 
       super value
 
+  stream: (length) ->
+    @_stream = new WritableStream(length, @)
+
+  skip: (length, fill) ->
+    while length
+      size = Math.min(length, @_buffer.length)
+      length -= size
+      for i in [0...size]
+        @_buffer[i] = fill
+      @_write @_buffer.slice 0, size
+
   serialize: (shiftable...) ->
     if typeof shiftable[shiftable.length - 1] == 'function'
       callback = shiftable.pop()
@@ -459,6 +495,21 @@ module.exports.Serializer = class Serializer extends Packet
 
     @nextField()
     @nextValue()
+
+    # Implementing pause requires callbacks.
+    while @pattern
+      read = @write(@_buffer, 0, @_buffer.length)
+      @_write @_buffer.slice 0, read
+
+  _write: (slice) ->
+    if @_decoder
+      string = @_decoder.write(slice)
+      @emit "data", string if string.length
+    else
+      @emit "data", slice
+
+  close: ->
+    @emit "end"
 
 ##### serializer.write(buffer[, offset][, length])
 # The `write` method writes to the buffer, returning when the current pattern is
