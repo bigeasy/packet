@@ -149,6 +149,22 @@ class module.exports.SerializerTest extends TwerpTest
     @deepEqual buffer, [ 0x01, 0x02, 0x03, 0x04, 0x00, 0x01, 0x01, 0x01 ]
     done 3
 
+  'test: write a zero terminated array of 8 bytes zero filled': (done) ->
+    buffer = []
+    invoked = false
+    bytes = [ 0x01, 0x02, 0x03, 0x04 ]
+    @parser.reset()
+    @parser.serialize "b8[8]{0}z", bytes, (engine) =>
+      @equal engine.getBytesWritten(), 8
+      invoked = true
+    buffer = []
+    for i in [0...8]
+      buffer[i] = 0x01
+    @parser.write buffer, 0, 10
+    @ok invoked
+    @deepEqual buffer, [ 0x01, 0x02, 0x03, 0x04, 0x00, 0x00, 0x00, 0x00 ]
+    done 3
+
   'test: write a zero terminated array of 8 bytes filled': (done) ->
     buffer = []
     invoked = false

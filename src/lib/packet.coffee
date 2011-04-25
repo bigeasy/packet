@@ -562,7 +562,7 @@ module.exports.Serializer = class Serializer extends Packet
         if @terminated
           if @repeat is Number.MAX_VALUE
             @repeat = @index + 1
-          else if @pattern[@patternIndex].padding
+          else if @pattern[@patternIndex].padding?
             @padding = @pattern[@patternIndex].padding
           else
             @_skipping = (@repeat - (++@index)) * @pattern[@patternIndex].bytes
