@@ -4,14 +4,14 @@
 class module.exports.SerializerTest extends TwerpTest
   start: (done) ->
     @parser = new Serializer()
+    @serializer = new Serializer()
     done()
 
   'test: write a byte': (done) ->
     buffer = []
-    @parser.reset()
-    @parser.serialize "b8", 0x01, (engine) =>
+    @serializer.serialize "b8", 0x01, (engine) =>
       @equal engine.getBytesWritten(), 1
-    @parser.write buffer, 0, 1
+    @serializer.write buffer, 0, 1
     @equal buffer[0], 0x01
     done 2
 

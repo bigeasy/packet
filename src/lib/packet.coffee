@@ -415,6 +415,7 @@ module.exports.Serializer = class Serializer extends Packet
     super self
     @readable = true
     @_buffer = new Buffer(1024)
+    @streaming = false
 
   getBytesWritten: -> @bytesWritten
 
@@ -497,9 +498,10 @@ module.exports.Serializer = class Serializer extends Packet
     @nextValue()
 
     # Implementing pause requires callbacks.
-    while @pattern
-      read = @write(@_buffer, 0, @_buffer.length)
-      @_write @_buffer.slice 0, read
+    if @streaming
+      while @pattern
+        read = @write(@_buffer, 0, @_buffer.length)
+        @_write @_buffer.slice 0, read
 
   _write: (slice) ->
     if @_decoder
