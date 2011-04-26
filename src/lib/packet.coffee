@@ -2,13 +2,10 @@ parsePattern = require("./pattern").parse
 ieee754 = require "./ieee754"
 stream = require "stream"
 
-# Convert an array of bytes into an hex string, two characters for each byte.
+# Convert an array of bytes into an hex string, two characters for each byte. #
+# FIXME Why less than 10 when we're doing hex?
 hex = (bytes) ->
-  h = bytes.map (b) ->
-    if b < 10
-      "0" + b.toString(16)
-    else
-      b.toString(16)
+  h = bytes.map (b) -> if b < 10 then "0" + b.toString(16) else b.toString(16)
   h.join("")
 
 # Default callback, when no callback is provided.
@@ -48,6 +45,7 @@ class Packet extends stream.Stream
     @callback = null
     @fields = []
 
+  # Excute the pipeline of transforms for the `pattern` on the `value`.
   pipeline: (pattern, value) ->
     # Run the piplines for parsing.
     if pattern.transforms
@@ -472,7 +470,26 @@ module.exports.Serializer = class Serializer extends Packet
         @_buffer[i] = fill
       @_write @_buffer.slice 0, size
 
+  buffer: (shiftable...) ->
+    callback = @_reset(shiftable)
+    read = 0
+    while @pattern
+      if read is @_buffer.length
+        buffer = new Buffer buffer.length * 2
+        @_buffer.copy(buffer)
+        @_buffer = buffer
+      read += @write(@_buffer, read, @_buffer.length - read)
+    callback.call @self, @_buffer.slice 0, read
+
   serialize: (shiftable...) ->
+    @callback = @_reset(shiftable)
+    # Implementing pause requires callbacks.
+    if @streaming
+      while @pattern
+        read = @write(@_buffer, 0, @_buffer.length)
+        @_write @_buffer.slice 0, read
+
+  _reset: (shiftable) ->
     if typeof shiftable[shiftable.length - 1] == 'function'
       callback = shiftable.pop()
 
@@ -487,7 +504,7 @@ module.exports.Serializer = class Serializer extends Packet
           part.transforms.reverse()
 
     @pattern      = pattern
-    @callback     = callback
+    @callback     = noop
     @patternIndex = 0
     @outgoing     = shiftable
 
@@ -497,11 +514,7 @@ module.exports.Serializer = class Serializer extends Packet
     @nextField()
     @nextValue()
 
-    # Implementing pause requires callbacks.
-    if @streaming
-      while @pattern
-        read = @write(@_buffer, 0, @_buffer.length)
-        @_write @_buffer.slice 0, read
+    callback
 
   _write: (slice) ->
     if @_decoder
@@ -591,7 +604,7 @@ module.exports.Serializer = class Serializer extends Packet
       # because the callback may specify a subsequent packet to parse.
       else if ++@patternIndex is @pattern.length
         @pattern = null
-        @callback.apply @self, [ this ]
+        @callback.call @self, this
 
       else
 
