@@ -15,25 +15,27 @@ noop = (value) -> value
 class Packet extends stream.Stream
   # Construct a packet that sends events using the given `self` as `this`.
   constructor: (@self) ->
-    @packets = {}
+    @_packets = {}
     @reset()
-    @fields = []
+    @_fields = []
     @transforms = Object.create(transforms)
 
   # Create a copy that will adopt the packets defined in this object, through
   # prototype inheritence. This is used to efficently create parsers and
   # serializers that can run concurrently, from a pre-configured prototype,
   # following classic GoF prototype creational pattern.
+  #
+  # FIXME Test me.
   clone: ->
-    copy            = new (this.constructor)()
-    copy.packets    = Object.create(packets)
+    copy            = new (@.constructor)()
+    copy._packets   = Object.create(@_packets)
     copy
 
   # Map a named packet with the given `name` to the given `pattern`. 
   packet: (name, pattern, callback) ->
     callback      or= noop
     pattern         = parsePattern(pattern)
-    @packets[name]  = {pattern, callback}
+    @_packets[name] = {pattern, callback}
 
   # Resets the bytes read, bytes written and the current pattern. Used to
   # recover from exceptional conditions and generally a good idea to call this
@@ -43,7 +45,7 @@ class Packet extends stream.Stream
     @bytesWritten = 0
     @pattern = null
     @callback = null
-    @fields = []
+    @_fields = []
 
   # Excute the pipeline of transforms for the `pattern` on the `value`.
   pipeline: (pattern, value) ->
@@ -201,7 +203,7 @@ module.exports.Parser = class Parser extends Packet
     @_skipping    = null
     @terminated   = not pattern.terminator
 
-    @fields.push [] if pattern.arrayed and pattern.endianness isnt "x"
+    @_fields.push [] if pattern.arrayed and pattern.endianness isnt "x"
 
   nextValue: ->
     pattern = @pattern[@patternIndex]
@@ -223,14 +225,14 @@ module.exports.Parser = class Parser extends Packet
   # pattern, with an optional `callback`. The optional `callback` will override
   # the callback assigned to a named pattern.
   parse: (nameOrPattern, callback) ->
-    packet        = @packets[nameOrPattern] or {}
+    packet        = @_packets[nameOrPattern] or {}
     pattern       = packet.pattern or parsePattern(nameOrPattern)
     callback    or= packet.callback or noop
 
     @pattern      = pattern
     @callback     = callback
     @patternIndex = 0
-    @fields       = []
+    @_fields      = []
 
     @nextField()
     @nextValue()
@@ -244,7 +246,7 @@ module.exports.Parser = class Parser extends Packet
     @index        = 0
     @repeat       = 1
     @patternIndex = 0
-    @fields = [ length ]
+    @_fields      = [ length ]
 
     @_skipping = length
 
@@ -325,9 +327,9 @@ module.exports.Parser = class Parser extends Packet
         # If we are filling an array field the current fields is an array,
         # otherwise current field is the value we've just read.
         if @pattern[@patternIndex].arrayed
-          @fields[@fields.length - 1].push(field) if field?
+          @_fields[@_fields.length - 1].push(field) if field?
         else
-          @fields.push(field)
+          @_fields.push(field)
 
 
       # If we've not yet hit our terminator, check for the terminator. If we've
@@ -356,23 +358,23 @@ module.exports.Parser = class Parser extends Packet
       # The pattern is set to null, our terminal condition, because the callback
       # may specify a subsequent packet to parse.
       else if ++@patternIndex == @pattern.length
-        @fields.push(@pipeline(@pattern[@patternIndex - 1 ], @fields.pop()))
+        @_fields.push(@pipeline(@pattern[@patternIndex - 1 ], @_fields.pop()))
 
-        @fields.push(this)
+        @_fields.push(this)
         for p in @user or []
-          @fields.push(p)
+          @_fields.push(p)
 
         @pattern = null
 
-        @callback.apply @self, @fields
+        @callback.apply @self, @_fields
 
       # Otherwise we proceed to the next field in the packet pattern.
       else
         if @pattern[@patternIndex - 1].endianness isnt "x"
           if @pattern[@patternIndex - 1].length
-            @pattern[@patternIndex].repeat = @fields.pop()
+            @pattern[@patternIndex].repeat = @_fields.pop()
           else
-            @fields.push(@pipeline(@pattern[@patternIndex - 1], @fields.pop()))
+            @_fields.push(@pipeline(@pattern[@patternIndex - 1], @_fields.pop()))
 
         @nextField()
         @nextValue()
@@ -419,7 +421,7 @@ module.exports.Serializer = class Serializer extends Packet
 
   packet: (name, pattern, callback) ->
     super name, pattern, callback
-    for part in @packets[name].pattern
+    for part in @_packets[name].pattern
       if part.transforms
         part.transforms.reverse()
 
@@ -494,7 +496,7 @@ module.exports.Serializer = class Serializer extends Packet
       callback = shiftable.pop()
 
     nameOrPattern = shiftable.shift()
-    packet        = @packets[nameOrPattern] or {}
+    packet        = @_packets[nameOrPattern] or {}
     pattern       = packet.pattern or parsePattern(nameOrPattern)
     callback    or= packet.callback or noop
 
