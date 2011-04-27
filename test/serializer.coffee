@@ -4,14 +4,14 @@
 class module.exports.SerializerTest extends TwerpTest
   start: (done) ->
     @parser = new Serializer()
+    @serializer = new Serializer()
     done()
 
   'test: write a byte': (done) ->
     buffer = []
-    @parser.reset()
-    @parser.serialize "b8", 0x01, (engine) =>
+    @serializer.serialize "b8", 0x01, (engine) =>
       @equal engine.getBytesWritten(), 1
-    @parser.write buffer, 0, 1
+    @serializer.write buffer, 0, 1
     @equal buffer[0], 0x01
     done 2
 
@@ -98,12 +98,21 @@ class module.exports.SerializerTest extends TwerpTest
     done 2
 
   'test: write a 16 bit integer after filling four bytes': (done) ->
-    buffer = []
+    buffer = [ 0x01, 0x01, 0x01, 0x01 ]
     @parser.reset()
     @parser.serialize "x16[2]{0}, b16", 1, (engine) =>
       @equal engine.getBytesWritten(), 6
     @parser.write buffer, 0, 7
     @deepEqual buffer, [ 0x00, 0x00, 0x00, 0x00, 0x00, 0x01 ]
+    done 2
+
+  'test: write 2 zero filled bytes then two 2 filled bytes': (done) ->
+    buffer = [ 0x01, 0x01, 0x01, 0x01, 0x01, 0x01 ]
+    @parser.reset()
+    @parser.serialize "x8[2]{0},x8[2]{2}", (engine) =>
+      @equal engine.getBytesWritten(), 4
+    @parser.write buffer, 0, 7
+    @deepEqual buffer, [ 0x00, 0x00, 0x02, 0x02, 0x01, 0x01 ]
     done 2
 
   'test: write a length encoded array of bytes': (done) ->
@@ -147,6 +156,22 @@ class module.exports.SerializerTest extends TwerpTest
     @parser.write buffer, 0, 10
     @ok invoked
     @deepEqual buffer, [ 0x01, 0x02, 0x03, 0x04, 0x00, 0x01, 0x01, 0x01 ]
+    done 3
+
+  'test: write a zero terminated array of 8 bytes zero filled': (done) ->
+    buffer = []
+    invoked = false
+    bytes = [ 0x01, 0x02, 0x03, 0x04 ]
+    @parser.reset()
+    @parser.serialize "b8[8]{0}z", bytes, (engine) =>
+      @equal engine.getBytesWritten(), 8
+      invoked = true
+    buffer = []
+    for i in [0...8]
+      buffer[i] = 0x01
+    @parser.write buffer, 0, 10
+    @ok invoked
+    @deepEqual buffer, [ 0x01, 0x02, 0x03, 0x04, 0x00, 0x00, 0x00, 0x00 ]
     done 3
 
   'test: write a zero terminated array of 8 bytes filled': (done) ->

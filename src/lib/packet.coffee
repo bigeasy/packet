@@ -2,13 +2,10 @@ parsePattern = require("./pattern").parse
 ieee754 = require "./ieee754"
 stream = require "stream"
 
-# Convert an array of bytes into an hex string, two characters for each byte.
+# Convert an array of bytes into an hex string, two characters for each byte. #
+# FIXME Why less than 10 when we're doing hex?
 hex = (bytes) ->
-  h = bytes.map (b) ->
-    if b < 10
-      "0" + b.toString(16)
-    else
-      b.toString(16)
+  h = bytes.map (b) -> if b < 10 then "0" + b.toString(16) else b.toString(16)
   h.join("")
 
 # Default callback, when no callback is provided.
@@ -18,25 +15,27 @@ noop = (value) -> value
 class Packet extends stream.Stream
   # Construct a packet that sends events using the given `self` as `this`.
   constructor: (@self) ->
-    @packets = {}
+    @_packets = {}
     @reset()
-    @fields = []
+    @_fields = []
     @transforms = Object.create(transforms)
 
   # Create a copy that will adopt the packets defined in this object, through
   # prototype inheritence. This is used to efficently create parsers and
   # serializers that can run concurrently, from a pre-configured prototype,
   # following classic GoF prototype creational pattern.
+  #
+  # FIXME Test me.
   clone: ->
-    copy            = new (this.constructor)()
-    copy.packets    = Object.create(packets)
+    copy            = new (@.constructor)()
+    copy._packets   = Object.create(@_packets)
     copy
 
   # Map a named packet with the given `name` to the given `pattern`. 
   packet: (name, pattern, callback) ->
     callback      or= noop
     pattern         = parsePattern(pattern)
-    @packets[name]  = {pattern, callback}
+    @_packets[name] = {pattern, callback}
 
   # Resets the bytes read, bytes written and the current pattern. Used to
   # recover from exceptional conditions and generally a good idea to call this
@@ -46,8 +45,9 @@ class Packet extends stream.Stream
     @bytesWritten = 0
     @pattern = null
     @callback = null
-    @fields = []
+    @_fields = []
 
+  # Excute the pipeline of transforms for the `pattern` on the `value`.
   pipeline: (pattern, value) ->
     # Run the piplines for parsing.
     if pattern.transforms
@@ -71,47 +71,6 @@ class Packet extends stream.Stream
     @offset     = if little then 0 else bytes - 1
     @increment  = if little then 1 else -1
     @terminal   = if little then bytes else -1
-
-  unpack: ->
-    bytes   = @value
-    return null unless bytes?
-    pattern = @pattern[@patternIndex]
-    if pattern.type == "h"
-      hex bytes.reverse()
-    else if pattern.type == "f"
-      if pattern.bits == 32
-        ieee754.fromIEEE754Single(bytes)
-      else
-        ieee754.fromIEEE754Double(bytes)
-    else if pattern.signed
-      value = 0
-      if (bytes[bytes.length - 1] & 0x80) == 0x80
-        top = bytes.length - 1
-        for i in [0...top]
-          value += (~bytes[i] & 0xff)  * Math.pow(256, i)
-        # ~1 == -2.
-        # To get the two's compliment as a positive value you use ~1 & 0xff == 254. 
-        value += (~(bytes[top] & 0x7f) & 0xff & 0x7f) * Math.pow(256, top)
-        value += 1
-        value *= -1
-      else
-        top = bytes.length - 1
-        for i in [0...top]
-          value += (bytes[i] & 0xff)  * Math.pow(256, i)
-        value += (bytes[top] & 0x7f) * Math.pow(256, top)
-      value
-    else
-      bytes
-
-  pack: (value) ->
-    pattern = @pattern[@patternIndex]
-    if pattern.type == "f"
-      if pattern.bits == 32
-        ieee754.toIEEE754Single value
-      else
-        ieee754.toIEEE754Double value
-    else
-      value
 
 bufferize = (array) ->
   buffer = new Buffer(array.length)
@@ -203,7 +162,7 @@ module.exports.Parser = class Parser extends Packet
     @_skipping    = null
     @terminated   = not pattern.terminator
 
-    @fields.push [] if pattern.arrayed and pattern.endianness isnt "x"
+    @_fields.push [] if pattern.arrayed and pattern.endianness isnt "x"
 
   nextValue: ->
     pattern = @pattern[@patternIndex]
@@ -221,18 +180,49 @@ module.exports.Parser = class Parser extends Packet
 
       super value
 
+  unpack: ->
+    bytes   = @value
+    return null unless bytes?
+    pattern = @pattern[@patternIndex]
+    if pattern.type == "h"
+      hex bytes.reverse()
+    else if pattern.type == "f"
+      if pattern.bits == 32
+        ieee754.fromIEEE754Single(bytes)
+      else
+        ieee754.fromIEEE754Double(bytes)
+    else if pattern.signed
+      value = 0
+      if (bytes[bytes.length - 1] & 0x80) == 0x80
+        top = bytes.length - 1
+        for i in [0...top]
+          value += (~bytes[i] & 0xff)  * Math.pow(256, i)
+        # ~1 == -2.
+        # To get the two's compliment as a positive value you use ~1 & 0xff == 254. 
+        value += (~(bytes[top] & 0x7f) & 0xff & 0x7f) * Math.pow(256, top)
+        value += 1
+        value *= -1
+      else
+        top = bytes.length - 1
+        for i in [0...top]
+          value += (bytes[i] & 0xff)  * Math.pow(256, i)
+        value += (bytes[top] & 0x7f) * Math.pow(256, top)
+      value
+    else
+      bytes
+
   # Set the next packet to parse by providing a named packet name or a packet
   # pattern, with an optional `callback`. The optional `callback` will override
   # the callback assigned to a named pattern.
   parse: (nameOrPattern, callback) ->
-    packet        = @packets[nameOrPattern] or {}
+    packet        = @_packets[nameOrPattern] or {}
     pattern       = packet.pattern or parsePattern(nameOrPattern)
     callback    or= packet.callback or noop
 
     @pattern      = pattern
     @callback     = callback
     @patternIndex = 0
-    @fields       = []
+    @_fields      = []
 
     @nextField()
     @nextValue()
@@ -246,7 +236,7 @@ module.exports.Parser = class Parser extends Packet
     @index        = 0
     @repeat       = 1
     @patternIndex = 0
-    @fields = [ length ]
+    @_fields      = [ length ]
 
     @_skipping = length
 
@@ -327,9 +317,9 @@ module.exports.Parser = class Parser extends Packet
         # If we are filling an array field the current fields is an array,
         # otherwise current field is the value we've just read.
         if @pattern[@patternIndex].arrayed
-          @fields[@fields.length - 1].push(field) if field?
+          @_fields[@_fields.length - 1].push(field) if field?
         else
-          @fields.push(field)
+          @_fields.push(field)
 
 
       # If we've not yet hit our terminator, check for the terminator. If we've
@@ -358,23 +348,23 @@ module.exports.Parser = class Parser extends Packet
       # The pattern is set to null, our terminal condition, because the callback
       # may specify a subsequent packet to parse.
       else if ++@patternIndex == @pattern.length
-        @fields.push(@pipeline(@pattern[@patternIndex - 1 ], @fields.pop()))
+        @_fields.push(@pipeline(@pattern[@patternIndex - 1 ], @_fields.pop()))
 
-        @fields.push(this)
+        @_fields.push(this)
         for p in @user or []
-          @fields.push(p)
+          @_fields.push(p)
 
         @pattern = null
 
-        @callback.apply @self, @fields
+        @callback.apply @self, @_fields
 
       # Otherwise we proceed to the next field in the packet pattern.
       else
         if @pattern[@patternIndex - 1].endianness isnt "x"
           if @pattern[@patternIndex - 1].length
-            @pattern[@patternIndex].repeat = @fields.pop()
+            @pattern[@patternIndex].repeat = @_fields.pop()
           else
-            @fields.push(@pipeline(@pattern[@patternIndex - 1], @fields.pop()))
+            @_fields.push(@pipeline(@pattern[@patternIndex - 1], @_fields.pop()))
 
         @nextField()
         @nextValue()
@@ -415,12 +405,13 @@ module.exports.Serializer = class Serializer extends Packet
     super self
     @readable = true
     @_buffer = new Buffer(1024)
+    @streaming = false
 
   getBytesWritten: -> @bytesWritten
 
   packet: (name, pattern, callback) ->
     super name, pattern, callback
-    for part in @packets[name].pattern
+    for part in @_packets[name].pattern
       if part.transforms
         part.transforms.reverse()
 
@@ -471,12 +462,31 @@ module.exports.Serializer = class Serializer extends Packet
         @_buffer[i] = fill
       @_write @_buffer.slice 0, size
 
+  buffer: (shiftable...) ->
+    callback = @_reset(shiftable)
+    read = 0
+    while @pattern
+      if read is @_buffer.length
+        buffer = new Buffer buffer.length * 2
+        @_buffer.copy(buffer)
+        @_buffer = buffer
+      read += @write(@_buffer, read, @_buffer.length - read)
+    callback.call @self, @_buffer.slice 0, read
+
   serialize: (shiftable...) ->
+    @callback = @_reset(shiftable)
+    # Implementing pause requires callbacks.
+    if @streaming
+      while @pattern
+        read = @write(@_buffer, 0, @_buffer.length)
+        @_write @_buffer.slice 0, read
+
+  _reset: (shiftable) ->
     if typeof shiftable[shiftable.length - 1] == 'function'
       callback = shiftable.pop()
 
     nameOrPattern = shiftable.shift()
-    packet        = @packets[nameOrPattern] or {}
+    packet        = @_packets[nameOrPattern] or {}
     pattern       = packet.pattern or parsePattern(nameOrPattern)
     callback    or= packet.callback or noop
 
@@ -486,7 +496,7 @@ module.exports.Serializer = class Serializer extends Packet
           part.transforms.reverse()
 
     @pattern      = pattern
-    @callback     = callback
+    @callback     = noop
     @patternIndex = 0
     @outgoing     = shiftable
 
@@ -496,10 +506,7 @@ module.exports.Serializer = class Serializer extends Packet
     @nextField()
     @nextValue()
 
-    # Implementing pause requires callbacks.
-    while @pattern
-      read = @write(@_buffer, 0, @_buffer.length)
-      @_write @_buffer.slice 0, read
+    callback
 
   _write: (slice) ->
     if @_decoder
@@ -510,6 +517,16 @@ module.exports.Serializer = class Serializer extends Packet
 
   close: ->
     @emit "end"
+
+  pack: (value) ->
+    pattern = @pattern[@patternIndex]
+    if pattern.type == "f"
+      if pattern.bits == 32
+        ieee754.toIEEE754Single value
+      else
+        ieee754.toIEEE754Double value
+    else
+      value
 
 ##### serializer.write(buffer[, offset][, length])
 # The `write` method writes to the buffer, returning when the current pattern is
@@ -560,7 +577,7 @@ module.exports.Serializer = class Serializer extends Packet
         if @terminated
           if @repeat is Number.MAX_VALUE
             @repeat = @index + 1
-          else if @pattern[@patternIndex].padding
+          else if @pattern[@patternIndex].padding?
             @padding = @pattern[@patternIndex].padding
           else
             @_skipping = (@repeat - (++@index)) * @pattern[@patternIndex].bytes
@@ -589,7 +606,7 @@ module.exports.Serializer = class Serializer extends Packet
       # because the callback may specify a subsequent packet to parse.
       else if ++@patternIndex is @pattern.length
         @pattern = null
-        @callback.apply @self, [ this ]
+        @callback.call @self, this
 
       else
 
@@ -599,6 +616,7 @@ module.exports.Serializer = class Serializer extends Packet
         @terminates   = not @terminated
         @index        = 0
 
+        @nextField()
         @nextValue()
 
     @outgoing = null
