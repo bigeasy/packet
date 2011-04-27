@@ -8,26 +8,30 @@ Use tar as an example?
 
 ## Objectives
 
+Node Packet creates binary parsers and serializers that are **pausable**,
+**streaming**, and **incremental** through an **expressive** and **declarative**
+binary pattern language.
+
 Node Packet simplifies the construction an maintainence of libraries that
 convert binary to JavaScript and back. The name Packet may make you think that
 it is desinged solely for binary network protocols, but it is also used to read
 and write binary file formats.
 
-**Incremental** ~ Node packet creates incremental parsers and serailizers that
-are almost as fast as the parser you'd write by hand, but a lot easier to define
-and maintain.
+**Incremental** &mdash; Node packet creates incremental parsers and serailizers
+that are almost as fast as the parser you'd write by hand, but a lot easier to
+define and maintain.
 
-**Declarative** ~ Packet defines a binary structure using a pattern language
-inspired by Perl's `pack`. The binary patterns can be used to define both
-parsers and serializers. If you have a protocol specificationre, or even just a
-C header file with structures that define your binary data, you can probably
-transalte that directly into Node Packet patterns.
+**Declarative** &mdash; Packet defines a binary structure using a pattern
+language inspired by Perl's `pack`. The binary patterns can be used to define
+both parsers and serializers. If you have a protocol specificationre, or even
+just a C header file with structures that define your binary data, you can
+probably transalte that directly into Node Packet patterns.
 
 For parsers, you match the patterns to actions you want to take when the pattern
 is matched. For serializers you simply give the values to write the pattern to
 follow when writing them.
 
-**Expressive** ~ The pattern language can express
+**Expressive** &mdash; The pattern language can express
 
   * signed and unsigned integers, 
   * endianess of singed and unsigned integers,
@@ -43,10 +47,31 @@ follow when writing them.
   * custom tranformations,
   * and pipelines of character encodings and custom tranformations.
 
-**Streaming** ~ Node Packet implements the Node.js [stream
+**Streaming** &mdash; Node Packet implements the Node.js [stream
 interface](http://nodejs.org/docs/v0.4.7/api/streams.html) in both the `Parser`
 and the `Serializer`. You can pump a stream into a Packet `Parser` and it will
 invoke your packet handlers.  
+
+**Pausable** &mdash; The streams implemented by both parsers and serializers
+are pausable. Parsers relay the pause to the source stream, and mark thier spot
+in the buffer they are parsing. Serializers can effectively pause the user code
+that is feeding the serializer.
+
+### Limitations
+
+**Parsing not searching** &mdash; Packet is not a pattern matching library. It
+does not search binary streams. It is able to respond to bit flags in streams
+using simple conditionals, but otherwise Packet is used for parsing well-defined
+streams of binary data.
+
+**8-bit boundaries** &mdash; I'm unable to think of an an example in
+contemporary computing that doesn't align to an 8-bit boundary, but I imagine
+that someone might want to unleash Packet on legacy data someday, so it's worth
+noting that Packet parses 8-bit bytes and expects bytes to align to an 8-bit
+boundary. Node Packet can parse 7-bit ASCII formats like tar archives, because
+they are 8-bit aligned with the top bit ignored. Packet can also parse and
+serialize bit packed integers, so it does support awkward integer sizes, but
+within an 8-bit aligned integer.
 
 ## Installing
 
@@ -65,9 +90,52 @@ parameters passed to callback when enough bytes are read from the input stream
 to satisfy the pattern. The pattern language is used in a `Serializer` to define
 how JavaScript primitives passed to the `serialize` method are written to stream.
 
-The pattern works with a `Parser` to deconstruct a binary stream and turn it
-into JavaScript primitives, passing those primitives as the arguments to a user
-defined callback.
+### Patterns
+
+Patterns are a series of element declarations joined by commas.
+
+```javascript
+parser.parse("b16, b32, b8z", function (length, address, name) {
+  frobinate(length, address, name);
+});
+```
+
+You can also name the elements in a pattern. If named, parsers will be able to
+pass maps to callbacks, serializers will be able to serialize maps of data.
+
+```javascript
+parser.parse("b16 => length, b32 => address, b8z => name", function (record) {
+  frobinate(record.length, record.address, record.name);
+});
+```
+
+Unnamed elements are good for short, simple patterns. For longer patterns it is
+easier to have parsers build maps for you, and for serializers to pluck the
+right values out of maps.
+
+The following example shows a complicated pattern, the invariable portion of an
+IP header, the first 20 bytes before options, if any.
+
+```javascript
+// Define an IP header pattern using a joined array to explode the pattern.
+ip =
+[ "b8{b4 => version, b4 => headerLength}"
+, "b8   => typeOfService"
+, "b16  => length"
+, "b16  => identification"
+, "b16{b3 => flags, b13 => fragmentOffset}"
+, "b8   => timeToLive"
+, "b8   => protocol"
+, "b16  => checksum"
+, "b32  => sourceAddress"
+, "b32  => destinationAddress"
+].join(", ");
+
+// The pattern is then used to defined parser and serializer actions.
+parser.parse(ip, function (header) {
+  console.log(header);
+});
+```
 
 ### Big-Endian Byte Ordering
 
@@ -244,6 +312,82 @@ and type.
 ```javascript
 "b8/b8"           // Length encoded byte array with a byte length.
 "l16/b8"          // Length encoded byte array with 16 bit little-endian length.
+```
+
+### Bit Packed Integers
+
+**Pending** &mdash; Not implemented.
+
+Integers are often divided into smaller integers through a process called bit
+packing. Bit packing is specified by following an integer specification with 
+a curly brace enclosed series series of integers patterns whose total size in
+bits equals the size of the packed integer.
+
+Packed integers are always big-endian and can be either singed or unsigned.
+
+**Mnemonic** Curly braces are used to define structures in C and bit packing is
+kind of like a structure.
+
+```javascript
+"b16{b3,x6,-b7}"  // A 16 bit big-endian integer divided into a 3-bit integer,
+                  // 6 skipped bits, and a signed 7-bit integer. 
+```
+
+You can also name the packed fields.
+
+```javascript
+"b16{b3 => type, x6, -b7 => count}"
+```
+
+### Conditinal Patterns
+
+**Pending** &mdash; Not implemented.
+
+A common pattern in binary formats is using the value of a byte, or the high
+order bits of a byte to specify the type of data to follow. [Length Encoded
+Arrays](#length-encoded-arrays) are one example of this practice, where a
+an integer count indicates the length of a following string or array.
+
+Byte switches are used to switch between types can can be based on either a
+byte value or a bit mask.
+
+A conditional is indicated by a encapsulating the alternatives in parenthesis.
+Alternative are separated by a pipe `|` character. Each alternative maps a match
+to a pattern separated by a colon `:`.
+
+The values to match can be either a range or a single value.  If the value
+matches then the pattern associated with the value is applied to the stream
+starting with the byte currently tested. That is, we use the byte both to test
+the condition, then use the byte as the first byte in the pattern with the
+matched condition.
+
+Tests are applied in the order in which they are declared.
+
+**Mnemonic** &mdash; Parenthesis and pipes are used to indicate alternation in
+regular expressions, while colons are used to deliniate switch options in C.
+
+```javascript
+// MySQL length coded binary; if the byte is less than 252, use the byte value,
+// otherwise the byte value indicates the length of the following word. 
+"b8(0-251: b8 | 252: x8, b16 | 253: x8, b24 | 254: x8, b64)"
+
+// Simpiler, but will also match 255 which is invalid, which is fine if you test
+// the value in your callback.
+"b8(252: x8, b16 | 253: x8, b24 | 254: x8, b64 | b8)"
+```
+
+The values are expressed in binary, decimal or hexidecimal.
+
+You can also indicate a branch based on set bits by prefixing the value with an
+ampersand. The value is then considered a bit mask. If the result of a logcal
+and with the bit mask equals the bit mask, then that alternative is chosen.
+
+**Mnemonic** The `&` performs a logical and in C and is used to check to see if
+bits in a bit mask are set.
+
+```javascript
+"b8(&0x80: b16{x1,b15} | b8)"   // A 15-bit word if the first bit is set,
+                                // otherwise a byte.
 ```
 
 ### Transforms
