@@ -666,6 +666,43 @@ class exports.PacketTest extends TwerpTest
     ]
     done 1
 
+  'test: parse a named element.': (done) ->
+    field = parse('b8z|utf8()|atoi(8) => mode, b32 => length')
+    @deepEqual field, [
+      { signed: false
+      , bits: 8
+      , endianness: 'b'
+      , bytes: 1
+      , type: 'n'
+      , name: "mode"
+      , unpacked: false
+      , arrayed: true
+      , repeat: Number.MAX_VALUE
+      , terminator: "\0"
+      , transforms:
+        [
+          { name: "utf8"
+          , parameters: []
+          }
+          ,
+          { name: "atoi"
+          , parameters: [ 8 ]
+          }
+        ]
+      },
+      { signed: false
+      , endianness: 'b'
+      , bits: 32
+      , bytes: 4
+      , type: 'n'
+      , unpacked: false
+      , arrayed: false
+      , repeat: 1
+      , name: "length"
+      }
+    ]
+    done 1
+
   'test: parse utter nonsense.': (done) ->
     @trap -> parse("blurdy")
     done 1
