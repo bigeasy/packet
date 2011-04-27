@@ -683,5 +683,9 @@ class exports.PacketTest extends TwerpTest
     done 1
 
   'test: parse two patterns together without a comma.': (done) ->
-    @trap ->parse('l16b8')
+    @trap -> parse('l16b8')
+    done 1
+
+  'test: parse a little-endian integer packed in an integer.': (done) ->
+    @trap -> parse('b8{l4,b4}')
     done 1

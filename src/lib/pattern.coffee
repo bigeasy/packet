@@ -9,11 +9,43 @@ argument = require "./argument"
 # Parse bit packing.
 
 # The `pattern` is the bit packing pattern to parse.
-packing = (pattern) ->
+packing = (pattern, size, index) ->
 
   fields  = []
-
   rest    = pattern
+
+  loop
+    # Match an element pattern.
+    match = /^(-?)([xb])(\d+)(.*)$/.exec rest
+    if not match
+      throw new Error "invalid pattern at #{index}"
+
+    return
+    # Convert the match into an object.
+    f =
+      signed:     !!match[1]
+      endianness: match[2]
+      bits:       parseInt(match[3], 10)
+      type:       'n'
+
+    size -= f.bits
+    if size < 0
+      throw new Error "bit field overflow at #{index}"
+
+    # Move the character position up to the bit count.
+    index++ if f.signed
+    index++
+
+    # Check for a valid bit size.
+    if f.bits == 0
+      throw new Error("bit size must be non-zero at #{index}")
+
+    # Move the character position up to the rest of the pattern.
+    index += match[3].length
+    index++ if match[4]
+
+  if size != 0
+    throw new Error "bit field underflow at #{index}"
 
 ##### parse(pattern)
 # Parse a pattern and create a list of fields.
@@ -50,10 +82,12 @@ module.exports.parse = (pattern) ->
     index++
 
     # Check for a valid character
-    if f.bits == 0 or f.bits % 8
-      throw new Error("bits must be divisible by 8 at " + index)
+    if f.bits == 0
+      throw new Error("bit size must be non-zero at #{index}")
+    if f.bits % 8
+      throw new Error("bits must be divisible by 8 at #{index}")
     if f.type == "f" and !(f.bits == 32 || f.bits == 64)
-      throw Error("floats can only be 32 or 64 bits at " + index)
+      throw Error("floats can only be 32 or 64 bits at #{index}")
 
     # Move the character position up to the rest of the pattern.
     index += match[3].length

@@ -436,6 +436,31 @@ terse to fit with the brevity of the pattern language.
 
 ## Reference
 
+### Error Messages
+
+Error messages for pattern parsing.
+
+ * **invalid pattern at N** &mdash; The characters starting at the specified
+   index is unexpected the pattern is invalid. The invalid character may not be
+   at the specified index, but shortly there after, such as unmatched braces.
+ * **bit field overflow at N** &mdash; The the sum of the bit size of bit field
+   elements is greater than the size of the containing element. The sum of the
+   bit size of bit field elements must equal the size of the containing element.
+ * **bit field underflow at N** &mdash; The the sum of the bit size of bit field
+   elements is less than the size of the containing element. The sum of the bit
+   size of bit field elements must equal the size of the containing element.
+ * **bit size must be non-zero at N** &mdash; Encountered element with a bit size of
+   zero. Element size must be a non-zero value.
+ * **bits must be divisible by 8 at N** &mdash; Encountered element with a bit
+   size that is not divisible by 8. If an element is not a bit field element, it
+   must align to an 8-bit boundary.
+ * **floats can only be 32 or 64 bits at N** &mdash; Encountered a float element
+   with an unsupported bit size. Only 32 and 64 bit floats are supported.
+ * **"array length must be non-zero at N** &mdash; Encountered an array length
+   of zero. Arrays must have a non-zero length.
+
+### API
+
 @ packet
 
 Node Packet exports the ec2 namespace, which provides the {{Structure}},
