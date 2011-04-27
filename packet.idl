@@ -8,8 +8,8 @@ Use tar as an example?
 
 ## Objectives
 
-Node Packet creates binary parsers and serializers that are **pausable**,
-**streaming**, and **incremental** through an **expressive** and **declarative**
+Node Packet creates binary parsers and serializers that are **incremental**,
+**streaming**, and **pausable** through an **expressive** and **declarative**
 binary pattern language.
 
 Node Packet simplifies the construction an maintainence of libraries that
