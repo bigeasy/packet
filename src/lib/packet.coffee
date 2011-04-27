@@ -72,47 +72,6 @@ class Packet extends stream.Stream
     @increment  = if little then 1 else -1
     @terminal   = if little then bytes else -1
 
-  unpack: ->
-    bytes   = @value
-    return null unless bytes?
-    pattern = @pattern[@patternIndex]
-    if pattern.type == "h"
-      hex bytes.reverse()
-    else if pattern.type == "f"
-      if pattern.bits == 32
-        ieee754.fromIEEE754Single(bytes)
-      else
-        ieee754.fromIEEE754Double(bytes)
-    else if pattern.signed
-      value = 0
-      if (bytes[bytes.length - 1] & 0x80) == 0x80
-        top = bytes.length - 1
-        for i in [0...top]
-          value += (~bytes[i] & 0xff)  * Math.pow(256, i)
-        # ~1 == -2.
-        # To get the two's compliment as a positive value you use ~1 & 0xff == 254. 
-        value += (~(bytes[top] & 0x7f) & 0xff & 0x7f) * Math.pow(256, top)
-        value += 1
-        value *= -1
-      else
-        top = bytes.length - 1
-        for i in [0...top]
-          value += (bytes[i] & 0xff)  * Math.pow(256, i)
-        value += (bytes[top] & 0x7f) * Math.pow(256, top)
-      value
-    else
-      bytes
-
-  pack: (value) ->
-    pattern = @pattern[@patternIndex]
-    if pattern.type == "f"
-      if pattern.bits == 32
-        ieee754.toIEEE754Single value
-      else
-        ieee754.toIEEE754Double value
-    else
-      value
-
 bufferize = (array) ->
   buffer = new Buffer(array.length)
   for b, i in array
@@ -220,6 +179,37 @@ module.exports.Parser = class Parser extends Packet
         value = 0
 
       super value
+
+  unpack: ->
+    bytes   = @value
+    return null unless bytes?
+    pattern = @pattern[@patternIndex]
+    if pattern.type == "h"
+      hex bytes.reverse()
+    else if pattern.type == "f"
+      if pattern.bits == 32
+        ieee754.fromIEEE754Single(bytes)
+      else
+        ieee754.fromIEEE754Double(bytes)
+    else if pattern.signed
+      value = 0
+      if (bytes[bytes.length - 1] & 0x80) == 0x80
+        top = bytes.length - 1
+        for i in [0...top]
+          value += (~bytes[i] & 0xff)  * Math.pow(256, i)
+        # ~1 == -2.
+        # To get the two's compliment as a positive value you use ~1 & 0xff == 254. 
+        value += (~(bytes[top] & 0x7f) & 0xff & 0x7f) * Math.pow(256, top)
+        value += 1
+        value *= -1
+      else
+        top = bytes.length - 1
+        for i in [0...top]
+          value += (bytes[i] & 0xff)  * Math.pow(256, i)
+        value += (bytes[top] & 0x7f) * Math.pow(256, top)
+      value
+    else
+      bytes
 
   # Set the next packet to parse by providing a named packet name or a packet
   # pattern, with an optional `callback`. The optional `callback` will override
@@ -527,6 +517,16 @@ module.exports.Serializer = class Serializer extends Packet
 
   close: ->
     @emit "end"
+
+  pack: (value) ->
+    pattern = @pattern[@patternIndex]
+    if pattern.type == "f"
+      if pattern.bits == 32
+        ieee754.toIEEE754Single value
+      else
+        ieee754.toIEEE754Double value
+    else
+      value
 
 ##### serializer.write(buffer[, offset][, length])
 # The `write` method writes to the buffer, returning when the current pattern is
