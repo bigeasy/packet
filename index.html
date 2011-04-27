@@ -40,26 +40,30 @@
         
         
         
-          <p>Node Packet simplifies the construction an maintainence of libraries that
+          <p>Node Packet creates binary parsers and serializers that are <strong>pausable</strong>,
+<strong>streaming</strong>, and <strong>incremental</strong> through an <strong>expressive</strong> and <strong>declarative</strong>
+binary pattern language.</p>
+
+<p>Node Packet simplifies the construction an maintainence of libraries that
 convert binary to JavaScript and back. The name Packet may make you think that
 it is desinged solely for binary network protocols, but it is also used to read
 and write binary file formats.</p>
 
-<p><strong>Incremental</strong> ~ Node packet creates incremental parsers and serailizers that
-are almost as fast as the parser you'd write by hand, but a lot easier to define
-and maintain.</p>
+<p><strong>Incremental</strong> &mdash; Node packet creates incremental parsers and serailizers
+that are almost as fast as the parser you'd write by hand, but a lot easier to
+define and maintain.</p>
 
-<p><strong>Declarative</strong> ~ Packet defines a binary structure using a pattern language
-inspired by Perl's <code>pack</code>. The binary patterns can be used to define both
-parsers and serializers. If you have a protocol specificationre, or even just a
-C header file with structures that define your binary data, you can probably
-transalte that directly into Node Packet patterns.</p>
+<p><strong>Declarative</strong> &mdash; Packet defines a binary structure using a pattern
+language inspired by Perl's <code>pack</code>. The binary patterns can be used to define
+both parsers and serializers. If you have a protocol specificationre, or even
+just a C header file with structures that define your binary data, you can
+probably transalte that directly into Node Packet patterns.</p>
 
 <p>For parsers, you match the patterns to actions you want to take when the pattern
 is matched. For serializers you simply give the values to write the pattern to
 follow when writing them.</p>
 
-<p><strong>Expressive</strong> ~ The pattern language can express</p>
+<p><strong>Expressive</strong> &mdash; The pattern language can express</p>
 
 <ul>
 <li>signed and unsigned integers, </li>
@@ -77,10 +81,31 @@ follow when writing them.</p>
 <li>and pipelines of character encodings and custom tranformations.</li>
 </ul>
 
-<p><strong>Streaming</strong> ~ Node Packet implements the Node.js <a href="http://nodejs.org/docs/v0.4.7/api/streams.html">stream
+<p><strong>Streaming</strong> &mdash; Node Packet implements the Node.js <a href="http://nodejs.org/docs/v0.4.7/api/streams.html">stream
 interface</a> in both the <code>Parser</code>
 and the <code>Serializer</code>. You can pump a stream into a Packet <code>Parser</code> and it will
 invoke your packet handlers.  </p>
+
+<p><strong>Pausable</strong> &mdash; The streams implemented by both parsers and serializers
+are pausable. Parsers relay the pause to the source stream, and mark thier spot
+in the buffer they are parsing. Serializers can effectively pause the user code
+that is feeding the serializer.</p>
+
+<h3>Limitations</h3>
+
+<p><strong>Parsing not searching</strong> &mdash; Packet is not a pattern matching library. It
+does not search binary streams. It is able to respond to bit flags in streams
+using simple conditionals, but otherwise Packet is used for parsing well-defined
+streams of binary data.</p>
+
+<p><strong>8-bit boundaries</strong> &mdash; I'm unable to think of an an example in
+contemporary computing that doesn't align to an 8-bit boundary, but I imagine
+that someone might want to unleash Packet on legacy data someday, so it's worth
+noting that Packet parses 8-bit bytes and expects bytes to align to an 8-bit
+boundary. Node Packet can parse 7-bit ASCII formats like tar archives, because
+they are 8-bit aligned with the top bit ignored. Packet can also parse and
+serialize bit packed integers, so it does support awkward integer sizes, but
+within an 8-bit aligned integer.</p>
         
       
         
@@ -107,11 +132,54 @@ parameters passed to callback when enough bytes are read from the input stream
 to satisfy the pattern. The pattern language is used in a <code>Serializer</code> to define
 how JavaScript primitives passed to the <code>serialize</code> method are written to stream.</p>
 
-<p>The pattern works with a <code>Parser</code> to deconstruct a binary stream and turn it
-into JavaScript primitives, passing those primitives as the arguments to a user
-defined callback.</p>
+<h3>Patterns</h3>
 
-<h3>Big-Endian Byte Ordering</h3>
+<p>Patterns are a series of element declarations joined by commas.</p>
+        
+          <div class="highlight"><pre><span class="nx">parser</span><span class="p">.</span><span class="nx">parse</span><span class="p">(</span><span class="s2">&quot;b16, b32, b8z&quot;</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">length</span><span class="p">,</span> <span class="nx">address</span><span class="p">,</span> <span class="nx">name</span><span class="p">)</span> <span class="p">{</span>
+  <span class="nx">frobinate</span><span class="p">(</span><span class="nx">length</span><span class="p">,</span> <span class="nx">address</span><span class="p">,</span> <span class="nx">name</span><span class="p">);</span>
+<span class="p">});</span>
+</pre></div>
+
+        
+          <p>You can also name the elements in a pattern. If named, parsers will be able to
+pass maps to callbacks, serializers will be able to serialize maps of data.</p>
+        
+          <div class="highlight"><pre><span class="nx">parser</span><span class="p">.</span><span class="nx">parse</span><span class="p">(</span><span class="s2">&quot;b16 =&gt; length, b32 =&gt; address, b8z =&gt; name&quot;</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">record</span><span class="p">)</span> <span class="p">{</span>
+  <span class="nx">frobinate</span><span class="p">(</span><span class="nx">record</span><span class="p">.</span><span class="nx">length</span><span class="p">,</span> <span class="nx">record</span><span class="p">.</span><span class="nx">address</span><span class="p">,</span> <span class="nx">record</span><span class="p">.</span><span class="nx">name</span><span class="p">);</span>
+<span class="p">});</span>
+</pre></div>
+
+        
+          <p>Unnamed elements are good for short, simple patterns. For longer patterns it is
+easier to have parsers build maps for you, and for serializers to pluck the
+right values out of maps.</p>
+
+<p>The following example shows a complicated pattern, the invariable portion of an
+IP header, the first 20 bytes before options, if any.</p>
+        
+          <div class="highlight"><pre><span class="c1">// Define an IP header pattern using a joined array to explode the pattern.</span>
+<span class="nx">ip</span> <span class="o">=</span>
+<span class="p">[</span> <span class="s2">&quot;b8{b4 =&gt; version, b4 =&gt; headerLength}&quot;</span>
+<span class="p">,</span> <span class="s2">&quot;b8   =&gt; typeOfService&quot;</span>
+<span class="p">,</span> <span class="s2">&quot;b16  =&gt; length&quot;</span>
+<span class="p">,</span> <span class="s2">&quot;b16  =&gt; identification&quot;</span>
+<span class="p">,</span> <span class="s2">&quot;b16{b3 =&gt; flags, b13 =&gt; fragmentOffset}&quot;</span>
+<span class="p">,</span> <span class="s2">&quot;b8   =&gt; timeToLive&quot;</span>
+<span class="p">,</span> <span class="s2">&quot;b8   =&gt; protocol&quot;</span>
+<span class="p">,</span> <span class="s2">&quot;b16  =&gt; checksum&quot;</span>
+<span class="p">,</span> <span class="s2">&quot;b32  =&gt; sourceAddress&quot;</span>
+<span class="p">,</span> <span class="s2">&quot;b32  =&gt; destinationAddress&quot;</span>
+<span class="p">].</span><span class="nx">join</span><span class="p">(</span><span class="s2">&quot;, &quot;</span><span class="p">);</span>
+
+<span class="c1">// The pattern is then used to defined parser and serializer actions.</span>
+<span class="nx">parser</span><span class="p">.</span><span class="nx">parse</span><span class="p">(</span><span class="nx">ip</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">header</span><span class="p">)</span> <span class="p">{</span>
+  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">header</span><span class="p">);</span>
+<span class="p">});</span>
+</pre></div>
+
+        
+          <h3>Big-Endian Byte Ordering</h3>
 
 <p>To define a big-endian byte ordering for a field, prefix the bit size with <code>b</code>.</p>
 
@@ -286,6 +354,82 @@ and type.</p>
         
           <div class="highlight"><pre><span class="s2">&quot;b8/b8&quot;</span>           <span class="c1">// Length encoded byte array with a byte length.</span>
 <span class="s2">&quot;l16/b8&quot;</span>          <span class="c1">// Length encoded byte array with 16 bit little-endian length.</span>
+</pre></div>
+
+        
+          <h3>Bit Packed Integers</h3>
+
+<p><strong>Pending</strong> &mdash; Not implemented.</p>
+
+<p>Integers are often divided into smaller integers through a process called bit
+packing. Bit packing is specified by following an integer specification with 
+a curly brace enclosed series series of integers patterns whose total size in
+bits equals the size of the packed integer.</p>
+
+<p>Packed integers are always big-endian and can be either singed or unsigned.</p>
+
+<p><strong>Mnemonic</strong> Curly braces are used to define structures in C and bit packing is
+kind of like a structure.</p>
+        
+          <div class="highlight"><pre><span class="s2">&quot;b16{b3,x6,-b7}&quot;</span>  <span class="c1">// A 16 bit big-endian integer divided into a 3-bit integer,</span>
+                  <span class="c1">// 6 skipped bits, and a signed 7-bit integer. </span>
+</pre></div>
+
+        
+          <p>You can also name the packed fields.</p>
+        
+          <div class="highlight"><pre><span class="s2">&quot;b16{b3 =&gt; type, x6, -b7 =&gt; count}&quot;</span>
+</pre></div>
+
+        
+          <h3>Conditinal Patterns</h3>
+
+<p><strong>Pending</strong> &mdash; Not implemented.</p>
+
+<p>A common pattern in binary formats is using the value of a byte, or the high
+order bits of a byte to specify the type of data to follow. <a href="#length-encoded-arrays">Length Encoded
+Arrays</a> are one example of this practice, where a
+an integer count indicates the length of a following string or array.</p>
+
+<p>Byte switches are used to switch between types can can be based on either a
+byte value or a bit mask.</p>
+
+<p>A conditional is indicated by a encapsulating the alternatives in parenthesis.
+Alternative are separated by a pipe <code>|</code> character. Each alternative maps a match
+to a pattern separated by a colon <code>:</code>.</p>
+
+<p>The values to match can be either a range or a single value.  If the value
+matches then the pattern associated with the value is applied to the stream
+starting with the byte currently tested. That is, we use the byte both to test
+the condition, then use the byte as the first byte in the pattern with the
+matched condition.</p>
+
+<p>Tests are applied in the order in which they are declared.</p>
+
+<p><strong>Mnemonic</strong> &mdash; Parenthesis and pipes are used to indicate alternation in
+regular expressions, while colons are used to deliniate switch options in C.</p>
+        
+          <div class="highlight"><pre><span class="c1">// MySQL length coded binary; if the byte is less than 252, use the byte value,</span>
+<span class="c1">// otherwise the byte value indicates the length of the following word. </span>
+<span class="s2">&quot;b8(0-251: b8 | 252: x8, b16 | 253: x8, b24 | 254: x8, b64)&quot;</span>
+
+<span class="c1">// Simpiler, but will also match 255 which is invalid, which is fine if you test</span>
+<span class="c1">// the value in your callback.</span>
+<span class="s2">&quot;b8(252: x8, b16 | 253: x8, b24 | 254: x8, b64 | b8)&quot;</span>
+</pre></div>
+
+        
+          <p>The values are expressed in binary, decimal or hexidecimal.</p>
+
+<p>You can also indicate a branch based on set bits by prefixing the value with an
+ampersand. The value is then considered a bit mask. If the result of a logcal
+and with the bit mask equals the bit mask, then that alternative is chosen.</p>
+
+<p><strong>Mnemonic</strong> The <code>&amp;</code> performs a logical and in C and is used to check to see if
+bits in a bit mask are set.</p>
+        
+          <div class="highlight"><pre><span class="s2">&quot;b8(&amp;0x80: b16{x1,b15} | b8)&quot;</span>   <span class="c1">// A 15-bit word if the first bit is set,</span>
+                                <span class="c1">// otherwise a byte.</span>
 </pre></div>
 
         
