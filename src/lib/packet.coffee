@@ -55,7 +55,7 @@ class Packet extends stream.Stream
         parameters = []
         for constant in transform.parameters
           parameters.push(constant)
-        parameters.push(not @outgoing)
+        parameters.push(not @_outgoing)
         parameters.push(pattern)
         parameters.push(value)
         value = @transforms[transform.name].apply null, parameters
@@ -425,7 +425,7 @@ module.exports.Serializer = class Serializer extends Packet
     delete        @padding
 
     if pattern.endianness is "x"
-      @outgoing.splice @patternIndex, 0, null
+      @_outgoing.splice @patternIndex, 0, null
       if pattern.padding?
         @padding = pattern.padding
 
@@ -439,13 +439,13 @@ module.exports.Serializer = class Serializer extends Packet
       if @padding?
         value = @padding
       else if pattern.arrayed
-        value = @outgoing[@patternIndex][@index]
+        value = @_outgoing[@patternIndex][@index]
       else
         if pattern.length
-          repeat = @outgoing[@patternIndex].length
-          @outgoing.splice @patternIndex, 0, repeat
+          repeat = @_outgoing[@patternIndex].length
+          @_outgoing.splice @patternIndex, 0, repeat
           @pattern[@patternIndex + 1].repeat = repeat
-        value = @outgoing[@patternIndex]
+        value = @_outgoing[@patternIndex]
       if pattern.unpacked
         value = @pack(value)
 
@@ -485,6 +485,7 @@ module.exports.Serializer = class Serializer extends Packet
     if typeof shiftable[shiftable.length - 1] == 'function'
       callback = shiftable.pop()
 
+
     nameOrPattern = shiftable.shift()
     packet        = @_packets[nameOrPattern] or {}
     pattern       = packet.pattern or parsePattern(nameOrPattern)
@@ -498,10 +499,18 @@ module.exports.Serializer = class Serializer extends Packet
     @pattern      = pattern
     @callback     = noop
     @patternIndex = 0
-    @outgoing     = shiftable
 
-    for value, i in @outgoing
-      @outgoing[i] = @pipeline(pattern[i], value)
+    if shiftable.length is 1 and
+        typeof shiftable[0] is "object" and
+        not shiftable[0] instanceof Array
+      @_outgoing = []
+      for pattern in @pattern
+        @_outgoing.push if pattern.name then shiftable[pattern.name] else null
+    else
+      @_outgoing  = shiftable
+
+    for value, i in @_outgoing
+      @_outgoing[i] = @pipeline(pattern[i], value)
 
     @nextField()
     @nextValue()
@@ -589,10 +598,10 @@ module.exports.Serializer = class Serializer extends Packet
           # array to hold the terminator, because the outgoing series may be a
           # buffer. We insert the terminator at next index in the outgoing array.
           # We then set repeat to allow one more iteration before callback.
-          if @outgoing[@patternIndex].length is @index + 1
+          if @_outgoing[@patternIndex].length is @index + 1
             @terminated = true
-            @outgoing[@patternIndex] = []
-            @outgoing[@patternIndex][@index + 1] = @pattern[@patternIndex].terminator.charCodeAt(0)
+            @_outgoing[@patternIndex] = []
+            @_outgoing[@patternIndex][@index + 1] = @pattern[@patternIndex].terminator.charCodeAt(0)
 
       # If we are reading an arrayed pattern and we have not read all of the
       # array elements, we repeat the current field type.
@@ -619,7 +628,7 @@ module.exports.Serializer = class Serializer extends Packet
         @nextField()
         @nextValue()
 
-    @outgoing = null
+    @_outgoing = null
 
     offset - start
 

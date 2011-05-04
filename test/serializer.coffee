@@ -276,3 +276,12 @@ class module.exports.SerializerTest extends TwerpTest
     serializer.write [ 1 ]
     @ok invoked
     done 1
+
+  "test: write object": (done) ->
+    serializer = new Serializer()
+    serializer.pipe buffer = []
+    object = { length: 257, type: 8, name: "ABC" }
+    serializer.serialize "b16 => length, b8 => type, b8z => name", "42", object, =>
+      @equal serializer.getBytesWritten(), 7
+      @deepEqual buffer, [ 0x30, 0x30, 0x30, 0x30, 0x30, 0x34, 0x32, 0x00 ]
+      done 2
