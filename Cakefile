@@ -88,7 +88,8 @@ task "gitignore", "create a .gitignore for node-ec2 based on git branch", ->
                 .gitignore
                 lib-cov
                 .DS_Store
-                **/.DS_Store
+                .AppleDouble
+                *.swp
                 
                 '''
 

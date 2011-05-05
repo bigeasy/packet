@@ -8,14 +8,14 @@ Use tar as an example?
 
 ## Objectives
 
-Node Packet creates binary parsers and serializers that are **incremental**,
-**streaming**, and **pausable** through an **expressive** and **declarative**
-binary pattern language.
+Node Packet creates **binary parsers** and **serializers** that are
+**incremental**, **streaming**, and **pausable** through a bindary pattern
+language that is **declarative** and very **expressive**.
 
 Node Packet simplifies the construction an maintainence of libraries that
 convert binary to JavaScript and back. The name Packet may make you think that
-it is desinged solely for binary network protocols, but it is also used to read
-and write binary file formats.
+it is designed solely for binary network protocols, but it is also great for
+reading and writing binary file formats.
 
 **Incremental** &mdash; Node packet creates incremental parsers and serailizers
 that are almost as fast as the parser you'd write by hand, but a lot easier to
@@ -136,6 +136,131 @@ parser.parse(ip, function (header) {
   console.log(header);
 });
 ```
+
+### Parsers
+
+Parsers implement the writable stream interface. First you set a binary pattern
+that the parser will use to interpret the stream. Then you write a byte stream
+into the parser and it generates events based on the values it extracts from the
+stream.
+
+The extracted values are fed to callbacks. Callback are associated with a binary
+pattern by passing the pattern and callback to the `extract` method.
+
+```javascript
+function parse (writable) {
+  var parser = new Parser();
+  parser.extract("b8, b8z|utf8(), b16[4]", function (flag, name, array) {
+    switch (flag) {
+    case 1:
+      ready(name);
+    case 2:
+      aim(name, array);
+    case 3:
+      fire(name, array);
+    default:
+      throw new Error("Invalid stream.");
+    }
+  });
+  writable.pipe(parser);
+}
+```
+
+You can gather up your pattern and callback associations and give them
+meaningful using the `pattern` method. This makes it easier to define the flow
+of the paser. The example above only extracted one pattern, while the example
+below shows how you would transition from one extraction to the next.
+
+```javascript
+function parse (writable) {
+  var parser = new Parser();
+  parser.pattern("command", "b8, b8z|utf8(), b16[4]",
+  function (flag, name, array) {
+    switch (flag) {
+    case 1:
+      ready(name);
+      parser.parse("command");
+    case 2:
+      aim(name, array);
+      parser.parse("command");
+    default:
+      fire(name, array);
+    }
+  });
+  parser.parse("command");
+  writable.pipe(parser);
+}
+```
+
+Note that while parser does implement `EventEmitter`, that is only for the sake
+of the `WritableStream` interface. Extracted values are passed directly to the
+callbacks associated with the pattern, not though an `EventEmitter` event, so
+that their is no ambiguity about the pattern applied or the values extracted.
+
+The parser callback recieves the values either as positioned function arguments
+or as an object. How the callback is invoked is based on the pattern and the
+[arity](http://en.wikipedia.org/wiki/Arity) of the callback function.
+
+In the examples above, callbacks are invoked with positioned arguments. The
+values extracted are passed to the callback as arguments in the order in which
+they were extracted from the stream.
+
+To receive an object in the callback, we defined named elements. When the
+pattern has at least one named element, and the callback has only a single
+argument, an object is passed to the callback containing the values using the
+element names as keys.
+
+```javascript
+function parse (writable) {
+  var parser = new Parser();
+  parser.pattern("command", "b8 => flag, b8z|utf8() => name, b16[4] => array",
+  function (command) {
+    switch (command.flag) {
+    case 1:
+      ready(command.name);
+      parser.parse("command");
+    case 2:
+      aim(command.name, command.array);
+      parser.parse("command");
+    default:
+      fire(command.name, command.array);
+    }
+  });
+  parser.parse("command");
+  writable.pipe(parser);
+}
+```
+
+Unnamed elements are excluded, but there's no good reason not name them. Use a
+skip pattern to skip over unwanted bytes instead.
+
+You can still get positioned arguments using a named pattern. Just provide a
+callback with more than one argument and it will be invoked with the extract
+values as parameters.
+
+```javascript
+function parse (writable) {
+  var parser = new Parser();
+  parser.pattern("command", "b8 => flag, b8z|utf8() => name, b16[4] => array",
+  function (foo, bar, baz) { // Ignore named elements, ask for parameters.
+    switch (foo) {
+    case 1:
+      ready(bar);
+      parser.parse("command");
+    case 2:
+      aim(bar, baz);
+      parser.parse("command");
+    default:
+      fire(bar, baz);
+    }
+  });
+  parser.parse("command");
+  writable.pipe(parser);
+}
+```
+
+A callback for a pattern without any named elements is always invoked with
+values as parameters regardless of arity.
 
 ### Big-Endian Byte Ordering
 
@@ -304,7 +429,7 @@ want to zero pad, use `0`. If you want to pad with ASCII spaces use `32`.
 ### Length Encoded Arrays
 
 Length encoded arrays are specified by joining a count type and a value type
-with a `/`.
+with a forward slash character `/`.
 
 **Mnemonic**: Inspired by Perl's `pack`, which uses the slash to separate count
 and type.
@@ -337,6 +462,20 @@ You can also name the packed fields.
 
 ```javascript
 "b16{b3 => type, x6, -b7 => count}"
+```
+
+### Constants
+
+You can add any JavaScript scalar value, a `string`, `number`, `boolean` or the
+`null` value to a pattern. THe value will be be emitted by parsers as if it were
+a value parsed from the byte stream. Constant values are ignored serializers.
+
+By itself, constants is not useful. They are useful when you want to provide
+some indication of the outcome of conditional pattern.
+
+```javascript
+"b16, 'ABC', b16"   // The string 'ABC' between two 16 bit integers.
+"b8z, null, b8z"    // A null value between to zero terminated byte strings.
 ```
 
 ### Conditinal Patterns
@@ -435,6 +574,31 @@ The `str` transform is defined by default. The transform names are purposely
 terse to fit with the brevity of the pattern language.
 
 ## Reference
+
+### Error Messages
+
+Error messages for pattern parsing.
+
+ * **invalid pattern at N** &mdash; The characters starting at the specified
+   index is unexpected the pattern is invalid. The invalid character may not be
+   at the specified index, but shortly there after, such as unmatched braces.
+ * **bit field overflow at N** &mdash; The the sum of the bit size of bit field
+   elements is greater than the size of the containing element. The sum of the
+   bit size of bit field elements must equal the size of the containing element.
+ * **bit field underflow at N** &mdash; The the sum of the bit size of bit field
+   elements is less than the size of the containing element. The sum of the bit
+   size of bit field elements must equal the size of the containing element.
+ * **bit size must be non-zero at N** &mdash; Encountered element with a bit size of
+   zero. Element size must be a non-zero value.
+ * **bits must be divisible by 8 at N** &mdash; Encountered element with a bit
+   size that is not divisible by 8. If an element is not a bit field element, it
+   must align to an 8-bit boundary.
+ * **floats can only be 32 or 64 bits at N** &mdash; Encountered a float element
+   with an unsupported bit size. Only 32 and 64 bit floats are supported.
+ * **"array length must be non-zero at N** &mdash; Encountered an array length
+   of zero. Arrays must have a non-zero length.
+
+### API
 
 @ packet
 
