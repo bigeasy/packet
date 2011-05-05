@@ -387,7 +387,7 @@ class WritableStream extends stream.Stream
     if typeof buffer is "string"
       buffer = new Buffer(buffer, encoding or "utf8")
     @_written += buffer.length
-    @_serializer._write buffer
+    @_serializer.write buffer
     if @_written > @_length
       throw new Error "buffer overflow"
     else if @_wrtten == @_length
@@ -454,37 +454,94 @@ module.exports.Serializer = class Serializer extends Packet
   stream: (length) ->
     @_stream = new WritableStream(length, @)
 
+  _pipe: (destination, options) ->
+    if destination instanceof Array
+      @_buffer = destination
+      @_bufferLength = Number.MAX_VALUE
+      @_streaming = false
+    else if destination instanceof Buffer
+      @_buffer = destination
+      @_bufferLength = destination.length
+      @_streaming = false
+    else
+      @_buffer = (@_ownBuffer or= new Buffer(1024))
+      @_bufferLength = @_ownBuffer.length
+      @_streaming = true
+      super destination, options
+
   skip: (length, fill) ->
     while length
       size = Math.min(length, @_buffer.length)
       length -= size
       for i in [0...size]
         @_buffer[i] = fill
-      @_write @_buffer.slice 0, size
+      @write @_buffer.slice 0, size
 
   buffer: (shiftable...) ->
+    if Array.isArray(shiftable[0])
+      buffer = shiftable.shift()
+      bufferLength = Number.MAX_VALUE
+      ownsBuffer = false
+    else if Buffer.isBuffer(shiftable[0])
+      buffer = shiftable.shift()
+      bufferLength = buffer.length
+      ownsBuffer = false
+    else
+      buffer = @_buffer
+      bufferLength = @_buffer.length
+      ownsBuffer = true
+
     callback = @_reset(shiftable)
+    @callback = noop
+
     read = 0
     while @pattern
-      if read is @_buffer.length
-        buffer = new Buffer buffer.length * 2
-        @_buffer.copy(buffer)
-        @_buffer = buffer
-      read += @write(@_buffer, read, @_buffer.length - read)
-    callback.call @self, @_buffer.slice 0, read
+      if read is bufferLength
+        if ownsBuffer
+          expanded = new Buffer buffer.length * 2
+          buffer.copy(expanded)
+          buffer = expanded
+        else
+          @emit "error", new Error "buffer overflow"
+          return
+      read += @_serialize buffer, read, bufferLength - read
 
-  serialize: (shiftable...) ->
-    @callback = @_reset(shiftable)
-    # Implementing pause requires callbacks.
-    if @streaming
+    @_buffer = buffer if ownsBuffer
+
+    slice = buffer.slice 0, read
+    callback.call @self, slice
+
+    null
+
+  # Using the airity of the callback might be too clever, when we could simply
+  # choose a name, such as `serialize` versus `buffer`, or maybe `write` versus
+  # `buffer`, where write writes the buffer when it fills, and buffer gathers
+  # everthing in a buffer, and gives the user an opportunity to make last minute
+  # changes before writing to the stream.
+  #
+  # Already have plenty of magic with named versus positional arguments.
+  write: (shiftable...) ->
+    if Array.isArray(shiftable[0])
+      shiftable[0] = new Buffer(shiftable[0])
+    if Buffer.isBuffer(shiftable[0])
+      slice = shiftable.shift()
+      if @_decoder
+        string = @_decoder.write(slice)
+        @emit "data", string if string.length
+      else
+        @emit "data", slice
+    else
+      callback = @_reset(shiftable)
+      # Implementing pause requires callbacks.
+      @callback = noop
       while @pattern
-        read = @write(@_buffer, 0, @_buffer.length)
-        @_write @_buffer.slice 0, read
+        read = @_serialize(@_buffer, 0, @_buffer.length)
+        @write @_buffer.slice 0, read
+      callback.call @self
 
   _reset: (shiftable) ->
     if typeof shiftable[shiftable.length - 1] == 'function'
       callback = shiftable.pop()
-
 
     nameOrPattern = shiftable.shift()
     packet        = @_packets[nameOrPattern] or {}
@@ -502,10 +559,11 @@ module.exports.Serializer = class Serializer extends Packet
 
     if shiftable.length is 1 and
         typeof shiftable[0] is "object" and
-        not shiftable[0] instanceof Array
+        not (shiftable[0] instanceof Array)
+      object = shiftable.shift()
       @_outgoing = []
-      for pattern in @pattern
-        @_outgoing.push if pattern.name then shiftable[pattern.name] else null
+      for part in @pattern
+        @_outgoing.push if part.name then object[part.name] else null
     else
       @_outgoing  = shiftable
 
@@ -516,13 +574,6 @@ module.exports.Serializer = class Serializer extends Packet
     @nextValue()
 
     callback
-
-  _write: (slice) ->
-    if @_decoder
-      string = @_decoder.write(slice)
-      @emit "data", string if string.length
-    else
-      @emit "data", slice
 
   close: ->
     @emit "end"
@@ -542,9 +593,7 @@ module.exports.Serializer = class Serializer extends Packet
 # written, or the end of the buffer is reached.
 
   # Write to the `buffer` in the region defined by the given `offset` and `length`.
-  write: (buffer, offset, length) ->
-    offset  or= 0
-    length  or= buffer.length
+  _serialize: (buffer, offset, length) ->
     start     = offset
     end       = offset + length
 
