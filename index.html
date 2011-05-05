@@ -40,14 +40,14 @@
         
         
         
-          <p>Node Packet creates binary parsers and serializers that are <strong>incremental</strong>,
-<strong>streaming</strong>, and <strong>pausable</strong> through an <strong>expressive</strong> and <strong>declarative</strong>
-binary pattern language.</p>
+          <p>Node Packet creates <strong>binary parsers</strong> and <strong>serializers</strong> that are
+<strong>incremental</strong>, <strong>streaming</strong>, and <strong>pausable</strong> through a bindary pattern
+language that is <strong>declarative</strong> and very <strong>expressive</strong>.</p>
 
 <p>Node Packet simplifies the construction an maintainence of libraries that
 convert binary to JavaScript and back. The name Packet may make you think that
-it is desinged solely for binary network protocols, but it is also used to read
-and write binary file formats.</p>
+it is designed solely for binary network protocols, but it is also great for
+reading and writing binary file formats.</p>
 
 <p><strong>Incremental</strong> &mdash; Node packet creates incremental parsers and serailizers
 that are almost as fast as the parser you'd write by hand, but a lot easier to
@@ -179,7 +179,132 @@ IP header, the first 20 bytes before options, if any.</p>
 </pre></div>
 
         
-          <h3>Big-Endian Byte Ordering</h3>
+          <h3>Parsers</h3>
+
+<p>Parsers implement the writable stream interface. First you set a binary pattern
+that the parser will use to interpret the stream. Then you write a byte stream
+into the parser and it generates events based on the values it extracts from the
+stream.</p>
+
+<p>The extracted values are fed to callbacks. Callback are associated with a binary
+pattern by passing the pattern and callback to the <code>extract</code> method.</p>
+        
+          <div class="highlight"><pre><span class="kd">function</span> <span class="nx">parse</span> <span class="p">(</span><span class="nx">writable</span><span class="p">)</span> <span class="p">{</span>
+  <span class="kd">var</span> <span class="nx">parser</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Parser</span><span class="p">();</span>
+  <span class="nx">parser</span><span class="p">.</span><span class="nx">extract</span><span class="p">(</span><span class="s2">&quot;b8, b8z|utf8(), b16[4]&quot;</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">flag</span><span class="p">,</span> <span class="nx">name</span><span class="p">,</span> <span class="nx">array</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">switch</span> <span class="p">(</span><span class="nx">flag</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">case</span> <span class="mi">1</span><span class="o">:</span>
+      <span class="nx">ready</span><span class="p">(</span><span class="nx">name</span><span class="p">);</span>
+    <span class="k">case</span> <span class="mi">2</span><span class="o">:</span>
+      <span class="nx">aim</span><span class="p">(</span><span class="nx">name</span><span class="p">,</span> <span class="nx">array</span><span class="p">);</span>
+    <span class="k">case</span> <span class="mi">3</span><span class="o">:</span>
+      <span class="nx">fire</span><span class="p">(</span><span class="nx">name</span><span class="p">,</span> <span class="nx">array</span><span class="p">);</span>
+    <span class="k">default</span><span class="o">:</span>
+      <span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span><span class="p">(</span><span class="s2">&quot;Invalid stream.&quot;</span><span class="p">);</span>
+    <span class="p">}</span>
+  <span class="p">});</span>
+  <span class="nx">writable</span><span class="p">.</span><span class="nx">pipe</span><span class="p">(</span><span class="nx">parser</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+
+        
+          <p>You can gather up your pattern and callback associations and give them
+meaningful using the <code>pattern</code> method. This makes it easier to define the flow
+of the paser. The example above only extracted one pattern, while the example
+below shows how you would transition from one extraction to the next.</p>
+        
+          <div class="highlight"><pre><span class="kd">function</span> <span class="nx">parse</span> <span class="p">(</span><span class="nx">writable</span><span class="p">)</span> <span class="p">{</span>
+  <span class="kd">var</span> <span class="nx">parser</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Parser</span><span class="p">();</span>
+  <span class="nx">parser</span><span class="p">.</span><span class="nx">pattern</span><span class="p">(</span><span class="s2">&quot;command&quot;</span><span class="p">,</span> <span class="s2">&quot;b8, b8z|utf8(), b16[4]&quot;</span><span class="p">,</span>
+  <span class="kd">function</span> <span class="p">(</span><span class="nx">flag</span><span class="p">,</span> <span class="nx">name</span><span class="p">,</span> <span class="nx">array</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">switch</span> <span class="p">(</span><span class="nx">flag</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">case</span> <span class="mi">1</span><span class="o">:</span>
+      <span class="nx">ready</span><span class="p">(</span><span class="nx">name</span><span class="p">);</span>
+      <span class="nx">parser</span><span class="p">.</span><span class="nx">parse</span><span class="p">(</span><span class="s2">&quot;command&quot;</span><span class="p">);</span>
+    <span class="k">case</span> <span class="mi">2</span><span class="o">:</span>
+      <span class="nx">aim</span><span class="p">(</span><span class="nx">name</span><span class="p">,</span> <span class="nx">array</span><span class="p">);</span>
+      <span class="nx">parser</span><span class="p">.</span><span class="nx">parse</span><span class="p">(</span><span class="s2">&quot;command&quot;</span><span class="p">);</span>
+    <span class="k">default</span><span class="o">:</span>
+      <span class="nx">fire</span><span class="p">(</span><span class="nx">name</span><span class="p">,</span> <span class="nx">array</span><span class="p">);</span>
+    <span class="p">}</span>
+  <span class="p">});</span>
+  <span class="nx">parser</span><span class="p">.</span><span class="nx">parse</span><span class="p">(</span><span class="s2">&quot;command&quot;</span><span class="p">);</span>
+  <span class="nx">writable</span><span class="p">.</span><span class="nx">pipe</span><span class="p">(</span><span class="nx">parser</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+
+        
+          <p>Note that while parser does implement <code>EventEmitter</code>, that is only for the sake
+of the <code>WritableStream</code> interface. Extracted values are passed directly to the
+callbacks associated with the pattern, not though an <code>EventEmitter</code> event, so
+that their is no ambiguity about the pattern applied or the values extracted.</p>
+
+<p>The parser callback recieves the values either as positioned function arguments
+or as an object. How the callback is invoked is based on the pattern and the
+<a href="http://en.wikipedia.org/wiki/Arity">arity</a> of the callback function.</p>
+
+<p>In the examples above, callbacks are invoked with positioned arguments. The
+values extracted are passed to the callback as arguments in the order in which
+they were extracted from the stream.</p>
+
+<p>To receive an object in the callback, we defined named elements. When the
+pattern has at least one named element, and the callback has only a single
+argument, an object is passed to the callback containing the values using the
+element names as keys.</p>
+        
+          <div class="highlight"><pre><span class="kd">function</span> <span class="nx">parse</span> <span class="p">(</span><span class="nx">writable</span><span class="p">)</span> <span class="p">{</span>
+  <span class="kd">var</span> <span class="nx">parser</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Parser</span><span class="p">();</span>
+  <span class="nx">parser</span><span class="p">.</span><span class="nx">pattern</span><span class="p">(</span><span class="s2">&quot;command&quot;</span><span class="p">,</span> <span class="s2">&quot;b8 =&gt; flag, b8z|utf8() =&gt; name, b16[4] =&gt; array&quot;</span><span class="p">,</span>
+  <span class="kd">function</span> <span class="p">(</span><span class="nx">command</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">switch</span> <span class="p">(</span><span class="nx">command</span><span class="p">.</span><span class="nx">flag</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">case</span> <span class="mi">1</span><span class="o">:</span>
+      <span class="nx">ready</span><span class="p">(</span><span class="nx">command</span><span class="p">.</span><span class="nx">name</span><span class="p">);</span>
+      <span class="nx">parser</span><span class="p">.</span><span class="nx">parse</span><span class="p">(</span><span class="s2">&quot;command&quot;</span><span class="p">);</span>
+    <span class="k">case</span> <span class="mi">2</span><span class="o">:</span>
+      <span class="nx">aim</span><span class="p">(</span><span class="nx">command</span><span class="p">.</span><span class="nx">name</span><span class="p">,</span> <span class="nx">command</span><span class="p">.</span><span class="nx">array</span><span class="p">);</span>
+      <span class="nx">parser</span><span class="p">.</span><span class="nx">parse</span><span class="p">(</span><span class="s2">&quot;command&quot;</span><span class="p">);</span>
+    <span class="k">default</span><span class="o">:</span>
+      <span class="nx">fire</span><span class="p">(</span><span class="nx">command</span><span class="p">.</span><span class="nx">name</span><span class="p">,</span> <span class="nx">command</span><span class="p">.</span><span class="nx">array</span><span class="p">);</span>
+    <span class="p">}</span>
+  <span class="p">});</span>
+  <span class="nx">parser</span><span class="p">.</span><span class="nx">parse</span><span class="p">(</span><span class="s2">&quot;command&quot;</span><span class="p">);</span>
+  <span class="nx">writable</span><span class="p">.</span><span class="nx">pipe</span><span class="p">(</span><span class="nx">parser</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+
+        
+          <p>Unnamed elements are excluded, but there's no good reason not name them. Use a
+skip pattern to skip over unwanted bytes instead.</p>
+
+<p>You can still get positioned arguments using a named pattern. Just provide a
+callback with more than one argument and it will be invoked with the extract
+values as parameters.</p>
+        
+          <div class="highlight"><pre><span class="kd">function</span> <span class="nx">parse</span> <span class="p">(</span><span class="nx">writable</span><span class="p">)</span> <span class="p">{</span>
+  <span class="kd">var</span> <span class="nx">parser</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Parser</span><span class="p">();</span>
+  <span class="nx">parser</span><span class="p">.</span><span class="nx">pattern</span><span class="p">(</span><span class="s2">&quot;command&quot;</span><span class="p">,</span> <span class="s2">&quot;b8 =&gt; flag, b8z|utf8() =&gt; name, b16[4] =&gt; array&quot;</span><span class="p">,</span>
+  <span class="kd">function</span> <span class="p">(</span><span class="nx">foo</span><span class="p">,</span> <span class="nx">bar</span><span class="p">,</span> <span class="nx">baz</span><span class="p">)</span> <span class="p">{</span> <span class="c1">// Ignore named elements, ask for parameters.</span>
+    <span class="k">switch</span> <span class="p">(</span><span class="nx">foo</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">case</span> <span class="mi">1</span><span class="o">:</span>
+      <span class="nx">ready</span><span class="p">(</span><span class="nx">bar</span><span class="p">);</span>
+      <span class="nx">parser</span><span class="p">.</span><span class="nx">parse</span><span class="p">(</span><span class="s2">&quot;command&quot;</span><span class="p">);</span>
+    <span class="k">case</span> <span class="mi">2</span><span class="o">:</span>
+      <span class="nx">aim</span><span class="p">(</span><span class="nx">bar</span><span class="p">,</span> <span class="nx">baz</span><span class="p">);</span>
+      <span class="nx">parser</span><span class="p">.</span><span class="nx">parse</span><span class="p">(</span><span class="s2">&quot;command&quot;</span><span class="p">);</span>
+    <span class="k">default</span><span class="o">:</span>
+      <span class="nx">fire</span><span class="p">(</span><span class="nx">bar</span><span class="p">,</span> <span class="nx">baz</span><span class="p">);</span>
+    <span class="p">}</span>
+  <span class="p">});</span>
+  <span class="nx">parser</span><span class="p">.</span><span class="nx">parse</span><span class="p">(</span><span class="s2">&quot;command&quot;</span><span class="p">);</span>
+  <span class="nx">writable</span><span class="p">.</span><span class="nx">pipe</span><span class="p">(</span><span class="nx">parser</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+
+        
+          <p>A callback for a pattern without any named elements is always invoked with
+values as parameters regardless of arity.</p>
+
+<h3>Big-Endian Byte Ordering</h3>
 
 <p>To define a big-endian byte ordering for a field, prefix the bit size with <code>b</code>.</p>
 
@@ -347,7 +472,7 @@ want to zero pad, use <code>0</code>. If you want to pad with ASCII spaces use <
           <h3>Length Encoded Arrays</h3>
 
 <p>Length encoded arrays are specified by joining a count type and a value type
-with a <code>/</code>.</p>
+with a forward slash character <code>/</code>.</p>
 
 <p><strong>Mnemonic</strong>: Inspired by Perl's <code>pack</code>, which uses the slash to separate count
 and type.</p>
@@ -379,6 +504,20 @@ kind of like a structure.</p>
           <p>You can also name the packed fields.</p>
         
           <div class="highlight"><pre><span class="s2">&quot;b16{b3 =&gt; type, x6, -b7 =&gt; count}&quot;</span>
+</pre></div>
+
+        
+          <h3>Constants</h3>
+
+<p>You can add any JavaScript scalar value, a <code>string</code>, <code>number</code>, <code>boolean</code> or the
+<code>null</code> value to a pattern. THe value will be be emitted by parsers as if it were
+a value parsed from the byte stream. Constant values are ignored serializers.</p>
+
+<p>By itself, constants is not useful. They are useful when you want to provide
+some indication of the outcome of conditional pattern.</p>
+        
+          <div class="highlight"><pre><span class="s2">&quot;b16, &#39;ABC&#39;, b16&quot;</span>   <span class="c1">// The string &#39;ABC&#39; between two 16 bit integers.</span>
+<span class="s2">&quot;b8z, null, b8z&quot;</span>    <span class="c1">// A null value between to zero terminated byte strings.</span>
 </pre></div>
 
         
@@ -483,7 +622,32 @@ terse to fit with the brevity of the pattern language.</p>
         
         
         
-          
+          <h3>Error Messages</h3>
+
+<p>Error messages for pattern parsing.</p>
+
+<ul>
+<li><strong>invalid pattern at N</strong> &mdash; The characters starting at the specified
+index is unexpected the pattern is invalid. The invalid character may not be
+at the specified index, but shortly there after, such as unmatched braces.</li>
+<li><strong>bit field overflow at N</strong> &mdash; The the sum of the bit size of bit field
+elements is greater than the size of the containing element. The sum of the
+bit size of bit field elements must equal the size of the containing element.</li>
+<li><strong>bit field underflow at N</strong> &mdash; The the sum of the bit size of bit field
+elements is less than the size of the containing element. The sum of the bit
+size of bit field elements must equal the size of the containing element.</li>
+<li><strong>bit size must be non-zero at N</strong> &mdash; Encountered element with a bit size of
+zero. Element size must be a non-zero value.</li>
+<li><strong>bits must be divisible by 8 at N</strong> &mdash; Encountered element with a bit
+size that is not divisible by 8. If an element is not a bit field element, it
+must align to an 8-bit boundary.</li>
+<li><strong>floats can only be 32 or 64 bits at N</strong> &mdash; Encountered a float element
+with an unsupported bit size. Only 32 and 64 bit floats are supported.</li>
+<li><strong>"array length must be non-zero at N</strong> &mdash; Encountered an array length
+of zero. Arrays must have a non-zero length.</li>
+</ul>
+
+<h3>API</h3>
         
       
         

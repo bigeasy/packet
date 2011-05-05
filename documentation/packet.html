@@ -30,7 +30,7 @@ method before starting a new series of packet parsing transitions.</p>          
         <span class="nv">parameters = </span><span class="p">[]</span>
         <span class="k">for</span> <span class="nx">constant</span> <span class="k">in</span> <span class="nx">transform</span><span class="p">.</span><span class="nx">parameters</span>
           <span class="nx">parameters</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">constant</span><span class="p">)</span>
-        <span class="nx">parameters</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="o">not</span> <span class="nx">@outgoing</span><span class="p">)</span>
+        <span class="nx">parameters</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="o">not</span> <span class="nx">@_outgoing</span><span class="p">)</span>
         <span class="nx">parameters</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">pattern</span><span class="p">)</span>
         <span class="nx">parameters</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">value</span><span class="p">)</span>
         <span class="nv">value = </span><span class="nx">@transforms</span><span class="p">[</span><span class="nx">transform</span><span class="p">.</span><span class="nx">name</span><span class="p">].</span><span class="nx">apply</span> <span class="kc">null</span><span class="p">,</span> <span class="nx">parameters</span>
@@ -313,7 +313,7 @@ may specify a subsequent packet to parse.</p>             </td>             <td 
     <span class="k">if</span> <span class="k">typeof</span> <span class="nx">buffer</span> <span class="o">is</span> <span class="s2">&quot;string&quot;</span>
       <span class="nv">buffer = </span><span class="k">new</span> <span class="nx">Buffer</span><span class="p">(</span><span class="nx">buffer</span><span class="p">,</span> <span class="nx">encoding</span> <span class="o">or</span> <span class="s2">&quot;utf8&quot;</span><span class="p">)</span>
     <span class="nx">@_written</span> <span class="o">+=</span> <span class="nx">buffer</span><span class="p">.</span><span class="nx">length</span>
-    <span class="nx">@_serializer</span><span class="p">.</span><span class="nx">_write</span> <span class="nx">buffer</span>
+    <span class="nx">@_serializer</span><span class="p">.</span><span class="nx">write</span> <span class="nx">buffer</span>
     <span class="k">if</span> <span class="nx">@_written</span> <span class="o">&gt;</span> <span class="nx">@_length</span>
       <span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span> <span class="s2">&quot;buffer overflow&quot;</span>
     <span class="k">else</span> <span class="k">if</span> <span class="nx">@_wrtten</span> <span class="o">==</span> <span class="nx">@_length</span>
@@ -351,7 +351,7 @@ may specify a subsequent packet to parse.</p>             </td>             <td 
     <span class="k">delete</span>        <span class="nx">@padding</span>
 
     <span class="k">if</span> <span class="nx">pattern</span><span class="p">.</span><span class="nx">endianness</span> <span class="o">is</span> <span class="s2">&quot;x&quot;</span>
-      <span class="nx">@outgoing</span><span class="p">.</span><span class="nx">splice</span> <span class="nx">@patternIndex</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="kc">null</span>
+      <span class="nx">@_outgoing</span><span class="p">.</span><span class="nx">splice</span> <span class="nx">@patternIndex</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="kc">null</span>
       <span class="k">if</span> <span class="nx">pattern</span><span class="p">.</span><span class="nx">padding</span><span class="o">?</span>
         <span class="vi">@padding = </span><span class="nx">pattern</span><span class="p">.</span><span class="nx">padding</span></pre></div>             </td>           </tr>                               <tr id="section-29">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-29">&#182;</a>               </div>               <p>Setup the next field in the current pattern to read or write.</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nv">nextValue: </span><span class="o">-&gt;</span>
     <span class="nv">pattern = </span><span class="nx">@pattern</span><span class="p">[</span><span class="nx">@patternIndex</span><span class="p">]</span>
@@ -362,13 +362,13 @@ may specify a subsequent packet to parse.</p>             </td>             <td 
       <span class="k">if</span> <span class="nx">@padding</span><span class="o">?</span>
         <span class="nv">value = </span><span class="nx">@padding</span>
       <span class="k">else</span> <span class="k">if</span> <span class="nx">pattern</span><span class="p">.</span><span class="nx">arrayed</span>
-        <span class="nv">value = </span><span class="nx">@outgoing</span><span class="p">[</span><span class="nx">@patternIndex</span><span class="p">][</span><span class="nx">@index</span><span class="p">]</span>
+        <span class="nv">value = </span><span class="nx">@_outgoing</span><span class="p">[</span><span class="nx">@patternIndex</span><span class="p">][</span><span class="nx">@index</span><span class="p">]</span>
       <span class="k">else</span>
         <span class="k">if</span> <span class="nx">pattern</span><span class="p">.</span><span class="nx">length</span>
-          <span class="nv">repeat = </span><span class="nx">@outgoing</span><span class="p">[</span><span class="nx">@patternIndex</span><span class="p">].</span><span class="nx">length</span>
-          <span class="nx">@outgoing</span><span class="p">.</span><span class="nx">splice</span> <span class="nx">@patternIndex</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="nx">repeat</span>
+          <span class="nv">repeat = </span><span class="nx">@_outgoing</span><span class="p">[</span><span class="nx">@patternIndex</span><span class="p">].</span><span class="nx">length</span>
+          <span class="nx">@_outgoing</span><span class="p">.</span><span class="nx">splice</span> <span class="nx">@patternIndex</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="nx">repeat</span>
           <span class="nx">@pattern</span><span class="p">[</span><span class="nx">@patternIndex</span> <span class="o">+</span> <span class="mi">1</span><span class="p">].</span><span class="nv">repeat = </span><span class="nx">repeat</span>
-        <span class="nv">value = </span><span class="nx">@outgoing</span><span class="p">[</span><span class="nx">@patternIndex</span><span class="p">]</span>
+        <span class="nv">value = </span><span class="nx">@_outgoing</span><span class="p">[</span><span class="nx">@patternIndex</span><span class="p">]</span>
       <span class="k">if</span> <span class="nx">pattern</span><span class="p">.</span><span class="nx">unpacked</span>
         <span class="nv">value = </span><span class="nx">@pack</span><span class="p">(</span><span class="nx">value</span><span class="p">)</span>
 
@@ -377,30 +377,85 @@ may specify a subsequent packet to parse.</p>             </td>             <td 
   <span class="nv">stream: </span><span class="nf">(length) -&gt;</span>
     <span class="vi">@_stream = </span><span class="k">new</span> <span class="nx">WritableStream</span><span class="p">(</span><span class="nx">length</span><span class="p">,</span> <span class="err">@</span><span class="p">)</span>
 
+  <span class="nv">_pipe: </span><span class="nf">(destination, options) -&gt;</span>
+    <span class="k">if</span> <span class="nx">destination</span> <span class="k">instanceof</span> <span class="nb">Array</span>
+      <span class="vi">@_buffer = </span><span class="nx">destination</span>
+      <span class="vi">@_bufferLength = </span><span class="nb">Number</span><span class="p">.</span><span class="nx">MAX_VALUE</span>
+      <span class="vi">@_streaming = </span><span class="kc">false</span>
+    <span class="k">else</span> <span class="k">if</span> <span class="nx">destination</span> <span class="k">instanceof</span> <span class="nx">Buffer</span>
+      <span class="vi">@_buffer = </span><span class="nx">destination</span>
+      <span class="vi">@_bufferLength = </span><span class="nx">destination</span><span class="p">.</span><span class="nx">length</span>
+      <span class="vi">@_streaming = </span><span class="kc">false</span>
+    <span class="k">else</span>
+      <span class="vi">@_buffer = </span><span class="p">(</span><span class="nx">@_ownBuffer</span> <span class="o">or=</span> <span class="k">new</span> <span class="nx">Buffer</span><span class="p">(</span><span class="mi">1024</span><span class="p">))</span>
+      <span class="vi">@_bufferLength = </span><span class="nx">@_ownBuffer</span><span class="p">.</span><span class="nx">length</span>
+      <span class="vi">@_streaming = </span><span class="kc">true</span>
+      <span class="k">super</span> <span class="nx">destination</span><span class="p">,</span> <span class="nx">options</span>
+
   <span class="nv">skip: </span><span class="nf">(length, fill) -&gt;</span>
     <span class="k">while</span> <span class="nx">length</span>
       <span class="nv">size = </span><span class="nb">Math</span><span class="p">.</span><span class="nx">min</span><span class="p">(</span><span class="nx">length</span><span class="p">,</span> <span class="nx">@_buffer</span><span class="p">.</span><span class="nx">length</span><span class="p">)</span>
       <span class="nx">length</span> <span class="o">-=</span> <span class="nx">size</span>
       <span class="k">for</span> <span class="nx">i</span> <span class="k">in</span> <span class="p">[</span><span class="mi">0</span><span class="p">...</span><span class="nx">size</span><span class="p">]</span>
         <span class="nx">@_buffer</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span> <span class="o">=</span> <span class="nx">fill</span>
-      <span class="nx">@_write</span> <span class="nx">@_buffer</span><span class="p">.</span><span class="nx">slice</span> <span class="mi">0</span><span class="p">,</span> <span class="nx">size</span>
+      <span class="nx">@write</span> <span class="nx">@_buffer</span><span class="p">.</span><span class="nx">slice</span> <span class="mi">0</span><span class="p">,</span> <span class="nx">size</span>
 
   <span class="nv">buffer: </span><span class="nf">(shiftable...) -&gt;</span>
+    <span class="k">if</span> <span class="nb">Array</span><span class="p">.</span><span class="nx">isArray</span><span class="p">(</span><span class="nx">shiftable</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+      <span class="nv">buffer = </span><span class="nx">shiftable</span><span class="p">.</span><span class="nx">shift</span><span class="p">()</span>
+      <span class="nv">bufferLength = </span><span class="nb">Number</span><span class="p">.</span><span class="nx">MAX_VALUE</span>
+      <span class="nv">ownsBuffer = </span><span class="kc">false</span>
+    <span class="k">else</span> <span class="k">if</span> <span class="nx">Buffer</span><span class="p">.</span><span class="nx">isBuffer</span><span class="p">(</span><span class="nx">shiftable</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+      <span class="nv">buffer = </span><span class="nx">shiftable</span><span class="p">.</span><span class="nx">shift</span><span class="p">()</span>
+      <span class="nv">bufferLength = </span><span class="nx">buffer</span><span class="p">.</span><span class="nx">length</span>
+      <span class="nv">ownsBuffer = </span><span class="kc">false</span>
+    <span class="k">else</span>
+      <span class="nv">buffer = </span><span class="nx">@_buffer</span>
+      <span class="nv">bufferLength = </span><span class="nx">@_buffer</span><span class="p">.</span><span class="nx">length</span>
+      <span class="nv">ownsBuffer = </span><span class="kc">true</span>
+
     <span class="nv">callback = </span><span class="nx">@_reset</span><span class="p">(</span><span class="nx">shiftable</span><span class="p">)</span>
+    <span class="vi">@callback = </span><span class="nx">noop</span>
+
     <span class="nv">read = </span><span class="mi">0</span>
     <span class="k">while</span> <span class="nx">@pattern</span>
-      <span class="k">if</span> <span class="nx">read</span> <span class="o">is</span> <span class="nx">@_buffer</span><span class="p">.</span><span class="nx">length</span>
-        <span class="nv">buffer = </span><span class="k">new</span> <span class="nx">Buffer</span> <span class="nx">buffer</span><span class="p">.</span><span class="nx">length</span> <span class="o">*</span> <span class="mi">2</span>
-        <span class="nx">@_buffer</span><span class="p">.</span><span class="nx">copy</span><span class="p">(</span><span class="nx">buffer</span><span class="p">)</span>
-        <span class="vi">@_buffer = </span><span class="nx">buffer</span>
-      <span class="nx">read</span> <span class="o">+=</span> <span class="nx">@write</span><span class="p">(</span><span class="nx">@_buffer</span><span class="p">,</span> <span class="nx">read</span><span class="p">,</span> <span class="nx">@_buffer</span><span class="p">.</span><span class="nx">length</span> <span class="o">-</span> <span class="nx">read</span><span class="p">)</span>
-    <span class="nx">callback</span><span class="p">.</span><span class="nx">call</span> <span class="nx">@self</span><span class="p">,</span> <span class="nx">@_buffer</span><span class="p">.</span><span class="nx">slice</span> <span class="mi">0</span><span class="p">,</span> <span class="nx">read</span>
+      <span class="k">if</span> <span class="nx">read</span> <span class="o">is</span> <span class="nx">bufferLength</span>
+        <span class="k">if</span> <span class="nx">ownsBuffer</span>
+          <span class="nv">expanded = </span><span class="k">new</span> <span class="nx">Buffer</span> <span class="nx">buffer</span><span class="p">.</span><span class="nx">length</span> <span class="o">*</span> <span class="mi">2</span>
+          <span class="nx">buffer</span><span class="p">.</span><span class="nx">copy</span><span class="p">(</span><span class="nx">expanded</span><span class="p">)</span>
+          <span class="nv">buffer = </span><span class="nx">expanded</span>
+        <span class="k">else</span>
+          <span class="nx">@emit</span> <span class="s2">&quot;error&quot;</span><span class="p">,</span> <span class="k">new</span> <span class="nb">Error</span> <span class="s2">&quot;buffer overflow&quot;</span>
+          <span class="k">return</span>
+      <span class="nx">read</span> <span class="o">+=</span> <span class="nx">@_serialize</span> <span class="nx">buffer</span><span class="p">,</span> <span class="nx">read</span><span class="p">,</span> <span class="nx">bufferLength</span> <span class="o">-</span> <span class="nx">read</span>
 
-  <span class="nv">serialize: </span><span class="nf">(shiftable...) -&gt;</span>
-    <span class="vi">@callback = </span><span class="nx">@_reset</span><span class="p">(</span><span class="nx">shiftable</span><span class="p">)</span></pre></div>             </td>           </tr>                               <tr id="section-30">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-30">&#182;</a>               </div>               <p>Implementing pause requires callbacks.</p>             </td>             <td class="code">               <div class="highlight"><pre>    <span class="k">if</span> <span class="nx">@streaming</span>
+    <span class="vi">@_buffer = </span><span class="nx">buffer</span> <span class="k">if</span> <span class="nx">ownsBuffer</span>
+
+    <span class="nv">slice = </span><span class="nx">buffer</span><span class="p">.</span><span class="nx">slice</span> <span class="mi">0</span><span class="p">,</span> <span class="nx">read</span>
+    <span class="nx">callback</span><span class="p">.</span><span class="nx">call</span> <span class="nx">@self</span><span class="p">,</span> <span class="nx">slice</span>
+
+    <span class="kc">null</span></pre></div>             </td>           </tr>                               <tr id="section-30">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-30">&#182;</a>               </div>               <p>Using the airity of the callback might be too clever, when we could simply
+choose a name, such as <code>serialize</code> versus <code>buffer</code>, or maybe <code>write</code> versus
+<code>buffer</code>, where write writes the buffer when it fills, and buffer gathers
+everthing in a buffer, and gives the user an opportunity to make last minute
+changes before writing to the stream.</p>
+
+<p>Already have plenty of magic with named versus positional arguments.</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nv">write: </span><span class="nf">(shiftable...) -&gt;</span>
+    <span class="k">if</span> <span class="nb">Array</span><span class="p">.</span><span class="nx">isArray</span><span class="p">(</span><span class="nx">shiftable</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+      <span class="nx">shiftable</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Buffer</span><span class="p">(</span><span class="nx">shiftable</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="k">if</span> <span class="nx">Buffer</span><span class="p">.</span><span class="nx">isBuffer</span><span class="p">(</span><span class="nx">shiftable</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+      <span class="nv">slice = </span><span class="nx">shiftable</span><span class="p">.</span><span class="nx">shift</span><span class="p">()</span>
+      <span class="k">if</span> <span class="nx">@_decoder</span>
+        <span class="nv">string = </span><span class="nx">@_decoder</span><span class="p">.</span><span class="nx">write</span><span class="p">(</span><span class="nx">slice</span><span class="p">)</span>
+        <span class="nx">@emit</span> <span class="s2">&quot;data&quot;</span><span class="p">,</span> <span class="nx">string</span> <span class="k">if</span> <span class="nx">string</span><span class="p">.</span><span class="nx">length</span>
+      <span class="k">else</span>
+        <span class="nx">@emit</span> <span class="s2">&quot;data&quot;</span><span class="p">,</span> <span class="nx">slice</span>
+    <span class="k">else</span>
+      <span class="nv">callback = </span><span class="nx">@_reset</span><span class="p">(</span><span class="nx">shiftable</span><span class="p">)</span></pre></div>             </td>           </tr>                               <tr id="section-31">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-31">&#182;</a>               </div>               <p>Implementing pause requires callbacks.</p>             </td>             <td class="code">               <div class="highlight"><pre>      <span class="vi">@callback = </span><span class="nx">noop</span>
       <span class="k">while</span> <span class="nx">@pattern</span>
-        <span class="nv">read = </span><span class="nx">@write</span><span class="p">(</span><span class="nx">@_buffer</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="nx">@_buffer</span><span class="p">.</span><span class="nx">length</span><span class="p">)</span>
-        <span class="nx">@_write</span> <span class="nx">@_buffer</span><span class="p">.</span><span class="nx">slice</span> <span class="mi">0</span><span class="p">,</span> <span class="nx">read</span>
+        <span class="nv">read = </span><span class="nx">@_serialize</span><span class="p">(</span><span class="nx">@_buffer</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="nx">@_buffer</span><span class="p">.</span><span class="nx">length</span><span class="p">)</span>
+        <span class="nx">@write</span> <span class="nx">@_buffer</span><span class="p">.</span><span class="nx">slice</span> <span class="mi">0</span><span class="p">,</span> <span class="nx">read</span>
+      <span class="nx">callback</span><span class="p">.</span><span class="nx">call</span> <span class="nx">@self</span>
 
   <span class="nv">_reset: </span><span class="nf">(shiftable) -&gt;</span>
     <span class="k">if</span> <span class="k">typeof</span> <span class="nx">shiftable</span><span class="p">[</span><span class="nx">shiftable</span><span class="p">.</span><span class="nx">length</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;function&#39;</span>
@@ -419,22 +474,24 @@ may specify a subsequent packet to parse.</p>             </td>             <td 
     <span class="vi">@pattern      = </span><span class="nx">pattern</span>
     <span class="vi">@callback     = </span><span class="nx">noop</span>
     <span class="vi">@patternIndex = </span><span class="mi">0</span>
-    <span class="vi">@outgoing     = </span><span class="nx">shiftable</span>
 
-    <span class="k">for</span> <span class="nx">value</span><span class="p">,</span> <span class="nx">i</span> <span class="k">in</span> <span class="nx">@outgoing</span>
-      <span class="nx">@outgoing</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span> <span class="o">=</span> <span class="nx">@pipeline</span><span class="p">(</span><span class="nx">pattern</span><span class="p">[</span><span class="nx">i</span><span class="p">],</span> <span class="nx">value</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nx">shiftable</span><span class="p">.</span><span class="nx">length</span> <span class="o">is</span> <span class="mi">1</span> <span class="o">and</span>
+        <span class="k">typeof</span> <span class="nx">shiftable</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">is</span> <span class="s2">&quot;object&quot;</span> <span class="o">and</span>
+        <span class="o">not</span> <span class="p">(</span><span class="nx">shiftable</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">instanceof</span> <span class="nb">Array</span><span class="p">)</span>
+      <span class="nv">object = </span><span class="nx">shiftable</span><span class="p">.</span><span class="nx">shift</span><span class="p">()</span>
+      <span class="vi">@_outgoing = </span><span class="p">[]</span>
+      <span class="k">for</span> <span class="nx">part</span> <span class="k">in</span> <span class="nx">@pattern</span>
+        <span class="nx">@_outgoing</span><span class="p">.</span><span class="nx">push</span> <span class="k">if</span> <span class="nx">part</span><span class="p">.</span><span class="nx">name</span> <span class="k">then</span> <span class="nx">object</span><span class="p">[</span><span class="nx">part</span><span class="p">.</span><span class="nx">name</span><span class="p">]</span> <span class="k">else</span> <span class="kc">null</span>
+    <span class="k">else</span>
+      <span class="vi">@_outgoing  = </span><span class="nx">shiftable</span>
+
+    <span class="k">for</span> <span class="nx">value</span><span class="p">,</span> <span class="nx">i</span> <span class="k">in</span> <span class="nx">@_outgoing</span>
+      <span class="nx">@_outgoing</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span> <span class="o">=</span> <span class="nx">@pipeline</span><span class="p">(</span><span class="nx">pattern</span><span class="p">[</span><span class="nx">i</span><span class="p">],</span> <span class="nx">value</span><span class="p">)</span>
 
     <span class="nx">@nextField</span><span class="p">()</span>
     <span class="nx">@nextValue</span><span class="p">()</span>
 
     <span class="nx">callback</span>
-
-  <span class="nv">_write: </span><span class="nf">(slice) -&gt;</span>
-    <span class="k">if</span> <span class="nx">@_decoder</span>
-      <span class="nv">string = </span><span class="nx">@_decoder</span><span class="p">.</span><span class="nx">write</span><span class="p">(</span><span class="nx">slice</span><span class="p">)</span>
-      <span class="nx">@emit</span> <span class="s2">&quot;data&quot;</span><span class="p">,</span> <span class="nx">string</span> <span class="k">if</span> <span class="nx">string</span><span class="p">.</span><span class="nx">length</span>
-    <span class="k">else</span>
-      <span class="nx">@emit</span> <span class="s2">&quot;data&quot;</span><span class="p">,</span> <span class="nx">slice</span>
 
   <span class="nv">close: </span><span class="o">-&gt;</span>
     <span class="nx">@emit</span> <span class="s2">&quot;end&quot;</span>
@@ -447,14 +504,12 @@ may specify a subsequent packet to parse.</p>             </td>             <td 
       <span class="k">else</span>
         <span class="nx">ieee754</span><span class="p">.</span><span class="nx">toIEEE754Double</span> <span class="nx">value</span>
     <span class="k">else</span>
-      <span class="nx">value</span></pre></div>             </td>           </tr>                               <tr id="section-31">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-31">&#182;</a>               </div>               <h4>serializer.write(buffer[, offset][, length])</h4>
+      <span class="nx">value</span></pre></div>             </td>           </tr>                               <tr id="section-32">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-32">&#182;</a>               </div>               <h4>serializer.write(buffer[, offset][, length])</h4>
 
 <p>The <code>write</code> method writes to the buffer, returning when the current pattern is
-written, or the end of the buffer is reached.</p>             </td>             <td class="code">               <div class="highlight"><pre></pre></div>             </td>           </tr>                               <tr id="section-32">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-32">&#182;</a>               </div>               <p>Write to the <code>buffer</code> in the region defined by the given <code>offset</code> and <code>length</code>.</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nv">write: </span><span class="nf">(buffer, offset, length) -&gt;</span>
-    <span class="nx">offset</span>  <span class="o">or=</span> <span class="mi">0</span>
-    <span class="nx">length</span>  <span class="o">or=</span> <span class="nx">buffer</span><span class="p">.</span><span class="nx">length</span>
+written, or the end of the buffer is reached.</p>             </td>             <td class="code">               <div class="highlight"><pre></pre></div>             </td>           </tr>                               <tr id="section-33">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-33">&#182;</a>               </div>               <p>Write to the <code>buffer</code> in the region defined by the given <code>offset</code> and <code>length</code>.</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nv">_serialize: </span><span class="nf">(buffer, offset, length) -&gt;</span>
     <span class="nv">start     = </span><span class="nx">offset</span>
-    <span class="nv">end       = </span><span class="nx">offset</span> <span class="o">+</span> <span class="nx">length</span></pre></div>             </td>           </tr>                               <tr id="section-33">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-33">&#182;</a>               </div>               <p>We set the pattern to null when all the fields have been written, so while
+    <span class="nv">end       = </span><span class="nx">offset</span> <span class="o">+</span> <span class="nx">length</span></pre></div>             </td>           </tr>                               <tr id="section-34">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-34">&#182;</a>               </div>               <p>We set the pattern to null when all the fields have been written, so while
 there is a pattern to fill and space to write.</p>             </td>             <td class="code">               <div class="highlight"><pre>    <span class="k">while</span> <span class="nx">@pattern</span> <span class="o">and</span> <span class="nx">offset</span> <span class="o">&lt;</span> <span class="nx">end</span>
       <span class="k">if</span> <span class="nx">@_skipping</span>
         <span class="nv">advance         = </span><span class="nb">Math</span><span class="p">.</span><span class="nx">min</span><span class="p">(</span><span class="nx">@_skipping</span><span class="p">,</span> <span class="nx">end</span> <span class="o">-</span> <span class="nx">offset</span><span class="p">)</span>
@@ -463,14 +518,14 @@ there is a pattern to fill and space to write.</p>             </td>            
         <span class="nx">@bytesWritten</span>  <span class="o">+=</span> <span class="nx">advance</span>
         <span class="k">return</span> <span class="nx">offset</span> <span class="o">-</span> <span class="nx">start</span> <span class="k">if</span> <span class="nx">@_skipping</span>
 
-      <span class="k">else</span></pre></div>             </td>           </tr>                               <tr id="section-34">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-34">&#182;</a>               </div>               <p>If the pattern is unpacked, the value we're writing is an array.</p>             </td>             <td class="code">               <div class="highlight"><pre>        <span class="k">if</span> <span class="nx">@pattern</span><span class="p">[</span><span class="nx">@patternIndex</span><span class="p">].</span><span class="nx">unpacked</span>
+      <span class="k">else</span></pre></div>             </td>           </tr>                               <tr id="section-35">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-35">&#182;</a>               </div>               <p>If the pattern is unpacked, the value we're writing is an array.</p>             </td>             <td class="code">               <div class="highlight"><pre>        <span class="k">if</span> <span class="nx">@pattern</span><span class="p">[</span><span class="nx">@patternIndex</span><span class="p">].</span><span class="nx">unpacked</span>
           <span class="nx">loop</span>
             <span class="nx">buffer</span><span class="p">[</span><span class="nx">offset</span><span class="p">]</span> <span class="o">=</span> <span class="nx">@value</span><span class="p">[</span><span class="nx">@offset</span><span class="p">]</span>
             <span class="nx">@offset</span> <span class="o">+=</span> <span class="nx">@increment</span>
             <span class="nx">@bytesWritten</span><span class="o">++</span>
             <span class="nx">offset</span><span class="o">++</span>
             <span class="k">break</span> <span class="k">if</span> <span class="nx">@offset</span> <span class="o">is</span> <span class="nx">@terminal</span>
-            <span class="k">return</span> <span class="nx">offset</span> <span class="o">-</span> <span class="nx">start</span> <span class="k">if</span> <span class="nx">offset</span> <span class="o">is</span> <span class="nx">end</span></pre></div>             </td>           </tr>                               <tr id="section-35">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-35">&#182;</a>               </div>               <p>Otherwise we're unpacking bytes of an unsigned integer, the most common
+            <span class="k">return</span> <span class="nx">offset</span> <span class="o">-</span> <span class="nx">start</span> <span class="k">if</span> <span class="nx">offset</span> <span class="o">is</span> <span class="nx">end</span></pre></div>             </td>           </tr>                               <tr id="section-36">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-36">&#182;</a>               </div>               <p>Otherwise we're unpacking bytes of an unsigned integer, the most common
 case.</p>             </td>             <td class="code">               <div class="highlight"><pre>        <span class="k">else</span>
           <span class="nx">loop</span>
             <span class="nx">buffer</span><span class="p">[</span><span class="nx">offset</span><span class="p">]</span> <span class="o">=</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">floor</span><span class="p">(</span><span class="nx">@value</span> <span class="err">/ Math.pow(256, @offset)) &amp; 0xff</span>
@@ -478,7 +533,7 @@ case.</p>             </td>             <td class="code">               <div cla
             <span class="nx">@bytesWritten</span><span class="o">++</span>
             <span class="nx">offset</span><span class="o">++</span>
             <span class="k">break</span> <span class="k">if</span> <span class="nx">@offset</span> <span class="o">is</span> <span class="nx">@terminal</span>
-            <span class="k">return</span> <span class="nx">offset</span> <span class="o">-</span> <span class="nx">start</span> <span class="k">if</span> <span class="nx">offset</span> <span class="o">is</span> <span class="nx">end</span></pre></div>             </td>           </tr>                               <tr id="section-36">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-36">&#182;</a>               </div>               <p>If we have not terminated, check for the termination state change.
+            <span class="k">return</span> <span class="nx">offset</span> <span class="o">-</span> <span class="nx">start</span> <span class="k">if</span> <span class="nx">offset</span> <span class="o">is</span> <span class="nx">end</span></pre></div>             </td>           </tr>                               <tr id="section-37">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-37">&#182;</a>               </div>               <p>If we have not terminated, check for the termination state change.
 Termination will change the loop settings.</p>             </td>             <td class="code">               <div class="highlight"><pre>      <span class="k">if</span> <span class="nx">@terminates</span>
         <span class="k">if</span> <span class="nx">@terminated</span>
           <span class="k">if</span> <span class="nx">@repeat</span> <span class="o">is</span> <span class="nb">Number</span><span class="p">.</span><span class="nx">MAX_VALUE</span>
@@ -490,15 +545,15 @@ Termination will change the loop settings.</p>             </td>             <td
             <span class="k">if</span> <span class="nx">@_skipping</span>
               <span class="vi">@repeat = </span><span class="nx">@index</span> <span class="o">+</span> <span class="mi">1</span>
               <span class="k">continue</span>
-        <span class="k">else</span></pre></div>             </td>           </tr>                               <tr id="section-37">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-37">&#182;</a>               </div>               <p>If we are at the end of the series, then we create an empty outgoing
+        <span class="k">else</span></pre></div>             </td>           </tr>                               <tr id="section-38">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-38">&#182;</a>               </div>               <p>If we are at the end of the series, then we create an empty outgoing
 array to hold the terminator, because the outgoing series may be a
 buffer. We insert the terminator at next index in the outgoing array.
-We then set repeat to allow one more iteration before callback.</p>             </td>             <td class="code">               <div class="highlight"><pre>          <span class="k">if</span> <span class="nx">@outgoing</span><span class="p">[</span><span class="nx">@patternIndex</span><span class="p">].</span><span class="nx">length</span> <span class="o">is</span> <span class="nx">@index</span> <span class="o">+</span> <span class="mi">1</span>
+We then set repeat to allow one more iteration before callback.</p>             </td>             <td class="code">               <div class="highlight"><pre>          <span class="k">if</span> <span class="nx">@_outgoing</span><span class="p">[</span><span class="nx">@patternIndex</span><span class="p">].</span><span class="nx">length</span> <span class="o">is</span> <span class="nx">@index</span> <span class="o">+</span> <span class="mi">1</span>
             <span class="vi">@terminated = </span><span class="kc">true</span>
-            <span class="nx">@outgoing</span><span class="p">[</span><span class="nx">@patternIndex</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
-            <span class="nx">@outgoing</span><span class="p">[</span><span class="nx">@patternIndex</span><span class="p">][</span><span class="nx">@index</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="nx">@pattern</span><span class="p">[</span><span class="nx">@patternIndex</span><span class="p">].</span><span class="nx">terminator</span><span class="p">.</span><span class="nx">charCodeAt</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span></pre></div>             </td>           </tr>                               <tr id="section-38">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-38">&#182;</a>               </div>               <p>If we are reading an arrayed pattern and we have not read all of the
+            <span class="nx">@_outgoing</span><span class="p">[</span><span class="nx">@patternIndex</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="nx">@_outgoing</span><span class="p">[</span><span class="nx">@patternIndex</span><span class="p">][</span><span class="nx">@index</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="nx">@pattern</span><span class="p">[</span><span class="nx">@patternIndex</span><span class="p">].</span><span class="nx">terminator</span><span class="p">.</span><span class="nx">charCodeAt</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span></pre></div>             </td>           </tr>                               <tr id="section-39">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-39">&#182;</a>               </div>               <p>If we are reading an arrayed pattern and we have not read all of the
 array elements, we repeat the current field type.</p>             </td>             <td class="code">               <div class="highlight"><pre>      <span class="k">if</span> <span class="o">++</span><span class="nx">@index</span> <span class="o">&lt;</span> <span class="nx">@repeat</span>
-        <span class="nx">@nextValue</span><span class="p">()</span></pre></div>             </td>           </tr>                               <tr id="section-39">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-39">&#182;</a>               </div>               <p>If we have written all of the packet fields, call the associated
+        <span class="nx">@nextValue</span><span class="p">()</span></pre></div>             </td>           </tr>                               <tr id="section-40">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-40">&#182;</a>               </div>               <p>If we have written all of the packet fields, call the associated
 callback with this parser.</p>
 
 <p>The pattern is set to null, our terminal condition, before the callback,
@@ -517,7 +572,7 @@ because the callback may specify a subsequent packet to parse.</p>             <
         <span class="nx">@nextField</span><span class="p">()</span>
         <span class="nx">@nextValue</span><span class="p">()</span>
 
-    <span class="vi">@outgoing = </span><span class="kc">null</span>
+    <span class="vi">@_outgoing = </span><span class="kc">null</span>
 
     <span class="nx">offset</span> <span class="o">-</span> <span class="nx">start</span>
 
