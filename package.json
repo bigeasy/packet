@@ -2,4 +2,5 @@
 ,   "version":          "0.0.2"
 ,   "author":           "Alan Gutierrez"
 ,   "main":             "./lib/packet"
+,   "scripts": { "postinstall": "cake compile" }
 }
