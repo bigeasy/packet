@@ -19,7 +19,7 @@ packing = (pattern, size, index) ->
     # Match an element pattern.
     match = /^(-?)([xb])(\d+)(.*)$/.exec rest
     if not match
-      throw new Error "invalid pattern at #{index}"
+      throw new Error "invalid pattern at index #{index}"
 
     # Convert the match into an object.
     f =
@@ -36,7 +36,7 @@ packing = (pattern, size, index) ->
       throw new Error "bit field overflow at #{index}"
 
     # Move the character position up to the bit count.
-    index++ if f.signed
+    index++ if match[1]
     index++
     index += match[3].length
 
@@ -65,7 +65,7 @@ number = (pattern, index) ->
   else if match = /^(&)0x([0-9a-f]+)(.*)$/i.exec pattern
     [ !! match[1], parseInt(match[2], 16), index + match[1].length + match[2].length, match[2] ]
   else
-    throw new Error "invalid pattern at #{index}"
+    throw new Error "invalid pattern at index #{index}"
 
 between = (mininum, maximum) ->
   (value) -> minimm <= value && value <= maximum
@@ -91,7 +91,7 @@ branch = (pattern, index) ->
           index++
           [ mask, maximum, index, rest ] = number condition.substring(1), index
           if mask
-            throw new Error "invalid pattern at #{index}"
+            throw new Error "invalid pattern at index #{index}"
           branch.condition = between value, maximum
         else
           branch.condition = equal value
@@ -129,7 +129,7 @@ parse = (o) ->
     # Match a packet pattern.
     match = o.next.exec(rest)
     if !match
-      throw  new Error "invalid pattern at #{index}"
+      throw  new Error "invalid pattern at index #{index}"
 
     # The remainder of the pattern, if any.
     rest = match.pop()
@@ -142,16 +142,16 @@ parse = (o) ->
       type:       match[4] || 'n'
 
     # Move the character position up to the bit count.
-    index++ if f.signed
+    index++ if match[1]
     index++
 
     # Check for a valid character
     if f.bits == 0
-      throw new Error("bit size must be non-zero at #{index}")
+      throw new Error("bit size must be non-zero at index #{index}")
     if f.bits % 8
-      throw new Error("bits must be divisible by 8 at #{index}")
+      throw new Error("bit size must be divisible by 8 at index #{index}")
     if f.type == "f" and !(f.bits == 32 || f.bits == 64)
-      throw Error("floats can only be 32 or 64 bits at #{index}")
+      throw Error("floats can only be 32 or 64 bits at index #{index}")
 
     # Move the character position up to the rest of the pattern.
     index += match[3].length
@@ -264,6 +264,6 @@ parse = (o) ->
     lengthEncoded = false
 
   if /\S/.test(rest)
-    throw  new Error "invalid pattern at #{index}"
+    throw  new Error "invalid pattern at index #{index}"
 
   fields

@@ -2,11 +2,11 @@
 {parse}     = require "pattern"
 
 class exports.PacketTest extends TwerpTest
-  trap: (callback) ->
+  trap: (message, callback) ->
     try
       callback()
     catch e
-      @ok 1
+      @equal e.message, message
 
   'test: parse a single byte': (done) ->
     field = parse('b8')
@@ -737,25 +737,25 @@ class exports.PacketTest extends TwerpTest
     done 1
 
   'test: parse utter nonsense.': (done) ->
-    @trap -> parse("blurdy")
+    @trap "invalid pattern at index 0", -> parse("blurdy")
     done 1
 
   'test: parse a 7 bit pattern.': (done) ->
-    @trap -> parse("b7")
+    @trap "bit size must be divisible by 8 at index 1", -> parse("b7")
     done 1
 
   'test: parse a 0 bit pattern.': (done) ->
-    @trap -> parse("b0")
+    @trap "bit size must be non-zero at index 1", -> parse("b0")
     done 1
 
   'test: parse a float pattern other than 32 or 64 bits.': (done) ->
-    @trap -> parse('b16f')
+    @trap "floats can only be 32 or 64 bits at index 1", -> parse('b16f')
     done 1
 
   'test: parse two patterns together without a comma.': (done) ->
-    @trap -> parse('l16b8')
+    @trap "invalid pattern at index 3", -> parse('l16b8')
     done 1
 
   'test: parse a little-endian integer packed in an integer.': (done) ->
-    @trap -> parse('b8{l4,b4}')
+    @trap "invalid pattern at index 2", -> parse('b8{l4,b4}')
     done 1
