@@ -23,13 +23,13 @@ define and maintain.
 
 **Declarative** &mdash; Packet defines a binary structure using a pattern
 language inspired by Perl's `pack`. The binary patterns can be used to define
-both parsers and serializers. If you have a protocol specificationre, or even
-just a C header file with structures that define your binary data, you can
-probably transalte that directly into Node Packet patterns.
+both parsers and serializers. If you have a protocol specification, or even just
+a C header file with structures that define your binary data, you can probably
+translate that directly into Node Packet patterns.
 
 For parsers, you match the patterns to actions you want to take when the pattern
-is matched. For serializers you simply give the values to write the pattern to
-follow when writing them.
+is matched. For serializers you simply give the values to write along with the
+pattern to follow when writing them.
 
 **Expressive** &mdash; The pattern language can express
 
@@ -48,7 +48,7 @@ follow when writing them.
   * and pipelines of character encodings and custom tranformations.
 
 **Streaming** &mdash; Node Packet implements the Node.js [stream
-interface](http://nodejs.org/docs/v0.4.7/api/streams.html) in both the `Parser`
+interface](http://nodejs.org/docs/v0.4.8/api/streams.html) in both the `Parser`
 and the `Serializer`. You can pump a stream into a Packet `Parser` and it will
 invoke your packet handlers.  
 
