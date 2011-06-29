@@ -336,6 +336,17 @@ module.exports.Parser = class Parser extends Packet
               @repeat = @index + 1
               continue
 
+      # If the field is a packed field, unpack the value.
+      if packing = @pattern[@patternIndex].packing
+        # Loop through the packed fields, unpacking the values.
+        for pack, i in packing
+          if pack.type is "b"
+            sum = 0
+            for j in [(i + 1)...packing.length]
+              sum += packing[j].bits
+            value = Math.floor(@value / Math.pow(2, sum))
+            value = value % Math.pow(2, pack.bits)
+            
       # If we are reading an arrayed pattern and we have not read all of the
       # array elements, we repeat the current field type.
       if ++@index <  @repeat
@@ -361,7 +372,7 @@ module.exports.Parser = class Parser extends Packet
       # Otherwise we proceed to the next field in the packet pattern.
       else
         if @pattern[@patternIndex - 1].endianness isnt "x"
-          if @pattern[@patternIndex - 1].length
+          if @pattern[@patternIndex - 1].lengthEncoding
             @pattern[@patternIndex].repeat = @_fields.pop()
           else
             @_fields.push(@pipeline(@pattern[@patternIndex - 1], @_fields.pop()))
@@ -441,7 +452,7 @@ module.exports.Serializer = class Serializer extends Packet
       else if pattern.arrayed
         value = @_outgoing[@patternIndex][@index]
       else
-        if pattern.length
+        if pattern.lengthEncoding
           repeat = @_outgoing[@patternIndex].length
           @_outgoing.splice @patternIndex, 0, repeat
           @pattern[@patternIndex + 1].repeat = repeat

@@ -292,6 +292,18 @@ class exports.PacketTest extends TwerpTest
     @ok invoked
     done 3
 
+  "xtest: read a bit packed integer": (done) ->
+    invoked = false
+    bytes = [ 0x28 ]
+    @parser.reset()
+    @parser.parse "b8{x2,b3,x3}", (field, engine) =>
+      @equal engine.getBytesRead(), 1
+      @equal field, 5
+      invoked true
+    @parser.read bytes, 0, 1
+    @ok invoked
+    done 3
+
   "test: set self": (done) ->
     self = {}
     parser = new Parser(self)

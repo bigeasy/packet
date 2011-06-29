@@ -22,14 +22,14 @@ that are almost as fast as the parser you'd write by hand, but a lot easier to
 define and maintain.
 
 **Declarative** &mdash; Packet defines a binary structure using a pattern
-language inspired by Perl's `pack`. The binary patterns can be used to define
-both parsers and serializers. If you have a protocol specification, or even just
-a C header file with structures that define your binary data, you can probably
+language inspired by Perl's `pack`. The binary patterns are used to define both
+parsers and serializers. If you have a protocol specification, or even just a C
+header file with structures that define your binary data, you can probably
 translate that directly into Node Packet patterns.
 
-For parsers, you match the patterns to actions you want to take when the pattern
-is matched. For serializers you simply give the values to write along with the
-pattern to follow when writing them.
+For parsers, you associate the patterns to callbacks invoked with captured
+values when the pattern is extracted from the stream. For serializers you simply
+give the values to write along with the pattern to follow when writing them.
 
 **Expressive** &mdash; The pattern language can express
 
@@ -60,18 +60,20 @@ that is feeding the serializer.
 ### Limitations
 
 **Parsing not searching** &mdash; Packet is not a pattern matching library. It
-does not search binary streams. It is able to respond to bit flags in streams
-using simple conditionals, but otherwise Packet is used for parsing well-defined
-streams of binary data.
+does not search binary streams for patterns. Packet is used for parsing
+well-defined streams of binary data.
 
 **8-bit boundaries** &mdash; I'm unable to think of an an example in
-contemporary computing that doesn't align to an 8-bit boundary, but I imagine
-that someone might want to unleash Packet on legacy data someday, so it's worth
-noting that Packet parses 8-bit bytes and expects bytes to align to an 8-bit
-boundary. Node Packet can parse 7-bit ASCII formats like tar archives, because
-they are 8-bit aligned with the top bit ignored. Packet can also parse and
-serialize bit packed integers, so it does support awkward integer sizes, but
-within an 8-bit aligned integer.
+contemporary computing that doesn't align to an 8-bit boundary, but the world is
+big and I am small, so I plan on being surprised. I can also imagine that
+someone might want to unleash Packet on legacy data someday, from way back when
+a byte was whatever a computer maufacturer said it was.
+
+Therefore, It's worth noting that Packet parses 8-bit bytes and expects bytes to
+align to an 8-bit boundary. Node Packet can parse 7-bit ASCII formats like tar
+archives, because they are 8-bit aligned with the top bit ignored. Packet can
+also parse and serialize bit packed integers, so it does support awkward integer
+sizes, but within an 8-bit aligned integer.
 
 ## Installing
 
@@ -82,7 +84,7 @@ Install Packet using NPM. The source is available on
 npm install packet
 ```
 
-## Binary Pattern Language
+## Parsers and Serializers
 
 Node Packet defines a binrary format using a binary pattern language inspried by
 Perl's `pack` function. The pattern language is used in a `Parser` to define the
@@ -261,6 +263,11 @@ function parse (writable) {
 
 A callback for a pattern without any named elements is always invoked with
 values as parameters regardless of arity.
+
+## Binary Pattern Fields
+
+The binary pattern language is used to specify the fields binary structures in
+data streams, using a comma separated field pattern.
 
 ### Big-Endian Byte Ordering
 
@@ -573,9 +580,7 @@ Now you can use the transform in your pattern.
 The `str` transform is defined by default. The transform names are purposely
 terse to fit with the brevity of the pattern language.
 
-## Reference
-
-### Error Messages
+## Error Messages
 
 Error messages for pattern parsing.
 

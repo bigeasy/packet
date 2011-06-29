@@ -240,7 +240,7 @@ class exports.PacketTest extends TwerpTest
       , unpacked: false
       , arrayed: false
       , repeat: 1
-      , length: true
+      , lengthEncoding: true
       }
     ,
       { signed: false

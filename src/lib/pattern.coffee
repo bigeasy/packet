@@ -169,7 +169,7 @@ parse = (o) ->
       rest          = alternation[2]
 
     # Check for bit backing.
-    pack = /^{([^}]+)}(.*)$/.exec(rest)
+    pack = /^{([-b][^}]+)}(.*)$/.exec(rest)
     if pack
       f.unpacked  = true
       f.packing   = packing pack[1], f.bits, index
@@ -179,7 +179,7 @@ parse = (o) ->
       # Check if this is a length encoding.
       length = /^\/(.*)$/.exec(rest)
       if length
-        f.length = true
+        f.lengthEncoding = true
         rest = length[1]
         f.arrayed = false
         f.repeat = 1
@@ -256,7 +256,7 @@ parse = (o) ->
     fields.push(f)
 
     # A comma indicates that we're to continue.
-    more = /\s*,\s*(.*)/.exec(rest)
+    more = /^\s*,\s*(.*)$/.exec(rest)
     break if not more
 
     # Reset for the next iteration.
