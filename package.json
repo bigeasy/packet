@@ -1,5 +1,7 @@
 {   "name":             "packet"
 ,   "version":          "0.0.2"
-,   "author":           "Alan Gutierrez"
+,   "author":           "Alan Gutierrez <alan@prettyrobots.com> (http://www.prettyrobots.com/)"
+,   "contributors":     ["Aaron Qian <aq1018@gmail.com> (http://aaronqian.com)", "Ben Hockey <neonstalwart@gmail.com>"]
 ,   "main":             "./lib/packet"
+,   "scripts": { "postinstall": "cake compile" }
 }
