@@ -21,13 +21,15 @@ packing = (pattern, size, index) ->
     if not match
       throw new Error "invalid pattern at #{index}"
 
-    return
     # Convert the match into an object.
     f =
       signed:     !!match[1]
       endianness: match[2]
       bits:       parseInt(match[3], 10)
       type:       'n'
+    rest = match[4]
+
+    fields.push f
 
     size -= f.bits
     if size < 0
@@ -36,17 +38,24 @@ packing = (pattern, size, index) ->
     # Move the character position up to the bit count.
     index++ if f.signed
     index++
+    index += match[3].length
 
     # Check for a valid bit size.
     if f.bits == 0
       throw new Error("bit size must be non-zero at #{index}")
 
-    # Move the character position up to the rest of the pattern.
-    index += match[3].length
-    index++ if match[4]
+
+    # A comma indicates that we're to continue.
+    more = /\s*,\s*(.*)/.exec(rest)
+    break if not more
+
+    # Reset for the next iteration.
+    rest = more[1]
 
   if size != 0
     throw new Error "bit field underflow at #{index}"
+
+  fields
 
 pass = -> true
 
@@ -112,7 +121,7 @@ parse = (o) ->
   fields          = []
   lengthEncoded   = false
 
-  # We chip away at the pattern, removing the parts we.ve match, while keeping
+  # We chip away at the pattern, removing the parts we've matched, while keeping
   # track of the index separately for error messages.
   rest            = o.pattern
   index           = o.index
@@ -160,87 +169,88 @@ parse = (o) ->
       rest          = alternation[2]
 
     # Check for bit backing.
-    pack = /^{([^b-][^}]+)}(.*)$/.exec(rest)
+    pack = /^{([^}]+)}(.*)$/.exec(rest)
     if pack
       f.unpacked  = true
-      f.packing   = packing pack[1]
+      f.packing   = packing pack[1], f.bits, index
       rest        = pack[2]
+      index      += pack[1].length
+    else
+      # Check if this is a length encoding.
+      length = /^\/(.*)$/.exec(rest)
+      if length
+        f.length = true
+        rest = length[1]
+        f.arrayed = false
+        f.repeat = 1
+        lengthEncoded = true
+        fields.push(f)
+        # Nothing else can apply to a length encoding.
+        continue
 
-    # Check if this is a length encoding.
-    length = /^\/(.*)$/.exec(rest)
-    if length
-      f.length = true
-      rest = length[1]
-      f.arrayed = false
-      f.repeat = 1
-      lengthEncoded = true
-      fields.push(f)
-      # Nothing else can apply to a length encoding.
-      continue
+      f.repeat    = 1
+      f.arrayed   = lengthEncoded
+      if not lengthEncoded
+        # Check for structure modifiers.
+        arrayed = /^\[(\d+)\](.*)$/.exec(rest)
+        if arrayed
+          f.arrayed = true
+          f.repeat = parseInt(arrayed[1], 10)
+          index++
+          if f.repeat == 0
+            throw new Error("array length must be non-zero at " + index)
+          index += arrayed[1].length + 1
+          rest = arrayed[2]
 
-    f.repeat    = 1
-    f.arrayed   = lengthEncoded
-    if not lengthEncoded
-      # Check for structure modifiers.
-      arrayed = /^\[(\d+)\](.*)$/.exec(rest)
-      if arrayed
-        f.arrayed = true
-        f.repeat = parseInt(arrayed[1], 10)
-        index++
-        if f.repeat == 0
-          throw new Error("array length must be non-zero at " + index)
-        index += arrayed[1].length + 1
-        rest = arrayed[2]
+      # Check for a padding value.
+      padding = /^{(0x|0)?(\d+)}(.*)$/.exec(rest)
+      if padding
+        base      = padding[1]
+        pad       = padding[2]
+        rest      = padding[3]
 
-    # Check for a padding value.
-    padding = /^{(0x|0)?(\d+)}(.*)$/.exec(rest)
-    if padding
-      base      = padding[1]
-      pad       = padding[2]
-      rest      = padding[3]
-
-      if base
-        if base == "0x"
-          f.padding = parseInt(pad, 16)
+        if base
+          if base == "0x"
+            f.padding = parseInt(pad, 16)
+          else
+            f.padding = parseInt(pad, 8)
         else
-          f.padding = parseInt(pad, 8)
-      else
-        f.padding = parseInt(pad, 10)
+          f.padding = parseInt(pad, 10)
 
-    # Check for zero termination.
-    tz = /^z(?:<(.*?)>)?(.*)$/.exec(rest)
-    if tz
-      index += rest.length - tz[2].length
-      f.terminator = tz[1] or "\0"
-      f.arrayed = true
-      rest = tz[2]
-      if f.repeat is 1
-        f.repeat = Number.MAX_VALUE
+      # Check for zero termination.
+      tz = /^z(?:<(.*?)>)?(.*)$/.exec(rest)
+      if tz
+        index += rest.length - tz[2].length
+        f.terminator = tz[1] or "\0"
+        f.arrayed = true
+        rest = tz[2]
+        if f.repeat is 1
+          f.repeat = Number.MAX_VALUE
 
-    # Parse piplines.
-    while pipe = /^\|(\w[\w\d]*)\((\)?)(.*)/.exec(rest)
-      index          += rest.length - pipe[3].length
-      transform       = { name: pipe[1], parameters: [] }
-      rest            = pipe[3]
-      hasArgument     = not pipe[2]
+      # Parse piplines.
+      while pipe = /^\|(\w[\w\d]*)\((\)?)(.*)/.exec(rest)
+        index          += rest.length - pipe[3].length
+        transform       = { name: pipe[1], parameters: [] }
+        rest            = pipe[3]
+        hasArgument     = not pipe[2]
 
-      while hasArgument
-        arg         = argument.exec(rest)
-        index      += rest.length - arg[3].length
-        value       = eval(arg[1])
-        hasArgument = arg[2].indexOf(")") is -1
-        rest        = arg[3]
+        while hasArgument
+          arg         = argument.exec(rest)
+          index      += rest.length - arg[3].length
+          value       = eval(arg[1])
+          hasArgument = arg[2].indexOf(")") is -1
+          rest        = arg[3]
 
-        transform.parameters.push(value)
+          transform.parameters.push(value)
 
-      (f.transforms or= []).push(transform)
+        (f.transforms or= []).push(transform)
 
-    # Named pattern.
-    name = /\s*=>\s*(\w[\w\d]+)\s*(.*)/.exec(rest)
-    if name
-      index += rest.length - name[2].length
-      f.name = name[1]
-      rest = name[2]
+      # Named pattern.
+      name = /\s*=>\s*(\w[\w\d]+)\s*(.*)/.exec(rest)
+      if name
+        index += rest.length - name[2].length
+        f.name = name[1]
+        rest = name[2]
 
     # Record the new field pattern object.
     fields.push(f)

@@ -703,6 +703,39 @@ class exports.PacketTest extends TwerpTest
     ]
     done 1
 
+  'test: parse bit packing.': (done) ->
+    field = parse("b16{b3,x6,-b7}")
+    @deepEqual field, [
+      { "signed": false
+      , "endianness": "b"
+      , "bits": 16
+      , "type": "n"
+      , "bytes": 2
+      , "unpacked": true
+      , "packing":
+        [
+          { "signed": false
+          , "endianness": "b"
+          , "bits": 3
+          , "type": "n"
+          }
+        ,
+          { "signed": false
+          , "endianness": "x"
+          , "bits": 6
+          , "type": "n"
+          }
+        ,
+          { "signed": true
+          , "endianness": "b"
+          , "bits": 7
+          , "type": "n"
+          }
+        ]
+      }
+    ]
+    done 1
+
   'test: parse utter nonsense.': (done) ->
     @trap -> parse("blurdy")
     done 1
