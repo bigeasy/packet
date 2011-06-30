@@ -7,19 +7,16 @@ class exports.PacketTest extends TwerpTest
     done()
 
   "test: read a byte": (done) ->
-    try
-      parser = new Parser()
-      invoked = false
-      parser.reset()
-      parser.parse "b8", (field, engine) =>
-        @equal engine.getBytesRead(), 1
-        @equal field, 1
-        invoked = true
-      parser.read [ 1 ]
-      @ok invoked
-      done(3)
-    catch e
-      console.log e.stack
+    parser = new Parser()
+    invoked = false
+    parser.reset()
+    parser.parse "b8", (field, engine) =>
+      @equal engine.getBytesRead(), 1
+      @equal field, 1
+      invoked = true
+    parser.read [ 1 ]
+    @ok invoked
+    done(3)
 
   "test: read a 16 bit number": (done) ->
     parser = new Parser()
@@ -295,14 +292,14 @@ class exports.PacketTest extends TwerpTest
     @ok invoked
     done 3
 
-  "xtest: read a bit packed integer": (done) ->
+  "test: read a bit packed integer": (done) ->
     invoked = false
     bytes = [ 0x28 ]
     @parser.reset()
     @parser.parse "b8{x2,b3,x3}", (field, engine) =>
       @equal engine.getBytesRead(), 1
       @equal field, 5
-      invoked true
+      invoked = true
     @parser.read bytes, 0, 1
     @ok invoked
     done 3

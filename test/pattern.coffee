@@ -703,7 +703,7 @@ class exports.PacketTest extends TwerpTest
     ]
     done 1
 
-  'test: parse bit packing.': (done) ->
+  'test: parse bit packing starting with big-endian.': (done) ->
     field = parse("b16{b3,x6,-b7}")
     @deepEqual field, [
       { "signed": false
@@ -711,7 +711,7 @@ class exports.PacketTest extends TwerpTest
       , "bits": 16
       , "type": "n"
       , "bytes": 2
-      , "unpacked": true
+      , "unpacked": false
       , "packing":
         [
           { "signed": false
@@ -722,6 +722,39 @@ class exports.PacketTest extends TwerpTest
         ,
           { "signed": false
           , "endianness": "x"
+          , "bits": 6
+          , "type": "n"
+          }
+        ,
+          { "signed": true
+          , "endianness": "b"
+          , "bits": 7
+          , "type": "n"
+          }
+        ]
+      }
+    ]
+    done 1
+
+  'test: parse bit packing starting with skip.': (done) ->
+    field = parse("b16{x3,b6,-b7}")
+    @deepEqual field, [
+      { "signed": false
+      , "endianness": "b"
+      , "bits": 16
+      , "type": "n"
+      , "bytes": 2
+      , "unpacked": false
+      , "packing":
+        [
+          { "signed": false
+          , "endianness": "x"
+          , "bits": 3
+          , "type": "n"
+          }
+        ,
+          { "signed": false
+          , "endianness": "b"
           , "bits": 6
           , "type": "n"
           }

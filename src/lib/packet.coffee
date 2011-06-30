@@ -160,8 +160,7 @@ module.exports.Parser = class Parser extends Packet
     @index        = 0
     @_skipping    = null
     @terminated   = not pattern.terminator
-
-    @_fields.push [] if pattern.arrayed and pattern.endianness isnt "x"
+    @_arrayed     = [] if pattern.arrayed and pattern.endianness isnt "x"
 
   nextValue: ->
     pattern = @pattern[@patternIndex]
@@ -204,7 +203,7 @@ module.exports.Parser = class Parser extends Packet
     @index        = 0
     @repeat       = 1
     @patternIndex = 0
-    @_fields      = [ length ]
+    @_fields      = []
 
     @_skipping = length
 
@@ -305,15 +304,9 @@ module.exports.Parser = class Parser extends Packet
               value += (bytes[i] & 0xff)  * Math.pow(256, i)
             value += (bytes[top] & 0x7f) * Math.pow(256, top)
 
-        # If we are filling an array field the current fields is an array,
-        # otherwise current field is the value we've just read. We keep the
-        # built value on the field list because if it is an array, we might
-        # leave this invocation of read before the array is filled.
-        if part.arrayed
-          @_fields[@_fields.length - 1].push(value)
-        else
-          @_fields.push(value)
-
+        # If the current field is arrayed, we keep track of the array we're
+        # building after a pause through member variable.
+        @_arrayed.push(value) if part.arrayed
 
       # If we've not yet hit our terminator, check for the terminator. If we've
       # hit the terminator, and we do not have a maximum size to fill, then
@@ -343,21 +336,22 @@ module.exports.Parser = class Parser extends Packet
           if packing = part.packing
             # Loop through the packed fields, unpacking the values.
             for pack, i in packing
-              if pack.type is "b"
+              if pack.endianness is "b"
                 sum = 0
                 for j in [(i + 1)...packing.length]
                   sum += packing[j].bits
                 unpacked = Math.floor(value / Math.pow(2, sum))
-                unpacked = value % Math.pow(2, pack.bits)
+                unpacked = unpacked % Math.pow(2, pack.bits)
                 @_fields.push(unpacked)
           else if part.lengthEncoding
             # If we have a zero length encoding, we push an empty array through
             # the pipeline, and skip the repeated type.
-            if (@pattern[@patternIndex + 1].repeat = @_fields.pop()) is 0
+            if (@pattern[@patternIndex + 1].repeat = value) is 0
               @_fields.push(@pipeline(part, []))
               @patternIndex++
           else
-            @_fields.push(@pipeline(part, @_fields.pop()))
+            value = @_arrayed if part.arrayed
+            @_fields.push(@pipeline(part, value))
 
         # If we have read all of the pattern fields, call the associated
         # callback.  We add the parser and the user suppilied additional

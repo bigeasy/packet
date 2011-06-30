@@ -46,7 +46,7 @@ packing = (pattern, size, index) ->
 
 
     # A comma indicates that we're to continue.
-    more = /\s*,\s*(.*)/.exec(rest)
+    more = /^\s*,\s*(.*)$/.exec(rest)
     break if not more
 
     # Reset for the next iteration.
@@ -169,9 +169,8 @@ parse = (o) ->
       rest          = alternation[2]
 
     # Check for bit backing.
-    pack = /^{([-b][^}]+)}(.*)$/.exec(rest)
+    pack = /^{((?:-b|b|x)[^}]+)}(.*)$/.exec(rest)
     if pack
-      f.unpacked  = true
       f.packing   = packing pack[1], f.bits, index
       rest        = pack[2]
       index      += pack[1].length
