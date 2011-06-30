@@ -40,7 +40,7 @@ class Packet extends stream.Stream
   # recover from exceptional conditions and generally a good idea to call this
   # method before starting a new series of packet parsing transitions.
   reset: ->
-    @bytesRead = 0
+    @_bytesRead = 0
     @bytesWritten = 0
     @pattern = null
     @callback = null
@@ -152,7 +152,7 @@ module.exports.Parser = class Parser extends Packet
 
   data: (data...)   -> @user = data
 
-  getBytesRead:     -> @bytesRead
+  getBytesRead:     -> @_bytesRead
 
   nextField: ->
     pattern       = @pattern[@patternIndex]
@@ -227,7 +227,7 @@ module.exports.Parser = class Parser extends Packet
   read: (buffer, offset, length) ->
     offset or= 0
     length or= buffer.length
-    start    = @bytesRead
+    start    = @_bytesRead
     end      = offset + length
 
     # We set the pattern to null when all the fields have been read, so while
@@ -240,12 +240,12 @@ module.exports.Parser = class Parser extends Packet
         begin        = offset
         offset      += advance
         @_skipping  -= advance
-        @bytesRead  += advance
+        @_bytesRead += advance
         if @_stream
           @_stream._write(buffer.slice(begin, begin + advance)) if advance
           @_stream._end() if not @_skipping
         if @_skipping
-          return @bytesRead - start
+          return @_bytesRead - start
         else
           @_skipping = null
 
@@ -254,24 +254,24 @@ module.exports.Parser = class Parser extends Packet
         if part.unpacked
           loop
             b = buffer[offset]
-            @bytesRead++
+            @_bytesRead++
             offset++
             @value[@offset] = b
             @offset += @increment
             break if @offset is @terminal
-            return @bytesRead - start if offset is end
+            return @_bytesRead - start if offset is end
 
         # Otherwise we're packing bytes into an unsigned integer, the most
         # common case.
         else
           loop
             b = buffer[offset]
-            @bytesRead++
+            @_bytesRead++
             offset++
             @value += Math.pow(256, @offset) * b
             @offset += @increment
             break if @offset == @terminal
-            return @bytesRead - start if offset is end
+            return @_bytesRead - start if offset is end
 
         # Unpack the field value.
         bytes = value = @value
@@ -378,7 +378,7 @@ module.exports.Parser = class Parser extends Packet
           @nextField()
           @nextValue()
 
-    @bytesRead - start
+    @_bytesRead - start
 
   close: ->
     @emit "close"
