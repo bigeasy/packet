@@ -2,8 +2,7 @@ parsePattern = require("./pattern").parse
 ieee754 = require "./ieee754"
 stream = require "stream"
 
-# Convert an array of bytes into an hex string, two characters for each byte. #
-# FIXME Why less than 10 when we're doing hex?
+# Convert an array of bytes into an hex string, two characters for each byte.
 hex = (bytes) ->
   h = bytes.map (b) -> if b < 10 then "0" + b.toString(16) else b.toString(16)
   h.join("")
@@ -180,37 +179,6 @@ module.exports.Parser = class Parser extends Packet
 
       super value
 
-  unpack: ->
-    bytes   = @value
-    return null unless bytes?
-    pattern = @pattern[@patternIndex]
-    if pattern.type == "h"
-      hex bytes.reverse()
-    else if pattern.type == "f"
-      if pattern.bits == 32
-        ieee754.fromIEEE754Single(bytes)
-      else
-        ieee754.fromIEEE754Double(bytes)
-    else if pattern.signed
-      value = 0
-      if (bytes[bytes.length - 1] & 0x80) == 0x80
-        top = bytes.length - 1
-        for i in [0...top]
-          value += (~bytes[i] & 0xff)  * Math.pow(256, i)
-        # ~1 == -2.
-        # To get the two's compliment as a positive value you use ~1 & 0xff == 254. 
-        value += (~(bytes[top] & 0x7f) & 0xff & 0x7f) * Math.pow(256, top)
-        value += 1
-        value *= -1
-      else
-        top = bytes.length - 1
-        for i in [0...top]
-          value += (bytes[i] & 0xff)  * Math.pow(256, i)
-        value += (bytes[top] & 0x7f) * Math.pow(256, top)
-      value
-    else
-      bytes
-
   # Set the next packet to parse by providing a named packet name or a packet
   # pattern, with an optional `callback`. The optional `callback` will override
   # the callback assigned to a named pattern.
@@ -266,6 +234,7 @@ module.exports.Parser = class Parser extends Packet
     # there is a pattern to fill and bytes to read.
     b
     while @pattern != null and offset < end
+      part = @pattern[@patternIndex]
       if @_skipping?
         advance      = Math.min(@_skipping, end - offset)
         begin        = offset
@@ -282,7 +251,7 @@ module.exports.Parser = class Parser extends Packet
 
       else
         # If the pattern is unpacked, the value we're populating is an array.
-        if @pattern[@patternIndex].unpacked
+        if part.unpacked
           loop
             b = buffer[offset]
             @bytesRead++
@@ -291,13 +260,6 @@ module.exports.Parser = class Parser extends Packet
             @offset += @increment
             break if @offset is @terminal
             return @bytesRead - start if offset is end
-
-        # If we are parsing an array, and repeat is 0
-        # It is essentially an empty array
-        # We don't parse anything
-        else if @pattern[@patternIndex].arrayed and @pattern[@patternIndex].repeat == 0
-          @value = null
-          @terminated = true
 
         # Otherwise we're packing bytes into an unsigned integer, the most
         # common case.
@@ -312,73 +274,109 @@ module.exports.Parser = class Parser extends Packet
             return @bytesRead - start if offset is end
 
         # Unpack the field value.
-        field = @unpack()
+        bytes = value = @value
+
+        # Create a hex string.
+        if part.type == "h"
+          value = hex bytes.reverse()
+
+        # Convert to float or double.
+        else if part.type == "f"
+          if part.bits == 32
+            value = ieee754.fromIEEE754Single(bytes)
+          else
+            value = ieee754.fromIEEE754Double(bytes)
+
+        # Get the two's compliment signed value. 
+        else if part.signed
+          value = 0
+          if (bytes[bytes.length - 1] & 0x80) == 0x80
+            top = bytes.length - 1
+            for i in [0...top]
+              value += (~bytes[i] & 0xff)  * Math.pow(256, i)
+            # To get the two's compliment as a positive value you use
+            # `~1 & 0xff == 254`. For exmaple: `~1 == -2`.
+            value += (~(bytes[top] & 0x7f) & 0xff & 0x7f) * Math.pow(256, top)
+            value += 1
+            value *= -1
+          else
+            top = bytes.length - 1
+            for i in [0...top]
+              value += (bytes[i] & 0xff)  * Math.pow(256, i)
+            value += (bytes[top] & 0x7f) * Math.pow(256, top)
 
         # If we are filling an array field the current fields is an array,
-        # otherwise current field is the value we've just read.
-        if @pattern[@patternIndex].arrayed
-          @_fields[@_fields.length - 1].push(field) if field?
+        # otherwise current field is the value we've just read. We keep the
+        # built value on the field list because if it is an array, we might
+        # leave this invocation of read before the array is filled.
+        if part.arrayed
+          @_fields[@_fields.length - 1].push(value)
         else
-          @_fields.push(field)
+          @_fields.push(value)
 
 
       # If we've not yet hit our terminator, check for the terminator. If we've
       # hit the terminator, and we do not have a maximum size to fill, then
       # terminate by setting up the array to terminate.
       if not @terminated
-        if @pattern[@patternIndex].terminator.charCodeAt(0) == field
+        if part.terminator.charCodeAt(0) == value
           @terminated = true
+          # A maximum length value means to repeat until the terminator, but a
+          # specific length value means that the zero terminated string occupies
+          # a field that has a fixed length, so we need to skip the used bytes.
           if @repeat == Number.MAX_VALUE
             @repeat = @index + 1
           else
-            @_skipping = (@repeat - (++@index)) * @pattern[@patternIndex].bytes
+            @_skipping = (@repeat - (++@index)) * part.bytes
             if @_skipping
               @repeat = @index + 1
               continue
 
-      # If the field is a packed field, unpack the value.
-      if packing = @pattern[@patternIndex].packing
-        # Loop through the packed fields, unpacking the values.
-        for pack, i in packing
-          if pack.type is "b"
-            sum = 0
-            for j in [(i + 1)...packing.length]
-              sum += packing[j].bits
-            value = Math.floor(@value / Math.pow(2, sum))
-            value = value % Math.pow(2, pack.bits)
-            
       # If we are reading an arrayed pattern and we have not read all of the
       # array elements, we repeat the current field type.
       if ++@index <  @repeat
         @nextValue()
-
-      # If we have read all of the pattern fields, call the associated callback.
-      # We add the parser and the user suppilied additional arguments onto the
-      # callback arguments.
-      #
-      # The pattern is set to null, our terminal condition, because the callback
-      # may specify a subsequent packet to parse.
-      else if ++@patternIndex == @pattern.length
-        @_fields.push(@pipeline(@pattern[@patternIndex - 1 ], @_fields.pop()))
-
-        @_fields.push(this)
-        for p in @user or []
-          @_fields.push(p)
-
-        @pattern = null
-
-        @callback.apply @self, @_fields
-
-      # Otherwise we proceed to the next field in the packet pattern.
       else
-        if @pattern[@patternIndex - 1].endianness isnt "x"
-          if @pattern[@patternIndex - 1].lengthEncoding
-            @pattern[@patternIndex].repeat = @_fields.pop()
+        # Push the field value after running it through the pipeline.
+        if part.endianness isnt "x"
+          # If the field is a packed field, unpack the value.
+          if packing = part.packing
+            # Loop through the packed fields, unpacking the values.
+            for pack, i in packing
+              if pack.type is "b"
+                sum = 0
+                for j in [(i + 1)...packing.length]
+                  sum += packing[j].bits
+                unpacked = Math.floor(value / Math.pow(2, sum))
+                unpacked = value % Math.pow(2, pack.bits)
+                @_fields.push(unpacked)
+          else if part.lengthEncoding
+            # If we have a zero length encoding, we push an empty array through
+            # the pipeline, and skip the repeated type.
+            if (@pattern[@patternIndex + 1].repeat = @_fields.pop()) is 0
+              @_fields.push(@pipeline(part, []))
+              @patternIndex++
           else
-            @_fields.push(@pipeline(@pattern[@patternIndex - 1], @_fields.pop()))
+            @_fields.push(@pipeline(part, @_fields.pop()))
 
-        @nextField()
-        @nextValue()
+        # If we have read all of the pattern fields, call the associated
+        # callback.  We add the parser and the user suppilied additional
+        # arguments onto the callback arguments.
+        #
+        # The pattern is set to null, our terminal condition, because the
+        # callback may specify a subsequent packet to parse.
+        if ++@patternIndex == @pattern.length
+          @_fields.push(this)
+          @_fields.push(p) for p in @user or []
+
+          @pattern = null
+
+          @callback.apply @self, @_fields
+
+        # Otherwise we proceed to the next field in the packet pattern.
+        else
+          @nextField()
+          @nextValue()
 
     @bytesRead - start
 
