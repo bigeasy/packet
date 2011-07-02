@@ -79,6 +79,7 @@ mask = (mask) ->
 branch = (pattern, index) ->
   rest = pattern
   branches = []
+  defaulted = false
   while rest
     fork = { minimum: Number.MIN_VALUE, maximum: Number.MAX_VALUE, mask: 0 }
     match = /^([^:]+):\s*(.*)$/.exec rest
@@ -100,6 +101,8 @@ branch = (pattern, index) ->
           fork.minimum = fork.maximum = value
       else
         fork.mask = value
+    else
+      defaulted = true
     if match = /^\s*([^|]+)\|\s*(.*)$/.exec rest
       [ alternate, rest ] = match.slice(1)
     else
@@ -108,6 +111,13 @@ branch = (pattern, index) ->
     index += alternate.length
     index += 1 if match
     branches.push fork
+  if not defaulted
+    branches.push {
+      minimum: Number.MIN_VALUE
+      maximum: Number.MAX_VALUE
+      mask: 0
+      failed: true
+    }
   branches
 
 ##### parse(pattern)
@@ -161,11 +171,6 @@ parse = (o) ->
     f.bytes     = f.bits / 8
     f.unpacked  = f.signed or f.bytes > 8 or "ha".indexOf(f.type) != -1
 
-    # Check for alternation.
-    alternation = /^\(([^)]+)\)(.*)$/.exec(rest)
-    if alternation
-      f.alternation = branch alternation[1], index
-      rest          = alternation[2]
 
     # Check for bit backing.
     pack = /^{((?:-b|b|x)[^}]+)}(.*)$/.exec(rest)
@@ -173,6 +178,11 @@ parse = (o) ->
       f.packing   = packing pack[1], f.bits, index
       rest        = pack[2]
       index      += pack[1].length
+    # Check for alternation.
+    else if alternation = /^\(([^)]+)\)(.*)$/.exec(rest)
+      f.arrayed     = true
+      f.alternation = branch alternation[1], index
+      rest          = alternation[2]
     else
       # Check if this is a length encoding.
       length = /^\/(.*)$/.exec(rest)

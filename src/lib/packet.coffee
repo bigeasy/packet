@@ -367,6 +367,27 @@ module.exports.Parser = class Parser extends Packet
               @_fields.push(@pipeline(part, []))
               @patternIndex++
 
+          # If the value is used as a switch for an alternation, we run through
+          # the different possible branches, updating the pattern with the
+          # pattern of the first branch that matches. We then re-read the bytes
+          # used to determine the conditional outcome.
+          else if part.alternation
+            unless part.signed
+              value = (Math.pow(256, i) * b for b, i in @_arrayed)
+            for branch in part.alternation
+              break if branch.minimum <= value and
+                       value <= branch.maximum and
+                       (value & branch.mask) is branch.mask
+            if branch.failed
+              throw new Error "Cannot match branch."
+            bytes = @_arrayed.slice(0)
+            @_bytesRead -= bytes.length
+            @pattern.splice.apply @pattern, [ @patternIndex, 1 ].concat(branch.pattern)
+            @nextField()
+            @nextValue()
+            @read bytes, 0, bytes.length
+            continue
+
           # Otherwise, the value is what it is, so run it through the user
           # supplied tranformation pipeline, and push it onto the list of fields.
           else

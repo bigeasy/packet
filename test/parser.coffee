@@ -304,6 +304,54 @@ class exports.PacketTest extends TwerpTest
     @ok invoked
     done 3
 
+  "test: read a masked alternative": (done) ->
+    invoked = false
+    bytes = [ 0x81, 0x00 ]
+    @parser.reset()
+    @parser.parse "b8(&0x80: b16{x1,b15} | b8)", (field, engine) =>
+      @equal engine.getBytesRead(), 2
+      @equal field, 256
+      invoked = true
+    @parser.read bytes, 0, 2
+    @ok invoked
+    done 3
+
+  "test: read a default after a masked alternative": (done) ->
+    invoked = false
+    bytes = [ 0x7f ]
+    @parser.reset()
+    @parser.parse "b8(&0x80: b16{x1,b15} | b8)", (field, engine) =>
+      @equal engine.getBytesRead(), 1
+      @equal field, 127
+      invoked = true
+    @parser.read bytes
+    @ok invoked
+    done 3
+
+  "test: read a ranged alternative": (done) ->
+    invoked = false
+    bytes = [ 0xfb ]
+    @parser.reset()
+    @parser.parse "b8(0-251: b8 | 252: x8, b16 | 253: x8, b24 | 254: x8, b64)", (field, engine) =>
+      @equal engine.getBytesRead(), 1
+      @equal field, 251
+      invoked = true
+    @parser.read bytes
+    @ok invoked
+    done 3
+
+  "test: read an exact alternative": (done) ->
+    invoked = false
+    bytes = [ 253, 0x00, 0x01, 0x00 ]
+    @parser.reset()
+    @parser.parse "b8(0-251: b8 | 252: x8, b16 | 253: x8, b24 | 254: x8, b64)", (field, engine) =>
+      @equal engine.getBytesRead(), 4
+      @equal field, 256
+      invoked = true
+    @parser.read bytes
+    @ok invoked
+    done 3
+
   "test: set self": (done) ->
     self = {}
     parser = new Parser(self)

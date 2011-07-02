@@ -778,8 +778,7 @@ class exports.PacketTest extends TwerpTest
       , "type": "n"
       , "bytes": 1
       , "unpacked": false
-      , "repeat": 1
-      , "arrayed": false
+      , "arrayed": true
       , "alternation":
         [
           { "minimum": 0
@@ -879,6 +878,12 @@ class exports.PacketTest extends TwerpTest
               }
             ]
           }
+        ,
+          { "minimum": 5e-324
+          , "maximum": 1.7976931348623157e+308
+          , "mask": 0
+          , "failed": true
+          }
         ]
       }
     ]
@@ -893,8 +898,7 @@ class exports.PacketTest extends TwerpTest
       , "type": "n"
       , "bytes": 1
       , "unpacked": false
-      , "repeat": 1
-      , "arrayed": false
+      , "arrayed": true
       , "alternation":
         [
           { "minimum": 252
@@ -1008,8 +1012,7 @@ class exports.PacketTest extends TwerpTest
       , "type": "n"
       , "bytes": 1
       , "unpacked": false
-      , "repeat": 1
-      , "arrayed": false
+      , "arrayed": true
       , "alternation":
         [
           { "minimum": 5e-324
