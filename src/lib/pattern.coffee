@@ -60,8 +60,8 @@ packing = (pattern, size, index) ->
 pass = -> true
 
 number = (pattern, index) ->
-  if match = /^(&)(\d+)(.*)$/.exec pattern
-    [ !! match[1], parseInt(match[2], 10), index + match[1].length + match[2].length, match[2] ]
+  if match = /^(\d+)(.*)$/.exec pattern
+    [ false, parseInt(match[1], 10), index + match[1].length, match[2] ]
   else if match = /^(&)0x([0-9a-f]+)(.*)$/i.exec pattern
     [ !! match[1], parseInt(match[2], 16), index + match[1].length + match[2].length, match[2] ]
   else
@@ -79,37 +79,36 @@ mask = (mask) ->
 branch = (pattern, index) ->
   rest = pattern
   branches = []
-  branch = {}
   while rest
-    match = /^([^:]+):(.*)$/.exec rest
+    fork = { minimum: Number.MIN_VALUE, maximum: Number.MAX_VALUE, mask: 0 }
+    match = /^([^:]+):\s*(.*)$/.exec rest
     if match
-      condition = match[1]
-      rest = match[2]
-      [ mask, value, index, rest ] = number condition, index
+      [ condition, rest ] = match.slice(1)
+      [ mask, value, index, range ] = number condition, index
       if not mask
-        if  rest[0] is "-"
+        if  range[0] is "-"
           index++
-          [ mask, maximum, index, rest ] = number condition.substring(1), index
+          [ mask, maximum, nextIndex, range ] = number range.substring(1), index
           if mask
-            throw new Error "invalid pattern at index #{index}"
-          branch.condition = between value, maximum
+            throw new Error "masks not permitted in ranges at index #{index}"
+          index = nextIndex
+          if match = /(\s*)\S/.test range
+            throw new Error "invalid pattern at index #{index + match[1].length}"
+          fork.minimum = value
+          fork.maximum = maximum
         else
-          branch.condition = equal value
+          fork.minimum = fork.maximum = value
       else
-        branch.condition = mask value
+        fork.mask = value
+    if match = /^\s*([^|]+)\|\s*(.*)$/.exec rest
+      [ alternate, rest ] = match.slice(1)
     else
-      branch.condition = pass
-    match = /^([^|]+)|(.*)$/
-    pipe = rest.indexOf("|")
-    if match
-      alternate = match[1]
-      rest = match[2]
-    else
-      alternate = rest
-      rest = ""
-    pattern({ pattern: alternate, index, next: element })
+      [ alternate, rest ]  = [ rest, "" ]
+    fork.pattern = parse({ pattern: alternate, index, next: next })
     index += alternate.length
     index += 1 if match
+    branches.push fork
+  branches
 
 ##### parse(pattern)
 # Parse a pattern and create a list of fields.
@@ -165,7 +164,7 @@ parse = (o) ->
     # Check for alternation.
     alternation = /^\(([^)]+)\)(.*)$/.exec(rest)
     if alternation
-      f.alternation = branches alternation[1]
+      f.alternation = branch alternation[1], index
       rest          = alternation[2]
 
     # Check for bit backing.

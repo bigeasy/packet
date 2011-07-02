@@ -769,6 +769,300 @@ class exports.PacketTest extends TwerpTest
     ]
     done 1
 
+  'test: parse alternation with range.': (done) ->
+    field = parse "b8(0-251: b8 | 252: x8, b16 | 253: x8, b24 | 254: x8, b64)"
+    @deepEqual field, [
+      { "signed": false
+      , "endianness": "b"
+      , "bits": 8
+      , "type": "n"
+      , "bytes": 1
+      , "unpacked": false
+      , "repeat": 1
+      , "arrayed": false
+      , "alternation":
+        [
+          { "minimum": 0
+          , "maximum": 251
+          , "mask": 0
+          , "pattern":
+            [
+              { "signed": false
+              , "endianness": "b"
+              , "bits": 8
+              , "type": "n"
+              , "bytes": 1
+              , "unpacked": false
+              , "repeat": 1
+              , "arrayed": false
+              }
+            ]
+          }
+        ,
+          { "minimum": 252
+          , "maximum": 252
+          , "mask": 0
+          , "pattern":
+            [
+              { "signed": false
+              , "endianness": "x"
+              , "bits": 8
+              , "type": "n"
+              , "bytes": 1
+              , "unpacked": false
+              , "repeat": 1
+              , "arrayed": false
+              }
+            ,
+              { "signed": false
+              , "endianness": "b"
+              , "bits": 16
+              , "type": "n"
+              , "bytes": 2
+              , "unpacked": false
+              , "repeat": 1
+              , "arrayed": false
+              }
+            ]
+          }
+        ,
+          { "minimum": 253
+          , "maximum": 253
+          , "mask": 0
+          , "pattern":
+            [
+              { "signed": false
+              , "endianness": "x"
+              , "bits": 8
+              , "type": "n"
+              , "bytes": 1
+              , "unpacked": false
+              , "repeat": 1
+              , "arrayed": false
+              }
+            ,
+              { "signed": false
+              , "endianness": "b"
+              , "bits": 24
+              , "type": "n"
+              , "bytes": 3
+              , "unpacked": false
+              , "repeat": 1
+              , "arrayed": false
+              }
+            ]
+          }
+        ,
+          { "minimum": 254
+          , "maximum": 254
+          , "mask": 0
+          , "pattern":
+            [
+              { "signed": false
+              , "endianness": "x"
+              , "bits": 8
+              , "type": "n"
+              , "bytes": 1
+              , "unpacked": false
+              , "repeat": 1
+              , "arrayed": false
+              }
+            ,
+              { "signed": false
+              , "endianness": "b"
+              , "bits": 64
+              , "type": "n"
+              , "bytes": 8
+              , "unpacked": false
+              , "repeat": 1
+              , "arrayed": false
+              }
+            ]
+          }
+        ]
+      }
+    ]
+    done 1
+
+  'test: parse alternation with default.': (done) ->
+    field = parse "b8(252: x8, b16 | 253: x8, b24 | 254: x8, b64 | b8)"
+    @deepEqual field, [
+      { "signed": false
+      , "endianness": "b"
+      , "bits": 8
+      , "type": "n"
+      , "bytes": 1
+      , "unpacked": false
+      , "repeat": 1
+      , "arrayed": false
+      , "alternation":
+        [
+          { "minimum": 252
+          , "maximum": 252
+          , "mask": 0
+          , "pattern":
+            [
+              { "signed": false
+              , "endianness": "x"
+              , "bits": 8
+              , "type": "n"
+              , "bytes": 1
+              , "unpacked": false
+              , "repeat": 1
+              , "arrayed": false
+              }
+            ,
+              { "signed": false
+              , "endianness": "b"
+              , "bits": 16
+              , "type": "n"
+              , "bytes": 2
+              , "unpacked": false
+              , "repeat": 1
+              , "arrayed": false
+              }
+            ]
+          }
+        ,
+          { "minimum": 253
+          , "maximum": 253
+          , "mask": 0
+          , "pattern":
+            [
+              { "signed": false
+              , "endianness": "x"
+              , "bits": 8
+              , "type": "n"
+              , "bytes": 1
+              , "unpacked": false
+              , "repeat": 1
+              , "arrayed": false
+              }
+            ,
+              { "signed": false
+              , "endianness": "b"
+              , "bits": 24
+              , "type": "n"
+              , "bytes": 3
+              , "unpacked": false
+              , "repeat": 1
+              , "arrayed": false
+              }
+            ]
+          }
+        ,
+          { "minimum": 254
+          , "maximum": 254
+          , "mask": 0
+          , "pattern":
+            [
+              { "signed": false
+              , "endianness": "x"
+              , "bits": 8
+              , "type": "n"
+              , "bytes": 1
+              , "unpacked": false
+              , "repeat": 1
+              , "arrayed": false
+              }
+            ,
+              { "signed": false
+              , "endianness": "b"
+              , "bits": 64
+              , "type": "n"
+              , "bytes": 8
+              , "unpacked": false
+              , "repeat": 1
+              , "arrayed": false
+              }
+            ]
+          }
+        ,
+          { "minimum": 5e-324
+          , "maximum": 1.7976931348623157e+308
+          , "mask": 0
+          , "pattern":
+            [
+              { "signed": false
+              , "endianness": "b"
+              , "bits": 8
+              , "type": "n"
+              , "bytes": 1
+              , "unpacked": false
+              , "repeat": 1
+              , "arrayed": false
+              }
+            ]
+          }
+        ]
+      }
+    ]
+    done 1
+
+  'test: parse alternation with bit mask.': (done) ->
+    field = parse "b8(&0x80: b16{x1,b15} | b8)"
+    @deepEqual field, [
+      { "signed": false
+      , "endianness": "b"
+      , "bits": 8
+      , "type": "n"
+      , "bytes": 1
+      , "unpacked": false
+      , "repeat": 1
+      , "arrayed": false
+      , "alternation":
+        [
+          { "minimum": 5e-324
+          , "maximum": 1.7976931348623157e+308
+          , "mask": 128
+          , "pattern":
+            [
+              { "signed": false
+              , "endianness": "b"
+              , "bits": 16
+              , "type": "n"
+              , "bytes": 2
+              , "unpacked": false
+              , "packing":
+                [
+                  { "signed": false
+                  , "endianness": "x"
+                  , "bits": 1
+                  , "type": "n"
+                  }
+                ,
+                  { "signed": false
+                  , "endianness": "b"
+                  , "bits": 15
+                  , "type": "n"
+                  }
+                ]
+              }
+            ]
+          }
+        ,
+          { "minimum": 5e-324
+          , "maximum": 1.7976931348623157e+308
+          , "mask": 0
+          , "pattern":
+            [
+              { "signed": false
+              , "endianness": "b"
+              , "bits": 8
+              , "type": "n"
+              , "bytes": 1
+              , "unpacked": false
+              , "repeat": 1
+              , "arrayed": false
+              }
+            ]
+          }
+        ]
+      }
+    ]
+    done 1
+
+
   'test: parse utter nonsense.': (done) ->
     @trap "invalid pattern at index 0", -> parse("blurdy")
     done 1
