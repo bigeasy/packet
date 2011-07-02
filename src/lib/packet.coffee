@@ -272,7 +272,16 @@ module.exports.Parser = class Parser extends Packet
             break if @offset == @terminal
             return @_bytesRead - start if offset is end
 
-        # Unpack the field value.
+        # Unpack the field value. Perform our basic transformations. That is,
+        # convert from a byte array to a JavaScript primitive, or turn a byte
+        # array into a hex string.
+        #
+        # Resist the urge to implement these conversions with pipelines. It
+        # keeps occuring to you, but those transitions are at a higher level of
+        # abstraction, primairly for operations on gathered byte arrays. These
+        # transitions need to take place immediately to populate those arrays.
+
+        # By default, value is as it is.
         bytes = value = @value
 
         # Create a hex string.
@@ -292,7 +301,7 @@ module.exports.Parser = class Parser extends Packet
           if (bytes[bytes.length - 1] & 0x80) == 0x80
             top = bytes.length - 1
             for i in [0...top]
-              value += (~bytes[i] & 0xff)  * Math.pow(256, i)
+              value += (~bytes[i] & 0xff) * Math.pow(256, i)
             # To get the two's compliment as a positive value you use
             # `~1 & 0xff == 254`. For exmaple: `~1 == -2`.
             value += (~(bytes[top] & 0x7f) & 0xff & 0x7f) * Math.pow(256, top)
@@ -311,12 +320,13 @@ module.exports.Parser = class Parser extends Packet
       # If we've not yet hit our terminator, check for the terminator. If we've
       # hit the terminator, and we do not have a maximum size to fill, then
       # terminate by setting up the array to terminate.
+      #
+      # A maximum length value means to repeat until the terminator, but a
+      # specific length value means that the zero terminated string occupies a
+      # field that has a fixed length, so we need to skip the used bytes.
       if not @terminated
         if part.terminator.charCodeAt(0) == value
           @terminated = true
-          # A maximum length value means to repeat until the terminator, but a
-          # specific length value means that the zero terminated string occupies
-          # a field that has a fixed length, so we need to skip the used bytes.
           if @repeat == Number.MAX_VALUE
             @repeat = @index + 1
           else
@@ -329,12 +339,17 @@ module.exports.Parser = class Parser extends Packet
       # array elements, we repeat the current field type.
       if ++@index <  @repeat
         @nextValue()
+
+      # Otherwise, we've got a complete field value, either a JavaScript
+      # primitive or raw bytes as an array or hex string.
       else
+
         # Push the field value after running it through the pipeline.
         if part.endianness isnt "x"
-          # If the field is a packed field, unpack the value.
+
+          # If the field is a packed field, unpack the values and push them onto
+          # the field list.
           if packing = part.packing
-            # Loop through the packed fields, unpacking the values.
             for pack, i in packing
               if pack.endianness is "b"
                 sum = 0
@@ -343,12 +358,17 @@ module.exports.Parser = class Parser extends Packet
                 unpacked = Math.floor(value / Math.pow(2, sum))
                 unpacked = unpacked % Math.pow(2, pack.bits)
                 @_fields.push(unpacked)
+
+          # If the value is a length encoding, we set the repeat value for the
+          # subsequent array of values. If we have a zero length encoding, we
+          # push an empty array through the pipeline, and skip the repeated type.
           else if part.lengthEncoding
-            # If we have a zero length encoding, we push an empty array through
-            # the pipeline, and skip the repeated type.
             if (@pattern[@patternIndex + 1].repeat = value) is 0
               @_fields.push(@pipeline(part, []))
               @patternIndex++
+
+          # Otherwise, the value is what it is, so run it through the user
+          # supplied tranformation pipeline, and push it onto the list of fields.
           else
             value = @_arrayed if part.arrayed
             @_fields.push(@pipeline(part, value))
@@ -372,6 +392,7 @@ module.exports.Parser = class Parser extends Packet
           @nextField()
           @nextValue()
 
+    # Return the number of bytes read in this iteration.
     @_bytesRead - start
 
   close: ->
