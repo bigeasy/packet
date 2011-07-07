@@ -76,49 +76,74 @@ equal = (target) ->
 mask = (mask) ->
   (value) -> (value & mask) is mask
 
-branch = (pattern, index) ->
-  rest = pattern
-  branches = []
-  defaulted = false
+condition = (struct, text, index) ->
+  [ mask, value, index, range ] = number text, index
+  if not mask
+    if  range[0] is "-"
+      index++
+      [ mask, maximum, nextIndex, range ] = number range.substring(1), index
+      if mask
+        throw new Error "masks not permitted in ranges at index #{index}"
+      index = nextIndex
+      if match = /(\s*)\S/.test range
+        throw new Error "invalid pattern at index #{index + match[1].length}"
+      struct.minimum = value
+      struct.maximum = maximum
+    else
+      struct.minimum = struct.maximum = value
+  else
+    struct.mask = value
+  index
+
+FAILURE =
+  minimum: Number.MIN_VALUE
+  maximum: Number.MAX_VALUE
+  mask: 0
+
+always = ->
+  {
+    maximum: Number.MAX_VALUE
+    minimum: Number.MIN_VALUE
+    mask: 0
+  }
+
+never = ->
+  {
+    maximum: Number.MIN_VALUE
+    minimum: Number.MAX_VALUE
+  }
+
+alternates = (array, rest, primary, secondary, allowSecondary, index) ->
   while rest
-    fork = { minimum: Number.MIN_VALUE, maximum: Number.MAX_VALUE, mask: 0 }
-    match = /^([^:]+):\s*(.*)$/.exec rest
+    alternate             = {}
+    alternate[primary]    = always()
+    alternate[secondary]  = if alternates then always() else never()
+
+    match = /^([^/:]+)(?:(\s*\/\s*)([^:]+))?(:\s*)(.*)$/.exec rest
     if match
-      [ condition, rest ] = match.slice(1)
-      [ mask, value, index, range ] = number condition, index
-      if not mask
-        if  range[0] is "-"
-          index++
-          [ mask, maximum, nextIndex, range ] = number range.substring(1), index
-          if mask
-            throw new Error "masks not permitted in ranges at index #{index}"
-          index = nextIndex
-          if match = /(\s*)\S/.test range
-            throw new Error "invalid pattern at index #{index + match[1].length}"
-          fork.minimum = value
-          fork.maximum = maximum
+      [ first, delimiter, second, imparative, rest ] = match.slice(1)
+      startIndex = index
+      condition alternate[primary], first, index
+      if allowSecondary
+        if second
+          condition alternate[secondary], second, index
         else
-          fork.minimum = fork.maximum = value
-      else
-        fork.mask = value
+          alternate[secondary] = alternate[primary]
+      else if second
+        slashIndex = startIndex + first.length + delimiter.indexOf("/")
+        throw new Error "field alternates not allowed at index #{slashIndex}"
+      index += first.length + imparative.length
+      index += delimiter.length + second.length if delimiter?
+
+    if match = /^(\s*)([^|]+)(\|\s*)(.*)$/.exec rest
+      [ padding, pattern, delimiter, rest ] = match.slice(1)
     else
-      defaulted = true
-    if match = /^\s*([^|]+)\|\s*(.*)$/.exec rest
-      [ alternate, rest ] = match.slice(1)
-    else
-      [ alternate, rest ]  = [ rest, "" ]
-    fork.pattern = parse({ pattern: alternate, index, next: next })
-    index += alternate.length
-    index += 1 if match
-    branches.push fork
-  if not defaulted
-    branches.push {
-      minimum: Number.MIN_VALUE
-      maximum: Number.MAX_VALUE
-      mask: 0
-      failed: true
-    }
-  branches
+      [ padding, pattern, delimiter, rest ] = [ "", rest, "", null ]
+    index += padding.length
+    alternate.pattern = parse({ pattern, index, next })
+    index += alternate.length + delimiter.length
+
+    array.push alternate
 
 ##### parse(pattern)
 # Parse a pattern and create a list of fields.
@@ -181,8 +206,22 @@ parse = (o) ->
     # Check for alternation.
     else if alternation = /^\(([^)]+)\)(.*)$/.exec(rest)
       f.arrayed     = true
-      f.alternation = branch alternation[1], index
+      read          = alternation[1]
       rest          = alternation[2]
+      write         = null
+      if alternation = /^(\s*\/\s*\(([^)]+)\))(.*)$/.exec(rest)
+        matched       = alternation[1]
+        write         = alternation[2]
+        rest          = alternation[3]
+        write         = null
+      alternates f.alternation = [], read, "read", "write", not write, index
+      index += read.length
+      if write
+        alternates f.alternation, write, "write", "read", false, index
+        index += matched.length
+      f.alternation.push {
+        read: FAILURE, write: FAILURE, failed: true
+      }
     else
       # Check if this is a length encoding.
       length = /^\/(.*)$/.exec(rest)

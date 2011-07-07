@@ -375,9 +375,9 @@ module.exports.Parser = class Parser extends Packet
             unless part.signed
               value = (Math.pow(256, i) * b for b, i in @_arrayed)
             for branch in part.alternation
-              break if branch.minimum <= value and
-                       value <= branch.maximum and
-                       (value & branch.mask) is branch.mask
+              break if branch.read.minimum <= value and
+                       value <= branch.read.maximum and
+                       (value & branch.read.mask) is branch.read.mask
             if branch.failed
               throw new Error "Cannot match branch."
             bytes = @_arrayed.slice(0)

@@ -770,8 +770,166 @@ class exports.PacketTest extends TwerpTest
     done 1
 
   'test: parse alternation with range.': (done) ->
-    field = parse "b8(0-251: b8 | 252: x8, b16 | 253: x8, b24 | 254: x8, b64)"
-    @deepEqual field, [
+    try
+      field = parse "b8(0-251: b8 | 252: x8, b16 | 253: x8, b24 | 254: x8, b64)"
+      @deepEqual field, [
+        { "signed": false
+        , "endianness": "b"
+        , "bits": 8
+        , "type": "n"
+        , "bytes": 1
+        , "unpacked": false
+        , "arrayed": true
+        , "alternation":
+          [
+            { "read":
+              { "maximum": 251
+              , "minimum": 0
+              , "mask": 0
+              }
+            , "write":
+              { "maximum": 251
+              , "minimum": 0
+              , "mask": 0
+              }
+            , "pattern":
+              [
+                { "signed": false
+                , "endianness": "b"
+                , "bits": 8
+                , "type": "n"
+                , "bytes": 1
+                , "unpacked": false
+                , "repeat": 1
+                , "arrayed": false
+                }
+              ]
+            }
+          ,
+            { "read":
+              { "minimum": 252
+              , "maximum": 252
+              , "mask": 0
+              }
+            , "write":
+              { "minimum": 252
+              , "maximum": 252
+              , "mask": 0
+              }
+            , "pattern":
+              [
+                { "signed": false
+                , "endianness": "x"
+                , "bits": 8
+                , "type": "n"
+                , "bytes": 1
+                , "unpacked": false
+                , "repeat": 1
+                , "arrayed": false
+                }
+              ,
+                { "signed": false
+                , "endianness": "b"
+                , "bits": 16
+                , "type": "n"
+                , "bytes": 2
+                , "unpacked": false
+                , "repeat": 1
+                , "arrayed": false
+                }
+              ]
+            }
+          ,
+            { "read":
+              { "minimum": 253
+              , "maximum": 253
+              , "mask": 0
+              }
+            , "write":
+              { "minimum": 253
+              , "maximum": 253
+              , "mask": 0
+              }
+            , "pattern":
+              [
+                { "signed": false
+                , "endianness": "x"
+                , "bits": 8
+                , "type": "n"
+                , "bytes": 1
+                , "unpacked": false
+                , "repeat": 1
+                , "arrayed": false
+                }
+              ,
+                { "signed": false
+                , "endianness": "b"
+                , "bits": 24
+                , "type": "n"
+                , "bytes": 3
+                , "unpacked": false
+                , "repeat": 1
+                , "arrayed": false
+                }
+              ]
+            }
+          ,
+            { "read":
+              { "minimum": 254
+              , "maximum": 254
+              , "mask": 0
+              }
+            , "write":
+              { "minimum": 254
+              , "maximum": 254
+              , "mask": 0
+              }
+            , "pattern":
+              [
+                { "signed": false
+                , "endianness": "x"
+                , "bits": 8
+                , "type": "n"
+                , "bytes": 1
+                , "unpacked": false
+                , "repeat": 1
+                , "arrayed": false
+                }
+              ,
+                { "signed": false
+                , "endianness": "b"
+                , "bits": 64
+                , "type": "n"
+                , "bytes": 8
+                , "unpacked": false
+                , "repeat": 1
+                , "arrayed": false
+                }
+              ]
+            }
+          ,
+            { "read":
+              { "minimum": Number.MIN_VALUE
+              , "maximum": Number.MAX_VALUE
+              , "mask": 0
+              }
+            , "write":
+              { "minimum": Number.MIN_VALUE
+              , "maximum": Number.MAX_VALUE
+              , "mask": 0
+              }
+            , "failed": true
+            }
+          ]
+        }
+      ]
+      done 1
+    catch e
+      console.log e.stack
+
+  'test: parse alternation with default.': (done) ->
+    field = parse "b8(252: x8, b16 | 253: x8, b24 | 254: x8, b64 | b8)"
+    expected = [
       { "signed": false
       , "endianness": "b"
       , "bits": 8
@@ -781,26 +939,16 @@ class exports.PacketTest extends TwerpTest
       , "arrayed": true
       , "alternation":
         [
-          { "minimum": 0
-          , "maximum": 251
-          , "mask": 0
-          , "pattern":
-            [
-              { "signed": false
-              , "endianness": "b"
-              , "bits": 8
-              , "type": "n"
-              , "bytes": 1
-              , "unpacked": false
-              , "repeat": 1
-              , "arrayed": false
-              }
-            ]
-          }
-        ,
-          { "minimum": 252
-          , "maximum": 252
-          , "mask": 0
+          { "read":
+            { "minimum": 252
+            , "maximum": 252
+            , "mask": 0
+            }
+          , "write":
+            { "minimum": 252
+            , "maximum": 252
+            , "mask": 0
+            }
           , "pattern":
             [
               { "signed": false
@@ -825,9 +973,16 @@ class exports.PacketTest extends TwerpTest
             ]
           }
         ,
-          { "minimum": 253
-          , "maximum": 253
-          , "mask": 0
+          { "read":
+            { "minimum": 253
+            , "maximum": 253
+            , "mask": 0
+            }
+          , "write":
+            { "minimum": 253
+            , "maximum": 253
+            , "mask": 0
+            }
           , "pattern":
             [
               { "signed": false
@@ -852,9 +1007,16 @@ class exports.PacketTest extends TwerpTest
             ]
           }
         ,
-          { "minimum": 254
-          , "maximum": 254
-          , "mask": 0
+          { "read":
+            { "minimum": 254
+            , "maximum": 254
+            , "mask": 0
+            }
+          , "write":
+            { "minimum": 254
+            , "maximum": 254
+            , "mask": 0
+            }
           , "pattern":
             [
               { "signed": false
@@ -879,128 +1041,46 @@ class exports.PacketTest extends TwerpTest
             ]
           }
         ,
-          { "minimum": 5e-324
-          , "maximum": 1.7976931348623157e+308
-          , "mask": 0
+          { "read":
+            { "minimum": Number.MIN_VALUE
+            , "maximum": Number.MAX_VALUE
+            , "mask": 0
+            }
+          , "write":
+            { "minimum": Number.MIN_VALUE
+            , "maximum": Number.MAX_VALUE
+            , "mask": 0
+            }
+          , "pattern":
+            [
+              { "signed": false
+              , "endianness": "b"
+              , "bits": 8
+              , "type": "n"
+              , "bytes": 1
+              , "unpacked": false
+              , "repeat": 1
+              , "arrayed": false
+              }
+            ]
+          }
+        ,
+          { "read":
+            { "minimum": Number.MIN_VALUE
+            , "maximum": Number.MAX_VALUE
+            , "mask": 0
+            }
+          , "write":
+            { "minimum": Number.MIN_VALUE
+            , "maximum": Number.MAX_VALUE
+            , "mask": 0
+            }
           , "failed": true
           }
         ]
       }
     ]
-    done 1
-
-  'test: parse alternation with default.': (done) ->
-    field = parse "b8(252: x8, b16 | 253: x8, b24 | 254: x8, b64 | b8)"
-    @deepEqual field, [
-      { "signed": false
-      , "endianness": "b"
-      , "bits": 8
-      , "type": "n"
-      , "bytes": 1
-      , "unpacked": false
-      , "arrayed": true
-      , "alternation":
-        [
-          { "minimum": 252
-          , "maximum": 252
-          , "mask": 0
-          , "pattern":
-            [
-              { "signed": false
-              , "endianness": "x"
-              , "bits": 8
-              , "type": "n"
-              , "bytes": 1
-              , "unpacked": false
-              , "repeat": 1
-              , "arrayed": false
-              }
-            ,
-              { "signed": false
-              , "endianness": "b"
-              , "bits": 16
-              , "type": "n"
-              , "bytes": 2
-              , "unpacked": false
-              , "repeat": 1
-              , "arrayed": false
-              }
-            ]
-          }
-        ,
-          { "minimum": 253
-          , "maximum": 253
-          , "mask": 0
-          , "pattern":
-            [
-              { "signed": false
-              , "endianness": "x"
-              , "bits": 8
-              , "type": "n"
-              , "bytes": 1
-              , "unpacked": false
-              , "repeat": 1
-              , "arrayed": false
-              }
-            ,
-              { "signed": false
-              , "endianness": "b"
-              , "bits": 24
-              , "type": "n"
-              , "bytes": 3
-              , "unpacked": false
-              , "repeat": 1
-              , "arrayed": false
-              }
-            ]
-          }
-        ,
-          { "minimum": 254
-          , "maximum": 254
-          , "mask": 0
-          , "pattern":
-            [
-              { "signed": false
-              , "endianness": "x"
-              , "bits": 8
-              , "type": "n"
-              , "bytes": 1
-              , "unpacked": false
-              , "repeat": 1
-              , "arrayed": false
-              }
-            ,
-              { "signed": false
-              , "endianness": "b"
-              , "bits": 64
-              , "type": "n"
-              , "bytes": 8
-              , "unpacked": false
-              , "repeat": 1
-              , "arrayed": false
-              }
-            ]
-          }
-        ,
-          { "minimum": 5e-324
-          , "maximum": 1.7976931348623157e+308
-          , "mask": 0
-          , "pattern":
-            [
-              { "signed": false
-              , "endianness": "b"
-              , "bits": 8
-              , "type": "n"
-              , "bytes": 1
-              , "unpacked": false
-              , "repeat": 1
-              , "arrayed": false
-              }
-            ]
-          }
-        ]
-      }
-    ]
+    @deepEqual field, expected
     done 1
 
   'test: parse alternation with bit mask.': (done) ->
@@ -1015,9 +1095,16 @@ class exports.PacketTest extends TwerpTest
       , "arrayed": true
       , "alternation":
         [
-          { "minimum": 5e-324
-          , "maximum": 1.7976931348623157e+308
-          , "mask": 128
+          { "read":
+            { "minimum": Number.MIN_VALUE
+            , "maximum": Number.MAX_VALUE
+            , "mask": 128
+            }
+          , "write":
+            { "minimum": Number.MIN_VALUE
+            , "maximum": Number.MAX_VALUE
+            , "mask": 128
+            }
           , "pattern":
             [
               { "signed": false
@@ -1044,9 +1131,16 @@ class exports.PacketTest extends TwerpTest
             ]
           }
         ,
-          { "minimum": 5e-324
-          , "maximum": 1.7976931348623157e+308
-          , "mask": 0
+          { "read":
+            { "minimum": Number.MIN_VALUE
+            , "maximum": Number.MAX_VALUE
+            , "mask": 0
+            }
+          , "write":
+            { "minimum": Number.MIN_VALUE
+            , "maximum": Number.MAX_VALUE
+            , "mask": 0
+            }
           , "pattern":
             [
               { "signed": false
@@ -1059,6 +1153,19 @@ class exports.PacketTest extends TwerpTest
               , "arrayed": false
               }
             ]
+          }
+        ,
+          { "read":
+            { "minimum": Number.MIN_VALUE
+            , "maximum": Number.MAX_VALUE
+            , "mask": 0
+            }
+          , "write":
+            { "minimum": Number.MIN_VALUE
+            , "maximum": Number.MAX_VALUE
+            , "mask": 0
+            }
+          , "failed": true
           }
         ]
       }
