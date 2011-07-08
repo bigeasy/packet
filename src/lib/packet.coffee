@@ -2,11 +2,6 @@ parsePattern = require("./pattern").parse
 ieee754 = require "./ieee754"
 stream = require "stream"
 
-# Convert an array of bytes into an hex string, two characters for each byte.
-hex = (bytes) ->
-  h = bytes.map (b) -> if b < 10 then "0" + b.toString(16) else b.toString(16)
-  h.join("")
-
 # Default callback, when no callback is provided.
 noop = (value) -> value
 
@@ -286,7 +281,9 @@ module.exports.Parser = class Parser extends Packet
 
         # Create a hex string.
         if part.type == "h"
-          value = hex bytes.reverse()
+          bytes.reverse()
+          hex = bytes.map (b) -> (b >> 4).toString(16) + (b & 0x0f).toString(16)
+          value = hex.join("")
 
         # Convert to float or double.
         else if part.type == "f"
