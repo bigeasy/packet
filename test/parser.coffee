@@ -11,7 +11,7 @@ class exports.ParserTest extends TwerpTest
       parser = new Parser()
       invoked = false
       parser.reset()
-      parser.parse "b8", (field, engine) =>
+      parser.extract "b8", (field, engine) =>
         @equal engine.getBytesRead(), 1
         @equal field, 1
         invoked = true
@@ -25,7 +25,7 @@ class exports.ParserTest extends TwerpTest
     parser = new Parser()
     invoked = false
     parser.reset()
-    parser.parse 'b16', (field, engine) =>
+    parser.extract 'b16', (field, engine) =>
       @equal(engine.getBytesRead(), 2)
       @equal(field, 0xA0B0)
       invoked = true
@@ -37,7 +37,7 @@ class exports.ParserTest extends TwerpTest
     parser = new Parser()
     invoked = false
     parser.reset()
-    parser.parse 'b16', (field, engine) =>
+    parser.extract 'b16', (field, engine) =>
       @equal(engine.getBytesRead(), 2)
       @equal(field, 0xA0B0)
       invoked = true
@@ -49,7 +49,7 @@ class exports.ParserTest extends TwerpTest
     parser = new Parser()
     invoked = false
     parser.reset()
-    parser.parse 'l16, b8', (a, b, engine) =>
+    parser.extract 'l16, b8', (a, b, engine) =>
       @equal(engine.getBytesRead(), 3)
       @equal(a, 0xB0A0)
       @equal(b, 0xAA)
@@ -63,7 +63,7 @@ class exports.ParserTest extends TwerpTest
     readSigned = (bytes, value) =>
       invoked = false
       parser.reset()
-      parser.parse '-b8', (field, engine) =>
+      parser.extract '-b8', (field, engine) =>
         @equal(engine.getBytesRead(), 1)
         @equal(field, value)
         invoked = true
@@ -80,7 +80,7 @@ class exports.ParserTest extends TwerpTest
     readSigned = (bytes, value) =>
       invoked = false
       parser.reset()
-      parser.parse '-b16', (field, engine) =>
+      parser.extract '-b16', (field, engine) =>
         @equal(engine.getBytesRead(), 2)
         @equal(field, value)
         invoked = true
@@ -96,7 +96,7 @@ class exports.ParserTest extends TwerpTest
     readHexString = (bytes, value) =>
       invoked = false
       @parser.reset()
-      @parser.parse 'l32h', (field, engine) =>
+      @parser.extract 'l32h', (field, engine) =>
           @equal engine.getBytesRead(), 4
           @equal field, value
           invoked = true
@@ -111,7 +111,7 @@ class exports.ParserTest extends TwerpTest
     readHexString = (bytes, value) =>
       invoked = false
       @parser.reset()
-      @parser.parse 'b32h', (field, engine) =>
+      @parser.extract 'b32h', (field, engine) =>
         @equal(engine.getBytesRead(), 4)
         @equal(field, value)
         invoked = true
@@ -127,7 +127,7 @@ class exports.ParserTest extends TwerpTest
     bytes = [ 0x01, 0x02, 0x00, 0x01 ]
 
     @parser.reset()
-    @parser.parse "x16, b16", (field, engine) =>
+    @parser.extract "x16, b16", (field, engine) =>
       @equal engine.getBytesRead(), 4
       @equal field, 1
       invoked = true
@@ -139,7 +139,7 @@ class exports.ParserTest extends TwerpTest
     readSingleFloat = (bytes, value) =>
       invoked = false
       @parser.reset()
-      @parser.parse "b64f", (field, engine) =>
+      @parser.extract "b64f", (field, engine) =>
         @equal engine.getBytesRead(), 8
         @equal field, value
         invoked = true
@@ -154,7 +154,7 @@ class exports.ParserTest extends TwerpTest
     bytes = [ 0x01, 0x02, 0x03, 0x04, 0x00, 0x01 ]
 
     @parser.reset()
-    @parser.parse "x16[2], b16", (field, engine) =>
+    @parser.extract "x16[2], b16", (field, engine) =>
       @equal(engine.getBytesRead(), 6)
       @equal(field, 1)
       invoked = true
@@ -167,7 +167,7 @@ class exports.ParserTest extends TwerpTest
     invoked = false
     bytes = [ 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08 ]
     @parser.reset()
-    @parser.parse "b8[8]", (field, engine) =>
+    @parser.extract "b8[8]", (field, engine) =>
       @equal(engine.getBytesRead(), 8)
       @deepEqual(field, bytes)
       invoked = true
@@ -179,7 +179,7 @@ class exports.ParserTest extends TwerpTest
     invoked = false
     bytes = [ 0x03, 0x02, 0x03, 0x04 ]
     @parser.reset()
-    @parser.parse "b8/b8", (field, engine) =>
+    @parser.extract "b8/b8", (field, engine) =>
       @equal engine.getBytesRead(), 4
       @deepEqual field, bytes.slice(1)
       invoked = true
@@ -191,7 +191,7 @@ class exports.ParserTest extends TwerpTest
     invoked = false
     bytes = [ 0x00, 0x00, 0x01, 0x02]
     @parser.reset()
-    @parser.parse "b16/b8", (field, engine) =>
+    @parser.extract "b16/b8", (field, engine) =>
       @equal engine.getBytesRead(), 2
       @equal field.length, 0
       invoked = true
@@ -203,7 +203,7 @@ class exports.ParserTest extends TwerpTest
     invoked = false
     bytes = [ 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x00 ]
     @parser.reset()
-    @parser.parse "b8z", (field, engine) =>
+    @parser.extract "b8z", (field, engine) =>
       @equal(engine.getBytesRead(), 8)
       @deepEqual(field, bytes)
       invoked = true
@@ -215,7 +215,7 @@ class exports.ParserTest extends TwerpTest
     invoked = false
     bytes = [ 0x01, 0x02, 0x03, 0x00, 0x05, 0x06, 0x07, 0x08 ]
     @parser.reset()
-    @parser.parse "b8[8]z", (field, engine) =>
+    @parser.extract "b8[8]z", (field, engine) =>
       @equal engine.getBytesRead(), 8
       @deepEqual field, bytes.slice(0, 4)
       invoked = true
@@ -227,7 +227,7 @@ class exports.ParserTest extends TwerpTest
     invoked = false
     bytes = [ 0x41, 0x42, 0x43 ]
     @parser.reset()
-    @parser.parse "b8[3]|ascii()", (field, engine) =>
+    @parser.extract "b8[3]|ascii()", (field, engine) =>
       @equal engine.getBytesRead(), 3
       @equal field, "ABC"
       invoked = true
@@ -239,7 +239,7 @@ class exports.ParserTest extends TwerpTest
     invoked = false
     bytes = [ 0x41, 0x42, 0x43, 0x00 ]
     @parser.reset()
-    @parser.parse "b8z|ascii()", (field, engine) =>
+    @parser.extract "b8z|ascii()", (field, engine) =>
       @equal engine.getBytesRead(), 4
       @equal field, "ABC"
       invoked = true
@@ -251,7 +251,7 @@ class exports.ParserTest extends TwerpTest
     invoked = false
     bytes = [ 0x41, 0x42, 0x43, 0x00, 0x00, 0x00, 0x00, 0x00 ]
     @parser.reset()
-    @parser.parse "b8[8]z|ascii()", (field, engine) =>
+    @parser.extract "b8[8]z|ascii()", (field, engine) =>
       @equal engine.getBytesRead(), 8
       @equal field, "ABC"
       invoked = true
@@ -263,7 +263,7 @@ class exports.ParserTest extends TwerpTest
     invoked = false
     bytes = [  0x30, 0x30, 0x30, 0x30, 0x41, 0x42, 0x43, 0x00 ]
     @parser.reset()
-    @parser.parse "b8[8]z|ascii()", (field, engine) =>
+    @parser.extract "b8[8]z|ascii()", (field, engine) =>
         @equal engine.getBytesRead(), 8
         @equal field, "0000ABC"
         invoked = true
@@ -275,7 +275,7 @@ class exports.ParserTest extends TwerpTest
     invoked = false
     bytes = [ 0x34, 0x32, 0x00 ]
     @parser.reset()
-    @parser.parse "b8z|ascii()|atoi(10)", (field, engine) =>
+    @parser.extract "b8z|ascii()|atoi(10)", (field, engine) =>
       @equal engine.getBytesRead(), 3
       @equal field, 42
       invoked = true
@@ -287,7 +287,7 @@ class exports.ParserTest extends TwerpTest
     invoked = false
     bytes = [ 0x30, 0x30, 0x30, 0x30, 0x30, 0x34, 0x32, 0x00 ]
     @parser.reset()
-    @parser.parse "b8[8]z|ascii()|pad('0', 7)|atoi(10)", (field, engine) =>
+    @parser.extract "b8[8]z|ascii()|pad('0', 7)|atoi(10)", (field, engine) =>
       @equal engine.getBytesRead(), 8
       @equal field, 42
       invoked = true
@@ -299,7 +299,7 @@ class exports.ParserTest extends TwerpTest
     invoked = false
     bytes = [ 0x28 ]
     @parser.reset()
-    @parser.parse "b8{x2,b3,x3}", (field, engine) =>
+    @parser.extract "b8{x2,b3,x3}", (field, engine) =>
       @equal engine.getBytesRead(), 1
       @equal field, 5
       invoked = true
@@ -311,7 +311,7 @@ class exports.ParserTest extends TwerpTest
     invoked = false
     bytes = [ 0x81, 0x00 ]
     @parser.reset()
-    @parser.parse "b8(&0x80: b16{x1,b15} | b8)", (field, engine) =>
+    @parser.extract "b8(&0x80: b16{x1,b15} | b8)", (field, engine) =>
       @equal engine.getBytesRead(), 2
       @equal field, 256
       invoked = true
@@ -323,7 +323,7 @@ class exports.ParserTest extends TwerpTest
     invoked = false
     bytes = [ 0x7f ]
     @parser.reset()
-    @parser.parse "b8(&0x80: b16{x1,b15} | b8)", (field, engine) =>
+    @parser.extract "b8(&0x80: b16{x1,b15} | b8)", (field, engine) =>
       @equal engine.getBytesRead(), 1
       @equal field, 127
       invoked = true
@@ -335,7 +335,7 @@ class exports.ParserTest extends TwerpTest
     invoked = false
     bytes = [ 0xfb ]
     @parser.reset()
-    @parser.parse "b8(0-251: b8 | 252: x8, b16 | 253: x8, b24 | 254: x8, b64)", (field, engine) =>
+    @parser.extract "b8(0-251: b8 | 252: x8, b16 | 253: x8, b24 | 254: x8, b64)", (field, engine) =>
       @equal engine.getBytesRead(), 1
       @equal field, 251
       invoked = true
@@ -347,7 +347,7 @@ class exports.ParserTest extends TwerpTest
     invoked = false
     bytes = [ 253, 0x00, 0x01, 0x00 ]
     @parser.reset()
-    @parser.parse "b8(0-251: b8 | 252: x8, b16 | 253: x8, b24 | 254: x8, b64)", (field, engine) =>
+    @parser.extract "b8(0-251: b8 | 252: x8, b16 | 253: x8, b24 | 254: x8, b64)", (field, engine) =>
       @equal engine.getBytesRead(), 4
       @equal field, 256
       invoked = true
@@ -360,7 +360,7 @@ class exports.ParserTest extends TwerpTest
     parser = new Parser(self)
     invoked = false
     parser.reset()
-    parser.parse "b8", (field, engine) ->
+    parser.extract "b8", (field, engine) ->
       invoked = self is this
     parser.read [ 1 ]
     @ok invoked
