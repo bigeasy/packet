@@ -191,7 +191,6 @@ class module.exports.SerializerTest extends TwerpTest
 
   "test: write object": (done) ->
     serializer = new Serializer()
-    serializer.streaming = true
     object = { length: 258, type: 8, name: "ABC" }
     serializer.buffer "b16 => length, b8 => type, b8z|utf8() => name", object, (buffer) =>
       @equal serializer.getBytesWritten(), 7

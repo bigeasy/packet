@@ -30,7 +30,7 @@ class exports.Serializer extends Packet
     super self
     @readable = true
     @_buffer = new Buffer(1024)
-    @streaming = false
+    @_streaming = false
 
   getBytesWritten: -> @_bytesWritten
 
@@ -40,31 +40,31 @@ class exports.Serializer extends Packet
       if part.transforms
         part.transforms.reverse()
 
-  nextField: ->
+  _nextField: ->
     pattern       = @_pattern[@_patternIndex]
-    @repeat       = pattern.repeat
-    @terminated   = not pattern.terminator
-    @terminates   = not @terminated
-    @index        = 0
+    @_repeat      = pattern.repeat
+    @_terminated  = not pattern.terminator
+    @_terminates  = not @_terminated
+    @_index       = 0
 
-    delete        @padding
+    delete        @_padding
 
     if pattern.endianness is "x"
       @_outgoing.splice @_patternIndex, 0, null
       if pattern.padding?
-        @padding = pattern.padding
+        @_padding = pattern.padding
 
   # Setup the next field in the current pattern to read or write.
-  nextValue: ->
+  _nextValue: ->
     pattern = @_pattern[@_patternIndex]
 
-    if pattern.endianness is "x" and not @padding?
+    if pattern.endianness is "x" and not @_padding?
         @_skipping = pattern.bytes
     else
-      if @padding?
-        value = @padding
+      if @_padding?
+        value = @_padding
       else if pattern.arrayed
-        value = @_outgoing[@_patternIndex][@index]
+        value = @_outgoing[@_patternIndex][@_index]
       else
         if pattern.lengthEncoding
           repeat = @_outgoing[@_patternIndex].length
@@ -72,7 +72,7 @@ class exports.Serializer extends Packet
           @_pattern[@_patternIndex + 1].repeat = repeat
         value = @_outgoing[@_patternIndex]
       if pattern.unpacked
-        value = @pack(value)
+        value = @_pack(value)
 
       super value
 
@@ -196,15 +196,15 @@ class exports.Serializer extends Packet
     for value, i in @_outgoing
       @_outgoing[i] = @pipeline(pattern[i], value)
 
-    @nextField()
-    @nextValue()
+    @_nextField()
+    @_nextValue()
 
     callback
 
   close: ->
     @emit "end"
 
-  pack: (value) ->
+  _pack: (value) ->
     pattern = @_pattern[@_patternIndex]
     if pattern.type == "f"
       if pattern.bits == 32
@@ -257,31 +257,31 @@ class exports.Serializer extends Packet
 
       # If we have not terminated, check for the termination state change.
       # Termination will change the loop settings.
-      if @terminates
-        if @terminated
-          if @repeat is Number.MAX_VALUE
-            @repeat = @index + 1
+      if @_terminates
+        if @_terminated
+          if @_repeat is Number.MAX_VALUE
+            @_repeat = @_index + 1
           else if @_pattern[@_patternIndex].padding?
-            @padding = @_pattern[@_patternIndex].padding
+            @_padding = @_pattern[@_patternIndex].padding
           else
-            @_skipping = (@repeat - (++@index)) * @_pattern[@_patternIndex].bytes
+            @_skipping = (@_repeat - (++@_index)) * @_pattern[@_patternIndex].bytes
             if @_skipping
-              @repeat = @index + 1
+              @_repeat = @_index + 1
               continue
         else
           # If we are at the end of the series, then we create an empty outgoing
           # array to hold the terminator, because the outgoing series may be a
           # buffer. We insert the terminator at next index in the outgoing array.
           # We then set repeat to allow one more iteration before callback.
-          if @_outgoing[@_patternIndex].length is @index + 1
-            @terminated = true
+          if @_outgoing[@_patternIndex].length is @_index + 1
+            @_terminated = true
             @_outgoing[@_patternIndex] = []
-            @_outgoing[@_patternIndex][@index + 1] = @_pattern[@_patternIndex].terminator.charCodeAt(0)
+            @_outgoing[@_patternIndex][@_index + 1] = @_pattern[@_patternIndex].terminator.charCodeAt(0)
 
       # If we are reading an arrayed pattern and we have not read all of the
       # array elements, we repeat the current field type.
-      if ++@index < @repeat
-        @nextValue()
+      if ++@_index < @_repeat
+        @_nextValue()
 
       # If we have written all of the packet fields, call the associated
       # callback with this parser.
@@ -296,14 +296,14 @@ class exports.Serializer extends Packet
 
       else
 
-        delete        @padding
-        @repeat       = @_pattern[@_patternIndex].repeat
-        @terminated   = not @_pattern[@_patternIndex].terminator
-        @terminates   = not @terminated
-        @index        = 0
+        delete        @_padding
+        @_repeat      = @_pattern[@_patternIndex].repeat
+        @_terminated  = not @_pattern[@_patternIndex].terminator
+        @_terminates  = not @_terminated
+        @_index       = 0
 
-        @nextField()
-        @nextValue()
+        @_nextField()
+        @_nextValue()
 
     @_outgoing = null
 

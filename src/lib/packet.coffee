@@ -53,7 +53,7 @@ class exports.Packet extends stream.Stream
     value
 
   # Setup the next field in the current pattern to read or write.
-  nextValue: (value) ->
+  _nextValue: (value) ->
     pattern     = @_pattern[@_patternIndex]
     little      = pattern.endianness == 'l'
     bytes       = pattern.bytes

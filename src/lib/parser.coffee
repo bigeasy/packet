@@ -4,25 +4,25 @@ ieee754   = require "./ieee754"
 stream    = require "stream"
 
 class ReadableStream extends stream.Stream
-  constructor: (@parser, @length) ->
+  constructor: (@_parser, @_length) ->
   setEncoding: (encoding) ->
     @_decoder = new (require("string_decoder").StringDecoder)(encoding)
-  _delegate: (method) -> @parser.piped[method]() if @parser.piped
+  _delegate: (method) -> @_parser.piped[method]() if @_parser.piped
   pause: ->
     @_delegate "pause"
-    @parser.paused = true
+    @_parser.paused = true
   resume: ->
     @_delegate "resume"
-    @parser.paused = false
+    @_parser.paused = false
   destroySoon: ->
     @_delegate "destroySoon"
-    @parser.piped.destroySoon() if @parser.piped
+    @_parser.piped.destroySoon() if @_parser.piped
   destroy: ->
     @_delegate "destroy"
     @aprser.destroyed = false
   _end: ->
     @emit "end"
-    @parser._stream = null
+    @_parser._stream = null
   _write: (slice) ->
     if @_decoder
       string = @_decoder.write(slice)
@@ -35,19 +35,19 @@ module.exports.Parser = class Parser extends Packet
     super self
     @writable = true
 
-  data: (data...)   -> @user = data
+  data: (data...)   -> @_user = data
 
   getBytesRead:     -> @_bytesRead
 
-  nextField: ->
+  _nextField: ->
     pattern       = @_pattern[@_patternIndex]
-    @repeat       = pattern.repeat
-    @index        = 0
+    @_repeat       = pattern.repeat
+    @_index        = 0
     @_skipping    = null
-    @terminated   = not pattern.terminator
+    @_terminated   = not pattern.terminator
     @_arrayed     = [] if pattern.arrayed and pattern.endianness isnt "x"
 
-  nextValue: ->
+  _nextValue: ->
     pattern = @_pattern[@_patternIndex]
 
     if pattern.endianness is "x"
@@ -76,17 +76,17 @@ module.exports.Parser = class Parser extends Packet
     @_patternIndex = 0
     @_fields      = []
 
-    @nextField()
-    @nextValue()
+    @_nextField()
+    @_nextValue()
 
   skip: (length, @_callback) ->
     # Create a bogus pattern to enter the parse loop where the stream is fed in
     # the skipping branch. The length is passed to the callback simply because
     # the parse loop expects there to be a field.
     @_pattern = [ {} ]
-    @terminated   = true
-    @index        = 0
-    @repeat       = 1
+    @_terminated   = true
+    @_index        = 0
+    @_repeat       = 1
     @_patternIndex = 0
     @_fields      = []
 
@@ -211,21 +211,21 @@ module.exports.Parser = class Parser extends Packet
       # A maximum length value means to repeat until the terminator, but a
       # specific length value means that the zero terminated string occupies a
       # field that has a fixed length, so we need to skip the used bytes.
-      if not @terminated
+      if not @_terminated
         if part.terminator.charCodeAt(0) == value
-          @terminated = true
-          if @repeat == Number.MAX_VALUE
-            @repeat = @index + 1
+          @_terminated = true
+          if @_repeat == Number.MAX_VALUE
+            @_repeat = @_index + 1
           else
-            @_skipping = (@repeat - (++@index)) * part.bytes
+            @_skipping = (@_repeat - (++@_index)) * part.bytes
             if @_skipping
-              @repeat = @index + 1
+              @_repeat = @_index + 1
               continue
 
       # If we are reading an arrayed pattern and we have not read all of the
       # array elements, we repeat the current field type.
-      if ++@index <  @repeat
-        @nextValue()
+      if ++@_index <  @_repeat
+        @_nextValue()
 
       # Otherwise, we've got a complete field value, either a JavaScript
       # primitive or raw bytes as an array or hex string.
@@ -270,8 +270,8 @@ module.exports.Parser = class Parser extends Packet
             bytes = @_arrayed.slice(0)
             @_bytesRead -= bytes.length
             @_pattern.splice.apply @_pattern, [ @_patternIndex, 1 ].concat(branch.pattern)
-            @nextField()
-            @nextValue()
+            @_nextField()
+            @_nextValue()
             @read bytes, 0, bytes.length
             continue
 
@@ -292,14 +292,14 @@ module.exports.Parser = class Parser extends Packet
 
           if @_callback
             @_fields.push(this)
-            @_fields.push(p) for p in @user or []
+            @_fields.push(p) for p in @_user or []
 
             @_callback.apply @_self, @_fields
 
         # Otherwise we proceed to the next field in the packet pattern.
         else
-          @nextField()
-          @nextValue()
+          @_nextField()
+          @_nextValue()
 
     # Return the number of bytes read in this iteration.
     @_bytesRead - start
