@@ -516,10 +516,24 @@ regular expressions, while colons are used to deliniate switch options in C.
 // MySQL length coded binary; if the byte is less than 252, use the byte value,
 // otherwise the byte value indicates the length of the following word. 
 "b8(0-251: b8 | 252: x8, b16 | 253: x8, b24 | 254: x8, b64)"
+```
 
+No condition will cause that branch to always match. This is used to specify a
+default value.
+
+```javascript
 // Simpiler, but will also match 255 which is invalid, which is fine if you test
 // the value in your callback.
 "b8(252: x8, b16 | 253: x8, b24 | 254: x8, b64 | b8)"
+```
+
+You can also be explicit about the default value using the asterisk `*` as a
+condition that means match any.
+
+```javascript
+// Simpiler, but will also match 255 which is invalid, which is fine if you test
+// the value in your callback.
+"b8(252: x8, b16 | 253: x8, b24 | 254: x8, b64 | *: b8)"
 ```
 
 The values are expressed in binary, decimal or hexidecimal.
