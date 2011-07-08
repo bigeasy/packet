@@ -2,9 +2,6 @@ parsePattern = require("./pattern").parse
 ieee754 = require "./ieee754"
 stream = require "stream"
 
-# Default callback, when no callback is provided.
-noop = (value) -> value
-
 # Base class for `Serializer` and `Parser`.
 class Packet extends stream.Stream
   # Construct a packet that sends events using the given `self` as `this`.
@@ -179,7 +176,7 @@ module.exports.Parser = class Parser extends Packet
   parse: (nameOrPattern, callback) ->
     packet        = @_packets[nameOrPattern] or {}
     pattern       = packet.pattern or parsePattern(nameOrPattern)
-    callback    or= packet.callback or noop
+    callback    or= packet.callback or null
 
     @pattern      = pattern
     @callback     = callback
@@ -398,12 +395,13 @@ module.exports.Parser = class Parser extends Packet
         # The pattern is set to null, our terminal condition, because the
         # callback may specify a subsequent packet to parse.
         if ++@patternIndex == @pattern.length
-          @_fields.push(this)
-          @_fields.push(p) for p in @user or []
-
           @pattern = null
 
-          @callback.apply @self, @_fields
+          if @callback
+            @_fields.push(this)
+            @_fields.push(p) for p in @user or []
+
+            @callback.apply @self, @_fields
 
         # Otherwise we proceed to the next field in the packet pattern.
         else
@@ -534,7 +532,7 @@ module.exports.Serializer = class Serializer extends Packet
       ownsBuffer = true
 
     callback = @_reset(shiftable)
-    @callback = noop
+    @callback = null
 
     read = 0
     while @pattern
@@ -575,7 +573,7 @@ module.exports.Serializer = class Serializer extends Packet
     else
       callback = @_reset(shiftable)
       # Implementing pause requires callbacks.
-      @callback = noop
+      @callback = null
       while @pattern
         read = @_serialize(@_buffer, 0, @_buffer.length)
         @write @_buffer.slice 0, read
@@ -596,7 +594,7 @@ module.exports.Serializer = class Serializer extends Packet
           part.transforms.reverse()
 
     @pattern      = pattern
-    @callback     = noop
+    @callback     = null
     @patternIndex = 0
 
     if shiftable.length is 1 and
@@ -706,7 +704,9 @@ module.exports.Serializer = class Serializer extends Packet
       # because the callback may specify a subsequent packet to parse.
       else if ++@patternIndex is @pattern.length
         @pattern = null
-        @callback.call @self, this
+
+        if @callback
+          @callback.call @self, @
 
       else
 
