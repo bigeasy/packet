@@ -1,7 +1,7 @@
 {TwerpTest} = require "twerp"
-{Parser}    = require "packet"
+{Parser}    = require "parser"
 
-class exports.PacketTest extends TwerpTest
+class exports.ParserTest extends TwerpTest
   start: (done) ->
     @parser = new Parser()
     done()

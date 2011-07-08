@@ -1,5 +1,5 @@
 {TwerpTest}   = require "twerp"
-{Serializer}  = require "packet"
+{Serializer}  = require "serializer"
 
 
 toArray = (buffer) ->
