@@ -5,11 +5,11 @@ stream        = require "stream"
 # Base class for `Serializer` and `Parser`.
 class exports.Packet extends stream.Stream
   # Construct a packet that sends events using the given `self` as `this`.
-  constructor: (@self) ->
+  constructor: (@_self) ->
     @_packets = {}
-    @reset()
     @_fields = []
-    @transforms = Object.create(transforms)
+    @_transforms = Object.create(transforms)
+    @reset()
 
   # Create a copy that will adopt the packets defined in this object, through
   # prototype inheritence. This is used to efficently create parsers and
@@ -33,9 +33,9 @@ class exports.Packet extends stream.Stream
   # method before starting a new series of packet parsing transitions.
   reset: ->
     @_bytesRead = 0
-    @bytesWritten = 0
-    @pattern = null
-    @callback = null
+    @_bytesWritten = 0
+    @_pattern = null
+    @_callback = null
     @_fields = []
 
   # Excute the pipeline of transforms for the `pattern` on the `value`.
@@ -49,16 +49,16 @@ class exports.Packet extends stream.Stream
         parameters.push(not @_outgoing)
         parameters.push(pattern)
         parameters.push(value)
-        value = @transforms[transform.name].apply null, parameters
+        value = @_transforms[transform.name].apply null, parameters
     value
 
   # Setup the next field in the current pattern to read or write.
   nextValue: (value) ->
-    pattern     = @pattern[@patternIndex]
+    pattern     = @_pattern[@_patternIndex]
     little      = pattern.endianness == 'l'
     bytes       = pattern.bytes
 
-    @value      = value
-    @offset     = if little then 0 else bytes - 1
-    @increment  = if little then 1 else -1
-    @terminal   = if little then bytes else -1
+    @_value     = value
+    @_offset    = if little then 0 else bytes - 1
+    @_increment = if little then 1 else -1
+    @_terminal  = if little then bytes else -1

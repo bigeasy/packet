@@ -40,7 +40,7 @@ module.exports.Parser = class Parser extends Packet
   getBytesRead:     -> @_bytesRead
 
   nextField: ->
-    pattern       = @pattern[@patternIndex]
+    pattern       = @_pattern[@_patternIndex]
     @repeat       = pattern.repeat
     @index        = 0
     @_skipping    = null
@@ -48,7 +48,7 @@ module.exports.Parser = class Parser extends Packet
     @_arrayed     = [] if pattern.arrayed and pattern.endianness isnt "x"
 
   nextValue: ->
-    pattern = @pattern[@patternIndex]
+    pattern = @_pattern[@_patternIndex]
 
     if pattern.endianness is "x"
       @_skipping  = pattern.bytes
@@ -71,23 +71,23 @@ module.exports.Parser = class Parser extends Packet
     pattern       = packet.pattern or parse(nameOrPattern)
     callback    or= packet.callback or null
 
-    @pattern      = pattern
-    @callback     = callback
-    @patternIndex = 0
+    @_pattern      = pattern
+    @_callback     = callback
+    @_patternIndex = 0
     @_fields      = []
 
     @nextField()
     @nextValue()
 
-  skip: (length, @callback) ->
+  skip: (length, @_callback) ->
     # Create a bogus pattern to enter the parse loop where the stream is fed in
     # the skipping branch. The length is passed to the callback simply because
     # the parse loop expects there to be a field.
-    @pattern = [ {} ]
+    @_pattern = [ {} ]
     @terminated   = true
     @index        = 0
     @repeat       = 1
-    @patternIndex = 0
+    @_patternIndex = 0
     @_fields      = []
 
     @_skipping = length
@@ -117,8 +117,8 @@ module.exports.Parser = class Parser extends Packet
     # We set the pattern to null when all the fields have been read, so while
     # there is a pattern to fill and bytes to read.
     b
-    while @pattern != null and offset < end
-      part = @pattern[@patternIndex]
+    while @_pattern != null and offset < end
+      part = @_pattern[@_patternIndex]
       if @_skipping?
         advance      = Math.min(@_skipping, end - offset)
         begin        = offset
@@ -140,9 +140,9 @@ module.exports.Parser = class Parser extends Packet
             b = buffer[offset]
             @_bytesRead++
             offset++
-            @value[@offset] = b
-            @offset += @increment
-            break if @offset is @terminal
+            @_value[@_offset] = b
+            @_offset += @_increment
+            break if @_offset is @_terminal
             return @_bytesRead - start if offset is end
 
         # Otherwise we're packing bytes into an unsigned integer, the most
@@ -152,9 +152,9 @@ module.exports.Parser = class Parser extends Packet
             b = buffer[offset]
             @_bytesRead++
             offset++
-            @value += Math.pow(256, @offset) * b
-            @offset += @increment
-            break if @offset == @terminal
+            @_value += Math.pow(256, @_offset) * b
+            @_offset += @_increment
+            break if @_offset == @_terminal
             return @_bytesRead - start if offset is end
 
         # Unpack the field value. Perform our basic transformations. That is,
@@ -167,7 +167,7 @@ module.exports.Parser = class Parser extends Packet
         # transitions need to take place immediately to populate those arrays.
 
         # By default, value is as it is.
-        bytes = value = @value
+        bytes = value = @_value
 
         # Create a hex string.
         if part.type == "h"
@@ -250,9 +250,9 @@ module.exports.Parser = class Parser extends Packet
           # subsequent array of values. If we have a zero length encoding, we
           # push an empty array through the pipeline, and skip the repeated type.
           else if part.lengthEncoding
-            if (@pattern[@patternIndex + 1].repeat = value) is 0
+            if (@_pattern[@_patternIndex + 1].repeat = value) is 0
               @_fields.push(@pipeline(part, []))
-              @patternIndex++
+              @_patternIndex++
 
           # If the value is used as a switch for an alternation, we run through
           # the different possible branches, updating the pattern with the
@@ -269,7 +269,7 @@ module.exports.Parser = class Parser extends Packet
               throw new Error "Cannot match branch."
             bytes = @_arrayed.slice(0)
             @_bytesRead -= bytes.length
-            @pattern.splice.apply @pattern, [ @patternIndex, 1 ].concat(branch.pattern)
+            @_pattern.splice.apply @_pattern, [ @_patternIndex, 1 ].concat(branch.pattern)
             @nextField()
             @nextValue()
             @read bytes, 0, bytes.length
@@ -287,14 +287,14 @@ module.exports.Parser = class Parser extends Packet
         #
         # The pattern is set to null, our terminal condition, because the
         # callback may specify a subsequent packet to parse.
-        if ++@patternIndex == @pattern.length
-          @pattern = null
+        if ++@_patternIndex == @_pattern.length
+          @_pattern = null
 
-          if @callback
+          if @_callback
             @_fields.push(this)
             @_fields.push(p) for p in @user or []
 
-            @callback.apply @self, @_fields
+            @_callback.apply @_self, @_fields
 
         # Otherwise we proceed to the next field in the packet pattern.
         else

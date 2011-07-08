@@ -7,16 +7,19 @@ class exports.ParserTest extends TwerpTest
     done()
 
   "test: read a byte": (done) ->
-    parser = new Parser()
-    invoked = false
-    parser.reset()
-    parser.parse "b8", (field, engine) =>
-      @equal engine.getBytesRead(), 1
-      @equal field, 1
-      invoked = true
-    parser.read [ 1 ]
-    @ok invoked
-    done(3)
+    try
+      parser = new Parser()
+      invoked = false
+      parser.reset()
+      parser.parse "b8", (field, engine) =>
+        @equal engine.getBytesRead(), 1
+        @equal field, 1
+        invoked = true
+      parser.read [ 1 ]
+      @ok invoked
+      done(3)
+    catch e
+      console.log e.stack
 
   "test: read a 16 bit number": (done) ->
     parser = new Parser()
