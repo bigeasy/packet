@@ -60,10 +60,12 @@ packing = (pattern, size, index) ->
 pass = -> true
 
 number = (pattern, index) ->
-  if match = /^(\d+)(.*)$/.exec pattern
-    [ false, parseInt(match[1], 10), index + match[1].length, match[2] ]
-  else if match = /^(&)0x([0-9a-f]+)(.*)$/i.exec pattern
-    [ !! match[1], parseInt(match[2], 16), index + match[1].length + match[2].length, match[2] ]
+  if match = /^(&)?0x([0-9a-f]+)(.*)$/i.exec pattern
+    [ false, !! match[1], parseInt(match[2], 16), index + (match[1] or "").length + 2 + match[2].length, match[3] ]
+  else if match = /^(\d+)(.*)$/.exec pattern
+    [ false, false, parseInt(match[1], 10), index + match[1].length, match[2] ]
+  else if match = /^\*(.*)$/
+    [ true, false, 0, 1, match[1] ]
   else
     throw new Error "invalid pattern at index #{index}"
 
@@ -77,13 +79,17 @@ mask = (mask) ->
   (value) -> (value & mask) is mask
 
 condition = (struct, text, index) ->
-  [ mask, value, index, range ] = number text, index
-  if not mask
+  [ any, mask, value, index, range ] = number text, index
+  if mask
+    struct.mask = value
+  else if not any
     if  range[0] is "-"
       index++
-      [ mask, maximum, nextIndex, range ] = number range.substring(1), index
+      [ any, mask, maximum, nextIndex, range ] = number range.substring(1), index
       if mask
         throw new Error "masks not permitted in ranges at index #{index}"
+      if any
+        throw new Error "asterisk not permitted in ranges at index #{index}"
       index = nextIndex
       if match = /(\s*)\S/.test range
         throw new Error "invalid pattern at index #{index + match[1].length}"
@@ -91,8 +97,6 @@ condition = (struct, text, index) ->
       struct.maximum = maximum
     else
       struct.minimum = struct.maximum = value
-  else
-    struct.mask = value
   index
 
 FAILURE =
