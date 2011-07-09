@@ -182,6 +182,13 @@ class module.exports.SerializerTest extends TwerpTest
       @deepEqual toArray(buffer), [ 0x30, 0x30, 0x30, 0x30, 0x30, 0x34, 0x32, 0x00 ]
       done 2
 
+  'test: write a bit packed integer': (done) ->
+    serializer = new Serializer()
+    serializer.buffer "b8{x2,b3,x3}", 5, (buffer) =>
+      @equal serializer.getBytesWritten(), 1
+      @deepEqual toArray(buffer), [ 0x28 ]
+      done 2
+
   "test: set self": (done) ->
     self = this
     serializer = new Serializer(self)

@@ -65,6 +65,16 @@ class exports.Serializer extends Packet
         value = @_padding
       else if pattern.arrayed
         value = @_outgoing[@_patternIndex][@_index]
+      else if packing = pattern.packing
+        count   = 0
+        value   = 0
+        length  = pattern.bits
+        for pack, i in packing
+          length -= pack.bits
+          if pack.endianness is "b"
+            unpacked = @_outgoing[@_patternIndex + count++]
+            value += unpacked * Math.pow(2, length)
+        @_outgoing.splice @_patternIndex, count, value
       else
         if pattern.lengthEncoding
           repeat = @_outgoing[@_patternIndex].length
