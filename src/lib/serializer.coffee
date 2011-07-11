@@ -203,8 +203,21 @@ class exports.Serializer extends Packet
     else
       @_outgoing  = shiftable
 
+    skip = 0
+    j = 0
     for value, i in @_outgoing
-      @_outgoing[i] = @pipeline(pattern[i], value)
+      if skip
+        skip--
+        continue
+      if pattern[j].packing
+        for pack in pattern[j].packing
+          if pack.endianness is "b"
+            skip++
+        if skip > 0
+          skip--
+      else if pattern.endianness isnt "x"
+        @_outgoing[i] = @pipeline(pattern[j], value)
+      j++
 
     @_nextField()
     @_nextValue()
