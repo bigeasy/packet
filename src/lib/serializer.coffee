@@ -203,6 +203,9 @@ class exports.Serializer extends Packet
     else
       @_outgoing  = shiftable
 
+    # Run the outgoing values through field pipelines before we enter the write
+    # loop. We need to skip over the blank fields and constants. We also skip
+    # over bit packed feilds because we do not apply pipelines to packed fields.
     skip = 0
     j = 0
     for value, i in @_outgoing
@@ -215,7 +218,10 @@ class exports.Serializer extends Packet
             skip++
         if skip > 0
           skip--
-      else if pattern.endianness isnt "x"
+      else
+        j++ while pattern[j] and pattern[j].endianness is "x"
+        if not pattern[j]
+          throw new Error "too many fields"
         @_outgoing[i] = @pipeline(pattern[j], value)
       j++
 
