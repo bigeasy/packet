@@ -44,7 +44,6 @@ packing = (pattern, size, index) ->
     if f.bits == 0
       throw new Error("bit size must be non-zero at #{index}")
 
-
     # A comma indicates that we're to continue.
     more = /^\s*,\s*(.*)$/.exec(rest)
     break if not more
