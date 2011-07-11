@@ -79,7 +79,7 @@ class exports.Serializer extends Packet
                 throw new Error "value #{unpacked} will not fit in #{pack.bits} bits"
               if unpacked < 0
                 mask = range * 2 - 1
-                unpacked = (~unpacked + 1) & mask
+                unpacked = (~(- unpacked) + 1) & mask
             value += unpacked * Math.pow(2, length)
         @_outgoing.splice @_patternIndex, count, value
       else

@@ -237,13 +237,16 @@ module.exports.Parser = class Parser extends Packet
           # If the field is a packed field, unpack the values and push them onto
           # the field list.
           if packing = part.packing
+            length  = part.bits
             for pack, i in packing
+              length -= pack.bits
               if pack.endianness is "b"
-                sum = 0
-                for j in [(i + 1)...packing.length]
-                  sum += packing[j].bits
-                unpacked = Math.floor(value / Math.pow(2, sum))
+                unpacked = Math.floor(value / Math.pow(2, length))
                 unpacked = unpacked % Math.pow(2, pack.bits)
+                if pack.signed
+                  mask = Math.pow(2, pack.bits - 1)
+                  if unpacked & mask
+                    unpacked = -(~(unpacked - 1) & (mask * 2 - 1))
                 @_fields.push(unpacked)
 
           # If the value is a length encoding, we set the repeat value for the
