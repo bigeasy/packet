@@ -73,6 +73,13 @@ class exports.Serializer extends Packet
           length -= pack.bits
           if pack.endianness is "b"
             unpacked = @_outgoing[@_patternIndex + count++]
+            if pack.signed
+              range = Math.pow(2, pack.bits - 1)
+              unless (-range) <= unpacked and unpacked <= range - 1
+                throw new Error "value #{unpacked} will not fit in #{pack.bits} bits"
+              if unpacked < 0
+                mask = range * 2 - 1
+                unpacked = (~unpacked + 1) & mask
             value += unpacked * Math.pow(2, length)
         @_outgoing.splice @_patternIndex, count, value
       else
