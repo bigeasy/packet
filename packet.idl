@@ -354,15 +354,8 @@ will increase with the index of the array, but then that's what little-endian is
 all about. (Big-endian orders like Arabic numerals, while little-endian orders
 like offsets into memory.)
 
-If you'd prefer a little-endian array, you can reverse the array with the `@`
-qualifier.
-
-**Mnemonic**: The `@` character is a swirl and we want to turn our array around.
-
-```javascript
-"l128a@"          // Unsigned little-endian 128 bit integer as little-endian
-                  // array of bytes.
-```
+If you'd prefer a little-endian array, simply call `reverse` on the array passed
+to you.
 
 ### Bytes as Hex Strings
 
@@ -372,17 +365,6 @@ suffix.
 ```javascript
 "l128h"           // Unsigned little-endian 128 bit integer as a big-endian hex
                   // string.
-```
-
-Like the raw byte of arrays, the hex string is in big-endian order with the most 
-significant bytes at the top. It is less likely that you'll want to reverse a
-hex string, but if you, you can use the `@` qualifier.
-
-**Mnemonic**: The `@` character is a swirl and we want to turn our string  around.
-
-```javascript
-"l128h@"          // Unsigned little-endian 128 bit integer as a little-endian
-                  // hex string.
 ```
 
 ### Arrays of Common Types
