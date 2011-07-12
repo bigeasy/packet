@@ -357,16 +357,6 @@ like offsets into memory.)
 If you'd prefer a little-endian array, simply call `reverse` on the array passed
 to you.
 
-### Bytes as Hex Strings
-
-A value will be converted to a big-endian hex string if followed by an `h`
-suffix. 
-
-```javascript
-"l128h"           // Unsigned little-endian 128 bit integer as a big-endian hex
-                  // string.
-```
-
 ### Arrays of Common Types
 
 It is often the case that a binary format contains an array of values. The most
