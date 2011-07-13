@@ -158,8 +158,7 @@ module.exports.Parser = class Parser extends Packet
             return @_bytesRead - start if offset is end
 
         # Unpack the field value. Perform our basic transformations. That is,
-        # convert from a byte array to a JavaScript primitive, or turn a byte
-        # array into a hex string.
+        # convert from a byte array to a JavaScript primitive.
         #
         # Resist the urge to implement these conversions with pipelines. It
         # keeps occuring to you, but those transitions are at a higher level of
@@ -169,14 +168,8 @@ module.exports.Parser = class Parser extends Packet
         # By default, value is as it is.
         bytes = value = @_value
 
-        # Create a hex string.
-        if part.type == "h"
-          bytes.reverse()
-          hex = bytes.map (b) -> (b >> 4).toString(16) + (b & 0x0f).toString(16)
-          value = hex.join("")
-
         # Convert to float or double.
-        else if part.type == "f"
+        if part.type == "f"
           if part.bits == 32
             value = ieee754.fromIEEE754Single(bytes)
           else

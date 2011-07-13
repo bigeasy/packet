@@ -92,36 +92,6 @@ class exports.ParserTest extends TwerpTest
     readSigned [ 0x01, 0x02 ],  258
     done(4 * 3)
 
-  'test: read a little-endian 32 bit hex string': (done) ->
-    readHexString = (bytes, value) =>
-      invoked = false
-      @parser.reset()
-      @parser.extract 'l32h', (field, engine) =>
-          @equal engine.getBytesRead(), 4
-          @equal field, value
-          invoked = true
-      @parser.read bytes
-      @ok invoked
-    readHexString [ 0x80, 0x00, 0x00, 0x00 ], '00000080'
-    readHexString [ 0xff, 0xff, 0xff, 0xff ], 'ffffffff'
-    readHexString [ 0xA0, 0xB0, 0xC0, 0xD0 ], 'd0c0b0a0'
-    done(3 * 3)
-
-  'test: read a big-endian 32 bit hex string': (done) ->
-    readHexString = (bytes, value) =>
-      invoked = false
-      @parser.reset()
-      @parser.extract 'b32h', (field, engine) =>
-        @equal(engine.getBytesRead(), 4)
-        @equal(field, value)
-        invoked = true
-      @parser.read(bytes)
-      @ok invoked
-    readHexString [ 0x80, 0x00, 0x00, 0x00 ], '80000000'
-    readHexString [ 0xff, 0xff, 0xff, 0xff ], 'ffffffff'
-    readHexString [ 0xA0, 0xB0, 0xC0, 0xD0 ], 'a0b0c0d0'
-    done(3 * 3)
-
   'test: read a 16 bit integer after skipping two bytes': (done) ->
     invoked = false
     bytes = [ 0x01, 0x02, 0x00, 0x01 ]
