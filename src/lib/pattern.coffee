@@ -4,59 +4,7 @@
 # Regular expression to match a pipeline argument, expressed as a JavaScript
 # scalar, taken in part from [json2.js](http://www.JSON.org/json2.js). 
 {argument, constant} = require "./argument"
-next = /^(-?)([xbl])(\d+)([fha]?)(.*)$/
-
-##### packing(pattern)
-# Parse bit packing.
-
-# The `pattern` is the bit packing pattern to parse.
-packing = (pattern, size, index) ->
-
-  fields  = []
-  rest    = pattern
-
-  loop
-    # Match an element pattern.
-    match = /^(-?)([xb])(\d+)(.*)$/.exec rest
-    if not match
-      throw new Error "invalid pattern at index #{index}"
-
-    # Convert the match into an object.
-    f =
-      signed:     !!match[1]
-      endianness: match[2]
-      bits:       parseInt(match[3], 10)
-      type:       'n'
-    rest = match[4]
-
-    fields.push f
-
-    size -= f.bits
-    if size < 0
-      throw new Error "bit field overflow at #{index}"
-
-    # Move the character position up to the bit count.
-    index++ if match[1]
-    index++
-    index += match[3].length
-
-    # Check for a valid bit size.
-    if f.bits == 0
-      throw new Error("bit size must be non-zero at #{index}")
-
-    # A comma indicates that we're to continue.
-    more = /^\s*,\s*(.*)$/.exec(rest)
-    break if not more
-
-    # Reset for the next iteration.
-    rest = more[1]
-
-  if size != 0
-    throw new Error "bit field underflow at #{index}"
-
-  fields
-
-pass = -> true
+next = /^(-?)([xbl])(\d+)([fa]?)(.*)$/
 
 number = (pattern, index) ->
   if match = /^(&)?0x([0-9a-f]+)(.*)$/i.exec pattern
@@ -67,15 +15,6 @@ number = (pattern, index) ->
     [ true, false, 0, 1, match[1] ]
   else
     throw new Error "invalid pattern at index #{index}"
-
-between = (mininum, maximum) ->
-  (value) -> minimm <= value && value <= maximum
-
-equal = (target) ->
-  (value) -> value is target
-
-mask = (mask) ->
-  (value) -> (value & mask) is mask
 
 condition = (struct, text, index) ->
   [ any, mask, value, index, range ] = number text, index
@@ -143,7 +82,7 @@ alternates = (array, rest, primary, secondary, allowSecondary, index) ->
     else
       [ padding, pattern, delimiter, rest ] = [ "", rest, "", null ]
     index += padding.length
-    alternate.pattern = parse({ pattern, index, next })
+    alternate.pattern = parse({ pattern, index, next, bits: 8 })
     index += alternate.length + delimiter.length
 
     array.push alternate
@@ -152,7 +91,7 @@ alternates = (array, rest, primary, secondary, allowSecondary, index) ->
 # Parse a pattern and create a list of fields.
 
 # The `pattern` is the pattern to parse.
-module.exports.parse = (pattern) -> parse({ pattern, index: 0, next })
+module.exports.parse = (pattern) -> parse({ pattern, index: 0, next, bits: 8 })
 
 parse = (o) ->
   fields          = []
@@ -165,11 +104,18 @@ parse = (o) ->
   loop
     # Match a packet pattern.
     match = o.next.exec(rest)
+
+    # The 6th field is a trick to reuse this method for bit packing patterns
+    # which are limited in what they can do. For bit packing the 5th pattern
+    # will match the rest only if it begins with a comma or named field arrow,
+    # otherwise it falls to the 6th which matches.
     if !match
       throw  new Error "invalid pattern at index #{index}"
+    if match[6]
+      throw  new Error "invalid pattern at index #{index + rest.length - match[6].length}"
 
     # The remainder of the pattern, if any.
-    rest = match.pop()
+    rest = match[5]
 
     # Convert the match into an object.
     f =
@@ -185,8 +131,8 @@ parse = (o) ->
     # Check for a valid character
     if f.bits == 0
       throw new Error("bit size must be non-zero at index #{index}")
-    if f.bits % 8
-      throw new Error("bit size must be divisible by 8 at index #{index}")
+    if f.bits % o.bits
+      throw new Error("bit size must be divisible by #{o.bits} at index #{index}")
     if f.type == "f" and !(f.bits == 32 || f.bits == 64)
       throw Error("floats can only be 32 or 64 bits at index #{index}")
 
@@ -194,18 +140,23 @@ parse = (o) ->
     index += match[3].length
     index++ if match[4]
 
-    # Set the implicit fields.
+    # Set the implicit fields. Unpacking logic is inconsistant between bits and
+    # bytes, but not applicable for bits anyway.
     f.type      = "a" if f.bits > 64 and f.type == "n"
-    f.bytes     = f.bits / 8
+    f.bytes     = f.bits / o.bits
     f.unpacked  = f.signed or f.bytes > 8 or "ha".indexOf(f.type) != -1
 
 
     # Check for bit backing.
     pack = /^{((?:-b|b|x)[^}]+)}(.*)$/.exec(rest)
     if pack
-      f.packing   = packing pack[1], f.bits, index
+      f.packing   = parse
+                      pattern: pack[1]
+                      bits: 1
+                      index: index + 1
+                      next: /^(-?)([xb])(\d+)()(\s*(?:,|=>).*|)(.*)$/
       rest        = pack[2]
-      index      += pack[1].length
+      index      += pack[1].length + 2
     # Check for alternation.
     else if alternation = /^\(([^)]+)\)(.*)$/.exec(rest)
       f.arrayed     = true
@@ -306,11 +257,12 @@ parse = (o) ->
     fields.push(f)
 
     # A comma indicates that we're to continue.
-    more = /^\s*,\s*(.*)$/.exec(rest)
+    more = /^(\s*,\s*)(.*)$/.exec(rest)
     break if not more
 
     # Reset for the next iteration.
-    rest = more[1]
+    index += more[1].length
+    rest = more[2]
     lengthEncoded = false
 
   if /\S/.test(rest)

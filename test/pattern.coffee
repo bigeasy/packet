@@ -169,21 +169,6 @@ class exports.PacketTest extends TwerpTest
     ]
     done 1
 
-  'test: parse a 16 bit hex string.': (done) ->
-    field = parse('l16h')
-    @deepEqual field, [
-      { signed: false
-      , bits: 16
-      , endianness: 'l'
-      , bytes: 2
-      , type: 'h'
-      , unpacked: true
-      , arrayed: false
-      , repeat: 1
-      }
-    ]
-    done 1
-
   'test: parse a single 32 bit float.': (done) ->
     field = parse('b32f')
     @deepEqual field, [
@@ -705,7 +690,7 @@ class exports.PacketTest extends TwerpTest
 
   'test: parse bit packing starting with big-endian.': (done) ->
     field = parse("b16{b3,x6,-b7}")
-    @deepEqual field, [
+    expected = [
       { "signed": false
       , "endianness": "b"
       , "bits": 16
@@ -718,22 +703,38 @@ class exports.PacketTest extends TwerpTest
           , "endianness": "b"
           , "bits": 3
           , "type": "n"
+          , "bytes": 3
+          , "repeat": 1
+          , "arrayed": false
+          , "unpacked": false
           }
         ,
           { "signed": false
           , "endianness": "x"
           , "bits": 6
           , "type": "n"
+          , "bytes": 6
+          , "repeat": 1
+          , "arrayed": false
+          , "unpacked": false
           }
         ,
           { "signed": true
           , "endianness": "b"
           , "bits": 7
           , "type": "n"
+          , "bytes": 7
+          , "repeat": 1
+          , "arrayed": false
+          , "unpacked": true
           }
         ]
       }
     ]
+    @deepEqual field[0].packing[0], expected[0].packing[0]
+    @deepEqual field[0].packing[1], expected[0].packing[1]
+    @deepEqual field[0].packing[2], expected[0].packing[2]
+    @deepEqual field, expected
     done 1
 
   'test: parse bit packing starting with skip.': (done) ->
@@ -751,18 +752,30 @@ class exports.PacketTest extends TwerpTest
           , "endianness": "x"
           , "bits": 3
           , "type": "n"
+          , "bytes": 3
+          , "repeat": 1
+          , "arrayed": false
+          , "unpacked": false
           }
         ,
           { "signed": false
           , "endianness": "b"
           , "bits": 6
           , "type": "n"
+          , "bytes": 6
+          , "repeat": 1
+          , "arrayed": false
+          , "unpacked": false
           }
         ,
           { "signed": true
           , "endianness": "b"
           , "bits": 7
           , "type": "n"
+          , "bytes": 7
+          , "repeat": 1
+          , "arrayed": false
+          , "unpacked": true
           }
         ]
       }
@@ -1252,7 +1265,7 @@ class exports.PacketTest extends TwerpTest
 
   'test: parse alternation with bit mask.': (done) ->
     field = parse "b8(&0x80: b16{x1,b15} | b8)"
-    @deepEqual field, [
+    expected = [
       { "signed": false
       , "endianness": "b"
       , "bits": 8
@@ -1286,12 +1299,20 @@ class exports.PacketTest extends TwerpTest
                   , "endianness": "x"
                   , "bits": 1
                   , "type": "n"
+                  , "bytes": 1
+                  , "repeat": 1
+                  , "arrayed": false
+                  , "unpacked": false
                   }
                 ,
                   { "signed": false
                   , "endianness": "b"
                   , "bits": 15
                   , "type": "n"
+                  , "bytes": 15
+                  , "repeat": 1
+                  , "arrayed": false
+                  , "unpacked": true
                   }
                 ]
               }
@@ -1337,6 +1358,9 @@ class exports.PacketTest extends TwerpTest
         ]
       }
     ]
+    @deepEqual field[0].alternation[0].pattern[0].packing[0], expected[0].alternation[0].pattern[0].packing[0]
+    @deepEqual field[0].alternation[0].pattern[0].packing[1], expected[0].alternation[0].pattern[0].packing[1]
+    @deepEqual field, expected
     done 1
 
 
@@ -1362,4 +1386,8 @@ class exports.PacketTest extends TwerpTest
 
   'test: parse a little-endian integer packed in an integer.': (done) ->
     @trap "invalid pattern at index 2", -> parse('b8{l4,b4}')
+    done 1
+
+  'test: parse invalid bit pattern.': (done) ->
+    @trap "invalid pattern at index 12", -> parse("b16{b3,x6,b7f}")
     done 1
