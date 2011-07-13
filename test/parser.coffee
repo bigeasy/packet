@@ -307,6 +307,19 @@ class exports.ParserTest extends TwerpTest
     @ok invoked
     done 3
 
+  "test: read a bit packed integer with two fields": (done) ->
+    invoked = false
+    bytes = [ 0xD0 ]
+    @parser.reset()
+    @parser.extract "b8{b2,x1,b2,x3}", (one, two, engine) =>
+      @equal engine.getBytesRead(), 1
+      @equal one, 3
+      @equal two, 2
+      invoked = true
+    @parser.read bytes, 0, 1
+    @ok invoked
+    done 4
+
   "test: read a bit packed signed negative integer": (done) ->
     invoked = false
     bytes = [ 0x20 ]
