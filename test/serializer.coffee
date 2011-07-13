@@ -147,6 +147,13 @@ class module.exports.SerializerTest extends TwerpTest
       @deepEqual toArray(buffer), [ 0x41, 0x42, 0x43 ]
       done 2
 
+  'test: write a 3 byte ASCII string with a null character': (done) ->
+    serializer = new Serializer()
+    serializer.buffer "b8[3]|ascii()", "A\u0000C", (buffer) =>
+      @equal serializer.getBytesWritten(), 3
+      @deepEqual toArray(buffer), [ 0x41, 0x00, 0x43 ]
+      done 2
+
   'test: write a zero terminated UTF-8 string': (done) ->
     serializer = new Serializer()
     serializer.buffer "b8z|utf8()", "ABC", (buffer) =>
