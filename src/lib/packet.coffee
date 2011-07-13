@@ -24,8 +24,8 @@ class exports.Packet extends stream.Stream
 
   # Map a named packet with the given `name` to the given `pattern`. 
   packet: (name, pattern, callback) ->
-    callback      or= noop
-    pattern         = parsePattern(pattern)
+    callback      or= null
+    pattern         = parse(pattern)
     @_packets[name] = {pattern, callback}
 
   # Resets the bytes read, bytes written and the current pattern. Used to

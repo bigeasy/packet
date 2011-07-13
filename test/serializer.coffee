@@ -50,12 +50,15 @@ class module.exports.SerializerTest extends TwerpTest
       done 2
 
   'test: write a 16 bit integer after skipping two bytes': (done) ->
-    serializer = new Serializer()
-    buffer = [ 0xff, 0xff, 0xff, 0xff ]
-    serializer.buffer buffer, "x16, b16", 1
-    @equal serializer.getBytesWritten(), 4
-    @deepEqual buffer, [  0xff, 0xff, 0x00, 0x01 ]
-    done 2
+    try
+      serializer = new Serializer()
+      buffer = [ 0xff, 0xff, 0xff, 0xff ]
+      serializer.buffer buffer, "x16, b16", 1
+      @equal serializer.getBytesWritten(), 4
+      @deepEqual buffer, [  0xff, 0xff, 0x00, 0x01 ]
+      done 2
+    catch e
+      console.log e.stack
 
   'test: write a 16 bit integer after filling two bytes': (done) ->
     serializer = new Serializer()
@@ -222,6 +225,13 @@ class module.exports.SerializerTest extends TwerpTest
       @deepEqual toArray(buffer), [ 0xD0 ]
       done 2
 
+  'test: write a bit packed integer with padded field': (done) ->
+    serializer = new Serializer()
+    serializer.buffer "b16{x1{1},b15}", 258, (buffer) =>
+      @equal serializer.getBytesWritten(), 2
+      @deepEqual toArray(buffer), [ 0x81, 0x02 ]
+      done 2
+
   'test: write a bit packed signed negative integer': (done) ->
     serializer = new Serializer()
     serializer.buffer "b8{x2,-b3,x3}", -4, (buffer) =>
@@ -234,6 +244,61 @@ class module.exports.SerializerTest extends TwerpTest
     serializer.buffer "b8{x2,-b3,x3}", 3, (buffer) =>
       @equal serializer.getBytesWritten(), 1
       @deepEqual toArray(buffer), [ 0x18 ]
+      done 2
+
+  'test: write alternation byte': (done) ->
+    serializer = new Serializer()
+    serializer.packet(
+      "alternation"
+      "b8(0-251: b8 | 252/252-0xffff: x8{252}, b16 | 253/0x10000-0xffffff: x8{253}, b24 | 254/*: x8{254}, b64)"
+    )
+    serializer.buffer "alternation", 3, (buffer) =>
+      @equal serializer.getBytesWritten(), 1
+      @deepEqual toArray(buffer), [ 0x03 ]
+      done 2
+
+  'test: write alternation short': (done) ->
+    serializer = new Serializer()
+    serializer.packet(
+      "alternation"
+      "b8(0-251: b8 | 252/252-0xffff: x8{252}, b16 | 253/0x10000-0xffffff: x8{253}, b24 | 254/*: x8{254}, b64)"
+    )
+    serializer.buffer "alternation", 258, (buffer) =>
+      @equal serializer.getBytesWritten(), 3
+      @deepEqual toArray(buffer), [ 252, 0x01, 0x02 ]
+      done 2
+
+  'test: write alternation long': (done) ->
+    serializer = new Serializer()
+    serializer.packet(
+      "alternation"
+      "b8(0-251: b8 | 252/252-0xffff: x8{252}, b16 | 253/0x10000-0xffffff: x8{253}, b24 | 254/*: x8{254}, b64)"
+    )
+    serializer.buffer "alternation", 0x01ffffff, (buffer) =>
+      @equal serializer.getBytesWritten(), 9
+      @deepEqual toArray(buffer), [ 254, 0x00, 0x00, 0x00, 0x00, 0x01, 0xff, 0xff, 0xff ]
+      done 2
+  
+  'test: write full write alternation byte': (done) ->
+    serializer = new Serializer()
+    serializer.packet(
+      "alternation"
+      "b8(&0x80: b16{x1,b15} | b8)/(0-0x7f: b8 | b16{x1{1},b15})"
+    )
+    serializer.buffer "alternation", 3, (buffer) =>
+      @equal serializer.getBytesWritten(), 1
+      @deepEqual toArray(buffer), [ 0x03 ]
+      done 2
+  
+  'test: write full write alternation short': (done) ->
+    serializer = new Serializer()
+    serializer.packet(
+      "alternation"
+      "b8(&0x80: b16{x1,b15} | b8)/(0-0x7f: b8 | b16{x1{1},b15})"
+    )
+    serializer.buffer "alternation", 258, (buffer) =>
+      @equal serializer.getBytesWritten(), 2
+      @deepEqual toArray(buffer), [ 0x81, 0x02 ]
       done 2
 
   "test: set self": (done) ->

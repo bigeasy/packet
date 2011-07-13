@@ -49,6 +49,7 @@ class exports.Serializer extends Packet
 
     delete        @_padding
 
+    # Can't I keep separate indexes? Do I need that zero?
     if pattern.endianness is "x"
       @_outgoing.splice @_patternIndex, 0, null
       if pattern.padding?
@@ -59,7 +60,17 @@ class exports.Serializer extends Packet
     pattern = @_pattern[@_patternIndex]
 
     if pattern.endianness is "x" and not @_padding?
-        @_skipping = pattern.bytes
+      @_skipping = pattern.bytes
+    else if pattern.alternation
+      value = @_outgoing[@_patternIndex]
+      for alternate in pattern.alternation
+        if alternate.write.minimum <= value and value <= alternate.write.maximum
+          @_pattern.splice.apply @_pattern, [ @_patternIndex, 1 ].concat(alternate.pattern)
+          break
+      if alternate.failed
+        throw new Error "Cannot match alternation."
+      @_nextField()
+      @_nextValue()
     else
       if @_padding?
         value = @_padding
@@ -71,8 +82,8 @@ class exports.Serializer extends Packet
         length  = pattern.bits
         for pack, i in packing
           length -= pack.bits
-          if pack.endianness is "b"
-            unpacked = @_outgoing[@_patternIndex + count++]
+          if pack.endianness is "b" or pack.padding?
+            unpacked = if pack.padding? then pack.padding else @_outgoing[@_patternIndex + count++]
             if pack.signed
               range = Math.pow(2, pack.bits - 1)
               unless (-range) <= unpacked and unpacked <= range - 1
@@ -187,15 +198,18 @@ class exports.Serializer extends Packet
       callback = shiftable.pop()
 
     nameOrPattern = shiftable.shift()
-    packet        = @_packets[nameOrPattern] or {}
-    pattern       = packet.pattern or parse(nameOrPattern)
-    callback    or= packet.callback or null
+    if packet = @_packets[nameOrPattern]
+      pattern    = packet.pattern.slice 0
+      callback or= packet.callback or null
+    else
+      pattern    = parse(nameOrPattern)
 
-    if not packet.pattern
+    if not packet
       for part in pattern
         if part.transforms
           part.transforms.reverse()
 
+    # Record the state. I'm aware of the wasteful slice.
     @_pattern      = pattern
     @_callback     = null
     @_patternIndex = 0

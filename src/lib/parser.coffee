@@ -67,9 +67,11 @@ module.exports.Parser = class Parser extends Packet
   # pattern, with an optional `callback`. The optional `callback` will override
   # the callback assigned to a named pattern.
   extract: (nameOrPattern, callback) ->
-    packet        = @_packets[nameOrPattern] or {}
-    pattern       = packet.pattern or parse(nameOrPattern)
-    callback    or= packet.callback or null
+    if packet = @_packets[nameOrPattern]
+      pattern    = packet.pattern.slice 0
+      callback or= packet.callback or null
+    else
+      pattern    = parse(nameOrPattern)
 
     @_pattern      = pattern
     @_callback     = callback
