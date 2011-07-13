@@ -247,6 +247,21 @@ class exports.Serializer extends Packet
         ieee754.toIEEE754Single value
       else
         ieee754.toIEEE754Double value
+    else if pattern.signed
+      copy = Math.abs(value)
+      bytes = []
+      for i in [0...pattern.bytes]
+        pow = Math.pow(256, i)
+        bytes[i] = Math.floor(copy / pow % (pow * 256))
+      if value < 0
+        carry = 1
+        for i in [0...bytes.length]
+          bytes[i] = (~bytes[i] & 0xff) + carry
+          if bytes[i] is 256
+            bytes[i] = 0
+          else
+            carry = 0
+      value = bytes
     else
       value
 

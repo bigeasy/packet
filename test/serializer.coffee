@@ -16,6 +16,21 @@ class module.exports.SerializerTest extends TwerpTest
       @equal buffer[0], 0x01
       done 2
 
+  'test: write a signed short': (done) ->
+    try
+      writeSigned = (bytes, value) =>
+        serializer = new Serializer()
+        serializer.buffer "-b16", value, (buffer) =>
+          @equal serializer.getBytesWritten(), 2
+          @deepEqual toArray(buffer), bytes
+      writeSigned [ 0x80, 0x00 ], -32768
+      writeSigned [ 0xff, 0xff ], -1
+      writeSigned [ 0x01, 0x02 ],  258
+      writeSigned [ 0x7f, 0xff ],  32767
+      done(4 * 2)
+    catch e
+      console.log e.stack
+
   'test: write a little-endian 16 bit integer': (done) ->
     serializer = new Serializer()
     serializer.buffer "l16", 0x1FF, (buffer) =>

@@ -188,6 +188,7 @@ module.exports.Parser = class Parser extends Packet
             value += 1
             value *= -1
           else
+            # Not really necessary, the bit about top.
             top = bytes.length - 1
             for i in [0...top]
               value += (bytes[i] & 0xff)  * Math.pow(256, i)
