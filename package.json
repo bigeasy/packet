@@ -1,4 +1,5 @@
 {   "name":             "packet"
 ,   "version":          "0.0.3"
 ,   "author":           "Alan Gutierrez"
+,   "main":             "./lib/index.js"
 }

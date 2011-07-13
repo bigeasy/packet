@@ -1,3 +1,3 @@
-exports.Packet     = require("./packet").Packet
-exports.Serializer = require("./serializer").Serialier
+exports.Parser     = require("./parser").Parser
+exports.Serializer = require("./serializer").Serializer
 exports.Structure  = require("./structure").Structure
