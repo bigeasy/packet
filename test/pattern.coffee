@@ -1363,6 +1363,174 @@ class exports.PacketTest extends TwerpTest
     @deepEqual field, expected
     done 1
 
+  'test: parse alternation with full write alternate.': (done) ->
+    field = parse "b8(&0x80: b16{x1,b15} | b8)/(0-0x7f: b8 | b16{x1{1},b15})"
+    expected = [
+      { "signed": false
+      , "endianness": "b"
+      , "bits": 8
+      , "type": "n"
+      , "bytes": 1
+      , "unpacked": false
+      , "arrayed": true
+      , "alternation":
+        [
+          { "read":
+            { "minimum": Number.MIN_VALUE
+            , "maximum": Number.MAX_VALUE
+            , "mask": 128
+            }
+          , "write":
+            { "minimum": Number.MAX_VALUE
+            , "maximum": Number.MIN_VALUE
+            }
+          , "pattern":
+            [
+              { "signed": false
+              , "endianness": "b"
+              , "bits": 16
+              , "type": "n"
+              , "bytes": 2
+              , "unpacked": false
+              , "packing":
+                [
+                  { "signed": false
+                  , "endianness": "x"
+                  , "bits": 1
+                  , "type": "n"
+                  , "bytes": 1
+                  , "repeat": 1
+                  , "arrayed": false
+                  , "unpacked": false
+                  }
+                ,
+                  { "signed": false
+                  , "endianness": "b"
+                  , "bits": 15
+                  , "type": "n"
+                  , "bytes": 15
+                  , "repeat": 1
+                  , "arrayed": false
+                  , "unpacked": true
+                  }
+                ]
+              }
+            ]
+          }
+        ,
+          { "read":
+            { "minimum": Number.MIN_VALUE
+            , "maximum": Number.MAX_VALUE
+            , "mask": 0
+            }
+          , "write":
+            { "minimum": Number.MAX_VALUE
+            , "maximum": Number.MIN_VALUE
+            }
+          , "pattern":
+            [
+              { "signed": false
+              , "endianness": "b"
+              , "bits": 8
+              , "type": "n"
+              , "bytes": 1
+              , "unpacked": false
+              , "repeat": 1
+              , "arrayed": false
+              }
+            ]
+          }
+        ,
+          { "read":
+            { "minimum": Number.MAX_VALUE
+            , "maximum": Number.MIN_VALUE
+            }
+          , "write":
+            { "minimum": 0
+            , "maximum": 127
+            , "mask": 0
+            }
+          , "pattern":
+            [
+              { "signed": false
+              , "endianness": "b"
+              , "bits": 8
+              , "type": "n"
+              , "bytes": 1
+              , "unpacked": false
+              , "repeat": 1
+              , "arrayed": false
+              }
+            ]
+          }
+        ,
+          { "read":
+            { "minimum": Number.MAX_VALUE
+            , "maximum": Number.MIN_VALUE
+            }
+          , "write":
+            { "minimum": Number.MIN_VALUE
+            , "maximum": Number.MAX_VALUE
+            , "mask": 0
+            }
+          , "pattern":
+            [
+              { "signed": false
+              , "endianness": "b"
+              , "bits": 16
+              , "type": "n"
+              , "bytes": 2
+              , "unpacked": false
+              , "packing":
+                [
+                  { "signed": false
+                  , "endianness": "x"
+                  , "bits": 1
+                  , "type": "n"
+                  , "bytes": 1
+                  , "repeat": 1
+                  , "arrayed": false
+                  , "unpacked": false
+                  , "padding": 1
+                  }
+                ,
+                  { "signed": false
+                  , "endianness": "b"
+                  , "bits": 15
+                  , "type": "n"
+                  , "bytes": 15
+                  , "repeat": 1
+                  , "arrayed": false
+                  , "unpacked": true
+                  }
+                ]
+              }
+            ]
+          }
+        ,
+          { "read":
+            { "minimum": Number.MIN_VALUE
+            , "maximum": Number.MAX_VALUE
+            , "mask": 0
+            }
+          , "write":
+            { "minimum": Number.MIN_VALUE
+            , "maximum": Number.MAX_VALUE
+            , "mask": 0
+            }
+          , "failed": true
+          }
+        ]
+      }
+    ]
+    @deepEqual field[0].alternation[0].pattern[0].packing[0], expected[0].alternation[0].pattern[0].packing[0]
+    @deepEqual field[0].alternation[0].pattern[0].packing[1], expected[0].alternation[0].pattern[0].packing[1]
+    @deepEqual field[0].alternation[0], expected[0].alternation[0]
+    @deepEqual field[0].alternation[1], expected[0].alternation[1]
+    @deepEqual field[0].alternation[2], expected[0].alternation[2]
+    @deepEqual field[0].alternation[3], expected[0].alternation[3]
+    @deepEqual field, expected
+    done 1
 
   'test: parse utter nonsense.': (done) ->
     @trap "invalid pattern at index 0", -> parse("blurdy")

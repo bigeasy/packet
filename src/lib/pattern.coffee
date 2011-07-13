@@ -59,7 +59,7 @@ alternates = (array, rest, primary, secondary, allowSecondary, index) ->
   while rest
     alternate             = {}
     alternate[primary]    = always()
-    alternate[secondary]  = if alternates then always() else never()
+    alternate[secondary]  = if allowSecondary then always() else never()
 
     match = /^([^/:]+)(?:(\s*\/\s*)([^:]+))?(:\s*)(.*)$/.exec rest
     if match
@@ -83,7 +83,7 @@ alternates = (array, rest, primary, secondary, allowSecondary, index) ->
       [ padding, pattern, delimiter, rest ] = [ "", rest, "", null ]
     index += padding.length
     alternate.pattern = parse({ pattern, index, next, bits: 8 })
-    index += alternate.length + delimiter.length
+    index += pattern.length + delimiter.length
 
     array.push alternate
 
@@ -147,14 +147,16 @@ parse = (o) ->
     f.unpacked  = f.signed or f.bytes > 8 or "ha".indexOf(f.type) != -1
 
 
-    # Check for bit backing.
-    pack = /^{((?:-b|b|x)[^}]+)}(.*)$/.exec(rest)
+    # Check for bit backing. The intense rest pattern allows us to skip over a
+    # nested padding specifier in the bit packing pattern, nested curly brace
+    # matching for a depth of one.
+    pack = /^{((?:-b|b|x).+)}(\s*,.*|\s*)$/.exec(rest)
     if pack
       f.packing   = parse
                       pattern: pack[1]
                       bits: 1
                       index: index + 1
-                      next: /^(-?)([xb])(\d+)()(\s*(?:,|=>).*|)(.*)$/
+                      next: /^(-?)([xb])(\d+)()(\s*(?:,|=>|{\d).*|)(.*)$/
       rest        = pack[2]
       index      += pack[1].length + 2
     # Check for alternation.
@@ -163,16 +165,17 @@ parse = (o) ->
       read          = alternation[1]
       rest          = alternation[2]
       write         = null
-      if alternation = /^(\s*\/\s*\(([^)]+)\))(.*)$/.exec(rest)
-        matched       = alternation[1]
+      if alternation = /^(\s*\/\s*)\(([^)]+)\)(.*)$/.exec(rest)
+        slash         = alternation[1]
         write         = alternation[2]
         rest          = alternation[3]
-        write         = null
+      index += 1
       alternates f.alternation = [], read, "read", "write", not write, index
-      index += read.length
+      index += read.length + 1
       if write
+        index += slash.length + 1
         alternates f.alternation, write, "write", "read", false, index
-        index += matched.length
+        index += write.length
       f.alternation.push {
         read: FAILURE, write: FAILURE, failed: true
       }
