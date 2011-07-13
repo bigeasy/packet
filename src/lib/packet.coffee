@@ -39,10 +39,17 @@ class exports.Packet extends stream.Stream
     @_fields = []
 
   # Excute the pipeline of transforms for the `pattern` on the `value`.
-  pipeline: (pattern, value) ->
+  _pipeline: (pattern, value, reverse) ->
     # Run the piplines for parsing.
-    if pattern.transforms
-      for transform in pattern.transforms
+    if pipeline = pattern.pipeline
+      if reverse
+        start = pipeline.length - 1
+        stop = 0
+      else
+        start = 0
+        stop = pipeline.length - 1
+      for i in [start..stop]
+        transform = pipeline[i]
         parameters = []
         for constant in transform.parameters
           parameters.push(constant)

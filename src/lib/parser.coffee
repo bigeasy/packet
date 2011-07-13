@@ -250,7 +250,7 @@ module.exports.Parser = class Parser extends Packet
           # push an empty array through the pipeline, and skip the repeated type.
           else if part.lengthEncoding
             if (@_pattern[@_patternIndex + 1].repeat = value) is 0
-              @_fields.push(@pipeline(part, []))
+              @_fields.push(@_pipeline(part, [], false))
               @_patternIndex++
 
           # If the value is used as a switch for an alternation, we run through
@@ -278,7 +278,7 @@ module.exports.Parser = class Parser extends Packet
           # supplied tranformation pipeline, and push it onto the list of fields.
           else
             value = @_arrayed if part.arrayed
-            @_fields.push(@pipeline(part, value))
+            @_fields.push(@_pipeline(part, value, false))
 
         # If we have read all of the pattern fields, call the associated
         # callback.  We add the parser and the user suppilied additional

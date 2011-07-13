@@ -247,7 +247,7 @@ parse = (o) ->
 
           transform.parameters.push(value)
 
-        (f.transforms or= []).push(transform)
+        (f.pipeline or= []).push(transform)
 
       # Named pattern.
       name = /\s*=>\s*(\w[\w\d]+)\s*(.*)/.exec(rest)

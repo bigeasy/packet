@@ -319,7 +319,7 @@ class exports.PacketTest extends TwerpTest
       , arrayed: true
       , repeat: Number.MAX_VALUE
       , terminator: "\0"
-      , transforms:
+      , pipeline:
         [
           { name: "str"
           , parameters: []
@@ -341,7 +341,7 @@ class exports.PacketTest extends TwerpTest
       , arrayed: true
       , repeat: Number.MAX_VALUE
       , terminator: "\0"
-      , transforms:
+      , pipeline:
         [
           { name: "str"
           , parameters: [ "utf8" ]
@@ -363,7 +363,7 @@ class exports.PacketTest extends TwerpTest
       , arrayed: true
       , repeat: Number.MAX_VALUE
       , terminator: "\0"
-      , transforms:
+      , pipeline:
         [
           { name: "str"
           , parameters: [ "utf8" ]
@@ -395,7 +395,7 @@ class exports.PacketTest extends TwerpTest
       , arrayed: true
       , repeat: Number.MAX_VALUE
       , terminator: "\0"
-      , transforms:
+      , pipeline:
         [
           { name: "twiddle"
           , parameters: [ 8 ]
@@ -417,7 +417,7 @@ class exports.PacketTest extends TwerpTest
       , arrayed: true
       , repeat: Number.MAX_VALUE
       , terminator: "\0"
-      , transforms:
+      , pipeline:
         [
           { name: "twiddle"
           , parameters: [ -8 ]
@@ -439,7 +439,7 @@ class exports.PacketTest extends TwerpTest
       , arrayed: true
       , repeat: Number.MAX_VALUE
       , terminator: "\0"
-      , transforms:
+      , pipeline:
         [
           { name: "twiddle"
           , parameters: [ Number.MAX_VALUE ]
@@ -461,7 +461,7 @@ class exports.PacketTest extends TwerpTest
       , arrayed: true
       , repeat: Number.MAX_VALUE
       , terminator: "\0"
-      , transforms:
+      , pipeline:
         [
           { name: "twiddle"
           , parameters: [ Number.MIN_VALUE ]
@@ -483,7 +483,7 @@ class exports.PacketTest extends TwerpTest
       , arrayed: true
       , repeat: Number.MAX_VALUE
       , terminator: "\0"
-      , transforms:
+      , pipeline:
         [
           { name: "twiddle"
           , parameters: [ null ],
@@ -505,7 +505,7 @@ class exports.PacketTest extends TwerpTest
       , arrayed: true
       , repeat: Number.MAX_VALUE
       , terminator: "\0"
-      , transforms:
+      , pipeline:
         [
           { name: "twiddle"
           , parameters: [ true ],
@@ -527,7 +527,7 @@ class exports.PacketTest extends TwerpTest
       , arrayed: true
       , repeat: Number.MAX_VALUE
       , terminator: "\0"
-      , transforms:
+      , pipeline:
         [
           { name: "twiddle"
           , parameters: [ false ],
@@ -549,7 +549,7 @@ class exports.PacketTest extends TwerpTest
       , arrayed: true
       , repeat: Number.MAX_VALUE
       , terminator: "\0"
-      , transforms:
+      , pipeline:
         [
           { name: "twiddle"
           , parameters: [ "a \u00DF b \" c" ],
@@ -571,7 +571,7 @@ class exports.PacketTest extends TwerpTest
       , arrayed: true
       , repeat: Number.MAX_VALUE
       , terminator: "\0"
-      , transforms:
+      , pipeline:
         [
           { name: "twiddle"
           , parameters: [ "a \u00DF b \" c" ],
@@ -593,7 +593,7 @@ class exports.PacketTest extends TwerpTest
       , arrayed: true
       , repeat: Number.MAX_VALUE
       , terminator: "\0"
-      , transforms:
+      , pipeline:
         [
           { name: "twiddle"
           , parameters: [ "utf8", 8 ],
@@ -615,7 +615,7 @@ class exports.PacketTest extends TwerpTest
       , arrayed: true
       , repeat: Number.MAX_VALUE
       , terminator: "\0"
-      , transforms:
+      , pipeline:
         [
           { name: "twiddle"
           , parameters: [ "utf8", 8, 8.1, false ],
@@ -637,7 +637,7 @@ class exports.PacketTest extends TwerpTest
       , arrayed: true
       , repeat: Number.MAX_VALUE
       , terminator: "\0"
-      , transforms:
+      , pipeline:
         [
           { name: "utf8"
           , parameters: []
@@ -664,7 +664,7 @@ class exports.PacketTest extends TwerpTest
       , arrayed: true
       , repeat: Number.MAX_VALUE
       , terminator: "\0"
-      , transforms:
+      , pipeline:
         [
           { name: "utf8"
           , parameters: []

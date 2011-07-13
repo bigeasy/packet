@@ -34,12 +34,6 @@ class exports.Serializer extends Packet
 
   getBytesWritten: -> @_bytesWritten
 
-  packet: (name, pattern, callback) ->
-    super name, pattern, callback
-    for part in @_packets[name].pattern
-      if part.transforms
-        part.transforms.reverse()
-
   _nextField: ->
     pattern       = @_pattern[@_patternIndex]
     @_repeat      = pattern.repeat
@@ -204,11 +198,6 @@ class exports.Serializer extends Packet
     else
       pattern    = parse(nameOrPattern)
 
-    if not packet
-      for part in pattern
-        if part.transforms
-          part.transforms.reverse()
-
     # Record the state. I'm aware of the wasteful slice.
     @_pattern      = pattern
     @_callback     = null
@@ -243,7 +232,7 @@ class exports.Serializer extends Packet
         j++ while pattern[j] and pattern[j].endianness is "x"
         if not pattern[j]
           throw new Error "too many fields"
-        @_outgoing[i] = @pipeline(pattern[j], value)
+        @_outgoing[i] = @_pipeline(pattern[j], value, true)
       j++
 
     @_nextField()
