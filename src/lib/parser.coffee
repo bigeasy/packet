@@ -1,28 +1,47 @@
+# Require `"stream"` for the base `Stream` implementation.
+stream    = require "stream"
+
+# Require the necessary Packet sibling modules.
 {parse}   = require "./pattern"
 {Packet}  = require "./packet"
 ieee754   = require "./ieee754"
-stream    = require "stream"
 
+# This implementation of `ReadableStream` is returned when the user calls the
+# `Parser.stream` method. It creates a stream that allows a `Parser`
+# implementation to emit raw binary data.
+
+# Implementation of the `ReadableStream` interface.
 class ReadableStream extends stream.Stream
-  constructor: (@_parser, @_length) ->
+  # Construct a readable stream for the given `Parser`.
+  constructor: (@_parser) ->
+
+  # Set the encoding used to convert binary data to strings before it is emitted
+  # as a `"data"` event.
   setEncoding: (encoding) ->
     @_decoder = new (require("string_decoder").StringDecoder)(encoding)
-  _delegate: (method) -> @_parser.piped[method]() if @_parser.piped
-  pause: ->
-    @_delegate "pause"
-    @_parser.paused = true
-  resume: ->
-    @_delegate "resume"
-    @_parser.paused = false
-  destroySoon: ->
-    @_delegate "destroySoon"
-    @_parser.piped.destroySoon() if @_parser.piped
-  destroy: ->
-    @_delegate "destroy"
-    @aprser.destroyed = false
+
+  
+  _delegate: (method) -> @_parser[method]() if @_parser.piped
+
+  # Pause the source stream that is feeding the associated `Parser`.
+  pause: -> @_parser.pause()
+
+  # Result the source stream that is feeding the associated `Parser`.
+  resume: -> @_parser.resume()
+
+  # Soon destory the source stream that is feeding the associated `Parser`.
+  destroySoon: -> @_parser.destroySoon()
+
+  # Destory the source stream that is feeding the associated `Parser`.
+  destroy: -> @_parser.destroy()
+
+  # Emit the `"end"` event.
   _end: ->
     @emit "end"
     @_parser._stream = null
+
+  # Emit the given buffer as a `"data"` event, decoding it if a decoder has been
+  # specified.
   _write: (slice) ->
     if @_decoder
       string = @_decoder.write(slice)
@@ -30,7 +49,7 @@ class ReadableStream extends stream.Stream
     else
       @emit "data", slice
 
-module.exports.Parser = class Parser extends Packet
+class exports.Parser extends Packet
   constructor: (self) ->
     super self
     @writable = true
