@@ -1,13 +1,26 @@
+# Require `"stream"` for the base `Stream` implementation.
+stream    = require "stream"
+
+# Require the necessary Packet sibling modules.
 {parse}   = require "./pattern"
 ieee754   = require "./ieee754"
-stream    = require "stream"
 {Packet}  = require "./packet"
 
+# This implementation of `WritableStream` is returned when the user calls the
+# `Serializer.stream` method. It create a stream that will write a specified
+# number of bytes, no more, no less.
+
+# Implementation of the `WritableStream` interface.
 class WritableStream extends stream.Stream
+  # Construct the writable stream for the given `Serializer`. The `@_length` is
+  # used to test for overflow. The `@_callback` is invoked when the all bytes
+  # have been written.
   constructor: (@_length, @_serializer, @_callback) ->
     @writable = true
     @_written = 0
 
+  # Write the `Buffer` or `String` given in `buffer` with the given `encoding`
+  # or UTF-8 if no encoding is specified.
   write: (buffer, encoding) ->
     if typeof buffer is "string"
       buffer = new Buffer(buffer, encoding or "utf8")
@@ -20,20 +33,31 @@ class WritableStream extends stream.Stream
       if @_callback
         @_callback.apply @_serializer.self, @_length
 
-
+  # The end of the stream is determined by the user specified length, not by the
+  # invocation of this method, so this implementation of `@end` is a synonym for
+  # `@write`.
   end: (splat...) ->
     @write.apply @, splat if splat.length
   
-
+# The `Serializer` writes JavaScript primitives to a stream in binary
+# representations.
 class exports.Serializer extends Packet
+  # Construct a `Serializer` that will use the given `self` object as the `this`
+  # when a callback is called. If no `self` is provided, the `Serializer`
+  # instance will be used as the `this` object for serialization event
+  # callbacks.
   constructor: (self) ->
     super self
     @readable = true
     @_buffer = new Buffer(1024)
     @_streaming = false
 
+  # Get the number of bytes written since the last call to `@reset()`.
   getBytesWritten: -> @_bytesWritten
 
+  # Initialize the next field pattern in the serialization pattern array, which
+  # is the pattern in the array `@_pattern` at the current `@_patternIndex`.
+  # This initializes the serializer to write the next field.
   _nextField: ->
     pattern       = @_pattern[@_patternIndex]
     @_repeat      = pattern.repeat
@@ -49,12 +73,19 @@ class exports.Serializer extends Packet
       if pattern.padding?
         @_padding = pattern.padding
 
-  # Setup the next field in the current pattern to read or write.
+  # Initialize the next field value to serialize. In the case of an arrayed
+  # value, we will read 
+  # values, we will call `@_nextValue` zero, one or more times for a single c
   _nextValue: ->
     pattern = @_pattern[@_patternIndex]
-
+  
+    # If we are skipping without filling we note the count of bytes to skip.
     if pattern.endianness is "x" and not @_padding?
       @_skipping = pattern.bytes
+
+    # If the pattern is an alternation, we use the current value to determine
+    # with alternate to apply. We then update the pattern array with pattern of
+    # the matched alternate, and rerun the next field and next value logic.
     else if pattern.alternation
       value = @_outgoing[@_patternIndex]
       for alternate in pattern.alternation
@@ -65,11 +96,21 @@ class exports.Serializer extends Packet
         throw new Error "Cannot match alternation."
       @_nextField()
       @_nextValue()
+
+    # Otherwise, we've got a value to write here and now.
     else
+      # If we're filling, we write the fill value.
       if @_padding?
         value = @_padding
+
+      # If the field is arrayed, we get the next value in the array.
       else if pattern.arrayed
         value = @_outgoing[@_patternIndex][@_index]
+
+      # If the field is bit packed, we update the `@_outgoing` array of values
+      # by packing zero, one or more values into a single value. We will also
+      # check for bits filled with a pattern specified filler value and pack
+      # that in there as well.
       else if packing = pattern.packing
         count   = 0
         value   = 0
@@ -87,17 +128,50 @@ class exports.Serializer extends Packet
                 unpacked = (~(- unpacked) + 1) & mask
             value += unpacked * Math.pow(2, length)
         @_outgoing.splice @_patternIndex, count, value
+
+      # If the current field is a length encoded array, then the length of the
+      # the current array value is the next value, otherwise, we have the
+      # simple case, the value is the current value.
       else
         if pattern.lengthEncoding
           repeat = @_outgoing[@_patternIndex].length
           @_outgoing.splice @_patternIndex, 0, repeat
           @_pattern[@_patternIndex + 1].repeat = repeat
         value = @_outgoing[@_patternIndex]
+
+      # If the array is not an unsigned integer, we might have to convert it.
       if pattern.unpacked
-        value = @_pack(value)
+        # Convert a float into its IEEE 754 representation.
+        if pattern.type == "f"
+          if pattern.bits == 32
+            value = ieee754.toIEEE754Single value
+          else
+            value = ieee754.toIEEE754Double value
+        # Convert a signed integer into its two's complient representation.
+        else if pattern.signed
+          copy = Math.abs(value)
+          bytes = []
+          # FIXME If the value is greater than zero, we can just change the
+          # pattern to packed.
+          for i in [0...pattern.bytes]
+            pow = Math.pow(256, i)
+            bytes[i] = Math.floor(copy / pow % (pow * 256))
+          if value < 0
+            carry = 1
+            for i in [0...bytes.length]
+              bytes[i] = (~bytes[i] & 0xff) + carry
+              if bytes[i] is 256
+                bytes[i] = 0
+              else
+                carry = 0
+          value = bytes
 
       super value
 
+  # Create a `WritableStream` to write the bytes directly to the output stream.
+  # The `WritableStream.write` method must be invoked with exactly `length`
+  # bytes. FIXME You really can change the meaning of `end` to skip the last
+  # part, just use skip.
   stream: (length) ->
     @_stream = new WritableStream(length, @)
 
@@ -116,6 +190,8 @@ class exports.Serializer extends Packet
       @_streaming = true
       super destination, options
 
+  # Skip a region of the given `length` in the output stream, filling it with
+  # the given `fill` byte.
   skip: (length, fill) ->
     while length
       size = Math.min(length, @_buffer.length)
@@ -124,6 +200,13 @@ class exports.Serializer extends Packet
         @_buffer[i] = fill
       @write @_buffer.slice 0, size
 
+
+  ##### serializer.buffer([buffer, ]values...[, callback])
+
+  # Serialize output to a `Buffer` or an `Array`. The first argument is the
+  # `Buffer` or `Array` to use. If omitted, the `@_buffer` member of the
+  # serializer will be used. The optional `callback` will be invoked using the
+  # flexiable `this` object, with the buffer as the sole argument.
   buffer: (shiftable...) ->
     if Array.isArray(shiftable[0])
       buffer = shiftable.shift()
@@ -187,10 +270,17 @@ class exports.Serializer extends Packet
         @write @_buffer.slice 0, read
       callback.call @_self
 
+  ##### serializer._reset(nameOrPattern, values...[, callback])
+
+  # Resets the `Seriailzer` to write fields to stream or to buffer using the
+  # given compiled pattern name or uncompiled pattern.
+  #
+  # FIXME: We've already used `reset`, so we need to rename this.
   _reset: (shiftable) ->
     if typeof shiftable[shiftable.length - 1] == 'function'
       callback = shiftable.pop()
 
+    # FIXME This is common to `Parser`, so put it in `Packet`.
     nameOrPattern = shiftable.shift()
     if packet = @_packets[nameOrPattern]
       pattern    = packet.pattern.slice 0
@@ -198,7 +288,6 @@ class exports.Serializer extends Packet
     else
       pattern    = parse(nameOrPattern)
 
-    # Record the state. I'm aware of the wasteful slice.
     @_pattern      = pattern
     @_callback     = null
     @_patternIndex = 0
@@ -240,39 +329,17 @@ class exports.Serializer extends Packet
 
     callback
 
+  ##### serializer.close()
+
+  # Close the underlying output stream.
   close: ->
     @emit "end"
 
-  _pack: (value) ->
-    pattern = @_pattern[@_patternIndex]
-    if pattern.type == "f"
-      if pattern.bits == 32
-        ieee754.toIEEE754Single value
-      else
-        ieee754.toIEEE754Double value
-    else if pattern.signed
-      copy = Math.abs(value)
-      bytes = []
-      for i in [0...pattern.bytes]
-        pow = Math.pow(256, i)
-        bytes[i] = Math.floor(copy / pow % (pow * 256))
-      if value < 0
-        carry = 1
-        for i in [0...bytes.length]
-          bytes[i] = (~bytes[i] & 0xff) + carry
-          if bytes[i] is 256
-            bytes[i] = 0
-          else
-            carry = 0
-      value = bytes
-    else
-      value
+  ##### serializer.write(buffer[, offset][, length])
 
-##### serializer.write(buffer[, offset][, length])
-# The `write` method writes to the buffer, returning when the current pattern is
-# written, or the end of the buffer is reached.
-
-  # Write to the `buffer` in the region defined by the given `offset` and `length`.
+  # The `write` method writes to the buffer, returning when the current pattern
+  # is written, or the end of the buffer is reached.  Write to the `buffer` in
+  # the region defined by the given `offset` and `length`.
   _serialize: (buffer, offset, length) ->
     start     = offset
     end       = offset + length
