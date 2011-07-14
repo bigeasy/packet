@@ -443,20 +443,6 @@ You can also name the packed fields.
 "b16{b3 => type, x6, -b7 => count}"
 ```
 
-### Constants
-
-You can add any JavaScript scalar value, a `string`, `number`, `boolean` or the
-`null` value to a pattern. THe value will be be emitted by parsers as if it were
-a value parsed from the byte stream. Constant values are ignored serializers.
-
-By itself, constants is not useful. They are useful when you want to provide
-some indication of the outcome of conditional pattern.
-
-```javascript
-"b16, 'ABC', b16"   // The string 'ABC' between two 16 bit integers.
-"b8z, null, b8z"    // A null value between to zero terminated byte strings.
-```
-
 ### Conditinal Patterns
 
 **Pending** &mdash; Not implemented.
