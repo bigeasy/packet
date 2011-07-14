@@ -176,6 +176,13 @@ class module.exports.SerializerTest extends TwerpTest
       @deepEqual toArray(buffer), [ 0x41, 0x42, 0x43, 0x00 ]
       done 2
 
+  'test: write a fixed width zero terminated UTF-8 string with no terminator': (done) ->
+    serializer = new Serializer()
+    serializer.buffer "b8[3]z|utf8()", "ABC", (buffer) =>
+      @equal serializer.getBytesWritten(), 3
+      @deepEqual toArray(buffer), [ 0x41, 0x42, 0x43 ]
+      done 2
+
   'test: write a zero terminated UTF-8 string after skipping': (done) ->
     serializer = new Serializer()
     serializer.buffer "x16{0}, b8z|utf8()", "ABC", (buffer) =>
