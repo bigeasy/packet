@@ -1654,3 +1654,11 @@ class exports.PacketTest extends TwerpTest
   'test: parse invalid bit pattern.': (done) ->
     @trap "invalid pattern at index 12", -> parse("b16{b3,x6,b7f}")
     done 1
+
+  'test: parse invalid alternation number pattern.': (done) ->
+    @trap "invalid number at character 4", -> parse("b8(Q: b16{x1,b15} | b8)/(0-0x7f: b8 | b16{x1{1},b15})")
+    done 1
+
+  'test: parse invalid alternation range with mask.': (done) ->
+    @trap "masks not permitted in ranges at character 6", -> parse("b8(0-&0x80: b16{x1,b15} | b8)/(0-0x7f: b8 | b16{x1{1},b15})")
+    done 1

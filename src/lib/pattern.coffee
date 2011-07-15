@@ -6,26 +6,29 @@
 {argument, constant} = require "./argument"
 next = /^(-?)([xbl])(\d+)([fa]?)(.*)$/
 
-number = (pattern, index) ->
-  if match = /^(&)?0x([0-9a-f]+)(.*)$/i.exec pattern
+number = (pattern, part, index) ->
+  if match = /^(&)?0x([0-9a-f]+)(.*)$/i.exec part
     [ false, !! match[1], parseInt(match[2], 16), index + (match[1] or "").length + 2 + match[2].length, match[3] ]
-  else if match = /^(\d+)(.*)$/.exec pattern
+  else if match = /^(\d+)(.*)$/.exec part
     [ false, false, parseInt(match[1], 10), index + match[1].length, match[2] ]
-  else if match = /^\*(.*)$/
-    [ true, false, 0, 1, match[1] ]
+  else if match = /^\*(.*)$/.exec part
+    [ true, false, 0, 1, match ]
   else
-    throw new Error "invalid number at index #{index}"
+    throw new Error error "invalid number", pattern, index
 
-condition = (struct, text, index) ->
-  [ any, mask, value, index, range ] = number text, index
+condition = (pattern, struct, text, index) ->
+  startIndex = index
+  [ any, mask, value, index, range ] = number pattern, text, index
   if mask
     struct.mask = value
   else if not any
     if  range[0] is "-"
-      index++
-      [ any, mask, maximum, nextIndex, range ] = number range.substring(1), index
       if mask
-        throw new Error "masks not permitted in ranges at index #{index}"
+        throw new Error error "masks not permitted in ranges", pattern, startIndex
+      index++
+      [ any, mask, maximum, nextIndex, range ] = number pattern, range.substring(1), index
+      if mask
+        throw new Error error "masks not permitted in ranges", pattern, index
       if any
         throw new Error "asterisk not permitted in ranges at index #{index}"
       index = nextIndex
@@ -65,10 +68,10 @@ alternates = (pattern, array, rest, primary, secondary, allowSecondary, index) -
     if match
       [ first, delimiter, second, imparative, rest ] = match.slice(1)
       startIndex = index
-      condition alternate[primary], first, index
+      condition pattern, alternate[primary], first, index
       if allowSecondary
         if second
-          condition alternate[secondary], second, index
+          condition pattern, alternate[secondary], second, index
         else
           alternate[secondary] = alternate[primary]
       else if second
@@ -83,7 +86,7 @@ alternates = (pattern, array, rest, primary, secondary, allowSecondary, index) -
       [ padding, part, delimiter, rest ] = [ "", rest, "", null ]
     index += padding.length
     alternate.pattern = parse next, pattern, part, index, 8
-    index += pattern.length + delimiter.length
+    index += part.length + delimiter.length
 
     array.push alternate
 
