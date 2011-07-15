@@ -1628,7 +1628,11 @@ class exports.PacketTest extends TwerpTest
     done 1
 
   'test: parse a 7 bit pattern.': (done) ->
-    @trap "bit size must be divisible by 8 at index 1", -> parse("b7")
+    @trap "bit size must be divisible by 8 at character 2", -> parse("b7")
+    done 1
+
+  'test: parse a bad multi-line pattern.': (done) ->
+    @trap "bit size must be divisible by 8 at line 2 character 2", -> parse("b8,\nb7")
     done 1
 
   'test: parse a 0 bit pattern.': (done) ->

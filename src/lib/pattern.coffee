@@ -96,6 +96,16 @@ module.exports.parse = (pattern) ->
   index = pattern.length - part.length
   parse next, pattern, part, index, 8
 
+# We don't count an initial newline as a line.
+error = (message, pattern, index) ->
+  if pattern.indexOf("\n") != -1
+    lines = pattern.substring(0, index).split /\n/
+    lines.shift() if lines[0] is ""
+    "#{message} at line #{lines.length} character #{lines.pop().length + 1}"
+  else
+    "#{message} at character #{index + 1}"
+
+
 parse = (next, pattern, part, index, bits) ->
   fields          = []
   lengthEncoded   = false
@@ -134,7 +144,7 @@ parse = (next, pattern, part, index, bits) ->
     if f.bits == 0
       throw new Error("bit size must be non-zero at index #{index}")
     if f.bits % bits
-      throw new Error("bit size must be divisible by #{bits} at index #{index}")
+      throw new Error error "bit size must be divisible by #{bits}", pattern, index
     if f.type == "f" and !(f.bits == 32 || f.bits == 64)
       throw Error("floats can only be 32 or 64 bits at index #{index}")
 
