@@ -398,7 +398,9 @@ class exports.Serializer extends Packet
           if @_outgoing[@_patternIndex].length is @_index + 1
             @_terminated = true
             @_outgoing[@_patternIndex] = []
-            @_outgoing[@_patternIndex][@_index + 1] = @_pattern[@_patternIndex].terminator.charCodeAt(0)
+            terminator = @_pattern[@_patternIndex].terminator
+            for char, i in terminator
+              @_outgoing[@_patternIndex][@_index + 1 + i] = char
 
       # If we are reading an arrayed pattern and we have not read all of the
       # array elements, we repeat the current field type.

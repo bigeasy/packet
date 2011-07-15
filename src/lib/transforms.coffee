@@ -16,11 +16,8 @@ transforms = exports.transforms =
           value[i] = 0 if value[i] & 0x80
         encoding = "utf8"
       length = value.length
-      length -= field.terminator.length if field.terminator
       value.toString(encoding, 0, length)
     else
-      if field.terminator
-        value += field.terminator
       buffer = new Buffer(value, encoding)
       if encoding is "ascii"
         for i in [0...buffer.length]

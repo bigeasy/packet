@@ -72,10 +72,11 @@ class exports.Parser extends Packet
   # is the pattern in the array `@_pattern` at the current `@_patternIndex`.
   _nextField: ->
     pattern       = @_pattern[@_patternIndex]
-    @_repeat       = pattern.repeat
-    @_index        = 0
+    @_repeat      = pattern.repeat
+    @_index       = 0
     @_skipping    = null
-    @_terminated   = not pattern.terminator
+    @_terminated  = not pattern.terminator
+    @_terminator  = pattern.terminator and pattern.terminator[pattern.terminator.length - 1]
     @_arrayed     = [] if pattern.arrayed and pattern.endianness isnt "x"
     @_named     or= !! pattern.name
 
@@ -251,15 +252,24 @@ class exports.Parser extends Packet
       # specific length value means that the zero terminated string occupies a
       # field that has a fixed length, so we need to skip the used bytes.
       if not @_terminated
-        if part.terminator.charCodeAt(0) == value
+        if @_terminator is value
           @_terminated = true
-          if @_repeat == Number.MAX_VALUE
-            @_repeat = @_index + 1
-          else
-            @_skipping = (@_repeat - (++@_index)) * part.bytes
-            if @_skipping
+          terminator = @_pattern[@_patternIndex].terminator
+          for i in [1..terminator.length]
+            if @_arrayed[@_arrayed.length - i] isnt terminator[terminator.length - i]
+              @_terminated = false
+              break
+          if @_terminated
+            for char in terminator
+              @_arrayed.pop()
+            @_terminated = true
+            if @_repeat == Number.MAX_VALUE
               @_repeat = @_index + 1
-              continue
+            else
+              @_skipping = (@_repeat - (++@_index)) * part.bytes
+              if @_skipping
+                @_repeat = @_index + 1
+                continue
 
       # If we are reading an arrayed pattern and we have not read all of the
       # array elements, we repeat the current field type.

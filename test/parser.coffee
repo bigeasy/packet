@@ -175,7 +175,7 @@ class exports.ParserTest extends TwerpTest
     @parser.reset()
     @parser.extract "b8z", (field, engine) =>
       @equal(engine.getBytesRead(), 8)
-      @deepEqual(field, bytes)
+      @deepEqual(field, bytes.slice(0, 7))
       invoked = true
     @parser.read bytes
     @ok invoked
@@ -187,7 +187,19 @@ class exports.ParserTest extends TwerpTest
     @parser.reset()
     @parser.extract "b8[8]z", (field, engine) =>
       @equal engine.getBytesRead(), 8
-      @deepEqual field, bytes.slice(0, 4)
+      @deepEqual field, bytes.slice(0, 3)
+      invoked = true
+    @parser.read bytes
+    @ok invoked
+    done 3
+
+  'test: read a multiple terminated array of 8 bytes': (done) ->
+    invoked = false
+    bytes = [ 0x01, 0x02, 0x0D, 0x0D, 0x0A, 0x06, 0x07, 0x08 ]
+    @parser.reset()
+    @parser.extract "b8[8]z<13,10>", (field, engine) =>
+      @equal engine.getBytesRead(), 8
+      @deepEqual field, bytes.slice(0, 3)
       invoked = true
     @parser.read bytes
     @ok invoked
