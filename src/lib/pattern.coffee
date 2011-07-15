@@ -7,7 +7,7 @@
 next = /^(-?)([xbl])(\d+)([fa]?)(.*)$/
 
 number = (pattern, part, index) ->
-  if match = /^(&)?0x([0-9a-f]+)(.*)$/i.exec part
+  if match = /^(&)?0x([0-9a-fA-F]+)(.*)$/i.exec part
     [ false, !! match[1], parseInt(match[2], 16), index + (match[1] or "").length + 2 + match[2].length, match[3] ]
   else if match = /^(\d+)(.*)$/.exec part
     [ false, false, parseInt(match[1], 10), index + match[1].length, match[2] ]
@@ -20,10 +20,13 @@ condition = (pattern, struct, text, index) ->
   startIndex = index
   [ any, mask, value, index, range ] = number pattern, text, index
   if mask
+    if  range[0] is "-"
+      throw new Error error "masks not permitted in ranges", pattern, startIndex
     struct.mask = value
   else if not any
     if  range[0] is "-"
       if mask
+        console.log "HERE"
         throw new Error error "masks not permitted in ranges", pattern, startIndex
       index++
       [ any, mask, maximum, nextIndex, range ] = number pattern, range.substring(1), index

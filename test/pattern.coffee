@@ -1659,6 +1659,10 @@ class exports.PacketTest extends TwerpTest
     @trap "invalid number at character 4", -> parse("b8(Q: b16{x1,b15} | b8)/(0-0x7f: b8 | b16{x1{1},b15})")
     done 1
 
-  'test: parse invalid alternation range with mask.': (done) ->
+  'test: parse invalid alternation range with mask lower.': (done) ->
     @trap "masks not permitted in ranges at character 6", -> parse("b8(0-&0x80: b16{x1,b15} | b8)/(0-0x7f: b8 | b16{x1{1},b15})")
+    done 1
+
+  'test: parse invalid alternation range with mask higher.': (done) ->
+    @trap "masks not permitted in ranges at character 4", -> parse("b8(&0x01-&0x80: b16{x1,b15} | b8)/(0-0x7f: b8 | b16{x1{1},b15})")
     done 1
