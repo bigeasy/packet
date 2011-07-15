@@ -1644,11 +1644,11 @@ class exports.PacketTest extends TwerpTest
     done 1
 
   'test: parse two patterns together without a comma.': (done) ->
-    @trap "invalid pattern at index 3", -> parse('l16b8')
+    @trap "invalid pattern at character 4", -> parse('l16b8')
     done 1
 
   'test: parse a little-endian integer packed in an integer.': (done) ->
-    @trap "invalid pattern at index 2", -> parse('b8{l4,b4}')
+    @trap "invalid pattern at character 3", -> parse('b8{l4,b4}')
     done 1
 
   'test: parse invalid bit pattern.': (done) ->

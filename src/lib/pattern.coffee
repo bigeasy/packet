@@ -285,6 +285,6 @@ parse = (next, pattern, part, index, bits) ->
     lengthEncoded = false
 
   if /\S/.test(rest)
-    throw  new Error "invalid pattern at index #{index}"
+    throw  new Error error "invalid pattern", pattern, index
 
   fields
