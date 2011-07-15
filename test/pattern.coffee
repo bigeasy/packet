@@ -1640,7 +1640,7 @@ class exports.PacketTest extends TwerpTest
     done 1
 
   'test: parse a float pattern other than 32 or 64 bits.': (done) ->
-    @trap "floats can only be 32 or 64 bits at index 1", -> parse('b16f')
+    @trap "floats can only be 32 or 64 bits at character 2", -> parse('b16f')
     done 1
 
   'test: parse two patterns together without a comma.': (done) ->

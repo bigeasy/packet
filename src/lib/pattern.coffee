@@ -153,7 +153,7 @@ parse = (next, pattern, part, index, bits) ->
     if f.bits % bits
       throw new Error error "bit size must be divisible by #{bits}", pattern, index
     if f.type == "f" and !(f.bits == 32 || f.bits == 64)
-      throw Error("floats can only be 32 or 64 bits at index #{index}")
+      throw Error error "floats can only be 32 or 64 bits", pattern, index
 
     # Move the character position up to the rest of the pattern.
     index += match[3].length
