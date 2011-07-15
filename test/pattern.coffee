@@ -154,6 +154,38 @@ class exports.PacketTest extends TwerpTest
     ]
     done 1
 
+  'test: parse a multi-line pattern': (done) ->
+    try
+      field = parse """
+        -l16,
+        b8
+      """
+    catch e
+      console.log e.stack
+    @deepEqual field,
+    [
+      { signed: true
+      , bits: 16
+      , endianness: 'l'
+      , bytes: 2
+      , type: 'n'
+      , unpacked: true
+      , arrayed: false
+      , repeat: 1
+      }
+    ,
+      { signed: false
+      , bits: 8
+      , endianness: 'b'
+      , bytes: 1
+      , type: 'n'
+      , unpacked: false
+      , arrayed: false
+      , repeat: 1
+      }
+    ]
+    done 1
+
   'test: parse a number greater than 64 bits with no type.': (done) ->
     field =  parse('b128')
     @deepEqual field, [

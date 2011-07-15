@@ -14,7 +14,7 @@ number = (pattern, index) ->
   else if match = /^\*(.*)$/
     [ true, false, 0, 1, match[1] ]
   else
-    throw new Error "invalid pattern at index #{index}"
+    throw new Error "invalid number at index #{index}"
 
 condition = (struct, text, index) ->
   [ any, mask, value, index, range ] = number text, index
@@ -55,7 +55,7 @@ never = ->
     minimum: Number.MAX_VALUE
   }
 
-alternates = (array, rest, primary, secondary, allowSecondary, index) ->
+alternates = (pattern, array, rest, primary, secondary, allowSecondary, index) ->
   while rest
     alternate             = {}
     alternate[primary]    = always()
@@ -78,11 +78,11 @@ alternates = (array, rest, primary, secondary, allowSecondary, index) ->
       index += delimiter.length + second.length if delimiter?
 
     if match = /^(\s*)([^|]+)(\|\s*)(.*)$/.exec rest
-      [ padding, pattern, delimiter, rest ] = match.slice(1)
+      [ padding, part, delimiter, rest ] = match.slice(1)
     else
-      [ padding, pattern, delimiter, rest ] = [ "", rest, "", null ]
+      [ padding, part, delimiter, rest ] = [ "", rest, "", null ]
     index += padding.length
-    alternate.pattern = parse({ pattern, index, next, bits: 8 })
+    alternate.pattern = parse next, pattern, part, index, 8
     index += pattern.length + delimiter.length
 
     array.push alternate
@@ -91,19 +91,21 @@ alternates = (array, rest, primary, secondary, allowSecondary, index) ->
 # Parse a pattern and create a list of fields.
 
 # The `pattern` is the pattern to parse.
-module.exports.parse = (pattern) -> parse({ pattern, index: 0, next, bits: 8 })
+module.exports.parse = (pattern) ->
+  part = pattern.replace(/\n/g, " ").replace(/^\s+/, " ")
+  index = pattern.length - part.length
+  parse next, pattern, part, index, 8
 
-parse = (o) ->
+parse = (next, pattern, part, index, bits) ->
   fields          = []
   lengthEncoded   = false
 
   # We chip away at the pattern, removing the parts we've matched, while keeping
   # track of the index separately for error messages.
-  rest            = o.pattern
-  index           = o.index
+  rest            = part
   loop
     # Match a packet pattern.
-    match = o.next.exec(rest)
+    match = next.exec(rest)
 
     # The 6th field is a trick to reuse this method for bit packing patterns
     # which are limited in what they can do. For bit packing the 5th pattern
@@ -131,8 +133,8 @@ parse = (o) ->
     # Check for a valid character
     if f.bits == 0
       throw new Error("bit size must be non-zero at index #{index}")
-    if f.bits % o.bits
-      throw new Error("bit size must be divisible by #{o.bits} at index #{index}")
+    if f.bits % bits
+      throw new Error("bit size must be divisible by #{bits} at index #{index}")
     if f.type == "f" and !(f.bits == 32 || f.bits == 64)
       throw Error("floats can only be 32 or 64 bits at index #{index}")
 
@@ -143,7 +145,7 @@ parse = (o) ->
     # Set the implicit fields. Unpacking logic is inconsistant between bits and
     # bytes, but not applicable for bits anyway.
     f.type      = "a" if f.bits > 64 and f.type == "n"
-    f.bytes     = f.bits / o.bits
+    f.bytes     = f.bits / bits
     f.unpacked  = f.signed or f.bytes > 8 or "ha".indexOf(f.type) != -1
 
 
@@ -152,13 +154,10 @@ parse = (o) ->
     # matching for a depth of one.
     pack = /^{((?:-b|b|x).+)}(\s*,.*|\s*)$/.exec(rest)
     if pack
-      f.packing   = parse
-                      pattern: pack[1]
-                      bits: 1
-                      index: index + 1
-                      next: /^(-?)([xb])(\d+)()(\s*(?:,|=>|{\d).*|)(.*)$/
+      index++
+      f.packing   = parse /^(-?)([xb])(\d+)()(\s*(?:,|=>|{\d).*|)(.*)$/, pattern, pack[1], index, 1
       rest        = pack[2]
-      index      += pack[1].length + 2
+      index      += pack[1].length + 1
     # Check for alternation.
     else if alternation = /^\(([^)]+)\)(.*)$/.exec(rest)
       f.arrayed     = true
@@ -170,11 +169,11 @@ parse = (o) ->
         write         = alternation[2]
         rest          = alternation[3]
       index += 1
-      alternates f.alternation = [], read, "read", "write", not write, index
+      alternates pattern, f.alternation = [], read, "read", "write", not write, index
       index += read.length + 1
       if write
         index += slash.length + 1
-        alternates f.alternation, write, "write", "read", false, index
+        alternates pattern, f.alternation, write, "write", "read", false, index
         index += write.length
       f.alternation.push {
         read: FAILURE, write: FAILURE, failed: true
