@@ -1678,3 +1678,11 @@ class exports.PacketTest extends TwerpTest
   'test: parse invalid alternation range with junk before colon.': (done) ->
     @trap "field alternates not allowed at character 9", -> parse("b8(&0x80/0-0x7f: b16{x1,b15} | b8)/(0-0x7f: b8 | b16{x1{1},b15})")
     done 1
+
+  'test: parse bit packed pattern underflow.': (done) ->
+    @trap "bit pack pattern underflow at character 5", -> parse("b16{b3,x6,b6}")
+    done 1
+
+  'test: parse bit packed pattern overflow.': (done) ->
+    @trap "bit pack pattern overflow at character 5", -> parse("b16{b3,x6,b8}")
+    done 1

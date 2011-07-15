@@ -172,9 +172,23 @@ parse = (next, pattern, part, index, bits) ->
     pack = /^{((?:-b|b|x).+)}(\s*,.*|\s*)$/.exec(rest)
     if pack
       index++
+
+      packIndex = index
+
       f.packing   = parse /^(-?)([xb])(\d+)()(\s*(?:,|=>|{\d).*|)(.*)$/, pattern, pack[1], index, 1
       rest        = pack[2]
       index      += pack[1].length + 1
+
+      sum = 0
+      for pack in f.packing
+        sum += pack.bits
+
+      if sum < f.bits
+        throw new Error error "bit pack pattern underflow", pattern, packIndex
+
+      if sum > f.bits
+        throw new Error error "bit pack pattern overflow", pattern, packIndex
+
     # Check for alternation.
     else if alternation = /^\(([^)]+)\)(.*)$/.exec(rest)
       f.arrayed     = true
