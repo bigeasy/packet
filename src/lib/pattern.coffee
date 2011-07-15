@@ -80,7 +80,7 @@ alternates = (pattern, array, rest, primary, secondary, allowSecondary, index) -
           alternate[secondary] = alternate[primary]
       else if second
         slashIndex = startIndex + first.length + delimiter.indexOf("/")
-        throw new Error "field alternates not allowed at index #{slashIndex}"
+        throw new Error error "field alternates not allowed", pattern, slashIndex
       index += first.length + imparative.length
       index += delimiter.length + second.length if delimiter?
 
