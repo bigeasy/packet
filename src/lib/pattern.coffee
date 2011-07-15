@@ -149,7 +149,7 @@ parse = (next, pattern, part, index, bits) ->
 
     # Check for a valid character
     if f.bits == 0
-      throw new Error("bit size must be non-zero at index #{index}")
+      throw new Error error "bit size must be non-zero", pattern, index
     if f.bits % bits
       throw new Error error "bit size must be divisible by #{bits}", pattern, index
     if f.type == "f" and !(f.bits == 32 || f.bits == 64)

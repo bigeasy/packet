@@ -1636,7 +1636,7 @@ class exports.PacketTest extends TwerpTest
     done 1
 
   'test: parse a 0 bit pattern.': (done) ->
-    @trap "bit size must be non-zero at index 1", -> parse("b0")
+    @trap "bit size must be non-zero at character 2", -> parse("b0")
     done 1
 
   'test: parse a float pattern other than 32 or 64 bits.': (done) ->
