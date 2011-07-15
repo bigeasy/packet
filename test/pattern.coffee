@@ -1624,7 +1624,7 @@ class exports.PacketTest extends TwerpTest
     done 1
 
   'test: parse utter nonsense.': (done) ->
-    @trap "invalid pattern at index 0", -> parse("blurdy")
+    @trap "invalid pattern at character 1", -> parse("blurdy")
     done 1
 
   'test: parse a 7 bit pattern.': (done) ->

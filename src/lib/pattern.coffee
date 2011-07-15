@@ -129,7 +129,7 @@ parse = (next, pattern, part, index, bits) ->
     # will match the rest only if it begins with a comma or named field arrow,
     # otherwise it falls to the 6th which matches.
     if !match
-      throw  new Error "invalid pattern at index #{index}"
+      throw  new Error error "invalid pattern", pattern, index
     if match[6]
       throw  new Error "invalid pattern at index #{index + rest.length - match[6].length}"
 
