@@ -74,8 +74,9 @@ class exports.Serializer extends Packet
         @_padding = pattern.padding
 
   # Initialize the next field value to serialize. In the case of an arrayed
-  # value, we will read 
-  # values, we will call `@_nextValue` zero, one or more times for a single c
+  # value, we will use the next value in the array. This method will adjust the
+  # pattern for alteration. It will back a bit packed integer. It will covert
+  # the field to a byte array for floats and signed negative numbers.
   _nextValue: ->
     pattern = @_pattern[@_patternIndex]
   

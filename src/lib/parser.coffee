@@ -49,15 +49,27 @@ class ReadableStream extends stream.Stream
     else
       @emit "data", slice
 
+##### Parser
+
+# The `Parser` reads binary data from a stream and converts it into JavaScript
+# primitives, Strings and arrays of JavaScript primitives.
 class exports.Parser extends Packet
+  # Construct a `Parser` that will use the given `self` object as the `this`
+  # when a callback is called. If no `self` is provided, the `Serializer`
+  # instance will be used as the `this` object for serialization event
+  # callbacks.
   constructor: (self) ->
     super self
     @writable = true
 
+  # FIXME Outgoing.
   data: (data...)   -> @_user = data
 
+  # Get the number of bytes read since the last call to `@reset()`. 
   getBytesRead:     -> @_bytesRead
 
+  # Initialize the next field pattern in the serialization pattern array, which
+  # is the pattern in the array `@_pattern` at the current `@_patternIndex`.
   _nextField: ->
     pattern       = @_pattern[@_patternIndex]
     @_repeat       = pattern.repeat
@@ -67,15 +79,19 @@ class exports.Parser extends Packet
     @_arrayed     = [] if pattern.arrayed and pattern.endianness isnt "x"
     @_named     or= !! pattern.name
 
+  # Prepare the parser to parse the next value in the input stream.  It
+  # initializes the value to a zero integer value or an array.  This method
+  # accounts for skipping, for skipped patterns.
   _nextValue: ->
+    # Get the next pattern.
     pattern = @_pattern[@_patternIndex]
 
+    # If skipping, skip over the count of bytes.
     if pattern.endianness is "x"
       @_skipping  = pattern.bytes
-    else
-      little      = pattern.endianness == "l"
-      bytes       = pattern.bytes
 
+    # Create the empty value and call the inherited `@_nextValue`.
+    else
       if pattern.unpacked
         value = []
       else
@@ -101,6 +117,11 @@ class exports.Parser extends Packet
     @_nextField()
     @_nextValue()
 
+  ##### parser.skip(length[, callback])
+
+  # Skip a region of input stream, invoking the given `callback` when `length`
+  # bytes have been skipped. The callback will be invoked with the flexible
+  # `this` object.
   skip: (length, @_callback) ->
     # Create a bogus pattern to enter the parse loop where the stream is fed in
     # the skipping branch. The length is passed to the callback simply because
@@ -114,8 +135,10 @@ class exports.Parser extends Packet
 
     @_skipping = length
 
-  # Construct a readable stream for the next length bytes calling callback when
-  # they have been read.
+  ##### parser.stream(length[, callback])
+
+  # Construct a readable stream that will read `length` bytes from the stream
+  # and invoke the given `callback` when the bytes have been read.
   stream: (length, callback) ->
     @skip(length, callback)
     @_stream = new ReadableStream(@, length, callback)
