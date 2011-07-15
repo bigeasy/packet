@@ -250,7 +250,7 @@ parse = (o) ->
         (f.pipeline or= []).push(transform)
 
       # Named pattern.
-      name = /\s*=>\s*(\w[\w\d]+)\s*(.*)/.exec(rest)
+      name = /^\s*=>\s*(\w[\w\d]+)\s*(.*)/.exec(rest)
       if name
         index += rest.length - name[2].length
         f.name = name[1]

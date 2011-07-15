@@ -37,6 +37,7 @@ class exports.Packet extends stream.Stream
     @_pattern = null
     @_callback = null
     @_fields = []
+    @_named = false
 
   # Excute the pipeline of transforms for the `pattern` on the `value`.
   _pipeline: (pattern, value, reverse) ->

@@ -782,163 +782,222 @@ class exports.PacketTest extends TwerpTest
     ]
     done 1
 
+  'test: parse a named bit packed pattern.': (done) ->
+    field = parse "b8{b2 => high, x1, b2 => low, x3}"
+    expected = [
+      { "signed": false
+      , "endianness": "b"
+      , "bits": 8
+      , "type": "n"
+      , "bytes": 1
+      , "unpacked": false
+      , "packing":
+        [
+          { "signed": false
+          , "endianness": "b"
+          , "bits": 2
+          , "type": "n"
+          , "bytes": 2
+          , "repeat": 1
+          , "arrayed": false
+          , "unpacked": false
+          , "name": "high"
+          }
+        ,
+          { "signed": false
+          , "endianness": "x"
+          , "bits": 1
+          , "type": "n"
+          , "bytes": 1
+          , "repeat": 1
+          , "arrayed": false
+          , "unpacked": false
+          }
+        ,
+          { "signed": false
+          , "endianness": "b"
+          , "bits": 2
+          , "type": "n"
+          , "bytes": 2
+          , "repeat": 1
+          , "arrayed": false
+          , "unpacked": false
+          , "name": "low"
+          }
+        ,
+          { "signed": false
+          , "endianness": "x"
+          , "bits": 3
+          , "type": "n"
+          , "bytes": 3
+          , "repeat": 1
+          , "arrayed": false
+          , "unpacked": false
+          }
+        ]
+      }
+    ]
+    @deepEqual field[0].packing[0], expected[0].packing[0]
+    @deepEqual field[0].packing[1], expected[0].packing[1]
+    @deepEqual field[0].packing[2], expected[0].packing[2]
+    @deepEqual field[0].packing[3], expected[0].packing[3]
+    @deepEqual field, expected
+    done 1
+
   'test: parse alternation with range.': (done) ->
-    try
-      field = parse "b8(0-251: b8 | 252: x8, b16 | 253: x8, b24 | 254: x8, b64)"
-      @deepEqual field, [
-        { "signed": false
-        , "endianness": "b"
-        , "bits": 8
-        , "type": "n"
-        , "bytes": 1
-        , "unpacked": false
-        , "arrayed": true
-        , "alternation":
-          [
-            { "read":
-              { "maximum": 251
-              , "minimum": 0
-              , "mask": 0
-              }
-            , "write":
-              { "maximum": 251
-              , "minimum": 0
-              , "mask": 0
-              }
-            , "pattern":
-              [
-                { "signed": false
-                , "endianness": "b"
-                , "bits": 8
-                , "type": "n"
-                , "bytes": 1
-                , "unpacked": false
-                , "repeat": 1
-                , "arrayed": false
-                }
-              ]
+    field = parse "b8(0-251: b8 | 252: x8, b16 | 253: x8, b24 | 254: x8, b64)"
+    @deepEqual field, [
+      { "signed": false
+      , "endianness": "b"
+      , "bits": 8
+      , "type": "n"
+      , "bytes": 1
+      , "unpacked": false
+      , "arrayed": true
+      , "alternation":
+        [
+          { "read":
+            { "maximum": 251
+            , "minimum": 0
+            , "mask": 0
             }
-          ,
-            { "read":
-              { "minimum": 252
-              , "maximum": 252
-              , "mask": 0
-              }
-            , "write":
-              { "minimum": 252
-              , "maximum": 252
-              , "mask": 0
-              }
-            , "pattern":
-              [
-                { "signed": false
-                , "endianness": "x"
-                , "bits": 8
-                , "type": "n"
-                , "bytes": 1
-                , "unpacked": false
-                , "repeat": 1
-                , "arrayed": false
-                }
-              ,
-                { "signed": false
-                , "endianness": "b"
-                , "bits": 16
-                , "type": "n"
-                , "bytes": 2
-                , "unpacked": false
-                , "repeat": 1
-                , "arrayed": false
-                }
-              ]
+          , "write":
+            { "maximum": 251
+            , "minimum": 0
+            , "mask": 0
             }
-          ,
-            { "read":
-              { "minimum": 253
-              , "maximum": 253
-              , "mask": 0
+          , "pattern":
+            [
+              { "signed": false
+              , "endianness": "b"
+              , "bits": 8
+              , "type": "n"
+              , "bytes": 1
+              , "unpacked": false
+              , "repeat": 1
+              , "arrayed": false
               }
-            , "write":
-              { "minimum": 253
-              , "maximum": 253
-              , "mask": 0
-              }
-            , "pattern":
-              [
-                { "signed": false
-                , "endianness": "x"
-                , "bits": 8
-                , "type": "n"
-                , "bytes": 1
-                , "unpacked": false
-                , "repeat": 1
-                , "arrayed": false
-                }
-              ,
-                { "signed": false
-                , "endianness": "b"
-                , "bits": 24
-                , "type": "n"
-                , "bytes": 3
-                , "unpacked": false
-                , "repeat": 1
-                , "arrayed": false
-                }
-              ]
+            ]
+          }
+        ,
+          { "read":
+            { "minimum": 252
+            , "maximum": 252
+            , "mask": 0
             }
-          ,
-            { "read":
-              { "minimum": 254
-              , "maximum": 254
-              , "mask": 0
-              }
-            , "write":
-              { "minimum": 254
-              , "maximum": 254
-              , "mask": 0
-              }
-            , "pattern":
-              [
-                { "signed": false
-                , "endianness": "x"
-                , "bits": 8
-                , "type": "n"
-                , "bytes": 1
-                , "unpacked": false
-                , "repeat": 1
-                , "arrayed": false
-                }
-              ,
-                { "signed": false
-                , "endianness": "b"
-                , "bits": 64
-                , "type": "n"
-                , "bytes": 8
-                , "unpacked": false
-                , "repeat": 1
-                , "arrayed": false
-                }
-              ]
+          , "write":
+            { "minimum": 252
+            , "maximum": 252
+            , "mask": 0
             }
-          ,
-            { "read":
-              { "minimum": Number.MIN_VALUE
-              , "maximum": Number.MAX_VALUE
-              , "mask": 0
+          , "pattern":
+            [
+              { "signed": false
+              , "endianness": "x"
+              , "bits": 8
+              , "type": "n"
+              , "bytes": 1
+              , "unpacked": false
+              , "repeat": 1
+              , "arrayed": false
               }
-            , "write":
-              { "minimum": Number.MIN_VALUE
-              , "maximum": Number.MAX_VALUE
-              , "mask": 0
+            ,
+              { "signed": false
+              , "endianness": "b"
+              , "bits": 16
+              , "type": "n"
+              , "bytes": 2
+              , "unpacked": false
+              , "repeat": 1
+              , "arrayed": false
               }
-            , "failed": true
+            ]
+          }
+        ,
+          { "read":
+            { "minimum": 253
+            , "maximum": 253
+            , "mask": 0
             }
-          ]
-        }
-      ]
-      done 1
-    catch e
-      console.log e.stack
+          , "write":
+            { "minimum": 253
+            , "maximum": 253
+            , "mask": 0
+            }
+          , "pattern":
+            [
+              { "signed": false
+              , "endianness": "x"
+              , "bits": 8
+              , "type": "n"
+              , "bytes": 1
+              , "unpacked": false
+              , "repeat": 1
+              , "arrayed": false
+              }
+            ,
+              { "signed": false
+              , "endianness": "b"
+              , "bits": 24
+              , "type": "n"
+              , "bytes": 3
+              , "unpacked": false
+              , "repeat": 1
+              , "arrayed": false
+              }
+            ]
+          }
+        ,
+          { "read":
+            { "minimum": 254
+            , "maximum": 254
+            , "mask": 0
+            }
+          , "write":
+            { "minimum": 254
+            , "maximum": 254
+            , "mask": 0
+            }
+          , "pattern":
+            [
+              { "signed": false
+              , "endianness": "x"
+              , "bits": 8
+              , "type": "n"
+              , "bytes": 1
+              , "unpacked": false
+              , "repeat": 1
+              , "arrayed": false
+              }
+            ,
+              { "signed": false
+              , "endianness": "b"
+              , "bits": 64
+              , "type": "n"
+              , "bytes": 8
+              , "unpacked": false
+              , "repeat": 1
+              , "arrayed": false
+              }
+            ]
+          }
+        ,
+          { "read":
+            { "minimum": Number.MIN_VALUE
+            , "maximum": Number.MAX_VALUE
+            , "mask": 0
+            }
+          , "write":
+            { "minimum": Number.MIN_VALUE
+            , "maximum": Number.MAX_VALUE
+            , "mask": 0
+            }
+          , "failed": true
+          }
+        ]
+      }
+    ]
+    done 1
 
   'test: parse alternation with default.': (done) ->
     field = parse "b8(252: x8, b16 | 253: x8, b24 | 254: x8, b64 | b8)"

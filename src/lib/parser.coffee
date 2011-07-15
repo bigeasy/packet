@@ -65,6 +65,7 @@ class exports.Parser extends Packet
     @_skipping    = null
     @_terminated   = not pattern.terminator
     @_arrayed     = [] if pattern.arrayed and pattern.endianness isnt "x"
+    @_named     or= !! pattern.name
 
   _nextValue: ->
     pattern = @_pattern[@_patternIndex]
@@ -306,13 +307,44 @@ class exports.Parser extends Packet
         # The pattern is set to null, our terminal condition, because the
         # callback may specify a subsequent packet to parse.
         if ++@_patternIndex == @_pattern.length
-          @_pattern = null
+          [ pattern, @_pattern ] = [ @_pattern, null ]
 
           if @_callback
             @_fields.push(this)
             @_fields.push(p) for p in @_user or []
 
-            @_callback.apply @_self, @_fields
+            # At one point, you thought you could have  a test for the arity of
+            # the function, and if it was not `1`, you'd call the callback
+            # positionally, regardless of named parameters. Then you realized
+            # that the `=>` operator in CoffeeScript would use a bind function
+            # with no arguments, and read the argument array. If you do decide
+            # to go back to arity override, then greater than one is the
+            # trigger. However, on reflection, I don't see that the flexiblity
+            # is useful, and I do believe that it will generate at least one bug
+            # report that will take a lot of hashing out only to close with "oh,
+            # no, you hit upon a "hidden feature".
+            offset = 0
+            if @_named
+              object = {}
+              for part in pattern
+                if part.endianness isnt "x"
+                  if part.packing
+                    for pack in part.packing
+                      if pack.endianness isnt "x"
+                        if pack.name
+                          object[pack.name] = @_fields[offset]
+                        else
+                          object["field#{offset + 1}"] = @_fields[offset]
+                        offset++
+                  else
+                    if part.name
+                      object[part.name] = @_fields[offset]
+                    else
+                      object["field#{offset + 1}"] = @_fields[offset]
+                    offset++
+              @_callback.call @_self, object
+            else
+              @_callback.apply @_self, @_fields
 
         # Otherwise we proceed to the next field in the packet pattern.
         else

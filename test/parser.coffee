@@ -372,3 +372,31 @@ class exports.ParserTest extends TwerpTest
     parser.read [ 1 ]
     @ok invoked
     done 1
+
+  "test: read object": (done) ->
+    invoked = false
+    @parser.reset()
+    @parser.extract "b16 => length, b8 => type, b8z|utf8() => name", (object) =>
+      @equal @parser.getBytesRead(), 7
+      @deepEqual object,
+        length: 258
+        type: 8
+        name: "ABC"
+      invoked = true
+    @parser.read [ 0x01, 0x02, 0x08, 0x41, 0x42, 0x43, 0x00 ]
+    @ok invoked
+    done 3
+
+  "test: read a bit packed integer into an object": (done) ->
+    invoked = false
+    bytes = [ 0x01, 0x02, 0xD0 ]
+    @parser.reset()
+    @parser.extract "b16 => short, b8{b2 => high, x1, b2 => low, x3}", (object) =>
+      @equal @parser.getBytesRead(), 3
+      @equal object.short, 258
+      @equal object.high, 3
+      @equal object.low, 2
+      invoked = true
+    @parser.read bytes, 0, 3
+    @ok invoked
+    done 5
