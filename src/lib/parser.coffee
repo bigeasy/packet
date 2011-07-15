@@ -62,9 +62,6 @@ class exports.Parser extends Packet
     super self
     @writable = true
 
-  # FIXME Outgoing.
-  data: (data...)   -> @_user = data
-
   # Get the number of bytes read since the last call to `@reset()`. 
   getBytesRead:     -> @_bytesRead
 
@@ -344,7 +341,6 @@ class exports.Parser extends Packet
 
           if @_callback
             @_fields.push(this)
-            @_fields.push(p) for p in @_user or []
 
             # At one point, you thought you could have  a test for the arity of
             # the function, and if it was not `1`, you'd call the callback
