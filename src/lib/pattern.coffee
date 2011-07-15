@@ -26,14 +26,13 @@ condition = (pattern, struct, text, index) ->
   else if not any
     if  range[0] is "-"
       if mask
-        console.log "HERE"
         throw new Error error "masks not permitted in ranges", pattern, startIndex
       index++
       [ any, mask, maximum, nextIndex, range ] = number pattern, range.substring(1), index
       if mask
         throw new Error error "masks not permitted in ranges", pattern, index
       if any
-        throw new Error "asterisk not permitted in ranges at index #{index}"
+        throw new Error error "any not permitted in ranges", pattern, index
       index = nextIndex
       if match = /(\s*)\S/.test range
         throw new Error "invalid pattern at index #{index + match[1].length}"
