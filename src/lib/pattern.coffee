@@ -254,8 +254,35 @@ parse = (next, pattern, part, index, bits) ->
       # Check for zero termination.
       tz = /^z(?:<(.*?)>)?(.*)$/.exec(rest)
       if tz
-        index += rest.length - tz[2].length
-        f.terminator = tz[1] or "\0"
+        index++
+        if tz[1]?
+          index++
+          f.terminator = []
+          terminator = tz[1]
+          loop
+            if not match = /^(\s*)(?:0x([A-F-a-f00-9]{2})|(\d+))(\s*,)?(.*)$/.exec terminator
+              throw new Error error "invalid terminator", pattern, index
+            [ before, hex, decimal, comma, rest ] = match.slice(1)
+            index += before.length
+            numberIndex = index
+            if hex
+              value = parseInt hex, 16
+              index += hex.length + 2
+            else
+              value = parseInt decimal, 10
+              index += decimal.length
+            if value > 255
+              throw new Error error "terminator value out of range", pattern, numberIndex
+            f.terminator.push value
+            if /\S/.test(rest) and not comma
+              throw new Error error "invalid pattern", pattern, index
+            if not comma
+              break
+            terminator = rest
+            index += comma.length
+          index++
+        else
+          f.terminator = [ 0 ]
         f.arrayed = true
         rest = tz[2]
         if f.repeat is 1

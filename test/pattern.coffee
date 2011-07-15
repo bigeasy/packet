@@ -283,7 +283,23 @@ class exports.PacketTest extends TwerpTest
       , unpacked: false
       , arrayed: true
       , repeat: Number.MAX_VALUE
-      , terminator: "\0"
+      , terminator: [ 0 ]
+      }
+    ]
+    done 1
+
+  'test: parse a list of bytes terminated by a custom terminator.': (done) ->
+    field = parse('b8z<13,0x0A>')
+    @deepEqual field, [
+      { signed: false
+      , bits: 8
+      , endianness: 'b'
+      , bytes: 1
+      , type: 'n'
+      , unpacked: false
+      , arrayed: true
+      , repeat: Number.MAX_VALUE
+      , terminator: [ 13, 10 ]
       }
     ]
     done 1
@@ -299,7 +315,7 @@ class exports.PacketTest extends TwerpTest
       , unpacked: false
       , arrayed: true
       , repeat: 8
-      , terminator: "\0"
+      , terminator: [ 0 ]
       , padding: 0
       }
     ]
@@ -316,7 +332,7 @@ class exports.PacketTest extends TwerpTest
       , unpacked: false
       , arrayed: true
       , repeat: 8
-      , terminator: "\0"
+      , terminator: [ 0 ]
       , padding: 16
       }
     ]
@@ -333,7 +349,7 @@ class exports.PacketTest extends TwerpTest
       , unpacked: false
       , arrayed: true
       , repeat: 8
-      , terminator: "\0"
+      , terminator: [ 0 ]
       , padding: 8
       }
     ]
@@ -350,7 +366,7 @@ class exports.PacketTest extends TwerpTest
       , unpacked: false
       , arrayed: true
       , repeat: Number.MAX_VALUE
-      , terminator: "\0"
+      , terminator: [ 0 ]
       , pipeline:
         [
           { name: "str"
@@ -372,7 +388,7 @@ class exports.PacketTest extends TwerpTest
       , unpacked: false
       , arrayed: true
       , repeat: Number.MAX_VALUE
-      , terminator: "\0"
+      , terminator: [ 0 ]
       , pipeline:
         [
           { name: "str"
@@ -394,7 +410,7 @@ class exports.PacketTest extends TwerpTest
       , unpacked: false
       , arrayed: true
       , repeat: Number.MAX_VALUE
-      , terminator: "\0"
+      , terminator: [ 0 ]
       , pipeline:
         [
           { name: "str"
@@ -426,7 +442,7 @@ class exports.PacketTest extends TwerpTest
       , unpacked: false
       , arrayed: true
       , repeat: Number.MAX_VALUE
-      , terminator: "\0"
+      , terminator: [ 0 ]
       , pipeline:
         [
           { name: "twiddle"
@@ -448,7 +464,7 @@ class exports.PacketTest extends TwerpTest
       , unpacked: false
       , arrayed: true
       , repeat: Number.MAX_VALUE
-      , terminator: "\0"
+      , terminator: [ 0 ]
       , pipeline:
         [
           { name: "twiddle"
@@ -470,7 +486,7 @@ class exports.PacketTest extends TwerpTest
       , unpacked: false
       , arrayed: true
       , repeat: Number.MAX_VALUE
-      , terminator: "\0"
+      , terminator: [ 0 ]
       , pipeline:
         [
           { name: "twiddle"
@@ -492,7 +508,7 @@ class exports.PacketTest extends TwerpTest
       , unpacked: false
       , arrayed: true
       , repeat: Number.MAX_VALUE
-      , terminator: "\0"
+      , terminator: [ 0 ]
       , pipeline:
         [
           { name: "twiddle"
@@ -514,7 +530,7 @@ class exports.PacketTest extends TwerpTest
       , unpacked: false
       , arrayed: true
       , repeat: Number.MAX_VALUE
-      , terminator: "\0"
+      , terminator: [ 0 ]
       , pipeline:
         [
           { name: "twiddle"
@@ -536,7 +552,7 @@ class exports.PacketTest extends TwerpTest
       , unpacked: false
       , arrayed: true
       , repeat: Number.MAX_VALUE
-      , terminator: "\0"
+      , terminator: [ 0 ]
       , pipeline:
         [
           { name: "twiddle"
@@ -558,7 +574,7 @@ class exports.PacketTest extends TwerpTest
       , unpacked: false
       , arrayed: true
       , repeat: Number.MAX_VALUE
-      , terminator: "\0"
+      , terminator: [ 0 ]
       , pipeline:
         [
           { name: "twiddle"
@@ -580,7 +596,7 @@ class exports.PacketTest extends TwerpTest
       , unpacked: false
       , arrayed: true
       , repeat: Number.MAX_VALUE
-      , terminator: "\0"
+      , terminator: [ 0 ]
       , pipeline:
         [
           { name: "twiddle"
@@ -602,7 +618,7 @@ class exports.PacketTest extends TwerpTest
       , unpacked: false
       , arrayed: true
       , repeat: Number.MAX_VALUE
-      , terminator: "\0"
+      , terminator: [ 0 ]
       , pipeline:
         [
           { name: "twiddle"
@@ -624,7 +640,7 @@ class exports.PacketTest extends TwerpTest
       , unpacked: false
       , arrayed: true
       , repeat: Number.MAX_VALUE
-      , terminator: "\0"
+      , terminator: [ 0 ]
       , pipeline:
         [
           { name: "twiddle"
@@ -646,7 +662,7 @@ class exports.PacketTest extends TwerpTest
       , unpacked: false
       , arrayed: true
       , repeat: Number.MAX_VALUE
-      , terminator: "\0"
+      , terminator: [ 0 ]
       , pipeline:
         [
           { name: "twiddle"
@@ -668,7 +684,7 @@ class exports.PacketTest extends TwerpTest
       , unpacked: false
       , arrayed: true
       , repeat: Number.MAX_VALUE
-      , terminator: "\0"
+      , terminator: [ 0 ]
       , pipeline:
         [
           { name: "utf8"
@@ -695,7 +711,7 @@ class exports.PacketTest extends TwerpTest
       , unpacked: false
       , arrayed: true
       , repeat: Number.MAX_VALUE
-      , terminator: "\0"
+      , terminator: [ 0 ]
       , pipeline:
         [
           { name: "utf8"
@@ -1685,4 +1701,12 @@ class exports.PacketTest extends TwerpTest
 
   'test: parse bit packed pattern overflow.': (done) ->
     @trap "bit pack pattern overflow at character 5", -> parse("b16{b3,x6,b8}")
+    done 1
+
+  'test: parse terminator out of range.': (done) ->
+    @trap "terminator value out of range at character 5", -> parse("b8z<300>")
+    done 1
+
+  'test: parse bad terminator.': (done) ->
+    @trap "invalid terminator at character 10", -> parse("b8z<0x0A,a>")
     done 1
