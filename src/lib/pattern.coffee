@@ -131,7 +131,7 @@ parse = (next, pattern, part, index, bits) ->
     if !match
       throw  new Error error "invalid pattern", pattern, index
     if match[6]
-      throw  new Error "invalid pattern at index #{index + rest.length - match[6].length}"
+      throw  new Error error "invalid pattern", pattern, index + rest.length - match[6].length
 
     # The remainder of the pattern, if any.
     rest = match[5]

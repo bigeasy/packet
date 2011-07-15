@@ -1652,7 +1652,7 @@ class exports.PacketTest extends TwerpTest
     done 1
 
   'test: parse invalid bit pattern.': (done) ->
-    @trap "invalid pattern at index 12", -> parse("b16{b3,x6,b7f}")
+    @trap "invalid pattern at character 13", -> parse("b16{b3,x6,b7f}")
     done 1
 
   'test: parse invalid alternation number pattern.': (done) ->
