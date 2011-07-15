@@ -12,10 +12,11 @@ number = (pattern, part, index) ->
   else if match = /^(\d+)(.*)$/.exec part
     [ false, false, parseInt(match[1], 10), index + match[1].length, match[2] ]
   else if match = /^\*(.*)$/.exec part
-    [ true, false, 0, 1, match ]
+    [ true, false, 0, index + 1, match[1] ]
   else
     throw new Error error "invalid number", pattern, index
 
+# Parse an alternation condition.
 condition = (pattern, struct, text, index) ->
   startIndex = index
   [ any, mask, value, index, range ] = number pattern, text, index
@@ -34,12 +35,13 @@ condition = (pattern, struct, text, index) ->
       if any
         throw new Error error "any not permitted in ranges", pattern, index
       index = nextIndex
-      if match = /(\s*)\S/.test range
-        throw new Error "invalid pattern at index #{index + match[1].length}"
       struct.minimum = value
       struct.maximum = maximum
     else
       struct.minimum = struct.maximum = value
+  if match = /(\s*)\S/.exec range
+    index += match[1].length
+    throw new Error error "invalid pattern", pattern, index
   index
 
 FAILURE =

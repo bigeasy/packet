@@ -1670,3 +1670,7 @@ class exports.PacketTest extends TwerpTest
   'test: parse invalid alternation range with any.': (done) ->
     @trap "any not permitted in ranges at character 6", -> parse("b8(0-*: b16{x1,b15} | b8)/(0-0x7f: b8 | b16{x1{1},b15})")
     done 1
+
+  'test: parse invalid alternation range with junk before colon.': (done) ->
+    @trap "invalid pattern at character 9", -> parse("b8(&0x80Steve: b16{x1,b15} | b8)/(0-0x7f: b8 | b16{x1{1},b15})")
+    done 1
