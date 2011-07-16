@@ -1,3 +1,7 @@
+# Don't forget that parsers of any sort tend to be complex. A simple PEG grammar
+# quickly becomes a thousand lines. This compiles to under 400 lines of
+# JavaScript. You are giong to find it difficult to make it much smaller.
+#
 # This module is separated for isolation during testing. It is not meant to be
 # exposed as part of the public API.
 
@@ -49,6 +53,14 @@ FAILURE =
   maximum: Number.MAX_VALUE
   mask: 0
 
+# An alternation condition that never matches.
+NEVER =
+  maximum: Number.MIN_VALUE
+  minimum: Number.MAX_VALUE
+
+# Generates an alternation condition that will always match. This is not a
+# constant like `FAILURE` because we build upon it to create specific
+# conditions.
 always = ->
   {
     maximum: Number.MAX_VALUE
@@ -56,17 +68,11 @@ always = ->
     mask: 0
   }
 
-never = ->
-  {
-    maximum: Number.MIN_VALUE
-    minimum: Number.MAX_VALUE
-  }
-
 alternates = (pattern, array, rest, primary, secondary, allowSecondary, index) ->
   while rest
     alternate             = {}
     alternate[primary]    = always()
-    alternate[secondary]  = if allowSecondary then always() else never()
+    alternate[secondary]  = if allowSecondary then always() else NEVER
 
     match = /^([^/:]+)(?:(\s*\/\s*)([^:]+))?(:\s*)(.*)$/.exec rest
     if match

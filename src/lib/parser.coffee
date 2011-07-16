@@ -340,8 +340,6 @@ class exports.Parser extends Packet
           [ pattern, @_pattern ] = [ @_pattern, null ]
 
           if @_callback
-            @_fields.push(this)
-
             # At one point, you thought you could have  a test for the arity of
             # the function, and if it was not `1`, you'd call the callback
             # positionally, regardless of named parameters. Then you realized
