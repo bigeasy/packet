@@ -5,47 +5,67 @@
 # This module is separated for isolation during testing. It is not meant to be
 # exposed as part of the public API.
 
-# Regular expression to match a pipeline argument, expressed as a JavaScript
-# scalar, taken in part from [json2.js](http://www.JSON.org/json2.js). 
-{argument, constant} = require "./argument"
-next = /^(-?)([xbl])(\d+)([fa]?)(.*)$/
+# Extract an alternation range number or bit mask from at the current pattern
+# substring given by `rest`.
+number = (pattern, rest, index) ->
+  match = ///
+    ^               # start
+    (                 # capture for length
+      (?:
+        \*                # any
+        |
+        (?:
+          (\&?)              # test is mask
+          0x([0-9a-f]+)     # hex
+          |
+          (\d+)             # decimal
+        )
+      )
+    (-)?            # range
+    ) 
+    (.*)            # rest
+    $               # end
+  ///i.exec rest
 
-number = (pattern, part, index) ->
-  if match = /^(&)?0x([0-9a-fA-F]+)(.*)$/i.exec part
-    [ false, !! match[1], parseInt(match[2], 16), index + (match[1] or "").length + 2 + match[2].length, match[3] ]
-  else if match = /^(\d+)(.*)$/.exec part
-    [ false, false, parseInt(match[1], 10), index + match[1].length, match[2] ]
-  else if match = /^\*(.*)$/.exec part
-    [ true, false, 0, index + 1, match[1] ]
-  else
+  if not match
     throw new Error error "invalid number", pattern, index
 
+  [ matched, mask, hex, decimal, range, rest ] = match.slice 1
+
+  if hex?
+    value = parseInt hex, 16
+  else if decimal?
+    value = parseInt decimal, 10
+
+  index += matched.length
+
+  { any: ! value?, mask: !! mask, value, index, range, rest }
+
 # Parse an alternation condition.
-condition = (pattern, struct, text, index) ->
-  startIndex = index
-  [ any, mask, value, index, range ] = number pattern, text, index
-  if mask
-    if  range[0] is "-"
-      throw new Error error "masks not permitted in ranges", pattern, startIndex
-    struct.mask = value
-  else if not any
-    if  range[0] is "-"
-      if mask
-        throw new Error error "masks not permitted in ranges", pattern, startIndex
-      index++
-      [ any, mask, maximum, nextIndex, range ] = number pattern, range.substring(1), index
-      if mask
-        throw new Error error "masks not permitted in ranges", pattern, index
-      if any
-        throw new Error error "any not permitted in ranges", pattern, index
-      index = nextIndex
-      struct.minimum = value
-      struct.maximum = maximum
+condition = (pattern, index, rest, struct) ->
+  from = number pattern, rest, index
+  if from.mask
+    if from.range
+      throw new Error error "masks not permitted in ranges", pattern, index
+    struct.mask = from.value
+  else if not from.any
+    if from.range
+      if from.mask
+        throw new Error error "masks not permitted in ranges", pattern, from.index - 1
+      to = number pattern, from.rest, from.index
+      if to.mask
+        throw new Error error "masks not permitted in ranges", pattern, from.index
+      if to.any
+        throw new Error error "any not permitted in ranges", pattern, from.index
+      struct.minimum = from.value
+      struct.maximum = to.value
     else
-      struct.minimum = struct.maximum = value
-  if match = /(\s*)\S/.exec range
-    index += match[1].length
-    throw new Error error "invalid pattern", pattern, index
+      struct.minimum = struct.maximum = from.value
+  else if from.range
+    throw new Error error "any not permitted in ranges", pattern, index
+  num = to or from
+  if match = /(\s*)\S/.exec num.rest
+    throw new Error error "invalid pattern", pattern, index + match[1].length
   index
 
 FAILURE =
@@ -78,10 +98,10 @@ alternates = (pattern, array, rest, primary, secondary, allowSecondary, index) -
     if match
       [ first, delimiter, second, imparative, rest ] = match.slice(1)
       startIndex = index
-      condition pattern, alternate[primary], first, index
+      condition pattern, index, first, alternate[primary]
       if allowSecondary
         if second
-          condition pattern, alternate[secondary], second, index
+          condition pattern, index, second, alternate[secondary]
         else
           alternate[secondary] = alternate[primary]
       else if second
@@ -95,7 +115,7 @@ alternates = (pattern, array, rest, primary, secondary, allowSecondary, index) -
     else
       [ padding, part, delimiter, rest ] = [ "", rest, "", null ]
     index += padding.length
-    alternate.pattern = parse next, pattern, part, index, 8
+    alternate.pattern = parse pattern, part, index, 8
     index += part.length + delimiter.length
 
     array.push alternate
@@ -107,7 +127,7 @@ alternates = (pattern, array, rest, primary, secondary, allowSecondary, index) -
 module.exports.parse = (pattern) ->
   part = pattern.replace(/\n/g, " ").replace(/^\s+/, " ")
   index = pattern.length - part.length
-  parse next, pattern, part, index, 8
+  parse pattern, part, index, 8
 
 # We don't count an initial newline as a line.
 error = (message, pattern, index) ->
@@ -118,10 +138,13 @@ error = (message, pattern, index) ->
   else
     "#{message} at character #{index + 1}"
 
-
-parse = (next, pattern, part, index, bits) ->
+# Parse a part of a pattern. The `next` regular expression is replaced when we
+# match bit packing patterns, with a regular expression that excludes modifiers
+# that are non-applicable to bit packing patterns.
+parse = (pattern, part, index, bits, next) ->
   fields          = []
   lengthEncoded   = false
+  next          or= /^(-?)([xbl])(\d+)([fa]?)(.*)$/
 
   # We chip away at the pattern, removing the parts we've matched, while keeping
   # track of the index separately for error messages.
@@ -181,7 +204,27 @@ parse = (next, pattern, part, index, bits) ->
 
       packIndex = index
 
-      f.packing   = parse /^(-?)([xb])(\d+)()(\s*(?:,|=>|{\d).*|)(.*)$/, pattern, pack[1], index, 1
+      f.packing   = parse pattern, pack[1], index, 1, ///
+        ^       # start
+        (-?)    # sign
+        ([xb])  # skip or big-endian
+        (\d+)   # bits
+        ()      # never a modifier
+        (       # valid tokens following size
+          \s*     # optional whitespace followed by
+          (?:
+            ,     # a comma to continue the pattern
+            |
+            =>    # a name specifier
+            |
+            {\d   # a fill character specifier
+          )
+          .*    # the rest of the pattern
+          |
+        )
+        (.*)    # match everything if the previous match misses
+        $
+      ///
       rest        = pack[2]
       index      += pack[1].length + 1
 
@@ -301,8 +344,19 @@ parse = (next, pattern, part, index, bits) ->
         rest            = pipe[3]
         hasArgument     = not pipe[2]
 
+        # Regular expression to match a pipeline argument, expressed as a
+        # JavaScript scalar, taken in part from
+        # [json2.js](http://www.JSON.org/json2.js). 
         while hasArgument
-          arg         = argument.exec(rest)
+          arg         = ///
+            ( '(?:[^\\']|\\.)+'|"(?:[^\\"]|\\.)+"   # string
+            | true | false                          # boolean
+            | null                                  # null
+            | -?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?     # number
+            )    
+            (\s*,\s*|\s*\))?                        # remaining arguments
+            (.*)                                    # remaining pattern
+          ///.exec rest
           index      += rest.length - arg[3].length
           value       = eval(arg[1])
           hasArgument = arg[2].indexOf(")") is -1

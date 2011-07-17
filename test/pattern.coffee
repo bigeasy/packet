@@ -831,66 +831,69 @@ class exports.PacketTest extends TwerpTest
     done 1
 
   'test: parse a named bit packed pattern.': (done) ->
-    field = parse "b8{b2 => high, x1, b2 => low, x3}"
-    expected = [
-      { "signed": false
-      , "endianness": "b"
-      , "bits": 8
-      , "type": "n"
-      , "bytes": 1
-      , "unpacked": false
-      , "packing":
-        [
-          { "signed": false
-          , "endianness": "b"
-          , "bits": 2
-          , "type": "n"
-          , "bytes": 2
-          , "repeat": 1
-          , "arrayed": false
-          , "unpacked": false
-          , "name": "high"
-          }
-        ,
-          { "signed": false
-          , "endianness": "x"
-          , "bits": 1
-          , "type": "n"
-          , "bytes": 1
-          , "repeat": 1
-          , "arrayed": false
-          , "unpacked": false
-          }
-        ,
-          { "signed": false
-          , "endianness": "b"
-          , "bits": 2
-          , "type": "n"
-          , "bytes": 2
-          , "repeat": 1
-          , "arrayed": false
-          , "unpacked": false
-          , "name": "low"
-          }
-        ,
-          { "signed": false
-          , "endianness": "x"
-          , "bits": 3
-          , "type": "n"
-          , "bytes": 3
-          , "repeat": 1
-          , "arrayed": false
-          , "unpacked": false
-          }
-        ]
-      }
-    ]
-    @deepEqual field[0].packing[0], expected[0].packing[0]
-    @deepEqual field[0].packing[1], expected[0].packing[1]
-    @deepEqual field[0].packing[2], expected[0].packing[2]
-    @deepEqual field[0].packing[3], expected[0].packing[3]
-    @deepEqual field, expected
-    done 1
+    try
+      field = parse "b8{b2 => high, x1, b2 => low, x3}"
+      expected = [
+        { "signed": false
+        , "endianness": "b"
+        , "bits": 8
+        , "type": "n"
+        , "bytes": 1
+        , "unpacked": false
+        , "packing":
+          [
+            { "signed": false
+            , "endianness": "b"
+            , "bits": 2
+            , "type": "n"
+            , "bytes": 2
+            , "repeat": 1
+            , "arrayed": false
+            , "unpacked": false
+            , "name": "high"
+            }
+          ,
+            { "signed": false
+            , "endianness": "x"
+            , "bits": 1
+            , "type": "n"
+            , "bytes": 1
+            , "repeat": 1
+            , "arrayed": false
+            , "unpacked": false
+            }
+          ,
+            { "signed": false
+            , "endianness": "b"
+            , "bits": 2
+            , "type": "n"
+            , "bytes": 2
+            , "repeat": 1
+            , "arrayed": false
+            , "unpacked": false
+            , "name": "low"
+            }
+          ,
+            { "signed": false
+            , "endianness": "x"
+            , "bits": 3
+            , "type": "n"
+            , "bytes": 3
+            , "repeat": 1
+            , "arrayed": false
+            , "unpacked": false
+            }
+          ]
+        }
+      ]
+      @deepEqual field[0].packing[0], expected[0].packing[0]
+      @deepEqual field[0].packing[1], expected[0].packing[1]
+      @deepEqual field[0].packing[2], expected[0].packing[2]
+      @deepEqual field[0].packing[3], expected[0].packing[3]
+      @deepEqual field, expected
+      done 1
+    catch e
+      console.log e.stack
 
   'test: parse alternation with range.': (done) ->
     field = parse "b8(0-251: b8 | 252: x8, b16 | 253: x8, b24 | 254: x8, b64)"
