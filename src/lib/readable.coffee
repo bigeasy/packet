@@ -15,21 +15,6 @@ class exports.ReadableStream extends stream.Stream
   setEncoding: (encoding) ->
     @_decoder = new (require("string_decoder").StringDecoder)(encoding)
 
-  
-  _delegate: (method) -> @_parser[method]() if @_parser.piped
-
-  # Pause the source stream that is feeding the associated `Parser`.
-  pause: -> @_parser.pause()
-
-  # Result the source stream that is feeding the associated `Parser`.
-  resume: -> @_parser.resume()
-
-  # Soon destory the source stream that is feeding the associated `Parser`.
-  destroySoon: -> @_parser.destroySoon()
-
-  # Destory the source stream that is feeding the associated `Parser`.
-  destroy: -> @_parser.destroy()
-
   # Emit the `"end"` event.
   _end: ->
     @emit "end"
@@ -43,3 +28,7 @@ class exports.ReadableStream extends stream.Stream
       @emit "data", string if string.length
     else
       @emit "data", slice
+  
+# A loop to create delegates for method that really exist in the `Parser`.
+for method in "pause resume destroySoon destroy".split /\s+/
+  ReadableStream::[method] = -> @_parser[method]()

@@ -17,7 +17,7 @@ class exports.Parser extends Packet
     @writable = true
 
   # Get the number of bytes read since the last call to `@reset()`. 
-  getBytesRead:     -> @_bytesRead
+  getBytesRead: -> @_bytesRead
 
   # Initialize the next field pattern in the serialization pattern array, which
   # is the pattern in the array `@_pattern` at the current `@_patternIndex`.
@@ -78,14 +78,14 @@ class exports.Parser extends Packet
     # Create a bogus pattern to enter the parse loop where the stream is fed in
     # the skipping branch. The length is passed to the callback simply because
     # the parse loop expects there to be a field.
-    @_pattern = [ {} ]
+    @_pattern      = [ {} ]
     @_terminated   = true
     @_index        = 0
     @_repeat       = 1
     @_patternIndex = 0
-    @_fields      = []
+    @_fields       = []
 
-    @_skipping = length
+    @_skipping     = length
 
   ##### parser.stream(length[, callback])
 
@@ -100,12 +100,15 @@ class exports.Parser extends Packet
       buffer = new Buffer(buffer, encoding or "utf8")
     @read(buffer, 0, buffer.length)
 
-##### parser.read(buffer[, offset][, length])
-# The `read` method reads from the buffer, returning when the current pattern is
-# read, or the end of the buffer is reached.
+  ##### parser.read(buffer[, offset][, length])
+  # The `read` method reads from the buffer, returning when the current pattern
+  # is read, or the end of the buffer is reached.
 
   # Read from the `buffer` for the given `offset` and length.
   read: (buffer, offset, length) ->
+    if @_paused
+      throw new Error "cannot write to paused parser"
+
     offset or= 0
     length or= buffer.length
     start    = @_bytesRead
@@ -125,6 +128,7 @@ class exports.Parser extends Packet
         if @_stream
           @_stream._write(buffer.slice(begin, begin + advance)) if advance
           @_stream._end() if not @_skipping
+        # What?
         if @_skipping
           return @_bytesRead - start
         else
@@ -327,6 +331,12 @@ class exports.Parser extends Packet
             else
               @_callback.apply @_self, @_fields
 
+            # The callback can pause the parser, which causes us to stash the
+            # current state of our parser, then return.
+            if @_paused
+              @_paused = { buffer, offset, end }
+              return @_bytesRead - start
+
         # Otherwise we proceed to the next field in the packet pattern.
         else
           @_nextField()
@@ -335,6 +345,21 @@ class exports.Parser extends Packet
     # Return the number of bytes read in this iteration.
     @_bytesRead - start
 
+  # Mark the parser as paused and notify the source of the pause.
+  pause: ->
+    @_paused = true
+    @emit "pause"
+
+  resume: ->
+    if @_paused
+      [ paused, @_paused ] = [ @_paused, false ]
+      @emit "resume"
+      @read paused.buffer, paused.start, paused.end
+
+  # What to do?
+  destroy: ->
+  destroySoon: ->
+    
   close: ->
     @emit "close"
 
