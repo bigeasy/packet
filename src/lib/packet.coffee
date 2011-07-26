@@ -28,6 +28,20 @@ class exports.Packet extends stream.Stream
     pattern         = parse(pattern)
     @_packets[name] = {pattern, callback}
 
+  # Initialize a named pattern or parse a pattern for parsing or serialization.
+  # This setup of a new pattern is common to both `Parser` and `Serializer`.
+  _nameOrPattern: (nameOrPattern, callback) ->
+    if packet = @_packets[nameOrPattern]
+      pattern    = packet.pattern.slice 0
+      callback or= packet.callback or null
+    else
+      pattern    = parse(nameOrPattern)
+
+    @_pattern      = pattern
+    @_callback     = callback
+    @_patternIndex = 0
+    
+
   # Resets the bytes read, bytes written and the current pattern. Used to
   # recover from exceptional conditions and generally a good idea to call this
   # method before starting a new series of packet parsing transitions.

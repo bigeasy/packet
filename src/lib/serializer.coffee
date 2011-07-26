@@ -242,20 +242,12 @@ class exports.Serializer extends Packet
   #
   # FIXME: We've already used `reset`, so we need to rename this.
   _reset: (shiftable) ->
+    # The pattern is given as a pattern name for a named pattern, or else a spot
+    # pattern to parse and use immediately.
     if typeof shiftable[shiftable.length - 1] == 'function'
       callback = shiftable.pop()
-
-    # FIXME This is common to `Parser`, so put it in `Packet`.
     nameOrPattern = shiftable.shift()
-    if packet = @_packets[nameOrPattern]
-      pattern    = packet.pattern.slice 0
-      callback or= packet.callback or null
-    else
-      pattern    = parse(nameOrPattern)
-
-    @_pattern      = pattern
-    @_callback     = null
-    @_patternIndex = 0
+    @_nameOrPattern nameOrPattern, callback
 
     if shiftable.length is 1 and
         typeof shiftable[0] is "object" and
@@ -265,7 +257,7 @@ class exports.Serializer extends Packet
       for part in @_pattern
         @_outgoing.push if part.name then object[part.name] else null
     else
-      @_outgoing  = shiftable
+      @_outgoing = shiftable
 
     # Run the outgoing values through field pipelines before we enter the write
     # loop. We need to skip over the blank fields and constants. We also skip
@@ -276,17 +268,17 @@ class exports.Serializer extends Packet
       if skip
         skip--
         continue
-      if pattern[j].packing
-        for pack in pattern[j].packing
+      if @_pattern[j].packing
+        for pack in @_pattern[j].packing
           if pack.endianness is "b"
             skip++
         if skip > 0
           skip--
       else
-        j++ while pattern[j] and pattern[j].endianness is "x"
-        if not pattern[j]
+        j++ while @_pattern[j] and @_pattern[j].endianness is "x"
+        if not @_pattern[j]
           throw new Error "too many fields"
-        @_outgoing[i] = @_pipeline(pattern[j], value, true)
+        @_outgoing[i] = @_pipeline(@_pattern[j], value, true)
       j++
 
     @_nextField()
