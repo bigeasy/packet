@@ -27,7 +27,8 @@ class exports.Parser extends Packet
     @_index       = 0
     @_skipping    = null
     @_terminated  = not pattern.terminator
-    @_terminator  = pattern.terminator and pattern.terminator[pattern.terminator.length - 1]
+    @_terminator  = pattern.terminator and
+                    pattern.terminator[pattern.terminator.length - 1]
     @_arrayed     = [] if pattern.arrayed and pattern.endianness isnt "x"
     @_named     or= !! pattern.name
 
@@ -83,10 +84,23 @@ class exports.Parser extends Packet
 
   # Construct a readable stream that will read `length` bytes from the stream
   # and invoke the given `callback` when the bytes have been read.
+  # 
+  # A zero `length` will confuse the `parse` loop, so we call the `callback`
+  # immediately.
   stream: (length, callback) ->
-    @skip(length, callback)
-    @_stream = new (require("./readable").ReadableStream)(@, length, callback)
+    if length > 0
+      @skip(length, callback)
+      @_stream = new (require("./readable").ReadableStream)(@, length, callback)
+    else
+      callback()
     
+  ##### parser.write(buffer[, encoding])
+  
+  # Parse the `Buffer` or `String` given in `buffer`. If `buffer` is a string it
+  # is decoded using the given `encoding` or UTF-8 if no encoding is specified.
+  #
+  # If the stream is paused by a pattern callback, this method will return
+  # `false`, to indicate that the parser is no longer capable of accepting data.
   write: (buffer, encoding) ->
     if typeof buffer is "string"
       buffer = new Buffer(buffer, encoding or "utf8")
@@ -95,12 +109,18 @@ class exports.Parser extends Packet
   ##### parser.read(buffer[, offset][, length])
   # The `read` method reads from the buffer, returning when the current pattern
   # is read, or the end of the buffer is reached.
+  #
+  # If the stream is paused by a pattern callback, this method will return
+  # `false`, to indicate that the parser is no longer capable of accepting data.
 
-  # Read from the `buffer` for the given `offset` and length.
+  # Read from the `buffer` for the given `offset` `and length`.
   read: (buffer, offset, length) ->
+    # If we are paused, freak out.
     if @_paused
       throw new Error "cannot write to paused parser"
 
+    # Initialize the loop counters. Initialize unspecified parameters with their
+    # defaults.
     offset or= 0
     length or= buffer.length
     start    = @_bytesRead
@@ -108,27 +128,36 @@ class exports.Parser extends Packet
 
     # We set the pattern to null when all the fields have been read, so while
     # there is a pattern to fill and bytes to read.
-    b
     while @_pattern != null and offset < end
-      part = @_pattern[@_patternIndex]
+      field = @_pattern[@_patternIndex]
+      # If we are skipping, we advance over all the skipped bytes or to the end
+      # of the current buffer.
       if @_skipping?
         advance      = Math.min(@_skipping, end - offset)
         begin        = offset
         offset      += advance
         @_skipping  -= advance
         @_bytesRead += advance
+        # If feeding a stream is done through skipping. Skipping and the
+        # presence of a stream is how skipping is done.
         if @_stream
-          @_stream._write(buffer.slice(begin, begin + advance)) if advance
-          @_stream._end() if not @_skipping
-        # What?
+          if Array.isArray(buffer)
+            slice = new Buffer(buffer.slice(begin, begin + advance))
+          else
+            slice = buffer.slice(begin, begin + advance)
+          @_stream._write(slice)
+          if not @_skipping
+            @_stream._end()
+        # If we have more bytes to skip, then return `true` because we've
+        # consumed the entire buffer.
         if @_skipping
-          return @_bytesRead - start
+          return true
         else
           @_skipping = null
 
       else
         # If the pattern is unpacked, the value we're populating is an array.
-        if part.unpacked
+        if field.unpacked
           loop
             b = buffer[offset]
             @_bytesRead++
@@ -162,14 +191,14 @@ class exports.Parser extends Packet
         bytes = value = @_value
 
         # Convert to float or double.
-        if part.type == "f"
-          if part.bits == 32
+        if field.type == "f"
+          if field.bits == 32
             value = ieee754.fromIEEE754Single(bytes)
           else
             value = ieee754.fromIEEE754Double(bytes)
 
         # Get the two's compliment signed value. 
-        else if part.signed
+        else if field.signed
           value = 0
           if (bytes[bytes.length - 1] & 0x80) == 0x80
             top = bytes.length - 1
@@ -189,7 +218,7 @@ class exports.Parser extends Packet
 
         # If the current field is arrayed, we keep track of the array we're
         # building after a pause through member variable.
-        @_arrayed.push(value) if part.arrayed
+        @_arrayed.push(value) if field.arrayed
 
       # If we've not yet hit our terminator, check for the terminator. If we've
       # hit the terminator, and we do not have a maximum size to fill, then
@@ -213,7 +242,7 @@ class exports.Parser extends Packet
             if @_repeat == Number.MAX_VALUE
               @_repeat = @_index + 1
             else
-              @_skipping = (@_repeat - (++@_index)) * part.bytes
+              @_skipping = (@_repeat - (++@_index)) * field.bytes
               if @_skipping
                 @_repeat = @_index + 1
                 continue
@@ -228,12 +257,12 @@ class exports.Parser extends Packet
       else
 
         # Push the field value after running it through the pipeline.
-        if part.endianness isnt "x"
+        if field.endianness isnt "x"
 
           # If the field is a packed field, unpack the values and push them onto
           # the field list.
-          if packing = part.packing
-            length  = part.bits
+          if packing = field.packing
+            length  = field.bits
             for pack, i in packing
               length -= pack.bits
               if pack.endianness is "b"
@@ -248,19 +277,19 @@ class exports.Parser extends Packet
           # If the value is a length encoding, we set the repeat value for the
           # subsequent array of values. If we have a zero length encoding, we
           # push an empty array through the pipeline, and skip the repeated type.
-          else if part.lengthEncoding
+          else if field.lengthEncoding
             if (@_pattern[@_patternIndex + 1].repeat = value) is 0
-              @_fields.push(@_pipeline(part, [], false))
+              @_fields.push(@_pipeline(field, [], false))
               @_patternIndex++
 
           # If the value is used as a switch for an alternation, we run through
           # the different possible branches, updating the pattern with the
           # pattern of the first branch that matches. We then re-read the bytes
           # used to determine the conditional outcome.
-          else if part.alternation
-            unless part.signed
+          else if field.alternation
+            unless field.signed
               value = (Math.pow(256, i) * b for b, i in @_arrayed)
-            for branch in part.alternation
+            for branch in field.alternation
               break if branch.read.minimum <= value and
                        value <= branch.read.maximum and
                        (value & branch.read.mask) is branch.read.mask
@@ -277,8 +306,8 @@ class exports.Parser extends Packet
           # Otherwise, the value is what it is, so run it through the user
           # supplied tranformation pipeline, and push it onto the list of fields.
           else
-            value = @_arrayed if part.arrayed
-            @_fields.push(@_pipeline(part, value, false))
+            value = @_arrayed if field.arrayed
+            @_fields.push(@_pipeline(field, value, false))
 
         # If we have read all of the pattern fields, call the associated
         # callback.  We add the parser and the user suppilied additional
@@ -303,10 +332,10 @@ class exports.Parser extends Packet
             offset = 0
             if @_named
               object = {}
-              for part in pattern
-                if part.endianness isnt "x"
-                  if part.packing
-                    for pack in part.packing
+              for field in pattern
+                if field.endianness isnt "x"
+                  if field.packing
+                    for pack in field.packing
                       if pack.endianness isnt "x"
                         if pack.name
                           object[pack.name] = @_fields[offset]
@@ -314,8 +343,8 @@ class exports.Parser extends Packet
                           object["field#{offset + 1}"] = @_fields[offset]
                         offset++
                   else
-                    if part.name
-                      object[part.name] = @_fields[offset]
+                    if field.name
+                      object[field.name] = @_fields[offset]
                     else
                       object["field#{offset + 1}"] = @_fields[offset]
                     offset++
@@ -324,18 +353,19 @@ class exports.Parser extends Packet
               @_callback.apply @_self, @_fields
 
             # The callback can pause the parser, which causes us to stash the
-            # current state of our parser, then return.
+            # current state of our parser, then return `false` to indicate that
+            # the destination is saturated.
             if @_paused
               @_paused = { buffer, offset, end }
-              return @_bytesRead - start
+              return false
 
         # Otherwise we proceed to the next field in the packet pattern.
         else
           @_nextField()
           @_nextValue()
 
-    # Return the number of bytes read in this iteration.
-    @_bytesRead - start
+    # We were able to write the whole
+    true
 
   # Mark the parser as paused and notify the source of the pause.
   pause: ->

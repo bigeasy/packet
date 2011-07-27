@@ -8,7 +8,8 @@ stream    = require "stream"
 # Implementation of the `ReadableStream` interface.
 class exports.ReadableStream extends stream.Stream
   # Construct a readable stream for the given `Parser`.
-  constructor: (@_parser) ->
+  constructor: (@_parser, @_length, @_callback) ->
+    # FIXME You must invoke the callback when the length is reached.
 
   # Set the encoding used to convert binary data to strings before it is emitted
   # as a `"data"` event.
