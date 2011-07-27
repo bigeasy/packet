@@ -192,7 +192,7 @@ parse = (pattern, part, index, bits, next) ->
     # bytes, but not applicable for bits anyway.
     f.type      = "a" if f.bits > 64 and f.type == "n"
     f.bytes     = f.bits / bits
-    f.unpacked  = f.signed or f.bytes > 8 or "ha".indexOf(f.type) != -1
+    f.exploded  = f.signed or f.bytes > 8 or "ha".indexOf(f.type) != -1
 
 
     # Check for bit backing. The intense rest pattern allows us to skip over a

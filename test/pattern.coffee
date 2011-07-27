@@ -16,7 +16,7 @@ class exports.PacketTest extends TwerpTest
       , endianness: 'b'
       , bytes: 1
       , type: 'n'
-      , unpacked: false
+      , exploded: false
       , arrayed: false
       , repeat: 1
       }
@@ -31,7 +31,7 @@ class exports.PacketTest extends TwerpTest
       , endianness: 'b'
       , bytes: 1
       , type: 'n'
-      , unpacked: true
+      , exploded: true
       , arrayed: false
       , repeat: 1
       }
@@ -46,7 +46,7 @@ class exports.PacketTest extends TwerpTest
       , endianness: 'b'
       , bytes: 2
       , type: 'n'
-      , unpacked: false
+      , exploded: false
       , arrayed: false
       , repeat: 1
       }
@@ -61,7 +61,7 @@ class exports.PacketTest extends TwerpTest
       , endianness: 'b'
       , bytes: 2
       , type: 'n'
-      , unpacked: true
+      , exploded: true
       , arrayed: false
       , repeat: 1
       }
@@ -76,7 +76,7 @@ class exports.PacketTest extends TwerpTest
       , endianness: 'b'
       , bytes: 2
       , type: 'n'
-      , unpacked: false
+      , exploded: false
       , arrayed: false
       , repeat: 1
       }
@@ -91,7 +91,7 @@ class exports.PacketTest extends TwerpTest
       , endianness: 'l'
       , bytes: 2
       , type: 'n'
-      , unpacked: false
+      , exploded: false
       , arrayed: false
       , repeat: 1
       }
@@ -106,7 +106,7 @@ class exports.PacketTest extends TwerpTest
       , endianness: 'l'
       , bytes: 2
       , type: 'n'
-      , unpacked: true
+      , exploded: true
       , arrayed: false
       , repeat: 1
       }
@@ -121,7 +121,7 @@ class exports.PacketTest extends TwerpTest
       , endianness: 'x'
       , bytes: 2
       , type: 'n'
-      , unpacked: false
+      , exploded: false
       , arrayed: false
       , repeat: 1
       }
@@ -137,7 +137,7 @@ class exports.PacketTest extends TwerpTest
       , endianness: 'l'
       , bytes: 2
       , type: 'n'
-      , unpacked: true
+      , exploded: true
       , arrayed: false
       , repeat: 1
       }
@@ -147,7 +147,7 @@ class exports.PacketTest extends TwerpTest
       , endianness: 'b'
       , bytes: 1
       , type: 'n'
-      , unpacked: false
+      , exploded: false
       , arrayed: false
       , repeat: 1
       }
@@ -169,7 +169,7 @@ class exports.PacketTest extends TwerpTest
       , endianness: 'l'
       , bytes: 2
       , type: 'n'
-      , unpacked: true
+      , exploded: true
       , arrayed: false
       , repeat: 1
       }
@@ -179,7 +179,7 @@ class exports.PacketTest extends TwerpTest
       , endianness: 'b'
       , bytes: 1
       , type: 'n'
-      , unpacked: false
+      , exploded: false
       , arrayed: false
       , repeat: 1
       }
@@ -194,7 +194,7 @@ class exports.PacketTest extends TwerpTest
       , endianness: 'b'
       , bytes: 16
       , type: 'a'
-      , unpacked: true
+      , exploded: true
       , arrayed: false
       , repeat: 1
       }
@@ -209,7 +209,7 @@ class exports.PacketTest extends TwerpTest
       , endianness: 'b'
       , bytes: 4
       , type: 'f'
-      , unpacked: true
+      , exploded: true
       , arrayed: false
       , repeat: 1
       }
@@ -224,7 +224,7 @@ class exports.PacketTest extends TwerpTest
       , endianness: 'b'
       , bytes: 8
       , type: 'f'
-      , unpacked: true
+      , exploded: true
       , arrayed: false
       , repeat: 1
       }
@@ -239,7 +239,7 @@ class exports.PacketTest extends TwerpTest
       , endianness: 'b'
       , bytes: 1
       , type: 'n'
-      , unpacked: false
+      , exploded: false
       , arrayed: true
       , repeat: 8
       }
@@ -254,7 +254,7 @@ class exports.PacketTest extends TwerpTest
       , endianness: 'b'
       , bytes: 1
       , type: 'n'
-      , unpacked: false
+      , exploded: false
       , arrayed: false
       , repeat: 1
       , lengthEncoding: true
@@ -265,7 +265,7 @@ class exports.PacketTest extends TwerpTest
       , endianness: 'b'
       , bytes: 2
       , type: 'n'
-      , unpacked: false
+      , exploded: false
       , arrayed: true
       , repeat: 1
       }
@@ -280,7 +280,7 @@ class exports.PacketTest extends TwerpTest
       , endianness: 'b'
       , bytes: 1
       , type: 'n'
-      , unpacked: false
+      , exploded: false
       , arrayed: true
       , repeat: Number.MAX_VALUE
       , terminator: [ 0 ]
@@ -296,7 +296,7 @@ class exports.PacketTest extends TwerpTest
       , endianness: 'b'
       , bytes: 1
       , type: 'n'
-      , unpacked: false
+      , exploded: false
       , arrayed: true
       , repeat: Number.MAX_VALUE
       , terminator: [ 13, 10 ]
@@ -312,7 +312,7 @@ class exports.PacketTest extends TwerpTest
       , endianness: 'b'
       , bytes: 1
       , type: 'n'
-      , unpacked: false
+      , exploded: false
       , arrayed: true
       , repeat: 8
       , terminator: [ 0 ]
@@ -329,7 +329,7 @@ class exports.PacketTest extends TwerpTest
       , endianness: 'b'
       , bytes: 1
       , type: 'n'
-      , unpacked: false
+      , exploded: false
       , arrayed: true
       , repeat: 8
       , terminator: [ 0 ]
@@ -346,7 +346,7 @@ class exports.PacketTest extends TwerpTest
       , endianness: 'b'
       , bytes: 1
       , type: 'n'
-      , unpacked: false
+      , exploded: false
       , arrayed: true
       , repeat: 8
       , terminator: [ 0 ]
@@ -363,7 +363,7 @@ class exports.PacketTest extends TwerpTest
       , endianness: 'b'
       , bytes: 1
       , type: 'n'
-      , unpacked: false
+      , exploded: false
       , arrayed: true
       , repeat: Number.MAX_VALUE
       , terminator: [ 0 ]
@@ -385,7 +385,7 @@ class exports.PacketTest extends TwerpTest
       , endianness: 'b'
       , bytes: 1
       , type: 'n'
-      , unpacked: false
+      , exploded: false
       , arrayed: true
       , repeat: Number.MAX_VALUE
       , terminator: [ 0 ]
@@ -407,7 +407,7 @@ class exports.PacketTest extends TwerpTest
       , endianness: 'b'
       , bytes: 1
       , type: 'n'
-      , unpacked: false
+      , exploded: false
       , arrayed: true
       , repeat: Number.MAX_VALUE
       , terminator: [ 0 ]
@@ -424,7 +424,7 @@ class exports.PacketTest extends TwerpTest
       , endianness: 'b'
       , bytes: 2
       , type: 'n'
-      , unpacked: false
+      , exploded: false
       , arrayed: false
       , repeat: 1
       }
@@ -439,7 +439,7 @@ class exports.PacketTest extends TwerpTest
       , endianness: 'b'
       , bytes: 1
       , type: 'n'
-      , unpacked: false
+      , exploded: false
       , arrayed: true
       , repeat: Number.MAX_VALUE
       , terminator: [ 0 ]
@@ -461,7 +461,7 @@ class exports.PacketTest extends TwerpTest
       , endianness: 'b'
       , bytes: 1
       , type: 'n'
-      , unpacked: false
+      , exploded: false
       , arrayed: true
       , repeat: Number.MAX_VALUE
       , terminator: [ 0 ]
@@ -483,7 +483,7 @@ class exports.PacketTest extends TwerpTest
       , endianness: 'b'
       , bytes: 1
       , type: 'n'
-      , unpacked: false
+      , exploded: false
       , arrayed: true
       , repeat: Number.MAX_VALUE
       , terminator: [ 0 ]
@@ -505,7 +505,7 @@ class exports.PacketTest extends TwerpTest
       , endianness: 'b'
       , bytes: 1
       , type: 'n'
-      , unpacked: false
+      , exploded: false
       , arrayed: true
       , repeat: Number.MAX_VALUE
       , terminator: [ 0 ]
@@ -527,7 +527,7 @@ class exports.PacketTest extends TwerpTest
       , endianness: 'b'
       , bytes: 1
       , type: 'n'
-      , unpacked: false
+      , exploded: false
       , arrayed: true
       , repeat: Number.MAX_VALUE
       , terminator: [ 0 ]
@@ -549,7 +549,7 @@ class exports.PacketTest extends TwerpTest
       , endianness: 'b'
       , bytes: 1
       , type: 'n'
-      , unpacked: false
+      , exploded: false
       , arrayed: true
       , repeat: Number.MAX_VALUE
       , terminator: [ 0 ]
@@ -571,7 +571,7 @@ class exports.PacketTest extends TwerpTest
       , endianness: 'b'
       , bytes: 1
       , type: 'n'
-      , unpacked: false
+      , exploded: false
       , arrayed: true
       , repeat: Number.MAX_VALUE
       , terminator: [ 0 ]
@@ -593,7 +593,7 @@ class exports.PacketTest extends TwerpTest
       , endianness: 'b'
       , bytes: 1
       , type: 'n'
-      , unpacked: false
+      , exploded: false
       , arrayed: true
       , repeat: Number.MAX_VALUE
       , terminator: [ 0 ]
@@ -615,7 +615,7 @@ class exports.PacketTest extends TwerpTest
       , endianness: 'b'
       , bytes: 1
       , type: 'n'
-      , unpacked: false
+      , exploded: false
       , arrayed: true
       , repeat: Number.MAX_VALUE
       , terminator: [ 0 ]
@@ -637,7 +637,7 @@ class exports.PacketTest extends TwerpTest
       , endianness: 'b'
       , bytes: 1
       , type: 'n'
-      , unpacked: false
+      , exploded: false
       , arrayed: true
       , repeat: Number.MAX_VALUE
       , terminator: [ 0 ]
@@ -659,7 +659,7 @@ class exports.PacketTest extends TwerpTest
       , endianness: 'b'
       , bytes: 1
       , type: 'n'
-      , unpacked: false
+      , exploded: false
       , arrayed: true
       , repeat: Number.MAX_VALUE
       , terminator: [ 0 ]
@@ -681,7 +681,7 @@ class exports.PacketTest extends TwerpTest
       , endianness: 'b'
       , bytes: 1
       , type: 'n'
-      , unpacked: false
+      , exploded: false
       , arrayed: true
       , repeat: Number.MAX_VALUE
       , terminator: [ 0 ]
@@ -708,7 +708,7 @@ class exports.PacketTest extends TwerpTest
       , bytes: 1
       , type: 'n'
       , name: "mode"
-      , unpacked: false
+      , exploded: false
       , arrayed: true
       , repeat: Number.MAX_VALUE
       , terminator: [ 0 ]
@@ -728,7 +728,7 @@ class exports.PacketTest extends TwerpTest
       , bits: 32
       , bytes: 4
       , type: 'n'
-      , unpacked: false
+      , exploded: false
       , arrayed: false
       , repeat: 1
       , name: "length"
@@ -744,7 +744,7 @@ class exports.PacketTest extends TwerpTest
       , "bits": 16
       , "type": "n"
       , "bytes": 2
-      , "unpacked": false
+      , "exploded": false
       , "packing":
         [
           { "signed": false
@@ -754,7 +754,7 @@ class exports.PacketTest extends TwerpTest
           , "bytes": 3
           , "repeat": 1
           , "arrayed": false
-          , "unpacked": false
+          , "exploded": false
           }
         ,
           { "signed": false
@@ -764,7 +764,7 @@ class exports.PacketTest extends TwerpTest
           , "bytes": 6
           , "repeat": 1
           , "arrayed": false
-          , "unpacked": false
+          , "exploded": false
           }
         ,
           { "signed": true
@@ -774,7 +774,7 @@ class exports.PacketTest extends TwerpTest
           , "bytes": 7
           , "repeat": 1
           , "arrayed": false
-          , "unpacked": true
+          , "exploded": true
           }
         ]
       }
@@ -793,7 +793,7 @@ class exports.PacketTest extends TwerpTest
       , "bits": 16
       , "type": "n"
       , "bytes": 2
-      , "unpacked": false
+      , "exploded": false
       , "packing":
         [
           { "signed": false
@@ -803,7 +803,7 @@ class exports.PacketTest extends TwerpTest
           , "bytes": 3
           , "repeat": 1
           , "arrayed": false
-          , "unpacked": false
+          , "exploded": false
           }
         ,
           { "signed": false
@@ -813,7 +813,7 @@ class exports.PacketTest extends TwerpTest
           , "bytes": 6
           , "repeat": 1
           , "arrayed": false
-          , "unpacked": false
+          , "exploded": false
           }
         ,
           { "signed": true
@@ -823,7 +823,7 @@ class exports.PacketTest extends TwerpTest
           , "bytes": 7
           , "repeat": 1
           , "arrayed": false
-          , "unpacked": true
+          , "exploded": true
           }
         ]
       }
@@ -839,7 +839,7 @@ class exports.PacketTest extends TwerpTest
         , "bits": 8
         , "type": "n"
         , "bytes": 1
-        , "unpacked": false
+        , "exploded": false
         , "packing":
           [
             { "signed": false
@@ -849,7 +849,7 @@ class exports.PacketTest extends TwerpTest
             , "bytes": 2
             , "repeat": 1
             , "arrayed": false
-            , "unpacked": false
+            , "exploded": false
             , "name": "high"
             }
           ,
@@ -860,7 +860,7 @@ class exports.PacketTest extends TwerpTest
             , "bytes": 1
             , "repeat": 1
             , "arrayed": false
-            , "unpacked": false
+            , "exploded": false
             }
           ,
             { "signed": false
@@ -870,7 +870,7 @@ class exports.PacketTest extends TwerpTest
             , "bytes": 2
             , "repeat": 1
             , "arrayed": false
-            , "unpacked": false
+            , "exploded": false
             , "name": "low"
             }
           ,
@@ -881,7 +881,7 @@ class exports.PacketTest extends TwerpTest
             , "bytes": 3
             , "repeat": 1
             , "arrayed": false
-            , "unpacked": false
+            , "exploded": false
             }
           ]
         }
@@ -903,7 +903,7 @@ class exports.PacketTest extends TwerpTest
       , "bits": 8
       , "type": "n"
       , "bytes": 1
-      , "unpacked": false
+      , "exploded": false
       , "arrayed": true
       , "alternation":
         [
@@ -924,7 +924,7 @@ class exports.PacketTest extends TwerpTest
               , "bits": 8
               , "type": "n"
               , "bytes": 1
-              , "unpacked": false
+              , "exploded": false
               , "repeat": 1
               , "arrayed": false
               }
@@ -948,7 +948,7 @@ class exports.PacketTest extends TwerpTest
               , "bits": 8
               , "type": "n"
               , "bytes": 1
-              , "unpacked": false
+              , "exploded": false
               , "repeat": 1
               , "arrayed": false
               }
@@ -958,7 +958,7 @@ class exports.PacketTest extends TwerpTest
               , "bits": 16
               , "type": "n"
               , "bytes": 2
-              , "unpacked": false
+              , "exploded": false
               , "repeat": 1
               , "arrayed": false
               }
@@ -982,7 +982,7 @@ class exports.PacketTest extends TwerpTest
               , "bits": 8
               , "type": "n"
               , "bytes": 1
-              , "unpacked": false
+              , "exploded": false
               , "repeat": 1
               , "arrayed": false
               }
@@ -992,7 +992,7 @@ class exports.PacketTest extends TwerpTest
               , "bits": 24
               , "type": "n"
               , "bytes": 3
-              , "unpacked": false
+              , "exploded": false
               , "repeat": 1
               , "arrayed": false
               }
@@ -1016,7 +1016,7 @@ class exports.PacketTest extends TwerpTest
               , "bits": 8
               , "type": "n"
               , "bytes": 1
-              , "unpacked": false
+              , "exploded": false
               , "repeat": 1
               , "arrayed": false
               }
@@ -1026,7 +1026,7 @@ class exports.PacketTest extends TwerpTest
               , "bits": 64
               , "type": "n"
               , "bytes": 8
-              , "unpacked": false
+              , "exploded": false
               , "repeat": 1
               , "arrayed": false
               }
@@ -1058,7 +1058,7 @@ class exports.PacketTest extends TwerpTest
       , "bits": 8
       , "type": "n"
       , "bytes": 1
-      , "unpacked": false
+      , "exploded": false
       , "arrayed": true
       , "alternation":
         [
@@ -1079,7 +1079,7 @@ class exports.PacketTest extends TwerpTest
               , "bits": 8
               , "type": "n"
               , "bytes": 1
-              , "unpacked": false
+              , "exploded": false
               , "repeat": 1
               , "arrayed": false
               }
@@ -1089,7 +1089,7 @@ class exports.PacketTest extends TwerpTest
               , "bits": 16
               , "type": "n"
               , "bytes": 2
-              , "unpacked": false
+              , "exploded": false
               , "repeat": 1
               , "arrayed": false
               }
@@ -1113,7 +1113,7 @@ class exports.PacketTest extends TwerpTest
               , "bits": 8
               , "type": "n"
               , "bytes": 1
-              , "unpacked": false
+              , "exploded": false
               , "repeat": 1
               , "arrayed": false
               }
@@ -1123,7 +1123,7 @@ class exports.PacketTest extends TwerpTest
               , "bits": 24
               , "type": "n"
               , "bytes": 3
-              , "unpacked": false
+              , "exploded": false
               , "repeat": 1
               , "arrayed": false
               }
@@ -1147,7 +1147,7 @@ class exports.PacketTest extends TwerpTest
               , "bits": 8
               , "type": "n"
               , "bytes": 1
-              , "unpacked": false
+              , "exploded": false
               , "repeat": 1
               , "arrayed": false
               }
@@ -1157,7 +1157,7 @@ class exports.PacketTest extends TwerpTest
               , "bits": 64
               , "type": "n"
               , "bytes": 8
-              , "unpacked": false
+              , "exploded": false
               , "repeat": 1
               , "arrayed": false
               }
@@ -1181,7 +1181,7 @@ class exports.PacketTest extends TwerpTest
               , "bits": 8
               , "type": "n"
               , "bytes": 1
-              , "unpacked": false
+              , "exploded": false
               , "repeat": 1
               , "arrayed": false
               }
@@ -1217,7 +1217,7 @@ class exports.PacketTest extends TwerpTest
       , "bits": 8
       , "type": "n"
       , "bytes": 1
-      , "unpacked": false
+      , "exploded": false
       , "arrayed": true
       , "alternation":
         [
@@ -1238,7 +1238,7 @@ class exports.PacketTest extends TwerpTest
               , "bits": 8
               , "type": "n"
               , "bytes": 1
-              , "unpacked": false
+              , "exploded": false
               , "repeat": 1
               , "arrayed": false
               }
@@ -1262,7 +1262,7 @@ class exports.PacketTest extends TwerpTest
               , "bits": 8
               , "type": "n"
               , "bytes": 1
-              , "unpacked": false
+              , "exploded": false
               , "repeat": 1
               , "arrayed": false
               , "padding": 252
@@ -1273,7 +1273,7 @@ class exports.PacketTest extends TwerpTest
               , "bits": 16
               , "type": "n"
               , "bytes": 2
-              , "unpacked": false
+              , "exploded": false
               , "repeat": 1
               , "arrayed": false
               }
@@ -1297,7 +1297,7 @@ class exports.PacketTest extends TwerpTest
               , "bits": 8
               , "type": "n"
               , "bytes": 1
-              , "unpacked": false
+              , "exploded": false
               , "repeat": 1
               , "arrayed": false
               , "padding": 253
@@ -1308,7 +1308,7 @@ class exports.PacketTest extends TwerpTest
               , "bits": 24
               , "type": "n"
               , "bytes": 3
-              , "unpacked": false
+              , "exploded": false
               , "repeat": 1
               , "arrayed": false
               }
@@ -1332,7 +1332,7 @@ class exports.PacketTest extends TwerpTest
               , "bits": 8
               , "type": "n"
               , "bytes": 1
-              , "unpacked": false
+              , "exploded": false
               , "repeat": 1
               , "arrayed": false
               , "padding": 254
@@ -1343,7 +1343,7 @@ class exports.PacketTest extends TwerpTest
               , "bits": 64
               , "type": "n"
               , "bytes": 8
-              , "unpacked": false
+              , "exploded": false
               , "repeat": 1
               , "arrayed": false
               }
@@ -1381,7 +1381,7 @@ class exports.PacketTest extends TwerpTest
       , "bits": 8
       , "type": "n"
       , "bytes": 1
-      , "unpacked": false
+      , "exploded": false
       , "arrayed": true
       , "alternation":
         [
@@ -1402,7 +1402,7 @@ class exports.PacketTest extends TwerpTest
               , "bits": 16
               , "type": "n"
               , "bytes": 2
-              , "unpacked": false
+              , "exploded": false
               , "packing":
                 [
                   { "signed": false
@@ -1412,7 +1412,7 @@ class exports.PacketTest extends TwerpTest
                   , "bytes": 1
                   , "repeat": 1
                   , "arrayed": false
-                  , "unpacked": false
+                  , "exploded": false
                   }
                 ,
                   { "signed": false
@@ -1422,7 +1422,7 @@ class exports.PacketTest extends TwerpTest
                   , "bytes": 15
                   , "repeat": 1
                   , "arrayed": false
-                  , "unpacked": true
+                  , "exploded": true
                   }
                 ]
               }
@@ -1446,7 +1446,7 @@ class exports.PacketTest extends TwerpTest
               , "bits": 8
               , "type": "n"
               , "bytes": 1
-              , "unpacked": false
+              , "exploded": false
               , "repeat": 1
               , "arrayed": false
               }
@@ -1481,7 +1481,7 @@ class exports.PacketTest extends TwerpTest
       , "bits": 8
       , "type": "n"
       , "bytes": 1
-      , "unpacked": false
+      , "exploded": false
       , "arrayed": true
       , "alternation":
         [
@@ -1501,7 +1501,7 @@ class exports.PacketTest extends TwerpTest
               , "bits": 16
               , "type": "n"
               , "bytes": 2
-              , "unpacked": false
+              , "exploded": false
               , "packing":
                 [
                   { "signed": false
@@ -1511,7 +1511,7 @@ class exports.PacketTest extends TwerpTest
                   , "bytes": 1
                   , "repeat": 1
                   , "arrayed": false
-                  , "unpacked": false
+                  , "exploded": false
                   }
                 ,
                   { "signed": false
@@ -1521,7 +1521,7 @@ class exports.PacketTest extends TwerpTest
                   , "bytes": 15
                   , "repeat": 1
                   , "arrayed": false
-                  , "unpacked": true
+                  , "exploded": true
                   }
                 ]
               }
@@ -1544,7 +1544,7 @@ class exports.PacketTest extends TwerpTest
               , "bits": 8
               , "type": "n"
               , "bytes": 1
-              , "unpacked": false
+              , "exploded": false
               , "repeat": 1
               , "arrayed": false
               }
@@ -1567,7 +1567,7 @@ class exports.PacketTest extends TwerpTest
               , "bits": 8
               , "type": "n"
               , "bytes": 1
-              , "unpacked": false
+              , "exploded": false
               , "repeat": 1
               , "arrayed": false
               }
@@ -1590,7 +1590,7 @@ class exports.PacketTest extends TwerpTest
               , "bits": 16
               , "type": "n"
               , "bytes": 2
-              , "unpacked": false
+              , "exploded": false
               , "packing":
                 [
                   { "signed": false
@@ -1600,7 +1600,7 @@ class exports.PacketTest extends TwerpTest
                   , "bytes": 1
                   , "repeat": 1
                   , "arrayed": false
-                  , "unpacked": false
+                  , "exploded": false
                   , "padding": 1
                   }
                 ,
@@ -1611,7 +1611,7 @@ class exports.PacketTest extends TwerpTest
                   , "bytes": 15
                   , "repeat": 1
                   , "arrayed": false
-                  , "unpacked": true
+                  , "exploded": true
                   }
                 ]
               }

@@ -105,7 +105,7 @@ class exports.Serializer extends Packet
         value = @_outgoing[@_patternIndex]
 
       # If the array is not an unsigned integer, we might have to convert it.
-      if pattern.unpacked
+      if pattern.exploded
         # Convert a float into its IEEE 754 representation.
         if pattern.type == "f"
           if pattern.bits == 32
@@ -318,8 +318,8 @@ class exports.Serializer extends Packet
         return offset - start if @_skipping
 
       else
-        # If the pattern is unpacked, the value we're writing is an array.
-        if @_pattern[@_patternIndex].unpacked
+        # If the pattern is exploded, the value we're writing is an array.
+        if @_pattern[@_patternIndex].exploded
           loop
             buffer[offset] = @_value[@_offset]
             @_offset += @_increment

@@ -45,7 +45,7 @@ class exports.Parser extends Packet
 
     # Create the empty value and call the inherited `@_nextValue`.
     else
-      if pattern.unpacked
+      if pattern.exploded
         value = []
       else
         value = 0
@@ -156,8 +156,8 @@ class exports.Parser extends Packet
           @_skipping = null
 
       else
-        # If the pattern is unpacked, the value we're populating is an array.
-        if field.unpacked
+        # If the pattern is exploded, the value we're populating is an array.
+        if field.exploded
           loop
             b = buffer[offset]
             @_bytesRead++
