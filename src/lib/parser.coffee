@@ -69,8 +69,7 @@ class exports.Parser extends Packet
   # `this` object.
   skip: (length, @_callback) ->
     # Create a bogus pattern to enter the parse loop where the stream is fed in
-    # the skipping branch. The length is passed to the callback simply because
-    # the parse loop expects there to be a field.
+    # the skipping branch.
     @_pattern      = [ {} ]
     @_terminated   = true
     @_index        = 0
@@ -165,7 +164,7 @@ class exports.Parser extends Packet
             @_value[@_offset] = b
             @_offset += @_increment
             break if @_offset is @_terminal
-            return @_bytesRead - start if offset is end
+            return true if offset is end
 
         # Otherwise we're packing bytes into an unsigned integer, the most
         # common case.
@@ -177,7 +176,7 @@ class exports.Parser extends Packet
             @_value += Math.pow(256, @_offset) * b
             @_offset += @_increment
             break if @_offset == @_terminal
-            return @_bytesRead - start if offset is end
+            return true if offset is end
 
         # Unpack the field value. Perform our basic transformations. That is,
         # convert from a byte array to a JavaScript primitive.
@@ -224,9 +223,10 @@ class exports.Parser extends Packet
       # hit the terminator, and we do not have a maximum size to fill, then
       # terminate by setting up the array to terminate.
       #
-      # A maximum length value means to repeat until the terminator, but a
-      # specific length value means that the zero terminated string occupies a
-      # field that has a fixed length, so we need to skip the used bytes.
+      # A length value of the maximum number value means to repeat until the
+      # terminator, but a specific length value means that the zero terminated
+      # string occupies a field that has a fixed length, so we need to skip the
+      # unused bytes.
       if not @_terminated
         if @_terminator is value
           @_terminated = true
@@ -253,14 +253,15 @@ class exports.Parser extends Packet
         @_nextValue()
 
       # Otherwise, we've got a complete field value, either a JavaScript
-      # primitive or raw bytes as an array or hex string.
+      # primitive or raw bytes as an array.
       else
 
-        # Push the field value after running it through the pipeline.
+        # If we're not skipping, push the field value after running it through
+        # the pipeline.
         if field.endianness isnt "x"
 
-          # If the field is a packed field, unpack the values and push them onto
-          # the field list.
+          # If the field is a bit packed field, unpack the values and push them
+          # onto the field list.
           if packing = field.packing
             length  = field.bits
             for pack, i in packing
@@ -268,6 +269,7 @@ class exports.Parser extends Packet
               if pack.endianness is "b"
                 unpacked = Math.floor(value / Math.pow(2, length))
                 unpacked = unpacked % Math.pow(2, pack.bits)
+                # If signed, we convert from two's compliment.
                 if pack.signed
                   mask = Math.pow(2, pack.bits - 1)
                   if unpacked & mask
@@ -276,7 +278,8 @@ class exports.Parser extends Packet
 
           # If the value is a length encoding, we set the repeat value for the
           # subsequent array of values. If we have a zero length encoding, we
-          # push an empty array through the pipeline, and skip the repeated type.
+          # push an empty array through the pipeline, and move on to the next
+          # field.
           else if field.lengthEncoding
             if (@_pattern[@_patternIndex + 1].repeat = value) is 0
               @_fields.push(@_pipeline(field, [], false))
