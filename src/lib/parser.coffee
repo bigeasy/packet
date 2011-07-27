@@ -103,17 +103,17 @@ class exports.Parser extends Packet
   write: (buffer, encoding) ->
     if typeof buffer is "string"
       buffer = new Buffer(buffer, encoding or "utf8")
-    @read(buffer, 0, buffer.length)
+    @parse(buffer, 0, buffer.length)
 
-  ##### parser.read(buffer[, offset][, length])
-  # The `read` method reads from the buffer, returning when the current pattern
+  ##### parser.parse(buffer[, offset][, length])
+  # The `parse` method reads from the buffer, returning when the current pattern
   # is read, or the end of the buffer is reached.
   #
   # If the stream is paused by a pattern callback, this method will return
   # `false`, to indicate that the parser is no longer capable of accepting data.
 
   # Read from the `buffer` for the given `offset` `and length`.
-  read: (buffer, offset, length) ->
+  parse: (buffer, offset, length) ->
     # If we are paused, freak out.
     if @_paused
       throw new Error "cannot write to paused parser"
@@ -303,7 +303,7 @@ class exports.Parser extends Packet
             @_pattern.splice.apply @_pattern, [ @_patternIndex, 1 ].concat(branch.pattern)
             @_nextField()
             @_nextValue()
-            @read bytes, 0, bytes.length
+            @parse bytes, 0, bytes.length
             continue
 
           # Otherwise, the value is what it is, so run it through the user
@@ -379,7 +379,7 @@ class exports.Parser extends Packet
     if @_paused
       [ paused, @_paused ] = [ @_paused, false ]
       @emit "resume"
-      @read paused.buffer, paused.start, paused.end
+      @parse paused.buffer, paused.start, paused.end
 
   # What to do?
   destroy: ->
