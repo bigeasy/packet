@@ -140,7 +140,13 @@ class exports.Serializer extends Packet
   stream: (length) ->
     @_stream = new (require("./writable").WritableStream)(length, @)
 
-  _pipe: (destination, options) ->
+  #### pipe(destination, options)
+
+  # An implementation of `Stream.pipe` that can use an `Array` or `Buffer` as a
+  # destination. If the destination is another `Stream`, then the inherited
+  # implementation of `Stream.pipe` is invoked after initialization, otherwise,
+  # the pipe logic in `Stream` is non-applicable.
+  pipe: (destination, options) ->
     if destination instanceof Array
       @_buffer = destination
       @_bufferLength = Number.MAX_VALUE
