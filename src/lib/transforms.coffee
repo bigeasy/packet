@@ -1,14 +1,8 @@
-bufferize = (array) ->
-  buffer = new Buffer(array.length)
-  for b, i in array
-    buffer[i] = b
-  buffer
-
 transforms = exports.transforms =
   str: (encoding, parsing, field, value) ->
     if parsing
       if not (value instanceof Buffer)
-        value = bufferize(value)
+        value = new Buffer(value)
       if /^ascii$/i.test(encoding)
         # Broken and waiting on [297](http://github.com/ry/node/issues/issue/297).
         # If the top bit is set, it is not ASCII, so we zero the value.
