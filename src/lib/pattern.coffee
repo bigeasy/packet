@@ -85,19 +85,16 @@ condition = (pattern, index, rest, struct) ->
     throw new Error error "invalid pattern", pattern, index + match[1].length
   index
 
-FAILURE =
-  minimum: Number.MIN_VALUE
-  maximum: Number.MAX_VALUE
-  mask: 0
-
-# An alternation condition that never matches.
-NEVER =
-  maximum: Number.MIN_VALUE
-  minimum: Number.MAX_VALUE
+# An alternation condition that never matches. This is not a constant for the
+# sake of consistancy with `always()`.
+never = ->
+  {
+    maximum: Number.MIN_VALUE
+    minimum: Number.MAX_VALUE
+  }
 
 # Generates an alternation condition that will always match. This is not a
-# constant like `FAILURE` because we build upon it to create specific
-# conditions.
+# constant because we build upon it to create specific conditions.
 always = ->
   {
     maximum: Number.MAX_VALUE
@@ -109,7 +106,7 @@ alternates = (pattern, array, rest, primary, secondary, allowSecondary, index) -
   while rest
     alternate             = {}
     alternate[primary]    = always()
-    alternate[secondary]  = if allowSecondary then always() else NEVER
+    alternate[secondary]  = if allowSecondary then always() else never()
 
     match = /^([^/:]+)(?:(\s*\/\s*)([^:]+))?(:\s*)(.*)$/.exec rest
     if match
@@ -255,7 +252,7 @@ parse = (pattern, part, index, bits, next) ->
         alternates pattern, f.alternation, write, "write", "read", false, index
         index += write.length
       f.alternation.push {
-        read: FAILURE, write: FAILURE, failed: true
+        read: always(), write: always(), failed: true
       }
     else
       # Check if this is a length encoding.
