@@ -191,9 +191,9 @@ parse = (pattern, part, index, bits, next) ->
     f.exploded  = f.signed or f.bytes > 8 or "ha".indexOf(f.type) != -1
 
 
-    # Check for bit backing. The intense rest pattern allows us to skip over a
-    # nested padding specifier in the bit packing pattern, nested curly brace
-    # matching for a depth of one.
+    # Check for bit backing. The intense rest pattern in the regex allows us to
+    # skip over a nested padding specifier in the bit packing pattern, nested
+    # curly brace matching for a depth of one.
     pack = /^{((?:-b|b|x).+)}(\s*,.*|\s*)$/.exec(rest)
     if pack
       index++
@@ -224,6 +224,8 @@ parse = (pattern, part, index, bits, next) ->
       rest        = pack[2]
       index      += pack[1].length + 1
 
+      # Check that the packed bits sum up to the size of the field into which
+      # they are packed.
       sum = 0
       for pack in f.packing
         sum += pack.bits
@@ -240,20 +242,33 @@ parse = (pattern, part, index, bits, next) ->
       read          = alternation[1]
       rest          = alternation[2]
       write         = null
+
+      # See if there is a full write pattern. If not, then the pattern will be
+      # the same for reads and writes, but with possible different conditions
+      # for write to match an alternate.
       if alternation = /^(\s*\/\s*)\(([^)]+)\)(.*)$/.exec(rest)
         slash         = alternation[1]
         write         = alternation[2]
         rest          = alternation[3]
+
+      # Parse the primary alternation pattern.
       index += 1
       alternates pattern, f.alternation = [], read, "read", "write", not write, index
       index += read.length + 1
+
+      # Parse the full write alternation pattern, if we have one.
       if write
         index += slash.length + 1
         alternates pattern, f.alternation, write, "write", "read", false, index
         index += write.length
+
+      # This condition will catch all, and let us know that no condition
+      # matched.
       f.alternation.push {
         read: always(), write: always(), failed: true
       }
+
+    # Neither bit packing nor alternation.
     else
       # Check if this is a length encoding.
       length = /^\/(.*)$/.exec(rest)
