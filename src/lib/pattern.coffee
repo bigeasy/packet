@@ -5,6 +5,15 @@
 # This module is separated for isolation during testing. It is not meant to be
 # exposed as part of the public API.
 
+# We don't count an initial newline as a line.
+error = (message, pattern, index) ->
+  if pattern.indexOf("\n") != -1
+    lines = pattern.substring(0, index).split /\n/
+    lines.shift() if lines[0] is ""
+    "#{message} at line #{lines.length} character #{lines.pop().length + 1}"
+  else
+    "#{message} at character #{index + 1}"
+
 BASE = { "0x": 16, "0": 8, "X": 10 }
 
 numeric = (base, value) ->
@@ -127,24 +136,6 @@ alternates = (pattern, array, rest, primary, secondary, allowSecondary, index) -
     index += part.length + delimiter.length
 
     array.push alternate
-
-##### parse(pattern)
-# Parse a pattern and create a list of fields.
-
-# The `pattern` is the pattern to parse.
-module.exports.parse = (pattern) ->
-  part = pattern.replace(/\n/g, " ").replace(/^\s+/, " ")
-  index = pattern.length - part.length
-  parse pattern, part, index, 8
-
-# We don't count an initial newline as a line.
-error = (message, pattern, index) ->
-  if pattern.indexOf("\n") != -1
-    lines = pattern.substring(0, index).split /\n/
-    lines.shift() if lines[0] is ""
-    "#{message} at line #{lines.length} character #{lines.pop().length + 1}"
-  else
-    "#{message} at character #{index + 1}"
 
 # Parse a part of a pattern. The `next` regular expression is replaced when we
 # match bit packing patterns, with a regular expression that excludes modifiers
@@ -403,3 +394,13 @@ parse = (pattern, part, index, bits, next) ->
     throw  new Error error "invalid pattern", pattern, index
 
   fields
+
+##### parse(pattern)
+# Parse a pattern and create a list of fields.
+
+# The `pattern` is the pattern to parse.
+module.exports.parse = (pattern) ->
+  part = pattern.replace(/\n/g, " ").replace(/^\s+/, " ")
+  index = pattern.length - part.length
+  parse pattern, part, index, 8
+
