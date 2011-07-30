@@ -5,6 +5,14 @@
 # This module is separated for isolation during testing. It is not meant to be
 # exposed as part of the public API.
 
+BASE = { "0x": 16, "0": 8, "X": 10 }
+
+numeric = (base, value) ->
+  try
+    parseInt(value, BASE[base or "X"])
+  catch e
+    null
+
 # Extract an alternation range number or bit mask from at the current pattern
 # substring given by `rest`.
 number = (pattern, rest, index) ->
@@ -286,19 +294,13 @@ parse = (pattern, part, index, bits, next) ->
           rest = arrayed[2]
 
       # Check for a padding value.
-      padding = /^{(0x|0)?(\d+)}(.*)$/.exec(rest)
+      padding = /^({\s*)((0x|0)?([a-f\d]+)\s*})(.*)$/i.exec(rest)
       if padding
-        base      = padding[1]
-        pad       = padding[2]
-        rest      = padding[3]
-
-        if base
-          if base == "0x"
-            f.padding = parseInt(pad, 16)
-          else
-            f.padding = parseInt(pad, 8)
-        else
-          f.padding = parseInt(pad, 10)
+        [ before, after, base, pad, rest ] = padding.slice 1
+        index += before.length
+        unless (f.padding = numeric(base, pad))?
+          throw new Error error, "invalid number format", pattern, index
+        index += after.length
 
       # Check for zero termination.
       tz = /^z(?:<(.*?)>)?(.*)$/.exec(rest)
@@ -309,7 +311,18 @@ parse = (pattern, part, index, bits, next) ->
           f.terminator = []
           terminator = tz[1]
           loop
-            if not match = /^(\s*)(?:0x([A-F-a-f00-9]{2})|(\d+))(\s*,)?(.*)$/.exec terminator
+            if not match = ///
+              ^         # start
+              (\s*)     # skip whitespace
+              (?:
+                0x([A-F-a-f00-9]{2})  # hex
+                |
+                (\d+)                 # decimal
+              )
+              (\s*,)?   # separtor for next character
+              (.*)      # rest
+              $         # end
+            ///.exec terminator
               throw new Error error "invalid terminator", pattern, index
             [ before, hex, decimal, comma, rest ] = match.slice(1)
             index += before.length
@@ -326,6 +339,7 @@ parse = (pattern, part, index, bits, next) ->
             if /\S/.test(rest) and not comma
               throw new Error error "invalid pattern", pattern, index
             if not comma
+              index += rest.length
               break
             terminator = rest
             index += comma.length

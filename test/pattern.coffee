@@ -1713,3 +1713,23 @@ class exports.PacketTest extends TwerpTest
   'test: parse bad terminator.': (done) ->
     @trap "invalid terminator at character 10", -> parse("b8z<0x0A,a>")
     done 1
+
+  'test: parse bad terminator.': (done) ->
+    @trap "invalid terminator at character 10", -> parse("b8z<0x0A,a>")
+    done 1
+
+  'test: error index after pipeline.': (done) ->
+    @trap "invalid pattern at character 24", -> parse("b8z|twiddle(8, 'utf8'),z")
+    done 1
+
+  'test: error index after named pattern.': (done) ->
+    @trap "invalid pattern at character 14", -> parse("b8z => steve,z")
+    done 1
+
+  'test: error index after terminator.': (done) ->
+    @trap "invalid pattern at character 18", -> parse("b8z< 10 , 13 > , z")
+    done 1
+
+  'test: error index after padding.': (done) ->
+    @trap "invalid pattern at character 14", -> parse("b8{ 0x00 } , z")
+    done 1
