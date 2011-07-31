@@ -365,7 +365,7 @@ parse = (pattern, part, index, bits, next) ->
         # JavaScript scalar, taken in part from
         # [json2.js](http://www.JSON.org/json2.js). 
         while hasArgument
-          arg         = ///
+          arg = ///
             ( '(?:[^\\']|\\.)+'|"(?:[^\\"]|\\.)+"   # string
             | true | false                          # boolean
             | null                                  # null
