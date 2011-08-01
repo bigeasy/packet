@@ -1738,6 +1738,10 @@ class exports.PacketTest extends TwerpTest
     @trap "invalid pattern at character 9", -> parse("b16/b8, z")
     done 1
 
+  'test: error index after array.': (done) ->
+    @trap "invalid pattern at character 10", -> parse("b16[12], z")
+    done 1
+
   'test: error array length is zero.': (done) ->
     @trap "array length must be non-zero at character 4", -> parse("b8[0]")
     done 1
