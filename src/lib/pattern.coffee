@@ -309,7 +309,7 @@ parse = (pattern, part, index, bits, next) ->
           f.repeat = parseInt(arrayed[1], 10)
           index++
           if f.repeat == 0
-            throw new Error("array length must be non-zero at " + index)
+            throw new Error error "array length must be non-zero", pattern, index
           index += arrayed[1].length + 1
           rest = arrayed[2]
 
