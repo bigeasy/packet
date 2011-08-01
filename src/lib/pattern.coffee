@@ -102,36 +102,53 @@ always = ->
     mask: 0
   }
 
+# Parse an alternation pattern.
 alternates = (pattern, array, rest, primary, secondary, allowSecondary, index) ->
+  # Chip away at the pattern.
   while rest
     alternate             = {}
     alternate[primary]    = always()
     alternate[secondary]  = if allowSecondary then always() else never()
 
+    # Match the condition and the colon prior to the pattern. If this doesn't
+    # match than we assume that we have a final, default pattern.
     match = /^([^/:]+)(?:(\s*\/\s*)([^:]+))?(:\s*)(.*)$/.exec rest
     if match
       [ first, delimiter, second, imparative, rest ] = match.slice(1)
       startIndex = index
       condition pattern, index, first, alternate[primary]
+
+      # If we are allowing patterns to match write conditions, and we have a
+      # write conidtion, parse the condition. Otherwise, the read and write
+      # conditions are the same.
       if allowSecondary
         if second
           condition pattern, index, second, alternate[secondary]
         else
           alternate[secondary] = alternate[primary]
+
+      # If we do not allow patterns with write conditions, raise an exception if
+      # one exists.
       else if second
         slashIndex = startIndex + first.length + delimiter.indexOf("/")
         throw new Error error "field alternates not allowed", pattern, slashIndex
+
+      # Increment the index.
       index += first.length + imparative.length
       index += delimiter.length + second.length if delimiter?
 
+    # Check to see if we have futher alternates.
     if match = /^(\s*)([^|]+)(\|\s*)(.*)$/.exec rest
       [ padding, part, delimiter, rest ] = match.slice(1)
     else
       [ padding, part, delimiter, rest ] = [ "", rest, "", null ]
     index += padding.length
+
+    # Parse the altenate pattern.
     alternate.pattern = parse pattern, part, index, 8
     index += part.length + delimiter.length
 
+    # Record the alternate.
     array.push alternate
 
 # Parse a part of a pattern. The `next` regular expression is replaced when we

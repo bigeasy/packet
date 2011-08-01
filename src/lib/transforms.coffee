@@ -5,9 +5,9 @@ transforms = exports.transforms =
     if parsing
       if not (value instanceof Buffer)
         value = new Buffer(value)
+      # Broken and waiting on [297](http://github.com/ry/node/issues/issue/297).
+      # If the top bit is set, it is not ASCII, so we zero the value.
       if /^ascii$/i.test(encoding)
-        # Broken and waiting on [297](http://github.com/ry/node/issues/issue/297).
-        # If the top bit is set, it is not ASCII, so we zero the value.
         for i in [0...value.length]
           value[i] = 0 if value[i] & 0x80
         encoding = "utf8"
