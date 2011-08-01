@@ -290,6 +290,7 @@ parse = (pattern, part, index, bits, next) ->
       # Check if this is a length encoding.
       length = /^\/(.*)$/.exec(rest)
       if length
+        index++
         f.lengthEncoding = true
         rest = length[1]
         f.arrayed = false
