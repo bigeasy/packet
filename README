@@ -1,26 +1,17 @@
-NODE PACKET
+PACKET
 
-An evended packet parser for Node.js
+An evended packet parser for Node.js.
 
-    Home:           http://bigeasy.github.com/node-packet
-    Source:         http://github.com/bigeasy/node-packet
-    Documentation:  http://github.com/bigeasy/node-packet/wiki
+    Documentation:  http://bigeasy.github.com/packet
+    Issues:         http://github.com/bigeasy/packet/issues
+    Source:         http://github.com/bigeasy/packet
 
-    Issues:         http://github.com/bigeasy/node-packet/issues
+    Build:          http://travis-ci.org/bigeasy/packet
+    Wiki:           http://github.com/bigeasy/packet/wiki
 
     License:        The MIT License
 
     Contributors:   Ben Hockey ~ @neonstalwart
                     Aaron Qian ~ @aq1018
 
-PURPOSE
-
-Simplies the reading and writing of binary data from Node.js buffers.
-
-For now, the best place to learn about this project is at the
-
-    Concerns and Decisions Wiki Page
-
-    http://github.com/bigeasy/node-packet/wiki/Concerns-and-Decisions
-
-Shortly, most of what you'll need to know will be in this README.
+Copyright 2009-2011 -- Alan Gutierrez All -- Rights Reserved.

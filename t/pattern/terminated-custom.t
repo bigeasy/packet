@@ -1,0 +1,14 @@
+#!/usr/bin/env coffee
+require("./proof") 1, ({ parseEqual }) ->
+  parseEqual "b8z<13,0x0A>", [
+    { signed: false
+    , bits: 8
+    , endianness: "b"
+    , bytes: 1
+    , type: "n"
+    , exploded: false
+    , arrayed: true
+    , repeat: Number.MAX_VALUE
+    , terminator: [ 13, 10 ]
+    }
+  ], "parse a list of bytes terminated by a custom terminator."
