@@ -1,0 +1,10 @@
+{   "name":             "packet-ssh"
+,   "description":      "Pure Node.js SSH client written in CoffeeScript."
+,   "version":          "0.0.1"
+,   "author":           "Alan Gutierrez"
+,   "dependencies":     { "packet": ">=0.0.1" }
+,   "devDependencies":  { "coffee-script": ">=1.1.3"
+                        , "proof": ">=0.0.1" }
+,   "scripts":          { "test": "proof t/*/*.t" }
+,   "main":             "./lib/index.js"
+}
