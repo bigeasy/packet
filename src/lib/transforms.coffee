@@ -17,7 +17,7 @@ transforms = exports.transforms =
       buffer = new Buffer(value, encoding)
       if encoding is "ascii"
         for i in [0...buffer.length]
-          buffer[i] = 0 if value.charAt(i) is '\0'
+          buffer[i] = 0 if value.charAt(i) is '\u0000'
       buffer
 
   # Convert to and from ASCII.
