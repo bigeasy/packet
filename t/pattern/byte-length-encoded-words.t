@@ -1,6 +1,6 @@
-#!/usr/bin/env coffee
-require("./proof") 1, ({ parseEqual }) ->
-  parseEqual "b8/b16", [
+#!/usr/bin/env node
+require("./proof")(1, function (parseEqual) {
+  parseEqual("b8/b16", [
     { signed: false
     , bits: 8
     , endianness: "b"
@@ -21,4 +21,5 @@ require("./proof") 1, ({ parseEqual }) ->
     , arrayed: true
     , repeat: 1
     }
-  ], "parse a length encoded array of 16 bit numbers."
+  ], "parse a length encoded array of 16 bit numbers.");
+});
