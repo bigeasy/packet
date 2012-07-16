@@ -1,3 +1,5 @@
-#!/usr/bin/env coffee
-require("./proof") 3, ({ parseEqual }) ->
-  parseEqual "b8", [ 1 ], 1, 1, "byte"
+#!/usr/bin/env node
+
+require("./proof")(3, function (parseEqual) {
+  parseEqual("b8", [ 1 ], 1, 1, "byte");
+});
