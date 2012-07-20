@@ -1,6 +1,6 @@
-#!/usr/bin/env coffee
-require("./proof") 1, ({ parseEqual }) ->
-  parseEqual "b8z|utf8()|atoi(8)", [
+#!/usr/bin/env node
+require('./proof')(1, function (parseEqual) {
+  parseEqual("b8z|utf8()|atoi(8)", [
     { signed: false
     , bits: 8
     , endianness: "b"
@@ -21,4 +21,5 @@ require("./proof") 1, ({ parseEqual }) ->
         }
       ]
     }
-  ], "parse a two transforms in a row."
+  ], "parse a two transforms in a row.");
+});

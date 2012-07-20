@@ -2,7 +2,7 @@
 ,   "description":      "Incremental, streaming and pausable packet parsers for Node.js."
 ,   "version":          "0.1.0"
 ,   "author":           "Alan Gutierrez"
-,   "devDependencies":  { "proof": "0.0.10" }
+,   "devDependencies":  { "proof": "0.0.15" }
 ,   "scripts":          { "test": "proof t/*/*.t" }
 ,   "main":             "./lib/index.js"
 }

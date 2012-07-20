@@ -1,6 +1,6 @@
-#!/usr/bin/env coffee
-require("./proof") 1, ({ parseEqual }) ->
-  parseEqual "b8{b2 => high, x1, b2 => low, x3}", [
+#!/usr/bin/env node
+require('./proof')(1, function (parseEqual) {
+  parseEqual("b8{b2 => high, x1, b2 => low, x3}", [
     { "signed": false
     , "endianness": "b"
     , "bits": 8
@@ -52,4 +52,5 @@ require("./proof") 1, ({ parseEqual }) ->
         }
       ]
     }
-  ], "parse a named bit packed pattern."
+  ], "parse a named bit packed pattern.");
+});

@@ -1,6 +1,6 @@
-#!/usr/bin/env coffee
-require("./proof") 1, ({ parseEqual }) ->
-  parseEqual "b16{x3,b6,-b7}", [
+#!/usr/bin/env node
+require('./proof')(1, function (parseEqual) {
+  parseEqual("b16{x3,b6,-b7}", [
     { "signed": false
     , "endianness": "b"
     , "bits": 16
@@ -40,4 +40,5 @@ require("./proof") 1, ({ parseEqual }) ->
         }
       ]
     }
-  ], "parse bit packing starting with skip."
+  ], "parse bit packing starting with skip.");
+});

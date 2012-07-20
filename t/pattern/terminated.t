@@ -1,6 +1,6 @@
-#!/usr/bin/env coffee
-require("./proof") 1, ({ parseEqual }) ->
-  parseEqual "b8z", [
+#!/usr/bin/env node
+require('./proof')(1, function (parseEqual) {
+  parseEqual("b8z", [
     { signed: false
     , bits: 8
     , endianness: "b"
@@ -11,4 +11,5 @@ require("./proof") 1, ({ parseEqual }) ->
     , repeat: Number.MAX_VALUE
     , terminator: [ 0 ]
     }
-  ], "parse a list of bytes terminated by zero."
+  ], "parse a list of bytes terminated by zero.");
+});

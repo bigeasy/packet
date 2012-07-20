@@ -1,6 +1,6 @@
-#!/usr/bin/env coffee
-require("./proof") 1, ({ parseEqual }) ->
-  parseEqual "b8z|utf8()|atoi(8) => mode, b32 => length", [
+#!/usr/bin/env node
+require('./proof')(1, function (parseEqual) {
+  parseEqual("b8z|utf8()|atoi(8) => mode, b32 => length", [
     { signed: false
     , bits: 8
     , endianness: "b"
@@ -32,4 +32,5 @@ require("./proof") 1, ({ parseEqual }) ->
     , repeat: 1
     , name: "length"
     }
-  ], "parse a named element."
+  ], "parse a named element.");
+});
