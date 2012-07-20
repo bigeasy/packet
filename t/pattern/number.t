@@ -1,6 +1,6 @@
-#!/usr/bin/env coffee
-require("./proof") 1, ({ parseEqual }) ->
-  parseEqual "b128", [
+#!/usr/bin/env node
+require('./proof')(1, function (parseEqual) {
+  parseEqual("b128", [
     { signed: false
     , bits: 128
     , endianness: "b"
@@ -10,4 +10,5 @@ require("./proof") 1, ({ parseEqual }) ->
     , arrayed: false
     , repeat: 1
     }
-  ], "parse a number greater than 64 bits with no type."
+  ], "parse a number greater than 64 bits with no type.");
+});

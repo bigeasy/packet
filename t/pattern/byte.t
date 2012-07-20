@@ -1,6 +1,7 @@
-#!/usr/bin/env coffee
-require("./proof") 1, ({ parseEqual }) ->
-  parseEqual "b8", [
+#!/usr/bin/env node
+
+require("./proof")(1, function (parseEqual) {
+  parseEqual("b8", [
     { signed: false
     , bits: 8
     , endianness: "b"
@@ -10,4 +11,5 @@ require("./proof") 1, ({ parseEqual }) ->
     , arrayed: false
     , repeat: 1
     }
-  ], "parse a single byte"
+  ], "parse a single byte");
+});

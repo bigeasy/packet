@@ -1,6 +1,6 @@
-#!/usr/bin/env coffee
-require("./proof") 1, ({ parseEqual }) ->
-  parseEqual "b8z<13,0x0A>", [
+#!/usr/bin/env node
+require('./proof')(1, function (parseEqual) {
+  parseEqual("b8z<13,0x0A>", [
     { signed: false
     , bits: 8
     , endianness: "b"
@@ -11,4 +11,5 @@ require("./proof") 1, ({ parseEqual }) ->
     , repeat: Number.MAX_VALUE
     , terminator: [ 13, 10 ]
     }
-  ], "parse a list of bytes terminated by a custom terminator."
+  ], "parse a list of bytes terminated by a custom terminator.");
+});

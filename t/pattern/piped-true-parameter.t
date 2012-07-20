@@ -1,6 +1,6 @@
-#!/usr/bin/env coffee
-require("./proof") 1, ({ parseEqual }) ->
-  parseEqual "b8z|twiddle(true)", [
+#!/usr/bin/env node
+require('./proof')(1, function (parseEqual) {
+  parseEqual("b8z|twiddle(true)", [
     { signed: false
     , bits: 8
     , endianness: "b"
@@ -17,5 +17,6 @@ require("./proof") 1, ({ parseEqual }) ->
         }
       ]
     }
-  ], "parse a transform with a true parameter."
+  ], "parse a transform with a true parameter.");
 
+});

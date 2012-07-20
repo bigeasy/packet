@@ -1,6 +1,6 @@
-#!/usr/bin/env coffee
-require("./proof") 1, ({ parseEqual }) ->
-  parseEqual "b8z|twiddle('a \\u00DF b \\' c')", [
+#!/usr/bin/env node
+require('./proof')(1, function (parseEqual) {
+  parseEqual("b8z|twiddle('a \\u00DF b \\' c')", [
     { signed: false
     , bits: 8
     , endianness: "b"
@@ -17,4 +17,5 @@ require("./proof") 1, ({ parseEqual }) ->
         }
       ]
     }
-  ], "parse a transform with a single quoted string parameter."
+  ], "parse a transform with a single quoted string parameter.");
+});

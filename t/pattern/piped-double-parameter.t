@@ -1,6 +1,6 @@
-#!/usr/bin/env coffee
-require("./proof") 1, ({ parseEqual }) ->
-  parseEqual "b8z|twiddle(" + Number.MAX_VALUE + ")", [
+#!/usr/bin/env node
+require('./proof')(1, function (parseEqual) {
+  parseEqual("b8z|twiddle(" + Number.MAX_VALUE + ")", [
     { signed: false
     , bits: 8
     , endianness: "b"
@@ -17,4 +17,5 @@ require("./proof") 1, ({ parseEqual }) ->
         }
       ]
     }
-  ], "parse a transform with an float parameter."
+  ], "parse a transform with an float parameter.");
+});

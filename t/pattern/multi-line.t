@@ -1,10 +1,6 @@
-#!/usr/bin/env coffee
-require("./proof") 1, ({ parseEqual }) ->
-  pattern = """
-    -l16,
-    b8
-  """
-  parseEqual pattern,
+#!/usr/bin/env node
+require('./proof')(1, function (parseEqual) {
+  parseEqual("-l16,b8",
   [
     { signed: true
     , bits: 16
@@ -25,4 +21,5 @@ require("./proof") 1, ({ parseEqual }) ->
     , arrayed: false
     , repeat: 1
     }
-  ], "parse a multi-line pattern"
+  ], "parse a multi-line pattern");
+});

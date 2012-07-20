@@ -1,6 +1,6 @@
-#!/usr/bin/env coffee
-require("./proof") 1, ({ parseEqual }) ->
-  parseEqual "-l16", [
+#!/usr/bin/env node
+require('./proof')(1, function (parseEqual) {
+  parseEqual("-l16", [
     { signed: true
     , bits: 16
     , endianness: "l"
@@ -10,4 +10,5 @@ require("./proof") 1, ({ parseEqual }) ->
     , arrayed: false
     , repeat: 1
     }
-  ], "parse a single signed little-endian 16 bit number"
+  ], "parse a single signed little-endian 16 bit number");
+});

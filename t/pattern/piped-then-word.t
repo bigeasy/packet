@@ -1,6 +1,6 @@
-#!/usr/bin/env coffee
-require("./proof") 1, ({ parseEqual }) ->
-  parseEqual "b8z|str('utf8'), b16", [
+#!/usr/bin/env node
+require('./proof')(1, function (parseEqual) {
+  parseEqual("b8z|str('utf8'), b16", [
     { signed: false
     , bits: 8
     , endianness: "b"
@@ -27,4 +27,5 @@ require("./proof") 1, ({ parseEqual }) ->
     , arrayed: false
     , repeat: 1
     }
-  ], "parse a transform followed by a 16 bit number."
+  ], "parse a transform followed by a 16 bit number.");
+});

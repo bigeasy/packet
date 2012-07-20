@@ -1,5 +1,7 @@
-#!/usr/bin/env coffee
-require("./proof") 1, ({ Parser }) ->
-  parser = new Parser(@)
-  parser.extract "b8", (field) -> @ok true, "set self"
-  parser.parse [ 1 ]
+#!/usr/bin/env node
+require('./proof')(1, function (Parser, ok) {
+  var self = this;
+  var parser = new Parser(this);
+  parser.extract("b8", function (field) { ok(self == this, "set self") });
+  parser.parse([ 1 ]);
+});

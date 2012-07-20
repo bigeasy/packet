@@ -1,6 +1,6 @@
-#!/usr/bin/env coffee
-require("./proof") 1, ({ parseEqual }) ->
-  parseEqual "b64f", [
+#!/usr/bin/env node
+require("./proof")(1, function (parseEqual) {
+  parseEqual("b64f", [
     { signed: true
     , bits: 64
     , endianness: "b"
@@ -10,4 +10,5 @@ require("./proof") 1, ({ parseEqual }) ->
     , arrayed: false
     , repeat: 1
     }
-  ], "parse a single 64 bit float."
+  ], "parse a single 64 bit float.");
+});

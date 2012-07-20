@@ -1,6 +1,6 @@
-#!/usr/bin/env coffee
-require("./proof") 1, ({ parseEqual }) ->
-  parseEqual "b8[8]{0}z", [
+#!/usr/bin/env node
+require("./proof")(1, function (parseEqual) {
+  parseEqual("b8[8]{0}z", [
     { signed: false
     , bits: 8
     , endianness: "b"
@@ -12,4 +12,5 @@ require("./proof") 1, ({ parseEqual }) ->
     , terminator: [ 0 ]
     , padding: 0
     }
-  ], "parse a zero terminated array of 8 bytes zero filled."
+  ], "parse a zero terminated array of 8 bytes zero filled.");
+});

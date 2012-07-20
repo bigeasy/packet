@@ -1,5 +1,8 @@
-#!/usr/bin/env coffee
-require("./proof") 1, ({ parse }) ->
-  @throws "array length must be non-zero at character 4",
-          "error array length is zero",
-          -> parse("b8[0]")
+#!/usr/bin/env node
+require("./proof")(1, function (parse, equal) {
+  try {
+    parse("b8[0]")
+  } catch (e) {
+    equal(e.message, "array length must be non-zero at character 4", "error array length is zero");
+  }
+});

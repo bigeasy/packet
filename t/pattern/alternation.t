@@ -1,6 +1,6 @@
-#!/usr/bin/env coffee
-require("./proof") 1, ({ parseEqual }) ->
-  parseEqual "b8(0-251: b8 | 252: x8, b16 | 253: x8, b24 | 254: x8, b64)", [
+#!/usr/bin/env node
+require("./proof")(1, function (parseEqual) {
+  parseEqual("b8(0-251: b8 | 252: x8, b16 | 253: x8, b24 | 254: x8, b64)", [
     { "signed": false
     , "endianness": "b"
     , "bits": 8
@@ -150,4 +150,5 @@ require("./proof") 1, ({ parseEqual }) ->
         }
       ]
     }
-  ], "parse alternation with range."
+  ], "parse alternation with range.");
+});
