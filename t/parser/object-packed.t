@@ -2,7 +2,7 @@
 require("./proof") 2, ({ Parser }) ->
   parser = new Parser
   parser.extract "b16 => short, b8{b2 => high, x1, b2 => low, x3}", (object) =>
-    @equal parser.getBytesRead(), 3, "bytes read"
+    @equal parser.read, 3, "bytes read"
     expected =
       short: 258
       high: 3

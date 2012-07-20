@@ -2,7 +2,7 @@
 require("./proof") 2, ({ Parser }) ->
   parser = new Parser
   parser.packet "packed", "b16 => short, b8{b2 => high, x1, b2 => low, x3}", (object) =>
-    @equal clone.getBytesRead(), 3, "bytes read"
+    @equal clone.read, 3, "bytes read"
     expected =
       short: 258
       high: 3
