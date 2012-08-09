@@ -1,10 +1,11 @@
-# Node Packet
+# Packet [![Build Status](https://secure.travis-ci.org/bigeasy/packet.png?branch=master)](http://travis-ci.org/bigeasy/packet)
 
 An evented binary packet and structure parser for Node.js.
 
-## Synopsis
+## Contributors
 
-Use tar as an example?
+  * [Ben Hockey](https://github.com/neonstalwart)
+  * [Aaron Qian](https://github.com/aq1018)
 
 ## Objectives
 
@@ -653,3 +654,17 @@ This allows a packet parser prototype to be used to efficently create initialize
 instances.
 
 class: Serializer
+
+## Change Log
+
+Changes for each release.
+
+### Version 0.0.3
+
+ * Fix Packet in NPM. #12. &mdash; ***Pending***
+ * Test serialization of words and double-words. #20. &mdash; ***Pending***
+ * Create a markdown `README.md`. #18.
+ * Move library to top level. #22 &mdash; ***Pending***
+ * Build on Node 0.8 at Travis CI. #23 &mdash; ***Pending***
+ * Fix too greedy match of bit packing pattern. #19.
+ * Skip leading whitespace in pattern. #15.

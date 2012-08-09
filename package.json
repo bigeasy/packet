@@ -1,8 +1,18 @@
 {   "name":             "packet"
 ,   "description":      "Incremental, streaming and pausable packet parsers for Node.js."
-,   "version":          "0.1.0"
-,   "author":           "Alan Gutierrez"
+,   "version":          "0.0.3"
+,   "keywords": [ "packet", "pack", "binary", "network", "structure", "async", "asynchronous", "javascript" ]
+,   "author":           "Alan Gutierrez <alan@prettyrobots.com>"
 ,   "devDependencies":  { "proof": "0.0.15" }
-,   "scripts":          { "test": "proof t/*/*.t" }
-,   "main":             "./lib/index.js"
+,   "scripts" : { "test": "proof platform win32 && proof t/*/*.t || t/test" }
+,   "dependencies": {}
+,   "licenses": [
+    { "type": "MIT"
+    , "url": "http://github.com/bigeasy/packet/raw/master/LICENSE"
+    }]
+,   "homepage": "https://github.com/bigeasy/packet"
+,   "repository":
+    { "type": "git"
+    , "url": "http://github.com/bigeasy/packet.git"
+    }
 }
