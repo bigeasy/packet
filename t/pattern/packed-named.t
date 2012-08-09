@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 require('./proof')(1, function (parseEqual) {
-  parseEqual("b8{b2 => high, x1, b2 => low, x3}", [
+  parseEqual("b8{b2 => high, x1{0}, b2 => low, x3}, x8{0}, b8", [
     { "signed": false
     , "endianness": "b"
     , "bits": 8
@@ -28,6 +28,7 @@ require('./proof')(1, function (parseEqual) {
         , "repeat": 1
         , "arrayed": false
         , "exploded": false
+        , "padding": 0
         }
       ,
         { "signed": false
@@ -51,6 +52,27 @@ require('./proof')(1, function (parseEqual) {
         , "exploded": false
         }
       ]
+    }
+  ,
+    { signed: false,
+      endianness: 'x',
+      bits: 8,
+      type: 'n',
+      bytes: 1,
+      exploded: 0,
+      repeat: 1,
+      arrayed: false,
+      padding: 0
+    }
+  ,
+    { signed: false,
+      endianness: 'b',
+      bits: 8,
+      type: 'n',
+      bytes: 1,
+      exploded: 0,
+      repeat: 1,
+      arrayed: false
     }
   ], "parse a named bit packed pattern.");
 });
