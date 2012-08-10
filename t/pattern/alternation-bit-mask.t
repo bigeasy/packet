@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 require("./proof")(1, function (parseEqual) {
-  parseEqual("b8(&0x80: b16{x1,b15} | b8)", [
+  parseEqual("b8( &0x80: b16{x1,b15} | b8 )", [
     { "signed": false
     , "endianness": "b"
     , "bits": 8
