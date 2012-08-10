@@ -661,10 +661,11 @@ Changes for each release.
 
 ### Version 0.0.3
 
+ * Named patterns reset buffer offset. #29.
+ * Allow spaces before alternation condition. #28.
  * Fix Packet in NPM. #12. &mdash; ***Pending***
  * Test serialization of words and double-words. #20. &mdash; ***Pending***
  * Create a markdown `README.md`. #18.
- * Move library to top level. #22 &mdash; ***Pending***
- * Build on Node 0.8 at Travis CI. #23 &mdash; ***Pending***
+ * Build on Node 0.8 at Travis CI. #23 &mdash;
  * Fix too greedy match of bit packing pattern. #19.
  * Skip leading whitespace in pattern. #15.
