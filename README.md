@@ -661,6 +661,7 @@ Changes for each release.
 
 ### Version 0.0.3
 
+ * Serializer not exported by `index.js`.
  * Named patterns reset buffer offset. #29.
  * Allow spaces before alternation condition. #28.
  * Fix Packet in NPM. #12. &mdash; ***Pending***
