@@ -10,7 +10,7 @@ An evented binary packet and structure parser for Node.js.
 ## Objectives
 
 Node Packet creates **binary parsers** and **serializers** that are
-**incremental**, **streaming**, and **pausable** through a bindary pattern
+**incremental**, **streaming**, and **pausable** through a binary pattern
 language that is **declarative** and very **expressive**.
 
 Node Packet simplifies the construction an maintainence of libraries that
@@ -421,8 +421,6 @@ and type.
 
 ### Bit Packed Integers
 
-**Pending** &mdash; Not implemented.
-
 Integers are often divided into smaller integers through a process called bit
 packing. Bit packing is specified by following an integer specification with 
 a curly brace enclosed series series of integers patterns whose total size in
@@ -444,32 +442,24 @@ You can also name the packed fields.
 "b16{b3 => type, x6, -b7 => count}"
 ```
 
-### Conditinal Patterns
-
-**Pending** &mdash; Not implemented.
+### Alternate Patterns
 
 A common pattern in binary formats is using the value of a byte, or the high
 order bits of a byte to specify the type of data to follow. [Length Encoded
 Arrays](#length-encoded-arrays) are one example of this practice, where a
 an integer count indicates the length of a following string or array.
 
-Byte switches are used to switch between types can can be based on either a
-byte value or a bit mask.
+With an alternate pattern, **Packet** will extract an integer from the byte
+stream, then choose a pattern based on the value of that integer. The pattern is
+applied at the index where the integer used to choose the pattern was extracted.
+That is, the bytes used to choose the pattern are included when the pattern is
+applied. It is a peek and switch.
 
-A conditional is indicated by a encapsulating the alternatives in parenthesis.
-Alternative are separated by a pipe `|` character. Each alternative maps a match
-to a pattern separated by a colon `:`.
-
-The values to match can be either a range or a single value.  If the value
-matches then the pattern associated with the value is applied to the stream
-starting with the byte currently tested. That is, we use the byte both to test
-the condition, then use the byte as the first byte in the pattern with the
-matched condition.
-
-Tests are applied in the order in which they are declared.
+Alternate patterns are grouped by parenthesis `(` and `)` and delimited by pipes
+`|`. Each alternative maps a match to a pattern separated by a colon `:`.
 
 **Mnemonic** &mdash; Parenthesis and pipes are used to indicate alternation in
-regular expressions, while colons are used to deliniate switch options in C.
+regular expressions, while colons are used to delineate switch options in C.
 
 ```javascript
 // MySQL length coded binary; if the byte is less than 252, use the byte value,
@@ -477,8 +467,10 @@ regular expressions, while colons are used to deliniate switch options in C.
 "b8(0-251: b8 | 252: x8, b16 | 253: x8, b24 | 254: x8, b64)"
 ```
 
-No condition will cause that branch to always match. This is used to specify a
-default value.
+Conditions are either a value to match exactly or a range of values. **Packet**
+tests each condition is tested in order. **Packet** uses the alternation of the
+first condition to match the extracted integer is used. An alternate without a
+condition will always match. This is used to specify a default pattern.
 
 ```javascript
 // Simpiler, but will also match 255 which is invalid, which is fine if you test
@@ -486,20 +478,14 @@ default value.
 "b8(252: x8, b16 | 253: x8, b24 | 254: x8, b64 | b8)"
 ```
 
-You can also be explicit about the default value using the asterisk `*` as a
-condition that means match any.
+The values can be expressed in binary, decimal or hexadecimal.
 
-```javascript
-// Simpiler, but will also match 255 which is invalid, which is fine if you test
-// the value in your callback.
-"b8(252: x8, b16 | 253: x8, b24 | 254: x8, b64 | *: b8)"
-```
-
-The values are expressed in binary, decimal or hexidecimal.
+### Bitwise Alternate Patterns
 
 You can also indicate a branch based on set bits by prefixing the value with an
-ampersand. The value is then considered a bit mask. If the result of a logcal
-and with the bit mask equals the bit mask, then that alternative is chosen.
+ampersand. **Packet** will use the value as a bit mask. If the result of a
+logical *and* with the bit mask equals the bit mask, then **Packet** use use
+that alternative.
 
 **Mnemonic** The `&` performs a logical and in C and is used to check to see if
 bits in a bit mask are set.
@@ -507,6 +493,55 @@ bits in a bit mask are set.
 ```javascript
 "b8(&0x80: b16{x1,b15} | b8)"   // A 15-bit word if the first bit is set,
                                 // otherwise a byte.
+```
+
+Bitwise conditions cannot be used in to choose a pattern for serialization. Upon
+serialization, the field value is a JavaScript number, not an stream of bytes.
+The bit flag simply does not exist.
+
+Instead, we need to perform a range check to determine which pattern. To delimit
+alternate tests for reading and writing, we use a slash in the condition.
+
+```javascript
+// A 15-bit word if the first bit is set, otherwise a byte.
+"b8(&0x80/0x80-0xffff: b16{x1{1},b15} | b8)"
+```
+
+### Multi-Field Alternate Patterns
+
+Alternate patterns can define either a single field or multiple field.
+Alternate patterns can contain bit-packed patterns, but they cannot contain
+still more alternate patterns.
+
+```javascript
+// Two alternate patterns with a different number of fields.
+"b8(&0x80/1: b16{b1, b15}, b16|b32{b1, b31})"
+```
+
+In the above example, the serialization test would be applied to the field value
+in the position of the `b1` field for either alternate.
+
+### Named Alternate Patterns
+
+Names can be applied either to the entire alternation if the alternation
+produces a single field, or else to individual members of the alternate
+patterns.
+
+```
+// A single field mapped to a name.
+"b8(&0x80/0x80-0xffff: b16{x1{1},b15} | b8) => number"
+```
+
+When serializing named multi-field patterns, for each alternate, **Packet** will
+use the first value of the property in the alternate for the serialization
+condition. **Packet** reads the property from the object we're serializing. If
+the value is not null, it is tested against the serialization condition. If it
+is null, the test is skipped. We use the first alternate whose object property
+is not null and whose serialization condition matches the object property.
+
+```javascript
+// Multi-field alternates mapped to names.
+"b8(&0x80/1: b16{b1 => control, b15 => type}, x16|b32{b1 => control, b31 => sequence})"
 ```
 
 ### Transforms
@@ -661,12 +696,12 @@ Changes for each release.
 
 ### Version 0.0.3
 
+ * Fix Packet in NPM. #12. &mdash; ***Pending***
+ * Serialize alternate structures. #31.
  * Test serialization of words. #20.
  * Serializer not exported by `index.js`.
  * Named patterns reset buffer offset. #29.
  * Allow spaces before alternation condition. #28.
- * Fix Packet in NPM. #12. &mdash; ***Pending***
- * Test serialization of words and double-words. #20. &mdash; ***Pending***
  * Create a markdown `README.md`. #18.
  * Build on Node 0.8 at Travis CI. #23 &mdash;
  * Fix too greedy match of bit packing pattern. #19.
