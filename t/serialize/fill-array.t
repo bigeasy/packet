@@ -1,0 +1,8 @@
+#!/usr/bin/env node
+require('./proof')(5, function (serialize, deepEqual) {
+  var buffer = [ 0x01, 0x01, 0x01, 0x01 ];
+  serialize(buffer, "x16[2]{0}, b16", 1, 6, [ 0x00, 0x00, 0x00, 0x00, 0x00, 0x01 ], "write a 16 bit integer after filling four bytes");
+  buffer = [ 0x01, 0x01, 0x01, 0x01, 0x01, 0x01 ];
+  serialize(buffer, "x8[2]{0},x8[2]{2}", 4, [ 0x00, 0x00, 0x02, 0x02 ], "write 2 zero filled bytes then two 2 filled bytes");
+  deepEqual(buffer, [ 0x00, 0x00, 0x02, 0x02, 0x01, 0x01 ], "no overwrite");
+});
