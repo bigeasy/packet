@@ -696,13 +696,13 @@ Changes for each release.
 
 ### Version 0.0.3
 
- * Fix Packet in NPM. #12. &mdash; ***Pending***
+ * Fix Packet in NPM. #12.
  * Serialize alternate structures. #31.
  * Test serialization of words. #20.
  * Serializer not exported by `index.js`.
  * Named patterns reset buffer offset. #29.
  * Allow spaces before alternation condition. #28.
  * Create a markdown `README.md`. #18.
- * Build on Node 0.8 at Travis CI. #23 &mdash;
+ * Build on Node 0.8 at Travis CI. #23.
  * Fix too greedy match of bit packing pattern. #19.
  * Skip leading whitespace in pattern. #15.
