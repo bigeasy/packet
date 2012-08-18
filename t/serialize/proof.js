@@ -1,6 +1,6 @@
 module.exports = require('proof')(function (equal, deepEqual) {
   var slice = Function.prototype.call.bind(Array.prototype.slice)
-    , Serializer = require('../../lib/serializer').Serializer
+    , Serializer = require('../..').Serializer
     ;
   function toArray (buffer) {
     var array = [], i, I;
@@ -10,16 +10,17 @@ module.exports = require('proof')(function (equal, deepEqual) {
     return array;
   }
   function serialize () {
-    var splat = slice(arguments, 0)
-      , message = splat.pop()
-      , bytes = splat.pop()
-      , written = splat.pop()
+    var vargs = slice(arguments, 0)
+      , message = vargs.pop()
+      , bytes = vargs.pop()
+      , written = vargs.pop()
       , serializer = new Serializer
+      , buffer = Array.isArray(vargs[0]) ? vargs.shift() : new Buffer(1024)
       ;
-    serializer.buffer.apply(serializer, splat.concat(function (buffer) {
-      equal(serializer.written, written, message + ' byte count');
-      deepEqual(toArray(buffer), bytes, message + ' written');
-    }));
+    serializer.serialize.apply(serializer, vargs);
+    serializer.write(buffer);
+    equal(serializer.length, written, message + ' byte count');
+    deepEqual(toArray(buffer.slice(0, serializer.length)), bytes, message + ' written');
   }
   return { Serializer: Serializer, serialize: serialize, toArray: toArray };
 });

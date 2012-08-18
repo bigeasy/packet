@@ -2,7 +2,7 @@
 require('./proof')(2, function (Parser, equal, deepEqual) {
   var parser = new Parser;
   parser.extract("b16 => short, b8{b2 => high, x1, b2 => low, x3}", function (object) {
-    equal(parser.read, 3, "bytes read");
+    equal(parser.length, 3, "bytes read");
     var expected = {
       short: 258,
       high: 3,
