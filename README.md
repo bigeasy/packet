@@ -696,6 +696,8 @@ Changes for each release.
 
 ### Version 0.0.3
 
+Released: Fri Aug 17 00:40:37 UTC 2012.
+
  * Fix Packet in NPM. #12.
  * Serialize alternate structures. #31.
  * Test serialization of words. #20.

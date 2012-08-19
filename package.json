@@ -1,5 +1,5 @@
 {   "name":             "packet"
-,   "description":      "Incremental, streaming and pausable packet parsers for Node.js."
+,   "description":      "Pure JavaScript evented binary parsers and serializers for Node.js."
 ,   "version":          "0.0.3"
 ,   "keywords": [ "packet", "pack", "binary", "network", "structure", "async", "asynchronous", "javascript" ]
 ,   "author":           "Alan Gutierrez <alan@prettyrobots.com>"
