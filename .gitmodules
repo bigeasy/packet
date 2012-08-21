@@ -1,0 +1,6 @@
+[submodule "prev"]
+	path = prev
+	url = git://github.com/bigeasy/packet.git
+[submodule "next"]
+	path = next
+	url = git://github.com/bigeasy/packet.git
