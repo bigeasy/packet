@@ -197,10 +197,6 @@ function Parser (self) {
 
   // Read from the `buffer` for the given `offset` `and length`.
   function parse (buffer, offset, length) {
-    // If we are paused, freak out.
-    if (this._paused)
-      throw new Error("cannot write to paused parser");
-
     // Initialize the loop counters. Initialize unspecified parameters with their
     // defaults.
     var offset  = offset || 0
@@ -474,14 +470,6 @@ function Parser (self) {
               this._callback.call(this._context, object);
             } else {
               this._callback.apply(this._context, this._fields);
-            }
-
-            // The callback can pause the parser, which causes us to stash the
-            // current state of our parser, then return `false` to indicate that
-            // the destination is saturated.
-            if (this._paused) {
-              this._paused = { buffer: buffer, offset: offset, end: end };
-              return false
             }
           }
         // Otherwise we proceed to the next field in the packet pattern.
