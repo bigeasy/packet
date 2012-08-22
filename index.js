@@ -514,6 +514,8 @@ function Serializer(context) {
 
   function _length () { return _bytesWritten }
 
+  function reset () { _bytesWritten = 0 }
+
   // Initialize the next field pattern in the serialization pattern array, which
   // is the pattern in the array `this._pattern` at the current `this._patternIndex`.
   // This initializes the serializer to write the next field.
@@ -853,7 +855,7 @@ function Serializer(context) {
     this._serialize(buffer, 0, buffer.length);
   }
 
-  objectify.call(this, serialize, write, _length);
+  objectify.call(this, serialize, write, reset, _length);
 }
 // The `Serializer` writes JavaScript primitives to a stream in binary
 // representations.
