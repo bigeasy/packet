@@ -1,6 +1,8 @@
 [submodule "prev"]
 	path = prev
+  ignore = dirty
 	url = git://github.com/bigeasy/packet.git
 [submodule "next"]
 	path = next
+  ignore = dirty
 	url = git://github.com/bigeasy/packet.git
