@@ -69,57 +69,7 @@ var transforms =
     return parsing ? parseFloat(value) : value.toString();
   }
 };
-
-// Construct a packet that sends events using the given `self` as `this`.
-function Packet(context) {
-  this._context = context, this._packets = {}, this.fields = [], this._transforms = Object.create(transforms);
-}
-
-// Map a named packet with the given `name` to the given `pattern`. 
-Packet.prototype.packet = function (name, pattern, callback) {
-  this._packets[name] = { pattern: parse(pattern), callback: callback || null };
-}
-
-// Initialize a named pattern or parse a pattern for parsing or serialization.
-// This setup of a new pattern is common to both `Parser` and `Serializer`.
-Packet.prototype._nameOrPattern  = function (nameOrPattern, callback) {
-  var packet, pattern;
-  if (packet = this._packets[nameOrPattern]) {
-    pattern    = packet.pattern.slice(0);
-    callback   = callback || packet.callback || null;
-  } else {
-    pattern    = parse(nameOrPattern);
-  }
-
-  this._pattern      = pattern;
-  this._callback     = callback;
-  this._patternIndex = 0;
-}
-    
-// Excute the pipeline of transforms for the `pattern` on the `value`.
-function _pipeline (outgoing, pattern, value, reverse) {
-  var i, I, j, J, by, pipeline, parameters, transform;
-  // Run the piplines for parsing.
-  if (pipeline = pattern.pipeline) {
-    if (reverse) {
-      i = pipeline.length - 1, I = -1, by = -1;
-    } else {
-      i = 0, I = pipeline.length; by = 1;
-    }
-    while (i != I) {
-      transform = pipeline[i];
-      parameters = [];
-      for (j = 0, J = transform.parameters.length; j < J; j++) {
-        parameters.push(transform.parameters[j])
-      }
-      parameters.push(outgoing, pattern, value);
-      value = transforms[transform.name].apply(null, parameters);
-      i += by;
-    }
-  }
-  return value;
-}
-
+ 
 function die () {
   console.log.apply(console, [].slice.call(arguments, 0));
   return process.exit(1);
@@ -127,32 +77,83 @@ function die () {
 
 function say () { return console.log.apply(console, [].slice.call(arguments, 0)) }
 
+// The `Definition` class is contianed by the `Serializer` and parser. We expose
+// public methods by explicitly adding the methods to the `Serializer` or
+// `Parser` when we create them. The `Definition` class references only enclosed
+// variables, but it does use prototypal inheritance to extend the collections
+// of packet patterns and transforms.
+
+function Definition (context, packets, transforms) {
+  packets = Object.create(packets);
+  transforms = Object.create(transforms);
+
+  function packet (name, pattern) {
+    packets[name] = parse(pattern);
+  }
+
+  function transform (name, procedure) {
+    transforms[name] = procedure;
+  }
+
+  function pattern (nameOrPattern) {
+    return packets[nameOrPattern] || parse(nameOrPattern);
+  }
+
+  // Execute the pipeline of transforms for the `pattern` on the `value`.
+  function pipeline (outgoing, pattern, value, reverse) {
+    var i, I, j, J, by, pipeline, parameters, transform;
+    // Run the piplines for parsing.
+    if (pipeline = pattern.pipeline) {
+      if (reverse) {
+        i = pipeline.length - 1, I = -1, by = -1;
+      } else {
+        i = 0, I = pipeline.length; by = 1;
+      }
+      while (i != I) {
+        transform = pipeline[i];
+        parameters = [];
+        for (j = 0, J = transform.parameters.length; j < J; j++) {
+          parameters.push(transform.parameters[j])
+        }
+        parameters.push(outgoing, pattern, value);
+        value = transforms[transform.name].apply(null, parameters);
+        i += by;
+      }
+    }
+    return value;
+  }
+
+  this.context = context;
+
+  return objectify.call(this, packet, transform, pattern, pipeline);
+}
+
+
 //#### Parser
 
-// Construct a `Parser` that will use the given `self` object as the `this` when
-// a callback is called. If no `self` is provided, the `Serializer` instance
-// will be used as the `this` object for serialization event callbacks.
-function Parser (self) {
-  // Get the number of bytes read since the last call to `@reset()`. 
-  Packet.call(this, self)
+// Construct a `Parser` around the given `definition`.
+function Parser (definition) {
+  var increment, _offset, terminal, terminated, terminator, _value, self = this,
+  _bytesRead = 0, _skipping, repeat, step, _outgoing, _named, _index, _arrayed,
+  _pattern, _patternIndex, _context = definition.context || this, _fields, _callback;
 
-  var increment, _offset, terminal, terminated, terminator, _value, self = this, _bytesRead = 0;
-
+  // The length property of the `Parser`, returning the number of bytes read.
   function _length () { return _bytesRead }
 
+  // The public `reset` method to reuse the parser, clearing the current state.
   function reset () { _bytesRead = 0 }
 
   // Initialize the next field pattern in the serialization pattern array, which
   // is the pattern in the array `@_pattern` at the current `@_patternIndex`.
   function _nextField ()  {
-    var pattern       = self._pattern[self._patternIndex];
-    self._repeat      = pattern.repeat;
-    self._index       = 0;
-    self._skipping    = null;
+    var pattern       = _pattern[_patternIndex];
+    repeat      = pattern.repeat;
+    _index       = 0;
+    _skipping    = null;
     terminated  = ! pattern.terminator;
     terminator  = pattern.terminator && pattern.terminator[pattern.terminator.length - 1];
-    self._named       = self._named || !! pattern.name;
-    if (pattern.arrayed && pattern.endianness  != "x") self._arrayed = [];
+    _named       = _named || !! pattern.name;
+    if (pattern.arrayed && pattern.endianness  != "x") _arrayed = [];
   }
 
   // Prepare the parser to parse the next value in the input stream.  It
@@ -160,11 +161,11 @@ function Parser (self) {
   // accounts for skipping, for skipped patterns.
   function _nextValue () {
     // Get the next pattern.
-    var pattern = self._pattern[self._patternIndex], value;
+    var pattern = _pattern[_patternIndex], value;
 
     // If skipping, skip over the count of bytes.
     if (pattern.endianness == "x") {
-      self._skipping  = pattern.bytes;
+      _skipping  = pattern.bytes;
 
     // Create the empty value and call the inherited `@_nextValue`.
     } else {
@@ -177,12 +178,17 @@ function Parser (self) {
     increment = little ? 1 : -1;
   }
 
-  // Set the next packet to parse by providing a named packet name or a packet
-  // pattern, with an optional `callback`. The optional `callback` will override
-  // the callback assigned to a named pattern.
+  // Sets the next packet to extract from the stream by providing a named packet
+  // name as defined by `packet` or else a packet pattern to parse. The
+  // `callback` will be invoked when the packet has been extracted from the
+  // stream or buffer.
+
+  //
   function extract (nameOrPattern, callback) {
-    self._nameOrPattern(nameOrPattern, callback);
-    self._fields      = [];
+    _pattern = definition.pattern(nameOrPattern);
+    _patternIndex = 0;
+    _callback = callback;
+    _fields = [];
 
     _nextField();
     _nextValue();
@@ -208,15 +214,15 @@ function Parser (self) {
 
     // We set the pattern to null when all the fields have been read, so while
     // there is a pattern to fill and bytes to read.
-    while (this._pattern != null && offset < end) {
-      field = this._pattern[this._patternIndex];
+    while (_pattern != null && offset < end) {
+      field = _pattern[_patternIndex];
       // If we are skipping, we advance over all the skipped bytes or to the end
       // of the current buffer.
-      if (this._skipping != null) {
-        var advance  = Math.min(this._skipping, end - offset);
+      if (_skipping != null) {
+        var advance  = Math.min(_skipping, end - offset);
         var begin    = offset;
         offset      += advance;
-        this._skipping  -= advance;
+        _skipping  -= advance;
         _bytesRead += advance;
         // If feeding a stream is done through skipping. Skipping and the
         // presence of a stream is how skipping is done.
@@ -226,15 +232,15 @@ function Parser (self) {
           else
             slice = buffer.slice(begin, begin + advance)
           this._stream._write(slice);
-          if (! this._skipping)
+          if (! _skipping)
             this._stream._end()
         }
         // If we have more bytes to skip, then return `true` because we've
         // consumed the entire buffer.
-        if (this._skipping)
+        if (_skipping)
           return true
         else
-          this._skipping = null
+          _skipping = null
 
       } else {
         // If the pattern is exploded, the value we're populating is an array.
@@ -302,7 +308,7 @@ function Parser (self) {
         }
         // If the current field is arrayed, we keep track of the array we're
         // building after a pause through member variable.
-        if (field.arrayed) this._arrayed.push(value);
+        if (field.arrayed) _arrayed.push(value);
       }
 
       // If we've not yet hit our terminator, check for the terminator. If we've
@@ -316,25 +322,24 @@ function Parser (self) {
       if (! terminated) {
         if (terminator == value) {
           terminated = true;
-          var t = this._pattern[this._patternIndex].terminator;
+          var t = _pattern[_patternIndex].terminator;
           for (i = 1, I = t.length; i <= I; i++) {
-            if (this._arrayed[this._arrayed.length - i] != t[t.length - i]) {
+            if (_arrayed[_arrayed.length - i] != t[t.length - i]) {
               terminated = false
               break
             }
           }
           if (terminated) {
             for (i = 0, I + t.length; i < I; i++) {
-              this._arrayed.pop();
+              _arrayed.pop();
             }
             terminated = true;
-            if (this._repeat == Number.MAX_VALUE) {
-              this._repeat = this._index + 1;
-
+            if (repeat == Number.MAX_VALUE) {
+              repeat = _index + 1;
             } else {
-              this._skipping = (this._repeat - (++this._index)) * field.bytes
-              if (this._skipping) {
-                this._repeat = this._index + 1;
+              _skipping = (repeat - (++_index)) * field.bytes
+              if (_skipping) {
+                repeat = _index + 1;
                 continue
               }
             }
@@ -344,7 +349,7 @@ function Parser (self) {
 
       // If we are reading an arrayed pattern and we have not read all of the
       // array elements, we repeat the current field type.
-      if (++this._index <  this._repeat) {
+      if (++_index <  repeat) {
         _nextValue();
 
       // Otherwise, we've got a complete field value, either a JavaScript
@@ -372,7 +377,7 @@ function Parser (self) {
                   if (unpacked & mask)
                     unpacked = -(~(unpacked - 1) & (mask * 2 - 1))
                 }
-                this._fields.push(unpacked);
+                _fields.push(unpacked);
               }
             }
          
@@ -381,9 +386,9 @@ function Parser (self) {
           // push an empty array through the pipeline, and move on to the next
           // field.
           } else if (field.lengthEncoding) {
-            if ((this._pattern[this._patternIndex + 1].repeat = value) == 0) {
-              this._fields.push(_pipeline(! this._outgoing, field, [], false))
-              this._patternIndex++
+            if ((_pattern[_patternIndex + 1].repeat = value) == 0) {
+              _fields.push(definition.pipeline(! _outgoing, field, [], false))
+              _patternIndex++
             }
           // If the value is used as a switch for an alternation, we run through
           // the different possible branches, updating the pattern with the
@@ -403,20 +408,21 @@ function Parser (self) {
             }
             if (branch.failed)
               throw new Error("Cannot match branch.");
-            bytes = this._arrayed.slice(0);
+            bytes = _arrayed.slice(0);
             _bytesRead -= bytes.length;
-            this._pattern.splice.apply(this._pattern, [ this._patternIndex, 1 ].concat(branch.pattern));
+            _pattern.splice.apply(_pattern, [ _patternIndex, 1 ].concat(branch.pattern));
             _nextField()
             _nextValue()
-            this.parse(bytes, 0, bytes.length);
+            parse(bytes, 0, bytes.length);
             continue;
           
 
           // Otherwise, the value is what it is, so run it through the user
-          // supplied tranformation pipeline, and push it onto the list of fields.
+          // supplied transformation pipeline, and push it onto the list of
+          // fields.
           } else {
-            if (field.arrayed) value = this._arrayed;
-            this._fields.push(_pipeline(! this._outgoing, field, value, false));
+            if (field.arrayed) value = _arrayed;
+            _fields.push(definition.pipeline(! _outgoing, field, value, false));
           }
         }
         // If we have read all of the pattern fields, call the associated
@@ -425,11 +431,11 @@ function Parser (self) {
         //
         // The pattern is set to null, our terminal condition, because the
         // callback may specify a subsequent packet to parse.
-        if (++this._patternIndex == this._pattern.length) {
-          var pattern = this._pattern;
-          this._pattern = null;
+        if (++_patternIndex == _pattern.length) {
+          var pattern = _pattern;
+          _pattern = null;
 
-          if (this._callback) {
+          if (_callback) {
             // At one point, you thought you could have  a test for the arity of
             // the function, and if it was not `1`, you'd call the callback
             // positionally, regardless of named parameters. Then you realized
@@ -441,7 +447,7 @@ function Parser (self) {
             // will take a lot of hashing out only to close with "oh, no, you hit
             // upon a "hidden feature".
             var index = 0
-            if (this._named) {
+            if (_named) {
               var object = {};
               for (i = 0, I = pattern.length; i < I; i++) {
                 field = pattern[i];
@@ -451,25 +457,25 @@ function Parser (self) {
                       pack = field.packing[j];
                       if (pack.endianness != "x") {
                         if (pack.name) {
-                          object[pack.name] = this._fields[index]
+                          object[pack.name] = _fields[index]
                         } else {
-                          object["field" + (index + 1)] = this._fields[index]
+                          object["field" + (index + 1)] = _fields[index]
                         }
                         index++;
                       }
                     }
                   } else {
                     if (field.name)
-                      object[field.name] = this._fields[index];
+                      object[field.name] = _fields[index];
                     else
-                      object["field" + (index + 1)] = this._fields[index];
+                      object["field" + (index + 1)] = _fields[index];
                     index++;
                   }
                 }
               }
-              this._callback.call(this._context, object);
+              _callback.call(_context, object);
             } else {
-              this._callback.apply(this._context, this._fields);
+              _callback.apply(_context, _fields);
             }
           }
         // Otherwise we proceed to the next field in the packet pattern.
@@ -483,22 +489,18 @@ function Parser (self) {
     return true;
   }
 
-  return objectify.call(this, extract, parse, reset, _length);
+  return objectify.call(this, definition.packet, definition.transform, extract, parse, reset, _length);
 }
-
-// The `Parser` reads binary data from a stream and converts it into JavaScript
-// primitives, Strings and arrays of JavaScript primitives.
-util.inherits(Parser, Packet);
 
 module.exports.Parser = Parser;
 
 // Construct a `Serializer` that will use the given `self` object as the `this`
 // when a callback is called. If no `self` is provided, the `Serializer`
 // instance will be used as the `this` object for serialization event callbacks.
-function Serializer(context) {
-  Packet.call(this, context);
-
-  var terminal, _offset, increment, _value, _bytesWritten = 0, self = this;
+function Serializer(definition) {
+  var terminal, _offset, increment, _value, _bytesWritten = 0, self = this,
+  _skipping, repeat, _outgoing, _index, _terminated, _terminates, _pattern,
+  _patternIndex, _context = definition.context || this;
 
   function _length () { return _bytesWritten }
 
@@ -508,17 +510,17 @@ function Serializer(context) {
   // is the pattern in the array `this._pattern` at the current `this._patternIndex`.
   // This initializes the serializer to write the next field.
   function _nextField () {
-    var pattern           = self._pattern[self._patternIndex]
-    self._repeat      = pattern.repeat
-    self._terminated  = ! pattern.terminator
-    self._terminates  = ! self._terminated
-    self._index       = 0
+    var pattern           = _pattern[_patternIndex]
+    repeat      = pattern.repeat
+    _terminated  = ! pattern.terminator
+    _terminates  = ! _terminated
+    _index       = 0
 
     delete        self._padding
 
     // Can't I keep separate indexes? Do I need that zero?
     if (pattern.endianness ==  "x") {
-      self._outgoing.splice(self._patternIndex, 0, null);
+      _outgoing.splice(_patternIndex, 0, null);
       if (pattern.padding != null)
         self._padding = pattern.padding
     }
@@ -530,21 +532,21 @@ function Serializer(context) {
   // the field to a byte array for floats and signed negative numbers.
   function _nextValue () {
     var i, I, value, packing;
-    var pattern = self._pattern[self._patternIndex];
+    var pattern = _pattern[_patternIndex];
 
     // If we are skipping without filling we note the count of bytes to skip.
     if (pattern.endianness ==  "x" &&  self._padding == null) {
-      self._skipping = pattern.bytes
+      _skipping = pattern.bytes
 
     // If the pattern is an alternation, we use the current value to determine
     // with alternate to apply. We then update the pattern array with pattern of
     // the matched alternate, and rerun the next field and next value logic.
     } else if (pattern.alternation) {
-      value = self._outgoing[self._patternIndex]
+      value = _outgoing[_patternIndex]
       for (i = 0, I = pattern.alternation.length; i < I; i++) {
         var alternate = pattern.alternation[i];
         if (alternate.write.minimum <= value &&  value <= alternate.write.maximum) {
-          self._pattern.splice.apply(self._pattern, [ self._patternIndex, 1 ].concat(alternate.pattern));
+          _pattern.splice.apply(_pattern, [ _patternIndex, 1 ].concat(alternate.pattern));
           break
         }
       }
@@ -561,9 +563,9 @@ function Serializer(context) {
 
       // If the field is arrayed, we get the next value in the array.
       } else if (pattern.arrayed) {
-        value = self._outgoing[self._patternIndex][self._index]
+        value = _outgoing[_patternIndex][_index]
 
-      // If the field is bit packed, we update the `self._outgoing` array of values
+      // If the field is bit packed, we update the `_outgoing` array of values
       // by packing zero, one or more values into a single value. We will also
       // check for bits filled with a pattern specified filler value and pack
       // that in there as well.
@@ -575,7 +577,7 @@ function Serializer(context) {
           var pack = packing[i];
           length -= pack.bits;
           if (pack.endianness ==  "b" || pack.padding != null) {
-            var unpacked = pack.padding != null ? pack.padding : self._outgoing[self._patternIndex + count++]
+            var unpacked = pack.padding != null ? pack.padding : _outgoing[_patternIndex + count++]
             if (pack.signed) {
               var range = Math.pow(2, pack.bits - 1)
               if (!( (-range) <= unpacked &&  unpacked <= range - 1))
@@ -588,18 +590,18 @@ function Serializer(context) {
             value += unpacked * Math.pow(2, length)
           }
         }
-        self._outgoing.splice(self._patternIndex, count, value);
+        _outgoing.splice(_patternIndex, count, value);
 
       // If the current field is a length encoded array, then the length of the
       // the current array value is the next value, otherwise, we have the
       // simple case, the value is the current value.
       } else {
         if (pattern.lengthEncoding) {
-          var repeat = self._outgoing[self._patternIndex].length;
-          self._outgoing.splice(self._patternIndex, 0, repeat);
-          self._pattern[self._patternIndex + 1].repeat = repeat;
+          var repeat = _outgoing[_patternIndex].length;
+          _outgoing.splice(_patternIndex, 0, repeat);
+          _pattern[_patternIndex + 1].repeat = repeat;
         }
-        value = self._outgoing[self._patternIndex];
+        value = _outgoing[_patternIndex];
       }
       // If the array is not an unsigned integer, we might have to convert it.
       if (pattern.exploded) {
@@ -653,15 +655,16 @@ function Serializer(context) {
     if (typeof shiftable[shiftable.length - 1] == 'function')
       var callback = shiftable.pop()
     var nameOrPattern = shiftable.shift()
-    self._nameOrPattern(nameOrPattern, callback);
+    _patternIndex = 0;
+    _pattern = definition.pattern(nameOrPattern);
 
     if (shiftable.length ==  1 &&
         typeof shiftable[0] ==  "object" &&
         ! (shiftable[0] instanceof Array)) {
       var object = shiftable.shift(), pattern = [];
-      self._outgoing = []
-      for (i = 0, I = self._pattern.length; i < I; i++) {
-        var part = self._pattern[i];
+      _outgoing = []
+      for (i = 0, I = _pattern.length; i < I; i++) {
+        var part = _pattern[i];
         if (part.alternation) {
           for (var j = 0, J = part.alternation.length; j < J; j++) {
             var alternate = part.alternation[j], value;
@@ -682,49 +685,49 @@ function Serializer(context) {
             if (part.packing) {
               for (var k = 0, K = part.packing.length; k < K; k++) {
                 if (part.packing[k].endianness != 'x') {
-                  self._outgoing.push(part.packing[k].name ? object[part.packing[k].name] : null)
+                  _outgoing.push(part.packing[k].name ? object[part.packing[k].name] : null)
                 }
               }
             } else {
               if (part.endianness != 'x') {
-                self._outgoing.push(part.name ? object[part.name] : null)
+                _outgoing.push(part.name ? object[part.name] : null)
               }
             }
           }
         } else {
           pattern.push(part);
           if (part.endianness != 'x') {
-            self._outgoing.push(part.name ? object[part.name] : null)
+            _outgoing.push(part.name ? object[part.name] : null)
           }
         }
       }
-      self._pattern = pattern;
+      _pattern = pattern;
     } else {
-      self._outgoing = shiftable
+      _outgoing = shiftable
     }
 
     // Run the outgoing values through field pipelines before we enter the write
     // loop. We need to skip over the blank fields and constants. We also skip
     // over bit packed feilds because we do not apply pipelines to packed fields.
     var skip = 0, j = 0;
-    for (i = 0, I = self._outgoing.length; i < I; i++) {
-      var value = self._outgoing[i];
+    for (i = 0, I = _outgoing.length; i < I; i++) {
+      var value = _outgoing[i];
       if (skip) {
         skip--
         continue
       }
-      if (self._pattern[j].packing) {
-        for (var k = 0, K = self._pattern[j].packing.length; k < K; k++) {
-          var pack = self._pattern[j].packing[k];
+      if (_pattern[j].packing) {
+        for (var k = 0, K = _pattern[j].packing.length; k < K; k++) {
+          var pack = _pattern[j].packing[k];
           if (pack.endianness ==  "b") skip++;
         }
         if (skip > 0) skip--;
       } else {
-        while (self._pattern[j] &&  self._pattern[j].endianness ==  "x") j++;
-        if (! self._pattern[j]) {
+        while (_pattern[j] &&  _pattern[j].endianness ==  "x") j++;
+        if (! _pattern[j]) {
           throw new Error("too many fields");
         }
-        self._outgoing[i] = _pipeline(! self._outgoing, self._pattern[j], value, true)
+        _outgoing[i] = definition.pipeline(! _outgoing, _pattern[j], value, true)
       }
       j++;
     }
@@ -744,17 +747,17 @@ function Serializer(context) {
 
     // We set the pattern to null when all the fields have been written, so while
     // there is a pattern to fill and space to write.
-    while (self._pattern &&  offset < end) {
-      if (self._skipping) {
-        var advance     = Math.min(self._skipping, end - offset);
+    while (_pattern &&  offset < end) {
+      if (_skipping) {
+        var advance     = Math.min(_skipping, end - offset);
         offset         += advance;
-        self._skipping      -= advance;
+        _skipping      -= advance;
         _bytesWritten  += advance;
-        if (self._skipping) return offset - start;
+        if (_skipping) return offset - start;
 
       } else {
         // If the pattern is exploded, the value we're writing is an array.
-        if (self._pattern[self._patternIndex].exploded) {
+        if (_pattern[_patternIndex].exploded) {
           for (;;) {
             buffer[offset] = _value[_offset];
             _offset += increment;
@@ -778,16 +781,16 @@ function Serializer(context) {
       }
       // If we have not terminated, check for the termination state change.
       // Termination will change the loop settings.
-      if (self._terminates) {
-        if (self._terminated) {
-          if (self._repeat ==  Number.MAX_VALUE) {
-            self._repeat = self._index + 1
-          } else if (self._pattern[self._patternIndex].padding != null)  {
-            self._padding = self._pattern[self._patternIndex].padding
+      if (_terminates) {
+        if (_terminated) {
+          if (repeat ==  Number.MAX_VALUE) {
+            repeat = _index + 1
+          } else if (_pattern[_patternIndex].padding != null)  {
+            self._padding = _pattern[_patternIndex].padding
           } else {
-            self._skipping = (self._repeat - (++self._index)) * self._pattern[self._patternIndex].bytes;
-            if (self._skipping) {
-              self._repeat = self._index + 1;
+            _skipping = (repeat - (++_index)) * _pattern[_patternIndex].bytes;
+            if (_skipping) {
+              repeat = _index + 1;
               continue;
             }
           }
@@ -796,19 +799,19 @@ function Serializer(context) {
           // array to hold the terminator, because the outgoing series may be a
           // buffer. We insert the terminator at next index in the outgoing array.
           // We then set repeat to allow one more iteration before callback.
-          if (self._outgoing[self._patternIndex].length == self._index + 1) {
-            self._terminated = true;
-            self._outgoing[self._patternIndex] = [];
-            var terminator = self._pattern[self._patternIndex].terminator;
+          if (_outgoing[_patternIndex].length == _index + 1) {
+            _terminated = true;
+            _outgoing[_patternIndex] = [];
+            var terminator = _pattern[_patternIndex].terminator;
             for (var i = 0, I = terminator.length; i < I; i++) {
-              self._outgoing[self._patternIndex][self._index + 1 + i] = terminator[i];
+              _outgoing[_patternIndex][_index + 1 + i] = terminator[i];
             }
           }
         }
       }
       // If we are reading an arrayed pattern and we have not read all of the
       // array elements, we repeat the current field type.
-      if (++self._index < self._repeat) {
+      if (++_index < repeat) {
         _nextValue();
 
       // If we have written all of the packet fields, call the associated
@@ -816,25 +819,25 @@ function Serializer(context) {
       //
       // The pattern is set to null, our terminal condition, before the callback,
       // because the callback may specify a subsequent packet to parse.
-      } else if (++self._patternIndex ==  self._pattern.length) {
-        self._pattern = null
+      } else if (++_patternIndex ==  _pattern.length) {
+        _pattern = null
 
         if (self._callback != null)
-          self._callback.call(self._self, self);
+          self._callback.call(_context, self);
 
       } else {
 
         delete        self._padding;
-        this._repeat      = self._pattern[self._patternIndex].repeat;
-        self._terminated  = ! self._pattern[self._patternIndex].terminator;
-        self._terminates  = ! self._terminated;
-        self._index       = 0;
+        repeat      = _pattern[_patternIndex].repeat;
+        _terminated  = ! _pattern[_patternIndex].terminator;
+        _terminates  = ! _terminated;
+        _index       = 0;
 
         _nextField();
         _nextValue();
       }
     }
-    self._outgoing = null;
+    _outgoing = null;
 
     return offset - start;
   }
@@ -843,10 +846,10 @@ function Serializer(context) {
     this._serialize(buffer, 0, buffer.length);
   }
 
-  objectify.call(this, serialize, write, reset, _length);
+  objectify.call(this, definition.packet, definition.transform, serialize, write, reset, _length);
 }
-// The `Serializer` writes JavaScript primitives to a stream in binary
-// representations.
-util.inherits(Serializer, Packet);
 
-module.exports.Serializer = Serializer;
+function createParser (context) { return new Parser(new Definition(context, {}, transforms)) }
+function createSerializer (context) { return new Serializer(new Definition(context, {}, transforms)) }
+
+objectify.call(exports, createParser, createSerializer);

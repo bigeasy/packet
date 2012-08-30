@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-require('./proof')(2, function (Serializer, equal, deepEqual, toArray) {
-  var serializer = new Serializer;
+require('./proof')(2, function (createSerializer, equal, deepEqual, toArray) {
+  var serializer = createSerializer();
   var buffer = [ 0xff, 0xff, 0xff, 0xff ];
   serializer.serialize("x16, b16", 1);
   serializer.write(buffer);
