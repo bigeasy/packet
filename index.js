@@ -224,17 +224,6 @@ function Parser (definition) {
         offset      += advance;
         _skipping  -= advance;
         _bytesRead += advance;
-        // If feeding a stream is done through skipping. Skipping and the
-        // presence of a stream is how skipping is done.
-        if (this._stream) {
-          if (Array.isArray(buffer))
-            slice = new Buffer(buffer.slice(begin, begin + advance))
-          else
-            slice = buffer.slice(begin, begin + advance)
-          this._stream._write(slice);
-          if (! _skipping)
-            this._stream._end()
-        }
         // If we have more bytes to skip, then return `true` because we've
         // consumed the entire buffer.
         if (_skipping)
@@ -500,14 +489,14 @@ module.exports.Parser = Parser;
 function Serializer(definition) {
   var terminal, _offset, increment, _value, _bytesWritten = 0, self = this,
   _skipping, repeat, _outgoing, _index, _terminated, _terminates, _pattern,
-  _patternIndex, _context = definition.context || this;
+  _patternIndex, _context = definition.context || this, _padding, _callback;
 
   function _length () { return _bytesWritten }
 
   function reset () { _bytesWritten = 0 }
 
   // Initialize the next field pattern in the serialization pattern array, which
-  // is the pattern in the array `this._pattern` at the current `this._patternIndex`.
+  // is the pattern in the array `_pattern` at the current `_patternIndex`.
   // This initializes the serializer to write the next field.
   function _nextField () {
     var pattern           = _pattern[_patternIndex]
@@ -515,14 +504,13 @@ function Serializer(definition) {
     _terminated  = ! pattern.terminator
     _terminates  = ! _terminated
     _index       = 0
-
-    delete        self._padding
+    _padding = null;
 
     // Can't I keep separate indexes? Do I need that zero?
     if (pattern.endianness ==  "x") {
       _outgoing.splice(_patternIndex, 0, null);
       if (pattern.padding != null)
-        self._padding = pattern.padding
+        _padding = pattern.padding
     }
   }
 
@@ -535,7 +523,7 @@ function Serializer(definition) {
     var pattern = _pattern[_patternIndex];
 
     // If we are skipping without filling we note the count of bytes to skip.
-    if (pattern.endianness ==  "x" &&  self._padding == null) {
+    if (pattern.endianness ==  "x" &&  _padding == null) {
       _skipping = pattern.bytes
 
     // If the pattern is an alternation, we use the current value to determine
@@ -558,8 +546,8 @@ function Serializer(definition) {
     // Otherwise, we've got a value to write here and now.
     } else {
       // If we're filling, we write the fill value.
-      if (self._padding != null) {
-        value = self._padding
+      if (_padding != null) {
+        value = _padding
 
       // If the field is arrayed, we get the next value in the array.
       } else if (pattern.arrayed) {
@@ -644,7 +632,7 @@ function Serializer(definition) {
   //#### serializer.buffer([buffer, ]values...[, callback])
 
   // Serialize output to a `Buffer` or an `Array`. The first argument is the
-  // `Buffer` or `Array` to use. If omitted, the `this._buffer` member of the
+  // `Buffer` or `Array` to use. If omitted, the `_buffer` member of the
   // serializer will be used. The optional `callback` will be invoked using the
   // flexiable `this` object, with the buffer as the sole argument.
   function serialize () {
@@ -742,7 +730,7 @@ function Serializer(definition) {
   // The `write` method writes to the buffer, returning when the current pattern
   // is written, or the end of the buffer is reached.  Write to the `buffer` in
   // the region defined by the given `offset` and `length`.
-  self._serialize = function (buffer, offset, length) {
+  function _serialize (buffer, offset, length) {
     var start = offset, end = offset + length;
 
     // We set the pattern to null when all the fields have been written, so while
@@ -786,7 +774,7 @@ function Serializer(definition) {
           if (repeat ==  Number.MAX_VALUE) {
             repeat = _index + 1
           } else if (_pattern[_patternIndex].padding != null)  {
-            self._padding = _pattern[_patternIndex].padding
+            _padding = _pattern[_patternIndex].padding
           } else {
             _skipping = (repeat - (++_index)) * _pattern[_patternIndex].bytes;
             if (_skipping) {
@@ -822,12 +810,12 @@ function Serializer(definition) {
       } else if (++_patternIndex ==  _pattern.length) {
         _pattern = null
 
-        if (self._callback != null)
-          self._callback.call(_context, self);
+        if (_callback != null)
+          _callback.call(_context, self);
 
       } else {
 
-        delete        self._padding;
+        _padding = null;
         repeat      = _pattern[_patternIndex].repeat;
         _terminated  = ! _pattern[_patternIndex].terminator;
         _terminates  = ! _terminated;
@@ -843,7 +831,7 @@ function Serializer(definition) {
   }
 
   function write (buffer) {
-    this._serialize(buffer, 0, buffer.length);
+    _serialize(buffer, 0, buffer.length);
   }
 
   objectify.call(this, definition.packet, definition.transform, serialize, write, reset, _length);
