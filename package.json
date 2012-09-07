@@ -4,7 +4,7 @@
 ,   "keywords": [ "packet", "pack", "binary", "network", "structure", "async", "asynchronous", "javascript" ]
 ,   "author":           "Alan Gutierrez <alan@prettyrobots.com>"
 ,   "devDependencies":  { "proof": "0.0.15" }
-,   "scripts" : { "test": "proof t/*/*.t" }
+,   "scripts" : { "test": "proof t/*/*.t.js" }
 ,   "dependencies": {}
 ,   "licenses": [
     { "type": "MIT"
