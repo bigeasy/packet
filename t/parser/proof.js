@@ -1,7 +1,8 @@
 module.exports = require('proof')(function (equal, deepEqual, ok) {
   var slice = Function.prototype.call.bind(Array.prototype.slice)
-    , Parser = require('../..').Parser
-    , parser = new Parser;
+    , createParser = require('../..').createParser
+    , parser = createParser()
+    ;
   function parseEqual (pattern, bytes, length) {
     var invoked = false, extracted = slice(arguments, 3), message = extracted.pop();
     parser.reset();
@@ -16,5 +17,5 @@ module.exports = require('proof')(function (equal, deepEqual, ok) {
     parser.parse(bytes);
     ok(invoked, message + ' invoked');
   }
-  return { Parser: Parser, parseEqual: parseEqual };
+  return { createParser: createParser, parseEqual: parseEqual };
 });

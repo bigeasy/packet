@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-require('./proof')(2, function (Serializer, equal, deepEqual, toArray) {
-  var serializer = new Serializer
+require('./proof')(2, function (createSerializer, equal, deepEqual, toArray) {
+  var serializer = createSerializer()
     , object = { length: 258, type: 8, name: "ABC" }
     , buffer = new Buffer(1024);
   serializer.serialize("b16 => length, b8 => type, b8z|utf8() => name", object);
