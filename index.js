@@ -519,59 +519,39 @@ function Serializer(definition) {
   // pattern for alteration. It will back a bit packed integer. It will covert
   // the field to a byte array for floats and signed negative numbers.
   function _nextValue () {
-    var i, I, value, packing;
+    var i, I, value, packing, count, length, pack, unpacked, range, mask;
     var pattern = _pattern[_patternIndex];
 
-    // If we are skipping without filling we note the count of bytes to skip.
+    // If we are skipping without filling we note the count of bytes to skip,
+    // otherwise we prepare our value.
     if (pattern.endianness ==  "x" &&  _padding == null) {
       _skipping = pattern.bytes
-
-    // If the pattern is an alternation, we use the current value to determine
-    // with alternate to apply. We then update the pattern array with pattern of
-    // the matched alternate, and rerun the next field and next value logic.
-    } else if (pattern.alternation) {
-      value = _outgoing[_patternIndex]
-      for (i = 0, I = pattern.alternation.length; i < I; i++) {
-        var alternate = pattern.alternation[i];
-        if (alternate.write.minimum <= value &&  value <= alternate.write.maximum) {
-          _pattern.splice.apply(_pattern, [ _patternIndex, 1 ].concat(alternate.pattern));
-          break
-        }
-      }
-      if (alternate.failed)
-        throw new Error("Cannot match alternation.");
-      _nextField()
-      _nextValue()
-
-    // Otherwise, we've got a value to write here and now.
     } else {
       // If we're filling, we write the fill value.
       if (_padding != null) {
-        value = _padding
+        value = _padding;
 
       // If the field is arrayed, we get the next value in the array.
       } else if (pattern.arrayed) {
-        value = _outgoing[_patternIndex][_index]
+        value = _outgoing[_patternIndex][_index];
 
       // If the field is bit packed, we update the `_outgoing` array of values
       // by packing zero, one or more values into a single value. We will also
       // check for bits filled with a pattern specified filler value and pack
       // that in there as well.
       } else if (packing = pattern.packing) {
-        var count   = 0;
-        value   = 0;
-        var length  = pattern.bits;
+        count = 0, value = 0, length = pattern.bits;
         for (i = 0, I = packing.length; i < I; i++) {
-          var pack = packing[i];
+          pack = packing[i];
           length -= pack.bits;
           if (pack.endianness ==  "b" || pack.padding != null) {
-            var unpacked = pack.padding != null ? pack.padding : _outgoing[_patternIndex + count++]
+            unpacked = pack.padding != null ? pack.padding : _outgoing[_patternIndex + count++]
             if (pack.signed) {
-              var range = Math.pow(2, pack.bits - 1)
+              range = Math.pow(2, pack.bits - 1)
               if (!( (-range) <= unpacked &&  unpacked <= range - 1))
                 throw new Error("value " + unpacked + " will not fit in " + pack.bits + " bits");
               if (unpacked < 0) {
-                var mask = range * 2 - 1
+                mask = range * 2 - 1
                 unpacked = (~(- unpacked) + 1) & mask
               }
             }
@@ -629,100 +609,90 @@ function Serializer(definition) {
       _value = value;
     } 
   }
-  //#### serializer.buffer([buffer, ]values...[, callback])
 
-  // Serialize output to a `Buffer` or an `Array`. The first argument is the
-  // `Buffer` or `Array` to use. If omitted, the `_buffer` member of the
-  // serializer will be used. The optional `callback` will be invoked using the
-  // flexiable `this` object, with the buffer as the sole argument.
   function serialize () {
-    var shiftable = __slice.call(arguments);
-    var i, I;
-    // The pattern is given as a pattern name for a named pattern, or else a spot
-    // pattern to parse and use immediately.
-    if (typeof shiftable[shiftable.length - 1] == 'function')
-      var callback = shiftable.pop()
-    var nameOrPattern = shiftable.shift()
-    _patternIndex = 0;
-    _pattern = definition.pattern(nameOrPattern);
+    var shiftable = __slice.call(arguments)
+      , pattern = definition.pattern(shiftable.shift()).slice(0)
+      , callback = typeof shiftable[shiftable.length - 1] == 'function' ? shiftable.pop() : void(0)
+      , named = (shiftable.length ==  1
+              && typeof shiftable[0] ==  "object"
+              && ! (shiftable[0] instanceof Array))
+      , incoming = named ? shiftable.shift() : shiftable
+      , skip = 0, part, value
+      , alternate, i, I, j, J, k, K
+      ;
 
-    if (shiftable.length ==  1 &&
-        typeof shiftable[0] ==  "object" &&
-        ! (shiftable[0] instanceof Array)) {
-      var object = shiftable.shift(), pattern = [];
-      _outgoing = []
-      for (i = 0, I = _pattern.length; i < I; i++) {
-        var part = _pattern[i];
-        if (part.alternation) {
-          for (var j = 0, J = part.alternation.length; j < J; j++) {
-            var alternate = part.alternation[j], value;
-            if (alternate.pattern[0].packing) {
-              value = object[alternate.pattern[0].packing[0].name];
-            } else {
-              value = object[alternate.pattern[0].name];
-            }
-            if (alternate.write.minimum <= value &&  value <= alternate.write.maximum) {
-              break;
-            }
-          }
-          // Not pretty, plus the check for packed is not present in the
-          // non-alternation branch.
-          for (var j = 0, J = alternate.pattern.length; j < J; j++) {
-            part = alternate.pattern[j];
-            pattern.push(part);
-            if (part.packing) {
-              for (var k = 0, K = part.packing.length; k < K; k++) {
-                if (part.packing[k].endianness != 'x') {
-                  _outgoing.push(part.packing[k].name ? object[part.packing[k].name] : null)
-                }
-              }
-            } else {
-              if (part.endianness != 'x') {
-                _outgoing.push(part.name ? object[part.name] : null)
-              }
-            }
-          }
-        } else {
-          pattern.push(part);
-          if (part.endianness != 'x') {
-            _outgoing.push(part.name ? object[part.name] : null)
+    _patternIndex = 0;
+
+
+    _outgoing = [], _pattern = [];
+
+    // Determine alternation now, creating a pattern with the alternation
+    // resolved.
+
+    for (i = 0; i < pattern.length; i++) {
+      part = pattern[i];
+      // The name of value to test for alternation is either the first name in
+      // the alternation or else if the first value is bit packed, the first
+      // name in the packed pattern.
+      if (part.alternation) {
+        part = part.alternation[0];
+        if (part.pattern[0].packing) {
+          part = part.pattern[0].packing[0];
+        }
+        value = named ? incoming[part.name] : incoming[0];
+        
+        part = pattern[i];
+        for (j = 0, J = part.alternation.length; j < J; j++) {
+          alternate = part.alternation[j];
+          if (alternate.write.minimum <= value &&  value <= alternate.write.maximum) {
+            break;
           }
         }
+
+        pattern.splice.apply(pattern, [ i--, 1 ].concat(alternate.pattern));
+        continue;
       }
-      _pattern = pattern;
-    } else {
-      _outgoing = shiftable
+
+      _pattern.push(part);
+
+      if (part.packing) {
+        for (j = 0, J = part.packing.length; j < J; j++) {
+          if (part.packing[j].endianness != 'x') {
+            _outgoing.push(named ? incoming[part.packing[j].name] : incoming.shift());
+          }
+        }
+      } else {
+        if (part.endianness != 'x') {
+          _outgoing.push(named ? incoming[part.name] : incoming.shift());
+        }
+      }
     }
 
     // Run the outgoing values through field pipelines before we enter the write
     // loop. We need to skip over the blank fields and constants. We also skip
     // over bit packed feilds because we do not apply pipelines to packed fields.
-    var skip = 0, j = 0;
-    for (i = 0, I = _outgoing.length; i < I; i++) {
-      var value = _outgoing[i];
+    for (j = 0, i = 0, I = _outgoing.length; i < I; i++) {
+      value = _outgoing[i];
       if (skip) {
         skip--
         continue
       }
       if (_pattern[j].packing) {
-        for (var k = 0, K = _pattern[j].packing.length; k < K; k++) {
-          var pack = _pattern[j].packing[k];
-          if (pack.endianness ==  "b") skip++;
+        for (k = 0, K = _pattern[j].packing.length; k < K; k++) {
+          if (_pattern[j].packing[k].endianness ==  "b") skip++;
         }
         if (skip > 0) skip--;
       } else {
         while (_pattern[j] &&  _pattern[j].endianness ==  "x") j++;
-        if (! _pattern[j]) {
-          throw new Error("too many fields");
-        }
+        if (! _pattern[j]) throw new Error("too many fields");
         _outgoing[i] = definition.pipeline(! _outgoing, _pattern[j], value, true)
       }
       j++;
     }
+
     _nextField()
     _nextValue()
-
-    return callback;
   }
 
   //#### serializer.write(buffer[, offset][, length])
