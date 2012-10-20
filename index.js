@@ -399,6 +399,7 @@ function Parser (definition) {
               throw new Error("Cannot match branch.");
             bytes = _arrayed.slice(0);
             _bytesRead -= bytes.length;
+            _pattern = _pattern.slice(0);
             _pattern.splice.apply(_pattern, [ _patternIndex, 1 ].concat(branch.pattern));
             _nextField()
             _nextValue()
