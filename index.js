@@ -99,6 +99,18 @@ function Definition (context, packets, transforms) {
     return packets[nameOrPattern] || parse(nameOrPattern);
   }
 
+  function createParser (context) {
+    return new Parser(new Definition(context, packets, transforms));
+  }
+
+  function createSerializer (context) {
+    return new Serializer(new Definition(context, packets, transforms));
+  }
+
+  function extend (object) {
+    return objectify.call(object, packet, transform, createParser, createSerializer);
+  }
+
   // Execute the pipeline of transforms for the `pattern` on the `value`.
   function pipeline (outgoing, pattern, value, reverse) {
     var i, I, j, J, by, pipeline, parameters, transform;
@@ -125,7 +137,7 @@ function Definition (context, packets, transforms) {
 
   this.context = context;
 
-  return objectify.call(this, packet, transform, pattern, pipeline);
+  return objectify.call(this, packet, transform, pattern, pipeline, extend);
 }
 
 
@@ -479,7 +491,7 @@ function Parser (definition) {
     return true;
   }
 
-  return objectify.call(this, definition.packet, definition.transform, extract, parse, reset, _length);
+  return objectify.call(definition.extend(this), extract, parse, reset, _length);
 }
 
 module.exports.Parser = Parser;
@@ -805,7 +817,7 @@ function Serializer(definition) {
     _serialize(buffer, 0, buffer.length);
   }
 
-  objectify.call(this, definition.packet, definition.transform, serialize, write, reset, _length);
+  objectify.call(definition.extend(this), serialize, write, reset, _length);
 }
 
 function createParser (context) { return new Parser(new Definition(context, {}, transforms)) }
