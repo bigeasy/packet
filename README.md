@@ -694,6 +694,21 @@ class: Serializer
 
 Changes for each release.
 
+### Version 0.0.4
+
+Released: Mon Nov  6 04:50:16 UTC 2012.
+
+ * Create parsers and serializers from prototypes. #53.
+ * Parse patterns with Win32 CRLF. #51. (Greg Ose <greg@nullmethod.com>)
+ * Copy cached pattern for alternation rewriting. #50.
+ * Flatten alternation prior to serialization. #34.
+ * Add `.js` suffix to tests. #49.
+ * Convert to closure style. #40, #47, #39, #38, #27.
+ * Remove pausing from `Parser`. #46.
+ * Implement `reset` for serializer. #43.
+ * Single letter field names. #45.
+ * Remove streams from API. #41.
+
 ### Version 0.0.3
 
 Released: Fri Aug 17 00:40:37 UTC 2012.
