@@ -696,7 +696,7 @@ Changes for each release.
 
 ### Version 0.0.4
 
-Released:
+Released: Mon Nov  6 04:50:16 UTC 2012.
 
  * Create parsers and serializers from prototypes. #53.
  * Parse patterns with Win32 CRLF. #51. (Greg Ose <greg@nullmethod.com>)
