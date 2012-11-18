@@ -137,12 +137,12 @@ require("./proof")(1, function (parseEqual) {
         }
       ,
         { "read":
-          { "minimum": Number.MIN_VALUE
+          { "minimum": -Number.MAX_VALUE
           , "maximum": Number.MAX_VALUE
           , "mask": 0
           }
         , "write":
-          { "minimum": Number.MIN_VALUE
+          { "minimum": -Number.MAX_VALUE
           , "maximum": Number.MAX_VALUE
           , "mask": 0
           }
