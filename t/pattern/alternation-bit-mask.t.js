@@ -11,12 +11,12 @@ require("./proof")(1, function (parseEqual) {
     , "alternation":
       [
         { "read":
-          { "minimum": Number.MIN_VALUE
+          { "minimum": -Number.MAX_VALUE
           , "maximum": Number.MAX_VALUE
           , "mask": 128
           }
         , "write":
-          { "minimum": Number.MIN_VALUE
+          { "minimum": -Number.MAX_VALUE
           , "maximum": Number.MAX_VALUE
           , "mask": 128
           }
@@ -55,12 +55,12 @@ require("./proof")(1, function (parseEqual) {
         }
       ,
         { "read":
-          { "minimum": Number.MIN_VALUE
+          { "minimum": -Number.MAX_VALUE
           , "maximum": Number.MAX_VALUE
           , "mask": 0
           }
         , "write":
-          { "minimum": Number.MIN_VALUE
+          { "minimum": -Number.MAX_VALUE
           , "maximum": Number.MAX_VALUE
           , "mask": 0
           }
@@ -79,12 +79,12 @@ require("./proof")(1, function (parseEqual) {
         }
       ,
         { "read":
-          { "minimum": Number.MIN_VALUE
+          { "minimum": -Number.MAX_VALUE
           , "maximum": Number.MAX_VALUE
           , "mask": 0
           }
         , "write":
-          { "minimum": Number.MIN_VALUE
+          { "minimum": -Number.MAX_VALUE
           , "maximum": Number.MAX_VALUE
           , "mask": 0
           }
