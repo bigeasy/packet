@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-require('./proof')(5, function (serialize, deepEqual) {
+require('./proof')(2 * 3 + 1, function (serialize, deepEqual) {
   var buffer = [ 0x01, 0x01, 0x01, 0x01, 0xff, 0xff ];
   serialize(buffer, "x16[2]{0}, b16", 1, 6, [ 0x00, 0x00, 0x00, 0x00, 0x00, 0x01 ], "write a 16 bit integer after filling four bytes");
   buffer = [ 0x01, 0x01, 0x01, 0x01, 0x01, 0x01 ];

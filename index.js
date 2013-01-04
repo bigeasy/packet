@@ -708,6 +708,27 @@ function Serializer(definition) {
     _nextValue()
   }
 
+  // Return the count of bytes that will be written by the serializer for the
+  // current pattern and variables.
+  function _sizeOf () {
+    var patternIndex = 0, part = _pattern[patternIndex], repeat = part.repeat,
+        outgoingIndex = 0, size = 0;
+    while (part) {
+      if (part.terminator) {
+        repeat = _outgoing[outgoingIndex++].length + part.terminator.length; 
+        if (part.repeat != Number.MAX_VALUE) {
+          repeat = part.repeat;
+        }
+      } else {
+        repeat = part.repeat || 1;
+        outgoingIndex += repeat;
+      }
+      size += part.bytes * repeat;
+      part = _pattern[++patternIndex];
+    }
+    return size;
+  }
+
   //#### serializer.write(buffer[, offset][, length])
 
   // The `write` method writes to the buffer, returning when the current pattern
@@ -814,7 +835,7 @@ function Serializer(definition) {
     _serialize(buffer, 0, buffer.length);
   }
 
-  objectify.call(definition.extend(this), serialize, write, reset, _length);
+  objectify.call(definition.extend(this), serialize, write, reset, _length, _sizeOf);
 }
 
 function createParser (context) { return new Parser(new Definition(context, {}, transforms)) }

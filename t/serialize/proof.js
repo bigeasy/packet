@@ -18,6 +18,7 @@ module.exports = require('proof')(function (equal, deepEqual) {
       , buffer = Array.isArray(vargs[0]) ? vargs.shift() : new Buffer(1024)
       ;
     serializer.serialize.apply(serializer, vargs);
+    equal(serializer.sizeOf, written, message + ' sizeOf');
     serializer.write(buffer);
     equal(serializer.length, written, message + ' byte count');
     deepEqual(toArray(buffer.slice(0, serializer.length)), bytes, message + ' written');
