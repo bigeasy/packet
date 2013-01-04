@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-require("./proof")(8, function (serialize) {
+require("./proof")(12, function (serialize) {
   serialize("b8[8]{1}z|utf8()", "ABC", 8, [ 0x41, 0x42, 0x43, 0x00, 0x01, 0x01, 0x01, 0x01 ],
     "write a zero terminated 8 byte padded UTF-8 string");
   serialize("b8[8]{0}z|utf8()", "0000ABC", 8, [ 0x30, 0x30, 0x30, 0x30, 0x41, 0x42, 0x43, 0x00 ],
