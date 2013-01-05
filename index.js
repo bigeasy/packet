@@ -708,6 +708,27 @@ function Serializer(definition) {
     _nextValue()
   }
 
+  // Return the count of bytes that will be written by the serializer for the
+  // current pattern and variables.
+  function _sizeOf () {
+    var patternIndex = 0, part = _pattern[patternIndex], repeat = part.repeat,
+        outgoingIndex = 0, size = 0;
+    while (part) {
+      if (part.terminator) {
+        repeat = _outgoing[outgoingIndex++].length + part.terminator.length; 
+        if (part.repeat != Number.MAX_VALUE) {
+          repeat = part.repeat;
+        }
+      } else {
+        repeat = part.repeat || 1;
+        outgoingIndex += repeat;
+      }
+      size += part.bytes * repeat;
+      part = _pattern[++patternIndex];
+    }
+    return size;
+  }
+
   //#### serializer.write(buffer[, offset][, length])
 
   // The `write` method writes to the buffer, returning when the current pattern
@@ -716,9 +737,8 @@ function Serializer(definition) {
   function _serialize (buffer, offset, length) {
     var start = offset, end = offset + length;
 
-    // We set the pattern to null when all the fields have been written, so while
-    // there is a pattern to fill and space to write.
-    while (_pattern &&  offset < end) {
+    // While there is a pattern to fill and space to write.
+    while (_pattern.length != _patternIndex &&  offset < end) {
       if (_skipping) {
         var advance     = Math.min(_skipping, end - offset);
         offset         += advance;
@@ -791,11 +811,9 @@ function Serializer(definition) {
       // The pattern is set to null, our terminal condition, before the callback,
       // because the callback may specify a subsequent packet to parse.
       } else if (++_patternIndex ==  _pattern.length) {
-        _pattern = null
-
-        if (_callback != null)
+        if (_callback != null) {
           _callback.call(_context, self);
-
+        }
       } else {
 
         _padding = null;
@@ -817,7 +835,7 @@ function Serializer(definition) {
     _serialize(buffer, 0, buffer.length);
   }
 
-  objectify.call(definition.extend(this), serialize, write, reset, _length);
+  objectify.call(definition.extend(this), serialize, write, reset, _length, _sizeOf);
 }
 
 function createParser (context) { return new Parser(new Definition(context, {}, transforms)) }
