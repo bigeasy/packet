@@ -573,9 +573,9 @@ function Serializer(definition) {
         }
         _outgoing.splice(_patternIndex, count, value);
 
-      // If the current field is a length encoded array, then the length of
-      // the current array value is the next value, otherwise, we have the
-      // simple case, the value is the current value.
+      // If the current field is a length encoded array, then the length of the
+      // current array value is the next value, otherwise, we have the simple
+      // case, the value is the current value.
       } else {
         if (pattern.lengthEncoding) {
           var repeat = _outgoing[_patternIndex].length;
