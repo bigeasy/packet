@@ -573,7 +573,7 @@ function Serializer(definition) {
         }
         _outgoing.splice(_patternIndex, count, value);
 
-      // If the current field is a length encoded array, then the length of the
+      // If the current field is a length encoded array, then the length of
       // the current array value is the next value, otherwise, we have the
       // simple case, the value is the current value.
       } else {
@@ -637,7 +637,6 @@ function Serializer(definition) {
 
     _patternIndex = 0;
 
-
     _outgoing = [], _pattern = [];
 
     // Determine alternation now, creating a pattern with the alternation
@@ -684,7 +683,7 @@ function Serializer(definition) {
 
     // Run the outgoing values through field pipelines before we enter the write
     // loop. We need to skip over the blank fields and constants. We also skip
-    // over bit packed feilds because we do not apply pipelines to packed fields.
+    // over bit packed fields because we do not apply pipelines to packed fields.
     for (j = 0, i = 0, I = _outgoing.length; i < I; i++) {
       value = _outgoing[i];
       if (skip) {

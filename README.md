@@ -10,8 +10,8 @@ An evented binary packet and structure parser for Node.js.
 ## Objectives
 
 Node Packet creates **binary parsers** and **serializers** that are
-**incremental**, **streaming**, and **pausable** through a binary pattern
-language that is **declarative** and very **expressive**.
+**incremental** through a binary pattern language that is **declarative** and
+very **expressive**.
 
 Node Packet simplifies the construction an maintainence of libraries that
 convert binary to JavaScript and back. The name Packet may make you think that
@@ -42,21 +42,11 @@ give the values to write along with the pattern to follow when writing them.
   * zero terminated strings of characters or numbers,
   * said strings terminated any fixed length terminator you specify,
   * padding of said strings with any padding value you specify,
-  * singed and unsigned integers extracted from bit packed integers,
+  * signed and unsigned integers extracted from bit packed integers,
   * conditions based on bit patterns
   * character encodings,
-  * custom tranformations,
-  * and pipelines of character encodings and custom tranformations.
-
-**Streaming** &mdash; Node Packet implements the Node.js [stream
-interface](http://nodejs.org/docs/v0.4.8/api/streams.html) in both the `Parser`
-and the `Serializer`. You can pump a stream into a Packet `Parser` and it will
-invoke your packet handlers.  
-
-**Pausable** &mdash; The streams implemented by both parsers and serializers
-are pausable. Parsers relay the pause to the source stream, and mark thier spot
-in the buffer they are parsing. Serializers can effectively pause the user code
-that is feeding the serializer.
+  * custom transformations,
+  * and pipelines of character encodings and custom transformations.
 
 ### Limitations
 
@@ -64,34 +54,36 @@ that is feeding the serializer.
 does not search binary streams for patterns. Packet is used for parsing
 well-defined streams of binary data.
 
-**8-bit boundaries** &mdash; I'm unable to think of an an example in
-contemporary computing that doesn't align to an 8-bit boundary, but the world is
-big and I am small, so I plan on being surprised. I can also imagine that
-someone might want to unleash Packet on legacy data someday, from way back when
-a byte was whatever a computer maufacturer said it was.
+**8-bit boundaries** &mdash; I'm unable to think of an example in contemporary
+computing that doesn't align to an 8-bit boundary, but the world is big and I am
+small, so I plan on being surprised. I can also imagine that someone might want
+to unleash Packet on legacy data someday, from way back when a byte was whatever
+a computer manufacturer said it was.
 
 Therefore, It's worth noting that Packet parses 8-bit bytes and expects bytes to
-align to an 8-bit boundary. Node Packet can parse 7-bit ASCII formats like tar
+align to an 8-bit boundary. Node Packet can parse 7-bit ASCII formats like `tar`
 archives, because they are 8-bit aligned with the top bit ignored. Packet can
 also parse and serialize bit packed integers, so it does support awkward integer
 sizes, but within an 8-bit aligned integer.
 
 ## Installing
 
-Install Packet using NPM. The source is available on
-[GitHub](https://github.com/bigeasy/node-packet).
+Install Packet using NPM.
 
 ```
 npm install packet
 ```
 
+The source is available on [GitHub](https://github.com/bigeasy/packet).
+
 ## Parsers and Serializers
 
-Node Packet defines a binrary format using a binary pattern language inspried by
+Node Packet defines a binary format using a binary pattern language inspired by
 Perl's `pack` function. The pattern language is used in a `Parser` to define the
 parameters passed to callback when enough bytes are read from the input stream
 to satisfy the pattern. The pattern language is used in a `Serializer` to define
-how JavaScript primitives passed to the `serialize` method are written to stream.
+how JavaScript primitives passed to the `serialize` method are written to
+stream.
 
 ### Patterns
 
@@ -113,8 +105,7 @@ parser.parse("b16 => length, b32 => address, b8z => name", function (record) {
 ```
 
 Unnamed elements are good for short, simple patterns. For longer patterns it is
-easier to have parsers build maps for you, and for serializers to pluck the
-right values out of maps.
+easier to have a parser build an object for you.
 
 The following example shows a complicated pattern, the invariable portion of an
 IP header, the first 20 bytes before options, if any.
