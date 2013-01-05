@@ -1,5 +1,5 @@
-var parse = require('./lib/pattern').parse
-  , ieee754   = require('./lib/ieee754')
+var parse = require('./pattern').parse
+  , ieee754   = require('./ieee754')
   , util = require('util')
   , __slice = [].slice
   ;
