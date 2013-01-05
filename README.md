@@ -10,15 +10,15 @@ An evented binary packet and structure parser for Node.js.
 ## Objectives
 
 Node Packet creates **binary parsers** and **serializers** that are
-**incremental**, **streaming**, and **pausable** through a binary pattern
-language that is **declarative** and very **expressive**.
+**incremental** through a binary pattern language that is **declarative** and
+very **expressive**.
 
-Node Packet simplifies the construction an maintainence of libraries that
-convert binary to JavaScript and back. The name Packet may make you think that
-it is designed solely for binary network protocols, but it is also great for
-reading and writing binary file formats.
+Node Packet simplifies the construction an maintenance of libraries that convert
+binary to JavaScript and back. The name Packet may make you think that it is
+designed solely for binary network protocols, but it is also great for reading
+and writing binary file formats.
 
-**Incremental** &mdash; Node packet creates incremental parsers and serailizers
+**Incremental** &mdash; Node packet creates incremental parsers and serializers
 that are almost as fast as the parser you'd write by hand, but a lot easier to
 define and maintain.
 
@@ -42,21 +42,11 @@ give the values to write along with the pattern to follow when writing them.
   * zero terminated strings of characters or numbers,
   * said strings terminated any fixed length terminator you specify,
   * padding of said strings with any padding value you specify,
-  * singed and unsigned integers extracted from bit packed integers,
+  * signed and unsigned integers extracted from bit packed integers,
   * conditions based on bit patterns
   * character encodings,
-  * custom tranformations,
-  * and pipelines of character encodings and custom tranformations.
-
-**Streaming** &mdash; Node Packet implements the Node.js [stream
-interface](http://nodejs.org/docs/v0.4.8/api/streams.html) in both the `Parser`
-and the `Serializer`. You can pump a stream into a Packet `Parser` and it will
-invoke your packet handlers.  
-
-**Pausable** &mdash; The streams implemented by both parsers and serializers
-are pausable. Parsers relay the pause to the source stream, and mark thier spot
-in the buffer they are parsing. Serializers can effectively pause the user code
-that is feeding the serializer.
+  * custom transformations,
+  * and pipelines of character encodings and custom transformations.
 
 ### Limitations
 
@@ -64,175 +54,148 @@ that is feeding the serializer.
 does not search binary streams for patterns. Packet is used for parsing
 well-defined streams of binary data.
 
-**8-bit boundaries** &mdash; I'm unable to think of an an example in
-contemporary computing that doesn't align to an 8-bit boundary, but the world is
-big and I am small, so I plan on being surprised. I can also imagine that
-someone might want to unleash Packet on legacy data someday, from way back when
-a byte was whatever a computer maufacturer said it was.
+**8-bit boundaries** &mdash; I'm unable to think of an example in contemporary
+computing that doesn't align to an 8-bit boundary, but the world is big and I am
+small, so I plan on being surprised. I can also imagine that someone might want
+to unleash Packet on legacy data someday, from way back when a byte was whatever
+a computer manufacturer said it was.
 
 Therefore, It's worth noting that Packet parses 8-bit bytes and expects bytes to
-align to an 8-bit boundary. Node Packet can parse 7-bit ASCII formats like tar
+align to an 8-bit boundary. Node Packet can parse 7-bit ASCII formats like `tar`
 archives, because they are 8-bit aligned with the top bit ignored. Packet can
 also parse and serialize bit packed integers, so it does support awkward integer
 sizes, but within an 8-bit aligned integer.
 
 ## Installing
 
-Install Packet using NPM. The source is available on
-[GitHub](https://github.com/bigeasy/node-packet).
+Install Packet using NPM.
 
 ```
 npm install packet
 ```
 
+The source is available on [GitHub](https://github.com/bigeasy/packet).
+
 ## Parsers and Serializers
 
-Node Packet defines a binrary format using a binary pattern language inspried by
+Node Packet defines a binary format using a binary pattern language inspired by
 Perl's `pack` function. The pattern language is used in a `Parser` to define the
 parameters passed to callback when enough bytes are read from the input stream
 to satisfy the pattern. The pattern language is used in a `Serializer` to define
-how JavaScript primitives passed to the `serialize` method are written to stream.
+how JavaScript primitives passed to the `serialize` method are written to
+stream.
 
 ### Patterns
 
 Patterns are a series of element declarations joined by commas.
 
 ```javascript
-parser.parse("b16, b32, b8z", function (length, address, name) {
-  frobinate(length, address, name);
+parser.extract("b16, b32, b8z", function (length, address, name) {
+  console.log(length, address, name);
 });
+parser.parse([ 0x01, 0xFF, 0x01, 0x00, 0x00, 0x00, 0x01, 0x02, 0x00 ]);
 ```
 
-You can also name the elements in a pattern. If named, parsers will be able to
-pass maps to callbacks, serializers will be able to serialize maps of data.
+You can also name the elements in a pattern. If named, parsers will be create an
+object to pass to callbacks, serializers will serialize an object's properties.
 
 ```javascript
-parser.parse("b16 => length, b32 => address, b8z => name", function (record) {
-  frobinate(record.length, record.address, record.name);
+parser.extract("b16 => length, b32 => address, b8z => name", function (record) {
+  console.log(record);
 });
+parser.parse([ 0x01, 0xFF, 0x01, 0x00, 0x00, 0x00, 0x01, 0x02, 0x00 ]);
 ```
 
 Unnamed elements are good for short, simple patterns. For longer patterns it is
-easier to have parsers build maps for you, and for serializers to pluck the
-right values out of maps.
+easier to use named patters so that the parser will build an object for you.
 
 The following example shows a complicated pattern, the invariable portion of an
 IP header, the first 20 bytes before options, if any.
 
 ```javascript
 // Define an IP header pattern using a joined array to explode the pattern.
-ip =
-[ "b8{b4 => version, b4 => headerLength}"
-, "b8   => typeOfService"
-, "b16  => length"
-, "b16  => identification"
-, "b16{b3 => flags, b13 => fragmentOffset}"
-, "b8   => timeToLive"
-, "b8   => protocol"
-, "b16  => checksum"
-, "b32  => sourceAddress"
-, "b32  => destinationAddress"
-].join(", ");
+parser.packet("ip", "b8{b4 => version, b4 => headerLength}, \
+                     b8   => typeOfService, \
+                     b16  => length, \
+                     b16  => identification, \
+                     b16{b3 => flags, b13 => fragmentOffset}, \
+                     b8   => timeToLive, \
+                     b8   => protocol, \
+                     b16  => checksum, \
+                     b32  => sourceAddress, \
+                     b32  => destinationAddress");
 
 // The pattern is then used to defined parser and serializer actions.
-parser.parse(ip, function (header) {
+parser.extract("ip", function (header) {
   console.log(header);
+});
+parser.parse(buffer);
+```
+
+Both parsers and serializers can define patterns using the `packet` method. The
+`packet` method allows you to pre-compile patterns.
+
+```javascript
+// Create a parser and define a header.
+var parser = require('packet').createParser();
+parser.packet("header", "b8 => type, b16 => length, b32 => extra");
+parser.packet("data", "b16 => sequence, b16 => crc");
+
+// Now you can define your serializer using your parser as a prototype. The
+// serializer will inherit the parser's packet definitions.
+var serializer = parser.createSerializer();
+```
+
+Parsers and serializers maintain internal state so that they can be used
+incrementally. If you're going to parse streams incrementally, you're going to
+need a parser for each stream your parsing. Same goes for serializers and
+serializing.
+
+When parsing/serializing incrementally create new parsers and serializers using
+the prototype pattern above.
+
+```javascript
+// Create a serializer and define a header.
+var serializer = require("packet").createSerializer();
+serializer.packet("header", "b8 => type, b16 => length, b32 => extra");
+serializer.packet("data", "b16 => sequence, b16 => crc");
+
+// Now you can define parsers for a using the serializer as a prototype.
+net.createServer(function (socket) {
+  var parser = serializer.createParser();
+  socket.on("data", function (buffer) {
+    parser.parse(buffer);
+  });
+  parser.extract("header", function (header) {
+    console.log(header);
+  });
 });
 ```
 
 ### Parsers
 
-Parsers implement the writable stream interface. First you set a binary pattern
-that the parser will use to interpret the stream. Then you write a byte stream
-into the parser and it generates events based on the values it extracts from the
-stream.
+Parsers parse a buffer extracting a specified pattern. The pattern is specified
+using the `extract` method. The `extract` method accept either a pattern or the
+name a pre-compiled pattern.
 
-The extracted values are fed to callbacks. Callback are associated with a binary
-pattern by passing the pattern and callback to the `extract` method.
+After the pattern has been specified, the parser will extract the data from one
+or more buffers according to the specified pattern.
 
-```javascript
-function parse (writable) {
-  var parser = new Parser();
-  parser.extract("b8, b8z|utf8(), b16[4]", function (flag, name, array) {
-    switch (flag) {
-    case 1:
-      ready(name);
-    case 2:
-      aim(name, array);
-    case 3:
-      fire(name, array);
-    default:
-      throw new Error("Invalid stream.");
-    }
-  });
-  writable.pipe(parser);
-}
-```
+When the pattern specified by `extract` has been read from the series of
+buffers, it will invoke a callback with the extracted values. The `extract`
+callback has the option of calling the `extract` method specifying a subsequent
+pattern for the parser to extract. When the callback returns, the parser will
+immediately continue to parse the newly specified pattern from the series of
+buffers.
 
-You can gather up your pattern and callback associations and give them
-meaningful using the `pattern` method. This makes it easier to define the flow
-of the paser. The example above only extracted one pattern, while the example
-below shows how you would transition from one extraction to the next.
-
-```javascript
-function parse (writable) {
-  var parser = new Parser();
-  parser.pattern("command", "b8, b8z|utf8(), b16[4]",
-  function (flag, name, array) {
-    switch (flag) {
-    case 1:
-      ready(name);
-      parser.parse("command");
-    case 2:
-      aim(name, array);
-      parser.parse("command");
-    default:
-      fire(name, array);
-    }
-  });
-  parser.parse("command");
-  writable.pipe(parser);
-}
-```
-
-Note that while parser does implement `EventEmitter`, that is only for the sake
-of the `WritableStream` interface. Extracted values are passed directly to the
-callbacks associated with the pattern, not though an `EventEmitter` event, so
-that their is no ambiguity about the pattern applied or the values extracted.
-
-The parser callback recieves the values either as positioned function arguments
+The parser callback receives the values either as positioned function arguments
 or as an object. How the callback is invoked is based on the pattern and the
 [arity](http://en.wikipedia.org/wiki/Arity) of the callback function.
-
-In the examples above, callbacks are invoked with positioned arguments. The
-values extracted are passed to the callback as arguments in the order in which
-they were extracted from the stream.
 
 To receive an object in the callback, we defined named elements. When the
 pattern has at least one named element, and the callback has only a single
 argument, an object is passed to the callback containing the values using the
 element names as keys.
-
-```javascript
-function parse (writable) {
-  var parser = new Parser();
-  parser.pattern("command", "b8 => flag, b8z|utf8() => name, b16[4] => array",
-  function (command) {
-    switch (command.flag) {
-    case 1:
-      ready(command.name);
-      parser.parse("command");
-    case 2:
-      aim(command.name, command.array);
-      parser.parse("command");
-    default:
-      fire(command.name, command.array);
-    }
-  });
-  parser.parse("command");
-  writable.pipe(parser);
-}
-```
 
 Unnamed elements are excluded, but there's no good reason not name them. Use a
 skip pattern to skip over unwanted bytes instead.
@@ -241,29 +204,13 @@ You can still get positioned arguments using a named pattern. Just provide a
 callback with more than one argument and it will be invoked with the extract
 values as parameters.
 
-```javascript
-function parse (writable) {
-  var parser = new Parser();
-  parser.pattern("command", "b8 => flag, b8z|utf8() => name, b16[4] => array",
-  function (foo, bar, baz) { // Ignore named elements, ask for parameters.
-    switch (foo) {
-    case 1:
-      ready(bar);
-      parser.parse("command");
-    case 2:
-      aim(bar, baz);
-      parser.parse("command");
-    default:
-      fire(bar, baz);
-    }
-  });
-  parser.parse("command");
-  writable.pipe(parser);
-}
-```
-
 A callback for a pattern without any named elements is always invoked with
 values as parameters regardless of arity.
+
+### Serializers
+
+First you call `serialize` with a pattern and arguments to serialize, then you
+call `write` with a series of buffers.
 
 ## Binary Pattern Fields
 
@@ -309,7 +256,7 @@ You can skip over bytes your pattern with `x`.
 
 All numbers are assumed to be unsigned, unless prefixed by a negative symbol.
 
-**Mnemonic**: The `-` symbol indicates the possiblity of negative numbers.
+**Mnemonic**: The `-` symbol indicates the possibility of negative numbers.
 
 ```javascript
 "-b32"            // Big-endian 32 bit signed integer.
@@ -347,13 +294,13 @@ suffix.
                   // of bytes.
 ```
 
-Note that big-endian means that the most signifcant byte is at index `0` of the
+Note that big-endian means that the most significant byte is at index `0` of the
 array.
 
-This can be surprising if you're expecting the the significance of the bytes
-will increase with the index of the array, but then that's what little-endian is
-all about. (Big-endian orders like Arabic numerals, while little-endian orders
-like offsets into memory.)
+This can be surprising if you're expecting the significance of the bytes will
+increase with the index of the array, but then that's what little-endian is all
+about. (Big-endian orders like Arabic numerals, while little-endian orders like
+offsets into memory.)
 
 If you'd prefer a little-endian array, simply call `reverse` on the array passed
 to you.
@@ -361,7 +308,7 @@ to you.
 ### Arrays of Common Types
 
 It is often the case that a binary format contains an array of values. The most
-common case are arrays of bytes represnting ASCII or UTF-8 strings.
+common case are arrays of bytes representing ASCII or UTF-8 strings.
 
 Arrays are specified with an subscript and a count.
 
@@ -377,9 +324,9 @@ The array notation produces an array of the type before the subscript.
 
 ### Zero Terminated Arrays
 
-Zero terminated series are speified with a `z` qualifier.
+Zero terminated series are specified with a `z` qualifier.
 
-You can specify both terminiation and width together. Why would you need this?
+You can specify both termination and width together. Why would you need this?
 This occurs in underlying C structures when there is a fixed width character
 array in a structure, but the structure still contains a zero terminated string.
 
@@ -548,12 +495,12 @@ is not null and whose serialization condition matches the object property.
 
 Often there are transformations that you need to perform on an field to get
 it to its final state. You may need to convert a byte array to string of a
-particular character encoding, for example. This is done with a tranformation
+particular character encoding, for example. This is done with a transformation
 functions which are specified with a transformation pipeline.
 
 If the transformation is a fixed transformation, you can perform the
 transformation by defining a pipeline. A pipeline defines one or more
-tranformations that are invoked on the value after parsing and before
+transformations that are invoked on the value after parsing and before
 serialization. The transformations can accept scalar JavaScript parameters.
 
 ```javascript
@@ -567,7 +514,7 @@ function str(encoding, name, field, parsing, value) {
         if (field.terminator) {
             length += field.terminator.length;
         }
-        reutrn buffer.toString(encoding, 0, length);
+        return buffer.toString(encoding, 0, length);
     } else {
         if (field.terminator) {
             value += field.terminator;
@@ -610,85 +557,6 @@ Error messages for pattern parsing.
    with an unsupported bit size. Only 32 and 64 bit floats are supported.
  * **"array length must be non-zero at N** &mdash; Encountered an array length
    of zero. Arrays must have a non-zero length.
-
-### API
-
-@ packet
-
-Node Packet exports the ec2 namespace, which provides the {{Structure}},
-{{Parser}} and {{Serializer}} classes.
-
-~ new Structure(pattern)
-
-  ~ pattern
-
-  The packet pattern.
-
-A structure is an object that both reads from and writes to a buffer
-syncrhonously. When reading, buffer must contain the entire contents of the
-structure. When writing, the buffer must have enough space to accomdoate the
-structure.
-
-~ read(buffer, offset, callback)
-
-  ~ buffer    - The byte buffer.
-  ~ offset?   - The optional offset into the byte buffer. Defaults to `0`.
-  ~ callback  - Called with the parameters read from the byte buffer.
-
-The read method accepts a buffer with an optional offset. The number of
-arguments is determined by the structure packet pattern, and must match
-the number of arguments expected by the packet pattern.
-
-The callback will be called with the fields read from the buffer, with the
-actual count of bytes read as the last parameter.
-
-~ write(buffer, offset, value...)
-
-  ~ buffer    - The byte buffer.
-  ~ offset?   - The optional offset into the byte buffer. Defaults to `0`.
-  ~ value...  - The values of the structure.
-
-Write the arguments to the  buffer at the optional offset. The arguments are
-determined by the structure bit pattern. Returns the number of bytes written.
-
-~ sizeOf(value...)
-
-  ~ value...  - The values of the structure.
-
-Get the size of the structure for the given variable length values. A structure
-can have 0 or more variable length values.
-
-The `sizeOf` method does not expect and will not correctly calculate the size of
-the structure if fixed size value are given.
-
-~ new Parser()
-
-Parses a buffer and emits events based on patterns.
-
-~ packet(name, pattern, callback)
-
-  ~ name - The name of the packet type.
-  ~ pattern - The packet pattern.
-  ~ callback? - Called when a packet of this type has been read from a buffer.
-
-Defines a named packet type optionally assigning a default response for the
-packet type.
-
-function: parse
-
-  parameter: nameOrPattern
-
-  Either the name of a named packet or a one off 
-
-function: clone
-
-Clone the packet parser to create a packet parser that shares the named packet
-definitions but has its own parser state.
-
-This allows a packet parser prototype to be used to efficently create initialized
-instances.
-
-class: Serializer
 
 ## Change Log
 

@@ -1,5 +1,5 @@
-var parse = require('./lib/pattern').parse
-  , ieee754   = require('./lib/ieee754')
+var parse = require('./pattern').parse
+  , ieee754   = require('./ieee754')
   , util = require('util')
   , __slice = [].slice
   ;
@@ -18,7 +18,7 @@ function objectify () {
   return this;
 }
 
-// The defualt transforms built into Packet.
+// The default transforms built into Packet.
 var transforms =
 // Convert the value to and from the given encoding.
 { str: function (encoding, parsing, field, value) {
@@ -77,10 +77,10 @@ function die () {
 
 function say () { return console.log.apply(console, [].slice.call(arguments, 0)) }
 
-// The `Definition` class is contianed by the `Serializer` and parser. We expose
+// The `Definition` class is contained by the `Serializer` and parser. We expose
 // public methods by explicitly adding the methods to the `Serializer` or
 // `Parser` when we create them. The `Definition` class references only enclosed
-// variables, but it does use prototypal inheritance to extend the collections
+// variables, but it does use prototypical inheritance to extend the collections
 // of packet patterns and transforms.
 
 function Definition (context, packets, transforms) {
@@ -114,7 +114,7 @@ function Definition (context, packets, transforms) {
   // Execute the pipeline of transforms for the `pattern` on the `value`.
   function pipeline (outgoing, pattern, value, reverse) {
     var i, I, j, J, by, pipeline, parameters, transform;
-    // Run the piplines for parsing.
+    // Run the pipelines for parsing.
     if (pipeline = pattern.pipeline) {
       if (reverse) {
         i = pipeline.length - 1, I = -1, by = -1;
@@ -271,10 +271,11 @@ function Parser (definition) {
         // Unpack the field value. Perform our basic transformations. That is,
         // convert from a byte array to a JavaScript primitive.
         //
-        // Resist the urge to implement these conversions with pipelines. It keeps
-        // occuring to you, but those transitions are at a higher level of
-        // abstraction, primairly for operations on gathered byte arrays. These
-        // transitions need to take place immediately to populate those arrays.
+        // Resist the urge to implement these conversions with pipelines. It
+        // keeps occurring to you, but those transitions are at a higher level
+        // of abstraction, primarily for operations on gathered byte arrays.
+        // These transitions need to take place immediately to populate those
+        // arrays.
 
         // By default, value is as it is.
         bytes = value = _value;
@@ -295,7 +296,7 @@ function Parser (definition) {
             for (i = 0; i < top; i++)
               value += (~bytes[i] & 0xff) * Math.pow(256, i)
             // To get the two's compliment as a positive value you use
-            // `~1 & 0xff == 254`. For exmaple: `~1 == -2`.
+            // `~1 & 0xff == 254`. For example: `~1 == -2`.
             value += (~(bytes[top] & 0x7f) & 0xff & 0x7f) * Math.pow(256, top);
             value += 1;
             value *= -1;
@@ -428,7 +429,7 @@ function Parser (definition) {
           }
         }
         // If we have read all of the pattern fields, call the associated
-        // callback.  We add the parser and the user suppilied additional
+        // callback.  We add the parser and the user supplied additional
         // arguments onto the callback arguments.
         //
         // The pattern is set to null, our terminal condition, because the
@@ -442,12 +443,12 @@ function Parser (definition) {
             // the function, and if it was not `1`, you'd call the callback
             // positionally, regardless of named parameters. Then you realized
             // that the `=>` operator in CoffeeScript would use a bind function
-            // with no arguments, and read the argument array. If you do decide to
-            // go back to arity override, then greater than one is the trigger.
-            // However, on reflection, I don't see that the flexiblity is useful,
-            // and I do believe that it will generate at least one bug report that
-            // will take a lot of hashing out only to close with "oh, no, you hit
-            // upon a "hidden feature".
+            // with no arguments, and read the argument array. If you do decide
+            // to go back to arity override, then greater than one is the
+            // trigger. However, on reflection, I don't see that the flexibility
+            // is useful, and I do believe that it will generate at least one
+            // bug report that will take a lot of hashing out only to close with
+            // "oh, no, you hit upon a "hidden feature".
             var index = 0
             if (_named) {
               var object = {};
@@ -574,8 +575,8 @@ function Serializer(definition) {
         _outgoing.splice(_patternIndex, count, value);
 
       // If the current field is a length encoded array, then the length of the
-      // the current array value is the next value, otherwise, we have the
-      // simple case, the value is the current value.
+      // current array value is the next value, otherwise, we have the simple
+      // case, the value is the current value.
       } else {
         if (pattern.lengthEncoding) {
           var repeat = _outgoing[_patternIndex].length;
@@ -593,7 +594,7 @@ function Serializer(definition) {
           else
             value = ieee754.toIEEE754Double(value)
         
-        // Convert a signed integer into its two's complient representation.
+        // Convert a signed integer into its two's compliment representation.
         } else if (pattern.signed) {
           var copy = Math.abs(value);
           var bytes = [];
@@ -636,7 +637,6 @@ function Serializer(definition) {
       ;
 
     _patternIndex = 0;
-
 
     _outgoing = [], _pattern = [];
 
@@ -684,7 +684,7 @@ function Serializer(definition) {
 
     // Run the outgoing values through field pipelines before we enter the write
     // loop. We need to skip over the blank fields and constants. We also skip
-    // over bit packed feilds because we do not apply pipelines to packed fields.
+    // over bit packed fields because we do not apply pipelines to packed fields.
     for (j = 0, i = 0, I = _outgoing.length; i < I; i++) {
       value = _outgoing[i];
       if (skip) {
