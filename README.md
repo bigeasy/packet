@@ -562,6 +562,16 @@ Error messages for pattern parsing.
 
 Changes for each release.
 
+### Version 0.0.5
+
+Released: Fri Mar  1 03:05:15 UTC 2013
+
+ * Chunked serialization bug fixes. #59. #58. #55.
+ * Move supporting libraries to root directory. #44.
+ * Spell check `README.md` and remove dead features. #32. #55.
+ * Implement `sizeOf` property for serializer. #37.
+ * Fix mimimum number value. #54.
+
 ### Version 0.0.4
 
 Released: Mon Nov  6 04:50:16 UTC 2012.
