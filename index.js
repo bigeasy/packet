@@ -636,6 +636,7 @@ function Serializer(definition) {
       , alternate, i, I, j, J, k, K
       ;
 
+    _callback = callback;
     _patternIndex = 0;
 
     _outgoing = [], _pattern = [];
@@ -704,8 +705,8 @@ function Serializer(definition) {
       j++;
     }
 
-    _nextField()
-    _nextValue()
+    _nextField();
+    _nextValue();
   }
 
   // Return the count of bytes that will be written by the serializer for the
@@ -826,13 +827,12 @@ function Serializer(definition) {
         _nextValue();
       }
     }
-    _outgoing = null;
 
     return offset - start;
   }
 
   function write (buffer) {
-    _serialize(buffer, 0, buffer.length);
+    return _serialize(buffer, 0, buffer.length);
   }
 
   objectify.call(definition.extend(this), serialize, write, reset, _length, _sizeOf);
