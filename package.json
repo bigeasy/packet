@@ -1,6 +1,6 @@
 {   "name":             "packet"
 ,   "description":      "Pure JavaScript evented binary parsers and serializers for Node.js."
-,   "version":          "0.0.4"
+,   "version":          "0.0.5"
 ,   "keywords": [ "packet", "pack", "binary", "network", "structure", "async", "asynchronous", "javascript" ]
 ,   "author":           "Alan Gutierrez <alan@prettyrobots.com>"
 ,   "devDependencies":  { "proof": "0.0.15" }
