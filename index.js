@@ -1,8 +1,7 @@
-var parse = require('./lib/pattern').parse
-  , ieee754   = require('./lib/ieee754')
-  , util = require('util')
-  , __slice = [].slice
-  ;
+var parse = require('./lib/pattern').parse,
+    ieee754   = require('./lib/ieee754'),
+    util = require('util'),
+    __slice = [].slice;
 
 function objectify () {
   var i, I, name;
@@ -217,12 +216,9 @@ function Parser (definition) {
   function parse (buffer, offset, length) {
     // Initialize the loop counters. Initialize unspecified parameters with their
     // defaults.
-    var offset  = offset || 0
-      , length  = length || buffer.length
-      , start   = _bytesRead
-      , end     = offset + length
-      , bytes, value, field
-      ;
+    var offset = offset || 0, length = length || buffer.length,
+        start = _bytesRead, end = offset + length,
+        bytes, value, field;
 
     // We set the pattern to null when all the fields have been read, so while
     // there is a pattern to fill and bytes to read.
@@ -512,12 +508,12 @@ function Serializer(definition) {
   // is the pattern in the array `_pattern` at the current `_patternIndex`.
   // This initializes the serializer to write the next field.
   function _nextField () {
-    var pattern           = _pattern[_patternIndex]
-    repeat      = pattern.repeat
-    _terminated  = ! pattern.terminator
-    _terminates  = ! _terminated
-    _index       = 0
-    _padding = null;
+    var pattern  = _pattern[_patternIndex]
+    repeat       = pattern.repeat;
+    _terminated  = ! pattern.terminator;
+    _terminates  = ! _terminated;
+    _index       = 0;
+    _padding     = null;
 
     // Can't I keep separate indexes? Do I need that zero?
     if (pattern.endianness ==  "x") {
@@ -624,16 +620,15 @@ function Serializer(definition) {
   }
 
   function serialize () {
-    var shiftable = __slice.call(arguments)
-      , pattern = definition.pattern(shiftable.shift()).slice(0)
-      , callback = typeof shiftable[shiftable.length - 1] == 'function' ? shiftable.pop() : void(0)
-      , named = (shiftable.length ==  1
-              && typeof shiftable[0] ==  "object"
-              && ! (shiftable[0] instanceof Array))
-      , incoming = named ? shiftable.shift() : shiftable
-      , skip = 0, part, value
-      , alternate, i, I, j, J, k, K
-      ;
+    var shiftable = __slice.call(arguments),
+        pattern = definition.pattern(shiftable.shift()).slice(0),
+        callback = typeof shiftable[shiftable.length - 1] == 'function' ? shiftable.pop() : void(0),
+        named = (shiftable.length ==  1
+                 && typeof shiftable[0] ==  "object"
+                 && ! (shiftable[0] instanceof Array)),
+        incoming = named ? shiftable.shift() : shiftable,
+        skip = 0,
+        part, value, alternate, i, I, j, J, k, K;
 
     _patternIndex = 0;
 
