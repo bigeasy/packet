@@ -154,8 +154,7 @@ function Parser (definition) {
   // The public `reset` method to reuse the parser, clearing the current state.
   function reset () { _bytesRead = 0 }
 
-  // Initialize the next field pattern in the serialization pattern array, which
-  // is the pattern in the array `@_pattern` at the current `@_patternIndex`.
+  // Prepare the parser for the next field in the pattern.
   function nextField ()  {
     var pattern       = _pattern[_patternIndex];
     repeat      = pattern.repeat;
@@ -167,9 +166,9 @@ function Parser (definition) {
     if (pattern.arrayed && pattern.endianness  != "x") _arrayed = [];
   }
 
-  // Prepare the parser to parse the next value in the input stream.  It
-  // initializes the value to a zero integer value or an array.  This method
-  // accounts for skipping, for skipped patterns.
+  // Prepare the parser to parse the next value in the stream. It initializes
+  // the value to a zero integer value or an array. This method accounts for
+  // skipping, for skipped patterns.
   function nextValue () {
     // Get the next pattern.
     var pattern = _pattern[_patternIndex], value;
@@ -178,21 +177,21 @@ function Parser (definition) {
     if (pattern.endianness == "x") {
       _skipping  = pattern.bytes;
 
-    // Create the empty value and call the inherited `@nextValue`.
+    // Otherwise, create the empty value.
     } else {
       _value = pattern.exploded ? [] : 0;
     }
     var little = pattern.endianness == 'l';
-    var bytes       = pattern.bytes;
+    var bytes = pattern.bytes;
     terminal = little ? bytes : -1;
     valueOffset = little ? 0 : bytes - 1;
     increment = little ? 1 : -1;
   }
 
-  // Sets the next packet to extract from the stream by providing a named packet
-  // name as defined by `packet` or else a packet pattern to parse. The
+  // Sets the next packet to extract from the stream by providing a packet name
+  // defined by the `packet` function or else a packet pattern to parse. The
   // `callback` will be invoked when the packet has been extracted from the
-  // stream or buffer.
+  // buffer or buffers given to `parse`.
 
   //
   function extract (nameOrPattern, callback) {
@@ -208,9 +207,6 @@ function Parser (definition) {
   //#### parser.parse(buffer[, offset][, length])
   // The `parse` method reads from the buffer, returning when the current pattern
   // is read, or the end of the buffer is reached.
-  //
-  // If the stream is paused by a pattern callback, this method will return
-  // `false`, to indicate that the parser is no longer capable of accepting data.
 
   // Read from the `buffer` for the given `start` offset and `length`.
   function parse (buffer, start, length) {
@@ -492,9 +488,7 @@ function Parser (definition) {
 
 module.exports.Parser = Parser;
 
-// Construct a `Serializer` that will use the given `self` object as the `this`
-// when a callback is called. If no `self` is provided, the `Serializer`
-// instance will be used as the `this` object for serialization event callbacks.
+// Construct a `Serializer` around the given `definition`.
 function Serializer(definition) {
   var serializer = this,
   terminal, _offset, increment, _value, _bytesWritten = 0,
@@ -505,9 +499,7 @@ function Serializer(definition) {
 
   function reset () { _bytesWritten = 0 }
 
-  // Initialize the next field pattern in the serialization pattern array, which
-  // is the pattern in the array `_pattern` at the current `_patternIndex`.
-  // This initializes the serializer to write the next field.
+  // Prepare the parser for the next field in the pattern.
   function nextField () {
     var pattern  = _pattern[_patternIndex]
     repeat       = pattern.repeat;
@@ -524,10 +516,12 @@ function Serializer(definition) {
     }
   }
 
-  // Initialize the next field value to serialize. In the case of an arrayed
-  // value, we will use the next value in the array. This method will adjust the
-  // pattern for alteration. It will back a bit packed integer. It will covert
-  // the field to a byte array for floats and signed negative numbers.
+  // Prepare the parser to serialize the next value to the stream. It
+  // initializes Initialize the next field value to serialize. In the case of an
+  // arrayed value, we will use the next value in the array. This method will
+  // adjust the pattern for alteration. It will pack a bit packed integer. It
+  // will covert the field to a byte array for floats and signed negative
+  // numbers.
   function nextValue () {
     var i, I, value, packing, count, length, pack, unpacked, range, mask;
     var pattern = _pattern[_patternIndex];
