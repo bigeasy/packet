@@ -144,7 +144,7 @@ function Definition (context, packets, transforms) {
 
 // Construct a `Parser` around the given `definition`.
 function Parser (definition) {
-  var increment, _offset, terminal, terminated, terminator, _value, self = this,
+  var increment, valueOffset, terminal, terminated, terminator, _value,
   _bytesRead = 0, _skipping, repeat, step, _outgoing, _named, _index, _arrayed,
   _pattern, _patternIndex, _context = definition.context || this, _fields, _callback;
 
@@ -185,7 +185,7 @@ function Parser (definition) {
     var little = pattern.endianness == 'l';
     var bytes       = pattern.bytes;
     terminal = little ? bytes : -1;
-    _offset = little ? 0 : bytes - 1;
+    valueOffset = little ? 0 : bytes - 1;
     increment = little ? 1 : -1;
   }
 
@@ -212,26 +212,26 @@ function Parser (definition) {
   // If the stream is paused by a pattern callback, this method will return
   // `false`, to indicate that the parser is no longer capable of accepting data.
 
-  // Read from the `buffer` for the given `offset` `and length`.
-  function parse (buffer, offset, length) {
+  // Read from the `buffer` for the given `start` offset and `length`.
+  function parse (buffer, start, length) {
     // Initialize the loop counters. Initialize unspecified parameters with their
     // defaults.
-    var offset = offset || 0, length = length || buffer.length,
-        start = _bytesRead, end = offset + length,
+    var bufferOffset = start || 0,
+        bufferEnd = bufferOffset + (length == null ? buffer.length : length),
         bytes, value, field;
 
     // We set the pattern to null when all the fields have been read, so while
     // there is a pattern to fill and bytes to read.
-    while (_pattern != null && offset < end) {
+    while (_pattern != null && bufferOffset < bufferEnd) {
       field = _pattern[_patternIndex];
       // If we are skipping, we advance over all the skipped bytes or to the end
       // of the current buffer.
       if (_skipping != null) {
-        var advance  = Math.min(_skipping, end - offset);
-        var begin    = offset;
-        offset      += advance;
-        _skipping  -= advance;
-        _bytesRead += advance;
+        var advance  = Math.min(_skipping, bufferEnd - bufferOffset);
+        var begin    = bufferOffset;
+        bufferOffset       += advance;
+        _skipping   -= advance;
+        _bytesRead  += advance;
         // If we have more bytes to skip, then return `true` because we've
         // consumed the entire buffer.
         if (_skipping)
@@ -243,25 +243,25 @@ function Parser (definition) {
         // If the pattern is exploded, the value we're populating is an array.
         if (field.exploded) {
           for (;;) {
-            var b = buffer[offset];
+            var b = buffer[bufferOffset];
             _bytesRead++;
-            offset++;
-            _value[_offset] = b;
-            _offset += increment;
-            if (_offset == terminal) break;
-            if (offset == end) return true;
+            bufferOffset++;
+            _value[valueOffset] = b;
+            valueOffset += increment;
+            if (valueOffset == terminal) break;
+            if (bufferOffset == bufferEnd) return true;
           }
         // Otherwise we're packing bytes into an unsigned integer, the most
         // common case.
         } else {
           for (;;) {
-            b = buffer[offset];
+            b = buffer[bufferOffset];
             _bytesRead++;
-            offset++;
-            _value += Math.pow(256, _offset) * b
-            _offset += increment
-            if (_offset == terminal) break;
-            if (offset == end) return true;
+            bufferOffset++;
+            _value += Math.pow(256, valueOffset) * b
+            valueOffset += increment
+            if (valueOffset == terminal) break;
+            if (bufferOffset == bufferEnd) return true;
           }
         }
         // Unpack the field value. Perform our basic transformations. That is,
@@ -496,7 +496,8 @@ module.exports.Parser = Parser;
 // when a callback is called. If no `self` is provided, the `Serializer`
 // instance will be used as the `this` object for serialization event callbacks.
 function Serializer(definition) {
-  var terminal, _offset, increment, _value, _bytesWritten = 0, self = this,
+  var serializer = this,
+  terminal, _offset, increment, _value, _bytesWritten = 0,
   _skipping, repeat, _outgoing, _index, _terminated, _terminates, _pattern,
   _patternIndex, _context = definition.context || this, _padding, _callback;
 
@@ -808,7 +809,7 @@ function Serializer(definition) {
       // because the callback may specify a subsequent packet to parse.
       } else if (++_patternIndex ==  _pattern.length) {
         if (_callback != null) {
-          _callback.call(_context, self);
+          _callback.call(_context, serializer);
         }
       } else {
 
