@@ -156,7 +156,7 @@ function Parser (definition) {
 
   // Initialize the next field pattern in the serialization pattern array, which
   // is the pattern in the array `@_pattern` at the current `@_patternIndex`.
-  function _nextField ()  {
+  function nextField ()  {
     var pattern       = _pattern[_patternIndex];
     repeat      = pattern.repeat;
     _index       = 0;
@@ -170,7 +170,7 @@ function Parser (definition) {
   // Prepare the parser to parse the next value in the input stream.  It
   // initializes the value to a zero integer value or an array.  This method
   // accounts for skipping, for skipped patterns.
-  function _nextValue () {
+  function nextValue () {
     // Get the next pattern.
     var pattern = _pattern[_patternIndex], value;
 
@@ -178,7 +178,7 @@ function Parser (definition) {
     if (pattern.endianness == "x") {
       _skipping  = pattern.bytes;
 
-    // Create the empty value and call the inherited `@_nextValue`.
+    // Create the empty value and call the inherited `@nextValue`.
     } else {
       _value = pattern.exploded ? [] : 0;
     }
@@ -201,8 +201,8 @@ function Parser (definition) {
     _callback = callback;
     _fields = [];
 
-    _nextField();
-    _nextValue();
+    nextField();
+    nextValue();
   }
 
   //#### parser.parse(buffer[, offset][, length])
@@ -347,7 +347,7 @@ function Parser (definition) {
       // If we are reading an arrayed pattern and we have not read all of the
       // array elements, we repeat the current field type.
       if (++_index <  repeat) {
-        _nextValue();
+        nextValue();
 
       // Otherwise, we've got a complete field value, either a JavaScript
       // primitive or raw bytes as an array.
@@ -409,8 +409,8 @@ function Parser (definition) {
             _bytesRead -= bytes.length;
             _pattern = _pattern.slice(0);
             _pattern.splice.apply(_pattern, [ _patternIndex, 1 ].concat(branch.pattern));
-            _nextField()
-            _nextValue()
+            nextField();
+            nextValue();
             parse(bytes, 0, bytes.length);
             continue;
           
@@ -478,8 +478,8 @@ function Parser (definition) {
           }
         // Otherwise we proceed to the next field in the packet pattern.
         } else {
-          _nextField()
-          _nextValue()
+          nextField();
+          nextValue();
         }
       }
     }
@@ -507,7 +507,7 @@ function Serializer(definition) {
   // Initialize the next field pattern in the serialization pattern array, which
   // is the pattern in the array `_pattern` at the current `_patternIndex`.
   // This initializes the serializer to write the next field.
-  function _nextField () {
+  function nextField () {
     var pattern  = _pattern[_patternIndex]
     repeat       = pattern.repeat;
     _terminated  = ! pattern.terminator;
@@ -527,7 +527,7 @@ function Serializer(definition) {
   // value, we will use the next value in the array. This method will adjust the
   // pattern for alteration. It will back a bit packed integer. It will covert
   // the field to a byte array for floats and signed negative numbers.
-  function _nextValue () {
+  function nextValue () {
     var i, I, value, packing, count, length, pack, unpacked, range, mask;
     var pattern = _pattern[_patternIndex];
 
@@ -698,8 +698,8 @@ function Serializer(definition) {
       j++;
     }
 
-    _nextField()
-    _nextValue()
+    nextField();
+    nextValue();
   }
 
   // Return the count of bytes that will be written by the serializer for the
@@ -728,7 +728,9 @@ function Serializer(definition) {
   // The `write` method writes to the buffer, returning when the current pattern
   // is written, or the end of the buffer is reached.  Write to the `buffer` in
   // the region defined by the given `offset` and `length`.
-  function _serialize (buffer, offset, length) {
+  function write (buffer, offset, length) {
+    if (offset == null) offset = 0;
+    if (length == null) length = buffer.length;
     var start = offset, end = offset + length;
 
     // While there is a pattern to fill and space to write.
@@ -797,7 +799,7 @@ function Serializer(definition) {
       // If we are reading an arrayed pattern and we have not read all of the
       // array elements, we repeat the current field type.
       if (++_index < repeat) {
-        _nextValue();
+        nextValue();
 
       // If we have written all of the packet fields, call the associated
       // callback with self parser.
@@ -816,17 +818,13 @@ function Serializer(definition) {
         _terminates  = ! _terminated;
         _index       = 0;
 
-        _nextField();
-        _nextValue();
+        nextField();
+        nextValue();
       }
     }
     _outgoing = null;
 
     return offset - start;
-  }
-
-  function write (buffer) {
-    _serialize(buffer, 0, buffer.length);
   }
 
   objectify.call(definition.extend(this), serialize, write, reset, _length, _sizeOf);
