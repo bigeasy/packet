@@ -1,5 +1,5 @@
-var parse = require('./lib/pattern').parse,
-    ieee754   = require('./lib/ieee754'),
+var parse = require('./pattern').parse,
+    ieee754   = require('./ieee754'),
     util = require('util'),
     __slice = [].slice;
 
@@ -621,6 +621,7 @@ function Serializer(definition) {
         skip = 0,
         field, value, alternate, i, I, j, J, k, K;
 
+    _callback = callback;
     patternIndex = 0;
 
     outgoing = [], pattern = [];
@@ -815,7 +816,6 @@ function Serializer(definition) {
         nextValue();
       }
     }
-    outgoing = null;
 
     return bufferOffset - start;
   }
