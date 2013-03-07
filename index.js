@@ -145,7 +145,7 @@ function Definition (context, packets, transforms) {
 // Construct a `Parser` around the given `definition`.
 function Parser (definition) {
   var increment, valueOffset, terminal, terminated, terminator, value,
-  bytesRead = 0, skipping, repeat, step, _outgoing, _named, index, _arrayed,
+  bytesRead = 0, skipping, repeat, step, _named, index, _arrayed,
   pattern, patternIndex, _context = definition.context || this, _fields, _callback;
 
   // The length property of the `Parser`, returning the number of bytes read.
@@ -380,7 +380,7 @@ function Parser (definition) {
           // field.
           } else if (field.lengthEncoding) {
             if ((pattern[patternIndex + 1].repeat = value) == 0) {
-              _fields.push(definition.pipeline(! _outgoing, field, [], false))
+              _fields.push(definition.pipeline(true, field, [], false))
               patternIndex++
             }
           // If the value is used as a switch for an alternation, we run through
@@ -416,7 +416,7 @@ function Parser (definition) {
           // fields.
           } else {
             if (field.arrayed) value = _arrayed;
-            _fields.push(definition.pipeline(! _outgoing, field, value, false));
+            _fields.push(definition.pipeline(true, field, value, false));
           }
         }
         // If we have read all of the pattern fields, call the associated
@@ -492,7 +492,7 @@ module.exports.Parser = Parser;
 function Serializer(definition) {
   var serializer = this,
   terminal, _offset, increment, value, bytesWritten = 0,
-  skipping, repeat, _outgoing, index, _terminated, _terminates, pattern,
+  skipping, repeat, outgoing, index, _terminated, _terminates, pattern,
   patternIndex, _context = definition.context || this, _padding, _callback;
 
   function _length () { return bytesWritten }
@@ -510,7 +510,7 @@ function Serializer(definition) {
 
     // Can't I keep separate indexes? Do I need that zero?
     if (field.endianness ==  "x") {
-      _outgoing.splice(patternIndex, 0, null);
+      outgoing.splice(patternIndex, 0, null);
       if (field.padding != null)
         _padding = field.padding
     }
@@ -537,9 +537,9 @@ function Serializer(definition) {
 
       // If the field is arrayed, we get the next value in the array.
       } else if (field.arrayed) {
-        value = _outgoing[patternIndex][index];
+        value = outgoing[patternIndex][index];
 
-      // If the field is bit packed, we update the `_outgoing` array of values
+      // If the field is bit packed, we update the `outgoing` array of values
       // by packing zero, one or more values into a single value. We will also
       // check for bits filled with a pattern specified filler value and pack
       // that in there as well.
@@ -549,7 +549,7 @@ function Serializer(definition) {
           pack = packing[i];
           length -= pack.bits;
           if (pack.endianness ==  "b" || pack.padding != null) {
-            unpacked = pack.padding != null ? pack.padding : _outgoing[patternIndex + count++]
+            unpacked = pack.padding != null ? pack.padding : outgoing[patternIndex + count++]
             if (pack.signed) {
               range = Math.pow(2, pack.bits - 1)
               if (!( (-range) <= unpacked &&  unpacked <= range - 1))
@@ -562,18 +562,18 @@ function Serializer(definition) {
             value += unpacked * Math.pow(2, length)
           }
         }
-        _outgoing.splice(patternIndex, count, value);
+        outgoing.splice(patternIndex, count, value);
 
       // If the current field is a length encoded array, then the length of the
       // current array value is the next value, otherwise, we have the simple
       // case, the value is the current value.
       } else {
         if (field.lengthEncoding) {
-          var repeat = _outgoing[patternIndex].length;
-          _outgoing.splice(patternIndex, 0, repeat);
+          var repeat = outgoing[patternIndex].length;
+          outgoing.splice(patternIndex, 0, repeat);
           pattern[patternIndex + 1].repeat = repeat;
         }
-        value = _outgoing[patternIndex];
+        value = outgoing[patternIndex];
       }
       // If the array is not an unsigned integer, we might have to convert it.
       if (field.exploded) {
@@ -626,7 +626,7 @@ function Serializer(definition) {
 
     patternIndex = 0;
 
-    _outgoing = [], pattern = [];
+    outgoing = [], pattern = [];
 
     // Determine alternation now, creating a pattern with the alternation
     // resolved.
@@ -660,12 +660,12 @@ function Serializer(definition) {
       if (field.packing) {
         for (j = 0, J = field.packing.length; j < J; j++) {
           if (field.packing[j].endianness != 'x') {
-            _outgoing.push(named ? incoming[field.packing[j].name] : incoming.shift());
+            outgoing.push(named ? incoming[field.packing[j].name] : incoming.shift());
           }
         }
       } else {
         if (field.endianness != 'x') {
-          _outgoing.push(named ? incoming[field.name] : incoming.shift());
+          outgoing.push(named ? incoming[field.name] : incoming.shift());
         }
       }
     }
@@ -673,8 +673,8 @@ function Serializer(definition) {
     // Run the outgoing values through field pipelines before we enter the write
     // loop. We need to skip over the blank fields and constants. We also skip
     // over bit packed fields because we do not apply pipelines to packed fields.
-    for (j = 0, i = 0, I = _outgoing.length; i < I; i++) {
-      value = _outgoing[i];
+    for (j = 0, i = 0, I = outgoing.length; i < I; i++) {
+      value = outgoing[i];
       if (skip) {
         skip--
         continue
@@ -687,7 +687,7 @@ function Serializer(definition) {
       } else {
         while (pattern[j] &&  pattern[j].endianness ==  "x") j++;
         if (! pattern[j]) throw new Error("too many fields");
-        _outgoing[i] = definition.pipeline(! _outgoing, pattern[j], value, true)
+        outgoing[i] = definition.pipeline(! outgoing, pattern[j], value, true)
       }
       j++;
     }
@@ -703,7 +703,7 @@ function Serializer(definition) {
         outgoingIndex = 0, size = 0;
     while (field) {
       if (field.terminator) {
-        repeat = _outgoing[outgoingIndex++].length + field.terminator.length; 
+        repeat = outgoing[outgoingIndex++].length + field.terminator.length; 
         if (field.repeat != Number.MAX_VALUE) {
           repeat = field.repeat;
         }
@@ -780,12 +780,12 @@ function Serializer(definition) {
           // array to hold the terminator, because the outgoing series may be a
           // buffer. We insert the terminator at next index in the outgoing array.
           // We then set repeat to allow one more iteration before callback.
-          if (_outgoing[patternIndex].length == index + 1) {
+          if (outgoing[patternIndex].length == index + 1) {
             _terminated = true;
-            _outgoing[patternIndex] = [];
+            outgoing[patternIndex] = [];
             var terminator = pattern[patternIndex].terminator;
             for (var i = 0, I = terminator.length; i < I; i++) {
-              _outgoing[patternIndex][index + 1 + i] = terminator[i];
+              outgoing[patternIndex][index + 1 + i] = terminator[i];
             }
           }
         }
@@ -816,7 +816,7 @@ function Serializer(definition) {
         nextValue();
       }
     }
-    _outgoing = null;
+    outgoing = null;
 
     return offset - start;
   }
