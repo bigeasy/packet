@@ -145,7 +145,7 @@ function Definition (context, packets, transforms) {
 // Construct a `Parser` around the given `definition`.
 function Parser (definition) {
   var increment, valueOffset, terminal, terminated, terminator, value,
-  bytesRead = 0, _skipping, repeat, step, _outgoing, _named, index, _arrayed,
+  bytesRead = 0, skipping, repeat, step, _outgoing, _named, index, _arrayed,
   pattern, patternIndex, _context = definition.context || this, _fields, _callback;
 
   // The length property of the `Parser`, returning the number of bytes read.
@@ -159,7 +159,7 @@ function Parser (definition) {
     var field = pattern[patternIndex];
     repeat = field.repeat;
     index = 0;
-    _skipping    = null;
+    skipping    = null;
     terminated = ! field.terminator;
     terminator = field.terminator && field.terminator[field.terminator.length - 1];
     _named = _named || !! field.name;
@@ -175,7 +175,7 @@ function Parser (definition) {
 
     // If skipping, skip over the count of bytes.
     if (field.endianness == "x") {
-      _skipping  = field.bytes;
+      skipping  = field.bytes;
 
     // Otherwise, create the empty value.
     } else {
@@ -222,18 +222,18 @@ function Parser (definition) {
       field = pattern[patternIndex];
       // If we are skipping, we advance over all the skipped bytes or to the end
       // of the current buffer.
-      if (_skipping != null) {
-        var advance  = Math.min(_skipping, bufferEnd - bufferOffset);
+      if (skipping != null) {
+        var advance  = Math.min(skipping, bufferEnd - bufferOffset);
         var begin    = bufferOffset;
         bufferOffset       += advance;
-        _skipping   -= advance;
+        skipping   -= advance;
         bytesRead  += advance;
         // If we have more bytes to skip, then return `true` because we've
         // consumed the entire buffer.
-        if (_skipping)
+        if (skipping)
           return true
         else
-          _skipping = null
+          skipping = null
 
       } else {
         // If the pattern is exploded, the value we're populating is an array.
@@ -330,8 +330,8 @@ function Parser (definition) {
             if (repeat == Number.MAX_VALUE) {
               repeat = index + 1;
             } else {
-              _skipping = (repeat - (++index)) * field.bytes
-              if (_skipping) {
+              skipping = (repeat - (++index)) * field.bytes
+              if (skipping) {
                 repeat = index + 1;
                 continue
               }
@@ -492,7 +492,7 @@ module.exports.Parser = Parser;
 function Serializer(definition) {
   var serializer = this,
   terminal, _offset, increment, value, bytesWritten = 0,
-  _skipping, repeat, _outgoing, index, _terminated, _terminates, pattern,
+  skipping, repeat, _outgoing, index, _terminated, _terminates, pattern,
   patternIndex, _context = definition.context || this, _padding, _callback;
 
   function _length () { return bytesWritten }
@@ -529,7 +529,7 @@ function Serializer(definition) {
     // If we are skipping without filling we note the count of bytes to skip,
     // otherwise we prepare our value.
     if (field.endianness ==  "x" &&  _padding == null) {
-      _skipping = field.bytes
+      skipping = field.bytes
     } else {
       // If we're filling, we write the fill value.
       if (_padding != null) {
@@ -729,12 +729,12 @@ function Serializer(definition) {
 
     // While there is a pattern to fill and space to write.
     while (pattern.length != patternIndex &&  offset < end) {
-      if (_skipping) {
-        var advance     = Math.min(_skipping, end - offset);
+      if (skipping) {
+        var advance     = Math.min(skipping, end - offset);
         offset         += advance;
-        _skipping      -= advance;
+        skipping      -= advance;
         bytesWritten  += advance;
-        if (_skipping) return offset - start;
+        if (skipping) return offset - start;
 
       } else {
         // If the pattern is exploded, the value we're writing is an array.
@@ -769,8 +769,8 @@ function Serializer(definition) {
           } else if (pattern[patternIndex].padding != null)  {
             _padding = pattern[patternIndex].padding
           } else {
-            _skipping = (repeat - (++index)) * pattern[patternIndex].bytes;
-            if (_skipping) {
+            skipping = (repeat - (++index)) * pattern[patternIndex].bytes;
+            if (skipping) {
               repeat = index + 1;
               continue;
             }
