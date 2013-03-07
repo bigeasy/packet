@@ -145,7 +145,7 @@ function Definition (context, packets, transforms) {
 // Construct a `Parser` around the given `definition`.
 function Parser (definition) {
   var increment, valueOffset, terminal, terminated, terminator, value,
-  bytesRead = 0, skipping, repeat, step, _named, index, _arrayed,
+  bytesRead = 0, skipping, repeat, step, _named, index, arrayed,
   pattern, patternIndex, context = definition.context || this, fields, _callback;
 
   // The length property of the `Parser`, returning the number of bytes read.
@@ -163,7 +163,7 @@ function Parser (definition) {
     terminated = ! field.terminator;
     terminator = field.terminator && field.terminator[field.terminator.length - 1];
     _named = _named || !! field.name;
-    if (field.arrayed && field.endianness  != "x") _arrayed = [];
+    if (field.arrayed && field.endianness  != "x") arrayed = [];
   }
 
   // Prepare the parser to parse the next value in the stream. It initializes
@@ -301,7 +301,7 @@ function Parser (definition) {
         }
         // If the current field is arrayed, we keep track of the array we're
         // building after a pause through member variable.
-        if (field.arrayed) _arrayed.push(value);
+        if (field.arrayed) arrayed.push(value);
       }
 
       // If we've not yet hit our terminator, check for the terminator. If we've
@@ -317,14 +317,14 @@ function Parser (definition) {
           terminated = true;
           var t = pattern[patternIndex].terminator;
           for (i = 1, I = t.length; i <= I; i++) {
-            if (_arrayed[_arrayed.length - i] != t[t.length - i]) {
+            if (arrayed[arrayed.length - i] != t[t.length - i]) {
               terminated = false
               break
             }
           }
           if (terminated) {
             for (i = 0, I + t.length; i < I; i++) {
-              _arrayed.pop();
+              arrayed.pop();
             }
             terminated = true;
             if (repeat == Number.MAX_VALUE) {
@@ -390,7 +390,7 @@ function Parser (definition) {
           } else if (field.alternation) {
             // This makes no sense now.I wonder if it is called.
             // unless field.signed
-            //  value = (Math.pow(256, i) * b for b, i in @_arrayed)
+            //  value = (Math.pow(256, i) * b for b, i in arrayed)
             var i, I, branch;
             for (i = 0, I = field.alternation.length; i < I; i++) {
               branch = field.alternation[i];
@@ -401,7 +401,7 @@ function Parser (definition) {
             }
             if (branch.failed)
               throw new Error("Cannot match branch.");
-            bytes = _arrayed.slice(0);
+            bytes = arrayed.slice(0);
             bytesRead -= bytes.length;
             pattern = pattern.slice(0);
             pattern.splice.apply(pattern, [ patternIndex, 1 ].concat(branch.pattern));
@@ -415,7 +415,7 @@ function Parser (definition) {
           // supplied transformation pipeline, and push it onto the list of
           // fields.
           } else {
-            if (field.arrayed) value = _arrayed;
+            if (field.arrayed) value = arrayed;
             fields.push(definition.pipeline(true, field, value, false));
           }
         }
