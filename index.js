@@ -204,7 +204,7 @@ function Parser (definition) {
     nextValue();
   }
 
-  //#### parser.parse(buffer[, offset][, length])
+  //#### parser.parse(buffer[, start][, length])
   // The `parse` method reads from the buffer, returning when the current pattern
   // is read, or the end of the buffer is reached.
 
@@ -490,8 +490,7 @@ module.exports.Parser = Parser;
 
 // Construct a `Serializer` around the given `definition`.
 function Serializer(definition) {
-  var serializer = this,
-  terminal, _offset, increment, value, bytesWritten = 0,
+  var serializer = this, terminal, valueOffset, increment, value, bytesWritten = 0,
   skipping, repeat, outgoing, index, _terminated, _terminates, pattern,
   patternIndex, _context = definition.context || this, _padding, _callback;
 
@@ -608,7 +607,7 @@ function Serializer(definition) {
       var little = field.endianness == 'l';
       var bytes = field.bytes;
       terminal = little  ? bytes : -1;
-      _offset = little ? 0 : bytes - 1;
+      valueOffset = little ? 0 : bytes - 1;
       increment = little ? 1 : -1;
     } 
   }
@@ -717,46 +716,48 @@ function Serializer(definition) {
     return size;
   }
 
-  //#### serializer.write(buffer[, offset][, length])
+  //#### serializer.write(buffer[, start][, length])
 
   // The `write` method writes to the buffer, returning when the current pattern
   // is written, or the end of the buffer is reached.  Write to the `buffer` in
-  // the region defined by the given `offset` and `length`.
-  function write (buffer, offset, length) {
-    if (offset == null) offset = 0;
+  // the region defined by the given `start` offset and `length`.
+  function write (buffer, start, length) {
+    // **TODO**: Tidy.
+    var bufferOffset = start || 0;
     if (length == null) length = buffer.length;
-    var start = offset, end = offset + length;
+    var bufferEnd = bufferOffset + (length == null ? buffer.length : length);
+    start = bufferOffset;
 
     // While there is a pattern to fill and space to write.
-    while (pattern.length != patternIndex &&  offset < end) {
+    while (pattern.length != patternIndex &&  bufferOffset < bufferEnd) {
       if (skipping) {
-        var advance     = Math.min(skipping, end - offset);
-        offset         += advance;
+        var advance     = Math.min(skipping, bufferEnd - bufferOffset);
+        bufferOffset         += advance;
         skipping      -= advance;
         bytesWritten  += advance;
-        if (skipping) return offset - start;
+        if (skipping) return bufferOffset - start;
 
       } else {
         // If the pattern is exploded, the value we're writing is an array.
         if (pattern[patternIndex].exploded) {
           for (;;) {
-            buffer[offset] = value[_offset];
-            _offset += increment;
+            buffer[bufferOffset] = value[valueOffset];
+            valueOffset += increment;
             bytesWritten++;
-            offset++;
-            if (_offset ==  terminal) break;
-            if (offset == end) return offset - start;
+            bufferOffset++;
+            if (valueOffset ==  terminal) break;
+            if (bufferOffset == bufferEnd) return bufferOffset - start;
           }
         // Otherwise we're unpacking bytes of an unsigned integer, the most common
         // case.
         } else {
           for (;;) {
-            buffer[offset] = Math.floor(value / Math.pow(256, _offset)) & 0xff;
-            _offset += increment;
+            buffer[bufferOffset] = Math.floor(value / Math.pow(256, valueOffset)) & 0xff;
+            valueOffset += increment;
             bytesWritten++;
-            offset++;
-            if (_offset ==  terminal) break;
-            if (offset ==  end) return offset - start;
+            bufferOffset++;
+            if (valueOffset ==  terminal) break;
+            if (bufferOffset ==  bufferEnd) return bufferOffset - start;
           }
         }
       }
@@ -818,7 +819,7 @@ function Serializer(definition) {
     }
     outgoing = null;
 
-    return offset - start;
+    return bufferOffset - start;
   }
 
   objectify.call(definition.extend(this), serialize, write, reset, _length, _sizeOf);
