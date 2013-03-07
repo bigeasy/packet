@@ -145,7 +145,7 @@ function Definition (context, packets, transforms) {
 // Construct a `Parser` around the given `definition`.
 function Parser (definition) {
   var increment, valueOffset, terminal, terminated, terminator, value,
-  bytesRead = 0, skipping, repeat, step, _named, index, arrayed,
+  bytesRead = 0, skipping, repeat, step, named, index, arrayed,
   pattern, patternIndex, context = definition.context || this, fields, _callback;
 
   // The length property of the `Parser`, returning the number of bytes read.
@@ -162,7 +162,7 @@ function Parser (definition) {
     skipping    = null;
     terminated = ! field.terminator;
     terminator = field.terminator && field.terminator[field.terminator.length - 1];
-    _named = _named || !! field.name;
+    named = named || !! field.name;
     if (field.arrayed && field.endianness  != "x") arrayed = [];
   }
 
@@ -441,7 +441,7 @@ function Parser (definition) {
             // will take a lot of hashing out only to close with "oh, no, you hit
             // upon a "hidden feature".
             var number = 1
-            if (_named) {
+            if (named) {
               var object = {};
               for (i = 0, I = field.length; i < I; i++) {
                 bits = field[i];
