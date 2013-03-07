@@ -491,7 +491,7 @@ module.exports.Parser = Parser;
 // Construct a `Serializer` around the given `definition`.
 function Serializer(definition) {
   var serializer = this, terminal, valueOffset, increment, value, bytesWritten = 0,
-  skipping, repeat, outgoing, index, terminated, _terminates, pattern,
+  skipping, repeat, outgoing, index, terminated, terminates, pattern,
   patternIndex, _context = definition.context || this, _padding, _callback;
 
   function _length () { return bytesWritten }
@@ -503,7 +503,7 @@ function Serializer(definition) {
     var field  = pattern[patternIndex]
     repeat       = field.repeat;
     terminated  = ! field.terminator;
-    _terminates  = ! terminated;
+    terminates  = ! terminated;
     index       = 0;
     _padding     = null;
 
@@ -763,7 +763,7 @@ function Serializer(definition) {
       }
       // If we have not terminated, check for the termination state change.
       // Termination will change the loop settings.
-      if (_terminates) {
+      if (terminates) {
         if (terminated) {
           if (repeat ==  Number.MAX_VALUE) {
             repeat = index + 1
@@ -810,7 +810,7 @@ function Serializer(definition) {
         _padding = null;
         repeat      = pattern[patternIndex].repeat;
         terminated  = ! pattern[patternIndex].terminator;
-        _terminates  = ! terminated;
+        terminates  = ! terminated;
         index       = 0;
 
         nextField();
