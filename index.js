@@ -145,14 +145,14 @@ function Definition (context, packets, transforms) {
 // Construct a `Parser` around the given `definition`.
 function Parser (definition) {
   var increment, valueOffset, terminal, terminated, terminator, _value,
-  _bytesRead = 0, _skipping, repeat, step, _outgoing, _named, _index, _arrayed,
+  bytesRead = 0, _skipping, repeat, step, _outgoing, _named, _index, _arrayed,
   pattern, patternIndex, _context = definition.context || this, _fields, _callback;
 
   // The length property of the `Parser`, returning the number of bytes read.
-  function _length () { return _bytesRead }
+  function _length () { return bytesRead }
 
   // The public `reset` method to reuse the parser, clearing the current state.
-  function reset () { _bytesRead = 0 }
+  function reset () { bytesRead = 0 }
 
   // Prepare the parser for the next field in the pattern.
   function nextField ()  {
@@ -227,7 +227,7 @@ function Parser (definition) {
         var begin    = bufferOffset;
         bufferOffset       += advance;
         _skipping   -= advance;
-        _bytesRead  += advance;
+        bytesRead  += advance;
         // If we have more bytes to skip, then return `true` because we've
         // consumed the entire buffer.
         if (_skipping)
@@ -240,7 +240,7 @@ function Parser (definition) {
         if (field.exploded) {
           for (;;) {
             var b = buffer[bufferOffset];
-            _bytesRead++;
+            bytesRead++;
             bufferOffset++;
             _value[valueOffset] = b;
             valueOffset += increment;
@@ -252,7 +252,7 @@ function Parser (definition) {
         } else {
           for (;;) {
             b = buffer[bufferOffset];
-            _bytesRead++;
+            bytesRead++;
             bufferOffset++;
             _value += Math.pow(256, valueOffset) * b
             valueOffset += increment
@@ -402,7 +402,7 @@ function Parser (definition) {
             if (branch.failed)
               throw new Error("Cannot match branch.");
             bytes = _arrayed.slice(0);
-            _bytesRead -= bytes.length;
+            bytesRead -= bytes.length;
             pattern = pattern.slice(0);
             pattern.splice.apply(pattern, [ patternIndex, 1 ].concat(branch.pattern));
             nextField();
@@ -491,13 +491,13 @@ module.exports.Parser = Parser;
 // Construct a `Serializer` around the given `definition`.
 function Serializer(definition) {
   var serializer = this,
-  terminal, _offset, increment, _value, _bytesWritten = 0,
+  terminal, _offset, increment, _value, bytesWritten = 0,
   _skipping, repeat, _outgoing, _index, _terminated, _terminates, pattern,
   patternIndex, _context = definition.context || this, _padding, _callback;
 
-  function _length () { return _bytesWritten }
+  function _length () { return bytesWritten }
 
-  function reset () { _bytesWritten = 0 }
+  function reset () { bytesWritten = 0 }
 
   // Prepare the parser for the next field in the pattern.
   function nextField () {
@@ -734,7 +734,7 @@ function Serializer(definition) {
         var advance     = Math.min(_skipping, end - offset);
         offset         += advance;
         _skipping      -= advance;
-        _bytesWritten  += advance;
+        bytesWritten  += advance;
         if (_skipping) return offset - start;
 
       } else {
@@ -743,7 +743,7 @@ function Serializer(definition) {
           for (;;) {
             buffer[offset] = _value[_offset];
             _offset += increment;
-            _bytesWritten++;
+            bytesWritten++;
             offset++;
             if (_offset ==  terminal) break;
             if (offset == end) return offset - start;
@@ -754,7 +754,7 @@ function Serializer(definition) {
           for (;;) {
             buffer[offset] = Math.floor(_value / Math.pow(256, _offset)) & 0xff;
             _offset += increment;
-            _bytesWritten++;
+            bytesWritten++;
             offset++;
             if (_offset ==  terminal) break;
             if (offset ==  end) return offset - start;
