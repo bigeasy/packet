@@ -1,8 +1,7 @@
-var parse = require('./pattern').parse
-  , ieee754   = require('./ieee754')
-  , util = require('util')
-  , __slice = [].slice
-  ;
+var parse = require('./pattern').parse,
+    ieee754   = require('./ieee754'),
+    util = require('util'),
+    __slice = [].slice;
 
 function objectify () {
   var i, I, name;
@@ -145,127 +144,120 @@ function Definition (context, packets, transforms) {
 
 // Construct a `Parser` around the given `definition`.
 function Parser (definition) {
-  var increment, _offset, terminal, terminated, terminator, _value, self = this,
-  _bytesRead = 0, _skipping, repeat, step, _outgoing, _named, _index, _arrayed,
-  _pattern, _patternIndex, _context = definition.context || this, _fields, _callback;
+  var increment, valueOffset, terminal, terminated, terminator, value,
+  bytesRead = 0, skipping, repeat, step, named, index, arrayed,
+  pattern, patternIndex, context = definition.context || this, fields, _callback;
 
   // The length property of the `Parser`, returning the number of bytes read.
-  function _length () { return _bytesRead }
+  function _length () { return bytesRead }
 
   // The public `reset` method to reuse the parser, clearing the current state.
-  function reset () { _bytesRead = 0 }
+  function reset () { bytesRead = 0 }
 
-  // Initialize the next field pattern in the serialization pattern array, which
-  // is the pattern in the array `@_pattern` at the current `@_patternIndex`.
-  function _nextField ()  {
-    var pattern       = _pattern[_patternIndex];
-    repeat      = pattern.repeat;
-    _index       = 0;
-    _skipping    = null;
-    terminated  = ! pattern.terminator;
-    terminator  = pattern.terminator && pattern.terminator[pattern.terminator.length - 1];
-    _named       = _named || !! pattern.name;
-    if (pattern.arrayed && pattern.endianness  != "x") _arrayed = [];
+  // Prepare the parser for the next field in the pattern.
+  function nextField ()  {
+    var field = pattern[patternIndex];
+    repeat = field.repeat;
+    index = 0;
+    skipping    = null;
+    terminated = ! field.terminator;
+    terminator = field.terminator && field.terminator[field.terminator.length - 1];
+    named = named || !! field.name;
+    if (field.arrayed && field.endianness  != "x") arrayed = [];
   }
 
-  // Prepare the parser to parse the next value in the input stream.  It
-  // initializes the value to a zero integer value or an array.  This method
-  // accounts for skipping, for skipped patterns.
-  function _nextValue () {
+  // Prepare the parser to parse the next value in the stream. It initializes
+  // the value to a zero integer value or an array. This method accounts for
+  // skipping, for skipped patterns.
+  function nextValue () {
     // Get the next pattern.
-    var pattern = _pattern[_patternIndex], value;
+    var field = pattern[patternIndex];
 
     // If skipping, skip over the count of bytes.
-    if (pattern.endianness == "x") {
-      _skipping  = pattern.bytes;
+    if (field.endianness == "x") {
+      skipping  = field.bytes;
 
-    // Create the empty value and call the inherited `@_nextValue`.
+    // Otherwise, create the empty value.
     } else {
-      _value = pattern.exploded ? [] : 0;
+      value = field.exploded ? [] : 0;
     }
-    var little = pattern.endianness == 'l';
-    var bytes       = pattern.bytes;
+    var little = field.endianness == 'l';
+    var bytes = field.bytes;
     terminal = little ? bytes : -1;
-    _offset = little ? 0 : bytes - 1;
+    valueOffset = little ? 0 : bytes - 1;
     increment = little ? 1 : -1;
   }
 
-  // Sets the next packet to extract from the stream by providing a named packet
-  // name as defined by `packet` or else a packet pattern to parse. The
+  // Sets the next packet to extract from the stream by providing a packet name
+  // defined by the `packet` function or else a packet pattern to parse. The
   // `callback` will be invoked when the packet has been extracted from the
-  // stream or buffer.
+  // buffer or buffers given to `parse`.
 
   //
   function extract (nameOrPattern, callback) {
-    _pattern = definition.pattern(nameOrPattern);
-    _patternIndex = 0;
+    pattern = definition.pattern(nameOrPattern);
+    patternIndex = 0;
     _callback = callback;
-    _fields = [];
+    fields = [];
 
-    _nextField();
-    _nextValue();
+    nextField();
+    nextValue();
   }
 
-  //#### parser.parse(buffer[, offset][, length])
+  //#### parser.parse(buffer[, start][, length])
   // The `parse` method reads from the buffer, returning when the current pattern
   // is read, or the end of the buffer is reached.
-  //
-  // If the stream is paused by a pattern callback, this method will return
-  // `false`, to indicate that the parser is no longer capable of accepting data.
 
-  // Read from the `buffer` for the given `offset` `and length`.
-  function parse (buffer, offset, length) {
+  // Read from the `buffer` for the given `start` offset and `length`.
+  function parse (buffer, start, length) {
     // Initialize the loop counters. Initialize unspecified parameters with their
     // defaults.
-    var offset  = offset || 0
-      , length  = length || buffer.length
-      , start   = _bytesRead
-      , end     = offset + length
-      , bytes, value, field
-      ;
+    var bufferOffset = start || 0,
+        bufferEnd = bufferOffset + (length == null ? buffer.length : length),
+        bytes, bits;
 
     // We set the pattern to null when all the fields have been read, so while
     // there is a pattern to fill and bytes to read.
-    while (_pattern != null && offset < end) {
-      field = _pattern[_patternIndex];
+    while (pattern != null && bufferOffset < bufferEnd) {
+      field = pattern[patternIndex];
       // If we are skipping, we advance over all the skipped bytes or to the end
       // of the current buffer.
-      if (_skipping != null) {
-        var advance  = Math.min(_skipping, end - offset);
-        var begin    = offset;
-        offset      += advance;
-        _skipping  -= advance;
-        _bytesRead += advance;
+      if (skipping != null) {
+        var advance  = Math.min(skipping, bufferEnd - bufferOffset);
+        var begin    = bufferOffset;
+        bufferOffset       += advance;
+        skipping   -= advance;
+        bytesRead  += advance;
         // If we have more bytes to skip, then return `true` because we've
         // consumed the entire buffer.
-        if (_skipping)
+        if (skipping)
           return true
         else
-          _skipping = null
+          skipping = null
 
       } else {
         // If the pattern is exploded, the value we're populating is an array.
         if (field.exploded) {
           for (;;) {
-            var b = buffer[offset];
-            _bytesRead++;
-            offset++;
-            _value[_offset] = b;
-            _offset += increment;
-            if (_offset == terminal) break;
-            if (offset == end) return true;
+            var b = buffer[bufferOffset];
+            bytesRead++;
+            bufferOffset++;
+            value[valueOffset] = b;
+            valueOffset += increment;
+            if (valueOffset == terminal) break;
+            if (bufferOffset == bufferEnd) return true;
           }
         // Otherwise we're packing bytes into an unsigned integer, the most
         // common case.
         } else {
           for (;;) {
-            b = buffer[offset];
-            _bytesRead++;
-            offset++;
-            _value += Math.pow(256, _offset) * b
-            _offset += increment
-            if (_offset == terminal) break;
-            if (offset == end) return true;
+            b = buffer[bufferOffset];
+            bytesRead++;
+            bufferOffset++;
+            value += Math.pow(256, valueOffset) * b
+            valueOffset += increment
+            if (valueOffset == terminal) break;
+            if (bufferOffset == bufferEnd) return true;
           }
         }
         // Unpack the field value. Perform our basic transformations. That is,
@@ -278,7 +270,7 @@ function Parser (definition) {
         // arrays.
 
         // By default, value is as it is.
-        bytes = value = _value;
+        bytes = value;
 
         // Convert to float or double.
         if (field.type == "f") {
@@ -286,7 +278,6 @@ function Parser (definition) {
             value = ieee754.fromIEEE754Single(bytes)
           else
             value = ieee754.fromIEEE754Double(bytes)
-       
 
         // Get the two's compliment signed value. 
         } else if (field.signed) {
@@ -310,7 +301,7 @@ function Parser (definition) {
         }
         // If the current field is arrayed, we keep track of the array we're
         // building after a pause through member variable.
-        if (field.arrayed) _arrayed.push(value);
+        if (field.arrayed) arrayed.push(value);
       }
 
       // If we've not yet hit our terminator, check for the terminator. If we've
@@ -324,24 +315,24 @@ function Parser (definition) {
       if (! terminated) {
         if (terminator == value) {
           terminated = true;
-          var t = _pattern[_patternIndex].terminator;
+          var t = pattern[patternIndex].terminator;
           for (i = 1, I = t.length; i <= I; i++) {
-            if (_arrayed[_arrayed.length - i] != t[t.length - i]) {
+            if (arrayed[arrayed.length - i] != t[t.length - i]) {
               terminated = false
               break
             }
           }
           if (terminated) {
             for (i = 0, I + t.length; i < I; i++) {
-              _arrayed.pop();
+              arrayed.pop();
             }
             terminated = true;
             if (repeat == Number.MAX_VALUE) {
-              repeat = _index + 1;
+              repeat = index + 1;
             } else {
-              _skipping = (repeat - (++_index)) * field.bytes
-              if (_skipping) {
-                repeat = _index + 1;
+              skipping = (repeat - (++index)) * field.bytes
+              if (skipping) {
+                repeat = index + 1;
                 continue
               }
             }
@@ -351,8 +342,8 @@ function Parser (definition) {
 
       // If we are reading an arrayed pattern and we have not read all of the
       // array elements, we repeat the current field type.
-      if (++_index <  repeat) {
-        _nextValue();
+      if (++index <  repeat) {
+        nextValue();
 
       // Otherwise, we've got a complete field value, either a JavaScript
       // primitive or raw bytes as an array.
@@ -379,7 +370,7 @@ function Parser (definition) {
                   if (unpacked & mask)
                     unpacked = -(~(unpacked - 1) & (mask * 2 - 1))
                 }
-                _fields.push(unpacked);
+                fields.push(unpacked);
               }
             }
          
@@ -388,9 +379,9 @@ function Parser (definition) {
           // push an empty array through the pipeline, and move on to the next
           // field.
           } else if (field.lengthEncoding) {
-            if ((_pattern[_patternIndex + 1].repeat = value) == 0) {
-              _fields.push(definition.pipeline(! _outgoing, field, [], false))
-              _patternIndex++
+            if ((pattern[patternIndex + 1].repeat = value) == 0) {
+              fields.push(definition.pipeline(true, field, [], false))
+              patternIndex++
             }
           // If the value is used as a switch for an alternation, we run through
           // the different possible branches, updating the pattern with the
@@ -399,7 +390,7 @@ function Parser (definition) {
           } else if (field.alternation) {
             // This makes no sense now.I wonder if it is called.
             // unless field.signed
-            //  value = (Math.pow(256, i) * b for b, i in @_arrayed)
+            //  value = (Math.pow(256, i) * b for b, i in arrayed)
             var i, I, branch;
             for (i = 0, I = field.alternation.length; i < I; i++) {
               branch = field.alternation[i];
@@ -410,12 +401,12 @@ function Parser (definition) {
             }
             if (branch.failed)
               throw new Error("Cannot match branch.");
-            bytes = _arrayed.slice(0);
-            _bytesRead -= bytes.length;
-            _pattern = _pattern.slice(0);
-            _pattern.splice.apply(_pattern, [ _patternIndex, 1 ].concat(branch.pattern));
-            _nextField()
-            _nextValue()
+            bytes = arrayed.slice(0);
+            bytesRead -= bytes.length;
+            pattern = pattern.slice(0);
+            pattern.splice.apply(pattern, [ patternIndex, 1 ].concat(branch.pattern));
+            nextField();
+            nextValue();
             parse(bytes, 0, bytes.length);
             continue;
           
@@ -424,8 +415,8 @@ function Parser (definition) {
           // supplied transformation pipeline, and push it onto the list of
           // fields.
           } else {
-            if (field.arrayed) value = _arrayed;
-            _fields.push(definition.pipeline(! _outgoing, field, value, false));
+            if (field.arrayed) value = arrayed;
+            fields.push(definition.pipeline(true, field, value, false));
           }
         }
         // If we have read all of the pattern fields, call the associated
@@ -434,57 +425,57 @@ function Parser (definition) {
         //
         // The pattern is set to null, our terminal condition, because the
         // callback may specify a subsequent packet to parse.
-        if (++_patternIndex == _pattern.length) {
-          var pattern = _pattern;
-          _pattern = null;
+        if (++patternIndex == pattern.length) {
+          var field = pattern;
+          pattern = null;
 
           if (_callback) {
             // At one point, you thought you could have  a test for the arity of
             // the function, and if it was not `1`, you'd call the callback
             // positionally, regardless of named parameters. Then you realized
             // that the `=>` operator in CoffeeScript would use a bind function
-            // with no arguments, and read the argument array. If you do decide
-            // to go back to arity override, then greater than one is the
-            // trigger. However, on reflection, I don't see that the flexibility
-            // is useful, and I do believe that it will generate at least one
-            // bug report that will take a lot of hashing out only to close with
-            // "oh, no, you hit upon a "hidden feature".
-            var index = 0
-            if (_named) {
+            // with no arguments, and read the argument array. If you do decide to
+            // go back to arity override, then greater than one is the trigger.
+            // However, on reflection, I don't see that the flexibility is useful,
+            // and I do believe that it will generate at least one bug report that
+            // will take a lot of hashing out only to close with "oh, no, you hit
+            // upon a "hidden feature".
+            var number = 1
+            if (named) {
               var object = {};
-              for (i = 0, I = pattern.length; i < I; i++) {
-                field = pattern[i];
-                if (field.endianness != "x") {
-                  if (field.packing) {
-                    for (var j = 0, J = field.packing.length; j < J; j++) {
-                      pack = field.packing[j];
+              for (i = 0, I = field.length; i < I; i++) {
+                bits = field[i];
+                if (bits.endianness != "x") {
+                  if (bits.packing) {
+                    for (var j = 0, J = bits.packing.length; j < J; j++) {
+                      pack = bits.packing[j];
                       if (pack.endianness != "x") {
                         if (pack.name) {
-                          object[pack.name] = _fields[index]
+                          object[pack.name] = fields[number - 1]
                         } else {
-                          object["field" + (index + 1)] = _fields[index]
+                          object["field" + number] = fields[number - 1]
                         }
-                        index++;
+                        number++;
                       }
                     }
                   } else {
-                    if (field.name)
-                      object[field.name] = _fields[index];
+                    if (bits.name)
+                      object[bits.name] = fields[number - 1];
                     else
-                      object["field" + (index + 1)] = _fields[index];
-                    index++;
+                      object["field" + number] = fields[number - 1];
+                    number++;
                   }
                 }
               }
-              _callback.call(_context, object);
+              _callback.call(context, object);
             } else {
-              _callback.apply(_context, _fields);
+              _callback.apply(context, fields);
             }
           }
         // Otherwise we proceed to the next field in the packet pattern.
         } else {
-          _nextField()
-          _nextValue()
+          nextField();
+          nextValue();
         }
       }
     }
@@ -497,69 +488,67 @@ function Parser (definition) {
 
 module.exports.Parser = Parser;
 
-// Construct a `Serializer` that will use the given `self` object as the `this`
-// when a callback is called. If no `self` is provided, the `Serializer`
-// instance will be used as the `this` object for serialization event callbacks.
+// Construct a `Serializer` around the given `definition`.
 function Serializer(definition) {
-  var terminal, _offset, increment, _value, _bytesWritten = 0, self = this,
-  _skipping, repeat, _outgoing, _index, _terminated, _terminates, _pattern,
-  _patternIndex, _context = definition.context || this, _padding, _callback;
+  var serializer = this, terminal, valueOffset, increment, value, bytesWritten = 0,
+  skipping, repeat, outgoing, index, terminated, terminates, pattern,
+  patternIndex, context = definition.context || this, padding, _callback;
 
-  function _length () { return _bytesWritten }
+  function _length () { return bytesWritten }
 
-  function reset () { _bytesWritten = 0 }
+  function reset () { bytesWritten = 0 }
 
-  // Initialize the next field pattern in the serialization pattern array, which
-  // is the pattern in the array `_pattern` at the current `_patternIndex`.
-  // This initializes the serializer to write the next field.
-  function _nextField () {
-    var pattern           = _pattern[_patternIndex]
-    repeat      = pattern.repeat
-    _terminated  = ! pattern.terminator
-    _terminates  = ! _terminated
-    _index       = 0
-    _padding = null;
+  // Prepare the parser for the next field in the pattern.
+  function nextField () {
+    var field  = pattern[patternIndex]
+    repeat       = field.repeat;
+    terminated  = ! field.terminator;
+    terminates  = ! terminated;
+    index       = 0;
+    padding     = null;
 
     // Can't I keep separate indexes? Do I need that zero?
-    if (pattern.endianness ==  "x") {
-      _outgoing.splice(_patternIndex, 0, null);
-      if (pattern.padding != null)
-        _padding = pattern.padding
+    if (field.endianness ==  "x") {
+      outgoing.splice(patternIndex, 0, null);
+      if (field.padding != null)
+        padding = field.padding
     }
   }
 
-  // Initialize the next field value to serialize. In the case of an arrayed
-  // value, we will use the next value in the array. This method will adjust the
-  // pattern for alteration. It will back a bit packed integer. It will covert
-  // the field to a byte array for floats and signed negative numbers.
-  function _nextValue () {
-    var i, I, value, packing, count, length, pack, unpacked, range, mask;
-    var pattern = _pattern[_patternIndex];
+  // Prepare the parser to serialize the next value to the stream. It
+  // initializes Initialize the next field value to serialize. In the case of an
+  // arrayed value, we will use the next value in the array. This method will
+  // adjust the pattern for alteration. It will pack a bit packed integer. It
+  // will covert the field to a byte array for floats and signed negative
+  // numbers.
+  function nextValue () {
+    var i, I, packing, count, length, pack, unpacked, range, mask;
+    var field = pattern[patternIndex];
 
     // If we are skipping without filling we note the count of bytes to skip,
     // otherwise we prepare our value.
-    if (pattern.endianness ==  "x" &&  _padding == null) {
-      _skipping = pattern.bytes
+    if (field.endianness ==  "x" &&  padding == null) {
+      skipping = field.bytes
     } else {
       // If we're filling, we write the fill value.
-      if (_padding != null) {
-        value = _padding;
+      if (padding != null) {
+        value = padding;
 
       // If the field is arrayed, we get the next value in the array.
-      } else if (pattern.arrayed) {
-        value = _outgoing[_patternIndex][_index];
+      } else if (field.arrayed) {
+        value = outgoing[patternIndex][index];
 
-      // If the field is bit packed, we update the `_outgoing` array of values
+      // If the field is bit packed, we update the `outgoing` array of values
       // by packing zero, one or more values into a single value. We will also
       // check for bits filled with a pattern specified filler value and pack
       // that in there as well.
-      } else if (packing = pattern.packing) {
-        count = 0, value = 0, length = pattern.bits;
+      } else if (packing = field.packing) {
+        count = 0, value = 0, length = field.bits;
         for (i = 0, I = packing.length; i < I; i++) {
           pack = packing[i];
           length -= pack.bits;
           if (pack.endianness ==  "b" || pack.padding != null) {
-            unpacked = pack.padding != null ? pack.padding : _outgoing[_patternIndex + count++]
+            unpacked = pack.padding != null ? pack.padding : outgoing[patternIndex + count++]
             if (pack.signed) {
               range = Math.pow(2, pack.bits - 1)
               if (!( (-range) <= unpacked &&  unpacked <= range - 1))
@@ -572,35 +561,35 @@ function Serializer(definition) {
             value += unpacked * Math.pow(2, length)
           }
         }
-        _outgoing.splice(_patternIndex, count, value);
+        outgoing.splice(patternIndex, count, value);
 
       // If the current field is a length encoded array, then the length of the
       // current array value is the next value, otherwise, we have the simple
       // case, the value is the current value.
       } else {
-        if (pattern.lengthEncoding) {
-          var repeat = _outgoing[_patternIndex].length;
-          _outgoing.splice(_patternIndex, 0, repeat);
-          _pattern[_patternIndex + 1].repeat = repeat;
+        if (field.lengthEncoding) {
+          var repeat = outgoing[patternIndex].length;
+          outgoing.splice(patternIndex, 0, repeat);
+          pattern[patternIndex + 1].repeat = repeat;
         }
-        value = _outgoing[_patternIndex];
+        value = outgoing[patternIndex];
       }
       // If the array is not an unsigned integer, we might have to convert it.
-      if (pattern.exploded) {
+      if (field.exploded) {
         // Convert a float into its IEEE 754 representation.
-        if (pattern.type == "f") {
-          if (pattern.bits == 32)
+        if (field.type == "f") {
+          if (field.bits == 32)
             value = ieee754.toIEEE754Single(value)
           else
             value = ieee754.toIEEE754Double(value)
         
         // Convert a signed integer into its two's compliment representation.
-        } else if (pattern.signed) {
+        } else if (field.signed) {
           var copy = Math.abs(value);
           var bytes = [];
           // FIXME If the value is greater than zero, we can just change the
           // pattern to packed.
-          for (i = 0, I = pattern.bytes; i < I; i++) {
+          for (i = 0, I = field.bytes; i < I; i++) {
             var pow = Math.pow(256, i)
             bytes[i] = Math.floor(copy / pow % (pow * 256))
           }
@@ -615,70 +604,68 @@ function Serializer(definition) {
           value = bytes;
         }
       }
-      var little = pattern.endianness == 'l';
-      var bytes = pattern.bytes;
+      var little = field.endianness == 'l';
+      var bytes = field.bytes;
       terminal = little  ? bytes : -1;
-      _offset = little ? 0 : bytes - 1;
+      valueOffset = little ? 0 : bytes - 1;
       increment = little ? 1 : -1;
-      _value = value;
     } 
   }
 
   function serialize () {
-    var shiftable = __slice.call(arguments)
-      , pattern = definition.pattern(shiftable.shift()).slice(0)
-      , callback = typeof shiftable[shiftable.length - 1] == 'function' ? shiftable.pop() : void(0)
-      , named = (shiftable.length ==  1
-              && typeof shiftable[0] ==  "object"
-              && ! (shiftable[0] instanceof Array))
-      , incoming = named ? shiftable.shift() : shiftable
-      , skip = 0, part, value
-      , alternate, i, I, j, J, k, K
-      ;
+    var shiftable = __slice.call(arguments),
+        alternates = definition.pattern(shiftable.shift()).slice(0),
+        callback = typeof shiftable[shiftable.length - 1] == 'function' ? shiftable.pop() : void(0),
+        named = (shiftable.length ==  1
+                 && typeof shiftable[0] ==  "object"
+                 && ! (shiftable[0] instanceof Array)),
+        incoming = named ? shiftable.shift() : shiftable,
+        skip = 0,
+        field, value, alternate, i, I, j, J, k, K;
 
     _callback = callback;
-    _patternIndex = 0;
+    patternIndex = 0;
 
-    _outgoing = [], _pattern = [];
+    outgoing = [], pattern = [];
 
     // Determine alternation now, creating a pattern with the alternation
     // resolved.
 
-    for (i = 0; i < pattern.length; i++) {
-      part = pattern[i];
+    for (i = 0; i < alternates.length; i++) {
+      field = alternates[i];
       // The name of value to test for alternation is either the first name in
       // the alternation or else if the first value is bit packed, the first
-      // name in the packed pattern.
-      if (part.alternation) {
-        part = part.alternation[0];
-        if (part.pattern[0].packing) {
-          part = part.pattern[0].packing[0];
+      // name in the packed alternates.
+      if (field.alternation) {
+        field = field.alternation[0];
+        if (field.pattern[0].packing) {
+          field = field.pattern[0].packing[0];
         }
-        value = named ? incoming[part.name] : incoming[0];
+        value = named ? incoming[field.name] : incoming[0];
         
-        part = pattern[i];
-        for (j = 0, J = part.alternation.length; j < J; j++) {
-          alternate = part.alternation[j];
+        field = alternates[i];
+        for (j = 0, J = field.alternation.length; j < J; j++) {
+          alternate = field.alternation[j];
           if (alternate.write.minimum <= value &&  value <= alternate.write.maximum) {
             break;
           }
         }
 
-        pattern.splice.apply(pattern, [ i--, 1 ].concat(alternate.pattern));
+        alternates.splice.apply(alternates, [ i--, 1 ].concat(alternate.pattern));
         continue;
       }
 
-      _pattern.push(part);
+      pattern.push(field);
 
-      if (part.packing) {
-        for (j = 0, J = part.packing.length; j < J; j++) {
-          if (part.packing[j].endianness != 'x') {
-            _outgoing.push(named ? incoming[part.packing[j].name] : incoming.shift());
+      if (field.packing) {
+        for (j = 0, J = field.packing.length; j < J; j++) {
+          if (field.packing[j].endianness != 'x') {
+            outgoing.push(named ? incoming[field.packing[j].name] : incoming.shift());
           }
         }
       } else {
-        if (part.endianness != 'x') {
-          _outgoing.push(named ? incoming[part.name] : incoming.shift());
+        if (field.endianness != 'x') {
+          outgoing.push(named ? incoming[field.name] : incoming.shift());
         }
       }
     }
@@ -686,103 +673,107 @@ function Serializer(definition) {
     // Run the outgoing values through field pipelines before we enter the write
     // loop. We need to skip over the blank fields and constants. We also skip
     // over bit packed fields because we do not apply pipelines to packed fields.
-    for (j = 0, i = 0, I = _outgoing.length; i < I; i++) {
-      value = _outgoing[i];
+    for (j = 0, i = 0, I = outgoing.length; i < I; i++) {
+      value = outgoing[i];
       if (skip) {
         skip--
         continue
       }
-      if (_pattern[j].packing) {
-        for (k = 0, K = _pattern[j].packing.length; k < K; k++) {
-          if (_pattern[j].packing[k].endianness ==  "b") skip++;
+      if (pattern[j].packing) {
+        for (k = 0, K = pattern[j].packing.length; k < K; k++) {
+          if (pattern[j].packing[k].endianness ==  "b") skip++;
         }
         if (skip > 0) skip--;
       } else {
-        while (_pattern[j] &&  _pattern[j].endianness ==  "x") j++;
-        if (! _pattern[j]) throw new Error("too many fields");
-        _outgoing[i] = definition.pipeline(! _outgoing, _pattern[j], value, true)
+        while (pattern[j] &&  pattern[j].endianness ==  "x") j++;
+        if (! pattern[j]) throw new Error("too many fields");
+        outgoing[i] = definition.pipeline(! outgoing, pattern[j], value, true)
       }
       j++;
     }
 
-    _nextField();
-    _nextValue();
+    nextField();
+    nextValue();
   }
 
   // Return the count of bytes that will be written by the serializer for the
   // current pattern and variables.
   function _sizeOf () {
-    var patternIndex = 0, part = _pattern[patternIndex], repeat = part.repeat,
+    var patternIndex = 0, field = pattern[patternIndex], repeat = field.repeat,
         outgoingIndex = 0, size = 0;
-    while (part) {
-      if (part.terminator) {
-        repeat = _outgoing[outgoingIndex++].length + part.terminator.length; 
-        if (part.repeat != Number.MAX_VALUE) {
-          repeat = part.repeat;
+    while (field) {
+      if (field.terminator) {
+        repeat = outgoing[outgoingIndex++].length + field.terminator.length; 
+        if (field.repeat != Number.MAX_VALUE) {
+          repeat = field.repeat;
         }
       } else {
-        repeat = part.repeat || 1;
+        repeat = field.repeat || 1;
         outgoingIndex += repeat;
       }
-      size += part.bytes * repeat;
-      part = _pattern[++patternIndex];
+      size += field.bytes * repeat;
+      field = pattern[++patternIndex];
     }
     return size;
   }
 
-  //#### serializer.write(buffer[, offset][, length])
+  //#### serializer.write(buffer[, start][, length])
 
   // The `write` method writes to the buffer, returning when the current pattern
   // is written, or the end of the buffer is reached.  Write to the `buffer` in
-  // the region defined by the given `offset` and `length`.
-  function _serialize (buffer, offset, length) {
-    var start = offset, end = offset + length;
+  // the region defined by the given `start` offset and `length`.
+  function write (buffer, start, length) {
+    // **TODO**: Tidy.
+    var bufferOffset = start || 0;
+    if (length == null) length = buffer.length;
+    var bufferEnd = bufferOffset + (length == null ? buffer.length : length);
+    start = bufferOffset;
 
     // While there is a pattern to fill and space to write.
-    while (_pattern.length != _patternIndex &&  offset < end) {
-      if (_skipping) {
-        var advance     = Math.min(_skipping, end - offset);
-        offset         += advance;
-        _skipping      -= advance;
-        _bytesWritten  += advance;
-        if (_skipping) return offset - start;
+    while (pattern.length != patternIndex &&  bufferOffset < bufferEnd) {
+      if (skipping) {
+        var advance     = Math.min(skipping, bufferEnd - bufferOffset);
+        bufferOffset         += advance;
+        skipping      -= advance;
+        bytesWritten  += advance;
+        if (skipping) return bufferOffset - start;
 
       } else {
         // If the pattern is exploded, the value we're writing is an array.
-        if (_pattern[_patternIndex].exploded) {
+        if (pattern[patternIndex].exploded) {
           for (;;) {
-            buffer[offset] = _value[_offset];
-            _offset += increment;
-            _bytesWritten++;
-            offset++;
-            if (_offset ==  terminal) break;
-            if (offset == end) return offset - start;
+            buffer[bufferOffset] = value[valueOffset];
+            valueOffset += increment;
+            bytesWritten++;
+            bufferOffset++;
+            if (valueOffset ==  terminal) break;
+            if (bufferOffset == bufferEnd) return bufferOffset - start;
           }
         // Otherwise we're unpacking bytes of an unsigned integer, the most common
         // case.
         } else {
           for (;;) {
-            buffer[offset] = Math.floor(_value / Math.pow(256, _offset)) & 0xff;
-            _offset += increment;
-            _bytesWritten++;
-            offset++;
-            if (_offset ==  terminal) break;
-            if (offset ==  end) return offset - start;
+            buffer[bufferOffset] = Math.floor(value / Math.pow(256, valueOffset)) & 0xff;
+            valueOffset += increment;
+            bytesWritten++;
+            bufferOffset++;
+            if (valueOffset ==  terminal) break;
+            if (bufferOffset ==  bufferEnd) return bufferOffset - start;
           }
         }
       }
       // If we have not terminated, check for the termination state change.
       // Termination will change the loop settings.
-      if (_terminates) {
-        if (_terminated) {
+      if (terminates) {
+        if (terminated) {
           if (repeat ==  Number.MAX_VALUE) {
-            repeat = _index + 1
-          } else if (_pattern[_patternIndex].padding != null)  {
-            _padding = _pattern[_patternIndex].padding
+            repeat = index + 1
+          } else if (pattern[patternIndex].padding != null)  {
+            padding = pattern[patternIndex].padding
           } else {
-            _skipping = (repeat - (++_index)) * _pattern[_patternIndex].bytes;
-            if (_skipping) {
-              repeat = _index + 1;
+            skipping = (repeat - (++index)) * pattern[patternIndex].bytes;
+            if (skipping) {
+              repeat = index + 1;
               continue;
             }
           }
@@ -791,48 +782,44 @@ function Serializer(definition) {
           // array to hold the terminator, because the outgoing series may be a
           // buffer. We insert the terminator at next index in the outgoing array.
           // We then set repeat to allow one more iteration before callback.
-          if (_outgoing[_patternIndex].length == _index + 1) {
-            _terminated = true;
-            _outgoing[_patternIndex] = [];
-            var terminator = _pattern[_patternIndex].terminator;
+          if (outgoing[patternIndex].length == index + 1) {
+            terminated = true;
+            outgoing[patternIndex] = [];
+            var terminator = pattern[patternIndex].terminator;
             for (var i = 0, I = terminator.length; i < I; i++) {
-              _outgoing[_patternIndex][_index + 1 + i] = terminator[i];
+              outgoing[patternIndex][index + 1 + i] = terminator[i];
             }
           }
         }
       }
       // If we are reading an arrayed pattern and we have not read all of the
       // array elements, we repeat the current field type.
-      if (++_index < repeat) {
-        _nextValue();
+      if (++index < repeat) {
+        nextValue();
 
       // If we have written all of the packet fields, call the associated
       // callback with self parser.
       //
       // The pattern is set to null, our terminal condition, before the callback,
       // because the callback may specify a subsequent packet to parse.
-      } else if (++_patternIndex ==  _pattern.length) {
+      } else if (++patternIndex ==  pattern.length) {
         if (_callback != null) {
-          _callback.call(_context, self);
+          _callback.call(context, serializer);
         }
       } else {
 
-        _padding = null;
-        repeat      = _pattern[_patternIndex].repeat;
-        _terminated  = ! _pattern[_patternIndex].terminator;
-        _terminates  = ! _terminated;
-        _index       = 0;
+        padding = null;
+        repeat      = pattern[patternIndex].repeat;
+        terminated  = ! pattern[patternIndex].terminator;
+        terminates  = ! terminated;
+        index       = 0;
 
-        _nextField();
-        _nextValue();
+        nextField();
+        nextValue();
       }
     }
 
-    return offset - start;
-  }
-
-  function write (buffer) {
-    return _serialize(buffer, 0, buffer.length);
+    return bufferOffset - start;
   }
 
   objectify.call(definition.extend(this), serialize, write, reset, _length, _sizeOf);

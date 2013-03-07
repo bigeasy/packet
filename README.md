@@ -107,7 +107,7 @@ parser.parse([ 0x01, 0xFF, 0x01, 0x00, 0x00, 0x00, 0x01, 0x02, 0x00 ]);
 ```
 
 Unnamed elements are good for short, simple patterns. For longer patterns it is
-easier to use named patters so that the parser will build an object for you.
+easier to have a parser build an object for you.
 
 The following example shows a complicated pattern, the invariable portion of an
 IP header, the first 20 bytes before options, if any.
