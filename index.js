@@ -492,7 +492,7 @@ module.exports.Parser = Parser;
 function Serializer(definition) {
   var serializer = this, terminal, valueOffset, increment, value, bytesWritten = 0,
   skipping, repeat, outgoing, index, terminated, terminates, pattern,
-  patternIndex, _context = definition.context || this, _padding, _callback;
+  patternIndex, _context = definition.context || this, padding, _callback;
 
   function _length () { return bytesWritten }
 
@@ -505,13 +505,13 @@ function Serializer(definition) {
     terminated  = ! field.terminator;
     terminates  = ! terminated;
     index       = 0;
-    _padding     = null;
+    padding     = null;
 
     // Can't I keep separate indexes? Do I need that zero?
     if (field.endianness ==  "x") {
       outgoing.splice(patternIndex, 0, null);
       if (field.padding != null)
-        _padding = field.padding
+        padding = field.padding
     }
   }
 
@@ -527,12 +527,12 @@ function Serializer(definition) {
 
     // If we are skipping without filling we note the count of bytes to skip,
     // otherwise we prepare our value.
-    if (field.endianness ==  "x" &&  _padding == null) {
+    if (field.endianness ==  "x" &&  padding == null) {
       skipping = field.bytes
     } else {
       // If we're filling, we write the fill value.
-      if (_padding != null) {
-        value = _padding;
+      if (padding != null) {
+        value = padding;
 
       // If the field is arrayed, we get the next value in the array.
       } else if (field.arrayed) {
@@ -768,7 +768,7 @@ function Serializer(definition) {
           if (repeat ==  Number.MAX_VALUE) {
             repeat = index + 1
           } else if (pattern[patternIndex].padding != null)  {
-            _padding = pattern[patternIndex].padding
+            padding = pattern[patternIndex].padding
           } else {
             skipping = (repeat - (++index)) * pattern[patternIndex].bytes;
             if (skipping) {
@@ -807,7 +807,7 @@ function Serializer(definition) {
         }
       } else {
 
-        _padding = null;
+        padding = null;
         repeat      = pattern[patternIndex].repeat;
         terminated  = ! pattern[patternIndex].terminator;
         terminates  = ! terminated;
