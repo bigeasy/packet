@@ -146,7 +146,7 @@ function Definition (context, packets, transforms) {
 function Parser (definition) {
   var increment, valueOffset, terminal, terminated, terminator, value,
   bytesRead = 0, skipping, repeat, step, _named, index, _arrayed,
-  pattern, patternIndex, _context = definition.context || this, _fields, _callback;
+  pattern, patternIndex, context = definition.context || this, _fields, _callback;
 
   // The length property of the `Parser`, returning the number of bytes read.
   function _length () { return bytesRead }
@@ -467,9 +467,9 @@ function Parser (definition) {
                   }
                 }
               }
-              _callback.call(_context, object);
+              _callback.call(context, object);
             } else {
-              _callback.apply(_context, _fields);
+              _callback.apply(context, _fields);
             }
           }
         // Otherwise we proceed to the next field in the packet pattern.
@@ -492,7 +492,7 @@ module.exports.Parser = Parser;
 function Serializer(definition) {
   var serializer = this, terminal, valueOffset, increment, value, bytesWritten = 0,
   skipping, repeat, outgoing, index, terminated, terminates, pattern,
-  patternIndex, _context = definition.context || this, padding, _callback;
+  patternIndex, context = definition.context || this, padding, _callback;
 
   function _length () { return bytesWritten }
 
@@ -803,7 +803,7 @@ function Serializer(definition) {
       // because the callback may specify a subsequent packet to parse.
       } else if (++patternIndex ==  pattern.length) {
         if (_callback != null) {
-          _callback.call(_context, serializer);
+          _callback.call(context, serializer);
         }
       } else {
 
