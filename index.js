@@ -146,7 +146,7 @@ function Definition (context, packets, transforms) {
 function Parser (definition) {
   var increment, valueOffset, terminal, terminated, terminator, value,
   bytesRead = 0, skipping, repeat, step, _named, index, _arrayed,
-  pattern, patternIndex, context = definition.context || this, _fields, _callback;
+  pattern, patternIndex, context = definition.context || this, fields, _callback;
 
   // The length property of the `Parser`, returning the number of bytes read.
   function _length () { return bytesRead }
@@ -198,7 +198,7 @@ function Parser (definition) {
     pattern = definition.pattern(nameOrPattern);
     patternIndex = 0;
     _callback = callback;
-    _fields = [];
+    fields = [];
 
     nextField();
     nextValue();
@@ -370,7 +370,7 @@ function Parser (definition) {
                   if (unpacked & mask)
                     unpacked = -(~(unpacked - 1) & (mask * 2 - 1))
                 }
-                _fields.push(unpacked);
+                fields.push(unpacked);
               }
             }
          
@@ -380,7 +380,7 @@ function Parser (definition) {
           // field.
           } else if (field.lengthEncoding) {
             if ((pattern[patternIndex + 1].repeat = value) == 0) {
-              _fields.push(definition.pipeline(true, field, [], false))
+              fields.push(definition.pipeline(true, field, [], false))
               patternIndex++
             }
           // If the value is used as a switch for an alternation, we run through
@@ -416,7 +416,7 @@ function Parser (definition) {
           // fields.
           } else {
             if (field.arrayed) value = _arrayed;
-            _fields.push(definition.pipeline(true, field, value, false));
+            fields.push(definition.pipeline(true, field, value, false));
           }
         }
         // If we have read all of the pattern fields, call the associated
@@ -451,25 +451,25 @@ function Parser (definition) {
                       pack = bits.packing[j];
                       if (pack.endianness != "x") {
                         if (pack.name) {
-                          object[pack.name] = _fields[number - 1]
+                          object[pack.name] = fields[number - 1]
                         } else {
-                          object["field" + number] = _fields[number - 1]
+                          object["field" + number] = fields[number - 1]
                         }
                         number++;
                       }
                     }
                   } else {
                     if (bits.name)
-                      object[bits.name] = _fields[number - 1];
+                      object[bits.name] = fields[number - 1];
                     else
-                      object["field" + number] = _fields[number - 1];
+                      object["field" + number] = fields[number - 1];
                     number++;
                   }
                 }
               }
               _callback.call(context, object);
             } else {
-              _callback.apply(context, _fields);
+              _callback.apply(context, fields);
             }
           }
         // Otherwise we proceed to the next field in the packet pattern.
