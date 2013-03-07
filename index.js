@@ -491,7 +491,7 @@ module.exports.Parser = Parser;
 // Construct a `Serializer` around the given `definition`.
 function Serializer(definition) {
   var serializer = this, terminal, valueOffset, increment, value, bytesWritten = 0,
-  skipping, repeat, outgoing, index, _terminated, _terminates, pattern,
+  skipping, repeat, outgoing, index, terminated, _terminates, pattern,
   patternIndex, _context = definition.context || this, _padding, _callback;
 
   function _length () { return bytesWritten }
@@ -502,8 +502,8 @@ function Serializer(definition) {
   function nextField () {
     var field  = pattern[patternIndex]
     repeat       = field.repeat;
-    _terminated  = ! field.terminator;
-    _terminates  = ! _terminated;
+    terminated  = ! field.terminator;
+    _terminates  = ! terminated;
     index       = 0;
     _padding     = null;
 
@@ -764,7 +764,7 @@ function Serializer(definition) {
       // If we have not terminated, check for the termination state change.
       // Termination will change the loop settings.
       if (_terminates) {
-        if (_terminated) {
+        if (terminated) {
           if (repeat ==  Number.MAX_VALUE) {
             repeat = index + 1
           } else if (pattern[patternIndex].padding != null)  {
@@ -782,7 +782,7 @@ function Serializer(definition) {
           // buffer. We insert the terminator at next index in the outgoing array.
           // We then set repeat to allow one more iteration before callback.
           if (outgoing[patternIndex].length == index + 1) {
-            _terminated = true;
+            terminated = true;
             outgoing[patternIndex] = [];
             var terminator = pattern[patternIndex].terminator;
             for (var i = 0, I = terminator.length; i < I; i++) {
@@ -809,8 +809,8 @@ function Serializer(definition) {
 
         _padding = null;
         repeat      = pattern[patternIndex].repeat;
-        _terminated  = ! pattern[patternIndex].terminator;
-        _terminates  = ! _terminated;
+        terminated  = ! pattern[patternIndex].terminator;
+        _terminates  = ! terminated;
         index       = 0;
 
         nextField();
