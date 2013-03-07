@@ -17,7 +17,7 @@ function objectify () {
   return this;
 }
 
-// The defualt transforms built into Packet.
+// The default transforms built into Packet.
 var transforms =
 // Convert the value to and from the given encoding.
 { str: function (encoding, parsing, field, value) {
@@ -76,10 +76,10 @@ function die () {
 
 function say () { return console.log.apply(console, [].slice.call(arguments, 0)) }
 
-// The `Definition` class is contianed by the `Serializer` and parser. We expose
+// The `Definition` class is contained by the `Serializer` and parser. We expose
 // public methods by explicitly adding the methods to the `Serializer` or
 // `Parser` when we create them. The `Definition` class references only enclosed
-// variables, but it does use prototypal inheritance to extend the collections
+// variables, but it does use prototypical inheritance to extend the collections
 // of packet patterns and transforms.
 
 function Definition (context, packets, transforms) {
@@ -113,7 +113,7 @@ function Definition (context, packets, transforms) {
   // Execute the pipeline of transforms for the `pattern` on the `value`.
   function pipeline (outgoing, pattern, value, reverse) {
     var i, I, j, J, by, pipeline, parameters, transform;
-    // Run the piplines for parsing.
+    // Run the pipelines for parsing.
     if (pipeline = pattern.pipeline) {
       if (reverse) {
         i = pipeline.length - 1, I = -1, by = -1;
@@ -263,10 +263,11 @@ function Parser (definition) {
         // Unpack the field value. Perform our basic transformations. That is,
         // convert from a byte array to a JavaScript primitive.
         //
-        // Resist the urge to implement these conversions with pipelines. It keeps
-        // occuring to you, but those transitions are at a higher level of
-        // abstraction, primairly for operations on gathered byte arrays. These
-        // transitions need to take place immediately to populate those arrays.
+        // Resist the urge to implement these conversions with pipelines. It
+        // keeps occurring to you, but those transitions are at a higher level
+        // of abstraction, primarily for operations on gathered byte arrays.
+        // These transitions need to take place immediately to populate those
+        // arrays.
 
         // By default, value is as it is.
         bytes = value;
@@ -277,7 +278,6 @@ function Parser (definition) {
             value = ieee754.fromIEEE754Single(bytes)
           else
             value = ieee754.fromIEEE754Double(bytes)
-       
 
         // Get the two's compliment signed value. 
         } else if (field.signed) {
@@ -287,7 +287,7 @@ function Parser (definition) {
             for (i = 0; i < top; i++)
               value += (~bytes[i] & 0xff) * Math.pow(256, i)
             // To get the two's compliment as a positive value you use
-            // `~1 & 0xff == 254`. For exmaple: `~1 == -2`.
+            // `~1 & 0xff == 254`. For example: `~1 == -2`.
             value += (~(bytes[top] & 0x7f) & 0xff & 0x7f) * Math.pow(256, top);
             value += 1;
             value *= -1;
@@ -420,7 +420,7 @@ function Parser (definition) {
           }
         }
         // If we have read all of the pattern fields, call the associated
-        // callback.  We add the parser and the user suppilied additional
+        // callback.  We add the parser and the user supplied additional
         // arguments onto the callback arguments.
         //
         // The pattern is set to null, our terminal condition, because the
@@ -436,7 +436,7 @@ function Parser (definition) {
             // that the `=>` operator in CoffeeScript would use a bind function
             // with no arguments, and read the argument array. If you do decide to
             // go back to arity override, then greater than one is the trigger.
-            // However, on reflection, I don't see that the flexiblity is useful,
+            // However, on reflection, I don't see that the flexibility is useful,
             // and I do believe that it will generate at least one bug report that
             // will take a lot of hashing out only to close with "oh, no, you hit
             // upon a "hidden feature".
@@ -583,7 +583,7 @@ function Serializer(definition) {
           else
             value = ieee754.toIEEE754Double(value)
         
-        // Convert a signed integer into its two's complient representation.
+        // Convert a signed integer into its two's compliment representation.
         } else if (field.signed) {
           var copy = Math.abs(value);
           var bytes = [];
