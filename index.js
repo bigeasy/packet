@@ -218,7 +218,7 @@ function Parser (definition) {
 
     // We set the pattern to null when all the fields have been read, so while
     // there is a pattern to fill and bytes to read.
-    while (pattern != null && bufferOffset < bufferEnd) {
+    PATTERN: while (pattern != null && bufferOffset < bufferEnd) {
       field = pattern[patternIndex];
       // If we are skipping, we advance over all the skipped bytes or to the end
       // of the current buffer.
@@ -230,11 +230,8 @@ function Parser (definition) {
         bytesRead  += advance;
         // If we have more bytes to skip, then return `true` because we've
         // consumed the entire buffer.
-        if (skipping)
-          return true
-        else
-          skipping = null
-
+        if (skipping) break;
+        else skipping = null
       } else {
         // If the pattern is exploded, the value we're populating is an array.
         if (field.exploded) {
@@ -244,7 +241,7 @@ function Parser (definition) {
             valueOffset += increment;
             bytesRead++;
             if (valueOffset == terminal) break;
-            if (bufferOffset == bufferEnd) return true;
+            if (bufferOffset == bufferEnd) break PATTERN;
           }
         // Otherwise we're packing bytes into an unsigned integer, the most
         // common case.
@@ -255,7 +252,7 @@ function Parser (definition) {
             valueOffset += increment
             bytesRead++;
             if (valueOffset == terminal) break;
-            if (bufferOffset == bufferEnd) return true;
+            if (bufferOffset == bufferEnd) break PATTERN;
           }
         }
         // Unpack the field value. Perform our basic transformations. That is,
@@ -728,13 +725,13 @@ function Serializer(definition) {
     start = bufferOffset;
 
     // While there is a pattern to fill and space to write.
-    while (pattern.length != patternIndex &&  bufferOffset < bufferEnd) {
+    PATTERN: while (pattern.length != patternIndex &&  bufferOffset < bufferEnd) {
       if (skipping) {
         var advance     = Math.min(skipping, bufferEnd - bufferOffset);
         bufferOffset         += advance;
         skipping      -= advance;
         bytesWritten  += advance;
-        if (skipping) return bufferOffset - start;
+        if (skipping) break;
 
       } else {
         // If the pattern is exploded, the value we're writing is an array.
@@ -745,7 +742,7 @@ function Serializer(definition) {
             bytesWritten++;
             bufferOffset++;
             if (valueOffset ==  terminal) break;
-            if (bufferOffset == bufferEnd) return bufferOffset - start;
+            if (bufferOffset == bufferEnd) break PATTERN;
           }
         // Otherwise we're unpacking bytes of an unsigned integer, the most common
         // case.
@@ -756,7 +753,7 @@ function Serializer(definition) {
             bytesWritten++;
             bufferOffset++;
             if (valueOffset ==  terminal) break;
-            if (bufferOffset ==  bufferEnd) return bufferOffset - start;
+            if (bufferOffset ==  bufferEnd) break PATTERN;
           }
         }
       }
