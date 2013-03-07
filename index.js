@@ -239,11 +239,10 @@ function Parser (definition) {
         // If the pattern is exploded, the value we're populating is an array.
         if (field.exploded) {
           for (;;) {
-            var b = buffer[bufferOffset];
-            bytesRead++;
+            value[valueOffset] = buffer[bufferOffset];
             bufferOffset++;
-            value[valueOffset] = b;
             valueOffset += increment;
+            bytesRead++;
             if (valueOffset == terminal) break;
             if (bufferOffset == bufferEnd) return true;
           }
@@ -251,11 +250,10 @@ function Parser (definition) {
         // common case.
         } else {
           for (;;) {
-            b = buffer[bufferOffset];
-            bytesRead++;
+            value += Math.pow(256, valueOffset) * buffer[bufferOffset];
             bufferOffset++;
-            value += Math.pow(256, valueOffset) * b
             valueOffset += increment
+            bytesRead++;
             if (valueOffset == terminal) break;
             if (bufferOffset == bufferEnd) return true;
           }
