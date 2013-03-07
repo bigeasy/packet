@@ -71,10 +71,10 @@ var transforms =
  
 function die () {
   console.log.apply(console, [].slice.call(arguments, 0));
-  return process.exit(1);
+  process.exit(1);
 }
 
-function say () { return console.log.apply(console, [].slice.call(arguments, 0)) }
+function say () { console.log.apply(console, [].slice.call(arguments, 0)) }
 
 // The `Definition` class is contained by the `Serializer` and parser. We expose
 // public methods by explicitly adding the methods to the `Serializer` or
