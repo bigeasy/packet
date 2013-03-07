@@ -144,7 +144,7 @@ function Definition (context, packets, transforms) {
 
 // Construct a `Parser` around the given `definition`.
 function Parser (definition) {
-  var increment, valueOffset, terminal, terminated, terminator, _value,
+  var increment, valueOffset, terminal, terminated, terminator, value,
   bytesRead = 0, _skipping, repeat, step, _outgoing, _named, index, _arrayed,
   pattern, patternIndex, _context = definition.context || this, _fields, _callback;
 
@@ -171,7 +171,7 @@ function Parser (definition) {
   // skipping, for skipped patterns.
   function nextValue () {
     // Get the next pattern.
-    var field = pattern[patternIndex], value;
+    var field = pattern[patternIndex];
 
     // If skipping, skip over the count of bytes.
     if (field.endianness == "x") {
@@ -179,7 +179,7 @@ function Parser (definition) {
 
     // Otherwise, create the empty value.
     } else {
-      _value = field.exploded ? [] : 0;
+      value = field.exploded ? [] : 0;
     }
     var little = field.endianness == 'l';
     var bytes = field.bytes;
@@ -214,7 +214,7 @@ function Parser (definition) {
     // defaults.
     var bufferOffset = start || 0,
         bufferEnd = bufferOffset + (length == null ? buffer.length : length),
-        bytes, value, bits;
+        bytes, bits;
 
     // We set the pattern to null when all the fields have been read, so while
     // there is a pattern to fill and bytes to read.
@@ -242,7 +242,7 @@ function Parser (definition) {
             var b = buffer[bufferOffset];
             bytesRead++;
             bufferOffset++;
-            _value[valueOffset] = b;
+            value[valueOffset] = b;
             valueOffset += increment;
             if (valueOffset == terminal) break;
             if (bufferOffset == bufferEnd) return true;
@@ -254,7 +254,7 @@ function Parser (definition) {
             b = buffer[bufferOffset];
             bytesRead++;
             bufferOffset++;
-            _value += Math.pow(256, valueOffset) * b
+            value += Math.pow(256, valueOffset) * b
             valueOffset += increment
             if (valueOffset == terminal) break;
             if (bufferOffset == bufferEnd) return true;
@@ -269,7 +269,7 @@ function Parser (definition) {
         // transitions need to take place immediately to populate those arrays.
 
         // By default, value is as it is.
-        bytes = value = _value;
+        bytes = value;
 
         // Convert to float or double.
         if (field.type == "f") {
@@ -491,7 +491,7 @@ module.exports.Parser = Parser;
 // Construct a `Serializer` around the given `definition`.
 function Serializer(definition) {
   var serializer = this,
-  terminal, _offset, increment, _value, bytesWritten = 0,
+  terminal, _offset, increment, value, bytesWritten = 0,
   _skipping, repeat, _outgoing, index, _terminated, _terminates, pattern,
   patternIndex, _context = definition.context || this, _padding, _callback;
 
@@ -523,7 +523,7 @@ function Serializer(definition) {
   // will covert the field to a byte array for floats and signed negative
   // numbers.
   function nextValue () {
-    var i, I, value, packing, count, length, pack, unpacked, range, mask;
+    var i, I, packing, count, length, pack, unpacked, range, mask;
     var field = pattern[patternIndex];
 
     // If we are skipping without filling we note the count of bytes to skip,
@@ -610,7 +610,6 @@ function Serializer(definition) {
       terminal = little  ? bytes : -1;
       _offset = little ? 0 : bytes - 1;
       increment = little ? 1 : -1;
-      _value = value;
     } 
   }
 
@@ -741,7 +740,7 @@ function Serializer(definition) {
         // If the pattern is exploded, the value we're writing is an array.
         if (pattern[patternIndex].exploded) {
           for (;;) {
-            buffer[offset] = _value[_offset];
+            buffer[offset] = value[_offset];
             _offset += increment;
             bytesWritten++;
             offset++;
@@ -752,7 +751,7 @@ function Serializer(definition) {
         // case.
         } else {
           for (;;) {
-            buffer[offset] = Math.floor(_value / Math.pow(256, _offset)) & 0xff;
+            buffer[offset] = Math.floor(value / Math.pow(256, _offset)) & 0xff;
             _offset += increment;
             bytesWritten++;
             offset++;
