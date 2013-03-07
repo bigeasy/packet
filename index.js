@@ -145,7 +145,7 @@ function Definition (context, packets, transforms) {
 // Construct a `Parser` around the given `definition`.
 function Parser (definition) {
   var increment, valueOffset, terminal, terminated, terminator, _value,
-  bytesRead = 0, _skipping, repeat, step, _outgoing, _named, _index, _arrayed,
+  bytesRead = 0, _skipping, repeat, step, _outgoing, _named, index, _arrayed,
   pattern, patternIndex, _context = definition.context || this, _fields, _callback;
 
   // The length property of the `Parser`, returning the number of bytes read.
@@ -158,7 +158,7 @@ function Parser (definition) {
   function nextField ()  {
     var field = pattern[patternIndex];
     repeat = field.repeat;
-    _index = 0;
+    index = 0;
     _skipping    = null;
     terminated = ! field.terminator;
     terminator = field.terminator && field.terminator[field.terminator.length - 1];
@@ -328,11 +328,11 @@ function Parser (definition) {
             }
             terminated = true;
             if (repeat == Number.MAX_VALUE) {
-              repeat = _index + 1;
+              repeat = index + 1;
             } else {
-              _skipping = (repeat - (++_index)) * field.bytes
+              _skipping = (repeat - (++index)) * field.bytes
               if (_skipping) {
-                repeat = _index + 1;
+                repeat = index + 1;
                 continue
               }
             }
@@ -342,7 +342,7 @@ function Parser (definition) {
 
       // If we are reading an arrayed pattern and we have not read all of the
       // array elements, we repeat the current field type.
-      if (++_index <  repeat) {
+      if (++index <  repeat) {
         nextValue();
 
       // Otherwise, we've got a complete field value, either a JavaScript
@@ -440,7 +440,7 @@ function Parser (definition) {
             // and I do believe that it will generate at least one bug report that
             // will take a lot of hashing out only to close with "oh, no, you hit
             // upon a "hidden feature".
-            var index = 0
+            var number = 1
             if (_named) {
               var object = {};
               for (i = 0, I = field.length; i < I; i++) {
@@ -451,19 +451,19 @@ function Parser (definition) {
                       pack = bits.packing[j];
                       if (pack.endianness != "x") {
                         if (pack.name) {
-                          object[pack.name] = _fields[index]
+                          object[pack.name] = _fields[number - 1]
                         } else {
-                          object["field" + (index + 1)] = _fields[index]
+                          object["field" + number] = _fields[number - 1]
                         }
-                        index++;
+                        number++;
                       }
                     }
                   } else {
                     if (bits.name)
-                      object[bits.name] = _fields[index];
+                      object[bits.name] = _fields[number - 1];
                     else
-                      object["field" + (index + 1)] = _fields[index];
-                    index++;
+                      object["field" + number] = _fields[number - 1];
+                    number++;
                   }
                 }
               }
@@ -492,7 +492,7 @@ module.exports.Parser = Parser;
 function Serializer(definition) {
   var serializer = this,
   terminal, _offset, increment, _value, bytesWritten = 0,
-  _skipping, repeat, _outgoing, _index, _terminated, _terminates, pattern,
+  _skipping, repeat, _outgoing, index, _terminated, _terminates, pattern,
   patternIndex, _context = definition.context || this, _padding, _callback;
 
   function _length () { return bytesWritten }
@@ -505,7 +505,7 @@ function Serializer(definition) {
     repeat       = field.repeat;
     _terminated  = ! field.terminator;
     _terminates  = ! _terminated;
-    _index       = 0;
+    index       = 0;
     _padding     = null;
 
     // Can't I keep separate indexes? Do I need that zero?
@@ -537,7 +537,7 @@ function Serializer(definition) {
 
       // If the field is arrayed, we get the next value in the array.
       } else if (field.arrayed) {
-        value = _outgoing[patternIndex][_index];
+        value = _outgoing[patternIndex][index];
 
       // If the field is bit packed, we update the `_outgoing` array of values
       // by packing zero, one or more values into a single value. We will also
@@ -766,13 +766,13 @@ function Serializer(definition) {
       if (_terminates) {
         if (_terminated) {
           if (repeat ==  Number.MAX_VALUE) {
-            repeat = _index + 1
+            repeat = index + 1
           } else if (pattern[patternIndex].padding != null)  {
             _padding = pattern[patternIndex].padding
           } else {
-            _skipping = (repeat - (++_index)) * pattern[patternIndex].bytes;
+            _skipping = (repeat - (++index)) * pattern[patternIndex].bytes;
             if (_skipping) {
-              repeat = _index + 1;
+              repeat = index + 1;
               continue;
             }
           }
@@ -781,19 +781,19 @@ function Serializer(definition) {
           // array to hold the terminator, because the outgoing series may be a
           // buffer. We insert the terminator at next index in the outgoing array.
           // We then set repeat to allow one more iteration before callback.
-          if (_outgoing[patternIndex].length == _index + 1) {
+          if (_outgoing[patternIndex].length == index + 1) {
             _terminated = true;
             _outgoing[patternIndex] = [];
             var terminator = pattern[patternIndex].terminator;
             for (var i = 0, I = terminator.length; i < I; i++) {
-              _outgoing[patternIndex][_index + 1 + i] = terminator[i];
+              _outgoing[patternIndex][index + 1 + i] = terminator[i];
             }
           }
         }
       }
       // If we are reading an arrayed pattern and we have not read all of the
       // array elements, we repeat the current field type.
-      if (++_index < repeat) {
+      if (++index < repeat) {
         nextValue();
 
       // If we have written all of the packet fields, call the associated
@@ -811,7 +811,7 @@ function Serializer(definition) {
         repeat      = pattern[patternIndex].repeat;
         _terminated  = ! pattern[patternIndex].terminator;
         _terminates  = ! _terminated;
-        _index       = 0;
+        index       = 0;
 
         nextField();
         nextValue();
