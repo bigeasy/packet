@@ -3,7 +3,7 @@
 ,   "version":          "0.0.5"
 ,   "keywords": [ "packet", "pack", "binary", "network", "structure", "async", "asynchronous", "javascript" ]
 ,   "author":           "Alan Gutierrez <alan@prettyrobots.com>"
-,   "devDependencies":  { "proof": "0.0.15" }
+,   "devDependencies":  { "proof": "0.0.25" }
 ,   "scripts" : { "test": "proof t/*/*.t.js" }
 ,   "dependencies": {}
 ,   "licenses": [
