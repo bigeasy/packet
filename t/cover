@@ -5,11 +5,11 @@ set -e
 rm -rf coverage
 
 count=1;
-#for file in $(find t -name \*.t.js); do
-  node_modules/.bin/istanbul cover -x 't/**' t/nothing.t.js
+for file in $(find t -name \*.t.js); do
+  node_modules/.bin/istanbul cover -x 't/**' $file
   mv coverage/coverage.json coverage/coverage$count.json
   count=$(expr $count + 1)
-#done
+done
 
 node_modules/.bin/istanbul report --root coverage --dir coverage > /dev/null
 
