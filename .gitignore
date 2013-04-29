@@ -1,9 +1,3 @@
-node_modules
-lib-cov
-.DS_Store
-.AppleDouble
-*.swp
-documentation
-site
-index.html
 /coverage
+/node_modules
+/.proof.out
