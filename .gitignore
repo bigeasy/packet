@@ -6,3 +6,4 @@ lib-cov
 documentation
 site
 index.html
+/coverage
