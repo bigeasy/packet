@@ -570,7 +570,7 @@ Released: Fri Mar  1 03:05:15 UTC 2013
  * Move supporting libraries to root directory. #44.
  * Spell check `README.md` and remove dead features. #32. #55.
  * Implement `sizeOf` property for serializer. #37.
- * Fix mimimum number value. #54.
+ * Fix minimum number value. #54.
 
 ### Version 0.0.4
 
