@@ -68,7 +68,7 @@ var transforms =
     return parsing ? parseFloat(value) : value.toString();
   }
 };
- 
+
 function die () {
   console.log.apply(console, [].slice.call(arguments, 0));
   process.exit(1);
@@ -275,7 +275,7 @@ function Parser (definition) {
           else
             value = ieee754.fromIEEE754Double(bytes)
 
-        // Get the two's compliment signed value. 
+        // Get the two's compliment signed value.
         } else if (field.signed) {
           value = 0;
           if ((bytes[bytes.length - 1] & 0x80) == 0x80) {
@@ -369,7 +369,7 @@ function Parser (definition) {
                 fields.push(unpacked);
               }
             }
-         
+
           // If the value is a length encoding, we set the repeat value for the
           // subsequent array of values. If we have a zero length encoding, we
           // push an empty array through the pipeline, and move on to the next
@@ -405,7 +405,7 @@ function Parser (definition) {
             nextValue();
             parse(bytes, 0, bytes.length);
             continue;
-          
+
 
           // Otherwise, the value is what it is, so run it through the user
           // supplied transformation pipeline, and push it onto the list of
@@ -578,7 +578,7 @@ function Serializer(definition) {
             value = ieee754.toIEEE754Single(value)
           else
             value = ieee754.toIEEE754Double(value)
-        
+
         // Convert a signed integer into its two's compliment representation.
         } else if (field.signed) {
           var copy = Math.abs(value);
@@ -605,7 +605,7 @@ function Serializer(definition) {
       terminal = little  ? bytes : -1;
       valueOffset = little ? 0 : bytes - 1;
       increment = little ? 1 : -1;
-    } 
+    }
   }
 
   function serialize () {
@@ -638,7 +638,7 @@ function Serializer(definition) {
           field = field.pattern[0].packing[0];
         }
         value = named ? incoming[field.name] : incoming[0];
-        
+
         field = alternates[i];
         for (j = 0, J = field.alternation.length; j < J; j++) {
           alternate = field.alternation[j];
@@ -699,7 +699,7 @@ function Serializer(definition) {
         outgoingIndex = 0, size = 0;
     while (field) {
       if (field.terminator) {
-        repeat = outgoing[outgoingIndex++].length + field.terminator.length; 
+        repeat = outgoing[outgoingIndex++].length + field.terminator.length;
         if (field.repeat != Number.MAX_VALUE) {
           repeat = field.repeat;
         }
