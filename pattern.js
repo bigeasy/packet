@@ -66,7 +66,7 @@ function number (pattern, rest, index) {
         )
       )
     (-)?            // range
-    ) 
+    )
     (.*)            // rest
     $               // end
   i*/].exec(rest);
@@ -435,19 +435,19 @@ function parse (pattern, part, index, bits, next) {
 
         // Regular expression to match a pipeline argument, expressed as a
         // JavaScript scalar, taken in part from
-        // [json2.js](http://www.JSON.org/json2.js). 
+        // [json2.js](http://www.JSON.org/json2.js).
         while (hasArgument) {
           $ = re["scalar" /*
             ( '(?:[^\\']|\\.)+'|"(?:[^\\"]|\\.)+"   // string
             | true | false                          // boolean
             | null                                  // null
             | -?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?     // number
-            )    
+            )
             (\s*,\s*|\s*\))?                        // remaining arguments
             (.*)                                    // remaining pattern
           */].exec(rest);
           index += rest.length - $[3].length;
-          value = eval($[1]); 
+          value = eval($[1]);
           hasArgument = $[2].indexOf(")") == -1;
           rest = $[3];
 
