@@ -215,6 +215,7 @@ function Parser (definition) {
     var bufferOffset = start || 0,
         bufferEnd = bufferOffset + (length == null ? buffer.length : length),
         bytes, bits;
+    start = bufferOffset;
 
     // We set the pattern to null when all the fields have been read, so while
     // there is a pattern to fill and bytes to read.
@@ -228,8 +229,8 @@ function Parser (definition) {
         bufferOffset       += advance;
         skipping   -= advance;
         bytesRead  += advance;
-        // If we have more bytes to skip, then return `true` because we've
-        // consumed the entire buffer.
+        // If we have more bytes to skip, then break because we've consumed the
+        // entire buffer.
         if (skipping) break;
         else skipping = null
       } else {
@@ -474,8 +475,8 @@ function Parser (definition) {
         }
       }
     }
-    // We were able to write the whole
-    return true;
+    // Return the count of bytes read.
+    return bufferOffset - start;
   }
 
   return objectify.call(definition.extend(this), extract, parse, reset, _length);
