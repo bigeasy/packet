@@ -56,14 +56,10 @@ function number (pattern, rest, index) {
     (                 // capture for length
       \s*               // skip white
       (?:
-        \*                // any
+        (\&?)             // test is mask
+        0x([0-9a-f]+)     // hex
         |
-        (?:
-          (\&?)             // test is mask
-          0x([0-9a-f]+)     // hex
-          |
-          (\d+)             // decimal
-        )
+        (\d+)             // decimal
       )
     (-)?            // range
     )
