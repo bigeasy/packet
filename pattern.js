@@ -19,14 +19,6 @@ function error (message, pattern, index) {
 
 var BASE = { "0x": 16, "0": 8, "X": 10 };
 
-function numeric (base, value) {
-  try {
-    return parseInt(value, BASE[base || "X"]);
-  } catch (e) {
-    return null;
-  }
-}
-
 var re = {};
 
 function compileRegularExpressions() {
@@ -364,7 +356,7 @@ function parse (pattern, part, index, bits, next) {
       if ($ = /^({\s*)((0x|0)?([a-f\d]+)\s*})(.*)$/i.exec(rest)) {
         var before = $[1], after = $[2], base = $[3], pad = $[4], rest = $[5];
         index += before.length;
-        if ((f.padding = numeric(base, pad)) == null) {
+        if (isNaN(f.padding = parseInt(pad, BASE[base]))) {
           throw new Error(error("invalid number format", pattern, index));
         }
         index += after.length;
