@@ -542,10 +542,10 @@ Error messages for pattern parsing.
  * **invalid pattern at N** &mdash; The characters starting at the specified
    index is unexpected the pattern is invalid. The invalid character may not be
    at the specified index, but shortly there after, such as unmatched braces.
- * **bit field overflow at N** &mdash; The the sum of the bit size of bit field
+ * **bit field overflow at N** &mdash; The sum of the bit size of bit field
    elements is greater than the size of the containing element. The sum of the
    bit size of bit field elements must equal the size of the containing element.
- * **bit field underflow at N** &mdash; The the sum of the bit size of bit field
+ * **bit field underflow at N** &mdash; The sum of the bit size of bit field
    elements is less than the size of the containing element. The sum of the bit
    size of bit field elements must equal the size of the containing element.
  * **bit size must be non-zero at N** &mdash; Encountered element with a bit size of
