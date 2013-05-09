@@ -363,7 +363,7 @@ function parse (pattern, part, index, bits, next) {
       }
 
       // Check for zero termination.
-      if ($ = /^z(?:<(.*?)>)?(.*)$/.exec(rest)) {
+      if ($ = /^z(?:<(.*?>))?(.*)$/.exec(rest)) {
         index++
         rest = $[2];
         if ($[1] != null) {
@@ -379,13 +379,15 @@ function parse (pattern, part, index, bits, next) {
                 |
                 (\d+)                 // decimal
               )
-              (\s*,)?   // separtor for next character
+              (\s*)     // skip whitespace
+              ([,>])    // separtor for next value or close
               (.*)      // rest
               $         // end
             */].exec(terminator);
             if (!$)
-              throw new Error(error("invalid terminator", pattern, index));
-            var before = $[1], hex = $[2], decimal = $[3], comma = $[4], terminator = $[5];
+              throw new Error(error("invalid terminator value", pattern, index));
+            var before = $[1], hex = $[2], decimal = $[3], after = $[4],
+                delimiter = $[5], terminator = $[6];
             index += before.length;
             var numberIndex = index;
             if (hex) {
@@ -397,16 +399,14 @@ function parse (pattern, part, index, bits, next) {
             }
             if (value > 255)
               throw new Error(error("terminator value out of range", pattern, numberIndex));
+            index += after.length;
+            index += delimiter.length;
             f.terminator.push(value);
-            if (/\S/.test(terminator) && ! comma)
-              throw new Error(error("invalid pattern", pattern, index));
-            if (! comma) {
+            if (delimiter == ">") {
               index += terminator.length
               break
             }
-            index += comma.length;
           }
-          index++;
         } else {
           f.terminator = [ 0 ];
         }
