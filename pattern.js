@@ -5,7 +5,8 @@
 // This module is separated for isolation during testing. It is not meant to be
 // exposed as part of the public API.
 
-// We don't count an initial newline as a line.
+// We don't count an initial newline as a line in our report. CoffeeScripters
+// might be defining their patterns use a HERDOC.
 function error (message, pattern, index) {
   var lines;
   if (pattern.indexOf("\n") != -1) {
