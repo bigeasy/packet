@@ -1,6 +1,6 @@
-// Don't forget that parsers of any sort tend to be complex. A simple PEG grammar
-// quickly becomes a thousand lines. This compiles to under 400 lines of
-// JavaScript. You are giong to find it difficult to make it much smaller.
+// Don't forget that parsers of any sort tend to be complex. A simple PEG
+// grammar quickly becomes a thousand lines. This compiles to under 400 lines of
+// JavaScript. You are going to find it difficult to make it much smaller.
 //
 // This module is separated for isolation during testing. It is not meant to be
 // exposed as part of the public API.
@@ -117,7 +117,7 @@ function condition (pattern, index, rest, struct) {
 }
 
 // An alternation condition that never matches. This is not a constant for the
-// sake of consistancy with `always()`.
+// sake of consistency with `always()`.
 function never () {
   return {
     maximum: -Number.MAX_VALUE,
@@ -153,7 +153,7 @@ function alternates (pattern, array, rest, primary, secondary, allowSecondary, i
       condition(pattern, index, first, alternate[primary]);
 
       // If we are allowing patterns to match write conditions, and we have a
-      // write conidtion, parse the condition. Otherwise, the read and write
+      // write condition, parse the condition. Otherwise, the read and write
       // conditions are the same.
       if (allowSecondary) {
         if (second) {
@@ -174,7 +174,7 @@ function alternates (pattern, array, rest, primary, secondary, allowSecondary, i
       if (delimiter != null) index += delimiter.length + second.length;
     }
 
-    // Check to see if we have futher alternates.
+    // Check to see if we have further alternates.
     if ($ = /^(\s*)([^|]+)(\|\s*)(.*)$/.exec(rest)) {
       var padding = $[1], part = $[2], delimiter = $[3], rest = $[4];
     } else {
@@ -182,7 +182,7 @@ function alternates (pattern, array, rest, primary, secondary, allowSecondary, i
     }
     index += padding.length;
 
-    // Parse the altenate pattern.
+    // Parse the alienate pattern.
     alternate.pattern = parse(pattern, part, index, 8);
     index += part.length + delimiter.length;
 
@@ -242,7 +242,7 @@ function parse (pattern, part, index, bits, next) {
     index += $[3].length;
     if ($[4]) index++;
 
-    // Set the implicit fields. Unpacking logic is inconsistant between bits and
+    // Set the implicit fields. Unpacking logic is inconsistent between bits and
     // bytes, but not applicable for bits anyway.
     if (f.bits > 64 && f.type == "n") f.type = "a";
     f.bytes = f.bits / bits
@@ -381,7 +381,7 @@ function parse (pattern, part, index, bits, next) {
                 (\d+)                 // decimal
               )
               (\s*)     // skip whitespace
-              ([,>])    // separtor for next value or close
+              ([,>])    // separator for next value or close
               (.*)      // rest
               $         // end
             */].exec(terminator);
@@ -415,7 +415,7 @@ function parse (pattern, part, index, bits, next) {
         if (f.repeat == 1) f.repeat = Number.MAX_VALUE;
       }
 
-      // Parse piplines.
+      // Parse pipelines.
       while ($ = /^\|(\w[\w\d]*)\((\)?)(.*)/.exec(rest)) {
         index          += rest.length - $[3].length;
         var transform       = { name: $[1], parameters: [] };
