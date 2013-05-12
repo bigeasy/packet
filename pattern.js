@@ -64,18 +64,12 @@ function number (pattern, rest, index) {
     throw new Error(error("invalid number", pattern, index));
 
   var matched = match[1], mask = match[2], hex = match[3],
-    decimal = match[4], range = match[5], rest = match[6], value;
-
-  if (hex != null) {
-    value = parseInt(hex, 16);
-  } else if (decimal != null) {
-    value = parseInt(decimal, 10);
-  }
+    decimal = match[4], range = match[5], rest = match[6],
+    value = (hex != null) ? parseInt(hex, 16) : parseInt(decimal, 10);
 
   index += matched.length;
 
-  return { any: value == null
-         , mask: !! mask
+  return { mask: !! mask
          , value: value
          , index: index
          , range: range
