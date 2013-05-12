@@ -18,7 +18,7 @@ function error (message, pattern, index) {
   }
 }
 
-var BASE = { "0x": 16, "0": 8, "X": 10 };
+var BASE = { "0x": 16, "0": 8 };
 
 var re = {};
 
