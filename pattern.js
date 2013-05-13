@@ -85,15 +85,11 @@ function condition (pattern, index, rest, struct) {
       throw new Error(error("masks not permitted in ranges", pattern, index));
     struct.mask = from.value;
     index = from.index;
-  } else if (! from.any) {
+  } else {
     if (from.range) {
-      if (from.mask)
-        throw new Error(error("masks not permitted in ranges", pattern, from.index - 1));
       to = number(pattern, from.rest, from.index);
       if (to.mask)
         throw new Error(error("masks not permitted in ranges", pattern, from.index));
-      if (to.any)
-        throw new Error(error("any not permitted in ranges", pattern, from.index));
       struct.minimum = from.value;
       struct.maximum = to.value;
       index = to.index;
@@ -101,8 +97,6 @@ function condition (pattern, index, rest, struct) {
       struct.minimum = struct.maximum = from.value;
       index = from.index;
     }
-  } else if (from.range) {
-    throw new Error(error("any not permitted in ranges", pattern, index));
   }
   num = to || from;
   if (match = /(\s*)\S/.exec(num.rest))
