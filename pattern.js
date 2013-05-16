@@ -209,7 +209,7 @@ function parse (pattern, part, index, bits, next) {
     // Convert the match into an object.
     var f =
     { signed:     !!$[1] || $[4] == "f"
-    , endianness: $[2] == 'n' ? 'b' : $[2]
+    , endianness: $[2]
     , bits:       parseInt($[3], 10)
     , type:       $[4] || 'n'
     };
