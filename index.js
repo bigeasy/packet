@@ -9,8 +9,6 @@ function objectify () {
     name = arguments[i].name;
     if (name[0] == "_")
       this.__defineGetter__(name.slice(1), arguments[i]);
-    else if (name[name.length - 1] == "_")
-      this.__defineSetter__(name.slice(0, name.length - 1), arguments[i]);
     else
       this[arguments[i].name] = arguments[i];
   }
