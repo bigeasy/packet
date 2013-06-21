@@ -33,7 +33,7 @@ require('proof')(1, function (createSerializer, deepEqual) {
   while ((count = serializer.write(chunk)) != 0) {
     parser.parse(chunk, 0, count);
   }
-  
+
   // Send the next record if there is one remaning.
   function send () {
     if (outgoing.length) {

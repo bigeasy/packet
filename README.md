@@ -34,7 +34,7 @@ give the values to write along with the pattern to follow when writing them.
 
 **Expressive** &mdash; The pattern language can express
 
-  * signed and unsigned integers, 
+  * signed and unsigned integers,
   * endianess of singed and unsigned integers,
   * floats and doubles,
   * fixed length arrays of characters or numbers,
@@ -369,7 +369,7 @@ and type.
 ### Bit Packed Integers
 
 Integers are often divided into smaller integers through a process called bit
-packing. Bit packing is specified by following an integer specification with 
+packing. Bit packing is specified by following an integer specification with
 a curly brace enclosed series series of integers patterns whose total size in
 bits equals the size of the packed integer.
 
@@ -380,7 +380,7 @@ kind of like a structure.
 
 ```javascript
 "b16{b3,x6,-b7}"  // A 16 bit big-endian integer divided into a 3-bit integer,
-                  // 6 skipped bits, and a signed 7-bit integer. 
+                  // 6 skipped bits, and a signed 7-bit integer.
 ```
 
 You can also name the packed fields.
@@ -410,7 +410,7 @@ regular expressions, while colons are used to delineate switch options in C.
 
 ```javascript
 // MySQL length coded binary; if the byte is less than 252, use the byte value,
-// otherwise the byte value indicates the length of the following word. 
+// otherwise the byte value indicates the length of the following word.
 "b8(0-251: b8 | 252: x8, b16 | 253: x8, b24 | 254: x8, b64)"
 ```
 
