@@ -1,0 +1,2780 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <title>Code coverage report for code/index.js</title>
+    <meta charset="utf-8">
+
+    <link rel="stylesheet" href="../prettify.css">
+
+    <style>
+        body, html {
+            margin:0; padding: 0;
+        }
+        body {
+            font-family: Helvetica Neue, Helvetica,Arial;
+            font-size: 10pt;
+        }
+        div.header, div.footer {
+            background: #eee;
+            padding: 1em;
+        }
+        div.header {
+            z-index: 100;
+            position: fixed;
+            top: 0;
+            border-bottom: 1px solid #666;
+            width: 100%;
+        }
+        div.footer {
+            border-top: 1px solid #666;
+        }
+        div.body {
+            margin-top: 10em;
+        }
+        div.meta {
+            font-size: 90%;
+            text-align: center;
+        }
+        h1, h2, h3 {
+            font-weight: normal;
+        }
+        h1 {
+            font-size: 12pt;
+        }
+        h2 {
+            font-size: 10pt;
+        }
+        pre {
+            font-family: Consolas, Menlo, Monaco, monospace;
+            margin: 0;
+            padding: 0;
+            line-height: 14px;
+            font-size: 14px;
+            -moz-tab-size: 2;
+            -o-tab-size:  2;
+            tab-size: 2;
+        }
+
+        div.path { font-size: 110%; }
+        div.path a:link, div.path a:visited { color: #000; }
+        table.coverage { border-collapse: collapse; margin:0; padding: 0 }
+
+        table.coverage td {
+            margin: 0;
+            padding: 0;
+            color: #111;
+            vertical-align: top;
+        }
+        table.coverage td.line-count {
+            width: 50px;
+            text-align: right;
+            padding-right: 5px;
+        }
+        table.coverage td.line-coverage {
+            color: #777 !important;
+            text-align: right;
+            border-left: 1px solid #666;
+            border-right: 1px solid #666;
+        }
+
+        table.coverage td.text {
+        }
+
+        table.coverage td span.cline-any {
+            display: inline-block;
+            padding: 0 5px;
+            width: 40px;
+        }
+        table.coverage td span.cline-neutral {
+            background: #eee;
+        }
+        table.coverage td span.cline-yes {
+            background: #b5d592;
+            color: #999;
+        }
+        table.coverage td span.cline-no {
+            background: #fc8c84;
+        }
+
+        .cstat-yes { color: #111; }
+        .cstat-no { background: #fc8c84; color: #111; }
+        .fstat-no { background: #ffc520; color: #111 !important; }
+        .cbranch-no { background:  yellow !important; color: #111; }
+        .missing-if-branch {
+            display: inline-block;
+            margin-right: 10px;
+            position: relative;
+            padding: 0 4px;
+            background: black;
+            color: yellow;
+            xtext-decoration: line-through;
+        }
+        .missing-if-branch .typ {
+            color: inherit !important;
+        }
+
+        .entity, .metric { font-weight: bold; }
+        .metric { display: inline-block; border: 1px solid #333; padding: 0.3em; background: white; }
+        .metric small { font-size: 80%; font-weight: normal; color: #666; }
+
+        div.coverage-summary table { border-collapse: collapse; margin: 3em; font-size: 110%; }
+        div.coverage-summary td, div.coverage-summary table  th { margin: 0; padding: 0.25em 1em; border-top: 1px solid #666; border-bottom: 1px solid #666; }
+        div.coverage-summary th { text-align: left; border: 1px solid #666; background: #eee; font-weight: normal; }
+        div.coverage-summary th.file { border-right: none !important; }
+        div.coverage-summary th.pic { border-left: none !important; text-align: right; }
+        div.coverage-summary th.pct { border-right: none !important; }
+        div.coverage-summary th.abs { border-left: none !important; text-align: right; }
+        div.coverage-summary td.pct { text-align: right; border-left: 1px solid #666; }
+        div.coverage-summary td.abs { text-align: right; font-size: 90%; color: #444; border-right: 1px solid #666; }
+        div.coverage-summary td.file { text-align: right; border-left: 1px solid #666; white-space: nowrap;  }
+        div.coverage-summary td.pic { min-width: 120px !important;  }
+        div.coverage-summary a:link { text-decoration: none; color: #000; }
+        div.coverage-summary a:visited { text-decoration: none; color: #333; }
+        div.coverage-summary a:hover { text-decoration: underline; }
+        div.coverage-summary tfoot td { border-top: 1px solid #666; }
+
+        div.coverage-summary .yui3-datatable-sort-indicator, div.coverage-summary .dummy-sort-indicator {
+            height: 10px;
+            width: 7px;
+            display: inline-block;
+            margin-left: 0.5em;
+        }
+        div.coverage-summary .yui3-datatable-sort-indicator {
+            background: url("http://yui.yahooapis.com/3.6.0/build/datatable-sort/assets/skins/sam/sort-arrow-sprite.png") no-repeat scroll 0 0 transparent;
+        }
+        div.coverage-summary .yui3-datatable-sorted .yui3-datatable-sort-indicator {
+            background-position: 0 -20px;
+        }
+        div.coverage-summary .yui3-datatable-sorted-desc .yui3-datatable-sort-indicator {
+            background-position: 0 -10px;
+        }
+
+        .high { background: #b5d592 !important; }
+        .medium { background: #ffe87c !important; }
+        .low { background: #fc8c84 !important; }
+
+        span.cover-fill, span.cover-empty {
+            display:inline-block;
+            border:1px solid #444;
+            background: white;
+            height: 12px;
+        }
+        span.cover-fill {
+            background: #ccc;
+            border-right: 1px solid #444;
+        }
+        span.cover-empty {
+            background: white;
+            border-left: none;
+        }
+        span.cover-full {
+            border-right: none !important;
+        }
+        pre.prettyprint {
+            border: none !important;
+            padding: 0 !important;
+            margin: 0 !important;
+        }
+        .com { color: #999 !important; }
+    </style>
+</head>
+<body>
+<div class="header high">
+    <h1>Code coverage report for <span class="entity">code/index.js</span></h1>
+    <h2>
+        
+        Statements: <span class="metric">95.5% <small>(424 / 444)</small></span> &nbsp;&nbsp;&nbsp;&nbsp;
+        
+        
+        Branches: <span class="metric">90.6% <small>(241 / 266)</small></span> &nbsp;&nbsp;&nbsp;&nbsp;
+        
+        
+        Functions: <span class="metric">85.29% <small>(29 / 34)</small></span> &nbsp;&nbsp;&nbsp;&nbsp;
+        
+        
+        Lines: <span class="metric">97.08% <small>(399 / 411)</small></span> &nbsp;&nbsp;&nbsp;&nbsp;
+        
+    </h2>
+    <div class="path"><a href="../index.html">All files</a> &#187; <a href="index.html">code/</a> &#187; index.js</div>
+</div>
+<div class="body">
+<pre><table class="coverage">
+<tr><td class="line-count">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59
+60
+61
+62
+63
+64
+65
+66
+67
+68
+69
+70
+71
+72
+73
+74
+75
+76
+77
+78
+79
+80
+81
+82
+83
+84
+85
+86
+87
+88
+89
+90
+91
+92
+93
+94
+95
+96
+97
+98
+99
+100
+101
+102
+103
+104
+105
+106
+107
+108
+109
+110
+111
+112
+113
+114
+115
+116
+117
+118
+119
+120
+121
+122
+123
+124
+125
+126
+127
+128
+129
+130
+131
+132
+133
+134
+135
+136
+137
+138
+139
+140
+141
+142
+143
+144
+145
+146
+147
+148
+149
+150
+151
+152
+153
+154
+155
+156
+157
+158
+159
+160
+161
+162
+163
+164
+165
+166
+167
+168
+169
+170
+171
+172
+173
+174
+175
+176
+177
+178
+179
+180
+181
+182
+183
+184
+185
+186
+187
+188
+189
+190
+191
+192
+193
+194
+195
+196
+197
+198
+199
+200
+201
+202
+203
+204
+205
+206
+207
+208
+209
+210
+211
+212
+213
+214
+215
+216
+217
+218
+219
+220
+221
+222
+223
+224
+225
+226
+227
+228
+229
+230
+231
+232
+233
+234
+235
+236
+237
+238
+239
+240
+241
+242
+243
+244
+245
+246
+247
+248
+249
+250
+251
+252
+253
+254
+255
+256
+257
+258
+259
+260
+261
+262
+263
+264
+265
+266
+267
+268
+269
+270
+271
+272
+273
+274
+275
+276
+277
+278
+279
+280
+281
+282
+283
+284
+285
+286
+287
+288
+289
+290
+291
+292
+293
+294
+295
+296
+297
+298
+299
+300
+301
+302
+303
+304
+305
+306
+307
+308
+309
+310
+311
+312
+313
+314
+315
+316
+317
+318
+319
+320
+321
+322
+323
+324
+325
+326
+327
+328
+329
+330
+331
+332
+333
+334
+335
+336
+337
+338
+339
+340
+341
+342
+343
+344
+345
+346
+347
+348
+349
+350
+351
+352
+353
+354
+355
+356
+357
+358
+359
+360
+361
+362
+363
+364
+365
+366
+367
+368
+369
+370
+371
+372
+373
+374
+375
+376
+377
+378
+379
+380
+381
+382
+383
+384
+385
+386
+387
+388
+389
+390
+391
+392
+393
+394
+395
+396
+397
+398
+399
+400
+401
+402
+403
+404
+405
+406
+407
+408
+409
+410
+411
+412
+413
+414
+415
+416
+417
+418
+419
+420
+421
+422
+423
+424
+425
+426
+427
+428
+429
+430
+431
+432
+433
+434
+435
+436
+437
+438
+439
+440
+441
+442
+443
+444
+445
+446
+447
+448
+449
+450
+451
+452
+453
+454
+455
+456
+457
+458
+459
+460
+461
+462
+463
+464
+465
+466
+467
+468
+469
+470
+471
+472
+473
+474
+475
+476
+477
+478
+479
+480
+481
+482
+483
+484
+485
+486
+487
+488
+489
+490
+491
+492
+493
+494
+495
+496
+497
+498
+499
+500
+501
+502
+503
+504
+505
+506
+507
+508
+509
+510
+511
+512
+513
+514
+515
+516
+517
+518
+519
+520
+521
+522
+523
+524
+525
+526
+527
+528
+529
+530
+531
+532
+533
+534
+535
+536
+537
+538
+539
+540
+541
+542
+543
+544
+545
+546
+547
+548
+549
+550
+551
+552
+553
+554
+555
+556
+557
+558
+559
+560
+561
+562
+563
+564
+565
+566
+567
+568
+569
+570
+571
+572
+573
+574
+575
+576
+577
+578
+579
+580
+581
+582
+583
+584
+585
+586
+587
+588
+589
+590
+591
+592
+593
+594
+595
+596
+597
+598
+599
+600
+601
+602
+603
+604
+605
+606
+607
+608
+609
+610
+611
+612
+613
+614
+615
+616
+617
+618
+619
+620
+621
+622
+623
+624
+625
+626
+627
+628
+629
+630
+631
+632
+633
+634
+635
+636
+637
+638
+639
+640
+641
+642
+643
+644
+645
+646
+647
+648
+649
+650
+651
+652
+653
+654
+655
+656
+657
+658
+659
+660
+661
+662
+663
+664
+665
+666
+667
+668
+669
+670
+671
+672
+673
+674
+675
+676
+677
+678
+679
+680
+681
+682
+683
+684
+685
+686
+687
+688
+689
+690
+691
+692
+693
+694
+695
+696
+697
+698
+699
+700
+701
+702
+703
+704
+705
+706
+707
+708
+709
+710
+711
+712
+713
+714
+715
+716
+717
+718
+719
+720
+721
+722
+723
+724
+725
+726
+727
+728
+729
+730
+731
+732
+733
+734
+735
+736
+737
+738
+739
+740
+741
+742
+743
+744
+745
+746
+747
+748
+749
+750
+751
+752
+753
+754
+755
+756
+757
+758
+759
+760
+761
+762
+763
+764
+765
+766
+767
+768
+769
+770
+771
+772
+773
+774
+775
+776
+777
+778
+779
+780
+781
+782
+783
+784
+785
+786
+787
+788
+789
+790
+791
+792
+793
+794
+795
+796
+797
+798
+799
+800
+801
+802
+803
+804
+805
+806
+807
+808
+809
+810
+811
+812
+813
+814
+815
+816
+817
+818
+819
+820
+821
+822
+823
+824
+825
+826</td><td class="line-coverage"><span class="cline-any cline-yes">60</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">60</span>
+<span class="cline-any cline-yes">312</span>
+<span class="cline-any cline-yes">312</span>
+<span class="cline-any cline-yes">1259</span>
+<span class="cline-any cline-yes">1259</span>
+<span class="cline-any cline-yes">131</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1128</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">312</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">60</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">71</span>
+<span class="cline-any cline-yes">71</span>
+<span class="cline-any cline-yes">34</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">34</span>
+<span class="cline-any cline-yes">6</span>
+<span class="cline-any cline-yes">25</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">6</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">34</span>
+<span class="cline-any cline-yes">34</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">37</span>
+<span class="cline-any cline-yes">37</span>
+<span class="cline-any cline-yes">2</span>
+<span class="cline-any cline-yes">6</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">37</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">8</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">63</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2</span>
+<span class="cline-any cline-yes">5</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">4</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">60</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">60</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">60</span>
+<span class="cline-any cline-yes">84</span>
+<span class="cline-any cline-yes">84</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">84</span>
+<span class="cline-any cline-yes">5</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">84</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">84</span>
+<span class="cline-any cline-yes">140</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">84</span>
+<span class="cline-any cline-yes">2</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">84</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">84</span>
+<span class="cline-any cline-yes">84</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">84</span>
+<span class="cline-any cline-yes">242</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">242</span>
+<span class="cline-any cline-yes">71</span>
+<span class="cline-any cline-yes">37</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">34</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">71</span>
+<span class="cline-any cline-yes">77</span>
+<span class="cline-any cline-yes">77</span>
+<span class="cline-any cline-yes">77</span>
+<span class="cline-any cline-yes">8</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">77</span>
+<span class="cline-any cline-yes">77</span>
+<span class="cline-any cline-yes">77</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">242</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">84</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">84</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">60</span>
+<span class="cline-any cline-yes">37</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">38</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">37</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">37</span>
+<span class="cline-any cline-yes">136</span>
+<span class="cline-any cline-yes">136</span>
+<span class="cline-any cline-yes">136</span>
+<span class="cline-any cline-yes">136</span>
+<span class="cline-any cline-yes">136</span>
+<span class="cline-any cline-yes">136</span>
+<span class="cline-any cline-yes">136</span>
+<span class="cline-any cline-yes">136</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">37</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">327</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">327</span>
+<span class="cline-any cline-yes">4</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">323</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">327</span>
+<span class="cline-any cline-yes">327</span>
+<span class="cline-any cline-yes">327</span>
+<span class="cline-any cline-yes">327</span>
+<span class="cline-any cline-yes">327</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">37</span>
+<span class="cline-any cline-yes">68</span>
+<span class="cline-any cline-yes">68</span>
+<span class="cline-any cline-yes">68</span>
+<span class="cline-any cline-yes">68</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">68</span>
+<span class="cline-any cline-yes">68</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">37</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">57</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">57</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">57</span>
+<span class="cline-any cline-yes">336</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">336</span>
+<span class="cline-any cline-yes">7</span>
+<span class="cline-any cline-yes">7</span>
+<span class="cline-any cline-yes">7</span>
+<span class="cline-any cline-yes">7</span>
+<span class="cline-any cline-yes">7</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">7</span>
+<span class="cline-any cline-yes">7</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">329</span>
+<span class="cline-any cline-yes">10</span>
+<span class="cline-any cline-yes">28</span>
+<span class="cline-any cline-yes">28</span>
+<span class="cline-any cline-yes">28</span>
+<span class="cline-any cline-yes">28</span>
+<span class="cline-any cline-yes">28</span>
+<span class="cline-any cline-yes">18</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">319</span>
+<span class="cline-any cline-yes">432</span>
+<span class="cline-any cline-yes">432</span>
+<span class="cline-any cline-yes">432</span>
+<span class="cline-any cline-yes">432</span>
+<span class="cline-any cline-yes">432</span>
+<span class="cline-any cline-yes">119</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">323</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">323</span>
+<span class="cline-any cline-yes">2</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">321</span>
+<span class="cline-any cline-yes">8</span>
+<span class="cline-any cline-yes">8</span>
+<span class="cline-any cline-yes">4</span>
+<span class="cline-any cline-yes">4</span>
+<span class="cline-any cline-yes">2</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">4</span>
+<span class="cline-any cline-yes">4</span>
+<span class="cline-any cline-yes">4</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">4</span>
+<span class="cline-any cline-yes">4</span>
+<span class="cline-any cline-yes">2</span>
+<span class="cline-any cline-yes">4</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">323</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">330</span>
+<span class="cline-any cline-yes">215</span>
+<span class="cline-any cline-yes">36</span>
+<span class="cline-any cline-yes">36</span>
+<span class="cline-any cline-yes">36</span>
+<span class="cline-any cline-yes">37</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">36</span>
+<span class="cline-any cline-yes">36</span>
+<span class="cline-any cline-yes">37</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">36</span>
+<span class="cline-any cline-yes">36</span>
+<span class="cline-any cline-yes">31</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">5</span>
+<span class="cline-any cline-yes">5</span>
+<span class="cline-any cline-yes">3</span>
+<span class="cline-any cline-yes">3</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">327</span>
+<span class="cline-any cline-yes">191</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">136</span>
+<span class="cline-any cline-yes">133</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">133</span>
+<span class="cline-any cline-yes">7</span>
+<span class="cline-any cline-yes">7</span>
+<span class="cline-any cline-yes">21</span>
+<span class="cline-any cline-yes">21</span>
+<span class="cline-any cline-yes">21</span>
+<span class="cline-any cline-yes">9</span>
+<span class="cline-any cline-yes">9</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">9</span>
+<span class="cline-any cline-yes">2</span>
+<span class="cline-any cline-yes">2</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">9</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">126</span>
+<span class="cline-any cline-yes">2</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">124</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">6</span>
+<span class="cline-any cline-yes">6</span>
+<span class="cline-any cline-yes">10</span>
+<span class="cline-any cline-yes">10</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">6</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">6</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">6</span>
+<span class="cline-any cline-yes">6</span>
+<span class="cline-any cline-yes">6</span>
+<span class="cline-any cline-yes">6</span>
+<span class="cline-any cline-yes">6</span>
+<span class="cline-any cline-yes">6</span>
+<span class="cline-any cline-yes">6</span>
+<span class="cline-any cline-yes">6</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">118</span>
+<span class="cline-any cline-yes">118</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">130</span>
+<span class="cline-any cline-yes">68</span>
+<span class="cline-any cline-yes">68</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">68</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">68</span>
+<span class="cline-any cline-yes">68</span>
+<span class="cline-any cline-yes">30</span>
+<span class="cline-any cline-yes">30</span>
+<span class="cline-any cline-yes">87</span>
+<span class="cline-any cline-yes">87</span>
+<span class="cline-any cline-yes">87</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-yes">4</span>
+<span class="cline-any cline-yes">4</span>
+<span class="cline-any cline-yes">2</span>
+<span class="cline-any cline-yes">2</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">86</span>
+<span class="cline-any cline-yes">86</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">86</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">30</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">38</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">62</span>
+<span class="cline-any cline-yes">62</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">57</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">37</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">60</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">60</span>
+<span class="cline-any cline-yes">47</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">88</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">47</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">47</span>
+<span class="cline-any cline-yes">138</span>
+<span class="cline-any cline-yes">138</span>
+<span class="cline-any cline-yes">138</span>
+<span class="cline-any cline-yes">138</span>
+<span class="cline-any cline-yes">138</span>
+<span class="cline-any cline-yes">138</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">138</span>
+<span class="cline-any cline-yes">9</span>
+<span class="cline-any cline-yes">9</span>
+<span class="cline-any cline-yes">7</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">47</span>
+<span class="cline-any cline-yes">351</span>
+<span class="cline-any cline-yes">351</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">351</span>
+<span class="cline-any cline-yes">3</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">348</span>
+<span class="cline-any cline-yes">20</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">328</span>
+<span class="cline-any cline-yes">242</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">86</span>
+<span class="cline-any cline-yes">6</span>
+<span class="cline-any cline-yes">6</span>
+<span class="cline-any cline-yes">17</span>
+<span class="cline-any cline-yes">17</span>
+<span class="cline-any cline-yes">17</span>
+<span class="cline-any cline-yes">9</span>
+<span class="cline-any cline-yes">9</span>
+<span class="cline-any cline-yes">2</span>
+<span class="cline-any cline-yes">2</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">2</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">9</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">6</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">80</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">80</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">348</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">7</span>
+<span class="cline-any cline-yes">2</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">5</span>
+<span class="cline-any cline-yes">5</span>
+<span class="cline-any cline-yes">5</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">5</span>
+<span class="cline-any cline-yes">10</span>
+<span class="cline-any cline-yes">10</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">5</span>
+<span class="cline-any cline-yes">3</span>
+<span class="cline-any cline-yes">3</span>
+<span class="cline-any cline-yes">6</span>
+<span class="cline-any cline-yes">6</span>
+<span class="cline-any cline-yes">4</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">5</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">348</span>
+<span class="cline-any cline-yes">348</span>
+<span class="cline-any cline-yes">348</span>
+<span class="cline-any cline-yes">348</span>
+<span class="cline-any cline-yes">348</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">47</span>
+<span class="cline-any cline-yes">72</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">72</span>
+<span class="cline-any cline-yes">72</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">72</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">72</span>
+<span class="cline-any cline-yes">143</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">143</span>
+<span class="cline-any cline-yes">5</span>
+<span class="cline-any cline-yes">5</span>
+<span class="cline-any cline-yes">2</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">5</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">5</span>
+<span class="cline-any cline-yes">5</span>
+<span class="cline-any cline-yes">14</span>
+<span class="cline-any cline-yes">14</span>
+<span class="cline-any cline-yes">5</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">5</span>
+<span class="cline-any cline-yes">5</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">138</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">138</span>
+<span class="cline-any cline-yes">6</span>
+<span class="cline-any cline-yes">17</span>
+<span class="cline-any cline-yes">7</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">132</span>
+<span class="cline-any cline-yes">123</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">72</span>
+<span class="cline-any cline-yes">130</span>
+<span class="cline-any cline-yes">130</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">129</span>
+<span class="cline-any cline-yes">6</span>
+<span class="cline-any cline-yes">17</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">6</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">123</span>
+<span class="cline-any cline-yes">123</span>
+<span class="cline-any cline-yes">123</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">129</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">72</span>
+<span class="cline-any cline-yes">72</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">47</span>
+<span class="cline-any cline-yes">41</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">41</span>
+<span class="cline-any cline-yes">49</span>
+<span class="cline-any cline-yes">11</span>
+<span class="cline-any cline-yes">11</span>
+<span class="cline-any cline-yes">6</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">38</span>
+<span class="cline-any cline-yes">38</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">49</span>
+<span class="cline-any cline-yes">49</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">41</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">47</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">57</span>
+<span class="cline-any cline-yes">57</span>
+<span class="cline-any cline-yes">57</span>
+<span class="cline-any cline-yes">57</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">57</span>
+<span class="cline-any cline-yes">356</span>
+<span class="cline-any cline-yes">4</span>
+<span class="cline-any cline-yes">4</span>
+<span class="cline-any cline-yes">4</span>
+<span class="cline-any cline-yes">4</span>
+<span class="cline-any cline-yes">4</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">352</span>
+<span class="cline-any cline-yes">7</span>
+<span class="cline-any cline-yes">26</span>
+<span class="cline-any cline-yes">26</span>
+<span class="cline-any cline-yes">26</span>
+<span class="cline-any cline-yes">26</span>
+<span class="cline-any cline-yes">26</span>
+<span class="cline-any cline-yes">19</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">345</span>
+<span class="cline-any cline-yes">478</span>
+<span class="cline-any cline-yes">478</span>
+<span class="cline-any cline-yes">478</span>
+<span class="cline-any cline-yes">478</span>
+<span class="cline-any cline-yes">478</span>
+<span class="cline-any cline-yes">137</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">352</span>
+<span class="cline-any cline-yes">236</span>
+<span class="cline-any cline-yes">49</span>
+<span class="cline-any cline-yes">33</span>
+<span class="cline-any cline-yes">16</span>
+<span class="cline-any cline-yes">14</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2</span>
+<span class="cline-any cline-yes">2</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">187</span>
+<span class="cline-any cline-yes">39</span>
+<span class="cline-any cline-yes">39</span>
+<span class="cline-any cline-yes">39</span>
+<span class="cline-any cline-yes">39</span>
+<span class="cline-any cline-yes">39</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">351</span>
+<span class="cline-any cline-yes">213</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">138</span>
+<span class="cline-any cline-yes">72</span>
+<span class="cline-any cline-yes">27</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">66</span>
+<span class="cline-any cline-yes">66</span>
+<span class="cline-any cline-yes">66</span>
+<span class="cline-any cline-yes">66</span>
+<span class="cline-any cline-yes">66</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">66</span>
+<span class="cline-any cline-yes">66</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">57</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">47</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">60</span>
+<span class="cline-any cline-yes">60</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">60</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">var parse = require('./pattern').parse,
+    ieee754   = require('./ieee754'),
+    util = require('util'),
+    __slice = [].slice;
+&nbsp;
+function objectify () {
+  var i, I, name;
+  for (i = 0, I = arguments.length; i &lt; I; i++) {
+    name = arguments[i].name;
+    if (name[0] == "_")
+      this.__defineGetter__(name.slice(1), arguments[i]);
+    else
+      this[arguments[i].name] = arguments[i];
+  }
+  return this;
+}
+&nbsp;
+// The default transforms built into Packet.
+var transforms =
+// Convert the value to and from the given encoding.
+{ str: function (encoding, parsing, field, value) {
+  var i, I, ascii = /^ascii$/i.test(encoding);
+    if (parsing) {
+      <span class="missing-if-branch" title="else path not taken"" >E</span>if (! (value instanceof Buffer)) value = new Buffer(value);
+      // Broken and waiting on [297](http://github.com/ry/node/issues/issue/297).
+      // If the top bit is set, it is not ASCII, so we zero the value.
+      if (ascii) {
+        for (i = 0, I = value.length; i &lt; I; i++) {
+          <span class="missing-if-branch" title="if path not taken"" >I</span>if (value[i] &amp; 0x80) <span class="cstat-no" title="statement not covered" >value[i] = 0;</span>
+        }
+        encoding = "utf8"
+      }
+      var length = value.length;
+      return value.toString(encoding, 0, length);
+    } else {
+      var buffer = new Buffer(value, encoding);
+      if (ascii) {
+        for (var i = 0, I = buffer.length; i &lt; I; i++) {
+          if (value.charAt(i) == '\u0000') buffer[i] = 0;
+        }
+      }
+      return buffer;
+    }
+  }
+// Convert to and from ASCII.
+, ascii: function (parsing, field, value) {
+    return transforms.str("ascii", parsing, field, value);
+  }
+// Convert to and from UTF-8.
+, utf8: function (parsing, field, value) {
+    return transforms.str("utf8", parsing, field, value);
+  }
+// Add padding to a value before you write it to stream.
+, pad: function (character, length, parsing, field, value) {
+    if (! parsing) {
+      while (value.length &lt; length) value = character + value;
+    }
+    return value;
+  }
+// Convert a text value from alphanumeric to integer.
+, atoi: function (base, parsing, field, value) {
+    return parsing ? parseInt(value, base) : value.toString(base);
+  }
+// Convert a text value from alphanumeric to float.
+, atof: <span class="fstat-no" title="function not covered" >function (parsing, field, value) {</span>
+<span class="cstat-no" title="statement not covered" >    return parsing ? parseFloat(value) : value.toString();</span>
+  }
+};
+&nbsp;
+<span class="fstat-no" title="function not covered" >function die () {</span>
+<span class="cstat-no" title="statement not covered" >  console.log.apply(console, [].slice.call(arguments, 0));</span>
+<span class="cstat-no" title="statement not covered" >  process.exit(1);</span>
+}
+&nbsp;
+<span class="fstat-no" title="function not covered" >function say () {</span> <span class="cstat-no" title="statement not covered" >console.log.apply(console, [].slice.call(arguments, 0)) }</span>
+&nbsp;
+// The `Definition` class is contained by the `Serializer` and parser. We expose
+// public methods by explicitly adding the methods to the `Serializer` or
+// `Parser` when we create them. The `Definition` class references only enclosed
+// variables, but it does use prototypical inheritance to extend the collections
+// of packet patterns and transforms.
+&nbsp;
+function Definition (context, packets, transforms) {
+  packets = Object.create(packets);
+  transforms = Object.create(transforms);
+&nbsp;
+  function packet (name, pattern) {
+    packets[name] = parse(pattern);
+  }
+&nbsp;
+<span class="fstat-no" title="function not covered" >  function transform (name, procedure) {</span>
+<span class="cstat-no" title="statement not covered" >    transforms[name] = procedure;</span>
+  }
+&nbsp;
+  function pattern (nameOrPattern) {
+    return packets[nameOrPattern] || parse(nameOrPattern);
+  }
+&nbsp;
+  function createParser (context) {
+    return new Parser(new Definition(context, packets, transforms));
+  }
+&nbsp;
+  function createSerializer (context) {
+    return new Serializer(new Definition(context, packets, transforms));
+  }
+&nbsp;
+  function extend (object) {
+    return objectify.call(object, packet, transform, createParser, createSerializer);
+  }
+&nbsp;
+  // Execute the pipeline of transforms for the `pattern` on the `value`.
+  function pipeline (outgoing, pattern, value, reverse) {
+    var i, I, j, J, by, pipeline, parameters, transform;
+    // Run the pipelines for parsing.
+    if (pipeline = pattern.pipeline) {
+      if (reverse) {
+        i = pipeline.length - 1, I = -1, by = -1;
+      } else {
+        i = 0, I = pipeline.length; by = 1;
+      }
+      while (i != I) {
+        transform = pipeline[i];
+        parameters = [];
+        for (j = 0, J = transform.parameters.length; j &lt; J; j++) {
+          parameters.push(transform.parameters[j])
+        }
+        parameters.push(outgoing, pattern, value);
+        value = transforms[transform.name].apply(null, parameters);
+        i += by;
+      }
+    }
+    return value;
+  }
+&nbsp;
+  this.context = context;
+&nbsp;
+  return objectify.call(this, packet, transform, pattern, pipeline, extend);
+}
+&nbsp;
+&nbsp;
+//#### Parser
+&nbsp;
+// Construct a `Parser` around the given `definition`.
+function Parser (definition) {
+  var increment, valueOffset, terminal, terminated, terminator, value,
+  bytesRead = 0, skipping, repeat, step, named, index, arrayed,
+  pattern, patternIndex, context = definition.context || this, fields, _callback;
+&nbsp;
+  // The length property of the `Parser`, returning the number of bytes read.
+  function _length () { return bytesRead }
+&nbsp;
+  // The public `reset` method to reuse the parser, clearing the current state.
+  function reset () { bytesRead = 0 }
+&nbsp;
+  // Prepare the parser for the next field in the pattern.
+  function nextField ()  {
+    var field = pattern[patternIndex];
+    repeat = field.repeat;
+    index = 0;
+    skipping    = null;
+    terminated = ! field.terminator;
+    terminator = field.terminator &amp;&amp; field.terminator[field.terminator.length - 1];
+    named = named || !! field.name;
+    if (field.arrayed &amp;&amp; field.endianness  != "x") arrayed = [];
+  }
+&nbsp;
+  // Prepare the parser to parse the next value in the stream. It initializes
+  // the value to a zero integer value or an array. This method accounts for
+  // skipping, for skipped patterns.
+  function nextValue () {
+    // Get the next pattern.
+    var field = pattern[patternIndex];
+&nbsp;
+    // If skipping, skip over the count of bytes.
+    if (field.endianness == "x") {
+      skipping  = field.bytes;
+&nbsp;
+    // Otherwise, create the empty value.
+    } else {
+      value = field.exploded ? [] : 0;
+    }
+    var little = field.endianness == 'l';
+    var bytes = field.bytes;
+    terminal = little ? bytes : -1;
+    valueOffset = little ? 0 : bytes - 1;
+    increment = little ? 1 : -1;
+  }
+&nbsp;
+  // Sets the next packet to extract from the stream by providing a packet name
+  // defined by the `packet` function or else a packet pattern to parse. The
+  // `callback` will be invoked when the packet has been extracted from the
+  // buffer or buffers given to `parse`.
+&nbsp;
+  //
+  function extract (nameOrPattern, callback) {
+    pattern = definition.pattern(nameOrPattern);
+    patternIndex = 0;
+    _callback = callback;
+    fields = [];
+&nbsp;
+    nextField();
+    nextValue();
+  }
+&nbsp;
+  //#### parser.parse(buffer[, start][, length])
+  // The `parse` method reads from the buffer, returning when the current pattern
+  // is read, or the end of the buffer is reached.
+&nbsp;
+  // Read from the `buffer` for the given `start` offset and `length`.
+  function parse (buffer, start, length) {
+    // Initialize the loop counters. Initialize unspecified parameters with their
+    // defaults.
+    var bufferOffset = start || 0,
+        bufferEnd = bufferOffset + (length == null ? buffer.length : length),
+        bytes, bits;
+    start = bufferOffset;
+&nbsp;
+    // We set the pattern to null when all the fields have been read, so while
+    // there is a pattern to fill and bytes to read.
+    PATTERN: while (pattern != null &amp;&amp; bufferOffset &lt; bufferEnd) {
+      field = pattern[patternIndex];
+      // If we are skipping, we advance over all the skipped bytes or to the end
+      // of the current buffer.
+      if (skipping != null) {
+        var advance  = Math.min(skipping, bufferEnd - bufferOffset);
+        var begin    = bufferOffset;
+        bufferOffset       += advance;
+        skipping   -= advance;
+        bytesRead  += advance;
+        // If we have more bytes to skip, then break because we've consumed the
+        // entire buffer.
+        <span class="missing-if-branch" title="if path not taken"" >I</span>if (skipping) <span class="cstat-no" title="statement not covered" >break;</span>
+        else skipping = null
+      } else {
+        // If the pattern is exploded, the value we're populating is an array.
+        if (field.exploded) {
+          for (;;) {
+            value[valueOffset] = buffer[bufferOffset];
+            bufferOffset++;
+            valueOffset += increment;
+            bytesRead++;
+            if (valueOffset == terminal) break;
+            <span class="missing-if-branch" title="if path not taken"" >I</span>if (bufferOffset == bufferEnd) <span class="cstat-no" title="statement not covered" >break PATTERN;</span>
+          }
+        // Otherwise we're packing bytes into an unsigned integer, the most
+        // common case.
+        } else {
+          for (;;) {
+            value += Math.pow(256, valueOffset) * buffer[bufferOffset];
+            bufferOffset++;
+            valueOffset += increment
+            bytesRead++;
+            if (valueOffset == terminal) break;
+            if (bufferOffset == bufferEnd) break PATTERN;
+          }
+        }
+        // Unpack the field value. Perform our basic transformations. That is,
+        // convert from a byte array to a JavaScript primitive.
+        //
+        // Resist the urge to implement these conversions with pipelines. It
+        // keeps occurring to you, but those transitions are at a higher level
+        // of abstraction, primarily for operations on gathered byte arrays.
+        // These transitions need to take place immediately to populate those
+        // arrays.
+&nbsp;
+        // By default, value is as it is.
+        bytes = value;
+&nbsp;
+        // Convert to float or double.
+        if (field.type == "f") {
+          <span class="missing-if-branch" title="if path not taken"" >I</span>if (field.bits == 32)
+<span class="cstat-no" title="statement not covered" >            value = ieee754.fromIEEE754Single(bytes)</span>
+          else
+            value = ieee754.fromIEEE754Double(bytes)
+&nbsp;
+        // Get the two's compliment signed value.
+        } else if (field.signed) {
+          value = 0;
+          if ((bytes[bytes.length - 1] &amp; 0x80) == 0x80) {
+            var top = bytes.length - 1
+            for (i = 0; i &lt; top; i++)
+              value += (~bytes[i] &amp; 0xff) * Math.pow(256, i)
+            // To get the two's compliment as a positive value you use
+            // `~1 &amp; 0xff == 254`. For example: `~1 == -2`.
+            value += (~(bytes[top] &amp; 0x7f) &amp; 0xff &amp; 0x7f) * Math.pow(256, top);
+            value += 1;
+            value *= -1;
+          } else {
+            // Not really necessary, the bit about top.
+            top = bytes.length - 1
+            for (i = 0; i &lt; top; i++)
+              value += (bytes[i] &amp; 0xff)  * Math.pow(256, i);
+            value += (bytes[top] &amp; 0x7f) * Math.pow(256, top);
+          }
+        }
+        // If the current field is arrayed, we keep track of the array we're
+        // building after a pause through member variable.
+        if (field.arrayed) arrayed.push(value);
+      }
+&nbsp;
+      // If we've not yet hit our terminator, check for the terminator. If we've
+      // hit the terminator, and we do not have a maximum size to fill, then
+      // terminate by setting up the array to terminate.
+      //
+      // A length value of the maximum number value means to repeat until the
+      // terminator, but a specific length value means that the zero terminated
+      // string occupies a field that has a fixed length, so we need to skip the
+      // unused bytes.
+      if (! terminated) {
+        if (terminator == value) {
+          terminated = true;
+          var t = pattern[patternIndex].terminator;
+          for (i = 1, I = t.length; i &lt;= I; i++) {
+            <span class="missing-if-branch" title="if path not taken"" >I</span>if (arrayed[arrayed.length - i] != t[t.length - i]) {
+<span class="cstat-no" title="statement not covered" >              terminated = false</span>
+<span class="cstat-no" title="statement not covered" >              break</span>
+            }
+          }
+          <span class="missing-if-branch" title="else path not taken"" >E</span>if (terminated) {
+            for (i = 0, I + t.length; i &lt; I; i++) {
+              arrayed.pop();
+            }
+            terminated = true;
+            if (repeat == Number.MAX_VALUE) {
+              repeat = index + 1;
+            } else {
+              skipping = (repeat - (++index)) * field.bytes
+              if (skipping) {
+                repeat = index + 1;
+                continue
+              }
+            }
+          }
+        }
+      }
+&nbsp;
+      // If we are reading an arrayed pattern and we have not read all of the
+      // array elements, we repeat the current field type.
+      if (++index &lt;  repeat) {
+        nextValue();
+&nbsp;
+      // Otherwise, we've got a complete field value, either a JavaScript
+      // primitive or raw bytes as an array.
+      } else {
+&nbsp;
+        // If we're not skipping, push the field value after running it through
+        // the pipeline.
+        if (field.endianness != "x") {
+          var packing;
+&nbsp;
+          // If the field is a bit packed field, unpack the values and push them
+          // onto the field list.
+          if (packing = field.packing) {
+            var length  = field.bits;
+            for (i = 0, I = packing.length; i &lt; I; i++) {
+              var pack = packing[i];
+              length -= pack.bits;
+              if (pack.endianness == "b") {
+                var unpacked = Math.floor(value / Math.pow(2, length));
+                unpacked = unpacked % Math.pow(2, pack.bits);
+                // If signed, we convert from two's compliment.
+                if (pack.signed) {
+                  var mask = Math.pow(2, pack.bits - 1)
+                  if (unpacked &amp; mask)
+                    unpacked = -(~(unpacked - 1) &amp; (mask * 2 - 1))
+                }
+                fields.push(unpacked);
+              }
+            }
+&nbsp;
+          // If the value is a length encoding, we set the repeat value for the
+          // subsequent array of values. If we have a zero length encoding, we
+          // push an empty array through the pipeline, and move on to the next
+          // field.
+          } else if (field.lengthEncoding) {
+            if ((pattern[patternIndex + 1].repeat = value) == 0) {
+              fields.push(definition.pipeline(true, field, [], false))
+              patternIndex++
+            }
+          // If the value is used as a switch for an alternation, we run through
+          // the different possible branches, updating the pattern with the
+          // pattern of the first branch that matches. We then re-read the bytes
+          // used to determine the conditional outcome.
+          } else if (field.alternation) {
+            // This makes no sense now.I wonder if it is called.
+            // unless field.signed
+            //  value = (Math.pow(256, i) * b for b, i in arrayed)
+            var i, I, branch;
+            for (i = 0, I = field.alternation.length; i &lt; I; i++) {
+              branch = field.alternation[i];
+              if (branch.read.minimum &lt;= value &amp;&amp;
+                  value &lt;= branch.read.maximum &amp;&amp;
+                  (value &amp; branch.read.mask) == branch.read.mask)
+                break;
+            }
+            <span class="missing-if-branch" title="if path not taken"" >I</span>if (branch.failed)
+<span class="cstat-no" title="statement not covered" >              throw new Error("Cannot match branch.");</span>
+            bytes = arrayed.slice(0);
+            bytesRead -= bytes.length;
+            pattern = pattern.slice(0);
+            pattern.splice.apply(pattern, [ patternIndex, 1 ].concat(branch.pattern));
+            nextField();
+            nextValue();
+            parse(bytes, 0, bytes.length);
+            continue;
+&nbsp;
+&nbsp;
+          // Otherwise, the value is what it is, so run it through the user
+          // supplied transformation pipeline, and push it onto the list of
+          // fields.
+          } else {
+            if (field.arrayed) value = arrayed;
+            fields.push(definition.pipeline(true, field, value, false));
+          }
+        }
+        // If we have read all of the pattern fields, call the associated
+        // callback.  We add the parser and the user supplied additional
+        // arguments onto the callback arguments.
+        //
+        // The pattern is set to null, our terminal condition, because the
+        // callback may specify a subsequent packet to parse.
+        if (++patternIndex == pattern.length) {
+          var field = pattern;
+          pattern = null;
+&nbsp;
+          <span class="missing-if-branch" title="else path not taken"" >E</span>if (_callback) {
+            // At one point, you thought you could have  a test for the arity of
+            // the function, and if it was not `1`, you'd call the callback
+            // positionally, regardless of named parameters. Then you realized
+            // that the `=&gt;` operator in CoffeeScript would use a bind function
+            // with no arguments, and read the argument array. If you do decide to
+            // go back to arity override, then greater than one is the trigger.
+            // However, on reflection, I don't see that the flexibility is useful,
+            // and I do believe that it will generate at least one bug report that
+            // will take a lot of hashing out only to close with "oh, no, you hit
+            // upon a "hidden feature".
+            var number = 1
+            if (named) {
+              var object = {};
+              for (i = 0, I = field.length; i &lt; I; i++) {
+                bits = field[i];
+                <span class="missing-if-branch" title="else path not taken"" >E</span>if (bits.endianness != "x") {
+                  if (bits.packing) {
+                    for (var j = 0, J = bits.packing.length; j &lt; J; j++) {
+                      pack = bits.packing[j];
+                      if (pack.endianness != "x") {
+                        <span class="missing-if-branch" title="else path not taken"" >E</span>if (pack.name) {
+                          object[pack.name] = fields[number - 1]
+                        } else {
+<span class="cstat-no" title="statement not covered" >                          object["field" + number] = fields[number - 1]</span>
+                        }
+                        number++;
+                      }
+                    }
+                  } else {
+                    <span class="missing-if-branch" title="else path not taken"" >E</span>if (bits.name)
+                      object[bits.name] = fields[number - 1];
+                    else
+<span class="cstat-no" title="statement not covered" >                      object["field" + number] = fields[number - 1];</span>
+                    number++;
+                  }
+                }
+              }
+              _callback.call(context, object);
+            } else {
+              _callback.apply(context, fields);
+            }
+          }
+        // Otherwise we proceed to the next field in the packet pattern.
+        } else {
+          nextField();
+          nextValue();
+        }
+      }
+    }
+    // Return the count of bytes read.
+    return bufferOffset - start;
+  }
+&nbsp;
+  return objectify.call(definition.extend(this), extract, parse, reset, _length);
+}
+&nbsp;
+module.exports.Parser = Parser;
+&nbsp;
+// Construct a `Serializer` around the given `definition`.
+function Serializer(definition) {
+  var serializer = this, terminal, valueOffset, increment, value, bytesWritten = 0,
+  skipping, repeat, outgoing, index, terminated, terminates, pattern,
+  patternIndex, context = definition.context || this, padding, _callback;
+&nbsp;
+  function _length () { return bytesWritten }
+&nbsp;
+<span class="fstat-no" title="function not covered" >  function reset () {</span> <span class="cstat-no" title="statement not covered" >bytesWritten = 0 }</span>
+&nbsp;
+  // Prepare the parser for the next field in the pattern.
+  function nextField () {
+    var field  = pattern[patternIndex]
+    repeat       = field.repeat;
+    terminated  = ! field.terminator;
+    terminates  = ! terminated;
+    index       = 0;
+    padding     = null;
+&nbsp;
+    // Can't I keep separate indexes? Do I need that zero?
+    if (field.endianness ==  "x") {
+      outgoing.splice(patternIndex, 0, null);
+      if (field.padding != null)
+        padding = field.padding
+    }
+  }
+&nbsp;
+  // Prepare the parser to serialize the next value to the stream. It
+  // initializes Initialize the next field value to serialize. In the case of an
+  // arrayed value, we will use the next value in the array. This method will
+  // adjust the pattern for alteration. It will pack a bit packed integer. It
+  // will covert the field to a byte array for floats and signed negative
+  // numbers.
+  function nextValue () {
+    var i, I, packing, count, length, pack, unpacked, range, mask;
+    var field = pattern[patternIndex];
+&nbsp;
+    // If we are skipping without filling we note the count of bytes to skip,
+    // otherwise we prepare our value.
+    if (field.endianness ==  "x" &amp;&amp;  padding == null) {
+      skipping = field.bytes
+    } else {
+      // If we're filling, we write the fill value.
+      if (padding != null) {
+        value = padding;
+&nbsp;
+      // If the field is arrayed, we get the next value in the array.
+      } else if (field.arrayed) {
+        value = outgoing[patternIndex][index];
+&nbsp;
+      // If the field is bit packed, we update the `outgoing` array of values
+      // by packing zero, one or more values into a single value. We will also
+      // check for bits filled with a pattern specified filler value and pack
+      // that in there as well.
+      } else if (packing = field.packing) {
+        count = 0, value = 0, length = field.bits;
+        for (i = 0, I = packing.length; i &lt; I; i++) {
+          pack = packing[i];
+          length -= pack.bits;
+          if (pack.endianness ==  "b" || pack.padding != null) {
+            unpacked = pack.padding != null ? pack.padding : outgoing[patternIndex + count++]
+            if (pack.signed) {
+              range = Math.pow(2, pack.bits - 1)
+              <span class="missing-if-branch" title="if path not taken"" >I</span>if (!( (-range) &lt;= unpacked &amp;&amp;  unpacked &lt;= range - 1))
+<span class="cstat-no" title="statement not covered" >                throw new Error("value " + unpacked + " will not fit in " + pack.bits + " bits");</span>
+              if (unpacked &lt; 0) {
+                mask = range * 2 - 1
+                unpacked = (~(- unpacked) + 1) &amp; mask
+              }
+            }
+            value += unpacked * Math.pow(2, length)
+          }
+        }
+        outgoing.splice(patternIndex, count, value);
+&nbsp;
+      // If the current field is a length encoded array, then the length of the
+      // current array value is the next value, otherwise, we have the simple
+      // case, the value is the current value.
+      } else {
+        if (field.lengthEncoding) {
+          var repeat = outgoing[patternIndex].length;
+          outgoing.splice(patternIndex, 0, repeat);
+          pattern[patternIndex + 1].repeat = repeat;
+        }
+        value = outgoing[patternIndex];
+      }
+      // If the array is not an unsigned integer, we might have to convert it.
+      if (field.exploded) {
+        // Convert a float into its IEEE 754 representation.
+        if (field.type == "f") {
+          <span class="missing-if-branch" title="if path not taken"" >I</span>if (field.bits == 32)
+<span class="cstat-no" title="statement not covered" >            value = ieee754.toIEEE754Single(value)</span>
+          else
+            value = ieee754.toIEEE754Double(value)
+&nbsp;
+        // Convert a signed integer into its two's compliment representation.
+        } else <span class="missing-if-branch" title="else path not taken"" >E</span>if (field.signed) {
+          var copy = Math.abs(value);
+          var bytes = [];
+          // FIXME If the value is greater than zero, we can just change the
+          // pattern to packed.
+          for (i = 0, I = field.bytes; i &lt; I; i++) {
+            var pow = Math.pow(256, i)
+            bytes[i] = Math.floor(copy / pow % (pow * 256))
+          }
+          if (value &lt; 0) {
+            var carry = 1;
+            for (i = 0, I = bytes.length; i &lt; I; i++) {
+              bytes[i] = (~bytes[i] &amp; 0xff) + carry;
+              if (bytes[i] ==  256) bytes[i] = 0;
+              else carry = 0;
+            }
+          }
+          value = bytes;
+        }
+      }
+      var little = field.endianness == 'l';
+      var bytes = field.bytes;
+      terminal = little  ? bytes : -1;
+      valueOffset = little ? 0 : bytes - 1;
+      increment = little ? 1 : -1;
+    }
+  }
+&nbsp;
+  function serialize () {
+    var shiftable = __slice.call(arguments),
+        alternates = definition.pattern(shiftable.shift()).slice(0),
+        callback = typeof shiftable[shiftable.length - 1] == 'function' ? shiftable.pop() : void(0),
+        named = (shiftable.length ==  1
+                 &amp;&amp; typeof shiftable[0] ==  "object"
+                 &amp;&amp; ! (shiftable[0] instanceof Array)),
+        incoming = named ? shiftable.shift() : shiftable,
+        skip = 0,
+        field, value, alternate, i, I, j, J, k, K;
+&nbsp;
+    _callback = callback;
+    patternIndex = 0;
+&nbsp;
+    outgoing = [], pattern = [];
+&nbsp;
+    // Determine alternation now, creating a pattern with the alternation
+    // resolved.
+&nbsp;
+    for (i = 0; i &lt; alternates.length; i++) {
+      field = alternates[i];
+      // The name of value to test for alternation is either the first name in
+      // the alternation or else if the first value is bit packed, the first
+      // name in the packed alternates.
+      if (field.alternation) {
+        field = field.alternation[0];
+        if (field.pattern[0].packing) {
+          field = field.pattern[0].packing[0];
+        }
+        value = named ? <span class="branch-0 cbranch-no" title="branch not covered" >incoming[field.name] </span>: incoming[0];
+&nbsp;
+        field = alternates[i];
+        for (j = 0, J = field.alternation.length; j &lt; J; j++) {
+          alternate = field.alternation[j];
+          if (alternate.write.minimum &lt;= value &amp;&amp;  value &lt;= alternate.write.maximum) {
+            break;
+          }
+        }
+&nbsp;
+        alternates.splice.apply(alternates, [ i--, 1 ].concat(alternate.pattern));
+        continue;
+      }
+&nbsp;
+      pattern.push(field);
+&nbsp;
+      if (field.packing) {
+        for (j = 0, J = field.packing.length; j &lt; J; j++) {
+          if (field.packing[j].endianness != 'x') {
+            outgoing.push(named ? <span class="branch-0 cbranch-no" title="branch not covered" >incoming[field.packing[j].name] </span>: incoming.shift());
+          }
+        }
+      } else {
+        if (field.endianness != 'x') {
+          outgoing.push(named ? incoming[field.name] : incoming.shift());
+        }
+      }
+    }
+&nbsp;
+    // Run the outgoing values through field pipelines before we enter the write
+    // loop. We need to skip over the blank fields and constants. We also skip
+    // over bit packed fields because we do not apply pipelines to packed fields.
+    for (j = 0, i = 0, I = outgoing.length; i &lt; I; i++) {
+      value = outgoing[i];
+      if (skip) {
+        skip--
+        continue
+      }
+      if (pattern[j].packing) {
+        for (k = 0, K = pattern[j].packing.length; k &lt; K; k++) {
+          if (pattern[j].packing[k].endianness ==  "b") skip++;
+        }
+        <span class="missing-if-branch" title="else path not taken"" >E</span>if (skip &gt; 0) skip--;
+      } else {
+        while (pattern[j] &amp;&amp;  pattern[j].endianness ==  "x") j++;
+        <span class="missing-if-branch" title="if path not taken"" >I</span>if (! pattern[j]) <span class="cstat-no" title="statement not covered" >throw new Error("too many fields");</span>
+        outgoing[i] = definition.pipeline(! outgoing, pattern[j], value, true)
+      }
+      j++;
+    }
+&nbsp;
+    nextField();
+    nextValue();
+  }
+&nbsp;
+  // Return the count of bytes that will be written by the serializer for the
+  // current pattern and variables.
+  function _sizeOf () {
+    var patternIndex = 0, field = pattern[patternIndex], repeat = field.repeat,
+        outgoingIndex = 0, size = 0;
+    while (field) {
+      if (field.terminator) {
+        repeat = outgoing[outgoingIndex++].length + field.terminator.length;
+        if (field.repeat != Number.MAX_VALUE) {
+          repeat = field.repeat;
+        }
+      } else {
+        repeat = field.repeat || 1;
+        outgoingIndex += repeat;
+      }
+      size += field.bytes * repeat;
+      field = pattern[++patternIndex];
+    }
+    return size;
+  }
+&nbsp;
+  //#### serializer.write(buffer[, start][, length])
+&nbsp;
+  // The `write` method writes to the buffer, returning when the current pattern
+  // is written, or the end of the buffer is reached.  Write to the `buffer` in
+  // the region defined by the given `start` offset and `length`.
+  function write (buffer, start, length) {
+    // **TODO**: Tidy.
+    var bufferOffset = start || 0;
+    <span class="missing-if-branch" title="else path not taken"" >E</span>if (length == null) length = buffer.length;
+    var bufferEnd = bufferOffset + (length == null ? <span class="branch-0 cbranch-no" title="branch not covered" >buffer.length </span>: length);
+    start = bufferOffset;
+&nbsp;
+    // While there is a pattern to fill and space to write.
+    PATTERN: while (pattern.length != patternIndex &amp;&amp;  bufferOffset &lt; bufferEnd) {
+      if (skipping) {
+        var advance     = Math.min(skipping, bufferEnd - bufferOffset);
+        bufferOffset         += advance;
+        skipping      -= advance;
+        bytesWritten  += advance;
+        <span class="missing-if-branch" title="if path not taken"" >I</span>if (skipping) <span class="cstat-no" title="statement not covered" >break;</span>
+&nbsp;
+      } else {
+        // If the pattern is exploded, the value we're writing is an array.
+        if (pattern[patternIndex].exploded) {
+          for (;;) {
+            buffer[bufferOffset] = value[valueOffset];
+            valueOffset += increment;
+            bytesWritten++;
+            bufferOffset++;
+            if (valueOffset ==  terminal) break;
+            <span class="missing-if-branch" title="if path not taken"" >I</span>if (bufferOffset == bufferEnd) <span class="cstat-no" title="statement not covered" >break PATTERN;</span>
+          }
+        // Otherwise we're unpacking bytes of an unsigned integer, the most common
+        // case.
+        } else {
+          for (;;) {
+            buffer[bufferOffset] = Math.floor(value / Math.pow(256, valueOffset)) &amp; 0xff;
+            valueOffset += increment;
+            bytesWritten++;
+            bufferOffset++;
+            if (valueOffset ==  terminal) break;
+            if (bufferOffset ==  bufferEnd) break PATTERN;
+          }
+        }
+      }
+      // If we have not terminated, check for the termination state change.
+      // Termination will change the loop settings.
+      if (terminates) {
+        if (terminated) {
+          if (repeat ==  Number.MAX_VALUE) {
+            repeat = index + 1
+          } else if (pattern[patternIndex].padding != null)  {
+            padding = pattern[patternIndex].padding
+          } else {
+            skipping = (repeat - (++index)) * pattern[patternIndex].bytes;
+            if (skipping) {
+              repeat = index + 1;
+              continue;
+            }
+          }
+        } else {
+          // If we are at the end of the series, then we create an empty outgoing
+          // array to hold the terminator, because the outgoing series may be a
+          // buffer. We insert the terminator at next index in the outgoing array.
+          // We then set repeat to allow one more iteration before callback.
+          if (outgoing[patternIndex].length == index + 1) {
+            terminated = true;
+            outgoing[patternIndex] = [];
+            var terminator = pattern[patternIndex].terminator;
+            for (var i = 0, I = terminator.length; i &lt; I; i++) {
+              outgoing[patternIndex][index + 1 + i] = terminator[i];
+            }
+          }
+        }
+      }
+      // If we are reading an arrayed pattern and we have not read all of the
+      // array elements, we repeat the current field type.
+      if (++index &lt; repeat) {
+        nextValue();
+&nbsp;
+      // If we have written all of the packet fields, call the associated
+      // callback with self parser.
+      //
+      // The pattern is set to null, our terminal condition, before the callback,
+      // because the callback may specify a subsequent packet to parse.
+      } else if (++patternIndex ==  pattern.length) {
+        if (_callback != null) {
+          _callback.call(context, serializer);
+        }
+      } else {
+&nbsp;
+        padding = null;
+        repeat      = pattern[patternIndex].repeat;
+        terminated  = ! pattern[patternIndex].terminator;
+        terminates  = ! terminated;
+        index       = 0;
+&nbsp;
+        nextField();
+        nextValue();
+      }
+    }
+&nbsp;
+    return bufferOffset - start;
+  }
+&nbsp;
+  objectify.call(definition.extend(this), serialize, write, reset, _length, _sizeOf);
+}
+&nbsp;
+function createParser (context) { return new Parser(new Definition(context, {}, transforms)) }
+function createSerializer (context) { return new Serializer(new Definition(context, {}, transforms)) }
+&nbsp;
+objectify.call(exports, createParser, createSerializer);
+&nbsp;</pre></td></tr>
+</table></pre>
+
+</div>
+<div class="footer">
+    <div class="meta">Generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at Sat Jun 22 2013 20:05:48 GMT-0400 (EDT)</div>
+</div>
+
+<script src="../prettify.js"></script>
+
+<script src="http://yui.yahooapis.com/3.6.0/build/yui/yui-min.js"></script>
+<script>
+
+    YUI().use('datatable', function (Y) {
+
+        var formatters = {
+          pct: function (o) {
+              o.className += o.record.get('classes')[o.column.key];
+              try {
+                  return o.value.toFixed(2) + '%';
+              } catch (ex) { return o.value + '%'; }
+          },
+          html: function (o) {
+              o.className += o.record.get('classes')[o.column.key];
+              return o.record.get(o.column.key + '_html');
+          }
+        },
+          defaultFormatter = function (o) {
+              o.className += o.record.get('classes')[o.column.key];
+              return o.value;
+          };
+
+        function getColumns(theadNode) {
+            var colNodes = theadNode.all('tr th'),
+                cols = [],
+                col;
+            colNodes.each(function (colNode) {
+                col = {
+                    key: colNode.getAttribute('data-col'),
+                    label: colNode.get('innerHTML') || ' ',
+                    sortable: !colNode.getAttribute('data-nosort'),
+                    className: colNode.getAttribute('class'),
+                    type: colNode.getAttribute('data-type'),
+                    allowHTML: colNode.getAttribute('data-html') === 'true' || colNode.getAttribute('data-fmt') === 'html'
+                };
+                col.formatter = formatters[colNode.getAttribute('data-fmt')] || defaultFormatter;
+                cols.push(col);
+            });
+            return cols;
+        }
+
+        function getRowData(trNode, cols) {
+            var tdNodes = trNode.all('td'),
+                    i,
+                    row = { classes: {} },
+                    node,
+                    name;
+            for (i = 0; i < cols.length; i += 1) {
+                name = cols[i].key;
+                node = tdNodes.item(i);
+                row[name] = node.getAttribute('data-value') || node.get('innerHTML');
+                row[name + '_html'] = node.get('innerHTML');
+                row.classes[name] = node.getAttribute('class');
+                //Y.log('Name: ' + name + '; Value: ' + row[name]);
+                if (cols[i].type === 'number') { row[name] = row[name] * 1; }
+            }
+            //Y.log(row);
+            return row;
+        }
+
+        function getData(tbodyNode, cols) {
+            var data = [];
+            tbodyNode.all('tr').each(function (trNode) {
+                data.push(getRowData(trNode, cols));
+            });
+            return data;
+        }
+
+        function replaceTable(node) {
+            if (!node) { return; }
+            var cols = getColumns(node.one('thead')),
+                data = getData(node.one('tbody'), cols),
+                table,
+                parent = node.get('parentNode');
+
+            table = new Y.DataTable({
+                columns: cols,
+                data: data,
+                sortBy: 'file'
+            });
+            parent.set('innerHTML', '');
+            table.render(parent);
+        }
+
+        Y.on('domready', function () {
+            replaceTable(Y.one('div.coverage-summary table'));
+            if (typeof prettyPrint === 'function') {
+                prettyPrint();
+            }
+        });
+    });
+</script>
+</body>
+</html>
