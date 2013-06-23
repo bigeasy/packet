@@ -66,14 +66,14 @@ var transforms =
     return parsing ? parseFloat(value) : value.toString();
   }
 };
-
+/*
 function die () {
   console.log.apply(console, [].slice.call(arguments, 0));
   process.exit(1);
 }
 
 function say () { console.log.apply(console, [].slice.call(arguments, 0)) }
-
+*/
 // The `Definition` class is contained by the `Serializer` and parser. We expose
 // public methods by explicitly adding the methods to the `Serializer` or
 // `Parser` when we create them. The `Definition` class references only enclosed
