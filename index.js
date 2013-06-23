@@ -21,7 +21,8 @@ var transforms =
 { str: function (encoding, parsing, field, value) {
   var i, I, ascii = /^ascii$/i.test(encoding);
     if (parsing) {
-      if (! (value instanceof Buffer)) value = new Buffer(value);
+      value = new Buffer(value);
+      console.log(value);
       // Broken and waiting on [297](http://github.com/ry/node/issues/issue/297).
       // If the top bit is set, it is not ASCII, so we zero the value.
       if (ascii) {
