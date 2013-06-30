@@ -527,8 +527,8 @@ function str(encoding, name, field, parsing, value) {
 Now you can use the transform in your pattern.
 
 ```javascript
-"n8z|str('ascii')"      // An ascii string terminated by zero.
-"n8z|str('ascii'), b16" // An ascii string terminated by zero followed by a
+"b8z|str('ascii')"      // An ascii string terminated by zero.
+"b8z|str('ascii'), b16" // An ascii string terminated by zero followed by a
                         // big-endian 16 bit integer.
 ```
 
