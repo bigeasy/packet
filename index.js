@@ -485,7 +485,8 @@ module.exports.Parser = Parser;
 // Construct a `Serializer` around the given `definition`.
 function Serializer(definition) {
   var serializer = this, terminal, valueOffset, increment, value, bytesWritten = 0,
-  skipping, repeat, outgoing, index, terminated, terminates, pattern,
+  skipping, repeat, outgoing, index, terminated, terminates, pattern, named,
+  incoming,
   patternIndex, context = definition.context || this, padding, _callback;
 
   function _length () { return bytesWritten }
@@ -610,12 +611,13 @@ function Serializer(definition) {
     var shiftable = __slice.call(arguments),
         alternates = definition.pattern(shiftable.shift()).slice(0),
         callback = typeof shiftable[shiftable.length - 1] == 'function' ? shiftable.pop() : void(0),
-        named = (shiftable.length ==  1
-                 && typeof shiftable[0] ==  "object"
-                 && ! (shiftable[0] instanceof Array)),
-        incoming = named ? shiftable.shift() : shiftable,
         skip = 0,
         field, value, alternate, i, I, j, J, k, K;
+
+    named = (shiftable.length ==  1
+             && typeof shiftable[0] ==  "object"
+             && ! (shiftable[0] instanceof Array));
+    incoming = named ? shiftable.shift() : shiftable;
 
     _callback = callback;
     patternIndex = 0;
@@ -711,23 +713,92 @@ function Serializer(definition) {
     return size;
   }
 
-  function _offsetsOf () {
-    var patternIndex = 0, field = pattern[patternIndex], repeat = field.repeat,
-        outgoingIndex = 0, size = 0;
-    while (field) {
+  function dump (record, buffer) {
+    if (buffer) {
+      record.hex = buffer.slice(record.offset, record.offset + record.length).toString('hex');
+    }
+  }
+
+  function detokenize (field, arrayed) {
+     var scalar = (field.signed && field.type != 'f' ? '-' : '') +
+                   field.endianness +
+                   field.bits +
+                  (field.type == 'n' ? '' : field.type);
+    if (arrayed) {
       if (field.terminator) {
-        repeat = outgoing[outgoingIndex++].length + field.terminator.length;
-        if (field.repeat != Number.MAX_VALUE) {
-          repeat = field.repeat;
+        if (field.terminator[0]) {
+        } else {
+          return scalar + 'z';
         }
       } else {
-        repeat = field.repeat || 1;
-        outgoingIndex += repeat;
+        return scalar + '[' + field.repeat + ']';
       }
-      size += field.bytes * repeat;
-      field = pattern[++patternIndex];
+    } else {
+      return scalar;
     }
-    return size;
+  }
+
+  function explode (output, field, index, offset, buffer) {
+    var value = field.arrayed ? incoming[field.name][index]
+                              : incoming[field.name],
+        record =  { pattern: detokenize(field),
+                    value: value,
+                    offset: offset,
+                    length: field.bits / 8 };
+    if (field.arrayed) {
+      output[field.name].value[index] = record;
+    } else {
+      output[field.name] = record;
+    }
+    dump(record, buffer);
+    return record.length;
+  }
+
+  function offsetsOf (buffer) {
+    if (Array.isArray(buffer)) buffer = new Buffer(buffer);
+    var patternIndex = 0, field = pattern[patternIndex], repeat = field.repeat,
+        outgoingIndex = 0, size = 0, output, offset = 0, record;
+    if (named) {
+      output = {};
+      while (field) {
+        if (field.terminator) {
+          var start = offset,
+              record = output[field.name] = { pattern: detokenize(field, true),
+                                              value: [], offset: 0 },
+              value = incoming[field.name];
+          for (var i = 0, I = value.length; i < I; i++) {
+            offset += explode(output, field, i, offset, buffer);
+          }
+          if (field.terminator.length) {
+            record.terminator = { value: field.terminator.slice(),
+                                  offset: offset,
+                                  length: field.terminator.length,
+                                  hex: new Buffer(field.terminator).toString('hex') };
+            offset += field.terminator.length;
+          }
+          record.length = offset - start;
+          dump(record, buffer);
+          outgoingIndex += repeat;
+        } else if (field.arrayed) {
+          var start = offset,
+              record = output[field.name] = { pattern: detokenize(field, true),
+                                              value: [],
+                                              offset: 0 };
+          for (var i = 0, I = field.repeat; i < I; i++) {
+            offset += explode(output, field, i, offset, buffer);
+          }
+          record.length = offset - start;
+          dump(record, buffer);
+          outgoingIndex += repeat;
+        } else {
+          offset += explode(output, field, null, offset, buffer);
+        }
+        field = pattern[++patternIndex];
+      }
+    } else {
+      throw new Error;
+    }
+    return output;
   }
 
   //#### serializer.write(buffer[, start][, length])
@@ -835,7 +906,7 @@ function Serializer(definition) {
     return bufferOffset - start;
   }
 
-  classify.call(definition.extend(this), serialize, write, reset, _length, _sizeOf);
+  classify.call(definition.extend(this), serialize, write, reset, offsetsOf, _length, _sizeOf);
 }
 
 function createParser (context) { return new Parser(new Definition(context, {}, transforms)) }
