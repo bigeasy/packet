@@ -727,6 +727,8 @@ function Serializer(definition) {
     if (arrayed) {
       if (field.terminator) {
         if (field.terminator[0]) {
+          // TODO: I'd prefer hex: b8z<0x0d0a>.
+          return scalar + 'z<' + field.terminator.join(',') + '>';
         } else {
           return scalar + 'z';
         }
