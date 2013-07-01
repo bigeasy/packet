@@ -1,4 +1,4 @@
-# Packet [![Build Status](https://secure.travis-ci.org/bigeasy/packet.png?branch=master)](http://travis-ci.org/bigeasy/packet) [![Coverage Status](https://coveralls.io/repos/bigeasy/packet/badge.png?branch=master)](https://coveralls.io/r/bigeasy/packet) [![NPM version](https://badge.fury.io/js/packet.png)](http://badge.fury.io/js/packet)
+# Packet [![Build Status](https://secure.travis-ci.org/bigeasy/packet.png?branch=master)](http://travis-ci.org/bigeasy/packet) [![Coverage Status](https://coveralls.io/repos/bigeasy/packet/badge.png?branch=master)](https://coveralls.io/r/bigeasy/packet) [![NPM version](https://badge.fury.io/js/packet.png)](http://badge.fury.io/js/packet) ![Tracker](https://www.prettyrobots.com/1x1-pixel.png)
 
 An evented binary packet and structure parser for Node.js.
 
