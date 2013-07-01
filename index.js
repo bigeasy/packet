@@ -746,7 +746,7 @@ function Serializer(definition) {
   function offsetsOf (buffer) {
     if (Array.isArray(buffer)) buffer = new Buffer(buffer);
     var patternIndex = 0, field = pattern[patternIndex], repeat = field.repeat,
-        outgoingIndex = 0, size = 0, output, offset = 0, record;
+        outgoingIndex = 0, size = 0, output, offset = 0, record, incomingIndex = 0;
 
     var _incoming = named ? incoming : outgoing;
 
@@ -766,13 +766,17 @@ function Serializer(definition) {
       return record.length;
     }
 
-    function _element (append) {
-      var value = field.arrayed ? obtain()[index] : obtain();
+    function _element (container, index) {
+      var value = field.arrayed ? obtain()[index] : obtain(),
           record =  { pattern: detokenize(field),
                       value: value,
                       offset: offset,
                       length: field.bits / 8 };
-      append(record);
+      if (field.arrayed) {
+        container.value[index] = record;
+      } else {
+        container[index] = record;
+      }
       dump(record, buffer);
       return record.length;
     }
@@ -825,18 +829,19 @@ function Serializer(definition) {
           outgoingIndex += repeat;
         } else if (field.arrayed) {
           var start = offset,
-              record = output[field.name] = { pattern: detokenize(field, true),
-                                              value: [],
-                                              offset: 0 };
+              value = obtain(),
+              record = output[field.name || outgoingIndex]
+                     = { pattern: detokenize(field, true), value: [], offset: 0 };
           for (var i = 0, I = field.repeat; i < I; i++) {
-            offset += explode(output, field, i, offset, buffer);
+            offset += _element(record, i);
           }
           record.length = offset - start;
           dump(record, buffer);
           outgoingIndex += repeat;
         } else {
-          offset += _element(append);
+          offset += _element(output, field.name || outgoingIndex);
         }
+        incomingIndex++;
         field = pattern[++patternIndex];
       }
     } else {
