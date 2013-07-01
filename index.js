@@ -796,13 +796,11 @@ function Serializer(definition) {
         for (var i = 0, I = value.length; i < I; i++) {
           offset += _element(record, i);
         }
-        if (field.terminator.length) {
           record.terminator = { value: field.terminator.slice(),
                                 offset: offset,
                                 length: field.terminator.length,
                                 hex: new Buffer(field.terminator).toString('hex') };
           offset += field.terminator.length;
-        }
         record.length = offset - start;
         dump(record);
       } else if (field.arrayed) {
