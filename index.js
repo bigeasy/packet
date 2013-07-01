@@ -420,6 +420,7 @@ function Parser (definition) {
         // The pattern is set to null, our terminal condition, because the
         // callback may specify a subsequent packet to parse.
         if (++patternIndex == pattern.length) {
+          // TODO: Rename to _pattern. This is too wonky.
           var field = pattern;
           pattern = null;
 
@@ -439,7 +440,7 @@ function Parser (definition) {
               var object = {};
               for (i = 0, I = field.length; i < I; i++) {
                 bits = field[i];
-                if (bits.endianness != "x") {
+                if (!bits.lengthEncoding && bits.endianness != "x") {
                   if (bits.packing) {
                     for (var j = 0, J = bits.packing.length; j < J; j++) {
                       pack = bits.packing[j];
@@ -659,8 +660,8 @@ function Serializer(definition) {
             outgoing.push(named ? incoming[field.packing[j].name] : incoming.shift());
           }
         }
-      } else {
-        if (field.endianness != 'x') {
+      } else { // TODO: else if
+        if (!field.lengthEncoding && field.endianness != 'x') {
           outgoing.push(named ? incoming[field.name] : incoming.shift());
         }
       }
