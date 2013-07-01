@@ -3,7 +3,7 @@ var parse = require('./pattern').parse,
     util = require('util'),
     __slice = [].slice;
 
-function objectify () {
+function classify () {
   var i, I, name;
   for (i = 0, I = arguments.length; i < I; i++) {
     name = arguments[i].name;
@@ -105,7 +105,7 @@ function Definition (context, packets, transforms) {
   }
 
   function extend (object) {
-    return objectify.call(object, packet, transform, createParser, createSerializer);
+    return classify.call(object, packet, transform, createParser, createSerializer);
   }
 
   // Execute the pipeline of transforms for the `pattern` on the `value`.
@@ -134,7 +134,7 @@ function Definition (context, packets, transforms) {
 
   this.context = context;
 
-  return objectify.call(this, packet, transform, pattern, pipeline, extend);
+  return classify.call(this, packet, transform, pattern, pipeline, extend);
 }
 
 
@@ -477,7 +477,7 @@ function Parser (definition) {
     return bufferOffset - start;
   }
 
-  return objectify.call(definition.extend(this), extract, parse, reset, _length);
+  return classify.call(definition.extend(this), extract, parse, reset, _length);
 }
 
 module.exports.Parser = Parser;
@@ -711,6 +711,25 @@ function Serializer(definition) {
     return size;
   }
 
+  function _offsetsOf () {
+    var patternIndex = 0, field = pattern[patternIndex], repeat = field.repeat,
+        outgoingIndex = 0, size = 0;
+    while (field) {
+      if (field.terminator) {
+        repeat = outgoing[outgoingIndex++].length + field.terminator.length;
+        if (field.repeat != Number.MAX_VALUE) {
+          repeat = field.repeat;
+        }
+      } else {
+        repeat = field.repeat || 1;
+        outgoingIndex += repeat;
+      }
+      size += field.bytes * repeat;
+      field = pattern[++patternIndex];
+    }
+    return size;
+  }
+
   //#### serializer.write(buffer[, start][, length])
 
   // The `write` method writes to the buffer, returning when the current pattern
@@ -816,10 +835,10 @@ function Serializer(definition) {
     return bufferOffset - start;
   }
 
-  objectify.call(definition.extend(this), serialize, write, reset, _length, _sizeOf);
+  classify.call(definition.extend(this), serialize, write, reset, _length, _sizeOf);
 }
 
 function createParser (context) { return new Parser(new Definition(context, {}, transforms)) }
 function createSerializer (context) { return new Serializer(new Definition(context, {}, transforms)) }
 
-objectify.call(exports, createParser, createSerializer);
+classify.call(exports, createParser, createSerializer);
