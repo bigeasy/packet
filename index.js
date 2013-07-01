@@ -793,19 +793,23 @@ function Serializer(definition) {
       output[outgoingIndex] = record;
     }
 
+    var inset = 0;
+
     if (true) {
       output = {};
       while (field) {
         if (field.lengthEncoding) {
           var start = offset;
           var element = pattern[++patternIndex];
-          var record = output[element.name] = { value: [], offset: 0 };
-          var value = incoming[element.name];
-          offset += explode(record, field, 'count', offset, buffer);
+          var record = output[element.name || outgoingIndex] = { value: [], offset: 0 };
+          if (!named) _incoming.splice(outgoingIndex, 1); // remove that count
+          var value = _incoming[element.name || outgoingIndex];
+          offset += _element(record, 'count');
           record.count.value = value.length;
           record.pattern = detokenize(element, true, record.count);
+          field = element;
           for (var i = 0, I = value.length; i < I; i++) {
-            offset += explode(output, element, i, offset, buffer);
+            offset += _element(record, i);
           }
           record.length = offset - start;
           dump(record, buffer);
