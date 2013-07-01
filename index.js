@@ -779,58 +779,58 @@ function Serializer(definition) {
 
     var inset = 0;
 
-      output = named ? {} : [];
-      while (field) {
-        if (field.lengthEncoding) {
-          var start = offset;
-          var element = pattern[++patternIndex];
-          var record = output[element.name || outgoingIndex] = { value: [], offset: 0 };
-          if (!named) _incoming.splice(outgoingIndex, 1); // remove that count
-          var value = _incoming[element.name || outgoingIndex];
-          offset += _element(record, 'count');
-          record.count.value = value.length;
-          field = element;
-          record.pattern = detokenize(true, record.count);
-          for (var i = 0, I = value.length; i < I; i++) {
-            offset += _element(record, i);
-          }
-          record.length = offset - start;
-          dump(record);
-        } else if (field.terminator) {
-          var start = offset,
-              record = output[field.name || outgoingIndex]
-                     = { pattern: detokenize(true), value: [], offset: 0 },
-              value = obtain();
-          for (var i = 0, I = value.length; i < I; i++) {
-            offset += _element(record, i);
-          }
-          if (field.terminator.length) {
-            record.terminator = { value: field.terminator.slice(),
-                                  offset: offset,
-                                  length: field.terminator.length,
-                                  hex: new Buffer(field.terminator).toString('hex') };
-            offset += field.terminator.length;
-          }
-          record.length = offset - start;
-          dump(record);
-          outgoingIndex += repeat;
-        } else if (field.arrayed) {
-          var start = offset,
-              value = obtain(),
-              record = output[field.name || outgoingIndex]
-                     = { pattern: detokenize(true), value: [], offset: 0 };
-          for (var i = 0, I = field.repeat; i < I; i++) {
-            offset += _element(record, i);
-          }
-          record.length = offset - start;
-          dump(record);
-          outgoingIndex += repeat;
-        } else {
-          offset += _element(output, field.name || outgoingIndex);
+    output = named ? {} : [];
+    while (field) {
+      if (field.lengthEncoding) {
+        var start = offset;
+        var element = pattern[++patternIndex];
+        var record = output[element.name || outgoingIndex] = { value: [], offset: 0 };
+        if (!named) _incoming.splice(outgoingIndex, 1); // remove that count
+        var value = _incoming[element.name || outgoingIndex];
+        offset += _element(record, 'count');
+        record.count.value = value.length;
+        field = element;
+        record.pattern = detokenize(true, record.count);
+        for (var i = 0, I = value.length; i < I; i++) {
+          offset += _element(record, i);
         }
-        incomingIndex++;
-        field = pattern[++patternIndex];
+        record.length = offset - start;
+        dump(record);
+      } else if (field.terminator) {
+        var start = offset,
+            record = output[field.name || outgoingIndex]
+                   = { pattern: detokenize(true), value: [], offset: 0 },
+            value = obtain();
+        for (var i = 0, I = value.length; i < I; i++) {
+          offset += _element(record, i);
+        }
+        if (field.terminator.length) {
+          record.terminator = { value: field.terminator.slice(),
+                                offset: offset,
+                                length: field.terminator.length,
+                                hex: new Buffer(field.terminator).toString('hex') };
+          offset += field.terminator.length;
+        }
+        record.length = offset - start;
+        dump(record);
+        outgoingIndex += repeat;
+      } else if (field.arrayed) {
+        var start = offset,
+            value = obtain(),
+            record = output[field.name || outgoingIndex]
+                   = { pattern: detokenize(true), value: [], offset: 0 };
+        for (var i = 0, I = field.repeat; i < I; i++) {
+          offset += _element(record, i);
+        }
+        record.length = offset - start;
+        dump(record);
+        outgoingIndex += repeat;
+      } else {
+        offset += _element(output, field.name || outgoingIndex);
       }
+      incomingIndex++;
+      field = pattern[++patternIndex];
+    }
     return output;
   }
 
