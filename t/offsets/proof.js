@@ -4,7 +4,8 @@ module.exports = require('proof')(function (equal, deepEqual, ok) {
     , parser = createParser()
     ;
   function offsetsOf (pattern, bytes, expected, label) {
-    var invoked = false, extracted = slice(arguments, 3), message = extracted.pop();
+    // TODO: Get rid of invoked.
+    var invoked = false;
     parser.reset();
     parser.packet('pattern', pattern);
     parser.extract('pattern', function () {

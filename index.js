@@ -743,26 +743,27 @@ function Serializer(definition) {
     }
   }
 
-  function explode (output, field, index, offset, buffer) {
-    var value = field.arrayed ? incoming[field.name][index]
-                              : incoming[field.name],
-        record =  { pattern: detokenize(field),
-                    value: value,
-                    offset: offset,
-                    length: field.bits / 8 };
-    if (field.arrayed) {
-      output[field.name].value[index] = record;
-    } else {
-      output[index || field.name] = record;
-    }
-    dump(record, buffer);
-    return record.length;
-  }
-
   function offsetsOf (buffer) {
     if (Array.isArray(buffer)) buffer = new Buffer(buffer);
     var patternIndex = 0, field = pattern[patternIndex], repeat = field.repeat,
         outgoingIndex = 0, size = 0, output, offset = 0, record;
+
+    function explode (output, field, index, offset, buffer) {
+      var value = field.arrayed ? incoming[field.name][index]
+                                : incoming[field.name || outgoingIndex],
+          record =  { pattern: detokenize(field),
+                      value: value,
+                      offset: offset,
+                      length: field.bits / 8 };
+      if (field.arrayed) {
+        output[field.name].value[index] = record;
+      } else {
+        output[index || field.name || outgoingIndex] = record;
+      }
+      dump(record, buffer);
+      return record.length;
+    }
+
     if (named) {
       output = {};
       while (field) {
@@ -814,7 +815,14 @@ function Serializer(definition) {
         field = pattern[++patternIndex];
       }
     } else {
-      throw new Error;
+      var output = [];
+      incoming = outgoing;
+      while (field) {
+        if (true) {
+          offset += explode(output, field, null, offset, buffer);
+        }
+        field = pattern[++patternIndex];
+      }
     }
     return output;
   }
