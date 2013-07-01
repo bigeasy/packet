@@ -811,11 +811,11 @@ function Serializer(definition) {
           dump(record, buffer);
         } else if (field.terminator) {
           var start = offset,
-              record = output[field.name] = { pattern: detokenize(field, true),
-                                              value: [], offset: 0 },
-              value = incoming[field.name];
+              record = output[field.name || outgoingIndex]
+                     = { pattern: detokenize(field, true), value: [], offset: 0 },
+              value = obtain();
           for (var i = 0, I = value.length; i < I; i++) {
-            offset += explode(output, field, i, offset, buffer);
+            offset += _element(record, i);
           }
           if (field.terminator.length) {
             record.terminator = { value: field.terminator.slice(),
