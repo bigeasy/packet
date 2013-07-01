@@ -748,8 +748,10 @@ function Serializer(definition) {
     var patternIndex = 0, field = pattern[patternIndex], repeat = field.repeat,
         outgoingIndex = 0, size = 0, output, offset = 0, record;
 
+    var _incoming = named ? incoming : outgoing;
+
     function explode (output, field, index, offset, buffer) {
-      var value = field.arrayed ? incoming[field.name][index]
+      var value = field.arrayed ? incoming[field.name || outgoingIndex][index]
                                 : incoming[field.name || outgoingIndex],
           record =  { pattern: detokenize(field),
                       value: value,
@@ -764,7 +766,30 @@ function Serializer(definition) {
       return record.length;
     }
 
-    if (named) {
+    function _element (append) {
+      var value = field.arrayed ? obtain()[index] : obtain();
+          record =  { pattern: detokenize(field),
+                      value: value,
+                      offset: offset,
+                      length: field.bits / 8 };
+      append(record);
+      dump(record, buffer);
+      return record.length;
+    }
+
+    var obtain = named ? function () {
+      return _incoming[field.name];
+    } : function () {
+      return _incoming[outgoingIndex];
+    }
+
+    var append = named ? function (record) {
+      output[field.name] = record;
+    } : function (record) {
+      output[outgoingIndex] = record;
+    }
+
+    if (true) {
       output = {};
       while (field) {
         if (field.lengthEncoding) {
@@ -810,7 +835,7 @@ function Serializer(definition) {
           dump(record, buffer);
           outgoingIndex += repeat;
         } else {
-          offset += explode(output, field, null, offset, buffer);
+          offset += _element(append);
         }
         field = pattern[++patternIndex];
       }
