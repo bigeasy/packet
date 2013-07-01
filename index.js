@@ -150,7 +150,7 @@ function Parser (definition) {
   function _length () { return bytesRead }
 
   // The public `reset` method to reuse the parser, clearing the current state.
-  function reset () { bytesRead = 0 }
+  function reset () { bytesRead = 0, named = false }
 
   // Prepare the parser for the next field in the pattern.
   function nextField ()  {
