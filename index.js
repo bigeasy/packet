@@ -768,7 +768,7 @@ function Serializer(definition) {
     var obtain = named ? function () {
       return _incoming[field.name];
     } : function () {
-      return _incoming[outgoingIndex];
+      return _incoming[incomingIndex];
     }
 
     var append = named ? function (record) {
@@ -784,9 +784,9 @@ function Serializer(definition) {
       if (field.lengthEncoding) {
         var start = offset;
         var element = pattern[++patternIndex];
-        var record = output[element.name || outgoingIndex] = { value: [], offset: 0 };
-        if (!named) _incoming.splice(outgoingIndex, 1); // remove that count
-        var value = _incoming[element.name || outgoingIndex];
+        var record = output[element.name || incomingIndex] = { value: [], offset: 0 };
+        if (!named) _incoming.splice(incomingIndex, 1); // remove that count
+        var value = _incoming[element.name || incomingIndex];
         offset += _element(record, 'count');
         record.count.value = value.length;
         field = element;
@@ -826,7 +826,7 @@ function Serializer(definition) {
         dump(record);
         outgoingIndex += repeat;
       } else {
-        offset += _element(output, field.name || outgoingIndex);
+        offset += _element(output, field.name || incomingIndex);
       }
       incomingIndex++;
       field = pattern[++patternIndex];
