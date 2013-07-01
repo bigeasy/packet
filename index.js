@@ -779,7 +779,6 @@ function Serializer(definition) {
 
     var inset = 0;
 
-    if (true) {
       output = named ? {} : [];
       while (field) {
         if (field.lengthEncoding) {
@@ -832,16 +831,6 @@ function Serializer(definition) {
         incomingIndex++;
         field = pattern[++patternIndex];
       }
-    } else {
-      var output = [];
-      incoming = outgoing;
-      while (field) {
-        if (true) {
-          offset += explode(output, field, null, offset, buffer);
-        }
-        field = pattern[++patternIndex];
-      }
-    }
     return output;
   }
 
