@@ -716,8 +716,8 @@ function Serializer(definition) {
 
   function offsetsOf (buffer) {
     if (Array.isArray(buffer)) buffer = new Buffer(buffer);
-    var patternIndex = 0, field = pattern[patternIndex], repeat = field.repeat,
-        outgoingIndex = 0, size = 0, output, offset = 0, record, incomingIndex = 0;
+    var patternIndex = 0, field = pattern[patternIndex],
+        output, offset = 0, record, incomingIndex = 0;
 
     var _incoming = named ? incoming : outgoing;
 
@@ -771,14 +771,6 @@ function Serializer(definition) {
       return _incoming[incomingIndex];
     }
 
-    var append = named ? function (record) {
-      output[field.name] = record;
-    } : function (record) {
-      output[outgoingIndex] = record;
-    }
-
-    var inset = 0;
-
     output = named ? {} : [];
     while (field) {
       if (field.lengthEncoding) {
@@ -798,7 +790,7 @@ function Serializer(definition) {
         dump(record);
       } else if (field.terminator) {
         var start = offset,
-            record = output[field.name || outgoingIndex]
+            record = output[field.name || incomingIndex]
                    = { pattern: detokenize(true), value: [], offset: 0 },
             value = obtain();
         for (var i = 0, I = value.length; i < I; i++) {
@@ -813,18 +805,16 @@ function Serializer(definition) {
         }
         record.length = offset - start;
         dump(record);
-        outgoingIndex += repeat;
       } else if (field.arrayed) {
         var start = offset,
             value = obtain(),
-            record = output[field.name || outgoingIndex]
+            record = output[field.name || incomingIndex]
                    = { pattern: detokenize(true), value: [], offset: 0 };
         for (var i = 0, I = field.repeat; i < I; i++) {
           offset += _element(record, i);
         }
         record.length = offset - start;
         dump(record);
-        outgoingIndex += repeat;
       } else {
         offset += _element(output, field.name || incomingIndex);
       }
