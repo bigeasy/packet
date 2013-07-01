@@ -780,7 +780,7 @@ function Serializer(definition) {
     var inset = 0;
 
     if (true) {
-      output = {};
+      output = named ? {} : [];
       while (field) {
         if (field.lengthEncoding) {
           var start = offset;
