@@ -5,7 +5,7 @@ set -e
 rm -rf coverage
 
 count=1;
-for file in $(find t -name \*.t.js | grep offsets); do
+for file in $(find t -name \*.t.js); do
   node_modules/.bin/istanbul cover -x 'ieee754.js' -x 't/**' $file > /dev/null 2>&1
   mv coverage/coverage.json coverage/coverage$count.json
   count=$(expr $count + 1)
