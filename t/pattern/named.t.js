@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-require('./proof')(1, function (parseEqual) {
+require('./proof')(2, function (parseEqual) {
   parseEqual("b8z|utf8()|atoi(8) => mode, b32 => l", [
     { signed: false
     , bits: 8
@@ -33,4 +33,26 @@ require('./proof')(1, function (parseEqual) {
     , name: "l"
     }
   ], "parse a named element.");
+  parseEqual("b8/b8 => numbers", [
+    { signed: false
+    , endianness: "b"
+    , bits: 8
+    , type: "n"
+    , bytes: 1
+    , exploded: false
+    , lengthEncoding: true
+    , arrayed: false
+    , repeat: 1
+    },
+    { signed: false
+    , endianness: "b"
+    , bits: 8
+    , type: "n"
+    , bytes: 1
+    , exploded: false
+    , repeat: 1
+    , arrayed: true
+    , name: 'numbers'
+    }
+  ], "parse a named length encoded.");
 });
