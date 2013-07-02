@@ -486,7 +486,8 @@ module.exports.Parser = Parser;
 // Construct a `Serializer` around the given `definition`.
 function Serializer(definition) {
   var serializer = this, terminal, valueOffset, increment, value, bytesWritten = 0,
-  skipping, repeat, outgoing, index, terminated, terminates, pattern,
+  skipping, repeat, outgoing, index, terminated, terminates, pattern, named,
+  incoming,
   patternIndex, context = definition.context || this, padding, _callback;
 
   function _length () { return bytesWritten }
@@ -611,12 +612,13 @@ function Serializer(definition) {
     var shiftable = __slice.call(arguments),
         alternates = definition.pattern(shiftable.shift()).slice(0),
         callback = typeof shiftable[shiftable.length - 1] == 'function' ? shiftable.pop() : void(0),
-        named = (shiftable.length ==  1
-                 && typeof shiftable[0] ==  "object"
-                 && ! (shiftable[0] instanceof Array)),
-        incoming = named ? shiftable.shift() : shiftable,
         skip = 0,
         field, value, alternate, i, I, j, J, k, K;
+
+    named = (shiftable.length ==  1
+             && typeof shiftable[0] ==  "object"
+             && ! (shiftable[0] instanceof Array));
+    incoming = named ? shiftable.shift() : shiftable;
 
     _callback = callback;
     patternIndex = 0;
@@ -712,23 +714,112 @@ function Serializer(definition) {
     return size;
   }
 
-  function _offsetsOf () {
-    var patternIndex = 0, field = pattern[patternIndex], repeat = field.repeat,
-        outgoingIndex = 0, size = 0;
-    while (field) {
-      if (field.terminator) {
-        repeat = outgoing[outgoingIndex++].length + field.terminator.length;
-        if (field.repeat != Number.MAX_VALUE) {
-          repeat = field.repeat;
+  function offsetsOf (buffer) {
+    if (Array.isArray(buffer)) buffer = new Buffer(buffer);
+    var patternIndex = 0, field = pattern[patternIndex],
+        output, offset = 0, record, incomingIndex = 0;
+
+    var _incoming = named ? incoming : outgoing;
+
+    function dump (record) {
+      if (buffer) {
+        record.hex = buffer.slice(record.offset, record.offset + record.length).toString('hex');
+      }
+    }
+
+    function detokenize (arrayed, count) {
+       var scalar = (field.signed && field.type != 'f' ? '-' : '') +
+                     field.endianness +
+                     field.bits +
+                    (field.type == 'n' ? '' : field.type);
+      if (arrayed) {
+        if (count) {
+          return count.pattern + '/' + scalar;
+        } else if (field.terminator) {
+          if (field.terminator[0]) {
+            // TODO: I'd prefer hex: b8z<0x0d0a>.
+            return scalar + 'z<' + field.terminator.join(',') + '>';
+          } else {
+            return scalar + 'z';
+          }
+        } else {
+          return scalar + '[' + field.repeat + ']';
         }
       } else {
-        repeat = field.repeat || 1;
-        outgoingIndex += repeat;
+        return scalar;
       }
-      size += field.bytes * repeat;
+    }
+
+    function _element (container, index) {
+      var value = field.arrayed ? obtain()[index] : obtain(),
+          record =  { pattern: detokenize(),
+                      value: value,
+                      offset: offset,
+                      length: field.bits / 8 };
+      if (field.arrayed) {
+        container.value[index] = record;
+      } else {
+        container[index] = record;
+      }
+      dump(record);
+      return record.length;
+    }
+
+    var obtain = named ? function () {
+      return _incoming[field.name];
+    } : function () {
+      return _incoming[incomingIndex];
+    }
+
+    output = named ? {} : [];
+    while (field) {
+      if (field.lengthEncoding) {
+        var start = offset;
+        var element = pattern[++patternIndex];
+        var record = output[element.name || incomingIndex] = { value: [], offset: 0 };
+        if (!named) _incoming.splice(incomingIndex, 1); // remove that count
+        var value = _incoming[element.name || incomingIndex];
+        offset += _element(record, 'count');
+        record.count.value = value.length;
+        field = element;
+        record.pattern = detokenize(true, record.count);
+        for (var i = 0, I = value.length; i < I; i++) {
+          offset += _element(record, i);
+        }
+        record.length = offset - start;
+        dump(record);
+      } else if (field.terminator) {
+        var start = offset,
+            record = output[field.name || incomingIndex]
+                   = { pattern: detokenize(true), value: [], offset: 0 },
+            value = obtain();
+        for (var i = 0, I = value.length; i < I; i++) {
+          offset += _element(record, i);
+        }
+        record.terminator = { value: field.terminator.slice(),
+                              offset: offset,
+                              length: field.terminator.length,
+                              hex: new Buffer(field.terminator).toString('hex') };
+        offset += field.terminator.length;
+        record.length = offset - start;
+        dump(record);
+      } else if (field.arrayed) {
+        var start = offset,
+            value = obtain(),
+            record = output[field.name || incomingIndex]
+                   = { pattern: detokenize(true), value: [], offset: 0 };
+        for (var i = 0, I = field.repeat; i < I; i++) {
+          offset += _element(record, i);
+        }
+        record.length = offset - start;
+        dump(record);
+      } else {
+        offset += _element(output, field.name || incomingIndex);
+      }
+      incomingIndex++;
       field = pattern[++patternIndex];
     }
-    return size;
+    return output;
   }
 
   //#### serializer.write(buffer[, start][, length])
@@ -836,7 +927,7 @@ function Serializer(definition) {
     return bufferOffset - start;
   }
 
-  classify.call(definition.extend(this), serialize, write, reset, _length, _sizeOf);
+  classify.call(definition.extend(this), serialize, write, reset, offsetsOf, _length, _sizeOf);
 }
 
 function createParser (context) { return new Parser(new Definition(context, {}, transforms)) }
