@@ -84,8 +84,14 @@ function Definition (context, packets, transforms) {
   packets = Object.create(packets);
   transforms = Object.create(transforms);
 
+  function compile (pattern) {
+    var parsed = parse(pattern);
+    parsed.hasAlternation = parsed.some(function (field) { return field.alternation });
+    return parsed;
+  }
+
   function packet (name, pattern) {
-    packets[name] = parse(pattern);
+    packets[name] = compile(pattern);
   }
 
   function transform (name, procedure) {
@@ -93,7 +99,7 @@ function Definition (context, packets, transforms) {
   }
 
   function pattern (nameOrPattern) {
-    return packets[nameOrPattern] || parse(nameOrPattern);
+    return packets[nameOrPattern] || compile(nameOrPattern);
   }
 
   function createParser (context) {
@@ -471,9 +477,9 @@ module.exports.Parser = Parser;
 
 // Construct a `Serializer` around the given `definition`.
 function Serializer(definition) {
-  var serializer = this, terminal, valueOffset, increment, value, bytesWritten = 0,
-  skipping, repeat, outgoing, index, terminated, terminates, pattern, named,
-  incoming,
+  var serializer = this, terminal, valueOffset, increment, array, value, bytesWritten = 0,
+  skipping, repeat, outgoing, index, terminated, terminates, pattern,
+  incoming, named,
   patternIndex, context = definition.context || this, padding, _callback;
 
   function _length () { return bytesWritten }
@@ -491,7 +497,6 @@ function Serializer(definition) {
 
     // Can't I keep separate indexes? Do I need that zero?
     if (field.endianness ==  "x") {
-      outgoing.splice(patternIndex, 0, null);
       if (field.padding != null)
         padding = field.padding
     }
@@ -518,7 +523,11 @@ function Serializer(definition) {
 
       // If the field is arrayed, we get the next value in the array.
       } else if (field.arrayed) {
-        value = outgoing[patternIndex][index];
+        if (index == 0) {
+          array = incoming[field.name];
+          array  = definition.pipeline(false, field, array, true)
+        }
+        value = array[index];
 
       // If the field is bit packed, we update the `outgoing` array of values
       // by packing zero, one or more values into a single value. We will also
@@ -530,7 +539,7 @@ function Serializer(definition) {
           pack = packing[i];
           length -= pack.bits;
           if (pack.endianness ==  "b" || pack.padding != null) {
-            unpacked = pack.padding != null ? pack.padding : outgoing[patternIndex + count++]
+            unpacked = pack.padding != null ? pack.padding : incoming[pack.name];
             if (pack.signed) {
               range = Math.pow(2, pack.bits - 1)
               if (!( (-range) <= unpacked &&  unpacked <= range - 1))
@@ -543,18 +552,17 @@ function Serializer(definition) {
             value += unpacked * Math.pow(2, length)
           }
         }
-        outgoing.splice(patternIndex, count, value);
 
       // If the current field is a length encoded array, then the length of the
       // current array value is the next value, otherwise, we have the simple
       // case, the value is the current value.
       } else {
         if (field.lengthEncoding) {
-          var repeat = outgoing[patternIndex].length;
-          outgoing.splice(patternIndex, 0, repeat);
-          pattern[patternIndex + 1].repeat = repeat;
+          value = incoming[pattern[patternIndex + 1].name].length;
+          pattern[patternIndex + 1].repeat = value;
+        } else {
+          value = incoming[field.name];
         }
-        value = outgoing[patternIndex];
       }
       // If the array is not an unsigned integer, we might have to convert it.
       if (field.exploded) {
@@ -591,72 +599,115 @@ function Serializer(definition) {
       terminal = little  ? bytes : -1;
       valueOffset = little ? 0 : bytes - 1;
       increment = little ? 1 : -1;
+      if (field.pipeline && !field.arrayed) {
+        value  = definition.pipeline(false, field, value, true)
+      }
     }
   }
 
   function serialize () {
+    // TODO: We're copying because of positional parameters and alternation.
     var shiftable = __slice.call(arguments),
-        alternates = definition.pattern(shiftable.shift()).slice(0),
+        // TODO: Rename `_pattern`.
+        prototype = definition.pattern(shiftable.shift()),
         callback = typeof shiftable[shiftable.length - 1] == 'function' ? shiftable.pop() : void(0),
         skip = 0,
-        field, value, alternate, i, I, j, J, k, K;
+        field, value, alternate, i, I, j, J, k, K, alternates;
 
+    // TODO: Hate that all this has to pass for the common case.
     named = (shiftable.length ==  1
              && typeof shiftable[0] ==  "object"
              && ! (shiftable[0] instanceof Array));
-    incoming = named ? shiftable.shift() : shiftable;
 
     _callback = callback;
     patternIndex = 0;
+    alternates = prototype.slice();
 
-    outgoing = [], pattern = [];
+    // Positial arrays go through once to resolve alternation for the sake of
+    // the naming. This duplication is the price you pay for invoking with
+    // positional arrays, it can't be avoided.
+    if (!named) {
+      incoming = {}, pattern = []; 
+      for (var i = 0; i < alternates.length; i++) {
+        field = alternates[i];
+        if (field.alternation) {
+          field = field.alternation[0];
+          if (field.pattern[0].packing) {
+            field = field.pattern[0].packing[0];
+          }
+          value = shiftable[0];
+
+          field = alternates[i];
+          for (j = 0, J = field.alternation.length; j < J; j++) {
+            alternate = field.alternation[j];
+            if (alternate.write.minimum <= value &&  value <= alternate.write.maximum) {
+              break;
+            }
+          }
+
+          alternates.splice.apply(alternates, [ i--, 1 ].concat(alternate.pattern));
+          continue;
+        }
+
+        pattern.push(field);
+
+        if (field.packing) {
+          for (j = 0, J = field.packing.length; j < J; j++) {
+            if (field.packing[j].endianness != 'x') {
+              incoming[field.packing[j].name] = shiftable.shift();
+            }
+          }
+        } else if (!field.lengthEncoding && field.endianness != 'x') {
+          incoming[field.name] = shiftable.shift();
+        }
+      }
+      // Reset for below.
+      alternates = pattern, pattern = [];
+    } else {
+      incoming = shiftable.shift();
+    }
+
+    outgoing = {}, pattern = [];
 
     // Determine alternation now, creating a pattern with the alternation
     // resolved.
-
-    for (i = 0; i < alternates.length; i++) {
-      field = alternates[i];
-      // The name of value to test for alternation is either the first name in
-      // the alternation or else if the first value is bit packed, the first
-      // name in the packed alternates.
-      if (field.alternation) {
-        field = field.alternation[0];
-        if (field.pattern[0].packing) {
-          field = field.pattern[0].packing[0];
-        }
-        value = named ? incoming[field.name] : incoming[0];
-
+    if (prototype.hasAlternation) {
+      for (i = 0; i < alternates.length; i++) {
         field = alternates[i];
-        for (j = 0, J = field.alternation.length; j < J; j++) {
-          alternate = field.alternation[j];
-          if (alternate.write.minimum <= value &&  value <= alternate.write.maximum) {
-            break;
+        // The name of value to test for alternation is either the first name in
+        // the alternation or else if the first value is bit packed, the first
+        // name in the packed alternates.
+        if (field.alternation) {
+          field = field.alternation[0];
+          if (field.pattern[0].packing) {
+            field = field.pattern[0].packing[0];
           }
-        }
+          value = named ? incoming[field.name] : incoming[0];
 
-        alternates.splice.apply(alternates, [ i--, 1 ].concat(alternate.pattern));
-        continue;
-      }
-
-      pattern.push(field);
-
-      if (field.packing) {
-        for (j = 0, J = field.packing.length; j < J; j++) {
-          if (field.packing[j].endianness != 'x') {
-            outgoing.push(named ? incoming[field.packing[j].name] : incoming.shift());
+          field = alternates[i];
+          for (j = 0, J = field.alternation.length; j < J; j++) {
+            alternate = field.alternation[j];
+            if (alternate.write.minimum <= value &&  value <= alternate.write.maximum) {
+              break;
+            }
           }
+
+          alternates.splice.apply(alternates, [ i--, 1 ].concat(alternate.pattern));
+          continue;
         }
-      } else { // TODO: else if
-        if (!field.lengthEncoding && field.endianness != 'x') {
-          outgoing.push(named ? incoming[field.name] : incoming.shift());
-        }
+        pattern.push(field);
       }
+    } else {
+      pattern = alternates;
     }
+
+    // TODO: No. Defer. We can make it faster if we defer.
 
     // Run the outgoing values through field pipelines before we enter the write
     // loop. We need to skip over the blank fields and constants. We also skip
     // over bit packed fields because we do not apply pipelines to packed fields.
-    for (j = 0, i = 0, I = outgoing.length; i < I; i++) {
+    if (false) for (j = 0, i = 0, I = pattern.length; i < I; i++) {
+      field = pattern[i];
       value = outgoing[i];
       if (skip) {
         skip--
@@ -686,8 +737,9 @@ function Serializer(definition) {
         outgoingIndex = 0, size = 0;
     while (field) {
       if (field.terminator) {
-        repeat = outgoing[outgoingIndex++].length + field.terminator.length;
-        if (field.repeat != Number.MAX_VALUE) {
+        if (field.repeat == Number.MAX_VALUE) {
+          repeat = definition.pipeline(false, field, incoming[field.name], true).length + field.terminator.length;
+        } else {
           repeat = field.repeat;
         }
       } else {
@@ -703,9 +755,7 @@ function Serializer(definition) {
   function offsetsOf (buffer) {
     if (Array.isArray(buffer)) buffer = new Buffer(buffer);
     var patternIndex = 0, field = pattern[patternIndex],
-        output, offset = 0, record, incomingIndex = 0;
-
-    var _incoming = named ? incoming : outgoing;
+        output, offset = 0, record;
 
     function dump (record) {
       if (buffer) {
@@ -737,7 +787,7 @@ function Serializer(definition) {
     }
 
     function _element (container, index) {
-      var value = field.arrayed ? obtain()[index] : obtain(),
+      var value = field.arrayed ? incoming[field.name][index] : incoming[field.name],
           record =  { pattern: detokenize(),
                       value: value,
                       offset: offset,
@@ -751,20 +801,13 @@ function Serializer(definition) {
       return record.length;
     }
 
-    var obtain = named ? function () {
-      return _incoming[field.name];
-    } : function () {
-      return _incoming[incomingIndex];
-    }
-
     output = named ? {} : [];
     while (field) {
       if (field.lengthEncoding) {
         var start = offset;
         var element = pattern[++patternIndex];
-        var record = output[named ? element.name : incomingIndex] = { value: [], offset: 0 };
-        if (!named) _incoming.splice(incomingIndex, 1); // remove that count
-        var value = _incoming[named ? element.name : incomingIndex];
+        var record = output[element.name] = { value: [], offset: 0 };
+        var value = incoming[element.name];
         offset += _element(record, 'count');
         record.count.value = value.length;
         field = element;
@@ -776,9 +819,9 @@ function Serializer(definition) {
         dump(record);
       } else if (field.terminator) {
         var start = offset,
-            record = output[named ? field.name : incomingIndex]
+            record = output[field.name]
                    = { pattern: detokenize(true), value: [], offset: 0 },
-            value = obtain();
+            value = incoming[field.name];
         for (var i = 0, I = value.length; i < I; i++) {
           offset += _element(record, i);
         }
@@ -791,8 +834,8 @@ function Serializer(definition) {
         dump(record);
       } else if (field.arrayed) {
         var start = offset,
-            value = obtain(),
-            record = output[named ? field.name : incomingIndex]
+            value = incoming[field.name],
+            record = output[field.name]
                    = { pattern: detokenize(true), value: [], offset: 0 };
         for (var i = 0, I = field.repeat; i < I; i++) {
           offset += _element(record, i);
@@ -800,10 +843,14 @@ function Serializer(definition) {
         record.length = offset - start;
         dump(record);
       } else {
-        offset += _element(output, named ? field.name : incomingIndex);
+        offset += _element(output, field.name);
       }
-      incomingIndex++;
       field = pattern[++patternIndex];
+    }
+    if (!named) {
+      var array = [];
+      flatten(pattern, output, array);
+      return array;
     }
     return output;
   }
@@ -873,12 +920,12 @@ function Serializer(definition) {
           // array to hold the terminator, because the outgoing series may be a
           // buffer. We insert the terminator at next index in the outgoing array.
           // We then set repeat to allow one more iteration before callback.
-          if (outgoing[patternIndex].length == index + 1) {
+          if (array.length == index + 1) {
             terminated = true;
-            outgoing[patternIndex] = [];
+            array = [];
             var terminator = pattern[patternIndex].terminator;
             for (var i = 0, I = terminator.length; i < I; i++) {
-              outgoing[patternIndex][index + 1 + i] = terminator[i];
+              array[index + 1 + i] = terminator[i];
             }
           }
         }

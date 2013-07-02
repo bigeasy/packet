@@ -21,7 +21,7 @@ module.exports = require('proof')(function (equal, deepEqual) {
     equal(serializer.sizeOf, written, message + ' sizeOf');
     serializer.write(buffer);
     equal(serializer.length, written, message + ' byte count');
-    deepEqual(bytes, toArray(buffer.slice(0, serializer.length)), message + ' written');
+    deepEqual(toArray(buffer.slice(0, serializer.length)), bytes, message + ' written');
   }
   return { createSerializer: createSerializer, serialize: serialize, toArray: toArray };
 });
