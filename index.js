@@ -438,47 +438,9 @@ function Parser (definition) {
             var number = 1
             if (named) {
               _callback.call(context, fields);
-              /*
-              var object = {};
-              for (i = 0, I = field.length; i < I; i++) {
-                bits = field[i];
-                if (!bits.lengthEncoding && bits.endianness != "x") {
-                  if (bits.packing) {
-                    for (var j = 0, J = bits.packing.length; j < J; j++) {
-                      pack = bits.packing[j];
-                      if (pack.endianness != "x") {
-                        if (pack.name) {
-                          object[pack.name] = fields[number - 1]
-                        } else {
-                          object["field" + number] = fields[number - 1]
-                        }
-                        number++;
-                      }
-                    }
-                  } else {
-                    if (bits.name)
-                      object[bits.name] = fields[number - 1];
-                    else
-                      object["field" + number] = fields[number - 1];
-                    number++;
-                  }
-                }
-              }
-              _callback.call(context, object);
-              */
             } else {
               var array = [];
-              for (var key in _pattern) {
-                if (_pattern[key].packing) {
-                  for (var j in _pattern[key].packing) {
-                    if (_pattern[key].packing[j].endianness != 'x') {
-                      array.push(fields[_pattern[key].packing[j].name]);
-                    }
-                  }
-                } else if (_pattern[key].endianness != 'x' && !_pattern[key].lengthEncoding) {
-                  array.push(fields[_pattern[key].name]);
-                }
-              }
+              flatten(_pattern, fields, array);
               _callback.apply(context, array);
             }
           }
@@ -496,6 +458,15 @@ function Parser (definition) {
   return classify.call(definition.extend(this), extract, parse, reset, _length);
 }
 
+function flatten (pattern, fields, array) {
+  pattern.forEach(function (field) {
+    if (field.packing) {
+      flatten(field.packing, fields, array);
+    } else if (!field.lengthEncoding && field.endianness != 'x') {
+      array.push(fields[field.name]);
+    }
+  });
+}
 module.exports.Parser = Parser;
 
 // Construct a `Serializer` around the given `definition`.
