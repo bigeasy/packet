@@ -196,7 +196,7 @@ function Parser (definition) {
     pattern = definition.pattern(nameOrPattern);
     patternIndex = 0;
     _callback = callback;
-    fields = [];
+    fields = {};
 
     nextField();
     nextValue();
@@ -212,7 +212,7 @@ function Parser (definition) {
     // defaults.
     var bufferOffset = start || 0,
         bufferEnd = bufferOffset + (length == null ? buffer.length : length),
-        bytes, bits;
+        bytes, bits, field;
     start = bufferOffset;
 
     // We set the pattern to null when all the fields have been read, so while
@@ -364,7 +364,7 @@ function Parser (definition) {
                   if (unpacked & mask)
                     unpacked = -(~(unpacked - 1) & (mask * 2 - 1))
                 }
-                fields.push(unpacked);
+                fields[pack.name] = unpacked;
               }
             }
 
@@ -374,7 +374,7 @@ function Parser (definition) {
           // field.
           } else if (field.lengthEncoding) {
             if ((pattern[patternIndex + 1].repeat = value) == 0) {
-              fields.push(definition.pipeline(true, field, [], false))
+              fields[pattern[patternIndex + 1].name] = definition.pipeline(true, field, [], false)
               patternIndex++
             }
           // If the value is used as a switch for an alternation, we run through
@@ -410,7 +410,7 @@ function Parser (definition) {
           // fields.
           } else {
             if (field.arrayed) value = arrayed;
-            fields.push(definition.pipeline(true, field, value, false));
+            fields[field.name] = definition.pipeline(true, field, value, false);
           }
         }
         // If we have read all of the pattern fields, call the associated
@@ -421,7 +421,7 @@ function Parser (definition) {
         // callback may specify a subsequent packet to parse.
         if (++patternIndex == pattern.length) {
           // TODO: Rename to _pattern. This is too wonky.
-          var field = pattern;
+          var _pattern = pattern;
           pattern = null;
 
           if (_callback) {
@@ -437,6 +437,8 @@ function Parser (definition) {
             // upon a "hidden feature".
             var number = 1
             if (named) {
+              _callback.call(context, fields);
+              /*
               var object = {};
               for (i = 0, I = field.length; i < I; i++) {
                 bits = field[i];
@@ -463,8 +465,21 @@ function Parser (definition) {
                 }
               }
               _callback.call(context, object);
+              */
             } else {
-              _callback.apply(context, fields);
+              var array = [];
+              for (var key in _pattern) {
+                if (_pattern[key].packing) {
+                  for (var j in _pattern[key].packing) {
+                    if (_pattern[key].packing[j].endianness != 'x') {
+                      array.push(fields[_pattern[key].packing[j].name]);
+                    }
+                  }
+                } else if (_pattern[key].endianness != 'x' && !_pattern[key].lengthEncoding) {
+                  array.push(fields[_pattern[key].name]);
+                }
+              }
+              _callback.apply(context, array);
             }
           }
         // Otherwise we proceed to the next field in the packet pattern.
