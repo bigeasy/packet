@@ -160,7 +160,7 @@ function Parser (definition) {
     skipping    = null;
     terminated = ! field.terminator;
     terminator = field.terminator && field.terminator[field.terminator.length - 1];
-    named = named || !! field.name;
+    named = named || field.named;
     if (field.arrayed && field.endianness  != "x") arrayed = [];
   }
 
@@ -776,9 +776,9 @@ function Serializer(definition) {
       if (field.lengthEncoding) {
         var start = offset;
         var element = pattern[++patternIndex];
-        var record = output[element.name || incomingIndex] = { value: [], offset: 0 };
+        var record = output[named ? element.name : incomingIndex] = { value: [], offset: 0 };
         if (!named) _incoming.splice(incomingIndex, 1); // remove that count
-        var value = _incoming[element.name || incomingIndex];
+        var value = _incoming[named ? element.name : incomingIndex];
         offset += _element(record, 'count');
         record.count.value = value.length;
         field = element;
@@ -790,7 +790,7 @@ function Serializer(definition) {
         dump(record);
       } else if (field.terminator) {
         var start = offset,
-            record = output[field.name || incomingIndex]
+            record = output[named ? field.name : incomingIndex]
                    = { pattern: detokenize(true), value: [], offset: 0 },
             value = obtain();
         for (var i = 0, I = value.length; i < I; i++) {
@@ -806,7 +806,7 @@ function Serializer(definition) {
       } else if (field.arrayed) {
         var start = offset,
             value = obtain(),
-            record = output[field.name || incomingIndex]
+            record = output[named ? field.name : incomingIndex]
                    = { pattern: detokenize(true), value: [], offset: 0 };
         for (var i = 0, I = field.repeat; i < I; i++) {
           offset += _element(record, i);
@@ -814,7 +814,7 @@ function Serializer(definition) {
         record.length = offset - start;
         dump(record);
       } else {
-        offset += _element(output, field.name || incomingIndex);
+        offset += _element(output, named ? field.name : incomingIndex);
       }
       incomingIndex++;
       field = pattern[++patternIndex];

@@ -183,7 +183,7 @@ function alternates (pattern, array, rest, primary, secondary, allowSecondary, i
 // match bit packing patterns, with a regular expression that excludes modifiers
 // that are non-applicable to bit packing patterns.
 function parse (pattern, part, index, bits, next) {
-  var fields = [], lengthEncoded = false, rest, $;
+  var fields = [], lengthEncoded = false, rest, $, position = 0;
 
   next = next || /^(-?)([xbl])(\d+)([fa]?)(.*)$/;
 
@@ -440,6 +440,9 @@ function parse (pattern, part, index, bits, next) {
         index += rest.length - $[2].length;
         f.name = $[1];
         rest = $[2];
+        f.named = true;
+      } else {
+        f.name = 'field' + (position ++);
       }
     }
 
