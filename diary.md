@@ -40,3 +40,12 @@ What am I trying to save here? What cost? The thought is that array indexes cost
 less than object indexes.
 
 Actually, the fear is 
+
+## Pre-Compiled Parsers and Serializers
+
+I've held onto a pointless optimization for far to long. I've believed, based on
+nothing but intuition, that parameters are faster than objects. Perhaps at some
+point I saw some evidence of this but that's gone.
+
+The logic still supports positional arguments now, but the implementation
+expects an object, instead of expecting an array.
