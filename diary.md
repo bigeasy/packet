@@ -1,4 +1,4 @@
-# Packet Diary
+# Packet Diary ![Tracker](https://www.prettyrobots.com/1x1-pixel.png)
 
 Getting started late on the diary. I keep one for new projects, but this has
 been around for a while, so there is none.
