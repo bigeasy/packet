@@ -781,6 +781,10 @@ function Serializer(definition) {
         } else {
           return scalar + '[' + field.repeat + ']';
         }
+      } else if (field.packing) {
+        return scalar + '{' + field.packing.map(function (field) {
+          return (field.signed ? '-' : '') + field.endianness + field.bits;
+        }).join(',') + '}';
       } else {
         return scalar;
       }
@@ -841,12 +845,57 @@ function Serializer(definition) {
       } else if (field.arrayed) {
         var start = offset,
             value = incoming[field.name],
+                // FIXME: offset is not zero. fix here and above.
             record = { name: field.name, pattern: detokenize(true), value: [], offset: 0 };
         if (!field.named) delete record.name;
         for (var i = 0, I = field.repeat; i < I; i++) {
           offset += _element(record, i);
         }
         record.length = offset - start;
+        dump(record);
+        output.push(record);
+      } else if (field.packing) {
+        record = { name: field.name,
+                   pattern: detokenize(),
+                   value: [],
+                   offset: offset,
+                   length: offset + field.bits / 8 };
+        if (!field.named) delete record.name;
+        var bit = 0, hex = new Buffer(1);
+        var packing = field.packing;
+        var start = offset;
+        for (var i = 0, I = packing.length; i < I; i++) {
+          field = packing[i];
+          var element = {
+            name: field.name,
+            pattern: detokenize(),
+            value: incoming[field.name],
+            bit: bit,
+            bits: field.bits
+          }
+          if (!field.named) delete element.name;
+          if (field.endianness == 'x') delete element.value;
+          record.value.push(element);
+          if (buffer) {
+            element.hex = '';
+            element.binary = '';
+            var left = bit % 8, right = (8 - ((bit + field.bits) % 8)) & 7, b;
+            var mask = 0xff >>> (bit % 8);
+            for (var j = Math.floor(bit / 8), J = Math.ceil((bit + field.bits) / 8); j < J; j++) {
+              b = buffer[offset + j];
+              element.binary +=  ('0000000' + b.toString('2')).slice(-8).substring(left);
+              hex[0] = buffer[offset + j] & (0xff >>> left);
+              left = 0;
+              mask = 0xff;
+              if (j == J - 1) {
+                hex[0] &= (0xff << right);
+                element.binary = element.binary.substring(0, element.binary.length - right);
+              }
+              element.hex += hex.toString('hex');
+            }
+            bit += field.bits;
+          }
+        }
         dump(record);
         output.push(record);
       } else {
