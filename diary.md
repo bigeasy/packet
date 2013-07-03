@@ -72,20 +72,26 @@ They certainly do not have a name.
 ## Upon Pattern Matching I Reconsider My Objectives for Packet
 
 Throughout this project, I've avoided slipperly slopes. Slopes such as, nesting
-and pattern matching. Of course, the moment I tried to build something with
-Packet myself I encountered a need for choices based on the first, and so I
-immediately added alternation to Packet.
+and pattern matching.
+
+Of course, the moment I tried to build something with Packet myself I
+encountered a need for choices based on the first bit of the first byte, a
+common construct in binary formats, and so I immediately added alternation to
+Packet. It's fine to slide down the slope if you're the one about to extend a
+metaphor beyond its utility.
 
 Nesting already exists in the form of bit packing. An
 [issue](https://github.com/bigeasy/packet/issues/81) exists requesting more
 nesting, this time to support length encoded arrays of structures. This is to
-support the real world use case of creating a Minecraft protocol parser. If it
-were me building that parser, I'd added length encoded arrays without pause.
+support the real world use case of creating a [Minecraft protocol
+parser](https://github.com/superjoe30/node-minecraft-protocol). If it were me
+building that parser, I'd added length encoded arrays without pause.
 
 The request for parsed inspection that came in through private email was also
 compelling. Here a programmer found Packet and wanted to use it to explode
 Packets for a web application that lets you inspect binary files, targeted at
-the gaming community. That's toocool of an application not to support.
+the gaming community. That's too cool of an application not to support. I'm
+adding `offsetsOf` so that Packet can show it's work.
 
 I've thought about how Packet has evolved. It is a compelling library. People
 see it and they want it to solve their problem. Their problem is that they want
@@ -100,21 +106,50 @@ inspect the contents of a binary file by expressing what they think they see as
 a pattern, then see what they got. Packet looked perfect for this, but it
 wasn't.
 
-Someone wants to read through a binary file looking for a sentry, a start of
-record marker, then extracting a packet if the record extracted has a proper
-checksum. Packet looked perfect for this, but it isn't.
+Someone wants to [read through a binary file looking for a
+sentry](https://github.com/bigeasy/packet/issues/62), a start of record marker,
+then extracting a packet if the record extracted has a proper checksum. Packet
+looked perfect for this, but it isn't.
  
-You make what you measure. While building Packet, I was building the MicroJS
-libraries Stencil, Inquiry, Cadence and Timezone, so I'd established a habit of
-rejecting anything that would be nice to have. It's not that these were simple
-utilities. Stencil and Inquiry are both languages of sorts, while Cadence has
-some serious syntax bashing. With them I favored minzipped size over other
-factors and still got some great libraries.
+You make what you measure. While building Packet, I was building the
+[MicroJS](http://microjs.com/) libraries
+[Stencil](https://github.com/bigeasy/stencil),
+[Inquiry](https://github.com/bigeasy/inquiry),
+[Cadence](https://github.com/bigeasy/cadence) and
+[Timezone](https://github.com/bigeasy/timezone), so I'd established a habit of
+rejecting anything that would be nice to have, anything that would cause the
+library to grow beyond 5k, or the braggable under 1k of Inquiry.
+
+Having a simple reason to say no was liberating. It was used primarily against
+myself, but once a library gets some adoption, like Timezone, I find that people
+appreciate the goal of miniminalism. When you can do something easily through a
+three line receipe, why bake another conditional into a function that is
+supposed to be high-performance like the date math and formatting function in
+Timezone?
+
+These libraries minimal and the reasoning to decide whether to include a feature
+was simple, but libraries themselves are not simple utilities. Stencil and
+Inquiry are both languages of sorts, Timezone does some lexing and syntax
+bashing, Cadence has some serious syntax bashing. With them I favored minzipped
+size over other factors and still got some great libraries.
 
 My concern with Packet has always been speed. I've been resistant to extensions
 because it complicates the parse and serialize loop. It has given me a simple
 criteria by which to judge any request for a new feature; will it add a
-condition to the 
+condition to the parse loop and serialize loop? If so that makes it harder for
+me to make my bargain, that the Packet delcaration language is so easy to use,
+you won't mind if Packet is a little bit slower than a hand-made parser. If it
+gets too complicated, then I have to use benchmarks to make my case, and if gets
+too slow then Packet is curious library, maybe for prototyping, but not
+for production.
+
+Well, [best-foot-forward](https://github.com/bigeasy/packet/blob/master/diary.md#best-foot-forward)
+makes performance concerns go away. Packet parsers and serializers will the
+fastest they can be, but this is not going to be a MicroJS library. It's not
+going to be huge, it can still live on the browser, but it's not going to be
+tiny. And, of course, as the [composition
+architecture](https://github.com/bigeasy/packet/blob/master/diary.md#composed-loops)
+takes shape, you can probably ship only what you need.
 
 My new criteria for considering a request is a little more complicated;
 
@@ -122,26 +157,37 @@ My new criteria for considering a request is a little more complicated;
    serialization?
  * does the use case work with real binary data, data in the wild?
  * does the Packet API prevent the user from obtaining the benefits of the
-   Packet parser?
+   Packet definition language?
 
-Perhaps the last bit is the way to look at packet. My hunch is that when people
-read through the language description, they think, oh, that's perfect. It makes
-sense. If I'm not altogether familiar with binary, I get the sense that this
-library catalogues the things you to expect in binary data. There is a lot of
-structure here, and I can build on top of this structure.
+Perhaps the last bit is the way to look at Packet. My hunch is that when people
+read through the definition language description, they think, oh, that's
+perfect. This makes sense.
+
+If I know a lot about binary, this looks like C structures, Perl's or Python's
+pack, I've see this before.
+
+If I'm not altogether familiar with binary, I get the sense that this library
+catalogues the things you to expect in binary data. There is a lot of structure
+here, and I can build on top of this structure.
 
 But, then my desire to keep it fast and minimal means that they can't get their
-hands on that language.
+hands on that language. There's now way to embed logic in the language. There's
+no way to get the parser to show it's work.
 
-Oh, you mean I can't match repeated structures without an external loop? Those
-are all over this real world protocol. (Minecraft.)
+And the nice people of GitHub will say...
 
-I can't get a dump of how the patterns matched? Well, I guess I can't use it to
-build an inspector, just a reader/writer.
+"Oh, you mean I can't match repeated structures without an external loop? Those
+are all over this real world protocol. (Minecraft.) I've got a lot of loops
+already."
 
-You mean in order to search for a word, I need to invoke your high-ceremony API
+"I can't get a dump of how the patterns matched? Well, I guess I can't use it to
+build an inspector, just a reader/writer. I'll keep that in mind."
+
+"You mean in order to search for a word, I need to invoke your high-ceremony API
 to get those two bytes? I'll just read them using a buffer library, and then
-I'll read my record using the same library.
+I'll read my record using the same library."
+
+"Great library though. It looks like it is really useful for *something*."
 
 The Packet API is a two step process. This is because Packet supports
 incremental parsing and serialization. It's not a single step in any case. Let
@@ -163,7 +209,7 @@ out of the core, out of the library, saying no.
 
 This truly is a diary, so please don't take this to be directed at you, dear
 reader, unless you are me rereading this, in which case, build for the people
-you want to help.
+you want to help, not against people you want to avoid.
 
 Try to imagine if you'd like to use Packet to solve the problem for which
 they've chosen Packet. People are very generous in sharing details of their use
@@ -173,12 +219,13 @@ inspector, accommodate.
 
 ## Best Foot Forward
 
-What's not being said here, what's changed my tune is realizing that Packet
-needs to take a best-foot-forward approach and **compile** a Packet parser that
-is a function with all the reads inlined that falls back to a general purpose
-loop if the compiled parser stops in mid-read. Then you could even go so far as
-to disable incremental parsing, if you know that you'll always have the entire
-structure when you invoke `parse`. (And all the same for the `Serializer`.)
+What's not being said here (update: added mention of this up there), what's
+changed my tune is realizing that Packet needs to take a best-foot-forward
+approach and **compile** a Packet parser that is a function with all the reads
+inlined that falls back to a general purpose loop if the compiled parser stops
+in mid-read. Then you could even go so far as to disable incremental parsing, if
+you know that you'll always have the entire structure when you invoke `parse`.
+(And all the same for the `Serializer`.)
 
 With this in place, the bad criteria of not wanting to pollute the loop with
 conditionals that won't trigger for the common case, that's nonsense, because
