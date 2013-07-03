@@ -564,6 +564,8 @@ Changes for each release.
 
 ### Version 0.0.6
 
+Wed Jul  3 21:52:20 UTC 2013
+
  * Implement `Serializer.offsetsOf`. #87. #85. #86. #63.
  * Objects primary, positional arguments secondary. #84.
  * Reset namedness of `Parser`. #83.
