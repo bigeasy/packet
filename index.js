@@ -798,6 +798,7 @@ function Serializer(definition) {
                       offset: offset,
                       length: field.bits / 8 };
       if (!field.named) delete record.name; // add then remove for the sake of order.
+      if (field.endianness == 'x') delete record.value;
       if (field.arrayed) {
         delete record.name;
         container.value[index] = record;
