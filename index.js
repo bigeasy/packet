@@ -788,11 +788,14 @@ function Serializer(definition) {
 
     function _element (container, index) {
       var value = field.arrayed ? incoming[field.name][index] : incoming[field.name],
-          record =  { pattern: detokenize(),
+          record =  { name: field.name,
+                      pattern: detokenize(),
                       value: value,
                       offset: offset,
                       length: field.bits / 8 };
+      if (!field.named) delete record.name; // add then remove for the sake of order.
       if (field.arrayed) {
+        delete record.name;
         container.value[index] = record;
       } else {
         container[index] = record;
@@ -801,12 +804,14 @@ function Serializer(definition) {
       return record.length;
     }
 
-    output = named ? {} : [];
+    output = [];
     while (field) {
       if (field.lengthEncoding) {
         var start = offset;
         var element = pattern[++patternIndex];
-        var record = output[element.name] = { value: [], offset: 0 };
+        var record = { name: element.name, value: [], offset: 0 };
+        if (!element.named) delete record.name;
+        output.push(record);
         var value = incoming[element.name];
         offset += _element(record, 'count');
         record.count.value = value.length;
@@ -819,9 +824,10 @@ function Serializer(definition) {
         dump(record);
       } else if (field.terminator) {
         var start = offset,
-            record = output[field.name]
-                   = { pattern: detokenize(true), value: [], offset: 0 },
+            record = { name: field.name, pattern: detokenize(true), value: [], offset: 0 },
             value = incoming[field.name];
+        if (!field.named) delete record.name;
+        output.push(record);
         for (var i = 0, I = value.length; i < I; i++) {
           offset += _element(record, i);
         }
@@ -835,22 +841,18 @@ function Serializer(definition) {
       } else if (field.arrayed) {
         var start = offset,
             value = incoming[field.name],
-            record = output[field.name]
-                   = { pattern: detokenize(true), value: [], offset: 0 };
+            record = { name: field.name, pattern: detokenize(true), value: [], offset: 0 };
+        if (!field.named) delete record.name;
         for (var i = 0, I = field.repeat; i < I; i++) {
           offset += _element(record, i);
         }
         record.length = offset - start;
         dump(record);
+        output.push(record);
       } else {
-        offset += _element(output, field.name);
+        offset += _element(output, output.length);
       }
       field = pattern[++patternIndex];
-    }
-    if (!named) {
-      var array = [];
-      flatten(pattern, output, array);
-      return array;
     }
     return output;
   }

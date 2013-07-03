@@ -7,7 +7,7 @@ require("./proof")(1, function (offsetsOf, deepEqual) {
     var serializer = parser.createSerializer();
     serializer.serialize('pattern', record);
     var fields = serializer.offsetsOf();
-    deepEqual(fields, { number: { pattern: 'b8', value: 1, offset: 0, length: 1 } }, 'expected');
+    deepEqual(fields, [ { name: 'number', pattern: 'b8', value: 1, offset: 0, length: 1 } ], 'expected');
   });
   parser.parse([ 1 ]);
 });
