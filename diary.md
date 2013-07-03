@@ -49,3 +49,22 @@ point I saw some evidence of this but that's gone.
 
 The logic still supports positional arguments now, but the implementation
 expects an object, instead of expecting an array.
+
+## Offsets
+
+The `Serializer` is just that, it takes an object or parameters and flattens
+them to a stream. Currently, I'm facing a problem in that `offsetsOf` returns an
+object if the `Serializer` was told to extract from an `Object.` However, the
+sturcture of the `offsetsOf` report includes the contianing bytes of of bit
+packed fields. There is no name to assign the containing bytes. They are unnamed
+in the pattern.
+
+It won't be a problem for arrays of structures, though. The array will most
+likely have a name.
+
+Thus, for that one special case, we say that there are no objects coming out of
+`offsetsOf`. It is an array for the purpose of visualization. If you want to
+find a particular field, you can use `Array.filter` or some such.
+
+Oh, also, for the purpose of display, we might also want to see skipped bytes.
+They certainly do not have a name.
