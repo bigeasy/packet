@@ -69,9 +69,9 @@ find a particular field, you can use `Array.filter` or some such.
 Oh, also, for the purpose of display, we might also want to see skipped bytes.
 They certainly do not have a name.
 
-## Upon Pattern Matching I Reconsider My Objectives for Packet
+## Reconsidering My Objectives for Packet
 
-Throughout this project, I've avoided slipperly slopes. Slopes such as, nesting
+Throughout this project, I've avoided slippery slopes. Slopes such as, nesting
 and pattern matching.
 
 Of course, the moment I tried to build something with Packet myself I
@@ -95,7 +95,7 @@ adding `offsetsOf` so that Packet can show it's work.
 
 I've thought about how Packet has evolved. It is a compelling library. People
 see it and they want it to solve their problem. Their problem is that they want
-to explode binary data with delcalrations of that data, not by picking through
+to explode binary data with declarations of that data, not by picking through
 the bits themselves.
 
 Someone wanted to implement a protocol where the packet parsing was fed by a
@@ -122,10 +122,9 @@ library to grow beyond 5k, or the braggable under 1k of Inquiry.
 
 Having a simple reason to say no was liberating. It was used primarily against
 myself, but once a library gets some adoption, like Timezone, I find that people
-appreciate the goal of miniminalism. When you can do something easily through a
-three line receipe, why bake another conditional into a function that is
-supposed to be high-performance like the date math and formatting function in
-Timezone?
+appreciate the goal of minimalism. When you can do something easily through a
+three line recipe, why bake another conditional into a function that is supposed
+to be high-performance like the date math and formatting function in Timezone?
 
 These libraries minimal and the reasoning to decide whether to include a feature
 was simple, but libraries themselves are not simple utilities. Stencil and
@@ -137,11 +136,11 @@ My concern with Packet has always been speed. I've been resistant to extensions
 because it complicates the parse and serialize loop. It has given me a simple
 criteria by which to judge any request for a new feature; will it add a
 condition to the parse loop and serialize loop? If so that makes it harder for
-me to make my bargain, that the Packet delcaration language is so easy to use,
+me to make my bargain, that the Packet declaration language is so easy to use,
 you won't mind if Packet is a little bit slower than a hand-made parser. If it
 gets too complicated, then I have to use benchmarks to make my case, and if gets
-too slow then Packet is curious library, maybe for prototyping, but not
-for production.
+too slow then Packet is curious library, maybe for prototyping, but not for
+production.
 
 Well, [best-foot-forward](https://github.com/bigeasy/packet/blob/master/diary.md#best-foot-forward)
 makes performance concerns go away. Packet parsers and serializers will the
