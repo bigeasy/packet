@@ -562,6 +562,22 @@ Error messages for pattern parsing.
 
 Changes for each release.
 
+### Version 0.0.6
+
+ * Implement `Serializer.offsetsOf`. #87. #85. #86. #63.
+ * Objects primary, positional arguments secondary. #84.
+ * Reset namedness of `Parser`. #83.
+ * Serialize and parsed a named length encoded array. #82.
+ * Increase test coverage.  #77. #69. #68. #67. #66.
+ * Test text to float conversion. #66.
+ * Remove `n` syntax from README. @jryans. #64.
+ * Remove detection of `n` synonym for `b`.
+ * Remove asterisk to indicate wildcard condition. #33.
+ * `Parser.parse` returns bytes read. #60.
+ * Report coverage to Coveralls. #61.
+ * Rename `pattern` to `field`. #57.
+ * Massive tidy after change in enclosed objects.
+
 ### Version 0.0.5
 
 Released: Fri Mar  1 03:05:15 UTC 2013
