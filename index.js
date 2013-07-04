@@ -842,12 +842,10 @@ function Serializer(definition) {
         dump(record);
         output.push(record);
       } else if (field.packing) {
-        record = { name: field.name,
-                   pattern: detokenize(),
+        record = { pattern: detokenize(),
                    value: [],
                    offset: offset,
                    length: offset + field.bits / 8 };
-        if (!field.named) delete record.name;
         var bit = 0, hex = new Buffer(1);
         var packing = field.packing;
         var start = offset;
