@@ -681,9 +681,19 @@ function Serializer(definition) {
         if (field.alternation) {
           field = field.alternation[0];
           if (field.pattern[0].packing) {
-            field = field.pattern[0].packing[0];
+            for (var j = 0, J = field.pattern[0].packing.length; j < J; j++) {
+              if (field.pattern[0].packing[j].named) {
+                field = field.pattern[0].packing[j];  
+              }
+            }
+          } else {
+            for (var j = 0, J = field.pattern.length; j < J; j++) {
+              if (field.pattern[j].named) {
+                field = field.pattern[j];  
+              }
+            }
           }
-          value = named ? incoming[field.name] : incoming[0];
+          value = incoming[field.name];
 
           field = alternates[i];
           for (j = 0, J = field.alternation.length; j < J; j++) {
