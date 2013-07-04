@@ -702,31 +702,6 @@ function Serializer(definition) {
       pattern = alternates;
     }
 
-    // TODO: No. Defer. We can make it faster if we defer.
-
-    // Run the outgoing values through field pipelines before we enter the write
-    // loop. We need to skip over the blank fields and constants. We also skip
-    // over bit packed fields because we do not apply pipelines to packed fields.
-    if (false) for (j = 0, i = 0, I = pattern.length; i < I; i++) {
-      field = pattern[i];
-      value = outgoing[i];
-      if (skip) {
-        skip--
-        continue
-      }
-      if (pattern[j].packing) {
-        for (k = 0, K = pattern[j].packing.length; k < K; k++) {
-          if (pattern[j].packing[k].endianness ==  "b") skip++;
-        }
-        if (skip > 0) skip--;
-      } else {
-        while (pattern[j] &&  pattern[j].endianness ==  "x") j++;
-        if (! pattern[j]) throw new Error("too many fields");
-        outgoing[i] = definition.pipeline(! outgoing, pattern[j], value, true)
-      }
-      j++;
-    }
-
     nextField();
     nextValue();
   }
