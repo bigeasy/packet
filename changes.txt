@@ -1,2 +1,0 @@
-
- * 100% test coverage prior to refactor. #70.

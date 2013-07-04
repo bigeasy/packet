@@ -400,17 +400,6 @@ calling this library Packet. Yes, it does parsing. Yes, it does serialization.
 Yes, it does pattern matching. Yes, it is faster than the parser you'd write
 yourself.
 
+## Next Change Log
 
-
-
-
-
-
-
-
-
-
-
-
-
-
+ * 100% test coverage prior to refactor. #71. #70.
