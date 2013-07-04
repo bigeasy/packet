@@ -149,14 +149,37 @@ function Definition (context, packets, transforms) {
 // Construct a `Parser` around the given `definition`.
 function Parser (definition) {
   var increment, valueOffset, terminal, terminated, terminator, value,
-  bytesRead = 0, skipping, repeat, step, named, index, arrayed,
+  skipping, repeat, step, named, index, arrayed,
   pattern, patternIndex, context = definition.context || this, fields, _callback;
 
-  // The length property of the `Parser`, returning the number of bytes read.
-  function _length () { return bytesRead }
+  // Sets the next packet to extract from the stream by providing a packet name
+  // defined by the `packet` function or else a packet pattern to parse. The
+  // `callback` will be invoked when the packet has been extracted from the
+  // buffer or buffers given to `parse`.
 
-  // The public `reset` method to reuse the parser, clearing the current state.
-//  function reset () { bytesRead = 0, named = false }
+  //
+  function extract (nameOrPattern, callback) {
+    pattern = definition.pattern(nameOrPattern);
+    patternIndex = 0;
+    _callback = callback;
+    fields = {};
+    named = false;
+    this.length = 0;
+
+    this.parse = createGenericParser(definition, pattern, patternIndex, _callback, fields, named);
+  }
+
+
+  return classify.call(definition.extend(this), extract);
+}
+
+function createGenericParser (definition, pattern, patternIndex, _callback, fields, named) {
+  var increment, valueOffset, terminal, terminated, terminator, value,
+  skipping, repeat, step, named, index, arrayed,
+  pattern, patternIndex, context = definition.context || this, fields, _callback;
+  //#### parser.parse(buffer[, start][, length])
+  // The `parse` method reads from the buffer, returning when the current pattern
+  // is read, or the end of the buffer is reached.
 
   // Prepare the parser for the next field in the pattern.
   function nextField ()  {
@@ -192,30 +215,11 @@ function Parser (definition) {
     increment = little ? 1 : -1;
   }
 
-  // Sets the next packet to extract from the stream by providing a packet name
-  // defined by the `packet` function or else a packet pattern to parse. The
-  // `callback` will be invoked when the packet has been extracted from the
-  // buffer or buffers given to `parse`.
-
-  //
-  function extract (nameOrPattern, callback) {
-    pattern = definition.pattern(nameOrPattern);
-    patternIndex = 0;
-    _callback = callback;
-    fields = {};
-    named = false;
-    bytesRead = 0;
-
-    nextField();
-    nextValue();
-  }
-
-  //#### parser.parse(buffer[, start][, length])
-  // The `parse` method reads from the buffer, returning when the current pattern
-  // is read, or the end of the buffer is reached.
+  nextField();
+  nextValue();
 
   // Read from the `buffer` for the given `start` offset and `length`.
-  function parse (buffer, start, length) {
+  return function (buffer, start, length) {
     // Initialize the loop counters. Initialize unspecified parameters with their
     // defaults.
     var bufferOffset = start || 0,
@@ -234,7 +238,7 @@ function Parser (definition) {
         var begin    = bufferOffset;
         bufferOffset       += advance;
         skipping   -= advance;
-        bytesRead  += advance;
+        this.length  += advance;
         // If we have more bytes to skip, then break because we've consumed the
         // entire buffer.
         if (skipping) break;
@@ -246,7 +250,7 @@ function Parser (definition) {
             value[valueOffset] = buffer[bufferOffset];
             bufferOffset++;
             valueOffset += increment;
-            bytesRead++;
+            this.length++;
             if (valueOffset == terminal) break;
             if (bufferOffset == bufferEnd) break PATTERN;
           }
@@ -257,7 +261,7 @@ function Parser (definition) {
             value += Math.pow(256, valueOffset) * buffer[bufferOffset];
             bufferOffset++;
             valueOffset += increment
-            bytesRead++;
+            this.length++;
             if (valueOffset == terminal) break;
             if (bufferOffset == bufferEnd) break PATTERN;
           }
@@ -404,12 +408,12 @@ function Parser (definition) {
             if (branch.failed)
               throw new Error("Cannot match branch.");
             bytes = arrayed.slice(0);
-            bytesRead -= bytes.length;
+            this.length -= bytes.length;
             pattern = pattern.slice(0);
             pattern.splice.apply(pattern, [ patternIndex, 1 ].concat(branch.pattern));
             nextField();
             nextValue();
-            parse(bytes, 0, bytes.length);
+            this.parse(bytes, 0, bytes.length);
             continue;
 
 
@@ -431,6 +435,7 @@ function Parser (definition) {
           // TODO: Rename to _pattern. This is too wonky.
           var _pattern = pattern;
           pattern = null;
+          this.parse = null;
 
           // At one point, you thought you could have  a test for the arity of
           // the function, and if it was not `1`, you'd call the callback
@@ -450,6 +455,9 @@ function Parser (definition) {
             flatten(_pattern, fields, array);
             _callback.apply(context, array);
           }
+          if (this.parse) {
+            bufferOffset += this.parse(buffer, bufferOffset, bufferEnd - bufferOffset);
+          }
         // Otherwise we proceed to the next field in the packet pattern.
         } else {
           nextField();
@@ -460,8 +468,6 @@ function Parser (definition) {
     // Return the count of bytes read.
     return bufferOffset - start;
   }
-
-  return classify.call(definition.extend(this), extract, parse, _length);
 }
 
 function flatten (pattern, fields, array) {
