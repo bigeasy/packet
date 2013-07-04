@@ -430,25 +430,23 @@ function Parser (definition) {
           var _pattern = pattern;
           pattern = null;
 
-          if (_callback) {
-            // At one point, you thought you could have  a test for the arity of
-            // the function, and if it was not `1`, you'd call the callback
-            // positionally, regardless of named parameters. Then you realized
-            // that the `=>` operator in CoffeeScript would use a bind function
-            // with no arguments, and read the argument array. If you do decide to
-            // go back to arity override, then greater than one is the trigger.
-            // However, on reflection, I don't see that the flexibility is useful,
-            // and I do believe that it will generate at least one bug report that
-            // will take a lot of hashing out only to close with "oh, no, you hit
-            // upon a "hidden feature".
-            var number = 1
-            if (named) {
-              _callback.call(context, fields);
-            } else {
-              var array = [];
-              flatten(_pattern, fields, array);
-              _callback.apply(context, array);
-            }
+          // At one point, you thought you could have  a test for the arity of
+          // the function, and if it was not `1`, you'd call the callback
+          // positionally, regardless of named parameters. Then you realized
+          // that the `=>` operator in CoffeeScript would use a bind function
+          // with no arguments, and read the argument array. If you do decide to
+          // go back to arity override, then greater than one is the trigger.
+          // However, on reflection, I don't see that the flexibility is useful,
+          // and I do believe that it will generate at least one bug report that
+          // will take a lot of hashing out only to close with "oh, no, you hit
+          // upon a "hidden feature".
+          var number = 1
+          if (named) {
+            _callback.call(context, fields);
+          } else {
+            var array = [];
+            flatten(_pattern, fields, array);
+            _callback.apply(context, array);
           }
         // Otherwise we proceed to the next field in the packet pattern.
         } else {
