@@ -156,7 +156,7 @@ function Parser (definition) {
   function _length () { return bytesRead }
 
   // The public `reset` method to reuse the parser, clearing the current state.
-  function reset () { bytesRead = 0, named = false }
+//  function reset () { bytesRead = 0, named = false }
 
   // Prepare the parser for the next field in the pattern.
   function nextField ()  {
@@ -203,6 +203,8 @@ function Parser (definition) {
     patternIndex = 0;
     _callback = callback;
     fields = {};
+    named = false;
+    bytesRead = 0;
 
     nextField();
     nextValue();
@@ -459,7 +461,7 @@ function Parser (definition) {
     return bufferOffset - start;
   }
 
-  return classify.call(definition.extend(this), extract, parse, reset, _length);
+  return classify.call(definition.extend(this), extract, parse, _length);
 }
 
 function flatten (pattern, fields, array) {
@@ -482,7 +484,7 @@ function Serializer(definition) {
 
   function _length () { return bytesWritten }
 
-  function reset () { bytesWritten = 0 }
+//  function reset () { bytesWritten = 0 }
 
   // Prepare the parser for the next field in the pattern.
   function nextField () {
@@ -620,6 +622,7 @@ function Serializer(definition) {
     _callback = callback;
     patternIndex = 0;
     alternates = prototype.slice();
+    bytesWritten = 0;
 
     // Positial arrays go through once to resolve alternation for the sake of
     // the naming. This duplication is the price you pay for invoking with
@@ -1010,7 +1013,7 @@ function Serializer(definition) {
     return bufferOffset - start;
   }
 
-  classify.call(definition.extend(this), serialize, write, reset, offsetsOf, _length, _sizeOf);
+  classify.call(definition.extend(this), serialize, write, offsetsOf, _length, _sizeOf);
 }
 
 function createParser (context) { return new Parser(new Definition(context, {}, transforms)) }

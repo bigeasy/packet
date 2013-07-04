@@ -6,7 +6,6 @@ module.exports = require('proof')(function (equal, deepEqual, ok) {
   function offsetsOf (pattern, bytes, expected, label) {
     // TODO: Get rid of invoked.
     var invoked = false;
-    parser.reset();
     parser.packet('pattern', pattern);
     parser.extract('pattern', function () {
       var serializer = parser.createSerializer();

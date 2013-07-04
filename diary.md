@@ -5,6 +5,11 @@ been around for a while, so there is none.
 
 `sizeOf` should be a function, not a property.
 
+## Inbox
+
+ * What is `bytesWritten` about? What is `rest` about? Don't we reset when we
+   call `serialize` or `extract`?
+
 ## Pre-compilation
 
 Your unwind loop gets fast. Inside the compiled function, everything you need
@@ -402,4 +407,4 @@ yourself.
 
 ## Next Change Log
 
- * 100% test coverage prior to refactor. #72. #71. #70.
+ * 100% test coverage prior to refactor. #75. #74. #73. #72. #71. #70.

@@ -5,7 +5,6 @@ module.exports = require('proof')(function (equal, deepEqual, ok) {
     ;
   function parseEqual (pattern, bytes, length) {
     var invoked = false, extracted = slice(arguments, 3), message = extracted.pop();
-    parser.reset();
     parser.extract(pattern, function () {
       var fields = slice(arguments, 0);
       equal(parser.length, length, message + ' byte count');
