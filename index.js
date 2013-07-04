@@ -754,6 +754,14 @@ function Serializer(definition) {
                      field.endianness +
                      field.bits +
                     (field.type == 'n' ? '' : field.type);
+      if (field.padding) {
+        var buffer = new Buffer(field.bits / 8), pad = field.padding;
+        for (var i = buffer.length -1; i != -1; i--) {
+          buffer[i] = pad & 0xff;
+          pad >>> 8;
+        }
+        scalar += '{0x' + buffer.toString('hex') + '}'
+      }
       if (arrayed) {
         if (count) {
           return count.pattern + '/' + scalar;

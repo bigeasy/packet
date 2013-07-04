@@ -407,5 +407,6 @@ yourself.
 
 ## Next Change Log
 
+ * Display padding in patterns in `offsetsOf`. #88.
  * Update `contributors` in `package.json`. #90.
  * 100% test coverage prior to refactor. #96. #94. #95. #93. #92. #79. #78. #76. #75. #74. #73. #72. #71. #70.
