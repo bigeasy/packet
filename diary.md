@@ -407,4 +407,5 @@ yourself.
 
 ## Next Change Log
 
+ * Update `contributors` in `package.json`. #90.
  * 100% test coverage prior to refactor. #96. #93. #92. #79. #78. #76. #75. #74. #73. #72. #71. #70.

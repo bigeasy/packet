@@ -18,5 +18,15 @@
 ,   "contributors": [
     { "name": "J. Ryan Stinnett"
     , "email": "jryans@gmail.com"
+    },
+    { "name": "Ben Hockey"
+    , "email": "neonstalwart@gmail.com"
+    },
+    { "name": "Greg Ose"
+    , "email": "neonstalwart@gmail.com"
+    , "web": "http://nullmethod.com/"
+    },
+    { "name": "Aaron Qian"
+    , "email": "aq1018@gmail.com"
     }]
 }
