@@ -16,10 +16,19 @@ module.exports = require('proof')(function (equal, deepEqual) {
       , written = vargs.pop()
       , serializer = createSerializer()
       , buffer = Array.isArray(vargs[0]) ? vargs.shift() : new Buffer(1024)
+      , sum
       ;
     serializer.serialize.apply(serializer, vargs);
-    equal(serializer.sizeOf, written, message + ' sizeOf');
-    serializer.write(buffer);
+    var sizeOf = serializer.sizeOf;
+    if (Array.isArray(written)) {
+      written = written.reduce(function (previous, current) {
+        serializer.write(buffer, previous, previous + current); 
+        return previous + current;
+      }, 0);
+    } else {
+      serializer.write(buffer);
+    }
+    equal(sizeOf, written, message + ' sizeOf');
     equal(serializer.length, written, message + ' byte count');
     deepEqual(toArray(buffer.slice(0, serializer.length)), bytes, message + ' written');
   }

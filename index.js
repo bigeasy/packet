@@ -889,9 +889,7 @@ function Serializer(definition) {
   // is written, or the end of the buffer is reached.  Write to the `buffer` in
   // the region defined by the given `start` offset and `length`.
   function write (buffer, start, length) {
-    // **TODO**: Tidy.
     var bufferOffset = start || 0;
-    if (length == null) length = buffer.length;
     var bufferEnd = bufferOffset + (length == null ? buffer.length : length);
     start = bufferOffset;
 
