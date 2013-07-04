@@ -407,4 +407,4 @@ yourself.
 
 ## Next Change Log
 
- * 100% test coverage prior to refactor. #75. #74. #73. #72. #71. #70.
+ * 100% test coverage prior to refactor. #76. #75. #74. #73. #72. #71. #70.
