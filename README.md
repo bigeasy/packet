@@ -582,7 +582,7 @@ Wed Jul  3 21:52:20 UTC 2013
 
 ### Version 0.0.5
 
-Released: Fri Mar  1 03:05:15 UTC 2013
+Fri Mar  1 03:05:15 UTC 2013
 
  * Chunked serialization bug fixes. #59. #58. #55.
  * Move supporting libraries to root directory. #44.
@@ -592,7 +592,7 @@ Released: Fri Mar  1 03:05:15 UTC 2013
 
 ### Version 0.0.4
 
-Released: Mon Nov  6 04:50:16 UTC 2012.
+Mon Nov  6 04:50:16 UTC 2012.
 
  * Create parsers and serializers from prototypes. #53.
  * Parse patterns with Win32 CRLF. #51. (Greg Ose <greg@nullmethod.com>)
@@ -607,7 +607,7 @@ Released: Mon Nov  6 04:50:16 UTC 2012.
 
 ### Version 0.0.3
 
-Released: Fri Aug 17 00:40:37 UTC 2012.
+Fri Aug 17 00:40:37 UTC 2012.
 
  * Fix Packet in NPM. #12.
  * Serialize alternate structures. #31.
