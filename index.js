@@ -878,8 +878,8 @@ function Serializer(definition) {
               }
               element.hex += hex.toString('hex');
             }
-            bit += field.bits;
           }
+          bit += field.bits;
         }
         dump(record);
         output.push(record);
