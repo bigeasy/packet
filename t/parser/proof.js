@@ -13,7 +13,18 @@ module.exports = require('proof')(function (equal, deepEqual, ok) {
       });
       invoked = true;
     });
-    parser.parse(bytes);
+    if (Array.isArray(length)) {
+      var writes = length;
+      var length = writes.reduce(function (offset, size) {
+        return offset + size;
+      }, 0);
+      writes.reduce(function (offset, size) {
+        parser.parse(bytes, offset, size);
+        return offset + size;
+      }, 0);
+    } else {
+      parser.parse(bytes);
+    }
     ok(invoked, message + ' invoked');
   }
   return { createParser: createParser, parseEqual: parseEqual };

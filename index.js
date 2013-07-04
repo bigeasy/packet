@@ -143,7 +143,43 @@ function Definition (context, packets, transforms) {
   return classify.call(this, packet, transform, pattern, pipeline, extend);
 }
 
+// FIXME: Really want to do start, end instead of offset length.
+var builders = {
+  b: add, l: add
+}
 
+function add (field, pattern, patternIndex, fields, callback) {
+  var value = 0,
+      little = field.endianness == 'l',
+      bytes = field.bytes,
+      bite = little ? 0 : bytes - 1,
+      increment = little ? 1 : -1,
+      stop = little ? bytes : -1;
+  return function (buffer, offset, length) {
+    var start = offset || 0, first = start, end = start + (length == null ? buffer.length : length);
+    while (bite != stop) {
+      if (start == end) return first - start;
+      value += Math.pow(256, bite) * buffer[start];
+      start++;
+      bite += increment;
+      this.length++;
+    }
+    fields[field.name] = value;
+    var next = advance.call(this, pattern, patternIndex, fields, callback);
+    return (first - start) + next.call(this, buffer, start, end - start);
+  }
+}
+
+function advance (pattern, patternIndex, fields, callback) {
+  var step;
+  if (step = pattern[++patternIndex]) {
+    return this.parse = step.builder.call(this, step.field, pattern, patternIndex, fields, callback);
+  } else {
+    this.parse = null;
+    callback(fields);
+    return this.parse || function () { return 0 }
+  }
+}
 //#### Parser
 
 // Construct a `Parser` around the given `definition`.
@@ -166,7 +202,32 @@ function Parser (definition) {
     named = false;
     this.length = 0;
 
-    this.parse = createGenericParser(definition, pattern, patternIndex, _callback, fields, named);
+    if (pattern.every(function (part) {
+      return ! part.arrayed &&
+             ! part.alternation &&
+             ! part.packing &&
+             ! part.pipeline &&
+             ! part.signed &&
+             /^(b|l)$/.test(part.endianness) &&
+             part.type == 'n'
+    })) {
+      var composition = pattern.map(function (field) {
+        return { field: field, builder: builders[field.endianness] }
+      });
+      named = pattern.some(function (field) { return field.named });
+      if (named) {
+        var __callback = callback;
+      } else {
+        var __callback = function (object) {
+          var array = [];
+          flatten(pattern, object, array);
+          callback.apply(this, array);
+        }
+      }
+      this.parse = composition[0].builder(composition[0].field, composition, 0, {}, __callback);
+    } else {
+      this.parse = createGenericParser(definition, pattern, patternIndex, _callback, fields, named);
+    }
   }
 
 
