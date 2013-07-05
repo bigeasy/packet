@@ -421,6 +421,11 @@ calling this library Packet. Yes, it does parsing. Yes, it does serialization.
 Yes, it does pattern matching. Yes, it is faster than the parser you'd write
 yourself.
 
+## Inbox
+
+ * Maybe there is a pattern parser that is exposed to the user? That is their
+   packet collection. They manage it, precompile, etc?
+
 ## Next Change Log
 
  * Packed integer length incorrect in `offsetsOf`. #105.
