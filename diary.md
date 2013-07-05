@@ -419,6 +419,7 @@ yourself.
 
 ## Next Change Log
 
+ * Pre-compiled packets. #99.
  * Parse as composition strategy. #98.
  * Display padding in patterns in `offsetsOf`. #88.
  * Update `contributors` in `package.json`. #90.
