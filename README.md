@@ -9,11 +9,11 @@ An evented binary packet and structure parser for Node.js.
 
 ## Objectives
 
-Node Packet creates **binary parsers** and **serializers** that are
-**incremental** through a binary pattern language that is **declarative** and
-very **expressive**.
+Packet creates **binary parsers** and **serializers** that are **incremental**
+through a binary pattern language that is **declarative** and very
+**expressive**.
 
-Node Packet simplifies the construction an maintenance of libraries that convert
+Packet simplifies the construction an maintenance of libraries that convert
 binary to JavaScript and back. The name Packet may make you think that it is
 designed solely for binary network protocols, but it is also great for reading
 and writing binary file formats.
@@ -26,7 +26,7 @@ define and maintain.
 language inspired by Perl's `pack`. The binary patterns are used to define both
 parsers and serializers. If you have a protocol specification, or even just a C
 header file with structures that define your binary data, you can probably
-translate that directly into Node Packet patterns.
+translate that directly into Packet patterns.
 
 For parsers, you associate the patterns to callbacks invoked with captured
 values when the pattern is extracted from the stream. For serializers you simply
@@ -61,7 +61,7 @@ to unleash Packet on legacy data someday, from way back when a byte was whatever
 a computer manufacturer said it was.
 
 Therefore, It's worth noting that Packet parses 8-bit bytes and expects bytes to
-align to an 8-bit boundary. Node Packet can parse 7-bit ASCII formats like `tar`
+align to an 8-bit boundary. Packet can parse 7-bit ASCII formats like `tar`
 archives, because they are 8-bit aligned with the top bit ignored. Packet can
 also parse and serialize bit packed integers, so it does support awkward integer
 sizes, but within an 8-bit aligned integer.
@@ -78,7 +78,7 @@ The source is available on [GitHub](https://github.com/bigeasy/packet).
 
 ## Parsers and Serializers
 
-Node Packet defines a binary format using a binary pattern language inspired by
+Packet defines a binary format using a binary pattern language inspired by
 Perl's `pack` function. The pattern language is used in a `Parser` to define the
 parameters passed to callback when enough bytes are read from the input stream
 to satisfy the pattern. The pattern language is used in a `Serializer` to define
@@ -266,8 +266,8 @@ All numbers are assumed to be unsigned, unless prefixed by a negative symbol.
 
 ### IEEE 754 Floating Point Numbers
 
-The number type for JavaScript is the  64 bit IEEE 754 floating point. Node
-Packet can read write 64 bit and 32 bit IEEE 754 floating point numbers.
+The number type for JavaScript is the  64 bit IEEE 754 floating point. Packet
+can read write 64 bit and 32 bit IEEE 754 floating point numbers.
 
 To indicated that the type is a floating point number, use the `f` type suffix.
 This is indicated with a `f` suffix.
