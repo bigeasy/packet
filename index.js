@@ -1018,7 +1018,7 @@ function Serializer(definition) {
         record = { pattern: detokenize(),
                    value: [],
                    offset: offset,
-                   length: offset + field.bits / 8 };
+                   length: field.bits / 8 };
         var bit = 0, hex = new Buffer(1);
         var packing = field.packing;
         var start = offset;

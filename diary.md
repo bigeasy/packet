@@ -423,6 +423,7 @@ yourself.
 
 ## Next Change Log
 
+ * Packed integer length incorrect in `offsetsOf`. #105.
  * Pre-compiled packets. #99.
  * Parse and serialize as composition strategy. #100. #98.
  * Display padding in patterns in `offsetsOf`. #88.
