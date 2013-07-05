@@ -4,6 +4,8 @@ module.exports = function (pattern, source) {
   builder.push.apply(builder, source.map(function (line) { return '  ' + line }));
   builder.push('}');
 
+  builder = builder.map(function (line) { return line.replace(/^\s+$/, '') });
+
   console.log(builder.join('\n'));
 
   var name = pattern.map(function (f) {

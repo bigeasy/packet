@@ -44,7 +44,7 @@ even wrap the callback, so flattening costs extra.
 What am I trying to save here? What cost? The thought is that array indexes cost
 less than object indexes.
 
-Actually, the fear is 
+Actually, the fear is
 
 ## Pre-Compiled Parsers and Serializers
 
@@ -115,7 +115,7 @@ Someone wants to [read through a binary file looking for a
 sentry](https://github.com/bigeasy/packet/issues/62), a start of record marker,
 then extracting a packet if the record extracted has a proper checksum. Packet
 looked perfect for this, but it isn't.
- 
+
 You make what you measure. While building Packet, I was building the
 [MicroJS](http://microjs.com/) libraries
 [Stencil](https://github.com/bigeasy/stencil),
@@ -439,7 +439,7 @@ var parser = parser.extract('b8', function () {
   return packet.extract('b8', function () {
   });
 }));
-var parser = parser.packet(compiled['name'], 
+var parser = parser.packet(compiled['name'],
 var serializer = packet.serialize('b8', new Serializer, object);
 ```
 

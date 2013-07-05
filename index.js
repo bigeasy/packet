@@ -120,14 +120,13 @@ function Definition (context, packets, transforms, options) {
     var offset = 0, sum = 0,
         source = [], hoisted = [ 'object = {}' ], assign = [],
         line;
-     
 
     var offset = 0;
     pattern.forEach(function (field) {
-      assign.push('object[' + JSON.stringify(field.name) + '] = ');
+      assign.push('object[' + JSON.stringify(field.name) + '] =');
       if (field.arrayed) {
         if (!~hoisted.indexOf('value')) hoisted.push('value');
-        assign[assign.length - 1] += 'value = new Array(' + field.repeat + ');'
+        assign[assign.length - 1] += ' value = new Array(' + field.repeat + ');'
         for (var i = 0, I = field.repeat; i < I; i++) {
           assign.push('value[' + i + '] =');
           element(assign, field);
@@ -135,7 +134,7 @@ function Definition (context, packets, transforms, options) {
       } else {
         element(assign, field);
       }
-    
+
       assign.push('');
     });
 
@@ -358,7 +357,6 @@ function Parser (definition, options) {
       this.parse = createGenericParser(definition, pattern, 0, __callback, {}, true);
     }
   }
-
 
   return classify.call(definition.extend(this), extract);
 }
@@ -821,7 +819,7 @@ function Serializer(definition) {
     // the naming. This duplication is the price you pay for invoking with
     // positional arrays, it can't be avoided.
     if (!named) {
-      incoming = {}, pattern = []; 
+      incoming = {}, pattern = [];
       for (var i = 0; i < alternates.length; i++) {
         field = alternates[i];
         if (field.alternation) {
@@ -876,13 +874,13 @@ function Serializer(definition) {
           if (field.pattern[0].packing) {
             for (var j = 0, J = field.pattern[0].packing.length; j < J; j++) {
               if (field.pattern[0].packing[j].named) {
-                field = field.pattern[0].packing[j];  
+                field = field.pattern[0].packing[j];
               }
             }
           } else {
             for (var j = 0, J = field.pattern.length; j < J; j++) {
               if (field.pattern[j].named) {
-                field = field.pattern[j];  
+                field = field.pattern[j];
               }
             }
           }

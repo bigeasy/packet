@@ -22,7 +22,7 @@ module.exports = require('proof')(function (equal, deepEqual) {
     var sizeOf = serializer.sizeOf;
     if (Array.isArray(written)) {
       written = written.reduce(function (previous, current) {
-        serializer.write(buffer, previous, previous + current); 
+        serializer.write(buffer, previous, previous + current);
         return previous + current;
       }, 0);
     } else {
