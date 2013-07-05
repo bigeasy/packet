@@ -448,7 +448,7 @@ var serializer = packet.serialize('b8', new Serializer, object);
  * Packed integer length incorrect in `offsetsOf`. #105.
  * Add `offset` argument to `offsetsOf`. #101.
  * Pre-compiled packets. #107. #106. #103. #102. #99.
- * Parse and serialize as composition strategy. #104. #100. #98. #97.
+ * Parse and serialize as composition strategy. #111. #110. #104. #100. #98. #97.
  * Display padding in patterns in `offsetsOf`. #88.
  * Update `contributors` in `package.json`. #90.
  * 100% test coverage prior to refactor. #96. #94. #95. #93. #92. #79. #78. #76. #75. #74. #73. #72. #71. #70.
