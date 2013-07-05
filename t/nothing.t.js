@@ -1,3 +1,0 @@
-#!/usr/bin/node
-
-require('..');
