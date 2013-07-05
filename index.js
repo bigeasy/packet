@@ -86,8 +86,8 @@ function Definition (context, packets, transforms, options) {
   options = options || {};
   if (!('compile' in options)) options.compile = true;
 
-  var precompiler = options.precompiler || function (composition, source) {
-    return Function.call(Function, 'incremental', 'composition', 'callback', source.join('\n'));
+  var precompiler = options.precompiler || function (pattern, source) {
+    return Function.call(Function, 'incremental', 'pattern', 'callback', source.join('\n'));
   }
 
   function precompile (pattern) {
@@ -191,27 +191,6 @@ function Definition (context, packets, transforms, options) {
     transforms[name] = procedure;
   }
 
-  var compositions = {};
-  function composition (nameOrPattern) {
-    if (packets[nameOrPattern]) {
-      if (compositions[nameOrPattern]) {
-        return compositions[nameOrPattern];
-      }
-      var composition = packets[nameOrPattern].map(function (field) {
-        return { field: field, builder: builders[field.endianness] }
-      });
-      composition.named = composition.some(function (step) { return step.field.named });
-      precompile(composition, 0);
-      return compositions[nameOrPattern] = composition;
-    } else {
-      var composition = parse(nameOrPattern).map(function (field) {
-        return { field: field, builder: builders[field.endianness] }
-      });
-      composition.named = composition.some(function (step) { return step.field.named });
-      return composition;
-    }
-  }
-
   function pattern (nameOrPattern) {
     return packets[nameOrPattern] || compile(nameOrPattern);
   }
@@ -254,46 +233,9 @@ function Definition (context, packets, transforms, options) {
 
   this.context = context;
 
-  return classify.call(this, packet, transform, composition, pattern, pipeline, extend);
+  return classify.call(this, packet, transform, pattern, pipeline, extend);
 }
 
-// FIXME: Really want to do start, end instead of offset length.
-var builders = {
-  b: add, l: add
-}
-
-function add (field, pattern, patternIndex, fields, callback) {
-  var value = 0,
-      little = field.endianness == 'l',
-      bytes = field.bytes,
-      bite = little ? 0 : bytes - 1,
-      increment = little ? 1 : -1,
-      stop = little ? bytes : -1;
-  return function (buffer, start, end) {
-    var first = start;
-    while (bite != stop) {
-      if (start == end) return first - start;
-      value += Math.pow(256, bite) * buffer[start];
-      start++;
-      bite += increment;
-      this.length++;
-    }
-    fields[field.name] = value;
-    var next = advance.call(this, pattern, patternIndex, fields, callback);
-    return first - start + next.call(this, buffer, start, end);
-  }
-}
-
-function advance (pattern, patternIndex, fields, callback) {
-  var step;
-  if (step = pattern[++patternIndex]) {
-    return this.parse = step.builder.call(this, step.field, pattern, patternIndex, fields, callback);
-  } else {
-    this.parse = null;
-    callback(fields);
-    return this.parse || function () { return 0 }
-  }
-}
 //#### Parser
 
 // Construct a `Parser` around the given `definition`.
