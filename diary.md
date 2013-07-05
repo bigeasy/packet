@@ -269,6 +269,18 @@ The code is generated in memory, but it is tested by writing out some of out to
 the file system and `requir`ing it so Istanbul can test the logic of the general
 case on a generated specific case.
 
+*Notes*: Some untested thoughts: `this.length` is going to cost something, maybe
+we push the total bytes read forward into callback. The callback reset logic is
+going to cost. Maybe the user is responsible for continuing. It mucks up our
+nice API thought, but I'm not sure I'm using it the API that way.
+
+If not, then it makes sense to remove it. If continuing from within callbacks is
+awesome, then the costs are probably not significant, and the logic would need
+to go somewhere in any case.
+
+I'm seeing where callback based ought to be an option. If you don't need
+incremental, `parse` can just return an object.
+
 ## Composed Loops
 
 In order to support best-foot-forward and length encoded arrays of structures,
