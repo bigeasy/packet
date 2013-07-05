@@ -3,8 +3,12 @@ module.exports = require('proof')(function (equal, deepEqual, ok) {
     , createParser = require('../..').createParser
     , parser = createParser({}, { precompiler: require('../require') })
     ;
-  function parseEqual (pattern, bytes, length) {
-    var invoked = false, extracted = slice(arguments, 3), message = extracted.pop();
+  function parseEqual () {
+    var invoked = false, extracted = slice(arguments, 0), message = extracted.pop(), options = {};
+    if (typeof extracted[0] == 'object') {
+      options = extracted.shift();
+    }
+    var pattern = extracted.shift(), bytes = extracted.shift(), length = extracted.shift();
     parser.packet('packet', pattern);
     parser.extract('packet', function () {
       var fields = slice(arguments, 0);
@@ -12,6 +16,9 @@ module.exports = require('proof')(function (equal, deepEqual, ok) {
       extracted.forEach(function (expect, i) {
         deepEqual(fields[i], expect, message + ' extracted ' + (i + 1));
       });
+      if (options.subsequent) {
+        parser.extract('b8', function () {});
+      }
       invoked = true;
     });
     if (Array.isArray(length)) {
@@ -26,6 +33,7 @@ module.exports = require('proof')(function (equal, deepEqual, ok) {
     } else {
       parser.parse(bytes, 0, bytes.length);
     }
+    if (parser.subsequent) parser.parse([ 0 ], 0, 1);
     ok(invoked, message + ' invoked');
   }
   return { createParser: createParser, parseEqual: parseEqual };
