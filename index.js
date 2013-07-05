@@ -90,38 +90,61 @@ function Definition (context, packets, transforms, options) {
     return Function.call(Function, 'incremental', 'composition', 'callback', source.join('\n'));
   }
 
-  function precompile (composition, index) {
+  function precompile (pattern) {
     if (!options.compile) return;
 
-    var field = composition[index].field,
-        sum = 0,
-        line;
-     
-    var source = [];
-    source.push('var object = {};', '');
-
-    var assign = [], offset = 0;
-    composition.forEach(function (step) {
-      var field = step.field,
-          little = field.endianness == 'l',
+    function element (assign, field) {
+      var little = field.endianness == 'l',
           bytes = field.bytes,
           bite = little ? 0 : bytes - 1,
           increment = little ? 1 : -1,
           stop = little ? bytes : -1;
-      assign.push('object[' + JSON.stringify(field.name) + '] = ');
       while (bite != stop) {
-        line = '    buffer[start + ' + (offset++)  + '] * ' + Math.pow(256, bite) + ' +';
+        line = 'buffer[start + ' + (offset++)  + '] * ' + Math.pow(256, bite) + ' +';
         line = line.replace(/ \* 1 \+$/, ' +');
-        assign.push(line);
+        line = line.replace(/start \+ 0/, 'start');
+        if (bytes == 1) assign[assign.length - 1] += ' ' + line;
+        else assign.push('    ' + line);
         bite += increment;
       }
-      assign.push(assign.pop().replace(/ \+$/, ';'), '');
       sum += bytes;
+      assign.push(assign.pop().replace(/ \+$/, ';'));
+    }
+
+    function rangeCheck (assign) {
+      assign.push('if (end - start < ' + sum + ') {');
+      assign.push('  return incremental.call(this, buffer, start, end, pattern, 0, object, callback);');
+      assign.push('}', '');
+    }
+
+    var offset = 0, sum = 0,
+        source = [], hoisted = [ 'object = {}' ], assign = [],
+        line;
+     
+
+    var offset = 0;
+    pattern.forEach(function (field) {
+      assign.push('object[' + JSON.stringify(field.name) + '] = ');
+      if (field.arrayed) {
+        if (!~hoisted.indexOf('value')) hoisted.push('value');
+        assign[assign.length - 1] += 'value = new Array(' + field.repeat + ');'
+        for (var i = 0, I = field.repeat; i < I; i++) {
+          assign.push('value[' + i + '] =');
+          element(assign, field);
+        }
+      } else {
+        element(assign, field);
+      }
+    
+      assign.push('');
     });
 
-    source.push('if (end - start < ' + sum + ') {');
-    source.push('  return incremental.call(this, buffer, start, end, composition, 0, callback);');
-    source.push('}', '');
+
+    source.unshift('var ' + hoisted.join(', ') + ';', '');
+
+    if (sum) {
+      rangeCheck(source);
+    }
 
     source.push.apply(source, assign);
 
@@ -141,18 +164,28 @@ function Definition (context, packets, transforms, options) {
     parser.push.apply(parser, source.map(function (line) { return '  ' + line }));
     parser.push('}');
 
-    composition.builder = precompiler(composition, parser);
+    pattern.builder = precompiler(pattern, parser);
   }
 
   function compile (pattern) {
     var parsed = parse(pattern);
     parsed.hasAlternation = parsed.some(function (field) { return field.alternation });
+    if (parsed.every(function (part) {
+      return (! part.arrayed || (part.repeat > 1 && ! part.terminator)) &&
+             ! part.alternation &&
+             ! part.packing &&
+             ! part.pipeline &&
+             ! part.signed &&
+             /^(b|l)$/.test(part.endianness) &&
+             part.type == 'n'
+    })) {
+      precompile(parsed);
+    }
     return parsed;
   }
 
   function packet (name, pattern) {
     packets[name] = compile(pattern);
-    delete compositions[name];
   }
 
   function transform (name, procedure) {
@@ -272,11 +305,6 @@ function Parser (definition, options) {
 
   options = (options || { directory: './t/generated'});
 
-  function incremental (buffer, start, end, composition, index, callback) {
-    this.parse = composition[index].builder(composition[index].field, composition, index, {}, callback);
-    return this.parse(buffer, start, end);
-  }
-
   // Sets the next packet to extract from the stream by providing a packet name
   // defined by the `packet` function or else a packet pattern to parse. The
   // `callback` will be invoked when the packet has been extracted from the
@@ -284,24 +312,25 @@ function Parser (definition, options) {
 
   //
   function extract (nameOrPattern, callback) {
-    pattern = definition.pattern(nameOrPattern);
+    var _pattern = definition.pattern(nameOrPattern);
     patternIndex = 0;
     _callback = callback;
+    pattern = _pattern.slice();
     fields = {};
     named = false;
     this.length = 0;
 
-    if (pattern.every(function (part) {
-      return ! part.arrayed &&
-             ! part.alternation &&
-             ! part.packing &&
-             ! part.pipeline &&
-             ! part.signed &&
-             /^(b|l)$/.test(part.endianness) &&
-             part.type == 'n'
-    })) {
-      var composition = definition.composition(nameOrPattern);
-      if (composition.named) {
+    function isNamed (field) {
+      return field.named || (field.packing && field.packing.some(isNamed))
+                         || (field.alternation && field.alternation.some(isNamed));
+    }
+    named = pattern.some(isNamed);
+
+    function incremental (buffer, start, end, pattern, index, object, callback) {
+      this.parse = createGenericParser(definition, pattern, index, callback, object, true);
+      return this.parse(buffer, start, end);
+    }
+      if (named) {
         var __callback = callback;
       } else {
         var __callback = function (object) {
@@ -310,13 +339,23 @@ function Parser (definition, options) {
           callback.apply(this, array);
         }
       }
-      if (composition.builder) {
-        this.parse = composition.builder(incremental, composition, __callback);
+
+    if (pattern.every(function (part) {
+      return (! part.arrayed || (part.repeat > 1 && ! part.terminator)) &&
+             ! part.alternation &&
+             ! part.packing &&
+             ! part.pipeline &&
+             ! part.signed &&
+             /^(b|l)$/.test(part.endianness) &&
+             part.type == 'n'
+    })) {
+      if (_pattern.builder) {
+        this.parse = _pattern.builder(incremental, pattern, __callback);
       } else {
-        this.parse = composition[0].builder(composition[0].field, composition, 0, {}, __callback);
+        this.parse = createGenericParser(definition, pattern, 0, __callback, {}, true);
       }
     } else {
-      this.parse = createGenericParser(definition, pattern, patternIndex, _callback, fields, named);
+      this.parse = createGenericParser(definition, pattern, 0, __callback, {}, true);
     }
   }
 
@@ -558,7 +597,6 @@ function createGenericParser (definition, pattern, patternIndex, _callback, fiel
               throw new Error("Cannot match branch.");
             bytes = arrayed.slice(0);
             this.length -= bytes.length;
-            pattern = pattern.slice(0);
             pattern.splice.apply(pattern, [ patternIndex, 1 ].concat(branch.pattern));
             nextField();
             nextValue();

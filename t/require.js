@@ -1,15 +1,15 @@
-module.exports = function (composition, source) {
+module.exports = function (pattern, source) {
   var path = require('path'), builder = [];
-  builder.push('module.exports = function (incremental, composition, callback) {');
+  builder.push('module.exports = function (incremental, pattern, callback) {');
   builder.push.apply(builder, source.map(function (line) { return '  ' + line }));
   builder.push('}');
 
   console.log(builder.join('\n'));
 
-  var name = composition.map(function (step) {
-    var f = step.field;
+  var name = pattern.map(function (f) {
     var scalar = f.endianness + f.bits + f.type;
-    if (f.named) scalar += '_' + f.name;
+    if (f.named) scalar += '.' + f.name;
+    if (f.arrayed) scalar += '.array'
     return scalar;
   }).join('_');
 
