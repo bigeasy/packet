@@ -1,7 +1,7 @@
 module.exports = require('proof')(function (equal, deepEqual, ok) {
   var slice = Function.prototype.call.bind(Array.prototype.slice)
     , createParser = require('../..').createParser
-    , parser = createParser({}, { directory: './t/generated' })
+    , parser = createParser({}, { directory: require('../require') })
     ;
   function parseEqual (pattern, bytes, length) {
     var invoked = false, extracted = slice(arguments, 3), message = extracted.pop();

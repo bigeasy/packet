@@ -83,8 +83,12 @@ function say () { console.log.apply(console, [].slice.call(arguments, 0)) }
 function Definition (context, packets, transforms, options) {
   packets = Object.create(packets);
   transforms = Object.create(transforms);
+  options = options || {};
 
-  if(!options) options = {};
+  var precompiler = options.precompiler || function (source) {
+    return Function.call(Function, 'incremental', 'composition', 'callback', source.join('\n'));
+  }
+
   function precompile (composition, index) {
     var field = composition[index].field,
         sum = 0,
@@ -134,24 +138,7 @@ function Definition (context, packets, transforms, options) {
     parser.push.apply(parser, source.map(function (line) { return '  ' + line }));
     parser.push('}');
 
-    if (options.directory) {
-      var builder = [];
-      builder.push('module.exports = function (incremental, composition, callback) {');
-      builder.push.apply(builder, parser.map(function (line) { return '  ' + line }));
-      builder.push('}');
-//      console.log(builder.join('\n'));
-      var name = composition.map(function (step) {
-        var f = step.field;
-        var scalar = f.endianness + f.bits + f.type;
-        if (f.named) scalar += '_' + f.name;
-        return scalar;
-      }).join('_');
-      var full = options.directory + '/' + name + '.js';
-      require('fs').writeFileSync(full, builder.join('\n'), 'utf8');
-      composition.builder = require(full);
-    } else {
-      composition.builder = Function.call(Function, 'incremental', 'composition', 'callback', parser.join('\n'));
-    }
+    composition.builder = precompiler(parser);
   }
 
   function compile (pattern) {
