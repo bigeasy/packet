@@ -20,7 +20,6 @@ module.exports = require('proof')(function (equal, deepEqual, ok) {
         return offset + size;
       }, 0);
       writes.reduce(function (offset, size) {
-        console.log(offset, size, offset + size);
         parser.parse(bytes, offset, offset + size);
         return offset + size;
       }, 0);
