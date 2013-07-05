@@ -6,6 +6,11 @@ module.exports = require('proof')(function (equal, deepEqual, ok) {
     var invoked = false, extracted = slice(arguments, 0), message = extracted.pop(), options = {};
     if (typeof extracted[0] == 'object') {
       options = extracted.shift();
+    } else {
+      options = {};
+    }
+    if (options.require) {
+      options.precompiler = require('../require');
     }
     var parser = createParser({}, options || {});
     var pattern = extracted.shift(), bytes = extracted.shift(), length = extracted.shift();
