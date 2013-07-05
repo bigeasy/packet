@@ -30,7 +30,7 @@ require('proof')(1, function (createSerializer, deepEqual) {
 
   // Serializer writes a chunk, parser parsers a chunk.
   var count;
-  while ((count = serializer.write(chunk)) != 0) {
+  while ((count = serializer.write(chunk, 0, chunk.length)) != 0) {
     parser.parse(chunk, 0, count);
   }
 

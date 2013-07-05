@@ -20,11 +20,12 @@ module.exports = require('proof')(function (equal, deepEqual, ok) {
         return offset + size;
       }, 0);
       writes.reduce(function (offset, size) {
-        parser.parse(bytes, offset, size);
+        console.log(offset, size, offset + size);
+        parser.parse(bytes, offset, offset + size);
         return offset + size;
       }, 0);
     } else {
-      parser.parse(bytes);
+      parser.parse(bytes, 0, bytes.length);
     }
     ok(invoked, message + ' invoked');
   }

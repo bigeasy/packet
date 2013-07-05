@@ -16,5 +16,5 @@ require("./proof")(1, function (offsetsOf, deepEqual) {
         offset: 0,
         length: 1 } ], 'expected');
   });
-  parser.parse([ 1 ]);
+  parser.parse([ 1 ], 0, 1);
 });

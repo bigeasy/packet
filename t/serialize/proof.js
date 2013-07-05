@@ -26,7 +26,7 @@ module.exports = require('proof')(function (equal, deepEqual) {
         return previous + current;
       }, 0);
     } else {
-      serializer.write(buffer);
+      serializer.write(buffer, 0, buffer.length);
     }
     equal(sizeOf, written, message + ' sizeOf');
     equal(serializer.length, written, message + ' byte count');

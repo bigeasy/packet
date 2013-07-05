@@ -281,6 +281,10 @@ to go somewhere in any case.
 I'm seeing where callback based ought to be an option. If you don't need
 incremental, `parse` can just return an object.
 
+If speed matters, then why am I adding convience functions like figuring the
+start and end of the range? Why don't you please provide that? Now I have to
+calcuate it everywhere.
+
 ## Composed Loops
 
 In order to support best-foot-forward and length encoded arrays of structures,
@@ -420,7 +424,7 @@ yourself.
 ## Next Change Log
 
  * Pre-compiled packets. #99.
- * Parse as composition strategy. #98.
+ * Parse and serialize as composition strategy. #100. #98.
  * Display padding in patterns in `offsetsOf`. #88.
  * Update `contributors` in `package.json`. #90.
  * 100% test coverage prior to refactor. #96. #94. #95. #93. #92. #79. #78. #76. #75. #74. #73. #72. #71. #70.

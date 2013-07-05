@@ -91,8 +91,7 @@ function Definition (context, packets, transforms, options) {
         line;
      
     var source = [];
-    source.push('var start = offset || 0, first = start, end = start + (length == null ? buffer.length : length),');
-    source.push('    object = {};', '');
+    source.push('var object = {};', '');
 
     var assign = [], offset = 0;
     composition.forEach(function (step) {
@@ -124,14 +123,14 @@ function Definition (context, packets, transforms, options) {
     source.push('this.parse = null;', '');
     source.push('callback(object);', '');
     source.push('if (this.parse) {');
-    source.push('  return ' + sum + ' + this.parse(buffer, ' + sum + ', end - ' + sum + ');');
+    source.push('  return ' + sum + ' + this.parse(buffer, ' + sum + ', end);');
     source.push('} else {');
     source.push('  return ' + sum + ';');
     source.push('}');
 
     var parser = [];
 
-    parser.push('return function (buffer, offset, length) {');
+    parser.push('return function (buffer, start, end) {');
     parser.push.apply(parser, source.map(function (line) { return '  ' + line }));
     parser.push('}');
 
@@ -248,8 +247,8 @@ function add (field, pattern, patternIndex, fields, callback) {
       bite = little ? 0 : bytes - 1,
       increment = little ? 1 : -1,
       stop = little ? bytes : -1;
-  return function (buffer, offset, length) {
-    var start = offset || 0, first = start, end = start + (length == null ? buffer.length : length);
+  return function (buffer, start, end) {
+    var first = start;
     while (bite != stop) {
       if (start == end) return first - start;
       value += Math.pow(256, bite) * buffer[start];
@@ -259,7 +258,7 @@ function add (field, pattern, patternIndex, fields, callback) {
     }
     fields[field.name] = value;
     var next = advance.call(this, pattern, patternIndex, fields, callback);
-    return (first - start) + next.call(this, buffer, start, end - start);
+    return first - start + next.call(this, buffer, start, end);
   }
 }
 
@@ -285,7 +284,7 @@ function Parser (definition, options) {
 
   function incremental (buffer, start, end, composition, index, callback) {
     this.parse = composition[index].builder(composition[index].field, composition, index, {}, callback);
-    return this.parse(buffer, start, start + end);
+    return this.parse(buffer, start, end);
   }
 
   // Sets the next packet to extract from the stream by providing a packet name
@@ -381,13 +380,11 @@ function createGenericParser (definition, pattern, patternIndex, _callback, fiel
   nextValue();
 
   // Read from the `buffer` for the given `start` offset and `length`.
-  return function (buffer, start, length) {
+  return function (buffer, bufferOffset, bufferEnd) {
     // Initialize the loop counters. Initialize unspecified parameters with their
     // defaults.
-    var bufferOffset = start || 0,
-        bufferEnd = bufferOffset + (length == null ? buffer.length : length),
-        bytes, bits, field;
-    start = bufferOffset;
+    var bufferOffset = bufferOffset, bufferEnd = bufferEnd, bytes, bits, field;
+    var start = bufferOffset;
 
     // We set the pattern to null when all the fields have been read, so while
     // there is a pattern to fill and bytes to read.
@@ -618,7 +615,7 @@ function createGenericParser (definition, pattern, patternIndex, _callback, fiel
             _callback.apply(context, array);
           }
           if (this.parse) {
-            bufferOffset += this.parse(buffer, bufferOffset, bufferEnd - bufferOffset);
+            bufferOffset += this.parse(buffer, bufferOffset, bufferEnd);
           }
         // Otherwise we proceed to the next field in the packet pattern.
         } else {
@@ -1072,10 +1069,8 @@ function Serializer(definition) {
   // The `write` method writes to the buffer, returning when the current pattern
   // is written, or the end of the buffer is reached.  Write to the `buffer` in
   // the region defined by the given `start` offset and `length`.
-  function write (buffer, start, length) {
-    var bufferOffset = start || 0;
-    var bufferEnd = bufferOffset + (length == null ? buffer.length : length);
-    start = bufferOffset;
+  function write (buffer, bufferOffset, bufferEnd) {
+    var start = bufferOffset;
 
     // While there is a pattern to fill and space to write.
     PATTERN: while (pattern.length != patternIndex &&  bufferOffset < bufferEnd) {

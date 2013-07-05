@@ -15,7 +15,7 @@ module.exports = require('proof')(function (equal, deepEqual, ok) {
       deepEqual(bytes.length, serializer.sizeOf, label + ' size of');
       invoked = true;
     });
-    parser.parse(bytes);
+    parser.parse(bytes, 0, bytes.length);
     ok(invoked, label + ' invoked');
   }
   return { createParser: createParser, offsetsOf: offsetsOf };

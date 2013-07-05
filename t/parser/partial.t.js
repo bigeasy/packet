@@ -8,7 +8,7 @@ require('./proof')(2, function (createParser, equal) {
     equal(number, -10, 'parsed');
     equal(parser.length, buffer.length, 'length');
   });
-  parser.parse(buffer.slice(0, 4));
-  parser.parse(buffer.slice(4, 12));
-  parser.parse(buffer.slice(12));
+  parser.parse(buffer, 0, 4);
+  parser.parse(buffer, 4, 12);
+  parser.parse(buffer, 12, buffer.length);
 });

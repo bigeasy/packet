@@ -8,5 +8,5 @@ require('./proof')(2, function (equal, createParser) {
       equal(value, 1, "unset");
     });
   });
-  parser.parse([ 0x81, 0x00, 0x01 ]);
+  parser.parse([ 0x81, 0x00, 0x01 ], 0, 3);
 });
