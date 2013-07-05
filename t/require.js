@@ -1,4 +1,4 @@
-module.exports = function (source) {
+module.exports = function (composition, source) {
   var path = require('path'), builder = [];
   builder.push('module.exports = function (incremental, composition, callback) {');
   builder.push.apply(builder, source.map(function (line) { return '  ' + line }));

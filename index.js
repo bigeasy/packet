@@ -85,7 +85,7 @@ function Definition (context, packets, transforms, options) {
   transforms = Object.create(transforms);
   options = options || {};
 
-  var precompiler = options.precompiler || function (source) {
+  var precompiler = options.precompiler || function (composition, source) {
     return Function.call(Function, 'incremental', 'composition', 'callback', source.join('\n'));
   }
 
@@ -138,7 +138,7 @@ function Definition (context, packets, transforms, options) {
     parser.push.apply(parser, source.map(function (line) { return '  ' + line }));
     parser.push('}');
 
-    composition.builder = precompiler(parser);
+    composition.builder = precompiler(composition, parser);
   }
 
   function compile (pattern) {
