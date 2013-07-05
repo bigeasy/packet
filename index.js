@@ -903,10 +903,10 @@ function Serializer(definition) {
     return size;
   }
 
-  function offsetsOf (buffer) {
+  function offsetsOf (buffer, offset) {
     if (Array.isArray(buffer)) buffer = new Buffer(buffer);
     var patternIndex = 0, field = pattern[patternIndex],
-        output, offset = 0, record;
+        output, offset = offset == null ? 0 : offset, record;
 
     function dump (record) {
       if (buffer) {
