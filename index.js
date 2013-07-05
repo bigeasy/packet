@@ -84,12 +84,15 @@ function Definition (context, packets, transforms, options) {
   packets = Object.create(packets);
   transforms = Object.create(transforms);
   options = options || {};
+  if (!('compile' in options)) options.compile = true;
 
   var precompiler = options.precompiler || function (composition, source) {
     return Function.call(Function, 'incremental', 'composition', 'callback', source.join('\n'));
   }
 
   function precompile (composition, index) {
+    if (!options.compile) return;
+
     var field = composition[index].field,
         sum = 0,
         line;
