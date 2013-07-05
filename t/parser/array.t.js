@@ -15,10 +15,10 @@ require('./proof')(23, function (parseEqual) {
     [ 0x0102, 0x0304, 0x0506 ], 0x0708,
     "read an array of 3 bytes pre-compiled, continue");
   parseEqual({
-      require: true, subsequent: true
+      require: true
     },
     "b16[3], b16",
-    bytes, [ 4, 4 ],
+    bytes, [ 4, 3, 1 ],
     [ 0x0102, 0x0304, 0x0506 ], 0x0708,
     "read an array of 3 bytes pre-compiled, fallback");
 });
