@@ -80,9 +80,80 @@ function say () { console.log.apply(console, [].slice.call(arguments, 0)) }
 // variables, but it does use prototypical inheritance to extend the collections
 // of packet patterns and transforms.
 
-function Definition (context, packets, transforms) {
+function Definition (context, packets, transforms, options) {
   packets = Object.create(packets);
   transforms = Object.create(transforms);
+
+  if(!options) options = {};
+  function precompile (composition, index) {
+    var field = composition[index].field,
+        sum = 0,
+        line;
+     
+    var source = [];
+    source.push('var start = offset || 0, first = start, end = start + (length == null ? buffer.length : length),');
+    source.push('    object = {};', '');
+
+    var assign = [], offset = 0;
+    composition.forEach(function (step) {
+      var field = step.field,
+          little = field.endianness == 'l',
+          bytes = field.bytes,
+          bite = little ? 0 : bytes - 1,
+          increment = little ? 1 : -1,
+          stop = little ? bytes : -1;
+      assign.push('object[' + JSON.stringify(field.name) + '] = ');
+      while (bite != stop) {
+        line = '    buffer[start + ' + (offset++)  + '] * ' + Math.pow(256, bite) + ' +';
+        line = line.replace(/ \* 1 \+$/, ' +');
+        assign.push(line);
+        bite += increment;
+      }
+      assign.push(assign.pop().replace(/ \+$/, ';'), '');
+      sum += bytes;
+    });
+
+    source.push('if (end - start < ' + sum + ') {');
+    source.push('  return incremental.call(this, buffer, start, end, composition, 0, callback);');
+    source.push('}', '');
+
+    source.push.apply(source, assign);
+
+    source.push('this.length = ' + sum + ';', '');
+
+    source.push('this.parse = null;', '');
+    source.push('callback(object);', '');
+    source.push('if (this.parse) {');
+    source.push('  return ' + sum + ' + this.parse(buffer, ' + sum + ', end - ' + sum + ');');
+    source.push('} else {');
+    source.push('  return ' + sum + ';');
+    source.push('}');
+
+    var parser = [];
+
+    parser.push('return function (buffer, offset, length) {');
+    parser.push.apply(parser, source.map(function (line) { return '  ' + line }));
+    parser.push('}');
+
+    if (options.directory) {
+      var builder = [];
+      builder.push('module.exports = function (incremental, composition, callback) {');
+      builder.push.apply(builder, parser.map(function (line) { return '  ' + line }));
+      builder.push('}');
+//      console.log(builder.join('\n'));
+      var name = composition.map(function (step) {
+        var f = step.field;
+        var scalar = f.endianness + f.bits + f.type;
+        if (f.named) scalar += '_' + f.name;
+        return scalar;
+      }).join('_');
+      var full = options.directory + '/' + name + '.js';
+      require('fs').writeFileSync(full, builder.join('\n'), 'utf8');
+      composition.builder = require(full);
+    } else {
+      composition.builder = Function.call(Function, 'incremental', 'composition', 'callback', parser.join('\n'));
+    }
+  }
 
   function compile (pattern) {
     var parsed = parse(pattern);
@@ -92,10 +163,32 @@ function Definition (context, packets, transforms) {
 
   function packet (name, pattern) {
     packets[name] = compile(pattern);
+    delete compositions[name];
   }
 
   function transform (name, procedure) {
     transforms[name] = procedure;
+  }
+
+  var compositions = {};
+  function composition (nameOrPattern) {
+    if (packets[nameOrPattern]) {
+      if (compositions[nameOrPattern]) {
+        return compositions[nameOrPattern];
+      }
+      var composition = packets[nameOrPattern].map(function (field) {
+        return { field: field, builder: builders[field.endianness] }
+      });
+      composition.named = composition.some(function (step) { return step.field.named });
+      precompile(composition, 0);
+      return compositions[nameOrPattern] = composition;
+    } else {
+      var composition = parse(nameOrPattern).map(function (field) {
+        return { field: field, builder: builders[field.endianness] }
+      });
+      composition.named = composition.some(function (step) { return step.field.named });
+      return composition;
+    }
   }
 
   function pattern (nameOrPattern) {
@@ -103,11 +196,11 @@ function Definition (context, packets, transforms) {
   }
 
   function createParser (context) {
-    return new Parser(new Definition(context, packets, transforms));
+    return new Parser(new Definition(context, packets, transforms, options), options);
   }
 
   function createSerializer (context) {
-    return new Serializer(new Definition(context, packets, transforms));
+    return new Serializer(new Definition(context, packets, transforms, options), options);
   }
 
   function extend (object) {
@@ -140,7 +233,7 @@ function Definition (context, packets, transforms) {
 
   this.context = context;
 
-  return classify.call(this, packet, transform, pattern, pipeline, extend);
+  return classify.call(this, packet, transform, composition, pattern, pipeline, extend);
 }
 
 // FIXME: Really want to do start, end instead of offset length.
@@ -183,10 +276,17 @@ function advance (pattern, patternIndex, fields, callback) {
 //#### Parser
 
 // Construct a `Parser` around the given `definition`.
-function Parser (definition) {
+function Parser (definition, options) {
   var increment, valueOffset, terminal, terminated, terminator, value,
   skipping, repeat, step, named, index, arrayed,
   pattern, patternIndex, context = definition.context || this, fields, _callback;
+
+  options = (options || { directory: './t/generated'});
+
+  function incremental (buffer, start, end, composition, index, callback) {
+    this.parse = composition[index].builder(composition[index].field, composition, index, {}, callback);
+    return this.parse(buffer, start, start + end);
+  }
 
   // Sets the next packet to extract from the stream by providing a packet name
   // defined by the `packet` function or else a packet pattern to parse. The
@@ -211,11 +311,8 @@ function Parser (definition) {
              /^(b|l)$/.test(part.endianness) &&
              part.type == 'n'
     })) {
-      var composition = pattern.map(function (field) {
-        return { field: field, builder: builders[field.endianness] }
-      });
-      named = pattern.some(function (field) { return field.named });
-      if (named) {
+      var composition = definition.composition(nameOrPattern);
+      if (composition.named) {
         var __callback = callback;
       } else {
         var __callback = function (object) {
@@ -224,7 +321,11 @@ function Parser (definition) {
           callback.apply(this, array);
         }
       }
-      this.parse = composition[0].builder(composition[0].field, composition, 0, {}, __callback);
+      if (composition.builder) {
+        this.parse = composition.builder(incremental, composition, __callback);
+      } else {
+        this.parse = composition[0].builder(composition[0].field, composition, 0, {}, __callback);
+      }
     } else {
       this.parse = createGenericParser(definition, pattern, patternIndex, _callback, fields, named);
     }
@@ -1072,7 +1173,7 @@ function Serializer(definition) {
   classify.call(definition.extend(this), serialize, write, offsetsOf, _length, _sizeOf);
 }
 
-function createParser (context) { return new Parser(new Definition(context, {}, transforms)) }
-function createSerializer (context) { return new Serializer(new Definition(context, {}, transforms)) }
+function createParser (context, options) { return new Parser(new Definition(context, {}, transforms, options), options) }
+function createSerializer (context, options) { return new Serializer(new Definition(context, {}, transforms, options), options) }
 
 classify.call(exports, createParser, createSerializer);

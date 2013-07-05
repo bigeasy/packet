@@ -1,11 +1,12 @@
 module.exports = require('proof')(function (equal, deepEqual, ok) {
   var slice = Function.prototype.call.bind(Array.prototype.slice)
     , createParser = require('../..').createParser
-    , parser = createParser()
+    , parser = createParser({}, { directory: './t/generated' })
     ;
   function parseEqual (pattern, bytes, length) {
     var invoked = false, extracted = slice(arguments, 3), message = extracted.pop();
-    parser.extract(pattern, function () {
+    parser.packet('packet', pattern);
+    parser.extract('packet', function () {
       var fields = slice(arguments, 0);
       equal(parser.length, length, message + ' byte count');
       extracted.forEach(function (expect, i) {
