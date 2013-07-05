@@ -426,6 +426,23 @@ yourself.
  * Maybe there is a pattern parser that is exposed to the user? That is their
    packet collection. They manage it, precompile, etc?
 
+```javascript
+var parser = packet.extract('b8', new Parser, function () {
+  return packet.extract('b8', function () {
+  });
+});
+var parser = new Parser(packet.compile('b8', function () {
+  return packet.extract('b8', function () {
+  });
+}));
+var parser = parser.extract('b8', function () {
+  return packet.extract('b8', function () {
+  });
+}));
+var parser = parser.packet(compiled['name'], 
+var serializer = packet.serialize('b8', new Serializer, object);
+```
+
 ## Next Change Log
 
  * Packed integer length incorrect in `offsetsOf`. #105.
