@@ -445,6 +445,7 @@ var serializer = packet.serialize('b8', new Serializer, object);
 
 ## Next Change Log
 
+ * Floats are not `signed`. #113.
  * Packed integer length incorrect in `offsetsOf`. #105.
  * Add `offset` argument to `offsetsOf`. #101.
  * Pre-compiled packets. #107. #106. #103. #102. #99.

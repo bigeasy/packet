@@ -208,7 +208,7 @@ function parse (pattern, part, index, bits, next) {
 
     // Convert the match into an object.
     var f =
-    { signed:     !!$[1] || $[4] == "f"
+    { signed:     !!$[1]
     , endianness: $[2]
     , bits:       parseInt($[3], 10)
     , type:       $[4] || 'n'
@@ -234,7 +234,7 @@ function parse (pattern, part, index, bits, next) {
     // bytes, but not applicable for bits anyway.
     if (f.bits > 64 && f.type == "n") f.type = "a";
     f.bytes = f.bits / bits
-    f.exploded = !!(f.signed || f.bytes > 8 || ~"ha".indexOf(f.type));
+    f.exploded = !!(f.signed || f.bytes > 8 || ~"fa".indexOf(f.type));
 
 
     // Check for bit backing. The intense rest pattern in the regex allows us to
