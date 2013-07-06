@@ -6,6 +6,7 @@ rm -rf coverage
 
 count=1;
 for file in $(find t -name \*.t.js); do
+  echo "RUNNING $file"
   node_modules/.bin/istanbul cover \
     -x 't/require.js' -x 'ieee754.js' \
     -x 't/**/proof.js' -x 't/**/*.t.js' $file
@@ -13,6 +14,7 @@ for file in $(find t -name \*.t.js); do
   count=$(expr $count + 1)
 done
 
+echo "REPORTING"
 node_modules/.bin/istanbul report --root coverage --dir coverage
 
 sed -i -e s,'^SF:'`pwd`/,SF:, coverage/lcov.info
