@@ -133,9 +133,9 @@ function Definition (context, packets, transforms, options) {
           bite += increment;
         }
         assign.unshift.apply(assign, gather);
-        assign[assign.length - 1] += ' ieee754.fromIEEE754' + size + '(value);'
-        sum += bytes;
+        assign[assign.length - 1] += ' ieee754.fromIEEE754' + size + '(value.reverse());'
       }
+      sum += bytes;
     }
 
     function element (assign, field) {
@@ -173,7 +173,6 @@ function Definition (context, packets, transforms, options) {
 
       assign.push('');
     });
-
 
     source.unshift('var ' + hoisted.join(', ') + ';', '');
 
@@ -445,9 +444,9 @@ function createGenericParser (definition, pattern, patternIndex, _callback, fiel
         // Convert to float or double.
         if (field.type == "f") {
           if (field.bits == 32)
-            value = ieee754.fromIEEE754Single(bytes)
+            value = ieee754.fromIEEE754Single(bytes.reverse())
           else
-            value = ieee754.fromIEEE754Double(bytes)
+            value = ieee754.fromIEEE754Double(bytes.reverse())
 
         // Get the two's compliment signed value.
         } else if (field.signed) {
@@ -738,9 +737,9 @@ function Serializer(definition) {
         // Convert a float into its IEEE 754 representation.
         if (field.type == "f") {
           if (field.bits == 32)
-            value = ieee754.toIEEE754Single(value)
+            value = ieee754.toIEEE754Single(value).reverse();
           else
-            value = ieee754.toIEEE754Double(value)
+            value = ieee754.toIEEE754Double(value).reverse();
 
         // Convert a signed integer into its two's compliment representation.
         } else if (field.signed) {
