@@ -108,8 +108,8 @@ function Definition (context, packets, transforms, options) {
         else assign.push('    ' + line);
         bite += increment;
       }
-      sum += bytes;
       assign.push(assign.pop().replace(/ \+$/, ';'));
+      return assign;
     }
 
     function floating (assign, field) {
@@ -135,7 +135,7 @@ function Definition (context, packets, transforms, options) {
         assign.unshift.apply(assign, gather);
         assign[assign.length - 1] += ' ieee754.fromIEEE754' + size + '(value.reverse());'
       }
-      sum += bytes;
+      return assign;
     }
 
     function element (assign, field) {
@@ -147,28 +147,98 @@ function Definition (context, packets, transforms, options) {
       }
     }
 
-    function rangeCheck (assign) {
-      assign.unshift('if (end - start < ' + sum + ') {',
-                     '  return incremental.call(this, buffer, start, end, pattern, 0, object, callback);',
-                     '}', '');
+    function rangeCheck (assign, condition) {
+      assign.push(
+        'if (' + condition + ') {',
+        '  return incremental.call(this, buffer, start, end, pattern, 0, object, callback);',
+        '}');
+      return assign;
     }
 
-    var offset = 0, sum = 0,
-        source = [], hoisted = [ 'object = {}' ], assign = [],
+    var offset = 0, sum = 0, sums = [],
+        source = [], hoisted = [ 'object = {}' ], assign = [], length = [],
         line;
 
+    function indent (spaces) {
+      spaces = new Array(spaces + 1).join(' ');
+      return function (line) { return spaces + line }
+    }
+
+    var push = Function.prototype.apply.bind(Array.prototype.push);
+    var unshift = Function.prototype.apply.bind(Array.prototype.unshift);
+
+    // TODO: Slice buffers. If signed, then slice and fixup.
     var offset = 0;
     pattern.forEach(function (field) {
       assign.push('object[' + JSON.stringify(field.name) + '] =');
       if (field.arrayed) {
-        if (!~hoisted.indexOf('value')) hoisted.push('value');
-        assign[assign.length - 1] += ' value = new Array(' + field.repeat + ');'
-        for (var i = 0, I = field.repeat; i < I; i++) {
-          assign.push('value[' + i + '] =');
-          element(assign, field);
+        if (!~hoisted.indexOf('array')) hoisted.push('array');
+        if (field.terminator) {
+          if (sum) {
+            rangeCheck(source, 'end - start < ' + sum);
+            sums.push(sum);
+            sum = 0;
+          }
+          if (!~hoisted.indexOf('value')) hoisted.push('value');
+          if (!~hoisted.indexOf('first = start')) hoisted.push('first = start');
+          assign[assign.length - 1] += ' array = [];'
+          if (field.terminator.length == 1) {
+            assign.push('for (;;) {');
+            if (field.repeat != Number.MAX_VALUE) {
+              assign.push('  if (array.length == ' + field.repeat + ') break;');
+            }
+            if (field.bytes == 1) {
+              push(assign, rangeCheck([], 'start == end').map(indent(2)));
+            } else {
+              push(assign, rangeCheck([], 'start + ' + (field.bytes - 1) + ' >= end').map(indent(2)));
+            }
+            assign.push.apply(assign, element([ 'value =' ], field).map(indent(2)));
+            assign.push('  start += ' + field.bytes + ';');
+            assign.push('  if (value == ' + field.terminator[0] + ') break;');
+            assign.push('  array.push(value);');
+            assign.push('}')
+          } else {
+            assign.push('for (;;) {');
+            if (field.bytes == 1) {
+              push(assign, rangeCheck([], 'start == end').map(indent(2)));
+            } else {
+              push(assign, rangeCheck([], 'start + ' + (field.bytes - 1) + ' >= end').map(indent(2)));
+            }
+            if (field.repeat != Number.MAX_VALUE) {
+              assign.push('  if (array.length == ' + field.repeat + ') break;');
+            }
+            assign.push.apply(assign, element([ 'value =' ], field).map(indent(2)));
+            assign.push('  start += ' + field.bytes + ';');
+            assign.push('  array.push(value);');
+            assign.push('  if (' + field.terminator.map(function (value, index) {
+              return '' + value + ' == array[array.length - ' + Math.abs((index - field.terminator.length)) + ']';
+            }).join(' && ') + ') {');
+            assign.push('    array.splice(-' + field.terminator.length + ');');
+            assign.push('    break;')
+            assign.push('  }');
+            assign.push('}')
+          }
+          if (!~hoisted.indexOf('(start - first)')) length.push('(start - first)');
+          if (field.repeat != Number.MAX_VALUE) {
+            // TODO: Ugly. Faster with offset to track count instead of array length?
+            // TODO: Slice buffers.
+            assign.push('start += ' + field.repeat + ' - array.length;');
+            assign.push('if (array.length < ' + field.repeat + ') {');
+            assign.push('  start -= ' + field.terminator.length + ';');
+            assign.push('}');
+          }
+          offset = 0;
+        } else {
+          assign[assign.length - 1] += ' array = new Array(' + field.repeat + ');'
+          for (var i = 0, I = field.repeat; i < I; i++) {
+            assign.push('array[' + i + '] =');
+            element(assign, field);
+          }
+          sum += field.bytes * field.repeat;
         }
       } else {
         element(assign, field);
+        sum += field.bytes;
       }
       assign.push('');
       source.push.apply(source, assign);
@@ -176,19 +246,27 @@ function Definition (context, packets, transforms, options) {
     });
 
     if (sum) {
-      rangeCheck(source);
+      source.unshift('');
+      unshift(source, rangeCheck([], 'end - start < ' + sum));
+      sums.push(sum);
+      sum = 0;
+    }
+
+    if (sums.length) {
+      length.push(sums.reduce(function (sum, value) { return sum + value }, 0));
     }
 
     source.unshift('var ' + hoisted.join(', ') + ';', '');
 
-    source.push('this.length = ' + sum + ';', '');
+
+    source.push('this.length = ' + length.join(' + ') + ';', '');
 
     source.push('this.parse = null;', '');
     source.push('callback(object);', '');
     source.push('if (this.parse) {');
-    source.push('  return ' + sum + ' + this.parse(buffer, ' + sum + ', end);');
+    source.push('  return ' + length.join(' + ') + ' + this.parse(buffer, ' + length.join(' + ') + ', end);');
     source.push('} else {');
-    source.push('  return ' + sum + ';');
+    source.push('  return ' + length.join(' + ') + ';');
     source.push('}');
 
     var parser = [];
@@ -204,7 +282,7 @@ function Definition (context, packets, transforms, options) {
     var parsed = parse(pattern);
     parsed.hasAlternation = parsed.some(function (field) { return field.alternation });
     if (parsed.every(function (part) {
-      return (! part.arrayed || (part.repeat > 1 && ! part.terminator)) &&
+      return (! part.arrayed || part.repeat > 1) &&
              ! part.alternation &&
              ! part.packing &&
              ! part.pipeline &&
