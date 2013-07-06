@@ -148,9 +148,9 @@ function Definition (context, packets, transforms, options) {
     }
 
     function rangeCheck (assign) {
-      assign.push('if (end - start < ' + sum + ') {');
-      assign.push('  return incremental.call(this, buffer, start, end, pattern, 0, object, callback);');
-      assign.push('}', '');
+      assign.unshift('if (end - start < ' + sum + ') {',
+                     '  return incremental.call(this, buffer, start, end, pattern, 0, object, callback);',
+                     '}', '');
     }
 
     var offset = 0, sum = 0,
@@ -170,17 +170,16 @@ function Definition (context, packets, transforms, options) {
       } else {
         element(assign, field);
       }
-
       assign.push('');
+      source.push.apply(source, assign);
+      assign.length = 0;
     });
-
-    source.unshift('var ' + hoisted.join(', ') + ';', '');
 
     if (sum) {
       rangeCheck(source);
     }
 
-    source.push.apply(source, assign);
+    source.unshift('var ' + hoisted.join(', ') + ';', '');
 
     source.push('this.length = ' + sum + ';', '');
 
