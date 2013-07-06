@@ -1,6 +1,6 @@
 module.exports = function (pattern, source) {
   var path = require('path'), builder = [];
-  builder.push('module.exports = function (incremental, pattern, callback) {');
+  builder.push('module.exports = function (incremental, pattern, ieee754, callback) {');
   builder.push.apply(builder, source.map(function (line) { return '  ' + line }));
   builder.push('}');
 

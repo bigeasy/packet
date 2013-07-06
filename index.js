@@ -87,13 +87,14 @@ function Definition (context, packets, transforms, options) {
   if (!('compile' in options)) options.compile = true;
 
   var precompiler = options.precompiler || function (pattern, source) {
-    return Function.call(Function, 'incremental', 'pattern', 'callback', source.join('\n'));
+    return Function.call(Function,
+      'incremental', 'pattern', 'ieee754', 'callback', source.join('\n'));
   }
 
   function precompile (pattern) {
     if (!options.compile) return;
 
-    function element (assign, field) {
+    function unsigned (assign, field) {
       var little = field.endianness == 'l',
           bytes = field.bytes,
           bite = little ? 0 : bytes - 1,
@@ -109,6 +110,41 @@ function Definition (context, packets, transforms, options) {
       }
       sum += bytes;
       assign.push(assign.pop().replace(/ \+$/, ';'));
+    }
+
+    function floating (assign, field) {
+      var little = field.endianness == 'l',
+          suffix = little ? 'LE' : 'BE',
+          bytes = field.bytes,
+          size = bytes == 4 ? options.buffersOnly ? 'Float' : 'Single' : 'Double',
+          bite = little ? 0 : bytes - 1,
+          increment = little ? 1 : -1,
+          gather = [],
+          stop = little ? bytes : -1;
+      if (!~hoisted.indexOf('value')) hoisted.push('value');
+      if (options.buffersOnly) {
+        assign[assign.length - 1] += ' buffer.read' + size + suffix + '(' + offset + ', true)';
+      } else {
+        gather.push('value = new Array(' + bytes + ');');
+        while (bite != stop) {
+          line = 'value[' + bite + '] = buffer[start + ' + (offset++)  + '];'
+          line = line.replace(/start \+ 0/, 'start');
+          gather.push(line);
+          bite += increment;
+        }
+        assign.unshift.apply(assign, gather);
+        assign[assign.length - 1] += ' ieee754.fromIEEE754' + size + '(value);'
+        sum += bytes;
+      }
+    }
+
+    function element (assign, field) {
+      switch (field.type) {
+      case "f":
+        return floating(assign, field); 
+      default:
+        return unsigned(assign, field);
+      }
     }
 
     function rangeCheck (assign) {
@@ -176,7 +212,7 @@ function Definition (context, packets, transforms, options) {
              ! part.pipeline &&
              ! part.signed &&
              /^(b|l)$/.test(part.endianness) &&
-             part.type == 'n'
+             /^(n|f)$/.test(part.type)
     })) {
       precompile(parsed);
     }
@@ -281,7 +317,7 @@ function Parser (definition, options) {
         }
       }
 
-    if (pattern.every(function (part) {
+    if (true || pattern.every(function (part) {
       return (! part.arrayed || (part.repeat > 1 && ! part.terminator)) &&
              ! part.alternation &&
              ! part.packing &&
@@ -291,7 +327,7 @@ function Parser (definition, options) {
              part.type == 'n'
     })) {
       if (_pattern.builder) {
-        this.parse = _pattern.builder(incremental, pattern, __callback);
+        this.parse = _pattern.builder(incremental, pattern, ieee754, __callback);
       } else {
         this.parse = createGenericParser(definition, pattern, 0, __callback, {}, true);
       }

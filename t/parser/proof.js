@@ -38,7 +38,7 @@ module.exports = require('proof')(function (equal, deepEqual, ok) {
     } else {
       parser.parse(bytes, 0, bytes.length);
     }
-    if (parser.subsequent) {
+    if (options.subsequent) {
       parser.parse([ 0 ], 0, 1);
     }
     ok(invoked, message + ' invoked');
