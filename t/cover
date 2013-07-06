@@ -8,12 +8,12 @@ count=1;
 for file in $(find t -name \*.t.js); do
   node_modules/.bin/istanbul cover \
     -x 't/require.js' -x 'ieee754.js' \
-    -x 't/**/proof.js' -x 't/**/*.t.js' $file > /dev/null 2>&1
+    -x 't/**/proof.js' -x 't/**/*.t.js' $file
   mv coverage/coverage.json coverage/coverage$count.json
   count=$(expr $count + 1)
 done
 
-node_modules/.bin/istanbul report --root coverage --dir coverage > /dev/null
+node_modules/.bin/istanbul report --root coverage --dir coverage
 
 sed -i -e s,'^SF:'`pwd`/,SF:, coverage/lcov.info
 
