@@ -275,7 +275,7 @@ function Definition (context, packets, transforms, options) {
 // Construct a `Parser` around the given `definition`.
 function Parser (definition, options) {
   var increment, valueOffset, terminal, terminated, terminator, value,
-  skipping, repeat, step, named, index, arrayed,
+  skipping, repeat, step, index, arrayed,
   pattern, patternIndex, context = definition.context || this, fields, _callback;
 
   options = (options || { directory: './t/generated'});
@@ -287,14 +287,22 @@ function Parser (definition, options) {
 
   //
   function extract (nameOrPattern, callback) {
-    var _pattern = definition.pattern(nameOrPattern);
+    var _pattern = definition.pattern(nameOrPattern), named;
     patternIndex = 0;
     _callback = callback;
     pattern = _pattern.slice();
     fields = {};
-    named = false;
     this.length = 0;
 
+    // At one point, you thought you could have  a test for the arity of the
+    // function, and if it was greater than `1`, you'd call the callback
+    // positionally, regardless of named parameters. Then you realized that the
+    // `=>` operator in CoffeeScript would use a bind function with no
+    // arguments, and read the argument array. If you do decide to go back to
+    // arity override, then greater than one is the trigger. However, on
+    // reflection, I don't see that the flexibility is useful, and I do believe
+    // that it will generate at least one bug report that will take a lot of
+    // hashing out only to close with "oh, no, you hit upon a "hidden feature".
     function isNamed (field) {
       return field.named || (field.packing && field.packing.some(isNamed))
                          || (field.alternation && field.alternation.some(isNamed));
@@ -305,30 +313,19 @@ function Parser (definition, options) {
       this.parse = createGenericParser(definition, pattern, index, callback, object, true);
       return this.parse(buffer, start, end);
     }
-      if (named) {
-        var __callback = callback;
-      } else {
-        var __callback = function (object) {
-          var array = [];
-          flatten(pattern, object, array);
-          callback.apply(this, array);
-        }
-      }
 
-    if (true || pattern.every(function (part) {
-      return (! part.arrayed || (part.repeat > 1 && ! part.terminator)) &&
-             ! part.alternation &&
-             ! part.packing &&
-             ! part.pipeline &&
-             ! part.signed &&
-             /^(b|l)$/.test(part.endianness) &&
-             part.type == 'n'
-    })) {
-      if (_pattern.builder) {
-        this.parse = _pattern.builder(incremental, pattern, ieee754, __callback);
-      } else {
-        this.parse = createGenericParser(definition, pattern, 0, __callback, {}, true);
+    if (named) {
+      var __callback = callback;
+    } else {
+      var __callback = function (object) {
+        var array = [];
+        flatten(pattern, object, array);
+        callback.apply(this, array);
       }
+    }
+
+    if (_pattern.builder) {
+      this.parse = _pattern.builder(incremental, pattern, ieee754, __callback);
     } else {
       this.parse = createGenericParser(definition, pattern, 0, __callback, {}, true);
     }
@@ -337,9 +334,9 @@ function Parser (definition, options) {
   return classify.call(definition.extend(this), extract);
 }
 
-function createGenericParser (definition, pattern, patternIndex, _callback, fields, named) {
+function createGenericParser (definition, pattern, patternIndex, _callback, fields) {
   var increment, valueOffset, terminal, terminated, terminator, value,
-  skipping, repeat, step, named, index, arrayed,
+  skipping, repeat, step, index, arrayed,
   pattern, patternIndex, context = definition.context || this, fields, _callback;
   //#### parser.parse(buffer[, start][, length])
   // The `parse` method reads from the buffer, returning when the current pattern
@@ -353,7 +350,6 @@ function createGenericParser (definition, pattern, patternIndex, _callback, fiel
     skipping    = null;
     terminated = ! field.terminator;
     terminator = field.terminator && field.terminator[field.terminator.length - 1];
-    named = named || field.named;
     if (field.arrayed && field.endianness  != "x") arrayed = [];
   }
 
@@ -593,29 +589,9 @@ function createGenericParser (definition, pattern, patternIndex, _callback, fiel
         // The pattern is set to null, our terminal condition, because the
         // callback may specify a subsequent packet to parse.
         if (++patternIndex == pattern.length) {
-          // TODO: Rename to _pattern. This is too wonky.
-          var _pattern = pattern;
           pattern = null;
           this.parse = null;
-
-          // At one point, you thought you could have  a test for the arity of
-          // the function, and if it was not `1`, you'd call the callback
-          // positionally, regardless of named parameters. Then you realized
-          // that the `=>` operator in CoffeeScript would use a bind function
-          // with no arguments, and read the argument array. If you do decide to
-          // go back to arity override, then greater than one is the trigger.
-          // However, on reflection, I don't see that the flexibility is useful,
-          // and I do believe that it will generate at least one bug report that
-          // will take a lot of hashing out only to close with "oh, no, you hit
-          // upon a "hidden feature".
-          var number = 1
-          if (named) {
-            _callback.call(context, fields);
-          } else {
-            var array = [];
-            flatten(_pattern, fields, array);
-            _callback.apply(context, array);
-          }
+           _callback.call(context, fields);
           if (this.parse) {
             bufferOffset += this.parse(buffer, bufferOffset, bufferEnd);
           }
