@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 require("./proof")(1, function (parseEqual) {
-  parseEqual("b8(0-251: b8 | 252/252-0xffff: x8{252}, b16 | 253/0x10000-0xffffff: x8{253}, b24 | 254/*: x8{254}, b64)", [
+  parseEqual("b8(0-251: b8 | 252/252-0xffff: x8{252}, b16 | 253/0x10000-0xffffff: x8{253}, b24 | x8{254}, b64)", [
     { "signed": false
     , "endianness": "b"
     , "bits": 8
@@ -105,8 +105,9 @@ require("./proof")(1, function (parseEqual) {
         }
       ,
         { "read":
-          { "minimum": 254
-          , "maximum": 254
+          { "minimum": -Number.MAX_VALUE
+          , "maximum": Number.MAX_VALUE
+          , "mask": 0
           , "mask": 0
           }
         , "write":

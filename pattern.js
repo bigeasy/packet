@@ -1,11 +1,12 @@
-// Don't forget that parsers of any sort tend to be complex. A simple PEG grammar
-// quickly becomes a thousand lines. This compiles to under 400 lines of
-// JavaScript. You are giong to find it difficult to make it much smaller.
+// Don't forget that parsers of any sort tend to be complex. A simple PEG
+// grammar quickly becomes a thousand lines. This compiles to under 400 lines of
+// JavaScript. You are going to find it difficult to make it much smaller.
 //
 // This module is separated for isolation during testing. It is not meant to be
 // exposed as part of the public API.
 
-// We don't count an initial newline as a line.
+// We don't count an initial newline as a line in our report. CoffeeScripters
+// might be defining their patterns use a HERDOC.
 function error (message, pattern, index) {
   var lines;
   if (pattern.indexOf("\n") != -1) {
@@ -17,15 +18,7 @@ function error (message, pattern, index) {
   }
 }
 
-var BASE = { "0x": 16, "0": 8, "X": 10 };
-
-function numeric (base, value) {
-  try {
-    return parseInt(value, BASE[base || "X"]);
-  } catch (e) {
-    return null;
-  }
-}
+var BASE = { "0x": 16, "0": 8 };
 
 var re = {};
 
@@ -56,17 +49,13 @@ function number (pattern, rest, index) {
     (                 // capture for length
       \s*               // skip white
       (?:
-        \*                // any
+        (\&?)             // test is mask
+        0x([0-9a-f]+)     // hex
         |
-        (?:
-          (\&?)             // test is mask
-          0x([0-9a-f]+)     // hex
-          |
-          (\d+)             // decimal
-        )
+        (\d+)             // decimal
       )
     (-)?            // range
-    ) 
+    )
     (.*)            // rest
     $               // end
   i*/].exec(rest);
@@ -75,18 +64,12 @@ function number (pattern, rest, index) {
     throw new Error(error("invalid number", pattern, index));
 
   var matched = match[1], mask = match[2], hex = match[3],
-    decimal = match[4], range = match[5], rest = match[6], value;
-
-  if (hex != null) {
-    value = parseInt(hex, 16);
-  } else if (decimal != null) {
-    value = parseInt(decimal, 10);
-  }
+    decimal = match[4], range = match[5], rest = match[6],
+    value = (hex != null) ? parseInt(hex, 16) : parseInt(decimal, 10);
 
   index += matched.length;
 
-  return { any: value == null
-         , mask: !! mask
+  return { mask: !! mask
          , value: value
          , index: index
          , range: range
@@ -102,15 +85,11 @@ function condition (pattern, index, rest, struct) {
       throw new Error(error("masks not permitted in ranges", pattern, index));
     struct.mask = from.value;
     index = from.index;
-  } else if (! from.any) {
+  } else {
     if (from.range) {
-      if (from.mask)
-        throw new Error(error("masks not permitted in ranges", pattern, from.index - 1));
       to = number(pattern, from.rest, from.index);
       if (to.mask)
         throw new Error(error("masks not permitted in ranges", pattern, from.index));
-      if (to.any)
-        throw new Error(error("any not permitted in ranges", pattern, from.index));
       struct.minimum = from.value;
       struct.maximum = to.value;
       index = to.index;
@@ -118,8 +97,6 @@ function condition (pattern, index, rest, struct) {
       struct.minimum = struct.maximum = from.value;
       index = from.index;
     }
-  } else if (from.range) {
-    throw new Error(error("any not permitted in ranges", pattern, index));
   }
   num = to || from;
   if (match = /(\s*)\S/.exec(num.rest))
@@ -128,7 +105,7 @@ function condition (pattern, index, rest, struct) {
 }
 
 // An alternation condition that never matches. This is not a constant for the
-// sake of consistancy with `always()`.
+// sake of consistency with `always()`.
 function never () {
   return {
     maximum: -Number.MAX_VALUE,
@@ -164,7 +141,7 @@ function alternates (pattern, array, rest, primary, secondary, allowSecondary, i
       condition(pattern, index, first, alternate[primary]);
 
       // If we are allowing patterns to match write conditions, and we have a
-      // write conidtion, parse the condition. Otherwise, the read and write
+      // write condition, parse the condition. Otherwise, the read and write
       // conditions are the same.
       if (allowSecondary) {
         if (second) {
@@ -185,7 +162,7 @@ function alternates (pattern, array, rest, primary, secondary, allowSecondary, i
       if (delimiter != null) index += delimiter.length + second.length;
     }
 
-    // Check to see if we have futher alternates.
+    // Check to see if we have further alternates.
     if ($ = /^(\s*)([^|]+)(\|\s*)(.*)$/.exec(rest)) {
       var padding = $[1], part = $[2], delimiter = $[3], rest = $[4];
     } else {
@@ -193,7 +170,7 @@ function alternates (pattern, array, rest, primary, secondary, allowSecondary, i
     }
     index += padding.length;
 
-    // Parse the altenate pattern.
+    // Parse the alienate pattern.
     alternate.pattern = parse(pattern, part, index, 8);
     index += part.length + delimiter.length;
 
@@ -206,7 +183,7 @@ function alternates (pattern, array, rest, primary, secondary, allowSecondary, i
 // match bit packing patterns, with a regular expression that excludes modifiers
 // that are non-applicable to bit packing patterns.
 function parse (pattern, part, index, bits, next) {
-  var fields = [], lengthEncoded = false, rest, $;
+  var fields = [], lengthEncoded = false, rest, $, position = 0;
 
   next = next || /^(-?)([xbl])(\d+)([fa]?)(.*)$/;
 
@@ -231,8 +208,8 @@ function parse (pattern, part, index, bits, next) {
 
     // Convert the match into an object.
     var f =
-    { signed:     !!$[1] || $[4] == "f"
-    , endianness: $[2] == 'n' ? 'b' : $[2]
+    { signed:     !!$[1]
+    , endianness: $[2]
     , bits:       parseInt($[3], 10)
     , type:       $[4] || 'n'
     };
@@ -253,11 +230,11 @@ function parse (pattern, part, index, bits, next) {
     index += $[3].length;
     if ($[4]) index++;
 
-    // Set the implicit fields. Unpacking logic is inconsistant between bits and
+    // Set the implicit fields. Unpacking logic is inconsistent between bits and
     // bytes, but not applicable for bits anyway.
     if (f.bits > 64 && f.type == "n") f.type = "a";
     f.bytes = f.bits / bits
-    f.exploded = f.signed || f.bytes > 8 || ~"ha".indexOf(f.type);
+    f.exploded = !!(f.signed || f.bytes > 8 || ~"fa".indexOf(f.type));
 
 
     // Check for bit backing. The intense rest pattern in the regex allows us to
@@ -368,14 +345,14 @@ function parse (pattern, part, index, bits, next) {
       if ($ = /^({\s*)((0x|0)?([a-f\d]+)\s*})(.*)$/i.exec(rest)) {
         var before = $[1], after = $[2], base = $[3], pad = $[4], rest = $[5];
         index += before.length;
-        if ((f.padding = numeric(base, pad)) == null) {
+        if (isNaN(f.padding = parseInt(pad, BASE[base]))) {
           throw new Error(error("invalid number format", pattern, index));
         }
         index += after.length;
       }
 
       // Check for zero termination.
-      if ($ = /^z(?:<(.*?)>)?(.*)$/.exec(rest)) {
+      if ($ = /^z(?:<(.*?>))?(.*)$/.exec(rest)) {
         index++
         rest = $[2];
         if ($[1] != null) {
@@ -391,13 +368,15 @@ function parse (pattern, part, index, bits, next) {
                 |
                 (\d+)                 // decimal
               )
-              (\s*,)?   // separtor for next character
+              (\s*)     // skip whitespace
+              ([,>])    // separator for next value or close
               (.*)      // rest
               $         // end
             */].exec(terminator);
             if (!$)
-              throw new Error(error("invalid terminator", pattern, index));
-            var before = $[1], hex = $[2], decimal = $[3], comma = $[4], terminator = $[5];
+              throw new Error(error("invalid terminator value", pattern, index));
+            var before = $[1], hex = $[2], decimal = $[3], after = $[4],
+                delimiter = $[5], terminator = $[6];
             index += before.length;
             var numberIndex = index;
             if (hex) {
@@ -409,16 +388,14 @@ function parse (pattern, part, index, bits, next) {
             }
             if (value > 255)
               throw new Error(error("terminator value out of range", pattern, numberIndex));
+            index += after.length;
+            index += delimiter.length;
             f.terminator.push(value);
-            if (/\S/.test(terminator) && ! comma)
-              throw new Error(error("invalid pattern", pattern, index));
-            if (! comma) {
+            if (delimiter == ">") {
               index += terminator.length
               break
             }
-            index += comma.length;
           }
-          index++;
         } else {
           f.terminator = [ 0 ];
         }
@@ -426,7 +403,7 @@ function parse (pattern, part, index, bits, next) {
         if (f.repeat == 1) f.repeat = Number.MAX_VALUE;
       }
 
-      // Parse piplines.
+      // Parse pipelines.
       while ($ = /^\|(\w[\w\d]*)\((\)?)(.*)/.exec(rest)) {
         index          += rest.length - $[3].length;
         var transform       = { name: $[1], parameters: [] };
@@ -435,19 +412,19 @@ function parse (pattern, part, index, bits, next) {
 
         // Regular expression to match a pipeline argument, expressed as a
         // JavaScript scalar, taken in part from
-        // [json2.js](http://www.JSON.org/json2.js). 
+        // [json2.js](http://www.JSON.org/json2.js).
         while (hasArgument) {
           $ = re["scalar" /*
             ( '(?:[^\\']|\\.)+'|"(?:[^\\"]|\\.)+"   // string
             | true | false                          // boolean
             | null                                  // null
             | -?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?     // number
-            )    
+            )
             (\s*,\s*|\s*\))?                        // remaining arguments
             (.*)                                    // remaining pattern
           */].exec(rest);
           index += rest.length - $[3].length;
-          value = eval($[1]); 
+          value = eval($[1]);
           hasArgument = $[2].indexOf(")") == -1;
           rest = $[3];
 
@@ -463,6 +440,9 @@ function parse (pattern, part, index, bits, next) {
         index += rest.length - $[2].length;
         f.name = $[1];
         rest = $[2];
+        f.named = true;
+      } else {
+        f.name = 'field' + (position ++);
       }
     }
 

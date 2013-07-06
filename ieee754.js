@@ -1,5 +1,5 @@
 function toIEEE754(v, ebits, fbits) {
- 
+
     var bias = (1 << (ebits - 1)) - 1;
 
     // Compute sign, exponent, fraction
@@ -27,7 +27,7 @@ function toIEEE754(v, ebits, fbits) {
             f = v / Math.pow(2, 1 - bias - fbits);
         }
     }
-     
+
     // Pack sign, exponent, fraction
     var i, bits = [];
     for (i = fbits; i; i -= 1) { bits.push(f % 2 ? 1 : 0); f = Math.floor(f / 2); }
@@ -35,7 +35,7 @@ function toIEEE754(v, ebits, fbits) {
     bits.push(s ? 1 : 0);
     bits.reverse();
     var str = bits.join('');
-     
+
     // Bits to bytes
     var bytes = [];
     while (str.length) {
@@ -57,13 +57,13 @@ function fromIEEE754(bytes, ebits, fbits) {
     }
     bits.reverse();
     var str = bits.join('');
-   
+
     // Unpack sign, exponent, fraction
     var bias = (1 << (ebits - 1)) - 1;
     var s = parseInt(str.substring(0, 1), 2) ? -1 : 1;
     var e = parseInt(str.substring(1, 1 + ebits), 2);
     var f = parseInt(str.substring(1 + ebits), 2);
-     
+
     // Produce number
     if (e === (1 << ebits) - 1) {
         return f !== 0 ? NaN : s * Infinity;
