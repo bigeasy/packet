@@ -285,6 +285,27 @@ If speed matters, then why am I adding convience functions like figuring the
 start and end of the range? Why don't you please provide that? Now I have to
 calcuate it everywhere.
 
+### Improvements
+
+Get rid of signedness for sizes larger that 32 bit. Reintroduce it when
+requested. When I first created Packet, there was much left of me that wanted to
+be future, ugh, proof, but flexible, but I'm going to let JavaScirpt's
+limitation set this boundaries, and get a faster unsigned integer.
+
+When you have single bytes, you can do array scans and slices. This gets back to
+doing buffer only, or maybe you have a langauge for buffer slices?
+
+```
+"<b8z>" // slice a buffer terminated by zero.
+"<b16z>" // slice a buffer terminated by two zeros?
+"<b16,b8z>" // get those properties, append a buffer?
+"<>b8z" // slice a buffer terminated by zero.
+```
+
+Or, hey, super easy. If you say b8, you get `Buffer`, otherwise you get an
+array. If really did want an `Array`, then you can create one yourself pretty
+easily, but you probably shouldn't.
+
 ## Composed Loops
 
 In order to support best-foot-forward and length encoded arrays of structures,
