@@ -94,14 +94,19 @@ function Definition (context, packets, transforms, options) {
   function precompile (pattern) {
     if (!options.compile) return;
 
-    function unsigned (assign, field) {
+    function unsigned (assign, field, inc) {
       var little = field.endianness == 'l',
           bytes = field.bytes,
           bite = little ? 0 : bytes - 1,
           increment = little ? 1 : -1,
           stop = little ? bytes : -1;
       while (bite != stop) {
-        line = 'buffer[start + ' + (offset++)  + '] * ' + Math.pow(256, bite) + ' +';
+        if (inc) {
+          line = 'buffer[start++]'
+        } else {
+          line = 'buffer[start + ' + (offset++)  + ']'
+        }
+        line += ' * ' + Math.pow(256, bite) + ' +';
         line = line.replace(/ \* 1 \+$/, ' +');
         line = line.replace(/start \+ 0/, 'start');
         if (bytes == 1) assign[assign.length - 1] += ' ' + line;
@@ -138,12 +143,12 @@ function Definition (context, packets, transforms, options) {
       return assign;
     }
 
-    function element (assign, field) {
+    function element (assign, field, increment) {
       switch (field.type) {
       case "f":
-        return floating(assign, field); 
+        return floating(assign, field, increment);
       default:
-        return unsigned(assign, field);
+        return unsigned(assign, field, increment);
       }
     }
 
@@ -168,12 +173,33 @@ function Definition (context, packets, transforms, options) {
     var unshift = Function.prototype.apply.bind(Array.prototype.unshift);
 
     // TODO: Slice buffers. If signed, then slice and fixup.
+    // TODO: With a fixed length buffer for a terminated array, give up early,
+    // not at each test.
+    // TODO: Would it be faster to have the same scan for a terminator, then
+    // come back and iterate? No because in the best case, we're not giving up.
+    // How about, if it's not fixed, give up and increment? So, once we're
+    // moving the `start`, we give up on trying to have nice fixed numbers.
     var offset = 0;
-    pattern.forEach(function (field) {
-      assign.push('object[' + JSON.stringify(field.name) + '] =');
+    pattern.forEach(function (field, index) {
+      if (field.lengthEncoding) return;
       if (field.arrayed) {
         if (!~hoisted.indexOf('array')) hoisted.push('array');
-        if (field.terminator) {
+        if (index && pattern[index - 1].lengthEncoding) {
+          var counter = pattern[index - 1];
+          if (!~hoisted.indexOf('first = start')) hoisted.push('first = start');
+          if (!~hoisted.indexOf('(start - first)')) length.push('(start - first)');
+          if (!~hoisted.indexOf('count')) hoisted.push('count');
+          if (!~hoisted.indexOf('i')) hoisted.push('i');
+          assign.push('count = ');
+          element(assign, counter, true);
+          assign.push('');
+          assign.push('object[' + JSON.stringify(field.name) + '] = array = [];');
+          assign.push('for (i = 0; i < count; i++) {');
+          assign.push('  array[i] =');
+          element(assign, field, true);
+          assign.push('}');
+        } else if (field.terminator) {
+          assign.push('object[' + JSON.stringify(field.name) + '] =');
           if (sum) {
             rangeCheck(source, 'end - start < ' + sum);
             sums.push(sum);
@@ -229,6 +255,7 @@ function Definition (context, packets, transforms, options) {
           }
           offset = 0;
         } else {
+          assign.push('object[' + JSON.stringify(field.name) + '] =');
           assign[assign.length - 1] += ' array = new Array(' + field.repeat + ');'
           for (var i = 0, I = field.repeat; i < I; i++) {
             assign.push('array[' + i + '] =');
@@ -237,6 +264,7 @@ function Definition (context, packets, transforms, options) {
           sum += field.bytes * field.repeat;
         }
       } else {
+        assign.push('object[' + JSON.stringify(field.name) + '] =');
         element(assign, field);
         sum += field.bytes;
       }
@@ -282,8 +310,7 @@ function Definition (context, packets, transforms, options) {
     var parsed = parse(pattern);
     parsed.hasAlternation = parsed.some(function (field) { return field.alternation });
     if (parsed.every(function (part) {
-      return (! part.arrayed || part.repeat > 1) &&
-             ! part.alternation &&
+      return ! part.alternation &&
              ! part.packing &&
              ! part.pipeline &&
              ! part.signed &&
