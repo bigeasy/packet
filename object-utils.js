@@ -214,9 +214,9 @@
             ret.f[k] += second.f[k];
         });
         Object.keys(second.b).forEach(function (k) {
-            if (!retArray) console.log(k);
             var retArray = ret.b[k],
                 secondArray = second.b[k];
+            if (!retArray) console.log(k);
             for (i = 0; i < retArray.length; i += 1) {
                 retArray[i] += secondArray[i];
             }
