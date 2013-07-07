@@ -82,7 +82,7 @@ Command.mix(ReportCommand, {
             if (err) { throw err; }
             files.forEach(function (file) {
                 var coverageObject =  JSON.parse(fs.readFileSync(file, 'utf8'));
-                console.log(file, coverageObject);
+                console.log(file);
                 collector.add(coverageObject);
             });
             console.log('Using reporter [' + fmt + ']');
