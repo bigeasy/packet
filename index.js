@@ -94,14 +94,24 @@ function Definition (context, packets, transforms, options) {
   function precompile (pattern) {
     if (!options.compile) return;
 
-    function unsigned (assign, field, inc) {
+    function unsigned (source, variable, field, increment) {
       var little = field.endianness == 'l',
           bytes = field.bytes,
           bite = little ? 0 : bytes - 1,
-          increment = little ? 1 : -1,
-          stop = little ? bytes : -1;
+          direction = little ? 1 : -1,
+          stop = little ? bytes : -1,
+          assign;
+      var sign = '0x80' + new Array(field.bytes).join('00');
+      var mask = '0xff' + new Array(field.bytes).join('ff');
+      if (field.signed) {
+        if (!~hoisted.indexOf('value')) hoisted.push('value');
+        source.push('value =');
+        assign = true;
+      } else {
+        source.push(variable);
+      }
       while (bite != stop) {
-        if (inc) {
+        if (increment) {
           line = 'buffer[start++]'
         } else {
           line = 'buffer[start + ' + (offset++)  + ']'
@@ -109,46 +119,49 @@ function Definition (context, packets, transforms, options) {
         line += ' * ' + Math.pow(256, bite) + ' +';
         line = line.replace(/ \* 1 \+$/, ' +');
         line = line.replace(/start \+ 0/, 'start');
-        if (bytes == 1) assign[assign.length - 1] += ' ' + line;
-        else assign.push('    ' + line);
-        bite += increment;
+        if (bytes == 1) source[source.length - 1] += ' ' + line;
+        else source.push('    ' + line);
+        bite += direction;
       }
-      assign.push(assign.pop().replace(/ \+$/, ';'));
-      return assign;
+      source.push(source.pop().replace(/ \+$/, ';'));
+      if (field.signed) {
+        source.push(variable + ' !(value & ' + sign + ') ? value :  (' + mask + ' - value + 1) * -1;');
+      }
+      return source;
     }
 
-    function floating (assign, field) {
+    function floating (source, variable, field) {
       var little = field.endianness == 'l',
           suffix = little ? 'LE' : 'BE',
           bytes = field.bytes,
           size = bytes == 4 ? options.buffersOnly ? 'Float' : 'Single' : 'Double',
           bite = little ? 0 : bytes - 1,
-          increment = little ? 1 : -1,
+          direction = little ? 1 : -1,
           gather = [],
           stop = little ? bytes : -1;
       if (!~hoisted.indexOf('value')) hoisted.push('value');
       if (options.buffersOnly) {
-        assign[assign.length - 1] += ' buffer.read' + size + suffix + '(' + offset + ', true)';
+        source.push(variable + ' buffer.read' + size + suffix + '(' + offset + ', true)');
       } else {
         gather.push('value = new Array(' + bytes + ');');
         while (bite != stop) {
           line = 'value[' + bite + '] = buffer[start + ' + (offset++)  + '];'
           line = line.replace(/start \+ 0/, 'start');
           gather.push(line);
-          bite += increment;
+          bite += direction;
         }
-        assign.unshift.apply(assign, gather);
-        assign[assign.length - 1] += ' ieee754.fromIEEE754' + size + '(value.reverse());'
+        source.unshift.apply(source, gather);
+        source.push(variable + ' ieee754.fromIEEE754' + size + '(value.reverse());');
       }
-      return assign;
+      return source;
     }
 
-    function element (assign, field, increment) {
+    function element (assign, variable, field, increment) {
       switch (field.type) {
       case "f":
-        return floating(assign, field, increment);
+        return floating(assign, variable, field, increment);
       default:
-        return unsigned(assign, field, increment);
+        return unsigned(assign, variable, field, increment);
       }
     }
 
@@ -190,13 +203,11 @@ function Definition (context, packets, transforms, options) {
           if (!~hoisted.indexOf('(start - first)')) length.push('(start - first)');
           if (!~hoisted.indexOf('count')) hoisted.push('count');
           if (!~hoisted.indexOf('i')) hoisted.push('i');
-          assign.push('count = ');
-          element(assign, counter, true);
+          element(assign, 'count = ', counter, true);
           assign.push('');
           assign.push('object[' + JSON.stringify(field.name) + '] = array = [];');
           assign.push('for (i = 0; i < count; i++) {');
-          assign.push('  array[i] =');
-          element(assign, field, true);
+          element(assign, '  array[i] =', field, true);
           assign.push('}');
         } else if (field.terminator) {
           assign.push('object[' + JSON.stringify(field.name) + '] =');
@@ -218,7 +229,7 @@ function Definition (context, packets, transforms, options) {
             } else {
               push(assign, rangeCheck([], 'start + ' + (field.bytes - 1) + ' >= end').map(indent(2)));
             }
-            assign.push.apply(assign, element([ 'value =' ], field).map(indent(2)));
+            assign.push.apply(assign, element([], 'value =', field).map(indent(2)));
             assign.push('  start += ' + field.bytes + ';');
             assign.push('  if (value == ' + field.terminator[0] + ') break;');
             assign.push('  array.push(value);');
@@ -233,7 +244,7 @@ function Definition (context, packets, transforms, options) {
             if (field.repeat != Number.MAX_VALUE) {
               assign.push('  if (array.length == ' + field.repeat + ') break;');
             }
-            assign.push.apply(assign, element([ 'value =' ], field).map(indent(2)));
+            assign.push.apply(assign, element([], 'value =', field).map(indent(2)));
             assign.push('  start += ' + field.bytes + ';');
             assign.push('  array.push(value);');
             assign.push('  if (' + field.terminator.map(function (value, index) {
@@ -258,14 +269,12 @@ function Definition (context, packets, transforms, options) {
           assign.push('object[' + JSON.stringify(field.name) + '] =');
           assign[assign.length - 1] += ' array = new Array(' + field.repeat + ');'
           for (var i = 0, I = field.repeat; i < I; i++) {
-            assign.push('array[' + i + '] =');
-            element(assign, field);
+            element(assign, 'array[' + i + '] =', field);
           }
           sum += field.bytes * field.repeat;
         }
       } else {
-        assign.push('object[' + JSON.stringify(field.name) + '] =');
-        element(assign, field);
+        element(assign, 'object[' + JSON.stringify(field.name) + '] =', field);
         sum += field.bytes;
       }
       assign.push('');
@@ -313,7 +322,6 @@ function Definition (context, packets, transforms, options) {
       return ! part.alternation &&
              ! part.packing &&
              ! part.pipeline &&
-             ! part.signed &&
              /^(b|l)$/.test(part.endianness) &&
              /^(n|f)$/.test(part.type)
     })) {

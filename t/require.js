@@ -10,6 +10,7 @@ module.exports = function (pattern, source) {
 
   var name = pattern.map(function (f, i) {
     var scalar = f.endianness + f.bits + f.type;
+    if (f.signed) scalar = 'S' + scalar;
     if (f.named) scalar += '.' + f.name;
     if (f.lengthEncoding) scalar += 'C';
     if (f.arrayed) {
