@@ -18,14 +18,14 @@ module.exports = function (pattern, source) {
       if (!(i && pattern[i - 1].lengthEncoding) && f.repeat != Math.MAX_VALUE) {
         scalar += f.repeat;
       }
-      if (f.terminated) {
-        scalar += '_t' + f.terminated.join('-');
+      if (f.terminator) {
+        scalar += '_t' + f.terminator.join('-');
       }
     }
     return scalar;
   }).join('_');
 
-    console.log(name);
+  console.log(name);
   var file = path.join(__dirname, 'generated', name + '.js');
   require('fs').writeFileSync(file, builder.join('\n'), 'utf8');
   return require(file);
