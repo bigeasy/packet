@@ -334,7 +334,6 @@ function Definition (context, packets, transforms, options) {
       return ! part.alternation &&
              ! part.packing &&
              ! part.pipeline &&
-             /^(x|b|l)$/.test(part.endianness) &&
              /^(n|f)$/.test(part.type)
     })) {
       precompile(parsed);
