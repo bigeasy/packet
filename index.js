@@ -173,7 +173,7 @@ function Definition (context, packets, transforms, options) {
       return assign;
     }
 
-    var offset = 0, sum = 0, sums = [],
+    var offset = 0, sum = 0, sums = [], fixed = true,
         source = [], hoisted = [ 'object = {}' ], assign = [], length = [],
         line;
 
@@ -185,6 +185,13 @@ function Definition (context, packets, transforms, options) {
     var push = Function.prototype.apply.bind(Array.prototype.push);
     var unshift = Function.prototype.apply.bind(Array.prototype.unshift);
 
+    function fix () {
+      if (!fixed) fixed = true;
+    }
+
+    function unfix () {
+    }
+
     // TODO: Slice buffers. If signed, then slice and fixup.
     // TODO: With a fixed length buffer for a terminated array, give up early,
     // not at each test.
@@ -194,8 +201,13 @@ function Definition (context, packets, transforms, options) {
     // moving the `start`, we give up on trying to have nice fixed numbers.
     var offset = 0;
     pattern.forEach(function (field, index) {
+      if (!/^(x|n|f)$/.test(field.type)) throw new Error;
       if (field.lengthEncoding) return;
-      if (field.arrayed) {
+      if (field.endianness == 'x') {
+        fix();
+        sum += field.bytes * field.repeat;
+        offset += field.bytes * field.repeat;
+      } else if (field.arrayed) {
         if (!~hoisted.indexOf('array')) hoisted.push('array');
         if (index && pattern[index - 1].lengthEncoding) {
           var counter = pattern[index - 1];
@@ -322,7 +334,7 @@ function Definition (context, packets, transforms, options) {
       return ! part.alternation &&
              ! part.packing &&
              ! part.pipeline &&
-             /^(b|l)$/.test(part.endianness) &&
+             /^(x|b|l)$/.test(part.endianness) &&
              /^(n|f)$/.test(part.type)
     })) {
       precompile(parsed);
