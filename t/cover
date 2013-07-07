@@ -5,6 +5,7 @@ set -e
 rm -rf coverage
 
 mv report.js node_modules/istanbul/lib/command/report.js
+mv object-utils.js node_modules/istanbul/lib/object-utils.js
 
 count=1;
 for file in $(find t -name \*.t.js); do
