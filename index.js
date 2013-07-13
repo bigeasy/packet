@@ -80,6 +80,100 @@ function say () { console.log.apply(console, [].slice.call(arguments, 0)) }
 // variables, but it does use prototypical inheritance to extend the collections
 // of packet patterns and transforms.
 
+function Source () {
+  this._lines = [];
+  this._indent = 0;
+  this._hoisted = [];
+}
+
+Source.prototype.indent = function () {
+  this._indent++;
+}
+
+Source.prototype.dedent = function () {
+  this._indent--;
+}
+
+Source.prototype._indentation = function () {
+  return new Array(this._indent + 1).join('  ')
+}
+
+Source.prototype.line = function () {
+  var line = __slice.call(arguments).join('');
+  if (line.length) this._lines.push(this._indentation() + line);
+  else this._lines.push('');
+}
+
+Source.prototype.text = function () {
+  var text = __slice.call(arguments).join('');
+  this._lines[this._lines.length - 1] += text;
+}
+
+Source.prototype.consume = function (prefix, source) {
+  if (!source) {
+    source = prefix;
+    prefix = null;
+  }
+  if (prefix == null) {
+    var indentation = this._indentation();
+    this._lines.push.apply(this._lines, source._lines.map(function (line) {
+      return indentation + line;
+    }))
+  } else {
+    this.text(prefix);
+    this.text(source._lines[0]);
+  }
+  this.hoist.apply(this, source._hoisted);
+  source._lines.length = 0;
+  source._hoisted.length = 0;
+}
+
+Source.prototype.hoist = function () {
+  __slice.call(arguments).forEach(function (variable) {
+    if (!~this._hoisted.indexOf(variable)) this._hoisted.push(variable);
+  }.bind(this));
+}
+
+Source.prototype.block = function (source) {
+  source = source.split(/\n/);
+  source.shift();
+  source.pop();
+  var spaces =  source[0].length - source[0].replace(/^\s+/, '').length;
+  source.forEach(function (line) {
+    line = line.substring(spaces).replace(/\s+$/, '');
+    if (/\S/.test(line)) this.line(line);
+    else this.line(line);
+  }.bind(this));
+}
+
+Source.prototype.replace = function () {
+  var last = this._lines[this._lines.length - 1];
+  last = last.replace.apply(last, __slice.call(arguments));
+  this._lines[this._lines.length - 1] = last;
+}
+
+Source.prototype.define = function () {
+  var source = new Source;
+  source.line('function (', __slice.call(arguments).join(', '), ') {')
+  source.indent();
+  if (this._hoisted.length) {
+    source.line('var ', this._hoisted.join(', '), ';');
+    source.line();
+  }
+  source.consume(this);
+  source.dedent();
+  source.line('}');
+  return String(source);
+}
+
+Source.prototype.toString = function () {
+  if (this._lines.length > 1) {
+    return this._lines.join('\n') + '\n';
+  } else {
+    return this._lines[0];
+  }
+}
+
 function Definition (context, packets, transforms, options) {
   packets = Object.create(packets);
   transforms = Object.create(transforms);
@@ -100,32 +194,42 @@ function Definition (context, packets, transforms, options) {
           bite = little ? 0 : bytes - 1,
           direction = little ? 1 : -1,
           stop = little ? bytes : -1,
+          line = new Source,
           assign;
       var sign = '0x80' + new Array(field.bytes).join('00');
       var mask = '0xff' + new Array(field.bytes).join('ff');
       if (field.signed) {
-        if (!~hoisted.indexOf('value')) hoisted.push('value');
-        source.push('value =');
+        source.hoist('value');
+        source.line('value =');
         assign = true;
       } else {
-        source.push(variable);
+        source.line(variable);
+      }
+      if (bytes != 1) {
+        source.indent();
       }
       while (bite != stop) {
         if (increment) {
-          line = 'buffer[start++]'
+          line.line('buffer[start++]');
         } else {
-          line = 'buffer[start + ' + (offset++)  + ']'
+          line.line('buffer[start + ', offset++, ']');
         }
-        line += ' * ' + Math.pow(256, bite) + ' +';
-        line = line.replace(/ \* 1 \+$/, ' +');
-        line = line.replace(/start \+ 0/, 'start');
-        if (bytes == 1) source[source.length - 1] += ' ' + line;
-        else source.push('    ' + line);
+        line.text(' * ' + Math.pow(256, bite) + ' +');
+        line.replace(/ \* 1 \+$/, ' +');
+        line.replace(/start \+ 0/, 'start');
+        if (bytes == 1) {
+          source.consume(' ', line);
+        } else {
+          source.consume(line);
+        }
         bite += direction;
       }
-      source.push(source.pop().replace(/ \+$/, ';'));
+      source.replace(/ \+$/, ';');
+      if (bytes != 1) {
+        source.dedent();
+      }
       if (field.signed) {
-        source.push(variable + ' !(value & ' + sign + ') ? value :  (' + mask + ' - value + 1) * -1;');
+        source.line(variable + ' !(value & ' + sign + ') ? value :  (' + mask + ' - value + 1) * -1;');
       }
       return source;
     }
@@ -137,21 +241,21 @@ function Definition (context, packets, transforms, options) {
           size = bytes == 4 ? options.buffersOnly ? 'Float' : 'Single' : 'Double',
           bite = little ? 0 : bytes - 1,
           direction = little ? 1 : -1,
-          gather = [],
+          gather = new Source,
           stop = little ? bytes : -1;
-      if (!~hoisted.indexOf('value')) hoisted.push('value');
+      source.hoist('value');
       if (options.buffersOnly) {
-        source.push(variable + ' buffer.read' + size + suffix + '(' + offset + ', true)');
+        source.line(variable + ' buffer.read' + size + suffix + '(' + offset + ', true)');
       } else {
-        gather.push('value = new Array(' + bytes + ');');
+        gather.line('value = new Array(' + bytes + ');');
         while (bite != stop) {
           line = 'value[' + bite + '] = buffer[start + ' + (offset++)  + '];'
           line = line.replace(/start \+ 0/, 'start');
-          gather.push(line);
+          gather.line(line);
           bite += direction;
         }
-        source.unshift.apply(source, gather);
-        source.push(variable + ' ieee754.fromIEEE754' + size + '(value.reverse());');
+        source.consume(gather);
+        source.line(variable + ' ieee754.fromIEEE754' + size + '(value.reverse());');
       }
       return source;
     }
@@ -165,25 +269,30 @@ function Definition (context, packets, transforms, options) {
       }
     }
 
-    function rangeCheck (assign, condition) {
-      assign.push(
-        'if (' + condition + ') {',
-        '  return incremental.call(this, buffer, start, end, pattern, 0, object, callback);',
-        '}');
-      return assign;
+    function rangeCheck (condition) {
+      var source = new Source;
+      source.block('                                                                        \n\
+        if (' + condition + ') {                                                            \n\
+          return incremental.call(this, buffer, start, end, pattern, 0, object, callback);  \n\
+        }                                                                                   \n\
+      ')
+      source.line();
+      return source;
     }
 
+    var method = new Source;
+    var section = new Source;
+
     var offset = 0, sum = 0, sums = [], fixed = true,
-        source = [], hoisted = [ 'object = {}' ], assign = [], length = [],
+        source = new Source, hoisted = [ 'object = {}' ], length = [],
         line;
+
+    method.hoist('object = {}');
 
     function indent (spaces) {
       spaces = new Array(spaces + 1).join(' ');
       return function (line) { return spaces + line }
     }
-
-    var push = Function.prototype.apply.bind(Array.prototype.push);
-    var unshift = Function.prototype.apply.bind(Array.prototype.unshift);
 
     function fix () {
       if (!fixed) fixed = true;
@@ -207,121 +316,129 @@ function Definition (context, packets, transforms, options) {
         sum += field.bytes * field.repeat;
         offset += field.bytes * field.repeat;
       } else if (field.arrayed) {
-        if (!~hoisted.indexOf('array')) hoisted.push('array');
+        section.hoist('array');
         if (index && pattern[index - 1].lengthEncoding) {
           var counter = pattern[index - 1];
-          if (!~hoisted.indexOf('first = start')) hoisted.push('first = start');
-          if (!~hoisted.indexOf('(start - first)')) length.push('(start - first)');
-          if (!~hoisted.indexOf('count')) hoisted.push('count');
-          if (!~hoisted.indexOf('i')) hoisted.push('i');
-          element(assign, 'count = ', counter, true);
-          assign.push('');
-          assign.push('object[' + JSON.stringify(field.name) + '] = array = [];');
-          assign.push('for (i = 0; i < count; i++) {');
-          element(assign, '  array[i] =', field, true);
-          assign.push('}');
+          method.hoist('first = start');
+          if (!~length.indexOf('(start - first)')) length.push('(start - first)');
+          method.hoist('count');
+          method.hoist('i');
+          element(section, 'count = ', counter, true);
+          section.line('object[' + JSON.stringify(field.name) + '] = array = [];');
+          section.line('for (i = 0; i < count; i++) {');
+          element(section, '  array[i] =', field, true);
+          section.line('}');
+          section.line();
         } else if (field.terminator) {
-          assign.push('object[' + JSON.stringify(field.name) + '] =');
+          section.line('object[' + JSON.stringify(field.name) + '] =');
           if (sum) {
             rangeCheck(source, 'end - start < ' + sum);
             sums.push(sum);
             sum = 0;
           }
-          if (!~hoisted.indexOf('value')) hoisted.push('value');
-          if (!~hoisted.indexOf('first = start')) hoisted.push('first = start');
-          assign[assign.length - 1] += ' array = [];'
+          section.hoist('value');
+          section.hoist('first = start');
+          section.text(' array = [];');
           if (field.terminator.length == 1) {
-            assign.push('for (;;) {');
+            section.line('for (;;) {');
             if (field.repeat != Number.MAX_VALUE) {
-              assign.push('  if (array.length == ' + field.repeat + ') break;');
+              section.line('  if (array.length == ' + field.repeat + ') break;');
             }
+            section.indent();
             if (field.bytes == 1) {
-              push(assign, rangeCheck([], 'start == end').map(indent(2)));
+              section.consume(rangeCheck('start == end'));
             } else {
-              push(assign, rangeCheck([], 'start + ' + (field.bytes - 1) + ' >= end').map(indent(2)));
+              section.consume(rangeCheck('start + ' + (field.bytes - 1) + ' >= end'));
             }
-            assign.push.apply(assign, element([], 'value =', field).map(indent(2)));
-            assign.push('  start += ' + field.bytes + ';');
-            assign.push('  if (value == ' + field.terminator[0] + ') break;');
-            assign.push('  array.push(value);');
-            assign.push('}')
+            element(section, 'value =', field);
+            section.line('  start += ' + field.bytes + ';');
+            section.line('  if (value == ' + field.terminator[0] + ') break;');
+            section.line('  array.push(value);');
+            section.dedent();
+            section.line('}')
           } else {
-            assign.push('for (;;) {');
+            section.line('for (;;) {');
+            section.indent();
             if (field.bytes == 1) {
-              push(assign, rangeCheck([], 'start == end').map(indent(2)));
+              section.consume(rangeCheck('start == end'));
             } else {
-              push(assign, rangeCheck([], 'start + ' + (field.bytes - 1) + ' >= end').map(indent(2)));
+              section.consume(rangeCheck('start + ' + (field.bytes - 1) + ' >= end'));
             }
             if (field.repeat != Number.MAX_VALUE) {
-              assign.push('  if (array.length == ' + field.repeat + ') break;');
+              section.line('if (array.length == ' + field.repeat + ') break;');
             }
-            assign.push.apply(assign, element([], 'value =', field).map(indent(2)));
-            assign.push('  start += ' + field.bytes + ';');
-            assign.push('  array.push(value);');
-            assign.push('  if (' + field.terminator.map(function (value, index) {
-              return '' + value + ' == array[array.length - ' + Math.abs((index - field.terminator.length)) + ']';
-            }).join(' && ') + ') {');
-            assign.push('    array.splice(-' + field.terminator.length + ');');
-            assign.push('    break;')
-            assign.push('  }');
-            assign.push('}')
+            var condition = field.terminator.map(function (value, index) {
+              return '' + value + ' == array[array.length - ' +
+                          Math.abs((index - field.terminator.length)) + ']';
+            }).join(' && ') 
+            element(section, 'value =', field);
+            section.block('\n\
+              start += ' + field.bytes + ';                                                 \n\
+              array.push(value);                                                            \n\
+              if (' + condition + ') {                                                      \n\
+                array.splice(-' + field.terminator.length + ');                             \n\
+                break;                                                                      \n\
+              }                                                                             \n\
+            ');
+            section.dedent();
+            section.line('}')
           }
-          if (!~hoisted.indexOf('(start - first)')) length.push('(start - first)');
+          if (!~length.indexOf('(start - first)')) length.push('(start - first)');
           if (field.repeat != Number.MAX_VALUE) {
             // TODO: Ugly. Faster with offset to track count instead of array length?
             // TODO: Slice buffers.
-            assign.push('start += ' + field.repeat + ' - array.length;');
-            assign.push('if (array.length < ' + field.repeat + ') {');
-            assign.push('  start -= ' + field.terminator.length + ';');
-            assign.push('}');
+            section.line('start += ' + field.repeat + ' - array.length;');
+            section.line('if (array.length < ' + field.repeat + ') {');
+            section.line('  start -= ' + field.terminator.length + ';');
+            section.line('}');
           }
           offset = 0;
         } else {
-          assign.push('object[' + JSON.stringify(field.name) + '] =');
-          assign[assign.length - 1] += ' array = new Array(' + field.repeat + ');'
+          section.line('object[' + JSON.stringify(field.name) + '] =');
+          section.text(' array = new Array(' + field.repeat + ');');
           for (var i = 0, I = field.repeat; i < I; i++) {
-            element(assign, 'array[' + i + '] =', field);
+            element(section, 'array[' + i + '] =', field);
           }
           sum += field.bytes * field.repeat;
         }
       } else {
-        element(assign, 'object[' + JSON.stringify(field.name) + '] =', field);
+        element(section, 'object[' + JSON.stringify(field.name) + '] =', field);
         sum += field.bytes;
       }
-      assign.push('');
-      source.push.apply(source, assign);
-      assign.length = 0;
+      section.line();
     });
 
+
     if (sum) {
-      source.unshift('');
-      unshift(source, rangeCheck([], 'end - start < ' + sum));
+      var range = rangeCheck('end - start < ' + sum);
+      method.consume(range);
+      method.consume(section);
       sums.push(sum);
       sum = 0;
+    } else {
+      method.consume(section);
     }
 
     if (sums.length) {
       length.push(sums.reduce(function (sum, value) { return sum + value }, 0));
     }
 
-    source.unshift('var ' + hoisted.join(', ') + ';', '');
+    method.block('                                                                              \n\
+      this.length = ' + length.join(' + ') + ';                                                 \n\
+                                                                                                \n\
+      this.parse = null                                                                         \n\
+                                                                                                \n\
+      callback(object);                                                                         \n\
+                                                                                                \n\
+      if (this.parse) {                                                                         \n\
+        return ' + length.join(' + ') + ' + this.parse(buffer, ' + length.join(' + ') + ', end);\n\
+      } else {                                                                                  \n\
+        return ' + length.join(' + ') + ';                                                      \n\
+      }                                                                                         \n\
+    ')
 
-
-    source.push('this.length = ' + length.join(' + ') + ';', '');
-
-    source.push('this.parse = null;', '');
-    source.push('callback(object);', '');
-    source.push('if (this.parse) {');
-    source.push('  return ' + length.join(' + ') + ' + this.parse(buffer, ' + length.join(' + ') + ', end);');
-    source.push('} else {');
-    source.push('  return ' + length.join(' + ') + ';');
-    source.push('}');
-
-    var parser = [];
-
-    parser.push('return function (buffer, start, end) {');
-    parser.push.apply(parser, source.map(function (line) { return '  ' + line }));
-    parser.push('}');
+    var parser = ('return ' + method.define('buffer', 'start', 'end')).split(/\n/);
+    parser.pop();
 
     pattern.builder = precompiler(pattern, parser);
   }
