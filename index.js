@@ -205,9 +205,7 @@ function Definition (context, packets, transforms, options) {
       } else {
         source.line(variable);
       }
-      if (bytes != 1) {
-        source.indent();
-      }
+      source.indent();
       while (bite != stop) {
         if (increment) {
           line.line('buffer[start++]');
@@ -225,9 +223,7 @@ function Definition (context, packets, transforms, options) {
         bite += direction;
       }
       source.replace(/ \+$/, ';');
-      if (bytes != 1) {
-        source.dedent();
-      }
+      source.dedent();
       if (field.signed) {
         source.line(variable + ' !(value & ' + sign + ') ? value :  (' + mask + ' - value + 1) * -1;');
       }
