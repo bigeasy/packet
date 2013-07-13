@@ -242,7 +242,8 @@ function Definition (context, packets, transforms, options) {
           bite = little ? 0 : bytes - 1,
           direction = little ? 1 : -1,
           gather = new Source,
-          stop = little ? bytes : -1;
+          stop = little ? bytes : -1,
+          line;
       source.hoist('value');
       if (options.buffersOnly) {
         source.line(variable + ' buffer.read' + size + suffix + '(' + offset + ', true)');
@@ -282,17 +283,13 @@ function Definition (context, packets, transforms, options) {
 
     var method = new Source;
     var section = new Source;
-
-    var offset = 0, sum = 0, sums = [], fixed = true,
-        source = new Source, hoisted = [ 'object = {}' ], length = [],
-        line;
+    var offset = 0;
+    var sum = 0;
+    var sums = [];
+    var fixed = true;
+    var length = [];
 
     method.hoist('object = {}');
-
-    function indent (spaces) {
-      spaces = new Array(spaces + 1).join(' ');
-      return function (line) { return spaces + line }
-    }
 
     function fix () {
       if (!fixed) fixed = true;
