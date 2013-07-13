@@ -201,7 +201,6 @@ function Definition (context, packets, transforms, options) {
     // moving the `start`, we give up on trying to have nice fixed numbers.
     var offset = 0;
     pattern.forEach(function (field, index) {
-      if (!/^(x|n|f)$/.test(field.type)) throw new Error;
       if (field.lengthEncoding) return;
       if (field.endianness == 'x') {
         fix();
@@ -333,8 +332,7 @@ function Definition (context, packets, transforms, options) {
     if (parsed.every(function (part) {
       return ! part.alternation &&
              ! part.packing &&
-             ! part.pipeline &&
-             /^(n|f)$/.test(part.type)
+             ! part.pipeline
     })) {
       precompile(parsed);
     }
