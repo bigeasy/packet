@@ -2,7 +2,7 @@
 
 require('proof')(4, function (equal) {
   var packet = require('../..');
-  var parser = packet.createParser({}, { precompiler: require('../require') });
+  var parser = packet.createParser({ precompiler: require('../require') });
   parser.transform('bool', function (parsing, field, value) {
     if (parsing) {
       return value ? 'TRUE' : 'FALSE';

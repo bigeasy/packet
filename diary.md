@@ -469,6 +469,7 @@ given array and make the parser start at an offset.
 
 ## Next Change Log
 
+ * Move context object to `options`. #126.
  * Floats are not `signed`. #113.
  * Packed integer length incorrect in `offsetsOf`. #105.
  * Add `offset` argument to `offsetsOf`. #101.

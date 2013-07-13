@@ -14,7 +14,7 @@ require('proof')(1, function (createSerializer, deepEqual) {
   });
 
   var createSerializer = require('../..').createSerializer;
-  var serializer = createSerializer({}, { precompiler: require('../require')  });
+  var serializer = createSerializer({ precompiler: require('../require')  });
 
   serializer.packet("header", "b32 => count");
   serializer.packet("record", "b8z|utf8() => phonetic, b16 => charCode, b32 => index");

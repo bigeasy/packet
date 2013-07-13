@@ -174,7 +174,7 @@ Source.prototype.toString = function () {
   }
 }
 
-function Definition (context, packets, transforms, options) {
+function Definition (packets, transforms, options) {
   packets = Object.create(packets);
   this.transforms = transforms = Object.create(transforms);
   options = options || {};
@@ -527,11 +527,13 @@ function Definition (context, packets, transforms, options) {
   }
 
   function createParser (context) {
-    return new Parser(new Definition(context, packets, transforms, options), options);
+    if (context) throw new Error;
+    return new Parser(new Definition(packets, transforms, options), options);
   }
 
   function createSerializer (context) {
-    return new Serializer(new Definition(context, packets, transforms, options), options);
+    if (context) throw new Error;
+    return new Serializer(new Definition(packets, transforms, options), options);
   }
 
   function extend (object) {
@@ -562,8 +564,6 @@ function Definition (context, packets, transforms, options) {
     return value;
   }
 
-  this.context = context;
-
   return classify.call(this, packet, transform, pattern, pipeline, extend);
 }
 
@@ -573,7 +573,7 @@ function Definition (context, packets, transforms, options) {
 function Parser (definition, options) {
   var increment, valueOffset, terminal, terminated, terminator, value,
   skipping, repeat, step, index, arrayed,
-  pattern, patternIndex, context = definition.context || this, fields, _callback;
+  pattern, patternIndex, context = options.context || this, fields, _callback;
 
   options = (options || { directory: './t/generated'});
 
@@ -607,7 +607,7 @@ function Parser (definition, options) {
     named = pattern.some(isNamed);
 
     function incremental (buffer, start, end, pattern, index, object, callback) {
-      this.parse = createGenericParser(definition, pattern, index, callback, object, true);
+      this.parse = createGenericParser(options, definition, pattern, index, callback, object, true);
       return this.parse(buffer, start, end);
     }
 
@@ -624,17 +624,17 @@ function Parser (definition, options) {
     if (_pattern.builder) {
       this.parse = _pattern.builder(incremental, pattern, definition.transforms, ieee754, __callback);
     } else {
-      this.parse = createGenericParser(definition, pattern, 0, __callback, {}, true);
+      this.parse = createGenericParser(options, definition, pattern, 0, __callback, {}, true);
     }
   }
 
   return classify.call(definition.extend(this), extract);
 }
 
-function createGenericParser (definition, pattern, patternIndex, _callback, fields) {
+function createGenericParser (options, definition, pattern, patternIndex, _callback, fields) {
   var increment, valueOffset, terminal, terminated, terminator, value,
   skipping, repeat, step, index, arrayed,
-  pattern, patternIndex, context = definition.context || this, fields, _callback;
+  pattern, patternIndex, context = options.context || this, fields, _callback;
   //#### parser.parse(buffer[, start][, length])
   // The `parse` method reads from the buffer, returning when the current pattern
   // is read, or the end of the buffer is reached.
@@ -916,11 +916,11 @@ function flatten (pattern, fields, array) {
 module.exports.Parser = Parser;
 
 // Construct a `Serializer` around the given `definition`.
-function Serializer(definition) {
+function Serializer(definition, options) {
   var serializer = this, terminal, valueOffset, increment, array, value, bytesWritten = 0,
   skipping, repeat, outgoing, index, terminated, terminates, pattern,
   incoming, named,
-  patternIndex, context = definition.context || this, padding, _callback;
+  patternIndex, context = options.context || this, padding, _callback;
 
   function _length () { return bytesWritten }
 
@@ -1443,7 +1443,13 @@ function Serializer(definition) {
   classify.call(definition.extend(this), serialize, write, offsetsOf, _length, _sizeOf);
 }
 
-function createParser (context, options) { return new Parser(new Definition(context, {}, transforms, options), options) }
-function createSerializer (context, options) { return new Serializer(new Definition(context, {}, transforms, options), options) }
+function createParser (options) {
+  if (arguments.length > 1) throw new Error;
+  options = options || {};
+  return new Parser(new Definition({}, transforms, options), options) }
+function createSerializer (options) {
+  if (arguments.length > 1) throw new Error;
+  options = options || {};
+  return new Serializer(new Definition({}, transforms, options), options) }
 
 classify.call(exports, createParser, createSerializer);
