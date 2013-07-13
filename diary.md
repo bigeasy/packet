@@ -464,12 +464,15 @@ var parser = parser.packet(compiled['name'],
 var serializer = packet.serialize('b8', new Serializer, object);
 ```
 
+If I really wanted to break tests, and I do, then I'd prepend a byte to the
+given array and make the parser start at an offset.
+
 ## Next Change Log
 
  * Floats are not `signed`. #113.
  * Packed integer length incorrect in `offsetsOf`. #105.
  * Add `offset` argument to `offsetsOf`. #101.
- * Pre-compiled packets. #123. #122. #118. #117. #116. #115. #112. #109. #108. #107. #106. #103. #102. #99.
+ * Pre-compiled packets. #123. #122. #119. #118. #117. #116. #115. #112. #109. #108. #107. #106. #103. #102. #99.
  * Parse and serialize as composition strategy. #111. #110. #104. #100. #98. #97.
  * Display padding in patterns in `offsetsOf`. #88.
  * Update `contributors` in `package.json`. #90.

@@ -1,6 +1,6 @@
 module.exports = function (pattern, source) {
   var path = require('path'), builder = [];
-  builder.push('module.exports = function (incremental, pattern, ieee754, callback) {');
+  builder.push('module.exports = function (incremental, pattern, transforms, ieee754, callback) {');
   builder.push.apply(builder, source.map(function (line) { return '  ' + line }));
   builder.push('}');
 
@@ -24,6 +24,11 @@ module.exports = function (pattern, source) {
     }
     if (f.packing) {
       scalar += '$' + f.packing.map(namify).join('$');
+    }
+    if (f.pipeline) {
+      scalar += '$' + f.pipeline.map(function (transform) {
+        return transform.name;
+      }).join('$');
     }
     return scalar;
   }

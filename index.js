@@ -176,13 +176,13 @@ Source.prototype.toString = function () {
 
 function Definition (context, packets, transforms, options) {
   packets = Object.create(packets);
-  transforms = Object.create(transforms);
+  this.transforms = transforms = Object.create(transforms);
   options = options || {};
   if (!('compile' in options)) options.compile = true;
 
   var precompiler = options.precompiler || function (pattern, source) {
     return Function.call(Function,
-      'incremental', 'pattern', 'ieee754', 'callback', source.join('\n'));
+      'incremental', 'pattern', 'transforms', 'ieee754', 'callback', source.join('\n'));
   }
 
   function precompile (pattern) {
@@ -266,11 +266,11 @@ function Definition (context, packets, transforms, options) {
       }
     }
 
-    function rangeCheck (condition) {
+    function rangeCheck (condition, start, index) {
       var source = new Source;
       source.block('                                                                        \n\
         if (' + condition + ') {                                                            \n\
-          return incremental.call(this, buffer, start, end, pattern, 0, object, callback);  \n\
+          return incremental.call(this, buffer, ' + start + ', end, pattern, ' + index + ', object, callback);  \n\
         }                                                                                   \n\
       ')
       source.line();
@@ -284,6 +284,7 @@ function Definition (context, packets, transforms, options) {
     var sums = [];
     var fixed = true;
     var length = [];
+    var unfixify = false;
 
     method.hoist('object = {}');
 
@@ -301,7 +302,7 @@ function Definition (context, packets, transforms, options) {
     // come back and iterate? No because in the best case, we're not giving up.
     // How about, if it's not fixed, give up and increment? So, once we're
     // moving the `start`, we give up on trying to have nice fixed numbers.
-    var offset = 0;
+    var offset = 0, patternIndex = 0;
     pattern.forEach(function (field, index) {
       if (field.lengthEncoding) return;
       if (field.endianness == 'x') {
@@ -317,21 +318,24 @@ function Definition (context, packets, transforms, options) {
           method.hoist('count');
           method.hoist('i');
           element(section, 'count = ', counter, true);
-          section.line('object[' + JSON.stringify(field.name) + '] = array = [];');
+          section.line('array = [];');
           section.line('for (i = 0; i < count; i++) {');
           element(section, '  array[i] =', field, true);
           section.line('}');
           section.line();
         } else if (field.terminator) {
-          section.line('object[' + JSON.stringify(field.name) + '] =');
+          unfixify = true;
           if (sum) {
-            rangeCheck(source, 'end - start < ' + sum);
+            method.consume(rangeCheck('end - start < ' + sum, 'start', patternIndex));
+            method.consume(section);
             sums.push(sum);
             sum = 0;
           }
           section.hoist('value');
-          section.hoist('first = start');
-          section.text(' array = [];');
+          method.hoist('first = start');
+          method.hoist('second');
+          section.line('second = start');
+          section.line('array = [];');
           if (field.terminator.length == 1) {
             section.line('for (;;) {');
             if (field.repeat != Number.MAX_VALUE) {
@@ -339,23 +343,23 @@ function Definition (context, packets, transforms, options) {
             }
             section.indent();
             if (field.bytes == 1) {
-              section.consume(rangeCheck('start == end'));
+              section.consume(rangeCheck('start == end', 'second', patternIndex));
             } else {
-              section.consume(rangeCheck('start + ' + (field.bytes - 1) + ' >= end'));
+              section.consume(rangeCheck('start + ' + (field.bytes - 1) + ' >= end', 'second', patternIndex));
             }
             element(section, 'value =', field);
-            section.line('  start += ' + field.bytes + ';');
-            section.line('  if (value == ' + field.terminator[0] + ') break;');
-            section.line('  array.push(value);');
+            section.line('start += ' + field.bytes + ';');
+            section.line('if (value == ' + field.terminator[0] + ') break;');
+            section.line('array.push(value);');
             section.dedent();
             section.line('}')
           } else {
             section.line('for (;;) {');
             section.indent();
             if (field.bytes == 1) {
-              section.consume(rangeCheck('start == end'));
+              section.consume(rangeCheck('start == end', 'second', patternIndex));
             } else {
-              section.consume(rangeCheck('start + ' + (field.bytes - 1) + ' >= end'));
+              section.consume(rangeCheck('start + ' + (field.bytes - 1) + ' >= end', 'second', patternIndex));
             }
             if (field.repeat != Number.MAX_VALUE) {
               section.line('if (array.length == ' + field.repeat + ') break;');
@@ -376,6 +380,7 @@ function Definition (context, packets, transforms, options) {
             section.dedent();
             section.line('}')
           }
+          patternIndex = index + 1;
           if (!~length.indexOf('(start - first)')) length.push('(start - first)');
           if (field.repeat != Number.MAX_VALUE) {
             // TODO: Ugly. Faster with offset to track count instead of array length?
@@ -387,13 +392,21 @@ function Definition (context, packets, transforms, options) {
           }
           offset = 0;
         } else {
-          section.line('object[' + JSON.stringify(field.name) + '] =');
-          section.text(' array = new Array(' + field.repeat + ');');
+          section.line('array = new Array(' + field.repeat + ');');
           for (var i = 0, I = field.repeat; i < I; i++) {
             element(section, 'array[' + i + '] =', field);
           }
           sum += field.bytes * field.repeat;
         }
+        if (field.pipeline) {
+          field.pipeline.forEach(function (transform) {
+            var parameters = transform.parameters.map(function (paramaeter) {
+              return JSON.stringify(paramaeter);
+            }).concat([ 'true', 'null', 'array' ]).join(', ');
+            section.line('array = transforms.', transform.name, '(', parameters, ');');
+          });
+        }
+        section.line('object[' + JSON.stringify(field.name) + '] = array;');
       } else {
         var code = new Source();
         if (field.packing) {
@@ -425,16 +438,35 @@ function Definition (context, packets, transforms, options) {
             bit += pack.bits
           }
         } else {
-          element(section, 'object[' + JSON.stringify(field.name) + '] =', field);
+          if (field.pipeline) {
+            section.hoist('value');
+            element(section, 'value =', field);
+            field.pipeline.forEach(function (transform) {
+              var parameters = transform.parameters.map(function (paramaeter) {
+                return JSON.stringify(paramaeter);
+              }).concat([ 'true', 'null', 'value' ]).join(', ');
+              section.line('value = transforms.', transform.name, '(', parameters, ');');
+            });
+            section.line('object[' + JSON.stringify(field.name) + '] = value;');
+          } else {
+            element(section, 'object[' + JSON.stringify(field.name) + '] =', field);
+          }
         }
         sum += field.bytes;
       }
       section.line();
+      if (unfixify) {
+        if (sum) {
+          var range = rangeCheck('end - start < ' + sum, 'start', patternIndex);
+          method.consume(range);
+        }
+        method.consume(section);
+        unfixify = false;
+      }
     });
 
-
     if (sum) {
-      var range = rangeCheck('end - start < ' + sum);
+      var range = rangeCheck('end - start < ' + sum, 'start', patternIndex);
       method.consume(range);
       method.consume(section);
       sums.push(sum);
@@ -447,6 +479,10 @@ function Definition (context, packets, transforms, options) {
       length.push(sums.reduce(function (sum, value) { return sum + value }, 0));
     }
 
+    var substart = length.slice(); 
+    if (~length.indexOf('(start - first)')) substart.unshift('first');
+
+
     method.block('                                                                              \n\
       this.length = ' + length.join(' + ') + ';                                                 \n\
                                                                                                 \n\
@@ -455,7 +491,7 @@ function Definition (context, packets, transforms, options) {
       callback(object);                                                                         \n\
                                                                                                 \n\
       if (this.parse) {                                                                         \n\
-        return ' + length.join(' + ') + ' + this.parse(buffer, ' + length.join(' + ') + ', end);\n\
+        return ' + length.join(' + ') + ' + this.parse(buffer, ' + substart.join(' + ') + ', end);\n\
       } else {                                                                                  \n\
         return ' + length.join(' + ') + ';                                                      \n\
       }                                                                                         \n\
@@ -471,8 +507,7 @@ function Definition (context, packets, transforms, options) {
     var parsed = parse(pattern);
     parsed.hasAlternation = parsed.some(function (field) { return field.alternation });
     if (parsed.every(function (part) {
-      return ! part.alternation &&
-             ! part.pipeline
+      return ! part.alternation
     })) {
       precompile(parsed);
     }
@@ -587,7 +622,7 @@ function Parser (definition, options) {
     }
 
     if (_pattern.builder) {
-      this.parse = _pattern.builder(incremental, pattern, ieee754, __callback);
+      this.parse = _pattern.builder(incremental, pattern, definition.transforms, ieee754, __callback);
     } else {
       this.parse = createGenericParser(definition, pattern, 0, __callback, {}, true);
     }
