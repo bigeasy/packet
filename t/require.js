@@ -8,7 +8,7 @@ module.exports = function (pattern, source) {
 
   console.log(builder.join('\n'));
 
-  var name = pattern.map(function (f, i) {
+  function namify (f, i) { 
     var scalar = f.endianness + f.bits + f.type;
     if (f.signed) scalar = 'S' + scalar;
     if (f.named) scalar += '.' + f.name;
@@ -22,8 +22,13 @@ module.exports = function (pattern, source) {
         scalar += '_t' + f.terminator.join('-');
       }
     }
+    if (f.packing) {
+      scalar += '$' + f.packing.map(namify).join('$');
+    }
     return scalar;
-  }).join('_');
+  }
+
+  var name = pattern.map(namify).join('_');
 
   console.log(name);
   var file = path.join(__dirname, 'generated', name + '.js');

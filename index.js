@@ -395,7 +395,38 @@ function Definition (context, packets, transforms, options) {
           sum += field.bytes * field.repeat;
         }
       } else {
-        element(section, 'object[' + JSON.stringify(field.name) + '] =', field);
+        var code = new Source();
+        if (field.packing) {
+          section.hoist('value');
+          element(section, 'value =', field);
+          var bit = 0
+          for (var i = 0, I = field.packing.length; i < I; i++) {
+            var pack = field.packing[i]
+            var mask = '0xff' + new Array(field.bytes).join('ff');
+            if (pack.endianness != 'x') {
+              if (pack.signed) {
+                section.hoist('unsigned');
+                section.line('unsigned');
+              } else {
+                section.line('object[' + JSON.stringify(pack.name) + ']')
+              }
+              section.text(' = ')
+              section.text('(value & (', mask, ' >> ', bit, '))');
+              section.text(' >> ', (field.bits - (bit + pack.bits)), ';');
+              if (pack.signed) {
+                var bits = '0x' + (mask >>> (field.bits - pack.bits)).toString(16);
+                var top = '0x' + (1 << pack.bits - 1).toString(16);
+                section.line('object[' + JSON.stringify(pack.name) + ']');
+                section.text(' = ', top , ' & unsigned ?');
+                section.text(' (', bits, ' - unsigned + 1) * -1');
+                section.text(' : unsigned;');
+              }
+            }
+            bit += pack.bits
+          }
+        } else {
+          element(section, 'object[' + JSON.stringify(field.name) + '] =', field);
+        }
         sum += field.bytes;
       }
       section.line();
@@ -441,7 +472,6 @@ function Definition (context, packets, transforms, options) {
     parsed.hasAlternation = parsed.some(function (field) { return field.alternation });
     if (parsed.every(function (part) {
       return ! part.alternation &&
-             ! part.packing &&
              ! part.pipeline
     })) {
       precompile(parsed);
