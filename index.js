@@ -225,7 +225,7 @@ function Definition (packets, transforms, options) {
       source.replace(/ \+$/, ';');
       source.dedent();
       if (field.signed) {
-        source.line(variable + ' !(value & ' + sign + ') ? value :  (' + mask + ' - value + 1) * -1;');
+        source.line(variable + ' (value & ' + sign + ') ? (' + mask + ' - value + 1) * -1 : value;');
       }
       return source;
     }
