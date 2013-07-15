@@ -1,4 +1,4 @@
-var parse = require('./pattern').parse,
+var parse = require('./tokenizer').parse,
         ieee754   = require('./ieee754'),
         util = require('util'),
         __slice = [].slice
