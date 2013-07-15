@@ -187,8 +187,10 @@ function parse (pattern, part, index, bits, next) {
 
   next = next || re["field" /*
         ^               // start
-        (\w[\w\d]*):    // name
-        \s*             // optional whitespace
+        (               // track length of name and spaces
+          (\w[\w\d]*):    // name
+          \s*             // optional whitespace
+        )
         (-?)            // sign
         ([xbl])         // skip, big-endian or little-endian
         (\d+)           // bits
@@ -204,29 +206,30 @@ function parse (pattern, part, index, bits, next) {
     // Match a packet pattern.
     $ = next.exec(rest);
 
-    // The 7th field is a trick to reuse this method for bit packing patterns
-    // which are limited in what they can do. For bit packing the 6th pattern
+    // The 8th field is a trick to reuse this method for bit packing patterns
+    // which are limited in what they can do. For bit packing the 7th pattern
     // will match the rest only if it begins with a comma or named field arrow,
-    // otherwise it falls to the 6th which matches.
+    // otherwise it falls to the 7th which matches.
     if (!$)
       throw new Error(error("invalid pattern", pattern, index));
-    if ($[7])
-      throw new Error(error("invalid pattern", pattern, index + rest.length - $[7].length));
+    if ($[8])
+      throw new Error(error("invalid pattern", pattern, index + rest.length - $[8].length));
 
     // The remainder of the pattern, if any.
-    rest = $[6]
+    rest = $[7]
 
     // Convert the match into an object.
     var f =
-    { name:       $[1]
-    , signed:     !!$[2]
-    , endianness: $[3]
-    , bits:       parseInt($[4], 10)
-    , type:       $[5] || 'n'
+    { name:       $[2]
+    , signed:     !!$[3]
+    , endianness: $[4]
+    , bits:       parseInt($[5], 10)
+    , type:       $[6] || 'n'
     };
 
     // Move the character position up to the bit count.
-    if ($[1]) index++;
+    index += $[1].length;
+    if ($[3]) index++;
     index++;
 
     // Check for a valid character
