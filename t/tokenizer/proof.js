@@ -1,6 +1,6 @@
 module.exports = require("proof")(function (deepEqual) {
   var parse = require('../../tokenizer').parse
-    k parseEqual = function (pattern, expected, message) {
+    var parseEqual = function (pattern, expected, message) {
     // TODO: Remove after completing object first.
     function unname (field) {
       if (/^field\d$/.test(field.name)) {
