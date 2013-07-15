@@ -474,6 +474,10 @@ var serializer = packet.serialize('b8', new Serializer, object);
 If I really wanted to break tests, and I do, then I'd prepend a byte to the
 given array and make the parser start at an offset.
 
+ * The only reason I'm keeping positional arguments around is because they are
+   easy to document, so I'm going to not be clever about anything, and simply
+   check to see if `isNamed` is set.
+
 ## Next Change Log
 
  * Move context object to `options`. #126.
