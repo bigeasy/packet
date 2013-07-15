@@ -292,6 +292,17 @@ each position, we note the path that is chosen, we then flatten.
 
 This breakifies the current parse loop.
 
+*Serialization*: I'm no longer happy with the notion of fixing up alternation
+prior to, you know what, I'm done with positional parameters. They have been on
+the way out for some time. I have a documentation issue, so how do if solve that?
+
+Create two simple functions that pack and unpack?
+
+```
+pack('byte: b8, word: b16', { byte: 1, word: 1 })
+unpack('byte: b8, word: b16', [ 0x01, 0x00, 0x01 ])
+```
+
 ### Improvements
 
 Get rid of signedness for sizes larger that 32 bit. Reintroduce it when
