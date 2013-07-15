@@ -185,7 +185,17 @@ function alternates (pattern, array, rest, primary, secondary, allowSecondary, i
 function parse (pattern, part, index, bits, next) {
   var fields = [], lengthEncoded = false, rest, $, position = 0;
 
-  next = next || /^(-?)([xbl])(\d+)([fa]?)(.*)$/;
+  next = next || re["field" /*
+        ^               // start
+        (\w[\w\d]*):    // name
+        \s*             // optional whitespace
+        (-?)            // sign
+        ([xbl])         // skip, big-endian or little-endian
+        (\d+)           // bits
+        ([fa]?)         // type modifier
+        (.*)            // and the rest
+        $               // end
+  */]
 
   // We chip away at the pattern, removing the parts we've matched, while keeping
   // track of the index separately for error messages.
@@ -194,24 +204,25 @@ function parse (pattern, part, index, bits, next) {
     // Match a packet pattern.
     $ = next.exec(rest);
 
-    // The 6th field is a trick to reuse this method for bit packing patterns
-    // which are limited in what they can do. For bit packing the 5th pattern
+    // The 7th field is a trick to reuse this method for bit packing patterns
+    // which are limited in what they can do. For bit packing the 6th pattern
     // will match the rest only if it begins with a comma or named field arrow,
     // otherwise it falls to the 6th which matches.
     if (!$)
       throw new Error(error("invalid pattern", pattern, index));
-    if ($[6])
-      throw new Error(error("invalid pattern", pattern, index + rest.length - $[6].length));
+    if ($[7])
+      throw new Error(error("invalid pattern", pattern, index + rest.length - $[7].length));
 
     // The remainder of the pattern, if any.
-    rest = $[5]
+    rest = $[6]
 
     // Convert the match into an object.
     var f =
-    { signed:     !!$[1]
-    , endianness: $[2]
-    , bits:       parseInt($[3], 10)
-    , type:       $[4] || 'n'
+    { name:       $[1]
+    , signed:     !!$[2]
+    , endianness: $[3]
+    , bits:       parseInt($[4], 10)
+    , type:       $[5] || 'n'
     };
 
     // Move the character position up to the bit count.
@@ -246,25 +257,23 @@ function parse (pattern, part, index, bits, next) {
       var packIndex = index;
 
       f.packing   = parse(pattern, $[1], index, 1, re["pack" /*
-        ^       // start
-        (-?)    // sign
-        ([xb])  // skip or big-endian
-        (\d+)   // bits
-        ()      // never a modifier
-        (       // valid tokens following size
-          \s*     // optional whitespace followed by
-          (?:
-            ,     // a comma to continue the pattern
-            |
-            =>    // a name specifier
-            |
-            {\d   // a fill character specifier
-          )
-          .*    // the rest of the pattern
-          |
+        ^               // start
+        (\w[\w\d]*):    // name
+        (-?)            // sign
+        ([xb])          // skip or big-endian
+        (\d+)           // bits
+        ()              // never a modifier
+        (               // valid tokens following size
+            \s*             // optional whitespace followed by
+            (?:
+                ,               // a comma to continue the pattern
+                |
+                {\d             // a fill character specifier
+            )
+          .*                // the rest of the pattern
         )
-        (.*)    // match everything if the previous match misses
-        $
+        (.*)            // match everything if the previous match misses
+        $               // end
       */]);
       rest = $[2];
       index += $[1].length + 1;
@@ -433,16 +442,6 @@ function parse (pattern, part, index, bits, next) {
 
         if (!f.pipeline) f.pipeline = [];
         f.pipeline.push(transform)
-      }
-
-      // Named pattern.
-      if ($ = /^\s*=>\s*(\w[\w\d]*)\s*(.*)/.exec(rest)) {
-        index += rest.length - $[2].length;
-        f.name = $[1];
-        rest = $[2];
-        f.named = true;
-      } else {
-        f.name = 'field' + (position ++);
       }
     }
 
