@@ -24,9 +24,12 @@ module.exports = function (pattern, source) {
     }
     if (f.packing) {
       scalar += '$' + f.packing.map(namify).join('$');
-    }
-    if (f.pipeline) {
-      scalar += '$' + f.pipeline.map(function (transform) {
+    } else if (f.alternation) {
+      scalar += '@' + f.alternation.map(function (alternate) {
+        return alternate.failed ? '' : alternate.pattern.map(namify);
+      }).join('@');
+    } else if (f.pipeline) {
+      scalar += '#' + f.pipeline.map(function (transform) {
         return transform.name;
       }).join('$');
     }

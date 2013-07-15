@@ -295,6 +295,15 @@ function Definition (packets, transforms, options) {
     function unfix () {
     }
 
+    function doRangeCheck () {
+      if (sum) {
+        method.consume(rangeCheck('end - start < ' + sum, 'start', patternIndex));
+        method.consume(section);
+        sums.push(sum);
+        sum = 0;
+      }
+    }
+
     // TODO: Slice buffers. If signed, then slice and fixup.
     // TODO: With a fixed length buffer for a terminated array, give up early,
     // not at each test.
@@ -303,9 +312,90 @@ function Definition (packets, transforms, options) {
     // How about, if it's not fixed, give up and increment? So, once we're
     // moving the `start`, we give up on trying to have nice fixed numbers.
     var offset = 0, patternIndex = 0;
-    pattern.forEach(function (field, index) {
+    function unravel (field, index) {
       if (field.lengthEncoding) return;
-      if (field.endianness == 'x') {
+      if (field.alternation) {
+        if (!~length.indexOf('(start - first)')) length.push('(start - first)');
+        var was = offset;
+        section.hoist('value');
+        section.hoist('first = start');
+        element(section, 'value =', field);
+        sum += field.bytes;
+        doRangeCheck();
+        sums.pop();
+        offset = was;
+        var elsed = false;
+        field.alternation.forEach(function (alternate, ai) {
+          var cond = new Source;
+          var read = alternate.read;
+          if (read.minimum == Number.MAX_VALUE && read.maximum == -Number.MAX_VALUE) {
+            return;
+          }
+          if (read.mask) {
+            cond.line(ai ? '} else ' : '', 'if ');
+            cond.text('(value & 0x', read.mask.toString(16), ') {');
+            method.consume(cond);
+            var was = offset;
+            // TODO: It will only do one, then the offsets will be off!
+            section.line('pattern.splice.apply(pattern, [', patternIndex, ', 1].concat(pattern[', patternIndex, '].alternation[', ai, '].pattern));');
+            alternate.pattern.forEach(unravel);
+            method.indent();
+            section.line('start += ', sum + ';');
+            doRangeCheck();
+            sums.pop();
+            method.dedent();
+            offset = was;
+          } else if (read.minimum == read.maximum) {
+            cond.line(ai ? '} else ' : '', 'if ');
+            cond.text('(', read.minimum, ' == value) {');
+            method.consume(cond);
+            var was = offset;
+            // TODO: It will only do one, then the offsets will be off!
+            section.line('pattern.splice.apply(pattern, [', patternIndex, ', 1].concat(pattern[', patternIndex, '].alternation[', ai, '].pattern));');
+            alternate.pattern.forEach(unravel);
+            method.indent();
+            section.line('start += ', sum + ';');
+            doRangeCheck();
+            sums.pop();
+            method.dedent();
+            offset = was;
+          } else if (read.minimum == -Number.MAX_VALUE && read.maximum == Number.MAX_VALUE) {
+            if (!elsed) {
+              elsed = true;
+              cond.line('} else {');
+              method.consume(cond);
+              if (alternate.failed) section.line('  throw new Error("Cannot match branch.");');
+              else {
+            var was = offset;
+            // TODO: It will only do one, then the offsets will be off!
+            section.line('pattern.splice.apply(pattern, [', patternIndex, ', 1].concat(pattern[', patternIndex, '].alternation[', ai, '].pattern));');
+            alternate.pattern.forEach(unravel);
+            method.indent();
+            section.line('start += ', sum + ';');
+            doRangeCheck();
+            sums.pop();
+            method.dedent();
+            offset = was;
+              }
+            }
+          } else {
+            cond.line(ai ? '} else ' : '', 'if ');
+            cond.text('(', read.minimum, ' <= value && value <= ', read.maximum, ') {');
+            method.consume(cond);
+            section.line('pattern.splice.apply(pattern, [', patternIndex, ', 1].concat(pattern[', patternIndex, '].alternation[', ai, '].pattern));');
+            section.indent();
+            var was = offset;
+            section.line('start += ', sum + ';');
+            alternate.pattern.forEach(unravel);
+            section.line('start += ', sum + ';');
+            doRangeCheck();
+            sums.pop();
+            offset = was;
+            section.dedent();
+          }
+        });
+        section.line('}');
+      } else if (field.endianness == 'x') {
         fix();
         sum += field.bytes * field.repeat;
         offset += field.bytes * field.repeat;
@@ -463,7 +553,8 @@ function Definition (packets, transforms, options) {
         method.consume(section);
         unfixify = false;
       }
-    });
+    }
+    pattern.forEach(unravel);
 
     if (sum) {
       var range = rangeCheck('end - start < ' + sum, 'start', patternIndex);
@@ -506,11 +597,7 @@ function Definition (packets, transforms, options) {
   function compile (pattern) {
     var parsed = parse(pattern);
     parsed.hasAlternation = parsed.some(function (field) { return field.alternation });
-    if (parsed.every(function (part) {
-      return ! part.alternation
-    })) {
-      precompile(parsed);
-    }
+    precompile(parsed);
     return parsed;
   }
 
@@ -602,7 +689,9 @@ function Parser (definition, options) {
     // hashing out only to close with "oh, no, you hit upon a "hidden feature".
     function isNamed (field) {
       return field.named || (field.packing && field.packing.some(isNamed))
-                         || (field.alternation && field.alternation.some(isNamed));
+                         || (field.alternation && field.alternation.some(function (alternate) {
+                                return !alternate.failed && alternate.pattern.some(isNamed);
+                              }));
     }
     named = pattern.some(isNamed);
 
