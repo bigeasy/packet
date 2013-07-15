@@ -285,6 +285,13 @@ If speed matters, then why am I adding convience functions like figuring the
 start and end of the range? Why don't you please provide that? Now I have to
 calcuate it everywhere.
 
+Alternation is becoming annoying. I'd like to keep a separate map of alternates
+that is only used if there are alternates to track. This gets passed into the
+generic builder, but is only auto created. Actually, it's a sparse array, and at
+each position, we note the path that is chosen, we then flatten.
+
+This breakifies the current parse loop.
+
 ### Improvements
 
 Get rid of signedness for sizes larger that 32 bit. Reintroduce it when
