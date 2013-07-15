@@ -1,14 +1,14 @@
 #!/usr/bin/env node
-require("./proof")(1, function (parseEqual) {
-  parseEqual("b32f", [
+require('./proof')(1, function (parseEqual) {
+  parseEqual('b32f', [
     { signed: false
     , bits: 32
-    , endianness: "b"
+    , endianness: 'b'
     , bytes: 4
-    , type: "f"
+    , type: 'f'
     , exploded: true
     , arrayed: false
     , repeat: 1
     }
-  ], "test: parse a single 32 bit float.");
+  ], 'test: parse a single 32 bit float.');
 });

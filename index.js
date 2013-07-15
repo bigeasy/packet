@@ -7,7 +7,7 @@ function classify () {
   var i, I, name;
   for (i = 0, I = arguments.length; i < I; i++) {
     name = arguments[i].name;
-    if (name[0] == "_")
+    if (name[0] == '_')
       this.__defineGetter__(name.slice(1), arguments[i]);
     else
       this[arguments[i].name] = arguments[i];
@@ -28,7 +28,7 @@ var transforms =
         for (i = 0, I = value.length; i < I; i++) {
           if (value[i] & 0x80) value[i] = 0;
         }
-        encoding = "utf8"
+        encoding = 'utf8'
       }
       var length = value.length;
       return value.toString(encoding, 0, length);
@@ -44,11 +44,11 @@ var transforms =
   }
 // Convert to and from ASCII.
 , ascii: function (parsing, field, value) {
-    return transforms.str("ascii", parsing, field, value);
+    return transforms.str('ascii', parsing, field, value);
   }
 // Convert to and from UTF-8.
 , utf8: function (parsing, field, value) {
-    return transforms.str("utf8", parsing, field, value);
+    return transforms.str('utf8', parsing, field, value);
   }
 // Add padding to a value before you write it to stream.
 , pad: function (character, length, parsing, field, value) {
@@ -259,7 +259,7 @@ function Definition (packets, transforms, options) {
 
     function element (assign, variable, field, increment) {
       switch (field.type) {
-      case "f":
+      case 'f':
         return floating(assign, variable, field, increment);
       default:
         return unsigned(assign, variable, field, increment);
@@ -686,7 +686,7 @@ function Parser (definition, options) {
     // arity override, then greater than one is the trigger. However, on
     // reflection, I don't see that the flexibility is useful, and I do believe
     // that it will generate at least one bug report that will take a lot of
-    // hashing out only to close with "oh, no, you hit upon a "hidden feature".
+    // hashing out only to close with "oh, no, you hit upon a 'hidden feature'."
     function isNamed (field) {
       return field.named || (field.packing && field.packing.some(isNamed))
                          || (field.alternation && field.alternation.some(function (alternate) {
@@ -736,7 +736,7 @@ function createGenericParser (options, definition, pattern, patternIndex, _callb
     skipping    = null;
     terminated = ! field.terminator;
     terminator = field.terminator && field.terminator[field.terminator.length - 1];
-    if (field.arrayed && field.endianness  != "x") arrayed = [];
+    if (field.arrayed && field.endianness  != 'x') arrayed = [];
   }
 
   // Prepare the parser to parse the next value in the stream. It initializes
@@ -747,7 +747,7 @@ function createGenericParser (options, definition, pattern, patternIndex, _callb
     var field = pattern[patternIndex];
 
     // If skipping, skip over the count of bytes.
-    if (field.endianness == "x") {
+    if (field.endianness == 'x') {
       skipping  = field.bytes;
 
     // Otherwise, create the empty value.
@@ -823,7 +823,7 @@ function createGenericParser (options, definition, pattern, patternIndex, _callb
         bytes = value;
 
         // Convert to float or double.
-        if (field.type == "f") {
+        if (field.type == 'f') {
           if (field.bits == 32)
             value = ieee754.fromIEEE754Single(bytes.reverse())
           else
@@ -901,7 +901,7 @@ function createGenericParser (options, definition, pattern, patternIndex, _callb
 
         // If we're not skipping, push the field value after running it through
         // the pipeline.
-        if (field.endianness != "x") {
+        if (field.endianness != 'x') {
           var packing;
 
           // If the field is a bit packed field, unpack the values and push them
@@ -911,7 +911,7 @@ function createGenericParser (options, definition, pattern, patternIndex, _callb
             for (i = 0, I = packing.length; i < I; i++) {
               var pack = packing[i];
               length -= pack.bits;
-              if (pack.endianness == "b") {
+              if (pack.endianness == 'b') {
                 var unpacked = Math.floor(value / Math.pow(2, length));
                 unpacked = unpacked % Math.pow(2, pack.bits);
                 // If signed, we convert from two's compliment.
@@ -950,7 +950,7 @@ function createGenericParser (options, definition, pattern, patternIndex, _callb
                 break;
             }
             if (branch.failed)
-              throw new Error("Cannot match branch.");
+              throw new Error('Cannot match branch.');
             bytes = arrayed.slice(0);
             this.length -= bytes.length;
             pattern.splice.apply(pattern, [ patternIndex, 1 ].concat(branch.pattern));
@@ -1025,7 +1025,7 @@ function Serializer(definition, options) {
     padding     = null;
 
     // Can't I keep separate indexes? Do I need that zero?
-    if (field.endianness ==  "x") {
+    if (field.endianness ==  'x') {
       if (field.padding != null)
         padding = field.padding
     }
@@ -1043,7 +1043,7 @@ function Serializer(definition, options) {
 
     // If we are skipping without filling we note the count of bytes to skip,
     // otherwise we prepare our value.
-    if (field.endianness ==  "x" &&  padding == null) {
+    if (field.endianness ==  'x' &&  padding == null) {
       skipping = field.bytes
     } else {
       // If we're filling, we write the fill value.
@@ -1067,12 +1067,12 @@ function Serializer(definition, options) {
         for (i = 0, I = packing.length; i < I; i++) {
           pack = packing[i];
           length -= pack.bits;
-          if (pack.endianness ==  "b" || pack.padding != null) {
+          if (pack.endianness ==  'b' || pack.padding != null) {
             unpacked = pack.padding != null ? pack.padding : incoming[pack.name];
             if (pack.signed) {
               range = Math.pow(2, pack.bits - 1)
               if (!( (-range) <= unpacked &&  unpacked <= range - 1))
-                throw new Error("value " + unpacked + " will not fit in " + pack.bits + " bits");
+                throw new Error('value ' + unpacked + ' will not fit in ' + pack.bits + ' bits');
               if (unpacked < 0) {
                 mask = range * 2 - 1
                 unpacked = (~(- unpacked) + 1) & mask
@@ -1096,7 +1096,7 @@ function Serializer(definition, options) {
       // If the array is not an unsigned integer, we might have to convert it.
       if (field.exploded) {
         // Convert a float into its IEEE 754 representation.
-        if (field.type == "f") {
+        if (field.type == 'f') {
           if (field.bits == 32)
             value = ieee754.toIEEE754Single(value).reverse();
           else
@@ -1145,7 +1145,7 @@ function Serializer(definition, options) {
 
     // TODO: Hate that all this has to pass for the common case.
     named = (shiftable.length ==  1
-             && typeof shiftable[0] ==  "object"
+             && typeof shiftable[0] ==  'object'
              && ! (shiftable[0] instanceof Array));
 
     _callback = callback;

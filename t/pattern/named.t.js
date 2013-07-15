@@ -1,43 +1,43 @@
 #!/usr/bin/env node
 require('./proof')(2, function (parseEqual) {
-  parseEqual("b8z|utf8()|atoi(8) => mode, b32 => l", [
+  parseEqual('b8z|utf8()|atoi(8) => mode, b32 => l', [
     { signed: false
     , bits: 8
-    , endianness: "b"
+    , endianness: 'b'
     , bytes: 1
-    , type: "n"
-    , name: "mode"
+    , type: 'n'
+    , name: 'mode'
     , exploded: false
     , arrayed: true
     , repeat: Number.MAX_VALUE
     , terminator: [ 0 ]
     , pipeline:
       [
-        { name: "utf8"
+        { name: 'utf8'
         , parameters: []
         }
         ,
-        { name: "atoi"
+        { name: 'atoi'
         , parameters: [ 8 ]
         }
       ]
     },
     { signed: false
-    , endianness: "b"
+    , endianness: 'b'
     , bits: 32
     , bytes: 4
-    , type: "n"
+    , type: 'n'
     , exploded: false
     , arrayed: false
     , repeat: 1
-    , name: "l"
+    , name: 'l'
     }
-  ], "parse a named element.");
-  parseEqual("b8/b8 => numbers", [
+  ], 'parse a named element.');
+  parseEqual('b8/b8 => numbers', [
     { signed: false
-    , endianness: "b"
+    , endianness: 'b'
     , bits: 8
-    , type: "n"
+    , type: 'n'
     , bytes: 1
     , exploded: false
     , lengthEncoding: true
@@ -45,14 +45,14 @@ require('./proof')(2, function (parseEqual) {
     , repeat: 1
     },
     { signed: false
-    , endianness: "b"
+    , endianness: 'b'
     , bits: 8
-    , type: "n"
+    , type: 'n'
     , bytes: 1
     , exploded: false
     , repeat: 1
     , arrayed: true
     , name: 'numbers'
     }
-  ], "parse a named length encoded.");
+  ], 'parse a named length encoded.');
 });

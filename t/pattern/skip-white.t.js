@@ -1,15 +1,15 @@
 #!/usr/bin/env node
 
-require("./proof")(1, function (parseEqual) {
-  parseEqual(" b8", [
+require('./proof')(1, function (parseEqual) {
+  parseEqual(' b8', [
     { signed: false
     , bits: 8
-    , endianness: "b"
+    , endianness: 'b'
     , bytes: 1
-    , type: "n"
+    , type: 'n'
     , exploded: false
     , arrayed: false
     , repeat: 1
     }
-  ], "parse a single byte");
+  ], 'parse a single byte');
 });

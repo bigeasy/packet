@@ -9,32 +9,32 @@
 // might be defining their patterns use a HERDOC.
 function error (message, pattern, index) {
   var lines;
-  if (pattern.indexOf("\n") != -1) {
+  if (pattern.indexOf('\n') != -1) {
     lines = pattern.substring(0, index).split(/\n/);
-    if (lines[0] == "") lines.shift();
-    return message + " at line " + lines.length + " character " + (lines.pop().length + 1);
+    if (lines[0] == '') lines.shift();
+    return message + ' at line ' + lines.length + ' character ' + (lines.pop().length + 1);
   } else {
-    return message + " at character " + (index + 1);
+    return message + ' at character ' + (index + 1);
   }
 }
 
-var BASE = { "0x": 16, "0": 8 };
+var BASE = { '0x': 16, '0': 8 };
 
 var re = {};
 
 function compileRegularExpressions() {
   var name, $, lines, i, I, source;
-  source = require("fs").readFileSync(__filename, "utf8").split(/\r?\n/);
+  source = require('fs').readFileSync(__filename, 'utf8').split(/\r?\n/);
   for (i = 0, I = source.length; i < I; i++, $ = null) {
     for (; !$ && i < I; i++) {
-      $ = /re\["([^"]+)"\s*\/\*\s*$/.exec(source[i]);
+      $ = /re\['([^']+)'\s*\/\*\s*$/.exec(source[i]);
     }
     if ($) {
       name = $[1], lines = [];
       for (; ! ($ = /^\s*(i?)\*\/\]/.exec(source[i])); i++) {
         lines.push(source[i].replace(/\/\/.*$/, '').trim());
       }
-      re[name] = new RegExp(lines.join("").replace(/ /g, ''), $[1] || "");
+      re[name] = new RegExp(lines.join('').replace(/ /g, ''), $[1] || '');
     }
   }
 }
@@ -44,7 +44,7 @@ compileRegularExpressions();
 // Extract an alternation range number or bit mask from at the current pattern
 // substring given by `rest`.
 function number (pattern, rest, index) {
-  var match = re["number" /*
+  var match = re['number' /*
     ^               // start
     (                 // capture for length
       \s*               // skip white
@@ -61,7 +61,7 @@ function number (pattern, rest, index) {
   i*/].exec(rest);
 
   if (! match)
-    throw new Error(error("invalid number", pattern, index));
+    throw new Error(error('invalid number', pattern, index));
 
   var matched = match[1], mask = match[2], hex = match[3],
     decimal = match[4], range = match[5], rest = match[6],
@@ -82,14 +82,14 @@ function condition (pattern, index, rest, struct) {
   var from = number(pattern, rest, index), match, num, to;
   if (from.mask) {
     if (from.range)
-      throw new Error(error("masks not permitted in ranges", pattern, index));
+      throw new Error(error('masks not permitted in ranges', pattern, index));
     struct.mask = from.value;
     index = from.index;
   } else {
     if (from.range) {
       to = number(pattern, from.rest, from.index);
       if (to.mask)
-        throw new Error(error("masks not permitted in ranges", pattern, from.index));
+        throw new Error(error('masks not permitted in ranges', pattern, from.index));
       struct.minimum = from.value;
       struct.maximum = to.value;
       index = to.index;
@@ -100,7 +100,7 @@ function condition (pattern, index, rest, struct) {
   }
   num = to || from;
   if (match = /(\s*)\S/.exec(num.rest))
-    throw new Error(error("invalid pattern", pattern, index + match[1].length));
+    throw new Error(error('invalid pattern', pattern, index + match[1].length));
   return index;
 }
 
@@ -153,8 +153,8 @@ function alternates (pattern, array, rest, primary, secondary, allowSecondary, i
       // If we do not allow patterns with write conditions, raise an exception if
       // one exists.
       } else if (second) {
-        var slashIndex = startIndex + first.length + delimiter.indexOf("/");
-        throw new Error(error("field alternates not allowed", pattern, slashIndex));
+        var slashIndex = startIndex + first.length + delimiter.indexOf('/');
+        throw new Error(error('field alternates not allowed', pattern, slashIndex));
       }
 
       // Increment the index.
@@ -166,7 +166,7 @@ function alternates (pattern, array, rest, primary, secondary, allowSecondary, i
     if ($ = /^(\s*)([^|]+)(\|\s*)(.*)$/.exec(rest)) {
       var padding = $[1], part = $[2], delimiter = $[3], rest = $[4];
     } else {
-      var padding = "", part = rest, delimiter = "", rest = null;
+      var padding = '', part = rest, delimiter = '', rest = null;
     }
     index += padding.length;
 
@@ -185,7 +185,7 @@ function alternates (pattern, array, rest, primary, secondary, allowSecondary, i
 function parse (pattern, part, index, bits, next) {
   var fields = [], lengthEncoded = false, rest, $, position = 0;
 
-  next = next || re["field" /*
+  next = next || re['field' /*
         ^               // start
         (               // track length of name and spaces
           (\w[\w\d]*):    // name
@@ -211,9 +211,9 @@ function parse (pattern, part, index, bits, next) {
     // will match the rest only if it begins with a comma or named field arrow,
     // otherwise it falls to the 7th which matches.
     if (!$)
-      throw new Error(error("invalid pattern", pattern, index));
+      throw new Error(error('invalid pattern', pattern, index));
     if ($[8])
-      throw new Error(error("invalid pattern", pattern, index + rest.length - $[8].length));
+      throw new Error(error('invalid pattern', pattern, index + rest.length - $[8].length));
 
     // The remainder of the pattern, if any.
     rest = $[7]
@@ -234,11 +234,11 @@ function parse (pattern, part, index, bits, next) {
 
     // Check for a valid character
     if (f.bits == 0)
-      throw new Error(error("bit size must be non-zero", pattern, index));
+      throw new Error(error('bit size must be non-zero', pattern, index));
     if (f.bits % bits)
-      throw new Error(error("bit size must be divisible by " + bits, pattern, index));
-    if (f.type == "f" && !(f.bits == 32 || f.bits == 64))
-      throw Error(error("floats can only be 32 or 64 bits", pattern, index));
+      throw new Error(error('bit size must be divisible by ' + bits, pattern, index));
+    if (f.type == 'f' && !(f.bits == 32 || f.bits == 64))
+      throw Error(error('floats can only be 32 or 64 bits', pattern, index));
 
     // Move the character position up to the rest of the pattern.
     index += $[3].length;
@@ -246,9 +246,9 @@ function parse (pattern, part, index, bits, next) {
 
     // Set the implicit fields. Unpacking logic is inconsistent between bits and
     // bytes, but not applicable for bits anyway.
-    if (f.bits > 64 && f.type == "n") f.type = "a";
+    if (f.bits > 64 && f.type == 'n') f.type = 'a';
     f.bytes = f.bits / bits
-    f.exploded = !!(f.signed || f.bytes > 8 || ~"fa".indexOf(f.type));
+    f.exploded = !!(f.signed || f.bytes > 8 || ~'fa'.indexOf(f.type));
 
 
     // Check for bit backing. The intense rest pattern in the regex allows us to
@@ -259,7 +259,7 @@ function parse (pattern, part, index, bits, next) {
 
       var packIndex = index;
 
-      f.packing   = parse(pattern, $[1], index, 1, re["pack" /*
+      f.packing   = parse(pattern, $[1], index, 1, re['pack' /*
         ^               // start
         (\w[\w\d]*):    // name
         (-?)            // sign
@@ -286,10 +286,10 @@ function parse (pattern, part, index, bits, next) {
       var sum = f.packing.reduce(function (x, y) { return x + y.bits }, 0);
 
       if (sum < f.bits)
-        throw new Error(error("bit pack pattern underflow", pattern, packIndex));
+        throw new Error(error('bit pack pattern underflow', pattern, packIndex));
 
       if (sum > f.bits)
-        throw new Error(error("bit pack pattern overflow", pattern, packIndex));
+        throw new Error(error('bit pack pattern overflow', pattern, packIndex));
 
     // Check for alternation.
     } else if ($ = /^\(([^)]+)\)(.*)$/.exec(rest)) {
@@ -307,13 +307,13 @@ function parse (pattern, part, index, bits, next) {
 
       // Parse the primary alternation pattern.
       index += 1
-      alternates(pattern, f.alternation = [], read, "read", "write", ! write, index);
+      alternates(pattern, f.alternation = [], read, 'read', 'write', ! write, index);
       index += read.length + 1;
 
       // Parse the full write alternation pattern, if we have one.
       if (write) {
         index += slash.length + 1
-        alternates(pattern, f.alternation, write, "write", "read", false, index);
+        alternates(pattern, f.alternation, write, 'write', 'read', false, index);
         index += write.length
       }
 
@@ -347,7 +347,7 @@ function parse (pattern, part, index, bits, next) {
           f.repeat = parseInt($[1], 10)
           index++
           if (f.repeat == 0)
-            throw new Error(error("array length must be non-zero", pattern, index));
+            throw new Error(error('array length must be non-zero', pattern, index));
           index += $[1].length + 1
           rest = $[2]
         }
@@ -358,7 +358,7 @@ function parse (pattern, part, index, bits, next) {
         var before = $[1], after = $[2], base = $[3], pad = $[4], rest = $[5];
         index += before.length;
         if (isNaN(f.padding = parseInt(pad, BASE[base]))) {
-          throw new Error(error("invalid number format", pattern, index));
+          throw new Error(error('invalid number format', pattern, index));
         }
         index += after.length;
       }
@@ -372,7 +372,7 @@ function parse (pattern, part, index, bits, next) {
           f.terminator = [];
           var terminator = $[1];
           for (;;) {
-            $ = re["terminator" /*
+            $ = re['terminator' /*
               ^         // start
               (\s*)     // skip whitespace
               (?:
@@ -386,7 +386,7 @@ function parse (pattern, part, index, bits, next) {
               $         // end
             */].exec(terminator);
             if (!$)
-              throw new Error(error("invalid terminator value", pattern, index));
+              throw new Error(error('invalid terminator value', pattern, index));
             var before = $[1], hex = $[2], decimal = $[3], after = $[4],
                 delimiter = $[5], terminator = $[6];
             index += before.length;
@@ -399,11 +399,11 @@ function parse (pattern, part, index, bits, next) {
               index += decimal.length;
             }
             if (value > 255)
-              throw new Error(error("terminator value out of range", pattern, numberIndex));
+              throw new Error(error('terminator value out of range', pattern, numberIndex));
             index += after.length;
             index += delimiter.length;
             f.terminator.push(value);
-            if (delimiter == ">") {
+            if (delimiter == '>') {
               index += terminator.length
               break
             }
@@ -426,7 +426,7 @@ function parse (pattern, part, index, bits, next) {
         // JavaScript scalar, taken in part from
         // [json2.js](http://www.JSON.org/json2.js).
         while (hasArgument) {
-          $ = re["scalar" /*
+          $ = re['scalar' /*
             ( '(?:[^\\']|\\.)+'|"(?:[^\\"]|\\.)+"   // string
             | true | false                          // boolean
             | null                                  // null
@@ -437,7 +437,7 @@ function parse (pattern, part, index, bits, next) {
           */].exec(rest);
           index += rest.length - $[3].length;
           value = eval($[1]);
-          hasArgument = $[2].indexOf(")") == -1;
+          hasArgument = $[2].indexOf(')') == -1;
           rest = $[3];
 
           transform.parameters.push(value)
@@ -460,7 +460,7 @@ function parse (pattern, part, index, bits, next) {
     lengthEncoded = false
   }
   if (/\S/.test(rest))
-    throw  new Error(error("invalid pattern", pattern, index));
+    throw  new Error(error('invalid pattern', pattern, index));
 
   return fields;
 }
@@ -470,7 +470,7 @@ function parse (pattern, part, index, bits, next) {
 
 // The `pattern` is the pattern to parse.
 module.exports.parse = function (pattern) {
-  var part = pattern.replace(/\n/g, " ").replace(/^\s+/, "")
+  var part = pattern.replace(/\n/g, ' ').replace(/^\s+/, '')
     , index = pattern.length - part.length;
   return parse(pattern, part, index, 8);
 }

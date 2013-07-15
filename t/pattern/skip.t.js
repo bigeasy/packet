@@ -1,14 +1,14 @@
 #!/usr/bin/env node
 require('./proof')(1, function (parseEqual) {
-  parseEqual("x16", [
+  parseEqual('x16', [
     { signed: false
     , bits: 16
-    , endianness: "x"
+    , endianness: 'x'
     , bytes: 2
-    , type: "n"
+    , type: 'n'
     , exploded: false
     , arrayed: false
     , repeat: 1
     }
-  ], "parse a single 16 bit skip");
+  ], 'parse a single 16 bit skip');
 });

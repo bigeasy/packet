@@ -1,21 +1,21 @@
 #!/usr/bin/env node
 require('./proof')(1, function (parseEqual) {
-  parseEqual("b8z|twiddle('a \\u00DF b \\' c')", [
+  parseEqual('b8z|twiddle('a \\u00DF b \\' c')', [
     { signed: false
     , bits: 8
-    , endianness: "b"
+    , endianness: 'b'
     , bytes: 1
-    , type: "n"
+    , type: 'n'
     , exploded: false
     , arrayed: true
     , repeat: Number.MAX_VALUE
     , terminator: [ 0 ]
     , pipeline:
       [
-        { name: "twiddle"
-        , parameters: [ "a \u00DF b ' c" ],
+        { name: 'twiddle'
+        , parameters: [ 'a \u00DF b ' c' ],
         }
       ]
     }
-  ], "parse a transform with a single quoted string parameter.");
+  ], 'parse a transform with a single quoted string parameter.');
 });

@@ -1,12 +1,12 @@
 #!/usr/bin/env node
 require('./proof')(1, function (parseEqual) {
-  parseEqual("-l16,b8",
+  parseEqual('-l16,b8',
   [
     { signed: true
     , bits: 16
-    , endianness: "l"
+    , endianness: 'l'
     , bytes: 2
-    , type: "n"
+    , type: 'n'
     , exploded: true
     , arrayed: false
     , repeat: 1
@@ -14,12 +14,12 @@ require('./proof')(1, function (parseEqual) {
   ,
     { signed: false
     , bits: 8
-    , endianness: "b"
+    , endianness: 'b'
     , bytes: 1
-    , type: "n"
+    , type: 'n'
     , exploded: false
     , arrayed: false
     , repeat: 1
     }
-  ], "parse a multi-line pattern");
+  ], 'parse a multi-line pattern');
 });
