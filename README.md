@@ -90,8 +90,8 @@ stream.
 Patterns are a series of element declarations joined by commas.
 
 ```javascript
-parser.extract("b16, b32, b8z", function (length, address, name) {
-  console.log(length, address, name);
+parser.extract("length: b16, address: b32, name: b8z", function (object) {
+  console.log(object.length, object.address, object.name);
 });
 parser.parse([ 0x01, 0xFF, 0x01, 0x00, 0x00, 0x00, 0x01, 0x02, 0x00 ]);
 ```
@@ -114,16 +114,17 @@ IP header, the first 20 bytes before options, if any.
 
 ```javascript
 // Define an IP header pattern using a joined array to explode the pattern.
-parser.packet("ip", "b8{b4 => version, b4 => headerLength}, \
-                     b8   => typeOfService, \
-                     b16  => length, \
-                     b16  => identification, \
-                     b16{b3 => flags, b13 => fragmentOffset}, \
-                     b8   => timeToLive, \
-                     b8   => protocol, \
-                     b16  => checksum, \
-                     b32  => sourceAddress, \
-                     b32  => destinationAddress");
+parser.packet('ip', 'b8{version: b4, headerLength: b4},         \
+                     typeOfService: b8,                         \
+                     length: b16,                               \
+                     identification: b16,                       \
+                     b16{flags: b3, fragmentOffset: b13},       \
+                     timeToLive: b8,                            \
+                     protocol: b8,                              \
+                     checksum: b16,                             \
+                     sourceAddress: b32,                        \
+                     destinationAddress: b32                    \
+                    ');
 
 // The pattern is then used to defined parser and serializer actions.
 parser.extract("ip", function (header) {
