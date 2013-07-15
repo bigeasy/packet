@@ -407,7 +407,7 @@ function Definition (packets, transforms, options) {
           if (!~length.indexOf('(start - first)')) length.push('(start - first)');
           method.hoist('count');
           method.hoist('i');
-          element(section, 'count = ', counter, true);
+          element(section, 'count =', counter, true);
           section.line('array = [];');
           section.line('for (i = 0; i < count; i++) {');
           element(section, '  array[i] =', field, true);
@@ -457,7 +457,7 @@ function Definition (packets, transforms, options) {
             var condition = field.terminator.map(function (value, index) {
               return '' + value + ' == array[array.length - ' +
                           Math.abs((index - field.terminator.length)) + ']';
-            }).join(' && ') 
+            }).join(' && ');
             element(section, 'value =', field);
             section.block('\n\
               start += ' + field.bytes + ';                                                 \n\
@@ -570,7 +570,7 @@ function Definition (packets, transforms, options) {
       length.push(sums.reduce(function (sum, value) { return sum + value }, 0));
     }
 
-    var substart = length.slice(); 
+    var substart = length.slice();
     if (~length.indexOf('(start - first)')) substart.unshift('first');
 
 

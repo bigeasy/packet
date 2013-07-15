@@ -8,7 +8,7 @@ module.exports = function (pattern, source) {
 
   console.log(builder.join('\n'));
 
-  function namify (f, i) { 
+  function namify (f, i) {
     var scalar = f.endianness + f.bits + f.type;
     if (f.signed) scalar = 'S' + scalar;
     if (f.named) scalar += '.' + f.name;
