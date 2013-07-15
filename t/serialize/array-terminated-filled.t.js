@@ -3,9 +3,9 @@ require('./proof')(2 * 3, function (serialize) {
   var bytes =  [ 0x01, 0x02, 0x03, 0x04 ];
   var buffer = [ 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01 ];
   var expected = [ 0x01, 0x02, 0x03, 0x04, 0x00, 0x00, 0x00, 0x00 ];
-  serialize(buffer, "b8[8]{0}z", bytes, 8, expected, "write a zero terminated array of 8 bytes zero filled");
+  serialize(buffer, 'b8[8]{0}z', bytes, 8, expected, 'write a zero terminated array of 8 bytes zero filled');
   var bytes =  [ 0x01, 0x02, 0x03, 0x04 ];
   buffer = [ 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01 ];
   expected = [ 0x01, 0x02, 0x03, 0x04, 0x00, 0x02, 0x02, 0x02 ];
-  serialize(buffer, "b8[8]{2}z", bytes, 8, expected, "write a zero terminated array of 8 bytes filled");
+  serialize(buffer, 'b8[8]{2}z', bytes, 8, expected, 'write a zero terminated array of 8 bytes filled');
 });

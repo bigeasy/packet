@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-require("./proof")(1, function (offsetsOf, deepEqual) {
+require('./proof')(1, function (offsetsOf, deepEqual) {
   var createParser = require('../..').createParser, parser = createParser();
   parser.packet('pattern', 'b8{x4,b4 => number}');
   parser.extract('pattern', function (record) {
