@@ -21,5 +21,5 @@ require('./proof')(1, function (parseEqual) {
         , arrayed: true
         , repeat: 1
         }
-    ], 'parse a length encoded array of 16 bit numbers.');
-});
+    ], 'parse a length encoded array of 16 bit numbers.')
+})

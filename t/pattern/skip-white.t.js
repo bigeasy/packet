@@ -11,5 +11,5 @@ require('./proof')(1, function (parseEqual) {
         , arrayed: false
         , repeat: 1
         }
-    ], 'parse a single byte');
-});
+    ], 'parse a single byte')
+})

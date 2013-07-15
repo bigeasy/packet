@@ -10,5 +10,5 @@ require('./proof')(1, function (parseEqual) {
         , arrayed: false
         , repeat: 1
         }
-    ], 'parse a single 16 bit skip');
-});
+    ], 'parse a single 16 bit skip')
+})

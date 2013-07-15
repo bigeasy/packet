@@ -32,7 +32,7 @@ require('./proof')(2, function (parseEqual) {
         , repeat: 1
         , name: 'l'
         }
-    ], 'parse a named element.');
+    ], 'parse a named element.')
     parseEqual('b8/b8 => numbers', [
         { signed: false
         , endianness: 'b'
@@ -54,5 +54,5 @@ require('./proof')(2, function (parseEqual) {
         , arrayed: true
         , name: 'numbers'
         }
-    ], 'parse a named length encoded.');
-});
+    ], 'parse a named length encoded.')
+})

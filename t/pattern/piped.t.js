@@ -17,5 +17,5 @@ require('./proof')(1, function (parseEqual) {
                 }
             ]
         }
-    ], 'parse an list of bytes termianted by zero piped to a transform.');
-});
+    ], 'parse an list of bytes termianted by zero piped to a transform.')
+})

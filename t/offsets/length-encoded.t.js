@@ -12,7 +12,7 @@ require('./proof')(6, function (offsetsOf) {
             offset: 0,
             length: 4,
             hex: '0002cdef' }
-    ], 'read a named length encoded array');
+    ], 'read a named length encoded array')
     offsetsOf('b16/b8', [
         0x00, 0x02, 0xcd, 0xef
     ], [
@@ -23,5 +23,5 @@ require('./proof')(6, function (offsetsOf) {
             offset: 0,
             length: 4,
             hex: '0002cdef' }
-    ], 'read a length encoded array');
-});
+    ], 'read a length encoded array')
+})

@@ -21,5 +21,5 @@ require('./proof')(1, function (parseEqual) {
         , arrayed: false
         , repeat: 1
         }
-    ], 'parse a signed little-endian 16 bit number followed by a byte');
-});
+    ], 'parse a signed little-endian 16 bit number followed by a byte')
+})

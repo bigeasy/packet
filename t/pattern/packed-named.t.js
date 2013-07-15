@@ -74,5 +74,5 @@ require('./proof')(1, function (parseEqual) {
             repeat: 1,
             arrayed: false
         }
-    ], 'parse a named bit packed pattern.');
-});
+    ], 'parse a named bit packed pattern.')
+})

@@ -1,12 +1,12 @@
 #!/usr/bin/env node
 
 require('./proof')(1, function (offsetsOf, deepEqual) {
-    var createParser = require('../..').createParser, parser = createParser();
-    parser.packet('pattern', 'b8{x4,b4 => number}');
+    var createParser = require('../..').createParser, parser = createParser()
+    parser.packet('pattern', 'b8{x4,b4 => number}')
     parser.extract('pattern', function (record) {
-        var serializer = parser.createSerializer();
-        serializer.serialize('pattern', record);
-        var fields = serializer.offsetsOf(new Buffer([ 0, 1 ]), 1);
+        var serializer = parser.createSerializer()
+        serializer.serialize('pattern', record)
+        var fields = serializer.offsetsOf(new Buffer([ 0, 1 ]), 1)
         deepEqual(fields, [
             { pattern: 'b8{x4,b4}',
                 value: [
@@ -15,7 +15,7 @@ require('./proof')(1, function (offsetsOf, deepEqual) {
                 ],
                 offset: 1,
                 length: 1,
-                hex: '01' } ], 'expected');
-    });
-    parser.parse([ 1 ], 0, 1);
-});
+                hex: '01' } ], 'expected')
+    })
+    parser.parse([ 1 ], 0, 1)
+})

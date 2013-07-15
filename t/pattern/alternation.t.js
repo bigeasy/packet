@@ -150,5 +150,5 @@ require('./proof')(1, function (parseEqual) {
                 }
             ]
         }
-    ], 'parse alternation with range.');
-});
+    ], 'parse alternation with range.')
+})

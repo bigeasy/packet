@@ -17,5 +17,5 @@ require('./proof')(1, function (parseEqual) {
                 }
             ]
         }
-    ], 'parse a transform with a two parameters.');
-});
+    ], 'parse a transform with a two parameters.')
+})

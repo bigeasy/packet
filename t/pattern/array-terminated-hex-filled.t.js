@@ -12,5 +12,5 @@ require('./proof')(1, function (parseEqual) {
         , terminator: [ 0 ]
         , padding: 16
         }
-    ], 'parse a zero terminated array of 8 bytes 0x10 filled.');
-});
+    ], 'parse a zero terminated array of 8 bytes 0x10 filled.')
+})

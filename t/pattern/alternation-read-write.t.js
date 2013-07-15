@@ -154,5 +154,5 @@ require('./proof')(1, function (parseEqual) {
                 }
             ]
         }
-    ], 'parse alternation with reads and writes.');
-});
+    ], 'parse alternation with reads and writes.')
+})

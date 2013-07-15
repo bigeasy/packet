@@ -10,5 +10,5 @@ require('./proof')(1, function (parseEqual) {
         , arrayed: true
         , repeat: 8
         }
-    ], 'parse an array of 8 bytes.');
-});
+    ], 'parse an array of 8 bytes.')
+})

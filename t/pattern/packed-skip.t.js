@@ -40,5 +40,5 @@ require('./proof')(1, function (parseEqual) {
                 }
             ]
         }
-    ], 'parse bit packing starting with skip.');
-});
+    ], 'parse bit packing starting with skip.')
+})

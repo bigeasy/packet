@@ -21,5 +21,5 @@ require('./proof')(1, function (parseEqual) {
                 }
             ]
         }
-    ], 'parse a two transforms in a row.');
-});
+    ], 'parse a two transforms in a row.')
+})

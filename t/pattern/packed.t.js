@@ -40,5 +40,5 @@ require('./proof')(1, function (parseEqual) {
                 }
             ]
         }
-    ], 'parse bit packing starting with big-endian.');
-});
+    ], 'parse bit packing starting with big-endian.')
+})

@@ -92,5 +92,5 @@ require('./proof')(1, function (parseEqual) {
                 }
             ]
         }
-    ], 'parse alternation with bit mask.');
-});
+    ], 'parse alternation with bit mask.')
+})

@@ -21,5 +21,5 @@ require('./proof')(1, function (parseEqual) {
         , arrayed: false
         , repeat: 1
         }
-    ], 'parse a multi-line pattern');
-});
+    ], 'parse a multi-line pattern')
+})

@@ -9,4 +9,4 @@ require('./proof')(6, function (offsetsOf) {
         { pattern: 'x16{0xaaaa}', offset: 0, length: 2, hex: '8101' },
         { name: 'foo', pattern: 'b16', value: 256, offset: 2, length: 2, hex: '0100' }
     ], 'read a skipped word and a named word')
-});
+})

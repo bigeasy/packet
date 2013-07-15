@@ -17,5 +17,5 @@ require('./proof')(1, function (parseEqual) {
                 }
             ]
         }
-    ], 'parse a transform with a negative integer parameter.');
-});
+    ], 'parse a transform with a negative integer parameter.')
+})

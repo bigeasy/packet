@@ -4,12 +4,12 @@ require('./proof')(2, function (parse, equal) {
         parse('b8,\nb7')
     } catch (e) {
         equal(e.message, 'bit size must be divisible by 8 at line 2 character 2',
-                                          'parse a bad multi-line pattern');
+                                          'parse a bad multi-line pattern')
     }
     try {
         parse('\nb8,\nb7')
     } catch (e) {
         equal(e.message, 'bit size must be divisible by 8 at line 2 character 2',
-                                          'skip initial newline in report');
+                                          'skip initial newline in report')
     }
-});
+})

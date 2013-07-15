@@ -11,5 +11,5 @@ require('./proof')(1, function (parseEqual) {
         , repeat: Number.MAX_VALUE
         , terminator: [ 13, 10 ]
         }
-    ], 'parse a list of bytes terminated by a custom terminator.');
-});
+    ], 'parse a list of bytes terminated by a custom terminator.')
+})

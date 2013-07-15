@@ -10,5 +10,5 @@ require('./proof')(1, function (parseEqual) {
         , arrayed: false
         , repeat: 1
         }
-    ], 'parse a number greater than 64 bits with no type.');
-});
+    ], 'parse a number greater than 64 bits with no type.')
+})

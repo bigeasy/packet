@@ -157,5 +157,5 @@ require('./proof')(1, function (parseEqual) {
                 }
             ]
         }
-    ], 'parse alternation with full write alternate.');
-});
+    ], 'parse alternation with full write alternate.')
+})

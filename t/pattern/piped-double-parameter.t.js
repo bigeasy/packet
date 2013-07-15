@@ -17,5 +17,5 @@ require('./proof')(1, function (parseEqual) {
                 }
             ]
         }
-    ], 'parse a transform with an float parameter.');
-});
+    ], 'parse a transform with an float parameter.')
+})

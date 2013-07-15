@@ -12,7 +12,7 @@ require('./proof')(6, function (offsetsOf) {
             terminator: { value: [ 0 ], offset: 3, length: 1, hex: '00' },
             length: 4,
             hex: 'abcdef00' }
-    ], 'offsets of a zero terminated array');
+    ], 'offsets of a zero terminated array')
     offsetsOf('b8z => numbers', [
         0xab, 0xcd, 0xef, 0x00
     ], [
@@ -25,5 +25,5 @@ require('./proof')(6, function (offsetsOf) {
             terminator: { value: [ 0 ], offset: 3, length: 1, hex: '00' },
             length: 4,
             hex: 'abcdef00' }
-    ], 'offsets of a named zero terminated array');
-});
+    ], 'offsets of a named zero terminated array')
+})

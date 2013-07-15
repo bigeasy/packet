@@ -27,5 +27,5 @@ require('./proof')(1, function (parseEqual) {
         , arrayed: false
         , repeat: 1
         }
-    ], 'parse a transform followed by a 16 bit number.');
-});
+    ], 'parse a transform followed by a 16 bit number.')
+})

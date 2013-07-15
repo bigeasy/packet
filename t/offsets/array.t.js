@@ -13,7 +13,7 @@ require('./proof')(6, function (offsetsOf) {
             length: 3,
             hex: 'abcdef' },
         { name: 'byte', pattern: 'b8', value: 0xff, offset: 3, length: 1, hex: 'ff' }
-    ], 'read a named array of 3 bytes');
+    ], 'read a named array of 3 bytes')
     offsetsOf('b8[3],b8', [
         0xab, 0xcd, 0xef, 0xff
     ], [
@@ -25,5 +25,5 @@ require('./proof')(6, function (offsetsOf) {
             length: 3,
             hex: 'abcdef' },
         { pattern: 'b8', value: 0xff, offset: 3, length: 1, hex: 'ff' }
-    ], 'read an array of 3 bytes');
-});
+    ], 'read an array of 3 bytes')
+})

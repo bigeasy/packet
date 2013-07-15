@@ -10,5 +10,5 @@ require('./proof')(1, function (parseEqual) {
         , arrayed: false
         , repeat: 1
         }
-    ], 'test: parse a single 32 bit float.');
-});
+    ], 'test: parse a single 32 bit float.')
+})
