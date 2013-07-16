@@ -190,7 +190,7 @@ function parse (pattern, part, index, bits, next) {
                 (               // track length of name and spaces
                     (\w[\w\d]*):    // name
                     \s*             // optional whitespace
-                )
+                )?              // name is probably optional
                 (-?)            // sign
                 ([xbl])         // skip, big-endian or little-endian
                 (\d+)           // bits
@@ -220,15 +220,18 @@ function parse (pattern, part, index, bits, next) {
 
         // Convert the match into an object.
         var f =
-        { name:       $[2]
-        , signed:     !!$[3]
+        { signed:     !!$[3]
         , endianness: $[4]
         , bits:       parseInt($[5], 10)
         , type:       $[6] || 'n'
         }
 
+        if ($[1]) {
+            f.name = $[2]
+            index += $[1].length
+        }
+
         // Move the character position up to the bit count.
-        index += $[1].length
         if ($[3]) index++
         index++
 
