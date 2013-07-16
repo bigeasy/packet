@@ -4,7 +4,7 @@ require('./proof')(2, function (createSerializer, equal, deepEqual, toArray) {
         , object = { length: 258, type: 8, name: 'ABC' }
         , buffer = new Buffer(1024)
         , serializer
-    prototype.packet('packet', 'b16 => length, b8 => type, b8z|utf8() => name')
+    prototype.packet('packet', 'length: b16, type: b8, name: b8z|utf8()')
     serializer = prototype.createSerializer()
     serializer.serialize('packet', object)
     serializer.write(buffer, 0, buffer.length)

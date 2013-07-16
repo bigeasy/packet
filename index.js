@@ -1232,6 +1232,10 @@ function Serializer(definition, options) {
                         }
                     }
 
+                    if (alternate.failed) {
+                        throw new Error('Cannot match branch.')
+                    }
+
                     alternates.splice.apply(alternates, [ i--, 1 ].concat(alternate.pattern))
                     continue
                 }
@@ -1337,6 +1341,7 @@ function Serializer(definition, options) {
             if (field.lengthEncoding) {
                 var start = offset
                 var element = pattern[++patternIndex]
+                console.log(element)
                 var record = { name: element.name, value: [], offset: 0 }
                 if (!element.named) delete record.name
                 output.push(record)

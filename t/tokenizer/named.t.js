@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 require('./proof')(2, function (parseEqual) {
-    parseEqual('b8z|utf8()|atoi(8) => mode, b32 => l', [
+    parseEqual('mode: b8z|utf8()|atoi(8), l: b32', [
         { signed: false
         , bits: 8
         , endianness: 'b'
@@ -33,7 +33,7 @@ require('./proof')(2, function (parseEqual) {
         , name: 'l'
         }
     ], 'parse a named element.')
-    parseEqual('b8/b8 => numbers', [
+    parseEqual('numbers: b8/b8', [
         { signed: false
         , endianness: 'b'
         , bits: 8

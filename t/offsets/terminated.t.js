@@ -13,7 +13,7 @@ require('./proof')(6, function (offsetsOf) {
             length: 4,
             hex: 'abcdef00' }
     ], 'offsets of a zero terminated array')
-    offsetsOf('b8z => numbers', [
+    offsetsOf('numbers: b8z', [
         0xab, 0xcd, 0xef, 0x00
     ], [
         { name: 'numbers',

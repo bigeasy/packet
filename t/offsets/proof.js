@@ -11,6 +11,7 @@ module.exports = require('proof')(function (equal, deepEqual, ok) {
       var serializer = parser.createSerializer();
       serializer.serialize.apply(serializer, ['pattern'].concat(slice(arguments, 0)));
       var fields = serializer.offsetsOf(bytes);
+      console.log(fields[0])
       deepEqual(fields, expected, label + ' expected');
       deepEqual(bytes.length, serializer.sizeOf, label + ' size of');
       invoked = true;

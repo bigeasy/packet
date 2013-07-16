@@ -6,6 +6,6 @@ require('./proof')(12, function (serialize) {
         'write a zero terminated 8 byte padded UTF-8 string that is 7 characters long')
     serialize('b8z|utf8()|atoi(10)', '42', 3, [ 0x34, 0x32, 0x00 ],
         'write an integer converted to a zero terminated UTF-8 string')
-    serialize('b8z|utf8()|pad('0', 7)|atoi(10)', '42', 8, [ 0x30, 0x30, 0x30, 0x30, 0x30, 0x34, 0x32, 0x00 ],
+    serialize('b8z|utf8()|pad("0", 7)|atoi(10)', '42', 8, [ 0x30, 0x30, 0x30, 0x30, 0x30, 0x34, 0x32, 0x00 ],
         'write an integer converted to a zero padded zero terminated UTF-8 string')
 })

@@ -14,7 +14,7 @@ require('./proof')(6, function (offsetsOf) {
             hex: 'abcdef0d0a' },
         { pattern: 'b8', value: 0xff, offset: 5, length: 1, hex: 'ff' }
     ], 'offsets of a custom terminated array')
-    offsetsOf('b8z<13,10> => numbers, b8 => byte', [
+    offsetsOf('numbers: b8z<13,10>, byte: b8', [
         0xab, 0xcd, 0xef, 0x0d, 0x0a, 0xff
     ], [
         { name: 'numbers',

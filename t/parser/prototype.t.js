@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 require('./proof')(2, function (createParser, equal, deepEqual) {
     var prototype = createParser(), parser
-    prototype.packet('packet', 'b16 => length, b8 => type, b8z|utf8() => name')
+    prototype.packet('packet', 'length: b16, type: b8, name: b8z|utf8()')
     parser = prototype.createParser()
     parser.extract('packet', function (object) {
         equal(parser.length, 7, 'bytes read')

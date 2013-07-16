@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 require('./proof')(6, function (offsetsOf) {
-    offsetsOf('b16/b8 => numbers', [
+    offsetsOf('numbers: b16/b8', [
         0x00, 0x02, 0xcd, 0xef
     ], [
         { name: 'numbers',

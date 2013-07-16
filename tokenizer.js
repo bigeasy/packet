@@ -134,7 +134,7 @@ function alternates (pattern, array, rest, primary, secondary, allowSecondary, i
 
         // Match the condition and the colon prior to the pattern. If this doesn't
         // match than we assume that we have a final, default pattern.
-        if ($ = /^([^/:]+)(?:(\s*\/\s*)([^:]+))?(:\s*)(.*)$/.exec(rest)) {
+        if ($ = /^(\s*[\&\d][^/:]*)(?:(\s*\/\s*)([^:]+))?(:\s*)(.*)$/.exec(rest)) {
             var first = $[1], delimiter = $[2], second = $[3], imparative = $[4], rest = $[5]
 
             startIndex = index
@@ -183,7 +183,7 @@ function alternates (pattern, array, rest, primary, secondary, allowSecondary, i
 // match bit packing patterns, with a regular expression that excludes modifiers
 // that are non-applicable to bit packing patterns.
 function parse (pattern, part, index, bits, next) {
-    var fields = [], lengthEncoded = false, rest, $, position = 0
+    var fields = [], lengthEncoded = false, rest, $, position = 0, name
 
     next = next || re['field' /*
                 ^               // start
@@ -226,9 +226,16 @@ function parse (pattern, part, index, bits, next) {
         , type:       $[6] || 'n'
         }
 
-        if ($[1]) {
+        if (name) {
+            f.name = name
+            f.named = true
+            name = null
+        } else if ($[1]) {
+            f.named = true
             f.name = $[2]
             index += $[1].length
+        } else {
+            f.name = 'field' + (position++)
         }
 
         // Move the character position up to the bit count.
@@ -244,8 +251,8 @@ function parse (pattern, part, index, bits, next) {
             throw Error(error('floats can only be 32 or 64 bits', pattern, index))
 
         // Move the character position up to the rest of the pattern.
-        index += $[3].length
-        if ($[4]) index++
+        index += $[5].length
+        if ($[6]) index++
 
         // Set the implicit fields. Unpacking logic is inconsistent between bits and
         // bytes, but not applicable for bits anyway.
@@ -257,14 +264,17 @@ function parse (pattern, part, index, bits, next) {
         // Check for bit backing. The intense rest pattern in the regex allows us to
         // skip over a nested padding specifier in the bit packing pattern, nested
         // curly brace matching for a depth of one.
-        if ($ = /^{((?:-b|b|x)(?:[^{}]+|{[^}]+})+)}(\s*,.*|\s*)$/.exec(rest)) {
+        if ($ = /^{((?:(?:\w[\w\d]*):\s*)?(?:-b|b|x)(?:[^{}]+|{[^}]+})+)}(\s*,.*|\s*)$/.exec(rest)) {
             index++
 
             var packIndex = index
 
             f.packing   = parse(pattern, $[1], index, 1, re['pack' /*
                 ^               // start
-                (\w[\w\d]*):    // name
+                (
+                    (\w[\w\d]*):    // name
+                    \s*
+                )?              // name is not optional, or it won't be TODO TODO
                 (-?)            // sign
                 ([xb])          // skip or big-endian
                 (\d+)           // bits
@@ -277,6 +287,7 @@ function parse (pattern, part, index, bits, next) {
                                 {\d             // a fill character specifier
                         )
                     .*                // the rest of the pattern
+                    |
                 )
                 (.*)            // match everything if the previous match misses
                 $               // end
@@ -330,6 +341,9 @@ function parse (pattern, part, index, bits, next) {
         } else{
             // Check if this is a length encoding.
             if ($ = /^\/(.*)$/.exec(rest)) {
+                if (f.named) name = f.name
+                delete f.name
+                delete f.named
                 index++
                 f.lengthEncoding = true
                 rest = $[1]

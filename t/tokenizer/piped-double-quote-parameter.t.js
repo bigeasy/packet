@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 require('./proof')(1, function (parseEqual) {
-    parseEqual('b8z|twiddle('a \\u00DF b \\' c')', [
+    parseEqual('b8z|twiddle("a \\u00DF b \\" c")', [
         { signed: false
         , bits: 8
         , endianness: 'b'
@@ -13,7 +13,7 @@ require('./proof')(1, function (parseEqual) {
         , pipeline:
             [
                 { name: 'twiddle'
-                , parameters: [ 'a \u00DF b \' c' ],
+                , parameters: [ 'a \u00DF b " c' ],
                 }
             ]
         }
