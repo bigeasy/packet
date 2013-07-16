@@ -460,6 +460,156 @@ calling this library Packet. Yes, it does parsing. Yes, it does serialization.
 Yes, it does pattern matching. Yes, it is faster than the parser you'd write
 yourself.
 
+## Syntax Beastiary
+
+Here are some thoughts on syntax...
+
+```javascript
+'b8'          // perfect wouldn't change a thing.
+'b16'         // bits instead of bytes, because we want to convey the binaryness.
+
+// the colon is precious. we use it for naming.
+'foo: b16'
+
+// notice how not all names are valid anymore. boo-hoo. but it is so easy to
+// detect, it doesn't matter too much, does it.
+'b16: b16'
+
+// matched characters are precious
+
+'b16[10]'     // kind of a waste of a bracket, don't you think? It will only
+              // ever contain a number, but we're not ever saying when we're
+              // going to create an array or buffer, we're not consistent.
+
+'b16*8'       // we could say this instead, times 8. creates array.
+'b16*8z'      // we can still zero terminate, creates padded array? can't the
+              // user pad simply by filling the array?
+
+'b8z'         // creates an array.
+'b8/b8'       // also creates an array.
+'b8.8'        // not as noisy as *.
+'b8.8z'       // can still zero terminate.
+'b8.8{0}z'    // can still pad. . means it is part of the same thing, but * 
+              // really breaks up the statement.
+
+// how to create a record? Where we have no packing.
+'record:{foo: b16, bar: b8z}'
+
+// reuse counting to create an array. I don't like the slash up against the
+curlies though, too much going on.
+'records:b8/{foo: b16, bar: b8z}'
+
+// reuse curlies for packing
+'b8{flag: b1, value: b7}'
+
+// we can say a name is an array, without is packing
+'records:b8{foo: b16, bar: b8z}'
+
+// can we still get our slices of the array?
+'check:<records:b8{foo: b16, bar: b8z}>'
+
+// and continue?
+'check:<records:b8{foo: b16, bar: b8z}, foo:b32f>, sum:b32'
+
+// what about processing before return?
+'check:<records:b8{foo: b16, bar: b8z}, foo:b32f> -> crc($1), sum:b32'
+
+// what about calculating as you go?
+'check:<records:b8{foo: b16, bar: b8z}, foo:b32f> | crc($1), sum:b32'
+
+// yeah, but a javascript block *will* have commas, so we need to use some
+// curlies.
+'check:<records:b8{foo: b16, bar: b8z}, foo:b32f> | { crc($1) }, sum:b32'
+'check:<records:b8{foo: b16, bar: b8z}, foo:b32f> -> { crc($1) }, sum:b32'
+
+// ah, but only if we *need* curlies.
+'check:<records:b8{foo: b16, bar: b8z}, foo:b32f> | crc($1), sum:b32'
+'check:<records:b8{foo: b16, bar: b8z}, foo:b32f> -> 'checksum: ' + crc($1), sum:b32'
+
+// alternation got the comma the first time around because of switch statements.
+'b8(252/252-0xffff: x8{252}, foo: b16         \
+   | 0-251: foo: b8                           \
+   | 253/0x10000-0xffffff: x8{253}, foo: b24  \
+   | x8{254}, foo: b64)'
+
+// but now the commas are too many. I'm not sure what to put there. the
+// alternation syntax is fine. we use pipes and parens. unfortunately, it means
+// we can't use pipes to create pipelines, but we might be moving to -> for
+// that, for function calls. alternation is usually about only a few bytes that
+// have been conditionally encoded, not entirely different packets.
+
+// We could reuse our arrows.
+'b8(252/252-0xffff -> x8{252}, foo: b16         \
+   | 0-251 -> foo: b8                           \
+   | 253/0x10000-0xffffff -> x8{253}, foo: b24  \
+   | x8{254}, foo: b64)'
+
+// We could use equal arrows.
+'b8(252/252-0xffff => x8{252}, foo: b16         \
+   | 0-251 => foo: b8                           \
+   | 253/0x10000-0xffffff => x8{253}, foo: b24  \
+   | x8{254}, foo: b64)'
+
+// We could use tildes to mean there abouts.
+'b8(252/252-0xffff ~ x8{252}, foo: b16         \
+   | 0-251 ~ foo: b8                           \
+   | 253/0x10000-0xffffff ~ x8{253}, foo: b24  \
+   | x8{254}, foo: b64)'
+
+// We can't have pipelines, unless we want say that whitespace is significant.
+// But, if it's not a number, or a pattern, or if we make ~ required, we can
+// have pipelines.
+'b8(252/252-0xffff ~ x8{252}, foo: b16         \
+   | 0-251 ~ foo: b8z | utf8()                   \
+   | 253/0x10000-0xffffff ~ x8{253}, foo: b24  \
+   | ~ x8{254}, foo: b8z | utf16())'
+
+// or we can go to arrows.
+'b8(252/252-0xffff ~ x8{252}, foo: b16         \
+   | 0-251 ~ foo: b8z -> utf8()                   \
+   | 253/0x10000-0xffffff ~ x8{253}, foo: b24  \
+   | ~ x8{254}, foo: b8z -> utf16())'
+
+// but arrows are one way, what if we did two way arrows?
+'b8(252/252-0xffff ~ x8{252}, foo: b16         \
+   | 0-251 ~ foo: b8z <-> utf8()                   \
+   | 253/0x10000-0xffffff ~ x8{253}, foo: b24  \
+   | ~ x8{254}, foo: b8z <-> utf16())'
+
+// what if we get noisy with equal arrows too?
+'b8(252/252-0xffff => x8{252}, foo: b16         \
+   | 0-251 => foo: b8z <-> utf8()               \
+   | 253/0x10000-0xffffff => x8{253}, foo: b24  \
+   | => x8{254}, foo: b8z <-> utf16())'
+
+// what if we get noisy with equal arrows too?
+'b8(252/252-0xffff        => x8{252}, foo: b16    \
+   | 0-251                => foo: b8z <-> utf8()  \
+   | 253/0x10000-0xffffff => x8{253}, foo: b24    \
+   |                      => x8{254}, foo: b8z <-> utf16())'
+
+// hey, that could mean run on parse and serialize, on parse only or on
+// serialize only.
+
+// how to we put our checksum back? The arrows both pointing in the same
+// direction mean to run through the checksum in both directions.
+
+// But, we only write the sum at the end.
+'check:<records:b8{foo: b16, bar: b8z}, foo:b32f> >-> crc($1), sum:b32 <- $.check'
+
+// The arrows have meaning, but we default call, how do we say pipe?
+'check:<records:b8{foo: b16, bar: b8z}, foo:b32f> >-> | crc($1), sum:b32 <- $.check'
+
+// Or maybe if we pipe we pipe?
+'check:<records:b8{foo: b16, bar: b8z}, foo:b32f> | crc($1), sum:b32 <- $.check'
+
+// Or we are explicit with the arrows.
+'check:<records:b8{foo: b16, bar: b8z}, foo:b32f> >|< crc($1), sum:b32 <- $.check'
+
+// but how about construction now?
+// if crc($1) returns a function can we call that function instead?
+```
+
 ## Inbox
 
  * Maybe there is a pattern parser that is exposed to the user? That is their
