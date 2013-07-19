@@ -1,7 +1,16 @@
 <!DOCTYPE html>
 <html>
+<meta charset='utf-8'>
+<link rel="stylesheet" type="text/css" href="css/packet.css">
+<link rel="stylesheet" type="text/css" href="css/syntax.css">
+<title>Locket</title>
+<body>
 <title>Packet</title>
 <body><div class="container">
+
+<div class="unit welcome">
+<h1>Packet</h1>
+</div>
 
 <div class="unit description">
 An evented binary packet and structure parser for Node.js.
@@ -217,6 +226,30 @@ values as parameters regardless of arity.
 First you call `serialize` with a pattern and arguments to serialize, then you
 call `write` with a series of buffers.
 
+</div>
+<div class="unit description">
+## Error Messages
+
+Error messages for pattern parsing.
+
+ * **invalid pattern at N** &mdash; The characters starting at the specified
+   index is unexpected the pattern is invalid. The invalid character may not be
+   at the specified index, but shortly there after, such as unmatched braces.
+ * **bit field overflow at N** &mdash; The sum of the bit size of bit field
+   elements is greater than the size of the containing element. The sum of the
+   bit size of bit field elements must equal the size of the containing element.
+ * **bit field underflow at N** &mdash; The sum of the bit size of bit field
+   elements is less than the size of the containing element. The sum of the bit
+   size of bit field elements must equal the size of the containing element.
+ * **bit size must be non-zero at N** &mdash; Encountered element with a bit size of
+   zero. Element size must be a non-zero value.
+ * **bits must be divisible by 8 at N** &mdash; Encountered element with a bit
+   size that is not divisible by 8. If an element is not a bit field element, it
+   must align to an 8-bit boundary.
+ * **floats can only be 32 or 64 bits at N** &mdash; Encountered a float element
+   with an unsupported bit size. Only 32 and 64 bit floats are supported.
+ * **"array length must be non-zero at N** &mdash; Encountered an array length
+   of zero. Arrays must have a non-zero length.
 </div>
 
 </div></body>
