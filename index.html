@@ -1,51 +1,36 @@
-<!DOCTYPE HTML>
+<!DOCTYPE html>
 <html>
-<head><title>Hello, World!</title>
-<meta http-equiv="content-type" content="text/html; charset=UTF-8">
-<link rel="stylesheet" media="all" href="/ace/css/docco.css">
-<link rel="stylesheet" media="all" href="/ace/css/markdown.css">
-</head>
-<body>
-<div class="container"><div id="container">
-<div id="markdown">
+<title>Packet</title>
+<body><div class="container">
 
-<div class="docs"><h1>Node Packet</h1>
-
-<p>An evented binary packet and structure parser for Node.js.</p>
-
-<h2>Synopsis</h2>
-
-<p>Use tar as an example?</p>
-
+<div class="unit description"><p>An evented binary packet and structure parser for Node.js.</p>
+<h2>Contributors</h2>
+<ul>
+<li><a href="https://github.com/neonstalwart">Ben Hockey</a></li>
+<li><a href="https://github.com/aq1018">Aaron Qian</a></li>
+</ul>
 <h2>Objectives</h2>
-
-<p>Node Packet creates <strong>binary parsers</strong> and <strong>serializers</strong> that are
-<strong>incremental</strong>, <strong>streaming</strong>, and <strong>pausable</strong> through a bindary pattern
-language that is <strong>declarative</strong> and very <strong>expressive</strong>.</p>
-
-<p>Node Packet simplifies the construction an maintainence of libraries that
-convert binary to JavaScript and back. The name Packet may make you think that
-it is designed solely for binary network protocols, but it is also great for
-reading and writing binary file formats.</p>
-
-<p><strong>Incremental</strong> &mdash; Node packet creates incremental parsers and serailizers
-that are almost as fast as the parser you'd write by hand, but a lot easier to
+<p>Packet creates <strong>binary parsers</strong> and <strong>serializers</strong> that are <strong>incremental</strong>
+through a binary pattern language that is <strong>declarative</strong> and very
+<strong>expressive</strong>.</p>
+<p>Packet simplifies the construction an maintenance of libraries that convert
+binary to JavaScript and back. The name Packet may make you think that it is
+designed solely for binary network protocols, but it is also great for reading
+and writing binary file formats.</p>
+<p><strong>Incremental</strong> — Node packet creates incremental parsers and serializers
+that are almost as fast as the parser you&#39;d write by hand, but a lot easier to
 define and maintain.</p>
-
-<p><strong>Declarative</strong> &mdash; Packet defines a binary structure using a pattern
-language inspired by Perl's <code>pack</code>. The binary patterns are used to define both
+<p><strong>Declarative</strong> — Packet defines a binary structure using a pattern
+language inspired by Perl&#39;s <code>pack</code>. The binary patterns are used to define both
 parsers and serializers. If you have a protocol specification, or even just a C
 header file with structures that define your binary data, you can probably
-translate that directly into Node Packet patterns.</p>
-
+translate that directly into Packet patterns.</p>
 <p>For parsers, you associate the patterns to callbacks invoked with captured
 values when the pattern is extracted from the stream. For serializers you simply
 give the values to write along with the pattern to follow when writing them.</p>
-
-<p><strong>Expressive</strong> &mdash; The pattern language can express</p>
-
+<p><strong>Expressive</strong> — The pattern language can express</p>
 <ul>
-<li>signed and unsigned integers, </li>
+<li>signed and unsigned integers,</li>
 <li>endianess of singed and unsigned integers,</li>
 <li>floats and doubles,</li>
 <li>fixed length arrays of characters or numbers,</li>
@@ -53,624 +38,132 @@ give the values to write along with the pattern to follow when writing them.</p>
 <li>zero terminated strings of characters or numbers,</li>
 <li>said strings terminated any fixed length terminator you specify,</li>
 <li>padding of said strings with any padding value you specify,</li>
-<li>singed and unsigned integers extracted from bit packed integers,</li>
+<li>signed and unsigned integers extracted from bit packed integers,</li>
 <li>conditions based on bit patterns</li>
 <li>character encodings,</li>
-<li>custom tranformations,</li>
-<li>and pipelines of character encodings and custom tranformations.</li>
+<li>custom transformations,</li>
+<li>and pipelines of character encodings and custom transformations.</li>
 </ul>
-
-<p><strong>Streaming</strong> &mdash; Node Packet implements the Node.js <a href="http://nodejs.org/docs/v0.4.8/api/streams.html">stream
-interface</a> in both the <code>Parser</code>
-and the <code>Serializer</code>. You can pump a stream into a Packet <code>Parser</code> and it will
-invoke your packet handlers.  </p>
-
-<p><strong>Pausable</strong> &mdash; The streams implemented by both parsers and serializers
-are pausable. Parsers relay the pause to the source stream, and mark thier spot
-in the buffer they are parsing. Serializers can effectively pause the user code
-that is feeding the serializer.</p>
-
 <h3>Limitations</h3>
-
-<p><strong>Parsing not searching</strong> &mdash; Packet is not a pattern matching library. It
+<p><strong>Parsing not searching</strong> — Packet is not a pattern matching library. It
 does not search binary streams for patterns. Packet is used for parsing
 well-defined streams of binary data.</p>
-
-<p><strong>8-bit boundaries</strong> &mdash; I'm unable to think of an an example in
-contemporary computing that doesn't align to an 8-bit boundary, but the world is
-big and I am small, so I plan on being surprised. I can also imagine that
-someone might want to unleash Packet on legacy data someday, from way back when
-a byte was whatever a computer maufacturer said it was.</p>
-
-<p>Therefore, It's worth noting that Packet parses 8-bit bytes and expects bytes to
-align to an 8-bit boundary. Node Packet can parse 7-bit ASCII formats like tar
+<p><strong>8-bit boundaries</strong> — I&#39;m unable to think of an example in contemporary
+computing that doesn&#39;t align to an 8-bit boundary, but the world is big and I am
+small, so I plan on being surprised. I can also imagine that someone might want
+to unleash Packet on legacy data someday, from way back when a byte was whatever
+a computer manufacturer said it was.</p>
+<p>Therefore, It&#39;s worth noting that Packet parses 8-bit bytes and expects bytes to
+align to an 8-bit boundary. Packet can parse 7-bit ASCII formats like <code>tar</code>
 archives, because they are 8-bit aligned with the top bit ignored. Packet can
 also parse and serialize bit packed integers, so it does support awkward integer
 sizes, but within an 8-bit aligned integer.</p>
-
 <h2>Installing</h2>
-
-<p>Install Packet using NPM. The source is available on
-<a href="https://github.com/bigeasy/node-packet">GitHub</a>.</p></div>
-
-<div class="docs"><pre>npm install packet</pre></div>
-
-<div class="docs"><h2>Parsers and Serializers</h2>
-
-<p>Node Packet defines a binrary format using a binary pattern language inspried by
-Perl's <code>pack</code> function. The pattern language is used in a <code>Parser</code> to define the
+<p>Install Packet using NPM.</p>
+<pre><code>npm install packet</code></pre>
+<p>The source is available on <a href="https://github.com/bigeasy/packet">GitHub</a>.</p>
+<h2>Parsers and Serializers</h2>
+<p>Packet defines a binary format using a binary pattern language inspired by
+Perl&#39;s <code>pack</code> function. The pattern language is used in a <code>Parser</code> to define the
 parameters passed to callback when enough bytes are read from the input stream
 to satisfy the pattern. The pattern language is used in a <code>Serializer</code> to define
-how JavaScript primitives passed to the <code>serialize</code> method are written to stream.</p>
-
-<h3>Patterns</h3>
-
-<p>Patterns are a series of element declarations joined by commas.</p></div>
-
-<div class="docs"><div class="highlight"><pre><span class="nx">parser</span><span class="p">.</span><span class="nx">parse</span><span class="p">(</span><span class="s2">&quot;b16, b32, b8z&quot;</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">length</span><span class="p">,</span> <span class="nx">address</span><span class="p">,</span> <span class="nx">name</span><span class="p">)</span> <span class="p">{</span>
-  <span class="nx">frobinate</span><span class="p">(</span><span class="nx">length</span><span class="p">,</span> <span class="nx">address</span><span class="p">,</span> <span class="nx">name</span><span class="p">);</span>
-<span class="p">});</span>
-
-</pre></div></div>
-
-<div class="docs"><p>You can also name the elements in a pattern. If named, parsers will be able to
-pass maps to callbacks, serializers will be able to serialize maps of data.</p></div>
-
-<div class="docs"><div class="highlight"><pre><span class="nx">parser</span><span class="p">.</span><span class="nx">parse</span><span class="p">(</span><span class="s2">&quot;b16 =&gt; length, b32 =&gt; address, b8z =&gt; name&quot;</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">record</span><span class="p">)</span> <span class="p">{</span>
-  <span class="nx">frobinate</span><span class="p">(</span><span class="nx">record</span><span class="p">.</span><span class="nx">length</span><span class="p">,</span> <span class="nx">record</span><span class="p">.</span><span class="nx">address</span><span class="p">,</span> <span class="nx">record</span><span class="p">.</span><span class="nx">name</span><span class="p">);</span>
-<span class="p">});</span>
-
-</pre></div></div>
-
-<div class="docs"><p>Unnamed elements are good for short, simple patterns. For longer patterns it is
-easier to have parsers build maps for you, and for serializers to pluck the
-right values out of maps.</p>
-
-<p>The following example shows a complicated pattern, the invariable portion of an
-IP header, the first 20 bytes before options, if any.</p></div>
-
-<div class="docs"><div class="highlight"><pre><span class="c1">// Define an IP header pattern using a joined array to explode the pattern.</span>
-<span class="nx">ip</span> <span class="o">=</span>
-<span class="p">[</span> <span class="s2">&quot;b8{b4 =&gt; version, b4 =&gt; headerLength}&quot;</span>
-<span class="p">,</span> <span class="s2">&quot;b8   =&gt; typeOfService&quot;</span>
-<span class="p">,</span> <span class="s2">&quot;b16  =&gt; length&quot;</span>
-<span class="p">,</span> <span class="s2">&quot;b16  =&gt; identification&quot;</span>
-<span class="p">,</span> <span class="s2">&quot;b16{b3 =&gt; flags, b13 =&gt; fragmentOffset}&quot;</span>
-<span class="p">,</span> <span class="s2">&quot;b8   =&gt; timeToLive&quot;</span>
-<span class="p">,</span> <span class="s2">&quot;b8   =&gt; protocol&quot;</span>
-<span class="p">,</span> <span class="s2">&quot;b16  =&gt; checksum&quot;</span>
-<span class="p">,</span> <span class="s2">&quot;b32  =&gt; sourceAddress&quot;</span>
-<span class="p">,</span> <span class="s2">&quot;b32  =&gt; destinationAddress&quot;</span>
-<span class="p">].</span><span class="nx">join</span><span class="p">(</span><span class="s2">&quot;, &quot;</span><span class="p">);</span>
-
-<span class="c1">// The pattern is then used to defined parser and serializer actions.</span>
-<span class="nx">parser</span><span class="p">.</span><span class="nx">parse</span><span class="p">(</span><span class="nx">ip</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">header</span><span class="p">)</span> <span class="p">{</span>
-  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">header</span><span class="p">);</span>
-<span class="p">});</span>
-
-</pre></div></div>
-
-<div class="docs"><h3>Parsers</h3>
-
-<p>Parsers implement the writable stream interface. First you set a binary pattern
-that the parser will use to interpret the stream. Then you write a byte stream
-into the parser and it generates events based on the values it extracts from the
+how JavaScript primitives passed to the <code>serialize</code> method are written to
 stream.</p>
+<h3>Patterns</h3>
+<p>Patterns are a series of element declarations joined by commas.</p>
+<pre><code class="lang-javascript">parser.extract(&quot;length: b16, address: b32, name: b8z&quot;, function (object) {
+  console.log(object.length, object.address, object.name);
+});
+parser.parse([ 0x01, 0xFF, 0x01, 0x00, 0x00, 0x00, 0x01, 0x02, 0x00 ]);</code></pre>
+<p>You can also name the elements in a pattern. If named, parsers will be create an
+object to pass to callbacks, serializers will serialize an object&#39;s properties.</p>
+<pre><code class="lang-javascript">parser.extract(&quot;b16 =&gt; length, b32 =&gt; address, b8z =&gt; name&quot;, function (record) {
+  console.log(record);
+});
+parser.parse([ 0x01, 0xFF, 0x01, 0x00, 0x00, 0x00, 0x01, 0x02, 0x00 ]);</code></pre>
+<p>Unnamed elements are good for short, simple patterns. For longer patterns it is
+easier to have a parser build an object for you.</p>
+<p>The following example shows a complicated pattern, the invariable portion of an
+IP header, the first 20 bytes before options, if any.</p>
+<pre><code class="lang-javascript">// Define an IP header pattern using a joined array to explode the pattern.
+parser.packet(&#39;ip&#39;, &#39;b8{version: b4, headerLength: b4},         \
+                     typeOfService: b8,                         \
+                     length: b16,                               \
+                     identification: b16,                       \
+                     b16{flags: b3, fragmentOffset: b13},       \
+                     timeToLive: b8,                            \
+                     protocol: b8,                              \
+                     checksum: b16,                             \
+                     sourceAddress: b32,                        \
+                     destinationAddress: b32                    \
+                    &#39;);
 
-<p>The extracted values are fed to callbacks. Callback are associated with a binary
-pattern by passing the pattern and callback to the <code>extract</code> method.</p></div>
+// The pattern is then used to defined parser and serializer actions.
+parser.extract(&quot;ip&quot;, function (header) {
+  console.log(header);
+});
+parser.parse(buffer);</code></pre>
+<p>Both parsers and serializers can define patterns using the <code>packet</code> method. The
+<code>packet</code> method allows you to pre-compile patterns.</p>
+<pre><code class="lang-javascript">// Create a parser and define a header.
+var parser = require(&#39;packet&#39;).createParser();
+parser.packet(&quot;header&quot;, &quot;b8 =&gt; type, b16 =&gt; length, b32 =&gt; extra&quot;);
+parser.packet(&quot;data&quot;, &quot;b16 =&gt; sequence, b16 =&gt; crc&quot;);
 
-<div class="docs"><div class="highlight"><pre><span class="kd">function</span> <span class="nx">parse</span> <span class="p">(</span><span class="nx">writable</span><span class="p">)</span> <span class="p">{</span>
-  <span class="kd">var</span> <span class="nx">parser</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Parser</span><span class="p">();</span>
-  <span class="nx">parser</span><span class="p">.</span><span class="nx">extract</span><span class="p">(</span><span class="s2">&quot;b8, b8z|utf8(), b16[4]&quot;</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">flag</span><span class="p">,</span> <span class="nx">name</span><span class="p">,</span> <span class="nx">array</span><span class="p">)</span> <span class="p">{</span>
-    <span class="k">switch</span> <span class="p">(</span><span class="nx">flag</span><span class="p">)</span> <span class="p">{</span>
-    <span class="k">case</span> <span class="mi">1</span><span class="o">:</span>
-      <span class="nx">ready</span><span class="p">(</span><span class="nx">name</span><span class="p">);</span>
-    <span class="k">case</span> <span class="mi">2</span><span class="o">:</span>
-      <span class="nx">aim</span><span class="p">(</span><span class="nx">name</span><span class="p">,</span> <span class="nx">array</span><span class="p">);</span>
-    <span class="k">case</span> <span class="mi">3</span><span class="o">:</span>
-      <span class="nx">fire</span><span class="p">(</span><span class="nx">name</span><span class="p">,</span> <span class="nx">array</span><span class="p">);</span>
-    <span class="k">default</span><span class="o">:</span>
-      <span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span><span class="p">(</span><span class="s2">&quot;Invalid stream.&quot;</span><span class="p">);</span>
-    <span class="p">}</span>
-  <span class="p">});</span>
-  <span class="nx">writable</span><span class="p">.</span><span class="nx">pipe</span><span class="p">(</span><span class="nx">parser</span><span class="p">);</span>
-<span class="p">}</span>
+// Now you can define your serializer using your parser as a prototype. The
+// serializer will inherit the parser&#39;s packet definitions.
+var serializer = parser.createSerializer();</code></pre>
+<p>Parsers and serializers maintain internal state so that they can be used
+incrementally. If you&#39;re going to parse streams incrementally, you&#39;re going to
+need a parser for each stream your parsing. Same goes for serializers and
+serializing.</p>
+<p>When parsing/serializing incrementally create new parsers and serializers using
+the prototype pattern above.</p>
+<pre><code class="lang-javascript">// Create a serializer and define a header.
+var serializer = require(&quot;packet&quot;).createSerializer();
+serializer.packet(&quot;header&quot;, &quot;b8 =&gt; type, b16 =&gt; length, b32 =&gt; extra&quot;);
+serializer.packet(&quot;data&quot;, &quot;b16 =&gt; sequence, b16 =&gt; crc&quot;);
 
-</pre></div></div>
-
-<div class="docs"><p>You can gather up your pattern and callback associations and give them
-meaningful using the <code>pattern</code> method. This makes it easier to define the flow
-of the paser. The example above only extracted one pattern, while the example
-below shows how you would transition from one extraction to the next.</p></div>
-
-<div class="docs"><div class="highlight"><pre><span class="kd">function</span> <span class="nx">parse</span> <span class="p">(</span><span class="nx">writable</span><span class="p">)</span> <span class="p">{</span>
-  <span class="kd">var</span> <span class="nx">parser</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Parser</span><span class="p">();</span>
-  <span class="nx">parser</span><span class="p">.</span><span class="nx">pattern</span><span class="p">(</span><span class="s2">&quot;command&quot;</span><span class="p">,</span> <span class="s2">&quot;b8, b8z|utf8(), b16[4]&quot;</span><span class="p">,</span>
-  <span class="kd">function</span> <span class="p">(</span><span class="nx">flag</span><span class="p">,</span> <span class="nx">name</span><span class="p">,</span> <span class="nx">array</span><span class="p">)</span> <span class="p">{</span>
-    <span class="k">switch</span> <span class="p">(</span><span class="nx">flag</span><span class="p">)</span> <span class="p">{</span>
-    <span class="k">case</span> <span class="mi">1</span><span class="o">:</span>
-      <span class="nx">ready</span><span class="p">(</span><span class="nx">name</span><span class="p">);</span>
-      <span class="nx">parser</span><span class="p">.</span><span class="nx">parse</span><span class="p">(</span><span class="s2">&quot;command&quot;</span><span class="p">);</span>
-    <span class="k">case</span> <span class="mi">2</span><span class="o">:</span>
-      <span class="nx">aim</span><span class="p">(</span><span class="nx">name</span><span class="p">,</span> <span class="nx">array</span><span class="p">);</span>
-      <span class="nx">parser</span><span class="p">.</span><span class="nx">parse</span><span class="p">(</span><span class="s2">&quot;command&quot;</span><span class="p">);</span>
-    <span class="k">default</span><span class="o">:</span>
-      <span class="nx">fire</span><span class="p">(</span><span class="nx">name</span><span class="p">,</span> <span class="nx">array</span><span class="p">);</span>
-    <span class="p">}</span>
-  <span class="p">});</span>
-  <span class="nx">parser</span><span class="p">.</span><span class="nx">parse</span><span class="p">(</span><span class="s2">&quot;command&quot;</span><span class="p">);</span>
-  <span class="nx">writable</span><span class="p">.</span><span class="nx">pipe</span><span class="p">(</span><span class="nx">parser</span><span class="p">);</span>
-<span class="p">}</span>
-
-</pre></div></div>
-
-<div class="docs"><p>Note that while parser does implement <code>EventEmitter</code>, that is only for the sake
-of the <code>WritableStream</code> interface. Extracted values are passed directly to the
-callbacks associated with the pattern, not though an <code>EventEmitter</code> event, so
-that their is no ambiguity about the pattern applied or the values extracted.</p>
-
-<p>The parser callback recieves the values either as positioned function arguments
+// Now you can define parsers for a using the serializer as a prototype.
+net.createServer(function (socket) {
+  var parser = serializer.createParser();
+  socket.on(&quot;data&quot;, function (buffer) {
+    parser.parse(buffer);
+  });
+  parser.extract(&quot;header&quot;, function (header) {
+    console.log(header);
+  });
+});</code></pre>
+<h3>Parsers</h3>
+<p>Parsers parse a buffer extracting a specified pattern. The pattern is specified
+using the <code>extract</code> method. The <code>extract</code> method accept either a pattern or the
+name a pre-compiled pattern.</p>
+<p>After the pattern has been specified, the parser will extract the data from one
+or more buffers according to the specified pattern.</p>
+<p>When the pattern specified by <code>extract</code> has been read from the series of
+buffers, it will invoke a callback with the extracted values. The <code>extract</code>
+callback has the option of calling the <code>extract</code> method specifying a subsequent
+pattern for the parser to extract. When the callback returns, the parser will
+immediately continue to parse the newly specified pattern from the series of
+buffers.</p>
+<p>The parser callback receives the values either as positioned function arguments
 or as an object. How the callback is invoked is based on the pattern and the
 <a href="http://en.wikipedia.org/wiki/Arity">arity</a> of the callback function.</p>
-
-<p>In the examples above, callbacks are invoked with positioned arguments. The
-values extracted are passed to the callback as arguments in the order in which
-they were extracted from the stream.</p>
-
 <p>To receive an object in the callback, we defined named elements. When the
 pattern has at least one named element, and the callback has only a single
 argument, an object is passed to the callback containing the values using the
-element names as keys.</p></div>
-
-<div class="docs"><div class="highlight"><pre><span class="kd">function</span> <span class="nx">parse</span> <span class="p">(</span><span class="nx">writable</span><span class="p">)</span> <span class="p">{</span>
-  <span class="kd">var</span> <span class="nx">parser</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Parser</span><span class="p">();</span>
-  <span class="nx">parser</span><span class="p">.</span><span class="nx">pattern</span><span class="p">(</span><span class="s2">&quot;command&quot;</span><span class="p">,</span> <span class="s2">&quot;b8 =&gt; flag, b8z|utf8() =&gt; name, b16[4] =&gt; array&quot;</span><span class="p">,</span>
-  <span class="kd">function</span> <span class="p">(</span><span class="nx">command</span><span class="p">)</span> <span class="p">{</span>
-    <span class="k">switch</span> <span class="p">(</span><span class="nx">command</span><span class="p">.</span><span class="nx">flag</span><span class="p">)</span> <span class="p">{</span>
-    <span class="k">case</span> <span class="mi">1</span><span class="o">:</span>
-      <span class="nx">ready</span><span class="p">(</span><span class="nx">command</span><span class="p">.</span><span class="nx">name</span><span class="p">);</span>
-      <span class="nx">parser</span><span class="p">.</span><span class="nx">parse</span><span class="p">(</span><span class="s2">&quot;command&quot;</span><span class="p">);</span>
-    <span class="k">case</span> <span class="mi">2</span><span class="o">:</span>
-      <span class="nx">aim</span><span class="p">(</span><span class="nx">command</span><span class="p">.</span><span class="nx">name</span><span class="p">,</span> <span class="nx">command</span><span class="p">.</span><span class="nx">array</span><span class="p">);</span>
-      <span class="nx">parser</span><span class="p">.</span><span class="nx">parse</span><span class="p">(</span><span class="s2">&quot;command&quot;</span><span class="p">);</span>
-    <span class="k">default</span><span class="o">:</span>
-      <span class="nx">fire</span><span class="p">(</span><span class="nx">command</span><span class="p">.</span><span class="nx">name</span><span class="p">,</span> <span class="nx">command</span><span class="p">.</span><span class="nx">array</span><span class="p">);</span>
-    <span class="p">}</span>
-  <span class="p">});</span>
-  <span class="nx">parser</span><span class="p">.</span><span class="nx">parse</span><span class="p">(</span><span class="s2">&quot;command&quot;</span><span class="p">);</span>
-  <span class="nx">writable</span><span class="p">.</span><span class="nx">pipe</span><span class="p">(</span><span class="nx">parser</span><span class="p">);</span>
-<span class="p">}</span>
-
-</pre></div></div>
-
-<div class="docs"><p>Unnamed elements are excluded, but there's no good reason not name them. Use a
+element names as keys.</p>
+<p>Unnamed elements are excluded, but there&#39;s no good reason not name them. Use a
 skip pattern to skip over unwanted bytes instead.</p>
-
 <p>You can still get positioned arguments using a named pattern. Just provide a
 callback with more than one argument and it will be invoked with the extract
-values as parameters.</p></div>
-
-<div class="docs"><div class="highlight"><pre><span class="kd">function</span> <span class="nx">parse</span> <span class="p">(</span><span class="nx">writable</span><span class="p">)</span> <span class="p">{</span>
-  <span class="kd">var</span> <span class="nx">parser</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Parser</span><span class="p">();</span>
-  <span class="nx">parser</span><span class="p">.</span><span class="nx">pattern</span><span class="p">(</span><span class="s2">&quot;command&quot;</span><span class="p">,</span> <span class="s2">&quot;b8 =&gt; flag, b8z|utf8() =&gt; name, b16[4] =&gt; array&quot;</span><span class="p">,</span>
-  <span class="kd">function</span> <span class="p">(</span><span class="nx">foo</span><span class="p">,</span> <span class="nx">bar</span><span class="p">,</span> <span class="nx">baz</span><span class="p">)</span> <span class="p">{</span> <span class="c1">// Ignore named elements, ask for parameters.</span>
-    <span class="k">switch</span> <span class="p">(</span><span class="nx">foo</span><span class="p">)</span> <span class="p">{</span>
-    <span class="k">case</span> <span class="mi">1</span><span class="o">:</span>
-      <span class="nx">ready</span><span class="p">(</span><span class="nx">bar</span><span class="p">);</span>
-      <span class="nx">parser</span><span class="p">.</span><span class="nx">parse</span><span class="p">(</span><span class="s2">&quot;command&quot;</span><span class="p">);</span>
-    <span class="k">case</span> <span class="mi">2</span><span class="o">:</span>
-      <span class="nx">aim</span><span class="p">(</span><span class="nx">bar</span><span class="p">,</span> <span class="nx">baz</span><span class="p">);</span>
-      <span class="nx">parser</span><span class="p">.</span><span class="nx">parse</span><span class="p">(</span><span class="s2">&quot;command&quot;</span><span class="p">);</span>
-    <span class="k">default</span><span class="o">:</span>
-      <span class="nx">fire</span><span class="p">(</span><span class="nx">bar</span><span class="p">,</span> <span class="nx">baz</span><span class="p">);</span>
-    <span class="p">}</span>
-  <span class="p">});</span>
-  <span class="nx">parser</span><span class="p">.</span><span class="nx">parse</span><span class="p">(</span><span class="s2">&quot;command&quot;</span><span class="p">);</span>
-  <span class="nx">writable</span><span class="p">.</span><span class="nx">pipe</span><span class="p">(</span><span class="nx">parser</span><span class="p">);</span>
-<span class="p">}</span>
-
-</pre></div></div>
-
-<div class="docs"><p>A callback for a pattern without any named elements is always invoked with
+values as parameters.</p>
+<p>A callback for a pattern without any named elements is always invoked with
 values as parameters regardless of arity.</p>
-
-<h2>Binary Pattern Fields</h2>
-
-<p>The binary pattern language is used to specify the fields binary structures in
-data streams, using a comma separated field pattern.</p>
-
-<h3>Big-Endian Byte Ordering</h3>
-
-<p>To define a big-endian byte ordering for a field, prefix the bit size with <code>b</code>.</p>
-
-<p><strong>Mnemonic</strong>: The letter <code>b</code> stands for big-endian.</p></div>
-
-<div class="docs"><div class="highlight"><pre><span class="s2">&quot;b16&quot;</span>             <span class="c1">// Big-endian 32 bit number.</span>
-<span class="s2">&quot;b8&quot;</span>              <span class="c1">// Endianess of a single byte is irrelevant.</span>
-<span class="s2">&quot;l16, b8&quot;</span>         <span class="c1">// Big-endian 16 bit integer followed by a byte.</span>
-
-</pre></div></div>
-
-<div class="docs"><h3>Little-Endian Byte Ordering</h3>
-
-<p>To define a little-endian byte ordering for a field, prefix the bit size with <code>l</code>.</p>
-
-<p><strong>Mnemonic</strong>: The letter <code>l</code> stands for little-endian.</p></div>
-
-<div class="docs"><div class="highlight"><pre><span class="s2">&quot;l32&quot;</span>             <span class="c1">// Little-endian 32 bit integer.</span>
-<span class="s2">&quot;l8&quot;</span>              <span class="c1">// Endianess of a single byte is irrelevant.</span>
-<span class="s2">&quot;l16, b8&quot;</span>         <span class="c1">// Little endian 16 bit integer followed by a byte.</span>
-
-</pre></div></div>
-
-<div class="docs"><h3>Skipping Bytes</h3>
-
-<p>You can skip over bytes your pattern with <code>x</code>.</p>
-
-<p><strong>Mnemonic</strong>: The letter <code>x</code> means to cross-out, which is kind of like skipping.</p></div>
-
-<div class="docs"><div class="highlight"><pre><span class="s2">&quot;b8, x16, l16&quot;</span>    <span class="c1">// A byte, two skipped bytes, and a little-endian 16 bit</span>
-                  <span class="c1">// integer.</span>
-
-</pre></div></div>
-
-<div class="docs"><h3>Signed Versus Unsigned Integers</h3>
-
-<p>All numbers are assumed to be unsigned, unless prefixed by a negative symbol.</p>
-
-<p><strong>Mnemonic</strong>: The <code>-</code> symbol indicates the possiblity of negative numbers.</p></div>
-
-<div class="docs"><div class="highlight"><pre><span class="s2">&quot;-b32&quot;</span>            <span class="c1">// Big-endian 32 bit signed integer.</span>
-<span class="s2">&quot;-l32&quot;</span>            <span class="c1">// Little-endian 32 bit signed integer.</span>
-<span class="s2">&quot;b32&quot;</span>             <span class="c1">// Big-endian 32 bit unsigned integer.</span>
-
-</pre></div></div>
-
-<div class="docs"><h3>IEEE 754 Floating Point Numbers</h3>
-
-<p>The number type for JavaScript is the  64 bit IEEE 754 floating point. Node
-Packet can read write 64 bit and 32 bit IEEE 754 floating point numbers.</p>
-
-<p>To indicated that the type is a floating point number, use the <code>f</code> type suffix.
-This is indicated with a <code>f</code> suffix.</p>
-
-<p><strong>Mnemonic</strong>: The letter <code>f</code> stands for
-<em>floating-point</em>.</p></div>
-
-<div class="docs"><div class="highlight"><pre><span class="s2">&quot;b64f&quot;</span>            <span class="c1">// Big-endian 64 bit IEEE 754 double floating point number.</span>
-<span class="s2">&quot;l32f&quot;</span>            <span class="c1">// Little-endian 32 bit IEEE 754 single floating point number.</span>
-
-</pre></div></div>
-
-<div class="docs"><p>The floating-point numbers can be stored in little-endian or big-endian byte order.</p>
-
-<h3>Arrays of Raw Bytes</h3>
-
-<p>A value will be converted to a big-endian array of bytes if followed by an <code>a</code>
-suffix.</p>
-
-<p><strong>Mnemonic</strong>: The letter <code>a</code> stands for <em>array</em>.</p></div>
-
-<div class="docs"><div class="highlight"><pre><span class="s2">&quot;l128a&quot;</span>           <span class="c1">// Unsigned little-endian 128 bit integer as big-endian array</span>
-                  <span class="c1">// of bytes.</span>
-
-</pre></div></div>
-
-<div class="docs"><p>Note that big-endian means that the most signifcant byte is at index <code>0</code> of the
-array.</p>
-
-<p>This can be surprising if you're expecting the the significance of the bytes
-will increase with the index of the array, but then that's what little-endian is
-all about. (Big-endian orders like Arabic numerals, while little-endian orders
-like offsets into memory.)</p>
-
-<p>If you'd prefer a little-endian array, simply call <code>reverse</code> on the array passed
-to you.</p>
-
-<h3>Arrays of Common Types</h3>
-
-<p>It is often the case that a binary format contains an array of values. The most
-common case are arrays of bytes represnting ASCII or UTF-8 strings.</p>
-
-<p>Arrays are specified with an subscript and a count.</p>
-
-<p><strong>Mnemonic</strong>: The square brackets are used as array subscripts in JavaScript,
-and used to declare array length in other C dialect languages.</p></div>
-
-<div class="docs"><div class="highlight"><pre><span class="s2">&quot;b32[4]&quot;</span>          <span class="c1">// An array of four big-endian 32 bit numbers.</span>
-<span class="s2">&quot;b8[16]&quot;</span>          <span class="c1">// An array of 16 bytes.</span>
-
-</pre></div></div>
-
-<div class="docs"><p>The array notation produces an array of the type before the subscript.</p>
-
-<h3>Zero Terminated Arrays</h3>
-
-<p>Zero terminated series are speified with a <code>z</code> qualifier.</p>
-
-<p>You can specify both terminiation and width together. Why would you need this?
-This occurs in underlying C structures when there is a fixed width character
-array in a structure, but the structure still contains a zero terminated string.</p>
-
-<p><strong>Upcoming</strong>: Chose your own terminator.</p>
-
-<p><strong>Mnemonic</strong>: The letter <code>z</code> stands for zero.</p></div>
-
-<div class="docs"><div class="highlight"><pre><span class="s2">&quot;l16z&quot;</span>            <span class="c1">// Little-endian 16 bit numbers terminated by a zero value.</span>
-<span class="s2">&quot;b8z&quot;</span>             <span class="c1">// Byte string terminated by zero.</span>
-<span class="s2">&quot;b8[12]z&quot;</span>         <span class="c1">// Byte string terminated by zero in a field 12 bytes long.</span>
-
-</pre></div></div>
-
-<div class="docs"><h3>Array Padding</h3>
-
-<p>You can specify a padding value immediately after the array brackets using curly
-braces. This should be the numeric value, or character code for padding. If you
-want to zero pad, use <code>0</code>. If you want to pad with ASCII spaces use <code>32</code>.</p>
-
-<p><strong>Mnemonic</strong>: Curly braces are used to define array literals in C.</p></div>
-
-<div class="docs"><div class="highlight"><pre><span class="s2">&quot;b16[12]{0}&quot;</span>      <span class="c1">// Array of 12 big-endian 16 bit integers, zero padded.</span>
-<span class="s2">&quot;b8[12]{32}z&quot;</span>     <span class="c1">// Byte string terminated by zero in a field 12 bytes long</span>
-                  <span class="c1">// ascii space padded.</span>
-
-</pre></div></div>
-
-<div class="docs"><h3>Length Encoded Arrays</h3>
-
-<p>Length encoded arrays are specified by joining a count type and a value type
-with a forward slash character <code>/</code>.</p>
-
-<p><strong>Mnemonic</strong>: Inspired by Perl's <code>pack</code>, which uses the slash to separate count
-and type.</p></div>
-
-<div class="docs"><div class="highlight"><pre><span class="s2">&quot;b8/b8&quot;</span>           <span class="c1">// Length encoded byte array with a byte length.</span>
-<span class="s2">&quot;l16/b8&quot;</span>          <span class="c1">// Length encoded byte array with 16 bit little-endian length.</span>
-
-</pre></div></div>
-
-<div class="docs"><h3>Bit Packed Integers</h3>
-
-<p><strong>Pending</strong> &mdash; Not implemented.</p>
-
-<p>Integers are often divided into smaller integers through a process called bit
-packing. Bit packing is specified by following an integer specification with 
-a curly brace enclosed series series of integers patterns whose total size in
-bits equals the size of the packed integer.</p>
-
-<p>Packed integers are always big-endian and can be either singed or unsigned.</p>
-
-<p><strong>Mnemonic</strong> Curly braces are used to define structures in C and bit packing is
-kind of like a structure.</p></div>
-
-<div class="docs"><div class="highlight"><pre><span class="s2">&quot;b16{b3,x6,-b7}&quot;</span>  <span class="c1">// A 16 bit big-endian integer divided into a 3-bit integer,</span>
-                  <span class="c1">// 6 skipped bits, and a signed 7-bit integer. </span>
-
-</pre></div></div>
-
-<div class="docs"><p>You can also name the packed fields.</p></div>
-
-<div class="docs"><div class="highlight"><pre><span class="s2">&quot;b16{b3 =&gt; type, x6, -b7 =&gt; count}&quot;</span>
-
-</pre></div></div>
-
-<div class="docs"><h3>Conditinal Patterns</h3>
-
-<p><strong>Pending</strong> &mdash; Not implemented.</p>
-
-<p>A common pattern in binary formats is using the value of a byte, or the high
-order bits of a byte to specify the type of data to follow. <a href="#length-encoded-arrays">Length Encoded
-Arrays</a> are one example of this practice, where a
-an integer count indicates the length of a following string or array.</p>
-
-<p>Byte switches are used to switch between types can can be based on either a
-byte value or a bit mask.</p>
-
-<p>A conditional is indicated by a encapsulating the alternatives in parenthesis.
-Alternative are separated by a pipe <code>|</code> character. Each alternative maps a match
-to a pattern separated by a colon <code>:</code>.</p>
-
-<p>The values to match can be either a range or a single value.  If the value
-matches then the pattern associated with the value is applied to the stream
-starting with the byte currently tested. That is, we use the byte both to test
-the condition, then use the byte as the first byte in the pattern with the
-matched condition.</p>
-
-<p>Tests are applied in the order in which they are declared.</p>
-
-<p><strong>Mnemonic</strong> &mdash; Parenthesis and pipes are used to indicate alternation in
-regular expressions, while colons are used to deliniate switch options in C.</p></div>
-
-<div class="docs"><div class="highlight"><pre><span class="c1">// MySQL length coded binary; if the byte is less than 252, use the byte value,</span>
-<span class="c1">// otherwise the byte value indicates the length of the following word. </span>
-<span class="s2">&quot;b8(0-251: b8 | 252: x8, b16 | 253: x8, b24 | 254: x8, b64)&quot;</span>
-
-</pre></div></div>
-
-<div class="docs"><p>No condition will cause that branch to always match. This is used to specify a
-default value.</p></div>
-
-<div class="docs"><div class="highlight"><pre><span class="c1">// Simpiler, but will also match 255 which is invalid, which is fine if you test</span>
-<span class="c1">// the value in your callback.</span>
-<span class="s2">&quot;b8(252: x8, b16 | 253: x8, b24 | 254: x8, b64 | b8)&quot;</span>
-
-</pre></div></div>
-
-<div class="docs"><p>You can also be explicit about the default value using the asterisk <code>*</code> as a
-condition that means match any.</p></div>
-
-<div class="docs"><div class="highlight"><pre><span class="c1">// Simpiler, but will also match 255 which is invalid, which is fine if you test</span>
-<span class="c1">// the value in your callback.</span>
-<span class="s2">&quot;b8(252: x8, b16 | 253: x8, b24 | 254: x8, b64 | *: b8)&quot;</span>
-
-</pre></div></div>
-
-<div class="docs"><p>The values are expressed in binary, decimal or hexidecimal.</p>
-
-<p>You can also indicate a branch based on set bits by prefixing the value with an
-ampersand. The value is then considered a bit mask. If the result of a logcal
-and with the bit mask equals the bit mask, then that alternative is chosen.</p>
-
-<p><strong>Mnemonic</strong> The <code>&amp;</code> performs a logical and in C and is used to check to see if
-bits in a bit mask are set.</p></div>
-
-<div class="docs"><div class="highlight"><pre><span class="s2">&quot;b8(&amp;0x80: b16{x1,b15} | b8)&quot;</span>   <span class="c1">// A 15-bit word if the first bit is set,</span>
-                                <span class="c1">// otherwise a byte.</span>
-
-</pre></div></div>
-
-<div class="docs"><h3>Transforms</h3>
-
-<p>Often there are transformations that you need to perform on an field to get
-it to its final state. You may need to convert a byte array to string of a
-particular character encoding, for example. This is done with a tranformation
-functions which are specified with a transformation pipeline.</p>
-
-<p>If the transformation is a fixed transformation, you can perform the
-transformation by defining a pipeline. A pipeline defines one or more
-tranformations that are invoked on the value after parsing and before
-serialization. The transformations can accept scalar JavaScript parameters.</p></div>
-
-<div class="docs"><div class="highlight"><pre><span class="kd">function</span> <span class="nx">str</span><span class="p">(</span><span class="nx">encoding</span><span class="p">,</span> <span class="nx">name</span><span class="p">,</span> <span class="nx">field</span><span class="p">,</span> <span class="nx">parsing</span><span class="p">,</span> <span class="nx">value</span><span class="p">)</span> <span class="p">{</span>
-    <span class="k">if</span> <span class="p">(</span><span class="nx">parsing</span><span class="p">)</span> <span class="p">{</span>
-        <span class="kd">var</span> <span class="nx">buffer</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Buffer</span><span class="p">(</span><span class="nx">array</span><span class="p">.</span><span class="nx">length</span><span class="p">)</span>
-        <span class="k">for</span> <span class="p">(</span><span class="kd">var</span> <span class="nx">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="nx">value</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
-            <span class="nx">buffer</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span> <span class="o">=</span> <span class="nx">value</span><span class="p">[</span><span class="nx">i</span><span class="p">];</span>
-        <span class="p">}</span>
-        <span class="kd">var</span> <span class="nx">length</span> <span class="o">=</span> <span class="nx">value</span><span class="p">.</span><span class="nx">length</span>
-        <span class="k">if</span> <span class="p">(</span><span class="nx">field</span><span class="p">.</span><span class="nx">terminator</span><span class="p">)</span> <span class="p">{</span>
-            <span class="nx">length</span> <span class="o">+=</span> <span class="nx">field</span><span class="p">.</span><span class="nx">terminator</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span>
-        <span class="p">}</span>
-        <span class="nx">reutrn</span> <span class="nx">buffer</span><span class="p">.</span><span class="nx">toString</span><span class="p">(</span><span class="nx">encoding</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="nx">length</span><span class="p">);</span>
-    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
-        <span class="k">if</span> <span class="p">(</span><span class="nx">field</span><span class="p">.</span><span class="nx">terminator</span><span class="p">)</span> <span class="p">{</span>
-            <span class="nx">value</span> <span class="o">+=</span> <span class="nx">field</span><span class="p">.</span><span class="nx">terminator</span><span class="p">;</span>
-        <span class="p">}</span>
-        <span class="k">return</span> <span class="k">new</span> <span class="nx">Buffer</span><span class="p">(</span><span class="nx">value</span><span class="p">,</span> <span class="nx">encoding</span><span class="p">);</span>
-    <span class="p">}</span>
-<span class="p">}</span>
-
-</pre></div></div>
-
-<div class="docs"><p>Now you can use the transform in your pattern.</p></div>
-
-<div class="docs"><div class="highlight"><pre><span class="s2">&quot;n8z|str(&#39;ascii&#39;)&quot;</span>      <span class="c1">// An ascii string terminated by zero.</span>
-<span class="s2">&quot;n8z|str(&#39;ascii&#39;), b16&quot;</span> <span class="c1">// An ascii string terminated by zero followed by a</span>
-                        <span class="c1">// big-endian 16 bit integer.</span>
-
-</pre></div></div>
-
-<div class="docs"><p>The <code>str</code> transform is defined by default. The transform names are purposely
-terse to fit with the brevity of the pattern language.</p>
-
-<h2>Error Messages</h2>
-
-<p>Error messages for pattern parsing.</p>
-
-<ul>
-<li><strong>invalid pattern at N</strong> &mdash; The characters starting at the specified
-index is unexpected the pattern is invalid. The invalid character may not be
-at the specified index, but shortly there after, such as unmatched braces.</li>
-<li><strong>bit field overflow at N</strong> &mdash; The the sum of the bit size of bit field
-elements is greater than the size of the containing element. The sum of the
-bit size of bit field elements must equal the size of the containing element.</li>
-<li><strong>bit field underflow at N</strong> &mdash; The the sum of the bit size of bit field
-elements is less than the size of the containing element. The sum of the bit
-size of bit field elements must equal the size of the containing element.</li>
-<li><strong>bit size must be non-zero at N</strong> &mdash; Encountered element with a bit size of
-zero. Element size must be a non-zero value.</li>
-<li><strong>bits must be divisible by 8 at N</strong> &mdash; Encountered element with a bit
-size that is not divisible by 8. If an element is not a bit field element, it
-must align to an 8-bit boundary.</li>
-<li><strong>floats can only be 32 or 64 bits at N</strong> &mdash; Encountered a float element
-with an unsupported bit size. Only 32 and 64 bit floats are supported.</li>
-<li><strong>"array length must be non-zero at N</strong> &mdash; Encountered an array length
-of zero. Arrays must have a non-zero length.</li>
-</ul>
-
-<h3>API</h3>
-
-<p>@ packet</p>
-
-<p>Node Packet exports the ec2 namespace, which provides the {{Structure}},
-{{Parser}} and {{Serializer}} classes.</p>
-
-<p>~ new Structure(pattern)</p>
-
-<p>~ pattern</p>
-
-<p>The packet pattern.</p>
-
-<p>A structure is an object that both reads from and writes to a buffer
-syncrhonously. When reading, buffer must contain the entire contents of the
-structure. When writing, the buffer must have enough space to accomdoate the
-structure.</p>
-
-<p>~ read(buffer, offset, callback)</p>
-
-<p>~ buffer    - The byte buffer.
-  ~ offset?   - The optional offset into the byte buffer. Defaults to <code>0</code>.
-  ~ callback  - Called with the parameters read from the byte buffer.</p>
-
-<p>The read method accepts a buffer with an optional offset. The number of
-arguments is determined by the structure packet pattern, and must match
-the number of arguments expected by the packet pattern.</p>
-
-<p>The callback will be called with the fields read from the buffer, with the
-actual count of bytes read as the last parameter.</p>
-
-<p>~ write(buffer, offset, value...)</p>
-
-<p>~ buffer    - The byte buffer.
-  ~ offset?   - The optional offset into the byte buffer. Defaults to <code>0</code>.
-  ~ value...  - The values of the structure.</p>
-
-<p>Write the arguments to the  buffer at the optional offset. The arguments are
-determined by the structure bit pattern. Returns the number of bytes written.</p>
-
-<p>~ sizeOf(value...)</p>
-
-<p>~ value...  - The values of the structure.</p>
-
-<p>Get the size of the structure for the given variable length values. A structure
-can have 0 or more variable length values.</p>
-
-<p>The <code>sizeOf</code> method does not expect and will not correctly calculate the size of
-the structure if fixed size value are given.</p>
-
-<p>~ new Parser()</p>
-
-<p>Parses a buffer and emits events based on patterns.</p>
-
-<p>~ packet(name, pattern, callback)</p>
-
-<p>~ name - The name of the packet type.
-  ~ pattern - The packet pattern.
-  ~ callback? - Called when a packet of this type has been read from a buffer.</p>
-
-<p>Defines a named packet type optionally assigning a default response for the
-packet type.</p>
-
-<p>function: parse</p>
-
-<p>parameter: nameOrPattern</p>
-
-<p>Either the name of a named packet or a one off </p>
-
-<p>function: clone</p>
-
-<p>Clone the packet parser to create a packet parser that shares the named packet
-definitions but has its own parser state.</p>
-
-<p>This allows a packet parser prototype to be used to efficently create initialized
-instances.</p>
-
-<p>class: Serializer</p></div>
-
-</div>
+<h3>Serializers</h3>
+<p>First you call <code>serialize</code> with a pattern and arguments to serialize, then you
+call <code>write</code> with a series of buffers.</p>
 </div>
 
-</div>
-</body>
+</div></body>
 </html>

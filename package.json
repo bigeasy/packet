@@ -1,0 +1,9 @@
+{   "name":             "package"
+,   "version":          "0.0.1"
+,   "author":           "Alan Gutierrez"
+,   "url" :             "http://bigeasy.github.com/timezone"
+,   "keywords" :        ["time", "timezone", "date"]
+,   "author" :          "Alan Gutierrez <alan@prettyrobots.com>"
+,   "contributors" :    []
+,   "dependencies":     { "connect": "~2", "marked": "0.2.9" }
+}
