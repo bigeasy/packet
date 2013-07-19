@@ -1,0 +1,109 @@
+/*-----------------------------------*\
+    $GRID
+  \*-----------------------------------*/
+* {
+  margin: 0;
+  padding: 0;
+  position: relative;
+  -webkit-box-sizing: border-box;
+  /* border-box is new to me, AG */
+
+  -moz-box-sizing: border-box;
+  /* https://pinboard.in/u:alan/t:border/t:box */
+
+  box-sizing: border-box;
+}
+.grid {
+  max-width: 100%;
+}
+.unit {
+  outline: 1px solid red;
+  display: inline-block;
+  *display: inline;
+  *zoom: 1;
+  vertical-align: top;
+  /* Clearfix */
+
+  overflow: hidden;
+  *overflow: visible;
+}
+.span-grid {
+  width: 100%;
+}
+.one-of-two {
+  width: 50%;
+}
+.one-of-three {
+  width: 33.333333333%;
+}
+.two-of-three {
+  width: 66.666666666%;
+}
+.one-of-four {
+  width: 25%;
+}
+.three-of-four {
+  width: 75%;
+}
+.one-of-five {
+  width: 20%;
+}
+.two-of-five {
+  width: 40%;
+}
+.three-of-five {
+  width: 60%;
+}
+.four-of-five {
+  width: 80%;
+}
+/* vim: set ts=4 sw=4: */
+html {
+  background: #fefefe;
+  font-size: 100%;
+  color: #3d2258;
+}
+body {
+  font-family: Helvetica;
+  margin: 0 auto;
+  padding: 0 0;
+}
+img {
+  max-width: 100%;
+}
+.container {
+  /* Whatever you want. They’re your oats. */
+
+  max-width: 60em;
+  margin: 0 auto;
+  padding: 0 0;
+}
+.unit.welcome {
+  width: 100%;
+}
+.unit.benefit {
+  padding: 1em;
+  width: 33.333333333%;
+}
+.unit.benefit h2 {
+  text-align: center;
+  font-size: 1em;
+  margin-bottom: 1em;
+}
+.unit.verbiage {
+  width: 100%;
+}
+.unit.verbiage h2 {
+  font-size: 1em;
+  margin-bottom: 1em;
+}
+.unit.verbiage p {
+  margin-bottom: 1em;
+}
+.unit.description {
+  width: 100%;
+}
+.unit.sidebar {
+  width: 25%;
+}
+/* vim: set ts=4 sw=4: */

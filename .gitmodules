@@ -1,3 +1,6 @@
 [submodule "packet"]
 	path = packet
 	url = git://github.com/bigeasy/packet.git
+[submodule "vendor/lesshat"]
+	path = vendor/lesshat
+	url = https://github.com/CSSHat/LESSHat.git

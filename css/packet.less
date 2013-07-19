@@ -1,0 +1,63 @@
+@import "response";
+@import "../vendor/lesshat/lesshat";
+
+@logo-text: #4a296a;
+@body-text: darken(@logo-text, 5%);
+
+html {
+    background: #fefefe;
+    font-size: 100%;
+    color: @body-text;
+}
+
+body {
+    font-family: Helvetica;
+    margin: 0 auto;
+    padding: 0 0;
+}
+
+img {
+    max-width: 100%;
+}
+
+.container {
+    /* Whatever you want. They’re your oats. */
+    max-width: 60em;
+    margin: 0 auto;
+    padding: 0 0;
+}
+
+.unit.welcome {
+    .span-grid;
+}
+
+.unit.benefit {
+    padding: 1em;
+    .one-of-three; 
+    h2 {
+        text-align: center;
+        font-size: 1em;
+        margin-bottom: 1em;
+    }
+}
+
+.unit.verbiage {
+    .span-grid;
+    h2 {
+        font-size: 1em;
+        margin-bottom: 1em;
+    }
+    p {
+        margin-bottom: 1em;
+    }
+}
+
+.unit.description {
+    .span-grid;
+}
+
+.unit.sidebar {
+    .one-of-four; 
+}
+
+/* vim: set ts=4 sw=4: */

@@ -1,7 +1,16 @@
 <!DOCTYPE html>
 <html>
+<meta charset="utf-8">
+<link rel="stylesheet" type="text/css" href="css/packet.css">
+<link rel="stylesheet" type="text/css" href="css/syntax.css">
+<title>Locket</title>
+<body>
 <title>Packet</title>
 <body><div class="container">
+
+<div class="unit welcome">
+<h1>Packet</h1>
+</div>
 
 <div class="unit description"><p>An evented binary packet and structure parser for Node.js.</p>
 <h2>Contributors</h2>
@@ -71,69 +80,79 @@ how JavaScript primitives passed to the <code>serialize</code> method are writte
 stream.</p>
 <h3>Patterns</h3>
 <p>Patterns are a series of element declarations joined by commas.</p>
-<pre><code class="lang-javascript">parser.extract(&quot;length: b16, address: b32, name: b8z&quot;, function (object) {
-  console.log(object.length, object.address, object.name);
-});
-parser.parse([ 0x01, 0xFF, 0x01, 0x00, 0x00, 0x00, 0x01, 0x02, 0x00 ]);</code></pre>
+<pre><code class="lang-javascript"><div class="highlight"><pre><span class="nx">parser</span><span class="p">.</span><span class="nx">extract</span><span class="p">(</span><span class="s2">&quot;length: b16, address: b32, name: b8z&quot;</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">object</span><span class="p">)</span> <span class="p">{</span>
+  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">object</span><span class="p">.</span><span class="nx">length</span><span class="p">,</span> <span class="nx">object</span><span class="p">.</span><span class="nx">address</span><span class="p">,</span> <span class="nx">object</span><span class="p">.</span><span class="nx">name</span><span class="p">);</span>
+<span class="p">});</span>
+<span class="nx">parser</span><span class="p">.</span><span class="nx">parse</span><span class="p">([</span> <span class="mh">0x01</span><span class="p">,</span> <span class="mh">0xFF</span><span class="p">,</span> <span class="mh">0x01</span><span class="p">,</span> <span class="mh">0x00</span><span class="p">,</span> <span class="mh">0x00</span><span class="p">,</span> <span class="mh">0x00</span><span class="p">,</span> <span class="mh">0x01</span><span class="p">,</span> <span class="mh">0x02</span><span class="p">,</span> <span class="mh">0x00</span> <span class="p">]);</span>
+</pre></div>
+</code></pre>
 <p>You can also name the elements in a pattern. If named, parsers will be create an
 object to pass to callbacks, serializers will serialize an object&#39;s properties.</p>
-<pre><code class="lang-javascript">parser.extract(&quot;b16 =&gt; length, b32 =&gt; address, b8z =&gt; name&quot;, function (record) {
-  console.log(record);
-});
-parser.parse([ 0x01, 0xFF, 0x01, 0x00, 0x00, 0x00, 0x01, 0x02, 0x00 ]);</code></pre>
+<pre><code class="lang-javascript"><div class="highlight"><pre><span class="nx">parser</span><span class="p">.</span><span class="nx">extract</span><span class="p">(</span><span class="s2">&quot;b16 =&gt; length, b32 =&gt; address, b8z =&gt; name&quot;</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">record</span><span class="p">)</span> <span class="p">{</span>
+  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">record</span><span class="p">);</span>
+<span class="p">});</span>
+<span class="nx">parser</span><span class="p">.</span><span class="nx">parse</span><span class="p">([</span> <span class="mh">0x01</span><span class="p">,</span> <span class="mh">0xFF</span><span class="p">,</span> <span class="mh">0x01</span><span class="p">,</span> <span class="mh">0x00</span><span class="p">,</span> <span class="mh">0x00</span><span class="p">,</span> <span class="mh">0x00</span><span class="p">,</span> <span class="mh">0x01</span><span class="p">,</span> <span class="mh">0x02</span><span class="p">,</span> <span class="mh">0x00</span> <span class="p">]);</span>
+</pre></div>
+</code></pre>
 <p>Unnamed elements are good for short, simple patterns. For longer patterns it is
 easier to have a parser build an object for you.</p>
 <p>The following example shows a complicated pattern, the invariable portion of an
 IP header, the first 20 bytes before options, if any.</p>
-<pre><code class="lang-javascript">// Define an IP header pattern using a joined array to explode the pattern.
-parser.packet(&#39;ip&#39;, &#39;b8{version: b4, headerLength: b4},         \
-                     typeOfService: b8,                         \
-                     length: b16,                               \
-                     identification: b16,                       \
-                     b16{flags: b3, fragmentOffset: b13},       \
-                     timeToLive: b8,                            \
-                     protocol: b8,                              \
-                     checksum: b16,                             \
-                     sourceAddress: b32,                        \
-                     destinationAddress: b32                    \
-                    &#39;);
+<pre><code class="lang-javascript"><div class="highlight"><pre><span class="c1">// Define an IP header pattern using a joined array to explode the pattern.</span>
+<span class="nx">parser</span><span class="p">.</span><span class="nx">packet</span><span class="p">(</span><span class="s1">&#39;ip&#39;</span><span class="p">,</span> <span class="s1">&#39;b8{version: b4, headerLength: b4},         \</span>
+<span class="s1">                     typeOfService: b8,                         \</span>
+<span class="s1">                     length: b16,                               \</span>
+<span class="s1">                     identification: b16,                       \</span>
+<span class="s1">                     b16{flags: b3, fragmentOffset: b13},       \</span>
+<span class="s1">                     timeToLive: b8,                            \</span>
+<span class="s1">                     protocol: b8,                              \</span>
+<span class="s1">                     checksum: b16,                             \</span>
+<span class="s1">                     sourceAddress: b32,                        \</span>
+<span class="s1">                     destinationAddress: b32                    \</span>
+<span class="s1">                    &#39;</span><span class="p">);</span>
 
-// The pattern is then used to defined parser and serializer actions.
-parser.extract(&quot;ip&quot;, function (header) {
-  console.log(header);
-});
-parser.parse(buffer);</code></pre>
+<span class="c1">// The pattern is then used to defined parser and serializer actions.</span>
+<span class="nx">parser</span><span class="p">.</span><span class="nx">extract</span><span class="p">(</span><span class="s2">&quot;ip&quot;</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">header</span><span class="p">)</span> <span class="p">{</span>
+  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">header</span><span class="p">);</span>
+<span class="p">});</span>
+<span class="nx">parser</span><span class="p">.</span><span class="nx">parse</span><span class="p">(</span><span class="nx">buffer</span><span class="p">);</span>
+</pre></div>
+</code></pre>
 <p>Both parsers and serializers can define patterns using the <code>packet</code> method. The
 <code>packet</code> method allows you to pre-compile patterns.</p>
-<pre><code class="lang-javascript">// Create a parser and define a header.
-var parser = require(&#39;packet&#39;).createParser();
-parser.packet(&quot;header&quot;, &quot;b8 =&gt; type, b16 =&gt; length, b32 =&gt; extra&quot;);
-parser.packet(&quot;data&quot;, &quot;b16 =&gt; sequence, b16 =&gt; crc&quot;);
+<pre><code class="lang-javascript"><div class="highlight"><pre><span class="c1">// Create a parser and define a header.</span>
+<span class="kd">var</span> <span class="nx">parser</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;packet&#39;</span><span class="p">).</span><span class="nx">createParser</span><span class="p">();</span>
+<span class="nx">parser</span><span class="p">.</span><span class="nx">packet</span><span class="p">(</span><span class="s2">&quot;header&quot;</span><span class="p">,</span> <span class="s2">&quot;b8 =&gt; type, b16 =&gt; length, b32 =&gt; extra&quot;</span><span class="p">);</span>
+<span class="nx">parser</span><span class="p">.</span><span class="nx">packet</span><span class="p">(</span><span class="s2">&quot;data&quot;</span><span class="p">,</span> <span class="s2">&quot;b16 =&gt; sequence, b16 =&gt; crc&quot;</span><span class="p">);</span>
 
-// Now you can define your serializer using your parser as a prototype. The
-// serializer will inherit the parser&#39;s packet definitions.
-var serializer = parser.createSerializer();</code></pre>
+<span class="c1">// Now you can define your serializer using your parser as a prototype. The</span>
+<span class="c1">// serializer will inherit the parser&#39;s packet definitions.</span>
+<span class="kd">var</span> <span class="nx">serializer</span> <span class="o">=</span> <span class="nx">parser</span><span class="p">.</span><span class="nx">createSerializer</span><span class="p">();</span>
+</pre></div>
+</code></pre>
 <p>Parsers and serializers maintain internal state so that they can be used
 incrementally. If you&#39;re going to parse streams incrementally, you&#39;re going to
 need a parser for each stream your parsing. Same goes for serializers and
 serializing.</p>
 <p>When parsing/serializing incrementally create new parsers and serializers using
 the prototype pattern above.</p>
-<pre><code class="lang-javascript">// Create a serializer and define a header.
-var serializer = require(&quot;packet&quot;).createSerializer();
-serializer.packet(&quot;header&quot;, &quot;b8 =&gt; type, b16 =&gt; length, b32 =&gt; extra&quot;);
-serializer.packet(&quot;data&quot;, &quot;b16 =&gt; sequence, b16 =&gt; crc&quot;);
+<pre><code class="lang-javascript"><div class="highlight"><pre><span class="c1">// Create a serializer and define a header.</span>
+<span class="kd">var</span> <span class="nx">serializer</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;packet&quot;</span><span class="p">).</span><span class="nx">createSerializer</span><span class="p">();</span>
+<span class="nx">serializer</span><span class="p">.</span><span class="nx">packet</span><span class="p">(</span><span class="s2">&quot;header&quot;</span><span class="p">,</span> <span class="s2">&quot;b8 =&gt; type, b16 =&gt; length, b32 =&gt; extra&quot;</span><span class="p">);</span>
+<span class="nx">serializer</span><span class="p">.</span><span class="nx">packet</span><span class="p">(</span><span class="s2">&quot;data&quot;</span><span class="p">,</span> <span class="s2">&quot;b16 =&gt; sequence, b16 =&gt; crc&quot;</span><span class="p">);</span>
 
-// Now you can define parsers for a using the serializer as a prototype.
-net.createServer(function (socket) {
-  var parser = serializer.createParser();
-  socket.on(&quot;data&quot;, function (buffer) {
-    parser.parse(buffer);
-  });
-  parser.extract(&quot;header&quot;, function (header) {
-    console.log(header);
-  });
-});</code></pre>
+<span class="c1">// Now you can define parsers for a using the serializer as a prototype.</span>
+<span class="nx">net</span><span class="p">.</span><span class="nx">createServer</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">socket</span><span class="p">)</span> <span class="p">{</span>
+  <span class="kd">var</span> <span class="nx">parser</span> <span class="o">=</span> <span class="nx">serializer</span><span class="p">.</span><span class="nx">createParser</span><span class="p">();</span>
+  <span class="nx">socket</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s2">&quot;data&quot;</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">buffer</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">parser</span><span class="p">.</span><span class="nx">parse</span><span class="p">(</span><span class="nx">buffer</span><span class="p">);</span>
+  <span class="p">});</span>
+  <span class="nx">parser</span><span class="p">.</span><span class="nx">extract</span><span class="p">(</span><span class="s2">&quot;header&quot;</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">header</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">header</span><span class="p">);</span>
+  <span class="p">});</span>
+<span class="p">});</span>
+</pre></div>
+</code></pre>
 <h3>Parsers</h3>
 <p>Parsers parse a buffer extracting a specified pattern. The pattern is specified
 using the <code>extract</code> method. The <code>extract</code> method accept either a pattern or the
@@ -164,6 +183,29 @@ values as parameters regardless of arity.</p>
 <p>First you call <code>serialize</code> with a pattern and arguments to serialize, then you
 call <code>write</code> with a series of buffers.</p>
 </div>
+<div class="unit description"><h2>Error Messages</h2>
+<p>Error messages for pattern parsing.</p>
+<ul>
+<li><strong>invalid pattern at N</strong> — The characters starting at the specified
+index is unexpected the pattern is invalid. The invalid character may not be
+at the specified index, but shortly there after, such as unmatched braces.</li>
+<li><strong>bit field overflow at N</strong> — The sum of the bit size of bit field
+elements is greater than the size of the containing element. The sum of the
+bit size of bit field elements must equal the size of the containing element.</li>
+<li><strong>bit field underflow at N</strong> — The sum of the bit size of bit field
+elements is less than the size of the containing element. The sum of the bit
+size of bit field elements must equal the size of the containing element.</li>
+<li><strong>bit size must be non-zero at N</strong> — Encountered element with a bit size of
+zero. Element size must be a non-zero value.</li>
+<li><strong>bits must be divisible by 8 at N</strong> — Encountered element with a bit
+size that is not divisible by 8. If an element is not a bit field element, it
+must align to an 8-bit boundary.</li>
+<li><strong>floats can only be 32 or 64 bits at N</strong> — Encountered a float element
+with an unsupported bit size. Only 32 and 64 bit floats are supported.</li>
+<li><strong>&quot;array length must be non-zero at N</strong> — Encountered an array length
+of zero. Arrays must have a non-zero length.</li>
+</ul>
+</div>
 
 </div></body>
-</html>
+</body></html>
