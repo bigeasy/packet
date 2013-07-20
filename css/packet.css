@@ -17,7 +17,6 @@
   max-width: 100%;
 }
 .unit {
-  outline: 1px solid red;
   display: inline-block;
   *display: inline;
   *zoom: 1;
@@ -80,6 +79,34 @@ img {
 }
 .unit.welcome {
   width: 100%;
+}
+.unit.welcome h1 {
+  font-family: "Michroma", "Helvetica", sans-serif;
+  font-size: 48pt;
+  margin-top: 1em;
+}
+.unit.welcome p {
+  font-family: "Questrial", "Helvetica", sans-serif;
+  font-size: 18pt;
+  margin-bottom: 1em;
+  margin-left: 1em;
+  margin-right: 1em;
+}
+.unit {
+  padding: 0 36px;
+}
+.unit.value-proposition {
+  width: 100%;
+}
+.unit.value-proposition p {
+  margin: 1em 0;
+}
+.unit.description p {
+  margin: 1em 0;
+}
+.unit.description ul {
+  margin: 1em 0;
+  padding-left: 2em;
 }
 .unit.benefit {
   padding: 1em;
