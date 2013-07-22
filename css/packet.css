@@ -58,9 +58,9 @@
 }
 /* vim: set ts=4 sw=4: */
 html {
-  background: #fefefe;
+  background: #f7f7f7;
   font-size: 100%;
-  color: #3d2258;
+  color: #1a1a1a;
 }
 body {
   font-family: Helvetica;
@@ -107,6 +107,25 @@ img {
 .unit.description ul {
   margin: 1em 0;
   padding-left: 2em;
+}
+.unit.description a {
+  color: #4682b4;
+}
+.unit.description a:visited {
+  color: #9370db;
+}
+.unit.description p code {
+  font-family: "Oxygen Mono";
+  font-size: 0.85em;
+  background: white;
+  padding: 0 0.25em;
+  border: 1px dotted #ccc;
+}
+.unit.description .highlight > pre {
+  margin: 2em 0;
+  padding: 1em;
+  font-size: 1.0em;
+  font-family: "Oxygen Mono", 'Monaco', 'Cutive Mono', 'Oxygen Mono', monospace;
 }
 .unit.benefit {
   padding: 1em;
