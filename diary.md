@@ -610,6 +610,9 @@ curlies though, too much going on.
 // if crc($1) returns a function can we call that function instead?
 ```
 
+I'd like to be able to have a ternary  like alernation, so that `foo, bar:` get
+assigned the results of the alternation.
+
 ## Inbox
 
  * Maybe there is a pattern parser that is exposed to the user? That is their
