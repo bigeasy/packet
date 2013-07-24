@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 require('./proof')(1, function (parseEqual) {
-    parseEqual('b8{high: b2, x1{0}, low: b2, x3}, x8{0}, b8', [
+    parseEqual('b8{high: b2, x1{0}, low: b2, x3}, x8{0}, foo: b8', [
         { 'signed': false
         , 'endianness': 'b'
         , 'bits': 8
@@ -59,18 +59,19 @@ require('./proof')(1, function (parseEqual) {
             bits: 8,
             type: 'n',
             bytes: 1,
-            exploded: 0,
+            exploded: false,
             repeat: 1,
             arrayed: false,
             padding: 0
         }
     ,
-        { signed: false,
+        { name: 'foo',
+            signed: false,
             endianness: 'b',
             bits: 8,
             type: 'n',
             bytes: 1,
-            exploded: 0,
+            exploded: false,
             repeat: 1,
             arrayed: false
         }

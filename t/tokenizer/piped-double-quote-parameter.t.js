@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 require('./proof')(1, function (parseEqual) {
-    parseEqual('b8z|twiddle("a \\u00DF b \\" c")', [
-        { signed: false
+    parseEqual('foo:b8z|twiddle("a \\u00DF b \\" c")', [
+        { name: 'foo'
+        , signed: false
         , bits: 8
         , endianness: 'b'
         , bytes: 1

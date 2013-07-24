@@ -234,8 +234,6 @@ function parse (pattern, part, index, bits, next) {
             f.named = true
             f.name = $[2]
             index += $[1].length
-        } else {
-            f.name = 'field' + (position++)
         }
 
         // Move the character position up to the bit count.
@@ -265,6 +263,8 @@ function parse (pattern, part, index, bits, next) {
         // skip over a nested padding specifier in the bit packing pattern, nested
         // curly brace matching for a depth of one.
         if ($ = /^{((?:(?:\w[\w\d]*):\s*)?(?:-b|b|x)(?:[^{}]+|{[^}]+})+)}(\s*,.*|\s*)$/.exec(rest)) {
+            if (f.named) throw new Error(error('name forbidden', pattern, index))
+
             index++
 
             var packIndex = index
@@ -307,6 +307,10 @@ function parse (pattern, part, index, bits, next) {
 
         // Check for alternation.
         } else if ($ = /^\(([^)]+)\)(.*)$/.exec(rest)) {
+            // todo: better error message - user may think given name is
+            // unusable
+            if (f.named) throw new Error(error('name forbidden', pattern, index))
+
             f.arrayed     = true
             var read      = $[1]
             rest          = $[2]
@@ -338,7 +342,11 @@ function parse (pattern, part, index, bits, next) {
             })
 
         // Neither bit packing nor alternation.
-        } else{
+        } else {
+            if (!f.named && f.endianness != 'x') {
+                throw new Error(error('name required', pattern, index))
+            }
+
             // Check if this is a length encoding.
             if ($ = /^\/(.*)$/.exec(rest)) {
                 if (f.named) name = f.name

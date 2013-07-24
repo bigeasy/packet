@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 require('./proof')(1, function (parseEqual) {
-    parseEqual('b8(0-251: b8 | 252/252-0xffff: x8{252}, b16 | 253/0x10000-0xffffff: x8{253}, b24 | x8{254}, b64)', [
+    parseEqual('b8(0-251: foo:b8 | 252/252-0xffff: x8{252}, foo:b16 | 253/0x10000-0xffffff: x8{253}, foo:b24 | x8{254}, foo:b64)', [
         { 'signed': false
         , 'endianness': 'b'
         , 'bits': 8
@@ -22,7 +22,8 @@ require('./proof')(1, function (parseEqual) {
                     }
                 , 'pattern':
                     [
-                        { 'signed': false
+                        { 'name': 'foo'
+                        , 'signed': false
                         , 'endianness': 'b'
                         , 'bits': 8
                         , 'type': 'n'
@@ -57,7 +58,8 @@ require('./proof')(1, function (parseEqual) {
                         , 'padding': 252
                         }
                     ,
-                        { 'signed': false
+                        { 'name': 'foo'
+                        , 'signed': false
                         , 'endianness': 'b'
                         , 'bits': 16
                         , 'type': 'n'
@@ -92,7 +94,8 @@ require('./proof')(1, function (parseEqual) {
                         , 'padding': 253
                         }
                     ,
-                        { 'signed': false
+                        { 'name': 'foo'
+                        , 'signed': false
                         , 'endianness': 'b'
                         , 'bits': 24
                         , 'type': 'n'
@@ -128,7 +131,8 @@ require('./proof')(1, function (parseEqual) {
                         , 'padding': 254
                         }
                     ,
-                        { 'signed': false
+                        { 'name': 'foo'
+                        , 'signed': false
                         , 'endianness': 'b'
                         , 'bits': 64
                         , 'type': 'n'
