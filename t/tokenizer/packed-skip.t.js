@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 require('./proof')(1, function (parseEqual) {
-    parseEqual('b16{x3,b6,-b7}', [
+    parseEqual('b16{x3,foo:b6,bar:-b7}', [
         { 'signed': false
         , 'endianness': 'b'
         , 'bits': 16
@@ -19,7 +19,8 @@ require('./proof')(1, function (parseEqual) {
                 , 'exploded': false
                 }
             ,
-                { 'signed': false
+                { 'name': 'foo'
+                , 'signed': false
                 , 'endianness': 'b'
                 , 'bits': 6
                 , 'type': 'n'
@@ -29,7 +30,8 @@ require('./proof')(1, function (parseEqual) {
                 , 'exploded': false
                 }
             ,
-                { 'signed': true
+                { 'name': 'bar'
+                , 'signed': true
                 , 'endianness': 'b'
                 , 'bits': 7
                 , 'type': 'n'

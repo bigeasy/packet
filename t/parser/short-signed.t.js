@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 require('./proof')(12, function (parseEqual) {
-    parseEqual({ require: true }, '-b16', [ 0x80, 0x00 ], 2, -32768, 'mininum')
-    parseEqual('-b16', [ 0xff, 0xff ], 2, -1, 'negative')
-    parseEqual('-b16', [ 0x7f, 0xff ], 2, 32767, 'maximum')
-    parseEqual('-b16', [ 0x01, 0x02 ], 2, 258, 'positive')
+    parseEqual({ require: true }, 'foo: -b16', [ 0x80, 0x00 ], 2, { foo: -32768 }, 'mininum')
+    parseEqual('foo: -b16', [ 0xff, 0xff ], 2, { foo: -1 }, 'negative')
+    parseEqual('foo: -b16', [ 0x7f, 0xff ], 2, { foo: 32767 }, 'maximum')
+    parseEqual('foo: -b16', [ 0x01, 0x02 ], 2, { foo: 258 }, 'positive')
 })

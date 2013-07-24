@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 require('./proof')(1, function (parseEqual) {
-    parseEqual('b8(&0x80: b16{x1,b15} | b8)/(0-0x7f: b8 | b16{x1{1},b15})', [
+    parseEqual('b8(&0x80: b16{x1, foo: b15} | foo: b8)/(0-0x7f: foo: b8 | b16{x1{1}, foo: b15})', [
         { 'signed': false
         , 'endianness': 'b'
         , 'bits': 8
@@ -39,7 +39,8 @@ require('./proof')(1, function (parseEqual) {
                                 , 'exploded': false
                                 }
                             ,
-                                { 'signed': false
+                                { 'name': 'foo'
+                                , 'signed': false
                                 , 'endianness': 'b'
                                 , 'bits': 15
                                 , 'type': 'n'
@@ -64,7 +65,8 @@ require('./proof')(1, function (parseEqual) {
                     }
                 , 'pattern':
                     [
-                        { 'signed': false
+                        { 'name': 'foo'
+                        , 'signed': false
                         , 'endianness': 'b'
                         , 'bits': 8
                         , 'type': 'n'
@@ -87,7 +89,8 @@ require('./proof')(1, function (parseEqual) {
                     }
                 , 'pattern':
                     [
-                        { 'signed': false
+                        { 'name': 'foo'
+                        , 'signed': false
                         , 'endianness': 'b'
                         , 'bits': 8
                         , 'type': 'n'
@@ -129,7 +132,8 @@ require('./proof')(1, function (parseEqual) {
                                 , 'padding': 1
                                 }
                             ,
-                                { 'signed': false
+                                { 'name': 'foo'
+                                , 'signed': false
                                 , 'endianness': 'b'
                                 , 'bits': 15
                                 , 'type': 'n'

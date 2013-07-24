@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 require('./proof')(1, function (parseEqual) {
-    parseEqual('b8(252: x8, b16 | 253: x8, b24 | 254: x8, b64 | b8)', [
+    parseEqual('b8(252: x8, foo: b16| 253: x8, foo: b24 | 254: x8, foo: b64| foo: b8)', [
         { 'signed': false
         , 'endianness': 'b'
         , 'bits': 8
@@ -32,7 +32,8 @@ require('./proof')(1, function (parseEqual) {
                         , 'arrayed': false
                         }
                     ,
-                        { 'signed': false
+                        { 'name': 'foo'
+                        , 'signed': false
                         , 'endianness': 'b'
                         , 'bits': 16
                         , 'type': 'n'
@@ -66,7 +67,8 @@ require('./proof')(1, function (parseEqual) {
                         , 'arrayed': false
                         }
                     ,
-                        { 'signed': false
+                        { 'name': 'foo'
+                        , 'signed': false
                         , 'endianness': 'b'
                         , 'bits': 24
                         , 'type': 'n'
@@ -100,7 +102,8 @@ require('./proof')(1, function (parseEqual) {
                         , 'arrayed': false
                         }
                     ,
-                        { 'signed': false
+                        { 'name': 'foo'
+                        , 'signed': false
                         , 'endianness': 'b'
                         , 'bits': 64
                         , 'type': 'n'
@@ -124,7 +127,8 @@ require('./proof')(1, function (parseEqual) {
                     }
                 , 'pattern':
                     [
-                        { 'signed': false
+                        { 'name': 'foo'
+                        , 'signed': false
                         , 'endianness': 'b'
                         , 'bits': 8
                         , 'type': 'n'

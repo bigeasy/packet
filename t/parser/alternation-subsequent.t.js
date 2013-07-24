@@ -1,11 +1,11 @@
 #!/usr/bin/env node
-require('./proof')(2, function (equal, createParser) {
+require('./proof')(2, function (deepEqual, createParser) {
     var parser = createParser()
-    parser.packet('alt', 'b8(&0x80: b16{x1,b15} | b8)')
+    parser.packet('alt', 'b8(&0x80: b16{x1, foo: b15} | bar: b8)')
     parser.extract('alt', function (value) {
-        equal(value, 256, 'set')
+        deepEqual(value, { foo: 256 }, 'set')
         parser.extract('alt', function (value) {
-            equal(value, 1, 'unset')
+            deepEqual(value, { bar: 1 }, 'unset')
         })
     })
     parser.parse([ 0x81, 0x00, 0x01 ], 0, 3)

@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 require('./proof')(1, function (parseEqual) {
-    parseEqual('-b16', [
-        { signed: true
+    parseEqual('foo:-b16', [
+        { name: 'foo'
+        , signed: true
         , bits: 16
         , endianness: 'b'
         , bytes: 2
