@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 require('./proof')(1, function (parseEqual) {
-    parseEqual('b8z|str("utf8")', [
-        { signed: false
+    parseEqual('foo:b8z|str("utf8")', [
+        { name: 'foo'
+        , signed: false
         , bits: 8
         , endianness: 'b'
         , bytes: 1

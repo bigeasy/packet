@@ -22,7 +22,7 @@ module.exports = require('proof')(function (equal, deepEqual, ok) {
         deepEqual(fields[i], expect, message + ' extracted ' + (i + 1));
       });
       if (options.subsequent) {
-        parser.extract('b8', function () {});
+        parser.extract('byte: b8', function () {});
       }
       invoked = true;
     });

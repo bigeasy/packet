@@ -1,8 +1,9 @@
 #!/usr/bin/env node
 require('./proof')(1, function (parseEqual) {
-    parseEqual('-l16, b8',
+    parseEqual('foo: -l16, bar: b8',
     [
-        { signed: true
+        { name: 'foo'
+        , signed: true
         , bits: 16
         , endianness: 'l'
         , bytes: 2
@@ -12,7 +13,8 @@ require('./proof')(1, function (parseEqual) {
         , repeat: 1
         }
     ,
-        { signed: false
+        { name: 'bar'
+        , signed: false
         , bits: 8
         , endianness: 'b'
         , bytes: 1
