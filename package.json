@@ -20,6 +20,7 @@
         "type": "git",
         "url": "http://github.com/bigeasy/packet.git"
     },
+    "bugs": "https://github.com/bigeasy/packet/issues",
     "contributors": [
         {
             "name":   "J. Ryan Stinnett",
