@@ -982,7 +982,7 @@ module.exports.Parser = Parser
 function Serializer(definition, options) {
     var serializer = this, terminal, valueOffset, increment, array, value, bytesWritten = 0,
     skipping, repeat, outgoing, index, terminated, terminates, pattern,
-    incoming, named,
+    incoming,
     patternIndex, context = options.context || this, padding, _callback
 
     function _length () { return bytesWritten }
@@ -1117,11 +1117,6 @@ function Serializer(definition, options) {
                 skip = 0,
                 field, value, alternate, i, I, j, J, k, K, alternates
 
-        // TODO: Hate that all this has to pass for the common case.
-        named = (shiftable.length ==  1
-                          && typeof shiftable[0] ==  'object'
-                          && ! (shiftable[0] instanceof Array))
-
         _callback = callback
         patternIndex = 0
         alternates = prototype.slice()
@@ -1130,46 +1125,7 @@ function Serializer(definition, options) {
         // Positial arrays go through once to resolve alternation for the sake of
         // the naming. This duplication is the price you pay for invoking with
         // positional arrays, it can't be avoided.
-        if (!named) {
-            incoming = {}, pattern = []
-            for (var i = 0; i < alternates.length; i++) {
-                field = alternates[i]
-                if (field.alternation) {
-                    field = field.alternation[0]
-                    if (field.pattern[0].packing) {
-                        field = field.pattern[0].packing[0]
-                    }
-                    value = shiftable[0]
-
-                    field = alternates[i]
-                    for (j = 0, J = field.alternation.length; j < J; j++) {
-                        alternate = field.alternation[j]
-                        if (alternate.write.minimum <= value &&  value <= alternate.write.maximum) {
-                            break
-                        }
-                    }
-
-                    alternates.splice.apply(alternates, [ i--, 1 ].concat(alternate.pattern))
-                    continue
-                }
-
-                pattern.push(field)
-
-                if (field.packing) {
-                    for (j = 0, J = field.packing.length; j < J; j++) {
-                        if (field.packing[j].endianness != 'x') {
-                            incoming[field.packing[j].name] = shiftable.shift()
-                        }
-                    }
-                } else if (!field.lengthEncoding && field.endianness != 'x') {
-                    incoming[field.name] = shiftable.shift()
-                }
-            }
-            // Reset for below.
-            alternates = pattern, pattern = []
-        } else {
-            incoming = shiftable.shift()
-        }
+        incoming = shiftable.shift()
 
         outgoing = {}, pattern = []
 

@@ -2,5 +2,5 @@
 
 require('./proof')(3, function (serialize) {
     var bytes =  [ 0x01, 0x02, 0x03, 0x04 ]
-    serialize('foo: l32a', bytes, 4, bytes, 'write raw bytes as array')
+    serialize('foo: l32a', { foo: bytes }, 4, bytes, 'write raw bytes as array')
 })
