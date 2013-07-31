@@ -671,45 +671,19 @@ function Parser (definition, options) {
 
     //
     function extract (nameOrPattern, callback) {
-        var _pattern = definition.pattern(nameOrPattern), named
+        var _pattern = definition.pattern(nameOrPattern)
         patternIndex = 0
         _callback = callback
         pattern = _pattern.slice()
         fields = {}
         this.length = 0
 
-        // At one point, you thought you could have  a test for the arity of the
-        // function, and if it was greater than `1`, you'd call the callback
-        // positionally, regardless of named parameters. Then you realized that the
-        // `=>` operator in CoffeeScript would use a bind function with no
-        // arguments, and read the argument array. If you do decide to go back to
-        // arity override, then greater than one is the trigger. However, on
-        // reflection, I don't see that the flexibility is useful, and I do believe
-        // that it will generate at least one bug report that will take a lot of
-        // hashing out only to close with "oh, no, you hit upon a 'hidden feature'."
-        function isNamed (field) {
-            return field.named || (field.packing && field.packing.some(isNamed))
-                                                  || (field.alternation && field.alternation.some(function (alternate) {
-                                                                return !alternate.failed && alternate.pattern.some(isNamed)
-                                                            }))
-        }
-        named = pattern.some(isNamed)
-
         function incremental (buffer, start, end, pattern, index, object, callback) {
             this.parse = createGenericParser(options, definition, pattern, index, callback, object, true)
             return this.parse(buffer, start, end)
         }
 
-        if (named) {
-            var __callback = callback
-        } else {
-            var __callback = function (object) {
-                var array = []
-                flatten(pattern, object, array)
-                callback.apply(this, array)
-            }
-        }
-
+        var __callback = callback
         if (_pattern.builder) {
             this.parse = _pattern.builder(incremental, pattern, definition.transforms, ieee754, __callback)
         } else {
