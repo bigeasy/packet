@@ -1175,8 +1175,7 @@ function Serializer(definition, options) {
             pattern = alternates
         }
 
-        nextField()
-        nextValue()
+        this.write = createGenericWriter()
     }
 
     // Return the count of bytes that will be written by the serializer for the
@@ -1363,108 +1362,107 @@ function Serializer(definition, options) {
         return output
     }
 
-    //#### serializer.write(buffer[, start][, length])
+    function createGenericWriter () {
+        nextField()
+        nextValue()
+        return function (buffer, bufferOffset, bufferEnd) {
+            var start = bufferOffset
 
-    // The `write` method writes to the buffer, returning when the current pattern
-    // is written, or the end of the buffer is reached.  Write to the `buffer` in
-    // the region defined by the given `start` offset and `length`.
-    function write (buffer, bufferOffset, bufferEnd) {
-        var start = bufferOffset
+            // While there is a pattern to fill and space to write.
+            PATTERN: while (pattern.length != patternIndex &&  bufferOffset < bufferEnd) {
+                if (skipping) {
+                    var advance     = Math.min(skipping, bufferEnd - bufferOffset)
+                    bufferOffset         += advance
+                    skipping      -= advance
+                    bytesWritten  += advance
+                    if (skipping) break
 
-        // While there is a pattern to fill and space to write.
-        PATTERN: while (pattern.length != patternIndex &&  bufferOffset < bufferEnd) {
-            if (skipping) {
-                var advance     = Math.min(skipping, bufferEnd - bufferOffset)
-                bufferOffset         += advance
-                skipping      -= advance
-                bytesWritten  += advance
-                if (skipping) break
-
-            } else {
-                // If the pattern is exploded, the value we're writing is an array.
-                if (pattern[patternIndex].exploded) {
-                    for (;;) {
-                        buffer[bufferOffset] = value[valueOffset]
-                        valueOffset += increment
-                        bytesWritten++
-                        bufferOffset++
-                        if (valueOffset ==  terminal) break
-                        if (bufferOffset == bufferEnd) break PATTERN
-                    }
-                // Otherwise we're unpacking bytes of an unsigned integer, the most common
-                // case.
                 } else {
-                    for (;;) {
-                        buffer[bufferOffset] = Math.floor(value / Math.pow(256, valueOffset)) & 0xff
-                        valueOffset += increment
-                        bytesWritten++
-                        bufferOffset++
-                        if (valueOffset ==  terminal) break
-                        if (bufferOffset ==  bufferEnd) break PATTERN
-                    }
-                }
-            }
-            // If we have not terminated, check for the termination state change.
-            // Termination will change the loop settings.
-            if (terminates) {
-                if (terminated) {
-                    if (repeat ==  Number.MAX_VALUE) {
-                        repeat = index + 1
-                    } else if (pattern[patternIndex].padding != null)  {
-                        padding = pattern[patternIndex].padding
+                    // If the pattern is exploded, the value we're writing is an array.
+                    if (pattern[patternIndex].exploded) {
+                        for (;;) {
+                            buffer[bufferOffset] = value[valueOffset]
+                            valueOffset += increment
+                            bytesWritten++
+                            bufferOffset++
+                            if (valueOffset ==  terminal) break
+                            if (bufferOffset == bufferEnd) break PATTERN
+                        }
+                    // Otherwise we're unpacking bytes of an unsigned integer, the most common
+                    // case.
                     } else {
-                        skipping = (repeat - (++index)) * pattern[patternIndex].bytes
-                        if (skipping) {
-                            repeat = index + 1
-                            continue
+                        for (;;) {
+                            buffer[bufferOffset] = Math.floor(value / Math.pow(256, valueOffset)) & 0xff
+                            valueOffset += increment
+                            bytesWritten++
+                            bufferOffset++
+                            if (valueOffset ==  terminal) break
+                            if (bufferOffset ==  bufferEnd) break PATTERN
                         }
+                    }
+                }
+                // If we have not terminated, check for the termination state change.
+                // Termination will change the loop settings.
+                if (terminates) {
+                    if (terminated) {
+                        if (repeat ==  Number.MAX_VALUE) {
+                            repeat = index + 1
+                        } else if (pattern[patternIndex].padding != null)  {
+                            padding = pattern[patternIndex].padding
+                        } else {
+                            skipping = (repeat - (++index)) * pattern[patternIndex].bytes
+                            if (skipping) {
+                                repeat = index + 1
+                                continue
+                            }
+                        }
+                    } else {
+                        // If we are at the end of the series, then we create an empty outgoing
+                        // array to hold the terminator, because the outgoing series may be a
+                        // buffer. We insert the terminator at next index in the outgoing array.
+                        // We then set repeat to allow one more iteration before callback.
+                        if (array.length == index + 1) {
+                            terminated = true
+                            array = []
+                            var terminator = pattern[patternIndex].terminator
+                            for (var i = 0, I = terminator.length; i < I; i++) {
+                                array[index + 1 + i] = terminator[i]
+                            }
+                        }
+                    }
+                }
+                // If we are reading an arrayed pattern and we have not read all of the
+                // array elements, we repeat the current field type.
+                if (++index < repeat) {
+                    nextValue()
+
+                // If we have written all of the packet fields, call the associated
+                // callback with self parser.
+                //
+                // The pattern is set to null, our terminal condition, before the callback,
+                // because the callback may specify a subsequent packet to parse.
+                } else if (++patternIndex ==  pattern.length) {
+                    if (_callback != null) {
+                        _callback.call(context, serializer)
                     }
                 } else {
-                    // If we are at the end of the series, then we create an empty outgoing
-                    // array to hold the terminator, because the outgoing series may be a
-                    // buffer. We insert the terminator at next index in the outgoing array.
-                    // We then set repeat to allow one more iteration before callback.
-                    if (array.length == index + 1) {
-                        terminated = true
-                        array = []
-                        var terminator = pattern[patternIndex].terminator
-                        for (var i = 0, I = terminator.length; i < I; i++) {
-                            array[index + 1 + i] = terminator[i]
-                        }
-                    }
+
+                    padding = null
+                    repeat      = pattern[patternIndex].repeat
+                    terminated  = ! pattern[patternIndex].terminator
+                    terminates  = ! terminated
+                    index       = 0
+
+                    nextField()
+                    nextValue()
                 }
             }
-            // If we are reading an arrayed pattern and we have not read all of the
-            // array elements, we repeat the current field type.
-            if (++index < repeat) {
-                nextValue()
 
-            // If we have written all of the packet fields, call the associated
-            // callback with self parser.
-            //
-            // The pattern is set to null, our terminal condition, before the callback,
-            // because the callback may specify a subsequent packet to parse.
-            } else if (++patternIndex ==  pattern.length) {
-                if (_callback != null) {
-                    _callback.call(context, serializer)
-                }
-            } else {
-
-                padding = null
-                repeat      = pattern[patternIndex].repeat
-                terminated  = ! pattern[patternIndex].terminator
-                terminates  = ! terminated
-                index       = 0
-
-                nextField()
-                nextValue()
-            }
+            return bufferOffset - start
         }
-
-        return bufferOffset - start
     }
 
-    classify.call(definition.extend(this), serialize, write, offsetsOf, _length, _sizeOf)
+    classify.call(definition.extend(this), serialize, offsetsOf, _length, _sizeOf)
 }
 
 function createParser (options) {
