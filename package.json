@@ -37,6 +37,11 @@
         {
             "name":   "Aaron Qian",
             "email":  "aq1018@gmail.com"
+        },
+        {
+            "name":   "Demarius Chrite",
+            "email":  "chrite.demarius@gmail.com",
+            "web":    "https://github.com/demarius"
         }
     ]
 }
