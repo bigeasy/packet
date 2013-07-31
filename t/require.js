@@ -11,10 +11,10 @@ module.exports = function (pattern, source) {
     function namify (f, i) {
         var scalar = f.endianness + f.bits + f.type
         if (f.signed) scalar = 'S' + scalar
-        if (f.named) scalar += '.' + f.name
+        if (f.named) scalar += '_' + f.name
         if (f.lengthEncoding) scalar += 'C'
         if (f.arrayed) {
-            scalar += '.array'
+            scalar += '_array'
             if (!(i && pattern[i - 1].lengthEncoding) && f.repeat != Math.MAX_VALUE) {
                 scalar += f.repeat
             }
@@ -36,7 +36,7 @@ module.exports = function (pattern, source) {
         return scalar
     }
 
-    var name = pattern.map(namify).join('_')
+    var name = pattern.map(namify).join('.')
 
     console.log(name)
     var file = path.join(__dirname, 'generated', name + '.js')
