@@ -499,5 +499,3 @@ module.exports.parse = function (pattern) {
         , index = pattern.length - part.length
     return parse(pattern, part, index, 8)
 }
-
-/* vim: set ts=2 sw=2: */

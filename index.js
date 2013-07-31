@@ -1547,5 +1547,3 @@ function createSerializer (options) {
     return new Serializer(new Definition({}, transforms, options), options) }
 
 classify.call(exports, createParser, createSerializer)
-
-/* vim: set st=2 sw=2: */
