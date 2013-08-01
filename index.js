@@ -4,6 +4,19 @@ var util    = require('util')
 
 var __slice = [].slice
 
+function canCompile (pattern) {
+    return pattern.every(function (part) {
+        return !/^[lx]$/.test(part.endianness)
+            && !/^[fa]$/.test(part.type)
+            && part.bytes == 1
+            && !part.arrayed
+            && !part.signed
+            && !part.packing
+            && !part.alternation
+            && !part.pipeline
+    })
+}
+
 function classify () {
     var i, I, name
     for (i = 0, I = arguments.length; i < I; i++) {
@@ -183,7 +196,7 @@ function Definition (packets, transforms, options) {
 
     var precompiler = options.precompiler || function (type, pattern, source) {
         return Function.call(Function,
-            'incremental', 'pattern', 'transforms', 'ieee754', 'callback', source.join('\n'))
+            'incremental', 'pattern', 'transforms', 'ieee754', 'object', 'callback', source.join('\n'))
     }
 
     // this becomes precomple parser, and then we create precompile serializer
@@ -575,31 +588,133 @@ function Definition (packets, transforms, options) {
         var substart = length.slice()
         if (~length.indexOf('(start - first)')) substart.unshift('first')
 
-
         method.block('                                                                              \n\
-            this.length = ' + length.join(' + ') + ';                                                 \n\
-                                                                                                                                                                                                \n\
-            this.parse = null                                                                         \n\
-                                                                                                                                                                                                \n\
-            callback(object);                                                                         \n\
-                                                                                                                                                                                                \n\
-            if (this.parse) {                                                                         \n\
+            this.length = ' + length.join(' + ') + ';                                               \n\
+                                                                                                    \n\
+            this.parse = null                                                                       \n\
+                                                                                                    \n\
+            callback(object);                                                                       \n\
+                                                                                                    \n\
+            if (this.parse) {                                                                       \n\
                 return ' + length.join(' + ') + ' + this.parse(buffer, ' + substart.join(' + ') + ', end);\n\
-            } else {                                                                                  \n\
-                return ' + length.join(' + ') + ';                                                      \n\
-            }                                                                                         \n\
+            } else {                                                                                \n\
+                return ' + length.join(' + ') + ';                                                  \n\
+            }                                                                                       \n\
         ')
 
         var parser = ('return ' + method.define('buffer', 'start', 'end')).split(/\n/)
         parser.pop()
 
+        // todo: needs to become an object.
         pattern.builder = precompiler('parser', pattern, parser)
+    }
+
+    function precompileSerializer (pattern) {
+        var method = new Source
+        var section = new Source
+        var offset = 0
+        var sum = 0
+        var sums = []
+        var lengths = []
+        var incrementalIndex = 0
+
+        function unsigned (variable, field, increment) {
+            var source = new Source
+            var little = field.endianness == 'l'
+            var bytes = field.bytes
+            var bite = little ? 0 : bytes - 1
+            var direction = little ? 1 : -1
+            var stop = little ? bytes : -1
+            var assign
+            function inc () {
+                if (increment) return 'start++'
+                if (offset++) return 'start + ' + (offset - 1)
+                return 'start'
+            }
+            if (bite == 0) {
+                source.line('buffer[' + inc() + '] = ' + variable + ' & 0xff')
+            } else {
+                while (bite != stop) {
+                    if (bite == 0) {
+                    } else {
+                        source.line('Math.floor(' + variable + ' / Math.pow(256)) + ' + bite)
+                    }
+                    bite += direction
+                }
+            }
+            return source
+        }
+
+        function element (variable, field, increment) {
+            switch (field.type) {
+            case 'f':
+                return floating(variable, field, increment)
+            default:
+                return unsigned(variable, field, increment)
+            }
+        }
+
+        function rangeCheck (condition, start, index) {
+            var source = new Source
+            source.block('                                                                        \n\
+                if (' + condition + ') {                                                          \n\
+                  return incremental.call(this, buffer, ' + start + ', end, pattern, ' + index + ', object, callback);  \n\
+                }                                                                                 \n\
+            ')
+            source.line()
+            return source
+        }
+
+        function unravel (field, index) {
+            section.consume(element('object[' + JSON.stringify(field.name) + ']', field))
+            sum += field.bytes * field.repeat
+        }
+
+        pattern.forEach(unravel)
+
+        if (sum) {
+            method.consume(rangeCheck('end - start < ' + sum, 'start', incrementalIndex))
+            method.consume(section)
+            sums.push(sum)
+            sum = 0
+        } else {
+            method.consume(section)
+        }
+
+        if (sums.length) {
+            lengths.push(sums.reduce(function (sum, value) { return sum + value }, 0))
+        }
+
+        var substart = lengths.slice()
+        if (~lengths.indexOf('(start - first)')) substart.unshift('first')
+
+        method.block('                                                                              \n\
+            this.length = ' + lengths.join(' + ') + ';                                               \n\
+                                                                                                    \n\
+            this.write = null                                                                       \n\
+                                                                                                    \n\
+            callback && callback()                                                                  \n\
+                                                                                                    \n\
+            if (this.write) {                                                                       \n\
+                return ' + lengths.join(' + ') + ' + this.write(buffer, ' + substart.join(' + ') + ', end);\n\
+            } else {                                                                                \n\
+                return ' + lengths.join(' + ') + ';                                                  \n\
+            }                                                                                       \n\
+        ')
+
+        var serializer = ('return ' + method.define('buffer', 'start', 'end')).split(/\n/)
+        serializer.pop()
+
+        pattern.createSerializer = precompiler('serializer', pattern, serializer)
     }
 
     function compile (pattern) {
         var parsed = parse(pattern)
         parsed.hasAlternation = parsed.some(function (field) { return field.alternation })
         precompile(parsed)
+        if (canCompile(parsed)) {
+            precompileSerializer(parsed)
+        }
         return parsed
     }
 
@@ -687,7 +802,7 @@ function Parser (definition, options) {
 
         var __callback = callback
         if (_pattern.builder) {
-            this.parse = _pattern.builder(incremental, pattern, definition.transforms, ieee754, __callback)
+            this.parse = _pattern.builder(incremental, pattern, definition.transforms, ieee754, {}, __callback)
         } else {
             this.parse = createGenericParser(options, definition, pattern, 0, __callback, {}, true)
         }
@@ -982,14 +1097,10 @@ module.exports.Parser = Parser
 
 // Construct a `Serializer` around the given `definition`.
 function Serializer(definition, options) {
-    var serializer = this, terminal, valueOffset, increment, array, value, bytesWritten = 0,
+    var serializer = this, terminal, valueOffset, increment, array, value,
     skipping, repeat, outgoing, index, terminated, terminates, pattern,
     incoming,
-    patternIndex, context = options.context || this, padding, _callback
-
-    function _length () { return bytesWritten }
-
-//  function reset () { bytesWritten = 0 }
+    patternIndex, context = options.context || this, padding, callback
 
     // Prepare the parser for the next field in the pattern.
     function nextField () {
@@ -1112,17 +1223,18 @@ function Serializer(definition, options) {
 
     function serialize () {
         // TODO: We're copying because of positional parameters and alternation.
-        var shiftable = __slice.call(arguments),
-                // TODO: Rename `_pattern`.
-                prototype = definition.pattern(shiftable.shift()),
-                callback = typeof shiftable[shiftable.length - 1] == 'function' ? shiftable.pop() : void(0),
-                skip = 0,
-                field, value, alternate, i, I, j, J, k, K, alternates
+        var shiftable = __slice.call(arguments)
 
-        _callback = callback
+        // todo: should return an object, flags and the pattern to slice.
+        var prototype = definition.pattern(shiftable.shift())
+
+        var field, value, alternate, i, I, j, J, alternates
+
+        callback = typeof shiftable[shiftable.length - 1] == 'function' ? shiftable.pop() : void(0)
+
         patternIndex = 0
         alternates = prototype.slice()
-        bytesWritten = 0
+        this.length = 0
 
         // Positial arrays go through once to resolve alternation for the sake of
         // the naming. This duplication is the price you pay for invoking with
@@ -1175,6 +1287,11 @@ function Serializer(definition, options) {
             }
         } else {
             pattern = alternates
+        }
+
+        if (canCompile(prototype)) {
+            this.write = prototype.createSerializer(null, prototype, definition.transforms, ieee754, incoming, callback)
+            return
         }
 
         this.write = createGenericWriter()
@@ -1363,6 +1480,7 @@ function Serializer(definition, options) {
     function createGenericWriter () {
         nextField()
         nextValue()
+
         return function (buffer, bufferOffset, bufferEnd) {
             var start = bufferOffset
 
@@ -1372,7 +1490,7 @@ function Serializer(definition, options) {
                     var advance     = Math.min(skipping, bufferEnd - bufferOffset)
                     bufferOffset         += advance
                     skipping      -= advance
-                    bytesWritten  += advance
+                    this.length  += advance
                     if (skipping) break
 
                 } else {
@@ -1381,7 +1499,7 @@ function Serializer(definition, options) {
                         for (;;) {
                             buffer[bufferOffset] = value[valueOffset]
                             valueOffset += increment
-                            bytesWritten++
+                            this.length++
                             bufferOffset++
                             if (valueOffset ==  terminal) break
                             if (bufferOffset == bufferEnd) break PATTERN
@@ -1392,7 +1510,7 @@ function Serializer(definition, options) {
                         for (;;) {
                             buffer[bufferOffset] = Math.floor(value / Math.pow(256, valueOffset)) & 0xff
                             valueOffset += increment
-                            bytesWritten++
+                            this.length++
                             bufferOffset++
                             if (valueOffset ==  terminal) break
                             if (bufferOffset ==  bufferEnd) break PATTERN
@@ -1440,8 +1558,8 @@ function Serializer(definition, options) {
                 // The pattern is set to null, our terminal condition, before the callback,
                 // because the callback may specify a subsequent packet to parse.
                 } else if (++patternIndex ==  pattern.length) {
-                    if (_callback != null) {
-                        _callback.call(context, serializer)
+                    if (callback != null) {
+                        callback.call(context, serializer)
                     }
                 } else {
 
@@ -1460,7 +1578,7 @@ function Serializer(definition, options) {
         }
     }
 
-    classify.call(definition.extend(this), serialize, offsetsOf, _length, _sizeOf)
+    classify.call(definition.extend(this), serialize, offsetsOf, _sizeOf)
 }
 
 function createParser (options) {
