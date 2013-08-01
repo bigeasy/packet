@@ -1300,8 +1300,11 @@ function Serializer(definition, options) {
     // Return the count of bytes that will be written by the serializer for the
     // current pattern and variables.
     function _sizeOf () {
-        var patternIndex = 0, field = pattern[patternIndex], repeat = field.repeat,
-                outgoingIndex = 0, size = 0
+        var patternIndex = 0
+        var field = pattern[patternIndex]
+        var repeat = field.repeat
+        var outgoingIndex = 0
+        var size = 0
         while (field) {
             if (field.terminator) {
                 if (field.repeat == Number.MAX_VALUE) {
