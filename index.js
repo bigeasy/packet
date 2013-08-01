@@ -1,7 +1,8 @@
-var parse = require('./tokenizer').parse,
-        ieee754   = require('./ieee754'),
-        util = require('util'),
-        __slice = [].slice
+var parse   = require('./tokenizer').parse
+var ieee754 = require('./ieee754')
+var util    = require('util')
+
+var __slice = [].slice
 
 function classify () {
     var i, I, name
