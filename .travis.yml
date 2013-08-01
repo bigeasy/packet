@@ -1,20 +1,20 @@
 language: node_js
-
 node_js:
   - 0.10
-  - 0.8
-  - 0.6
-
 branches:
   only:
-    - master
-    - offset-of
-    - travis-ci
-
-# Not using `npm install --dev` because it is recursive. It will pull in the all
-# development dependencies for CoffeeScript. Way too much spew in the Travis CI
-# build output.
-
+  - master
+  - travis-ci
 before_install:
   - npm install
   - npm install istanbul coveralls
+before_script:
+  - "gem install travis-artifacts"
+after_success:
+  - "travis-artifacts upload --path coverage --target-path coverage/`echo $TRAVIS_REPO_SLUG | sed 's/[^\\/]\\+\\///'`/$TRAVIS_BUILD_ID/$TRAVIS_JOB_ID"
+env:
+  global:
+  - "ARTIFACTS_AWS_REGION=us-east-1"
+  - "ARTIFACTS_S3_BUCKET=bigeasy"
+  - secure: UkU/MzfrNlPh/yXS8fSKLb7o/xisdnC0C8XWgzrzeDN0WtgvJzkf/2LaxoqC7fG5zlsBCerfPyRpeq6ZKWuof2LeiMX5M26qJzRPWkMfGBzYvqOE394VGxTPx/oVmVFd2IGCbo3le+ZWGzq/eEziHpzD7BVDYnfSd4sX+e82Ahw=
+  - secure: q1vMZpXioJYeaPOihDeInrRWnjlqz3u5CpNCg4mQxNoDYNaBR6NDBeRv0pMAXF0JaStVcdMQQ5SvOGNA9enI925EfLKd2epboF+Z0kKQ7DzZ6ljtBAb2iUhQCCCVwXlBEIfL7bqcOdUNPCFEiV+MpH/SmDNm367xboaZhm2DY/I=
