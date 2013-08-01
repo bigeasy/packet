@@ -200,8 +200,12 @@ function Definition (packets, transforms, options) {
     }
 
     // this becomes precomple parser, and then we create precompile serializer
-    function precompile (pattern) {
+    function precompileParser (object) {
         if (!options.compile) return
+
+        var pattern = object.pattern
+        if (!pattern) throw new Error
+        console.log(pattern)
 
         function unsigned (source, variable, field, increment) {
             var little = field.endianness == 'l',
@@ -606,10 +610,10 @@ function Definition (packets, transforms, options) {
         parser.pop()
 
         // todo: needs to become an object.
-        pattern.builder = precompiler('parser', pattern, parser)
+        object.createParser = precompiler('parser', pattern, parser)
     }
 
-    function precompileSerializer (pattern) {
+    function precompileSerializer (object) {
         var method = new Source
         var section = new Source
         var offset = 0
@@ -617,6 +621,7 @@ function Definition (packets, transforms, options) {
         var sums = []
         var lengths = []
         var incrementalIndex = 0
+        var pattern = object.pattern
 
         function unsigned (variable, field, increment) {
             var source = new Source
@@ -705,17 +710,17 @@ function Definition (packets, transforms, options) {
         var serializer = ('return ' + method.define('buffer', 'start', 'end')).split(/\n/)
         serializer.pop()
 
-        pattern.createSerializer = precompiler('serializer', pattern, serializer)
+        object.createSerializer = precompiler('serializer', pattern, serializer)
     }
 
     function compile (pattern) {
-        var parsed = parse(pattern)
-        parsed.hasAlternation = parsed.some(function (field) { return field.alternation })
-        precompile(parsed)
-        if (canCompile(parsed)) {
-            precompileSerializer(parsed)
+        var object = { pattern: parse(pattern) }
+        object.hasAlternation = object.pattern.some(function (field) { return field.alternation })
+        precompileParser(object)
+        if (canCompile(object.pattern)) {
+            precompileSerializer(object)
         }
-        return parsed
+        return object
     }
 
     function packet (name, pattern) {
@@ -776,8 +781,9 @@ function Definition (packets, transforms, options) {
 // Construct a `Parser` around the given `definition`.
 function Parser (definition, options) {
     var increment, valueOffset, terminal, terminated, terminator, value,
-    skipping, repeat, step, index, arrayed,
-    pattern, patternIndex, context = options.context || this, fields, _callback
+    skipping, repeat, step, index, arrayed, pattern, patternIndex, fields,
+    compiled
+    var context = options.context || this
 
     options = (options || { directory: './t/generated'})
 
@@ -788,10 +794,9 @@ function Parser (definition, options) {
 
     //
     function extract (nameOrPattern, callback) {
-        var _pattern = definition.pattern(nameOrPattern)
+        compiled = definition.pattern(nameOrPattern)
         patternIndex = 0
-        _callback = callback
-        pattern = _pattern.slice()
+        pattern = compiled.pattern.slice()
         fields = {}
         this.length = 0
 
@@ -800,11 +805,12 @@ function Parser (definition, options) {
             return this.parse(buffer, start, end)
         }
 
-        var __callback = callback
-        if (_pattern.builder) {
-            this.parse = _pattern.builder(incremental, pattern, definition.transforms, ieee754, {}, __callback)
+        // todo: if you don't want me to create a parser, fine, but that must
+        // means that createParser fails immediately.
+        if (compiled.createParser) {
+            this.parse = compiled.createParser(incremental, pattern, definition.transforms, ieee754, {}, callback)
         } else {
-            this.parse = createGenericParser(options, definition, pattern, 0, __callback, {}, true)
+            this.parse = createGenericParser(options, definition, pattern, 0, callback, {}, true)
         }
     }
 
@@ -1097,10 +1103,11 @@ module.exports.Parser = Parser
 
 // Construct a `Serializer` around the given `definition`.
 function Serializer(definition, options) {
-    var serializer = this, terminal, valueOffset, increment, array, value,
-    skipping, repeat, outgoing, index, terminated, terminates, pattern,
-    incoming,
-    patternIndex, context = options.context || this, padding, callback
+    var serializer = this
+    var context = options.context || this
+    var compiled, terminal, valueOffset, increment, array, value, skipping,
+    repeat, outgoing, index, terminated, terminates, pattern, incoming,
+    patternIndex, padding, callback
 
     // Prepare the parser for the next field in the pattern.
     function nextField () {
@@ -1226,14 +1233,14 @@ function Serializer(definition, options) {
         var shiftable = __slice.call(arguments)
 
         // todo: should return an object, flags and the pattern to slice.
-        var prototype = definition.pattern(shiftable.shift())
+        compiled = definition.pattern(shiftable.shift())
 
         var field, value, alternate, i, I, j, J, alternates
 
         callback = typeof shiftable[shiftable.length - 1] == 'function' ? shiftable.pop() : void(0)
 
         patternIndex = 0
-        alternates = prototype.slice()
+        alternates = compiled.pattern.slice()
         this.length = 0
 
         // Positial arrays go through once to resolve alternation for the sake of
@@ -1245,7 +1252,7 @@ function Serializer(definition, options) {
 
         // Determine alternation now, creating a pattern with the alternation
         // resolved.
-        if (prototype.hasAlternation) {
+        if (compiled.hasAlternation) {
             for (i = 0; i < alternates.length; i++) {
                 field = alternates[i]
                 // The name of value to test for alternation is either the first name in
@@ -1289,8 +1296,8 @@ function Serializer(definition, options) {
             pattern = alternates
         }
 
-        if (canCompile(prototype)) {
-            this.write = prototype.createSerializer(null, prototype, definition.transforms, ieee754, incoming, callback)
+        if (canCompile(compiled.pattern)) {
+            this.write = compiled.createSerializer(null, compiled.pattern, definition.transforms, ieee754, incoming, callback)
             return
         }
 
