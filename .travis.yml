@@ -1,20 +1,23 @@
 language: node_js
 node_js:
-  - 0.10
+- 0.1
 branches:
   only:
   - master
   - travis-ci
 before_install:
-  - npm install
-  - npm install istanbul coveralls
+- npm install
+- npm install istanbul coveralls
 before_script:
-  - "gem install travis-artifacts"
+- gem install travis-artifacts
 after_success:
-  - "travis-artifacts upload --path coverage --target-path coverage/`echo $TRAVIS_REPO_SLUG | sed 's/[^\\/]\\+\\///'`/$TRAVIS_BUILD_ID/$TRAVIS_JOB_ID"
+- travis-artifacts upload --path coverage --target-path coverage/`echo $TRAVIS_REPO_SLUG
+  | sed 's/[^\/]\+\///'`/$TRAVIS_BUILD_ID/$TRAVIS_JOB_ID
 env:
   global:
-  - "ARTIFACTS_AWS_REGION=us-east-1"
-  - "ARTIFACTS_S3_BUCKET=bigeasy"
+  - ARTIFACTS_AWS_REGION=us-east-1
+  - ARTIFACTS_S3_BUCKET=bigeasy
   - secure: UkU/MzfrNlPh/yXS8fSKLb7o/xisdnC0C8XWgzrzeDN0WtgvJzkf/2LaxoqC7fG5zlsBCerfPyRpeq6ZKWuof2LeiMX5M26qJzRPWkMfGBzYvqOE394VGxTPx/oVmVFd2IGCbo3le+ZWGzq/eEziHpzD7BVDYnfSd4sX+e82Ahw=
   - secure: q1vMZpXioJYeaPOihDeInrRWnjlqz3u5CpNCg4mQxNoDYNaBR6NDBeRv0pMAXF0JaStVcdMQQ5SvOGNA9enI925EfLKd2epboF+Z0kKQ7DzZ6ljtBAb2iUhQCCCVwXlBEIfL7bqcOdUNPCFEiV+MpH/SmDNm367xboaZhm2DY/I=
+  - secure: TxBQrjQCZXM8ZYbPa1cKn9+n971j+icdlozOObLKhTMXNd5XonLcn8tw5SoUJvEvV2SJ0Vqswl/Vpx4GfSrBHmuE1/wMjedNUeAYC9ug+pqPMOXn9jS7ezulVEAoomwaUAhJPE0HGdwFdvauYCX26wUCnjRHrTlPG2mkHCRcFkI=
+  - secure: CJ/8ds56wF1vcjprbwW6orp0wis9a8G5LL9PdR0YPNhZCQIj31r2BamQTNGqpOEHJ/mUGJ6xkliKGGyePCPa0n+Ztm3DAH28njj5Pl8OQrDs9n4vx6/OBseVonCB8SvXgY+hAp3L3bqnzXddzHIVPXodDY+xkBCRnQ8uXIe+QB8=
