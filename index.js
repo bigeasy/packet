@@ -717,7 +717,6 @@ function Definition (packets, transforms, options) {
 
     function compile (pattern) {
         var object = { pattern: parse(pattern) }
-        object.hasAlternation = object.pattern.some(function (field) { return field.alternation })
         object.createParser = compileParser(object)
         if (canCompile(object.pattern)) {
             object.createSerializer = compileSerializer(object)
@@ -1087,159 +1086,14 @@ module.exports.Parser = Parser
 function Serializer(definition, options) {
     var serializer = this
     var context = options.context || this
-    var compiled, terminal, valueOffset, increment, array, value, skipping,
-    repeat, outgoing, index, terminated, terminates, pattern, incoming,
-    patternIndex, padding, callback
+    var compiled, incoming
 
-    // Prepare the parser for the next field in the pattern.
-    function nextField () {
-        var field  = pattern[patternIndex]
-        repeat       = field.repeat
-        terminated  = ! field.terminator
-        terminates  = ! terminated
-        index       = 0
-        padding     = null
-
-        // Can't I keep separate indexes? Do I need that zero?
-        if (field.endianness ==  'x') {
-            if (field.padding != null)
-                padding = field.padding
-        }
-    }
-
-    // Prepare the parser to serialize the next value to the stream. It
-    // initializes Initialize the next field value to serialize. In the case of an
-    // arrayed value, we will use the next value in the array. This method will
-    // adjust the pattern for alteration. It will pack a bit packed integer. It
-    // will covert the field to a byte array for floats and signed negative
-    // numbers.
-    function nextValue () {
-        var i, I, packing, count, length, pack, unpacked, range, mask
-        var field = pattern[patternIndex]
-
-        // If we are skipping without filling we note the count of bytes to skip,
-        // otherwise we prepare our value.
-        if (field.endianness ==  'x' &&  padding == null) {
-            skipping = field.bytes
-        } else {
-            // If we're filling, we write the fill value.
-            if (padding != null) {
-                value = padding
-
-            // If the field is arrayed, we get the next value in the array.
-            } else if (field.arrayed) {
-                if (index == 0) {
-                    array = incoming[field.name]
-                    array  = definition.pipeline(false, field, array, true)
-                }
-                value = array[index]
-
-            // If the field is bit packed, we update the `outgoing` array of values
-            // by packing zero, one or more values into a single value. We will also
-            // check for bits filled with a pattern specified filler value and pack
-            // that in there as well.
-            } else if (packing = field.packing) {
-                count = 0, value = 0, length = field.bits
-                for (i = 0, I = packing.length; i < I; i++) {
-                    pack = packing[i]
-                    length -= pack.bits
-                    if (pack.endianness ==  'b' || pack.padding != null) {
-                        unpacked = pack.padding != null ? pack.padding : incoming[pack.name]
-                        if (pack.signed) {
-                            range = Math.pow(2, pack.bits - 1)
-                            if (!( (-range) <= unpacked &&  unpacked <= range - 1))
-                                throw new Error('value ' + unpacked + ' will not fit in ' + pack.bits + ' bits')
-                            if (unpacked < 0) {
-                                mask = range * 2 - 1
-                                unpacked = (~(- unpacked) + 1) & mask
-                            }
-                        }
-                        value += unpacked * Math.pow(2, length)
-                    }
-                }
-
-            // If the current field is a length encoded array, then the length of the
-            // current array value is the next value, otherwise, we have the simple
-            // case, the value is the current value.
-            } else {
-                if (field.lengthEncoding) {
-                    value = incoming[pattern[patternIndex + 1].name].length
-                    pattern[patternIndex + 1].repeat = value
-                } else {
-                    value = incoming[field.name]
-                }
-            }
-            // If the array is not an unsigned integer, we might have to convert it.
-            if (field.exploded) {
-                // Convert a float into its IEEE 754 representation.
-                if (field.type == 'f') {
-                    if (field.bits == 32)
-                        value = ieee754.toIEEE754Single(value).reverse()
-                    else
-                        value = ieee754.toIEEE754Double(value).reverse()
-
-                // Convert a signed integer into its two's compliment representation.
-                } else if (field.signed) {
-                    var copy = Math.abs(value)
-                    var bytes = []
-                    // FIXME If the value is greater than zero, we can just change the
-                    // pattern to packed.
-                    for (i = 0, I = field.bytes; i < I; i++) {
-                        var pow = Math.pow(256, i)
-                        bytes[i] = Math.floor(copy / pow % (pow * 256))
-                    }
-                    if (value < 0) {
-                        var carry = 1
-                        for (i = 0, I = bytes.length; i < I; i++) {
-                            bytes[i] = (~bytes[i] & 0xff) + carry
-                            if (bytes[i] ==  256) bytes[i] = 0
-                            else carry = 0
-                        }
-                    }
-                    value = bytes
-                }
-            }
-            var little = field.endianness == 'l'
-            var bytes = field.bytes
-            terminal = little  ? bytes : -1
-            valueOffset = little ? 0 : bytes - 1
-            increment = little ? 1 : -1
-            if (field.pipeline && !field.arrayed) {
-                value  = definition.pipeline(false, field, value, true)
-            }
-        }
-    }
-
-    function serialize () {
-        // TODO: We're copying because of positional parameters and alternation.
-        var shiftable = __slice.call(arguments)
-
-        // todo: should return an object, flags and the pattern to slice.
-        compiled = definition.pattern(shiftable.shift())
-
-        var field, value, alternate, i, I, j, J, alternates
-
-        callback = typeof shiftable[shiftable.length - 1] == 'function' ? shiftable.pop() : void(0)
-
-        patternIndex = 0
-        alternates = compiled.pattern.slice()
-        this.length = 0
-
-        // Positial arrays go through once to resolve alternation for the sake of
-        // the naming. This duplication is the price you pay for invoking with
-        // positional arrays, it can't be avoided.
-        incoming = shiftable.shift()
-
-        outgoing = {}, pattern = []
-
-        // Determine alternation now, creating a pattern with the alternation
-        // resolved.
-        if (compiled.hasAlternation) {
-            for (i = 0; i < alternates.length; i++) {
-                field = alternates[i]
-                // The name of value to test for alternation is either the first name in
-                // the alternation or else if the first value is bit packed, the first
-                // name in the packed alternates.
+    function resolveAlternation (compiled, incoming) {
+        if (compiled.pattern.some(function (field) { return field.alternation })) {
+            var pattern = []
+            var alternates = compiled.pattern.slice()
+            for (var i = 0; i < alternates.length; i++) {
+                var field = alternates[i]
                 if (field.alternation) {
                     field = field.alternation[0]
                     if (field.pattern[0].packing) {
@@ -1255,11 +1109,11 @@ function Serializer(definition, options) {
                             }
                         }
                     }
-                    value = incoming[field.name]
+                    var value = incoming[field.name]
 
                     field = alternates[i]
                     for (j = 0, J = field.alternation.length; j < J; j++) {
-                        alternate = field.alternation[j]
+                        var alternate = field.alternation[j]
                         if (alternate.write.minimum <= value &&  value <= alternate.write.maximum) {
                             break
                         }
@@ -1274,21 +1128,41 @@ function Serializer(definition, options) {
                 }
                 pattern.push(field)
             }
+            return pattern
         } else {
-            pattern = alternates
+            return compiled.pattern
         }
+    }
+
+    function serialize () {
+        var shiftable = __slice.call(arguments)
+
+        compiled = definition.pattern(shiftable.shift())
+
+        var callback = typeof shiftable[shiftable.length - 1] == 'function' ? shiftable.pop() : void(0)
+
+        this.length = 0
+
+        // Positial arrays go through once to resolve alternation for the sake of
+        // the naming. This duplication is the price you pay for invoking with
+        // positional arrays, it can't be avoided.
+        incoming = shiftable.shift()
+
+        // Determine alternation now, creating a pattern with the alternation
+        // resolved.
 
         if (canCompile(compiled.pattern)) {
             this.write = compiled.createSerializer(null, compiled.pattern, definition.transforms, ieee754, incoming, callback)
             return
         }
 
-        this.write = createGenericWriter()
+        this.write = createGenericWriter(compiled, incoming, 0, callback)
     }
 
     // Return the count of bytes that will be written by the serializer for the
     // current pattern and variables.
     function _sizeOf () {
+        var pattern = resolveAlternation(compiled, incoming)
         var patternIndex = 0
         var field = pattern[patternIndex]
         var repeat = field.repeat
@@ -1313,8 +1187,12 @@ function Serializer(definition, options) {
 
     function offsetsOf (buffer, offset) {
         if (Array.isArray(buffer)) buffer = new Buffer(buffer)
-        var patternIndex = 0, field = pattern[patternIndex],
-                output, offset = offset == null ? 0 : offset, record
+
+        var pattern = resolveAlternation(compiled, incoming)
+        var patternIndex = 0
+        var field = pattern[patternIndex]
+        var offset = offset == null ? 0 : offset
+        var output, record
 
         function dump (record) {
             if (buffer) {
@@ -1323,10 +1201,9 @@ function Serializer(definition, options) {
         }
 
         function detokenize (arrayed, count) {
-              var scalar = (field.signed && field.type != 'f' ? '-' : '') +
-                                          field.endianness +
-                                          field.bits +
-                                        (field.type == 'n' ? '' : field.type)
+             var scalar = (field.signed && field.type != 'f' ? '-' : '') +
+                           field.endianness + field.bits +
+                          (field.type == 'n' ? '' : field.type)
             if (field.padding) {
                 var buffer = new Buffer(field.bits / 8), pad = field.padding
                 for (var i = buffer.length -1; i != -1; i--) {
@@ -1469,7 +1346,130 @@ function Serializer(definition, options) {
         return output
     }
 
-    function createGenericWriter () {
+    function createGenericWriter (compiled, incoming, patternIndex, callback) {
+        var pattern = resolveAlternation(compiled, incoming)
+        var terminal, valueOffset, increment, array, value, skipping, repeat,
+        outgoing, index, terminated, terminates, pattern, padding, callback
+
+        // Prepare the parser for the next field in the pattern.
+        function nextField () {
+            var field  = pattern[patternIndex]
+            repeat       = field.repeat
+            terminated  = ! field.terminator
+            terminates  = ! terminated
+            index       = 0
+            padding     = null
+
+            // Can't I keep separate indexes? Do I need that zero?
+            if (field.endianness ==  'x') {
+                if (field.padding != null)
+                    padding = field.padding
+            }
+        }
+
+        // Prepare the parser to serialize the next value to the stream. It
+        // initializes Initialize the next field value to serialize. In the case of an
+        // arrayed value, we will use the next value in the array. This method will
+        // adjust the pattern for alteration. It will pack a bit packed integer. It
+        // will covert the field to a byte array for floats and signed negative
+        // numbers.
+        function nextValue () {
+            var i, I, packing, count, length, pack, unpacked, range, mask
+            var field = pattern[patternIndex]
+
+            // If we are skipping without filling we note the count of bytes to skip,
+            // otherwise we prepare our value.
+            if (field.endianness ==  'x' &&  padding == null) {
+                skipping = field.bytes
+            } else {
+                // If we're filling, we write the fill value.
+                if (padding != null) {
+                    value = padding
+
+                // If the field is arrayed, we get the next value in the array.
+                } else if (field.arrayed) {
+                    if (index == 0) {
+                        array = incoming[field.name]
+                        array  = definition.pipeline(false, field, array, true)
+                    }
+                    value = array[index]
+
+                // If the field is bit packed, we update the `outgoing` array of values
+                // by packing zero, one or more values into a single value. We will also
+                // check for bits filled with a pattern specified filler value and pack
+                // that in there as well.
+                } else if (packing = field.packing) {
+                    count = 0, value = 0, length = field.bits
+                    for (i = 0, I = packing.length; i < I; i++) {
+                        pack = packing[i]
+                        length -= pack.bits
+                        if (pack.endianness ==  'b' || pack.padding != null) {
+                            unpacked = pack.padding != null ? pack.padding : incoming[pack.name]
+                            if (pack.signed) {
+                                range = Math.pow(2, pack.bits - 1)
+                                if (!( (-range) <= unpacked &&  unpacked <= range - 1))
+                                    throw new Error('value ' + unpacked + ' will not fit in ' + pack.bits + ' bits')
+                                if (unpacked < 0) {
+                                    mask = range * 2 - 1
+                                    unpacked = (~(- unpacked) + 1) & mask
+                                }
+                            }
+                            value += unpacked * Math.pow(2, length)
+                        }
+                    }
+
+                // If the current field is a length encoded array, then the length of the
+                // current array value is the next value, otherwise, we have the simple
+                // case, the value is the current value.
+                } else {
+                    if (field.lengthEncoding) {
+                        value = incoming[pattern[patternIndex + 1].name].length
+                        pattern[patternIndex + 1].repeat = value
+                    } else {
+                        value = incoming[field.name]
+                    }
+                }
+                // If the array is not an unsigned integer, we might have to convert it.
+                if (field.exploded) {
+                    // Convert a float into its IEEE 754 representation.
+                    if (field.type == 'f') {
+                        if (field.bits == 32)
+                            value = ieee754.toIEEE754Single(value).reverse()
+                        else
+                            value = ieee754.toIEEE754Double(value).reverse()
+
+                    // Convert a signed integer into its two's compliment representation.
+                    } else if (field.signed) {
+                        var copy = Math.abs(value)
+                        var bytes = []
+                        // FIXME If the value is greater than zero, we can just change the
+                        // pattern to packed.
+                        for (i = 0, I = field.bytes; i < I; i++) {
+                            var pow = Math.pow(256, i)
+                            bytes[i] = Math.floor(copy / pow % (pow * 256))
+                        }
+                        if (value < 0) {
+                            var carry = 1
+                            for (i = 0, I = bytes.length; i < I; i++) {
+                                bytes[i] = (~bytes[i] & 0xff) + carry
+                                if (bytes[i] ==  256) bytes[i] = 0
+                                else carry = 0
+                            }
+                        }
+                        value = bytes
+                    }
+                }
+                var little = field.endianness == 'l'
+                var bytes = field.bytes
+                terminal = little  ? bytes : -1
+                valueOffset = little ? 0 : bytes - 1
+                increment = little ? 1 : -1
+                if (field.pipeline && !field.arrayed) {
+                    value  = definition.pipeline(false, field, value, true)
+                }
+            }
+        }
+
         nextField()
         nextValue()
 
