@@ -145,7 +145,7 @@ Source.prototype.consume = function (prefix, source) {
 Source.prototype.hoist = function () {
     __slice.call(arguments).forEach(function (variable) {
         if (!~this._hoisted.indexOf(variable)) this._hoisted.push(variable)
-    }.bind(this))
+    }, this)
 }
 
 Source.prototype.block = function (source) {
@@ -157,7 +157,7 @@ Source.prototype.block = function (source) {
         line = line.substring(spaces).replace(/\s+$/, '')
         if (/\S/.test(line)) this.line(line)
         else this.line(line)
-    }.bind(this))
+    }, this)
 }
 
 Source.prototype.replace = function () {
@@ -776,28 +776,14 @@ function Definition (packets, transforms, options) {
     return classify.call(this, packet, transform, pattern, pipeline, extend)
 }
 
-//#### Parser
-
-// Construct a `Parser` around the given `definition`.
 function Parser (definition, options) {
-    var increment, valueOffset, terminal, terminated, terminator, value,
-    skipping, repeat, step, index, arrayed, pattern, patternIndex, fields,
-    compiled
-    var context = options.context || this
+    options = options || {}
 
-    options = (options || { directory: './t/generated'})
-
-    // Sets the next packet to extract from the stream by providing a packet name
-    // defined by the `packet` function or else a packet pattern to parse. The
-    // `callback` will be invoked when the packet has been extracted from the
-    // buffer or buffers given to `parse`.
-
-    //
     function extract (nameOrPattern, callback) {
-        compiled = definition.pattern(nameOrPattern)
-        patternIndex = 0
-        pattern = compiled.pattern.slice()
-        fields = {}
+        var compiled = definition.pattern(nameOrPattern)
+        var patternIndex = 0
+        var pattern = compiled.pattern.slice()
+        var fields = {}
         this.length = 0
 
         function incremental (buffer, start, end, pattern, index, object, callback) {
@@ -817,10 +803,10 @@ function Parser (definition, options) {
     return classify.call(definition.extend(this), extract)
 }
 
-function createGenericParser (options, definition, pattern, patternIndex, _callback, fields) {
+function createGenericParser (options, definition, pattern, patternIndex, callback, fields) {
+    var context = options.context || this
     var increment, valueOffset, terminal, terminated, terminator, value,
-    skipping, repeat, step, index, arrayed,
-    pattern, patternIndex, context = options.context || this, fields, _callback
+    skipping, repeat, step, index, arrayed, pattern, patternIndex, fields
     //#### parser.parse(buffer[, start][, length])
     // The `parse` method reads from the buffer, returning when the current pattern
     // is read, or the end of the buffer is reached.
@@ -1074,7 +1060,7 @@ function createGenericParser (options, definition, pattern, patternIndex, _callb
                 if (++patternIndex == pattern.length) {
                     pattern = null
                     this.parse = null
-                      _callback.call(context, fields)
+                    callback.call(context, fields)
                     if (this.parse) {
                         bufferOffset += this.parse(buffer, bufferOffset, bufferEnd)
                     }
