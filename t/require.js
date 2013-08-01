@@ -1,4 +1,4 @@
-module.exports = function (pattern, source) {
+module.exports = function (type, pattern, source) {
     var path = require('path'), builder = []
     builder.push('module.exports = function (incremental, pattern, transforms, ieee754, callback) {')
     builder.push.apply(builder, source.map(function (line) { return '  ' + line }))
@@ -36,7 +36,7 @@ module.exports = function (pattern, source) {
         return scalar
     }
 
-    var name = pattern.map(namify).join('.')
+    var name = type + '.' + pattern.map(namify).join('.')
 
     console.log(name)
     var file = path.join(__dirname, 'generated', name + '.js')

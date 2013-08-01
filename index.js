@@ -181,11 +181,12 @@ function Definition (packets, transforms, options) {
     options = options || {}
     if (!('compile' in options)) options.compile = true
 
-    var precompiler = options.precompiler || function (pattern, source) {
+    var precompiler = options.precompiler || function (type, pattern, source) {
         return Function.call(Function,
             'incremental', 'pattern', 'transforms', 'ieee754', 'callback', source.join('\n'))
     }
 
+    // this becomes precomple parser, and then we create precompile serializer
     function precompile (pattern) {
         if (!options.compile) return
 
@@ -592,7 +593,7 @@ function Definition (packets, transforms, options) {
         var parser = ('return ' + method.define('buffer', 'start', 'end')).split(/\n/)
         parser.pop()
 
-        pattern.builder = precompiler(pattern, parser)
+        pattern.builder = precompiler('parser', pattern, parser)
     }
 
     function compile (pattern) {
