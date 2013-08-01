@@ -199,13 +199,16 @@ function Definition (packets, transforms, options) {
             'incremental', 'pattern', 'transforms', 'ieee754', 'object', 'callback', source.join('\n'))
     }
 
-    // this becomes precomple parser, and then we create precompile serializer
-    function precompileParser (object) {
-        if (!options.compile) return
+    function uncompiledParser (incremental, pattern, transforms, ieee754, object, callback) {
+        return function (buffer, start, end) {
+            return incremental.call(this, buffer, start, end, pattern, 0, object, callback)
+        }
+    }
+
+    function compileParser (object) {
+        if (!options.compile) return uncompiledParser
 
         var pattern = object.pattern
-        if (!pattern) throw new Error
-        console.log(pattern)
 
         function unsigned (source, variable, field, increment) {
             var little = field.endianness == 'l',
@@ -609,11 +612,10 @@ function Definition (packets, transforms, options) {
         var parser = ('return ' + method.define('buffer', 'start', 'end')).split(/\n/)
         parser.pop()
 
-        // todo: needs to become an object.
-        object.createParser = precompiler('parser', pattern, parser)
+        return precompiler('parser', pattern, parser)
     }
 
-    function precompileSerializer (object) {
+    function compileSerializer (object) {
         var method = new Source
         var section = new Source
         var offset = 0
@@ -710,15 +712,15 @@ function Definition (packets, transforms, options) {
         var serializer = ('return ' + method.define('buffer', 'start', 'end')).split(/\n/)
         serializer.pop()
 
-        object.createSerializer = precompiler('serializer', pattern, serializer)
+        return precompiler('serializer', pattern, serializer)
     }
 
     function compile (pattern) {
         var object = { pattern: parse(pattern) }
         object.hasAlternation = object.pattern.some(function (field) { return field.alternation })
-        precompileParser(object)
+        object.createParser = compileParser(object)
         if (canCompile(object.pattern)) {
-            precompileSerializer(object)
+            object.createSerializer = compileSerializer(object)
         }
         return object
     }
@@ -791,13 +793,7 @@ function Parser (definition, options) {
             return this.parse(buffer, start, end)
         }
 
-        // todo: if you don't want me to create a parser, fine, but that must
-        // means that createParser fails immediately.
-        if (compiled.createParser) {
-            this.parse = compiled.createParser(incremental, pattern, definition.transforms, ieee754, {}, callback)
-        } else {
-            this.parse = createGenericParser(options, definition, pattern, 0, callback, {}, true)
-        }
+        this.parse = compiled.createParser(incremental, pattern, definition.transforms, ieee754, {}, callback)
     }
 
     return classify.call(definition.extend(this), extract)
