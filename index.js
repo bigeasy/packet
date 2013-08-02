@@ -8,7 +8,6 @@ function canCompileSerializer (pattern) {
     return pattern.every(function (part) {
         return !/^[lx]$/.test(part.endianness)
             && !/^[fa]$/.test(part.type)
-            && part.bytes == 1
             && !part.arrayed
             && !part.signed
             && !part.packing
@@ -657,10 +656,13 @@ function Definition (packets, transforms, options) {
             if (bite == 0) {
                 source.line('buffer[' + inc() + '] = ' + variable + ' & 0xff')
             } else {
+                source.hoist('value')
+                source.line('value = ' + variable)
                 while (bite != stop) {
                     if (bite == 0) {
+                        source.line('buffer[' + inc() + '] = value & 0xff')
                     } else {
-                        source.line('Math.floor(' + variable + ' / Math.pow(256)) + ' + bite)
+                        source.line('buffer[' + inc() + '] = (value >>> ' + (bite * 8) + ') & 0xff')
                     }
                     bite += direction
                 }
