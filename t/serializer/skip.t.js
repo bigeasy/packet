@@ -1,9 +1,7 @@
 #!/usr/bin/env node
-require('./proof')(2, function (createSerializer, equal, deepEqual, toArray) {
-    var serializer = createSerializer()
-    var buffer = [ 0xff, 0xff, 0xff, 0xff ]
-    serializer.serialize('x16, foo: b16', { foo: 1 })
-    serializer.write(buffer, 0, buffer.length)
-    equal(serializer.length, 4, 'bytes written')
-    deepEqual(buffer, [  0xff, 0xff, 0x00, 0x01 ], 'bytes')
+require('./proof')(6, function (serialize) {
+    serialize([ 0xff, 0xff, 0xaa, 0xaa ], 'x16, foo: b16', { foo: 1 }, 4, [ 0xff, 0xff, 0x00, 0x01 ],
+              'write a 16 bit integer after skipping 2 bytes')
+    serialize({ require: true }, [ 0xff, 0xff, 0xaa, 0xaa ], 'x16{0xaa55}, foo: b16', { foo: 1 }, 4, [ 0xaa, 0x55, 0x00, 0x01 ],
+              'write a 16 bit integer after skipping 2 bytes')
 })

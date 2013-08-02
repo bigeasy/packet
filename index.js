@@ -6,8 +6,7 @@ var __slice = [].slice
 
 function canCompileSerializer (pattern) {
     return pattern.every(function (part) {
-        return !/^[x]$/.test(part.endianness)
-            && !/^[a]$/.test(part.type)
+        return !/^[a]$/.test(part.type)
             && !part.arrayed
             && !part.packing
             && !part.alternation
@@ -652,6 +651,24 @@ function Definition (packets, transforms, options) {
                 if (increment) return 'start++'
                 if (offset++) return 'start + ' + (offset - 1)
                 return 'start'
+            }
+            if (field.endianness == 'x') {
+                if (field.padding == null) {
+                    if (increment) {
+                        source.line('start += ' + field.bytes)
+                        source.line()
+                    } else {
+                        offset += field.bytes
+                    }
+                    return source
+                } else {
+                    while (bite != stop) {
+                        source.line('buffer[' + inc() + '] = 0x' + ((field.padding >> (bite * 8)) & 0xff).toString(16))
+                        bite += direction
+                    }
+                    source.line()
+                    return source
+                }
             }
             if (bytes == 0) {
                 source.line('buffer[' + inc() + '] = ' + variable + ' & 0xff')
