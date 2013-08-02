@@ -9,7 +9,6 @@ function canCompileSerializer (pattern) {
         return !/^[lx]$/.test(part.endianness)
             && !/^[fa]$/.test(part.type)
             && !part.arrayed
-            && !part.signed
             && !part.packing
             && !part.alternation
             && !part.pipeline
