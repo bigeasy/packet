@@ -7,7 +7,7 @@ var __slice = [].slice
 function canCompileSerializer (pattern) {
     return pattern.every(function (part) {
         return !/^[x]$/.test(part.endianness)
-            && !/^[fa]$/.test(part.type)
+            && !/^[a]$/.test(part.type)
             && !part.arrayed
             && !part.packing
             && !part.alternation
@@ -288,6 +288,7 @@ function Definition (packets, transforms, options) {
                     bite += direction
                 }
                 source.consume(gather)
+                // todo: get rid of reverse
                 source.line(variable + ' ieee754.fromIEEE754' + size + '(value.reverse());')
             }
             return source
@@ -666,6 +667,36 @@ function Definition (packets, transforms, options) {
                     bite += direction
                 }
             }
+            return source
+        }
+
+        function floating (variable, field, increment) {
+            var little = field.endianness == 'l'
+            var suffix = little ? 'LE' : 'BE'
+            var bytes = field.bytes
+            var size = bytes == 4 ? options.buffersOnly ? 'Float' : 'Single' : 'Double'
+            var bite = little ? 0 : bytes - 1
+            var direction = little ? 1 : -1
+            var gather = new Source
+            var stop = little ? bytes : -1
+            var source = new Source
+            var line
+            function inc () {
+                if (increment) return 'start++'
+                if (offset++) return 'start + ' + (offset - 1)
+                return 'start'
+            }
+            source.hoist('value')
+            if (options.buffersOnly) {
+                source.line('buffer.write' + size + suffix + '(' + variable + ',' + offset + ', true)')
+            } else {
+                source.line('value = ieee754.toIEEE754' + size + '(' + variable + ')')
+                while (bite != stop) {
+                    source.line('buffer[' + inc() + '] = value[' + (bytes - bite - 1) + ']')
+                    bite += direction
+                }
+            }
+            source.line()
             return source
         }
 
@@ -1122,9 +1153,9 @@ function Serializer(definition, options) {
     var context = options.context || this
     var compiled, incoming
 
-    function resolveAlternation (compiled, incoming) {
-        if (compiled.pattern.some(function (field) { return field.alternation })) {
-            var pattern = []
+    function resolveAlternation (pattern, incoming) {
+        if (pattern.some(function (field) { return field.alternation })) {
+            var resolved = []
             var alternates = compiled.pattern.slice()
             for (var i = 0; i < alternates.length; i++) {
                 var field = alternates[i]
@@ -1160,11 +1191,11 @@ function Serializer(definition, options) {
                     alternates.splice.apply(alternates, [ i--, 1 ].concat(alternate.pattern))
                     continue
                 }
-                pattern.push(field)
+                resolved.push(field)
             }
-            return pattern
+            return resolved
         } else {
-            return compiled.pattern
+            return pattern
         }
     }
 
@@ -1177,25 +1208,24 @@ function Serializer(definition, options) {
 
         this.length = 0
 
-        // Positial arrays go through once to resolve alternation for the sake of
-        // the naming. This duplication is the price you pay for invoking with
-        // positional arrays, it can't be avoided.
         incoming = shiftable.shift()
 
-        // Determine alternation now, creating a pattern with the alternation
-        // resolved.
+        function incremental (buffer, start, end, pattern, patternIndex, object, callback) {
+            this.write = createGenericWriter(pattern.slice(patternIndex), object, callback)
+            this.write(buffer, start, end)
+        }
 
         if (canCompileSerializer(compiled.pattern)) {
-            this.write = compiled.createSerializer(null, compiled.pattern, definition.transforms, ieee754, incoming, callback)
+            this.write = compiled.createSerializer(incremental, compiled.pattern, definition.transforms, ieee754, incoming, callback)
             return
         }
 
-        this.write = createGenericWriter(compiled, incoming, 0, callback)
+        this.write = createGenericWriter(compiled.pattern, incoming, callback)
     }
 
     function _sizeOf () {
         if (compiled.sizeOf) return compiled.sizeOf(incoming)
-        var pattern = resolveAlternation(compiled, incoming)
+        var pattern = resolveAlternation(compiled.pattern, incoming)
         var patternIndex = 0
         var field = pattern[patternIndex]
         var repeat = field.repeat
@@ -1221,7 +1251,7 @@ function Serializer(definition, options) {
     function offsetsOf (buffer, offset) {
         if (Array.isArray(buffer)) buffer = new Buffer(buffer)
 
-        var pattern = resolveAlternation(compiled, incoming)
+        var pattern = resolveAlternation(compiled.pattern, incoming)
         var patternIndex = 0
         var field = pattern[patternIndex]
         var offset = offset == null ? 0 : offset
@@ -1379,10 +1409,13 @@ function Serializer(definition, options) {
         return output
     }
 
-    function createGenericWriter (compiled, incoming, patternIndex, callback) {
-        var pattern = resolveAlternation(compiled, incoming)
+    function createGenericWriter (pattern, incoming, callback) {
+        pattern = resolveAlternation(pattern, incoming)
+
         var terminal, valueOffset, increment, array, value, skipping, repeat,
         outgoing, index, terminated, terminates, pattern, padding, callback
+
+        var patternIndex = 0
 
         // Prepare the parser for the next field in the pattern.
         function nextField () {
