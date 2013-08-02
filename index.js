@@ -6,7 +6,7 @@ var __slice = [].slice
 
 function canCompileSerializer (pattern) {
     return pattern.every(function (part) {
-        return !/^[lx]$/.test(part.endianness)
+        return !/^[x]$/.test(part.endianness)
             && !/^[fa]$/.test(part.type)
             && !part.arrayed
             && !part.packing
@@ -652,7 +652,7 @@ function Definition (packets, transforms, options) {
                 if (offset++) return 'start + ' + (offset - 1)
                 return 'start'
             }
-            if (bite == 0) {
+            if (bytes == 0) {
                 source.line('buffer[' + inc() + '] = ' + variable + ' & 0xff')
             } else {
                 source.hoist('value')
