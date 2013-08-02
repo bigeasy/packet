@@ -4,7 +4,20 @@ var util    = require('util')
 
 var __slice = [].slice
 
-function canCompile (pattern) {
+function canCompileSerializer (pattern) {
+    return pattern.every(function (part) {
+        return !/^[lx]$/.test(part.endianness)
+            && !/^[fa]$/.test(part.type)
+            && part.bytes == 1
+            && !part.arrayed
+            && !part.signed
+            && !part.packing
+            && !part.alternation
+            && !part.pipeline
+    })
+}
+
+function canCompileSizeOf (pattern) {
     return pattern.every(function (part) {
         return !/^[lx]$/.test(part.endianness)
             && !/^[fa]$/.test(part.type)
@@ -188,17 +201,20 @@ Source.prototype.toString = function () {
     }
 }
 
+var parameters = [ 'incremental', 'pattern', 'transforms', 'ieee754', 'object', 'callback' ]
+
 function Definition (packets, transforms, options) {
     packets = Object.create(packets)
     this.transforms = transforms = Object.create(transforms)
     options = options || {}
     if (!('compile' in options)) options.compile = true
 
-    var precompiler = options.precompiler || function (type, pattern, source) {
-        return Function.call(Function,
-            'incremental', 'pattern', 'transforms', 'ieee754', 'object', 'callback', source.join('\n'))
+    var precompiler = options.precompiler || function (type, pattern, parameters, source) {
+        return Function.apply(Function, parameters.concat(source.join('\n')))
     }
 
+    // we can't disable compilation anymore. compiled sizeof is not going to
+    // have a fallback.
     function uncompiledParser (incremental, pattern, transforms, ieee754, object, callback) {
         return function (buffer, start, end) {
             return incremental.call(this, buffer, start, end, pattern, 0, object, callback)
@@ -612,7 +628,7 @@ function Definition (packets, transforms, options) {
         var parser = ('return ' + method.define('buffer', 'start', 'end')).split(/\n/)
         parser.pop()
 
-        return precompiler('parser', pattern, parser)
+        return precompiler('parser', pattern, parameters, parser)
     }
 
     function compileSerializer (object) {
@@ -712,14 +728,31 @@ function Definition (packets, transforms, options) {
         var serializer = ('return ' + method.define('buffer', 'start', 'end')).split(/\n/)
         serializer.pop()
 
-        return precompiler('serializer', pattern, serializer)
+        return precompiler('serializer', pattern, parameters, serializer)
+    }
+
+    function compileSizeOf (object) {
+        var pattern = object.pattern
+
+        var fixed = 0
+
+        function unravel (field, index) {
+            fixed += field.bytes * field.repeat
+        }
+
+        pattern.forEach(unravel)
+
+        return precompiler('sizeOf', pattern, [ 'object' ], [ 'return ' + fixed ])
     }
 
     function compile (pattern) {
         var object = { pattern: parse(pattern) }
         object.createParser = compileParser(object)
-        if (canCompile(object.pattern)) {
+        if (canCompileSerializer(object.pattern)) {
             object.createSerializer = compileSerializer(object)
+        }
+        if (canCompileSizeOf(object.pattern)) {
+            object.sizeOf = compileSizeOf(object)
         }
         return object
     }
@@ -1151,7 +1184,7 @@ function Serializer(definition, options) {
         // Determine alternation now, creating a pattern with the alternation
         // resolved.
 
-        if (canCompile(compiled.pattern)) {
+        if (canCompileSerializer(compiled.pattern)) {
             this.write = compiled.createSerializer(null, compiled.pattern, definition.transforms, ieee754, incoming, callback)
             return
         }
@@ -1159,9 +1192,8 @@ function Serializer(definition, options) {
         this.write = createGenericWriter(compiled, incoming, 0, callback)
     }
 
-    // Return the count of bytes that will be written by the serializer for the
-    // current pattern and variables.
     function _sizeOf () {
+        if (compiled.sizeOf) return compiled.sizeOf(incoming)
         var pattern = resolveAlternation(compiled, incoming)
         var patternIndex = 0
         var field = pattern[patternIndex]
