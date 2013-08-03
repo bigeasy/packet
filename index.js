@@ -246,6 +246,7 @@ function Definition (packets, transforms, options) {
         if (!options.compile) return uncompiledParser
 
         var pattern = object.pattern
+        var prefix = [ 'parser' ]
 
         function inc (increment) {
             if (increment) return 'start++'
@@ -311,6 +312,7 @@ function Definition (packets, transforms, options) {
             source.hoist('value')
             if (options.buffersOnly) {
                 source.line(variable + ' buffer.read' + size + suffix + '(' + offset + ', true)')
+                if (!~prefix.indexOf('buffersOnly')) prefix.push('buffersOnly')
             } else {
                 gather.line('value = new Array(' + bytes + ');')
                 while (bite != stop) {
@@ -656,7 +658,7 @@ function Definition (packets, transforms, options) {
         var parser = ('return ' + method.define('buffer', 'start', 'end')).split(/\n/)
         parser.pop()
 
-        return precompiler('parser', pattern, parameters, parser)
+        return precompiler(prefix.join('.'), pattern, parameters, parser)
     }
 
     function compileSerializer (object) {
@@ -670,6 +672,7 @@ function Definition (packets, transforms, options) {
         var incrementalIndex = 0
         var pattern = object.pattern
         var variables = {}
+        var prefix = [ 'serializer' ]
 
         method.hoist('length')
 
@@ -741,6 +744,7 @@ function Definition (packets, transforms, options) {
             source.hoist('value')
             if (options.buffersOnly) {
                 source.line('buffer.write' + size + suffix + '(' + variable + ',' + offset + ', true)')
+                if (!~prefix.indexOf('buffersOnly')) prefix.push('buffersOnly')
             } else {
                 source.line('value = ieee754.toIEEE754' + size + '(' + variable + ')')
                 while (bite != stop) {
@@ -848,7 +852,7 @@ function Definition (packets, transforms, options) {
         var serializer = ('return ' + method.define('buffer', 'start', 'end')).split(/\n/)
         serializer.pop()
 
-        return precompiler('serializer', pattern, parameters, serializer)
+        return precompiler(prefix.join('.'), pattern, parameters, serializer)
     }
 
     function sizeOfName (variable) {
