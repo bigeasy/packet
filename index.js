@@ -16,7 +16,7 @@ function canCompileSerializer (pattern) {
 
 function canCompileSizeOf (pattern) {
     return pattern.every(function (part) {
-        return !part.arrayed
+        return !part.terminator
             && !part.packing
             && !part.alternation
             && !part.pipeline
@@ -193,6 +193,16 @@ Source.prototype.replace = function () {
     var last = this._lines[this._lines.length - 1]
     last = last.replace.apply(last, __slice.call(arguments))
     this._lines[this._lines.length - 1] = last
+}
+
+Source.prototype.body = function () {
+    var source = new Source
+    if (this._hoisted.length) {
+        source.line('var ', this._hoisted.join(', '), ';')
+        source.line()
+    }
+    source.consume(this)
+    return source._lines.join('\n')
 }
 
 Source.prototype.define = function () {
@@ -846,7 +856,13 @@ function Definition (packets, transforms, options) {
 
         function unravel (field, index) {
             var variable = variables[field.name] || 'object[' + JSON.stringify(field.name) + ']'
-            if (field.arrayed) {
+            if (index && pattern[index - 1].lengthEncoding) {
+                if (field.bytes == 1) {
+                    values.push(variable + '.length')
+                } else {
+                    values.push('(' + variable + '.length * ' + field.bytes + ')')
+                }
+            } else if (field.arrayed) {
                 if (field.repeat != Number.MAX_VALUE) {
                     fixed += field.bytes * field.repeat
                 } else {
@@ -868,11 +884,11 @@ function Definition (packets, transforms, options) {
         if (values.length == 1) {
             source.line(assignment, ' ', values[0])
         } else {
-            source.dent(assignment, function (source) {
+            source.dent(assignment + '(', function (source) {
                 values.forEach(function (value, index) {
                     source.line(value, index < values.length - 1 ? ' +' : '')
                 })
-            })
+            }, ')')
         }
 
         return source
@@ -880,16 +896,32 @@ function Definition (packets, transforms, options) {
 
     function compileSizeOf (object) {
         var pattern = object.pattern
+        var source = new Source
 
         var fixed = 0
+        var variables = []
+        var count = 0
 
         function unravel (field, index) {
-            fixed += field.bytes * field.repeat
+            var reference = 'object[' + JSON.stringify(field.name) + ']'
+            var variable = 'field' + (++count)
+            if (field.arrayed && field.repeat == Math.MAX_VALUE) {
+                source.hoist(variable)
+                source.line(variable + ' = ' + reference)
+                fixed += field.bytes * field.repeat
+                variables[field.name] = variable
+            } else {
+                fixed += field.bytes * field.repeat
+            }
         }
 
         pattern.forEach(unravel)
 
-        return precompiler('sizeOf', pattern, [ 'object' ], [ 'return ' + fixed ])
+        source.consume(sizeOfSource('return ', variables, object))
+
+        var sizeOf = (source.body()).split(/\n/)
+
+        return precompiler('sizeOf', pattern, [ 'object' ], sizeOf)
     }
 
     function compile (pattern) {
