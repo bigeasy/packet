@@ -1,4 +1,4 @@
 #!/usr/bin/env node
 require('./proof')(3, function (parseEqual) {
-  parseEqual("b8(0-251: b8 | 252: x8, b16 | 253: x8, b24 | 254: x8, b64)", [ 0xfb ], 1, 251, "read a ranged alternative");
-});
+    parseEqual({ require: true }, 'b8(0-251: foo:b8 | 252: x8, bar:b16 | 253: x8, baz:b24 | 254: x8, bob:b64)', [ 0xfb ], 1, {foo: 251}, 'read a ranged alternative')
+})

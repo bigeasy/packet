@@ -1,0 +1,8 @@
+#!/usr/bin/env node
+require('./proof')(1, function (parse, equal) {
+    try {
+        parse('b8(b16{x1,foo:b15} | bar:b8)/(0-0x7f: baz:b8 | b16{x1{1},bob:b15})')
+    } catch (e) {
+        equal(e.message, 'invalid number at character 4', 'parse invalid alternation number pattern')
+    }
+})

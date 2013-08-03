@@ -1,32 +1,48 @@
-{   "name":             "packet"
-,   "description":      "Pure JavaScript evented binary parsers and serializers for Node.js."
-,   "version":          "0.0.6"
-,   "keywords": [ "packet", "pack", "binary", "network", "structure", "async", "asynchronous", "javascript" ]
-,   "author":           "Alan Gutierrez <alan@prettyrobots.com>"
-,   "devDependencies":  { "proof": "0.0.30" }
-,   "scripts" : { "test": "proof platform win32 && proof test */*/*.t.js || t/test" }
-,   "dependencies": {}
-,   "licenses": [
-    { "type": "MIT"
-    , "url": "http://github.com/bigeasy/packet/raw/master/LICENSE"
-    }]
-,   "homepage": "https://github.com/bigeasy/packet"
-,   "repository":
-    { "type": "git"
-    , "url": "http://github.com/bigeasy/packet.git"
-    }
-,   "contributors": [
-    { "name": "J. Ryan Stinnett"
-    , "email": "jryans@gmail.com"
+{
+    "name":             "packet",
+    "description":      "Pure JavaScript evented binary parsers and serializers for Node.js.",
+    "version":          "0.0.6",
+    "keywords": [
+        "packet", "pack", "binary", "network", "structure", "async", "asynchronous", "javascript"
+    ],
+    "author":           "Alan Gutierrez <alan@prettyrobots.com>",
+    "devDependencies":  { "proof": "0.0.33" },
+    "scripts" : {
+        "test": "proof platform win32 && proof test */*/*.t.js || t/test"
     },
-    { "name": "Ben Hockey"
-    , "email": "neonstalwart@gmail.com"
+    "dependencies": {},
+    "licenses": [{
+        "type": "MIT",
+        "url": "http://github.com/bigeasy/packet/raw/master/LICENSE"
+    }],
+    "homepage": "https://github.com/bigeasy/packet",
+    "repository": {
+        "type": "git",
+        "url": "http://github.com/bigeasy/packet.git"
     },
-    { "name": "Greg Ose"
-    , "email": "neonstalwart@gmail.com"
-    , "web": "http://nullmethod.com/"
-    },
-    { "name": "Aaron Qian"
-    , "email": "aq1018@gmail.com"
-    }]
+    "bugs": "https://github.com/bigeasy/packet/issues",
+    "contributors": [
+        {
+            "name":   "J. Ryan Stinnett",
+            "email":  "jryans@gmail.com"
+        },
+        {
+            "name":   "Ben Hockey",
+            "email":  "neonstalwart@gmail.com"
+        },
+        {
+            "name":   "Greg Ose",
+            "email":  "neonstalwart@gmail.com",
+            "web":    "http://nullmethod.com/"
+        },
+        {
+            "name":   "Aaron Qian",
+            "email":  "aq1018@gmail.com"
+        },
+        {
+            "name":   "Demarius Chrite",
+            "email":  "chrite.demarius@gmail.com",
+            "web":    "https://github.com/demarius"
+        }
+    ]
 }
