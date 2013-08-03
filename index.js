@@ -1424,15 +1424,6 @@ function createGenericParser (options, definition, pattern, patternIndex, callba
     }
 }
 
-function flatten (pattern, fields, array) {
-    pattern.forEach(function (field) {
-        if (field.packing) {
-            flatten(field.packing, fields, array)
-        } else if (!field.lengthEncoding && field.endianness != 'x') {
-            array.push(fields[field.name])
-        }
-    })
-}
 module.exports.Parser = Parser
 
 // Construct a `Serializer` around the given `definition`.
