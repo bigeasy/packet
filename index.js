@@ -621,6 +621,18 @@ function Definition (packets, transforms, options) {
         }
         pattern.forEach(unravel)
 
+        function unfix () {
+            if ((true || fixed) && sum) {
+                method.consume(rangeCheck('end - start < ' + sum, 'start', patternIndex))
+                method.consume(section)
+                sums.push(sum)
+                method.line()
+                method.line('start += ' + sum)
+                method.line()
+                sum = 0
+            }
+        }
+
         if (sum) {
             var range = rangeCheck('end - start < ' + sum, 'start', patternIndex)
             method.consume(range)
@@ -639,9 +651,7 @@ function Definition (packets, transforms, options) {
         if (~length.indexOf('(start - first)')) substart.unshift('first')
 
         method.block('                                                    \n\
-            read = ' + length.join(' + ') + '                             \n\
-                                                                          \n\
-            return callback(object, read, buffer, start + read, end)      \n\
+            return callback(object)                                       \n\
         ')
 
         var parser = ('return ' + method.define('buffer', 'start', 'end')).split(/\n/)
@@ -960,7 +970,7 @@ function Definition (packets, transforms, options) {
         method.block('                                          \n\
             this.write = terminator                             \n\
                                                                 \n\
-            callback(buffer, start, end)                        \n\
+            callback()                                          \n\
                                                                 \n\
             if (this.write === terminator) {                    \n\
                 return start                                    \n\
@@ -1149,7 +1159,6 @@ function Parser (definition, options) {
 
 function createGenericParser (options, definition, pattern, patternIndex, callback, fields) {
     var context = options.context || this
-    var read = 0
     var increment, valueOffset, terminal, terminated, terminator, value,
     skipping, repeat, step, index, arrayed, pattern, patternIndex, fields
 
@@ -1207,7 +1216,6 @@ function createGenericParser (options, definition, pattern, patternIndex, callba
                 var begin    = bufferOffset
                 bufferOffset       += advance
                 skipping   -= advance
-                read  += advance
                 // If we have more bytes to skip, then break because we've consumed the
                 // entire buffer.
                 if (skipping) break
@@ -1219,7 +1227,6 @@ function createGenericParser (options, definition, pattern, patternIndex, callba
                         value[valueOffset] = buffer[bufferOffset]
                         bufferOffset++
                         valueOffset += increment
-                        read++
                         if (valueOffset == terminal) break
                         if (bufferOffset == bufferEnd) break PATTERN
                     }
@@ -1230,7 +1237,6 @@ function createGenericParser (options, definition, pattern, patternIndex, callba
                         value += Math.pow(256, valueOffset) * buffer[bufferOffset]
                         bufferOffset++
                         valueOffset += increment
-                        read++
                         if (valueOffset == terminal) break
                         if (bufferOffset == bufferEnd) break PATTERN
                     }
@@ -1377,7 +1383,6 @@ function createGenericParser (options, definition, pattern, patternIndex, callba
                         if (branch.failed)
                             throw new Error('Cannot match branch.')
                         bytes = arrayed.slice(0)
-                        read -= bytes.length
                         pattern.splice.apply(pattern, [ patternIndex, 1 ].concat(branch.pattern))
                         nextField()
                         nextValue()
@@ -1401,7 +1406,7 @@ function createGenericParser (options, definition, pattern, patternIndex, callba
                 // callback may specify a subsequent packet to parse.
                 if (++patternIndex == pattern.length) {
                     pattern = null
-                    callback.call(context, fields, read, buffer, bufferOffset, bufferEnd)
+                    callback.call(context, fields)
                 // Otherwise we proceed to the next field in the packet pattern.
                 } else {
                     nextField()
@@ -1694,7 +1699,6 @@ function Serializer(definition, options) {
         outgoing, index, terminated, terminates, pattern, padding, callback
 
         var patternIndex = 0
-        var written = 0
 
         // Prepare the parser for the next field in the pattern.
         function nextField () {
@@ -1827,7 +1831,6 @@ function Serializer(definition, options) {
                     var advance     = Math.min(skipping, bufferEnd - bufferOffset)
                     bufferOffset         += advance
                     skipping      -= advance
-                    written += advance
                     if (skipping) break
 
                 } else {
@@ -1836,7 +1839,6 @@ function Serializer(definition, options) {
                         for (;;) {
                             buffer[bufferOffset] = value[valueOffset]
                             valueOffset += increment
-                            written++
                             bufferOffset++
                             if (valueOffset ==  terminal) break
                             if (bufferOffset == bufferEnd) break PATTERN
@@ -1847,7 +1849,6 @@ function Serializer(definition, options) {
                         for (;;) {
                             buffer[bufferOffset] = Math.floor(value / Math.pow(256, valueOffset)) & 0xff
                             valueOffset += increment
-                            written++
                             bufferOffset++
                             if (valueOffset ==  terminal) break
                             if (bufferOffset ==  bufferEnd) break PATTERN
@@ -1897,7 +1898,7 @@ function Serializer(definition, options) {
                 } else if (++patternIndex ==  pattern.length) {
                     this.write = start
                     if (callback != null) {
-                        callback.call(context, written, buffer, bufferOffset - start, bufferEnd)
+                        callback.call(context)
                         if (this.write !== start) {
                             return this.write(buffer, bufferStart, bufferEnd)
                         }
