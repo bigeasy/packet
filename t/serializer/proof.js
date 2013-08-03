@@ -31,7 +31,7 @@ module.exports = require('proof')(function (equal, deepEqual) {
 
         if (Array.isArray(length)) {
             written = length.reduce(function (previous, current) {
-                var written = serializer.write(buffer, previous, previous + current)
+                var written = serializer.write(buffer, previous, previous + current) - previous
                 return previous + written
             }, 0)
             length = length.reduce(function (previous, current) {

@@ -8,7 +8,6 @@ function canCompileSerializer (pattern) {
     return pattern.every(function (part) {
         return !part.terminator
             && !part.alternation
-            && !part.pipeline
     })
 }
 
@@ -28,6 +27,14 @@ function classify () {
             this[arguments[i].name] = arguments[i]
     }
     return this
+}
+
+function hexify (number) {
+    var string = number.toString(16)
+    if (string.length % 2) {
+        string = '0' + string
+    }
+    return '0x' + string
 }
 
 // The default transforms built into Packet.
@@ -212,7 +219,7 @@ Source.prototype.toString = function () {
     }
 }
 
-var parameters = [ 'incremental', 'pattern', 'transforms', 'ieee754', 'object', 'callback' ]
+var parameters = [ 'incremental', 'terminator', 'pattern', 'transforms', 'ieee754', 'object', 'callback' ]
 
 function Definition (packets, transforms, options) {
     packets = Object.create(packets)
@@ -226,7 +233,7 @@ function Definition (packets, transforms, options) {
 
     // we can't disable compilation anymore. compiled sizeof is not going to
     // have a fallback.
-    function uncompiledParser (incremental, pattern, transforms, ieee754, object, callback) {
+    function uncompiledParser (incremental, terminator, pattern, transforms, ieee754, object, callback) {
         return function (buffer, start, end) {
             return incremental.call(this, buffer, start, end, pattern, 0, object, callback)
         }
@@ -519,12 +526,12 @@ function Definition (packets, transforms, options) {
                             }).join(' && ')
                             element(section, 'value =', field)
                             section.block('\n\
-                                start += ' + field.bytes + ';                                                 \n\
-                                array.push(value);                                                            \n\
-                                if (' + condition + ') {                                                      \n\
-                                    array.splice(-' + field.terminator.length + ');                           \n\
-                                    break;                                                                    \n\
-                                }                                                                             \n\
+                                start += ' + field.bytes + ';                         \n\
+                                array.push(value);                                    \n\
+                                if (' + condition + ') {                              \n\
+                                    array.splice(-' + field.terminator.length + ');   \n\
+                                    break;                                            \n\
+                                }                                                     \n\
                             ')
                         }).line('}')
                     }
@@ -656,8 +663,6 @@ function Definition (packets, transforms, options) {
         var variables = {}
         var prefix = [ 'serializer' ]
 
-        method.hoist('written')
-
         function unsigned (variable, field, increment) {
             var source = new Source
             var little = field.endianness == 'l'
@@ -708,6 +713,7 @@ function Definition (packets, transforms, options) {
         }
 
         function floating (variable, field, increment) {
+            // todo: tidy, dead variables
             var little = field.endianness == 'l'
             var suffix = little ? 'LE' : 'BE'
             var bytes = field.bytes
@@ -758,89 +764,177 @@ function Definition (packets, transforms, options) {
             return source
         }
 
+        function exit (start, index) {
+            var source = new Source
+            source.line('return incremental.call(this, buffer, ' + start + ', end, pattern, ' + index + ', object, callback)')
+            return source
+        }
+
         var section = new Source
         var count = 0
+        var fixed = true
+
+        function possiblyTerminated (field, index) {
+            var variable = 'field' + (++count)
+            var reference = 'object[' + JSON.stringify(field.name) + ']'
+            return function (section, rangeCheck) {
+                section.hoist(variable, 'i', 'I')
+                section.line(variable + ' = ' + reference)
+                if (field.pipeline) field.pipeline.slice().reverse().forEach(function (transform) {
+                    var parameters = transform.parameters.map(function (paramaeter) {
+                        return JSON.stringify(paramaeter)
+                    }).concat([ 'false', 'null', variable ]).join(', ')
+                    section.line(variable, ' = transforms.', transform.name, '(', parameters, ')')
+                })
+                rangeCheck(field, variable)
+                section.dent('for (i = 0, I = ' + variable + '.length; i < I; i++) {', function (section) {
+                    section.consume(element(variable + '[i]', field, true))
+                }, '}')
+                variables[field.name] = variable
+                if (field.terminator) {
+                    if (field.length == Math.MAX_VALUE) {
+                        for (var i = 0; i < field.terminator.length; i++) {
+                            section.line('buffer[start++] = ' + hexify(field.terminator[i]))
+                        }
+                    } else {
+                        throw new Error
+                    }
+                }
+                section.line()
+            }
+        }
+
+
+        function fix (index, block) {
+            if (!fixed) {
+                fixed = true
+                incrementalIndex = index
+            }
+            var source = new Source
+            block(source)
+            section.consume(source)
+        }
+
+        function unfix (index, block) {
+            if (fixed && sum) {
+                method.consume(rangeCheck('end - start < ' + sum, 'start', incrementalIndex))
+                method.consume(section)
+                sums.push(sum)
+                method.line()
+                method.line('start += ' + sum)
+                method.line()
+                sum = 0
+            }
+            var source = new Source
+            var range = function (field, variable) {
+                var summary = variable + '.length'
+                if (field.terminator) summary += ' + ' + field.terminator.length
+                source.consume(rangeCheck('end - start < ' + summary, 'start', index))
+                fixed = false
+            }
+            block(source, range)
+            method.consume(source)
+        }
 
         // todo: size is sizeOf and calculated just as sizeOf
         function unravel (field, index) {
             var reference = 'object[' + JSON.stringify(field.name) + ']'
             var variable = 'field' + (++count)
             if (index && pattern[index - 1].lengthEncoding) {
-                section.hoist(variable, 'i', 'I')
-                section.line(variable + ' = ' + reference)
-                section.consume(element(variable + '.length', pattern[index - 1], true))
-                section.dent('for (i = 0, I = ' + variable + '.length; i < I; i++) {', function (section) {
-                    section.consume(element(variable + '[i]', field, true))
-                }, '}')
-                variables[field.name] = variable
-            } else if (field.arrayed) {
-                if (field.endianness == 'x') {
-                    fixed += field.repeat * field.bytes
-                    sum += field.repeat * field.bytes
-                    if (field.padding == null) {
-                        offset += field.repeat * field.bytes
-                    } else {
-                        section.hoist('i')
-                        section.dent('for (i = 0; i < ' + field.repeat + '; i++) {', function (section) {
-                            section.consume(element(variable + '[i]', field, true))
-                        }, '}')
-                    }
-                } else {
-                    fixed += sum
+                unfix(index - 1, function (section) {
                     section.hoist(variable, 'i', 'I')
                     section.line(variable + ' = ' + reference)
+                    rangeCheck(field, variable)
+                    section.consume(element(variable + '.length', pattern[index - 1], true))
                     section.dent('for (i = 0, I = ' + variable + '.length; i < I; i++) {', function (section) {
                         section.consume(element(variable + '[i]', field, true))
                     }, '}')
                     variables[field.name] = variable
-                    section.line()
+                })
+            } else if (field.arrayed) {
+                if (field.endianness == 'x') {
+                    fix(index, function (section) {
+                        fixed += field.repeat * field.bytes
+                        if (field.padding == null) {
+                            offset += field.repeat * field.bytes
+                            sum += field.repeat * field.bytes
+                        } else {
+                            section.hoist('i')
+                            section.dent('for (i = 0; i < ' + field.repeat + '; i++) {', function (section) {
+                                section.consume(element(variable + '[i]', field, true))
+                            }, '}')
+                        }
+                    })
+                } else {
+                    if (field.length == Math.MAX_VALUE) {
+                        unfix(index, possiblyTerminated(field, variable, reference))
+                    } else {
+                        fix(index, possiblyTerminated(field, variable, reference))
+                    }
                 }
             } else if (!field.lengthEncoding) {
                 if (field.packing) {
-                    section.hoist('value')
-                    var bit = 0
-                    var assign = ' = '
-                    var first = true
-                    for (var i = 0, I = field.packing.length; i < I; i++) {
-                        var line = ''
-                        var pack = field.packing[i]
-                        var reference = 'object[' + JSON.stringify(pack.name) + ']'
-                        var mask = '0xff' + new Array(field.bytes).join('ff')
-                        if (pack.endianness != 'x' || pack.padding != null) {
-                            if (pack.padding != null) {
-                                reference = '0x' + pack.padding.toString(16)
-                            }
-                            if (first) {
-                                if (pack.signed) {
-                                    section.hoist('unsigned')
+                    fix(index, function (section) {
+                        section.hoist('value')
+                        var bit = 0
+                        var assign = ' = '
+                        var first = true
+                        for (var i = 0, I = field.packing.length; i < I; i++) {
+                            var line = ''
+                            var pack = field.packing[i]
+                            var reference = 'object[' + JSON.stringify(pack.name) + ']'
+                            var mask = '0xff' + new Array(field.bytes).join('ff')
+                            if (pack.endianness != 'x' || pack.padding != null) {
+                                if (pack.padding != null) {
+                                    reference = '0x' + pack.padding.toString(16)
                                 }
-                                line = 'value'
-                                line = 'value = ('
-                                first = false
-                            } else {
-                                line = '  ('
+                                if (first) {
+                                    if (pack.signed) {
+                                        section.hoist('unsigned')
+                                    }
+                                    line = 'value'
+                                    line = 'value = ('
+                                    first = false
+                                } else {
+                                    line = '  ('
+                                }
+                                if (pack.signed) {
+                                    var bits = '0x' + (mask >>> (field.bits - pack.bits)).toString(16)
+                                    var top = '0x' + (1 << pack.bits - 1).toString(16)
+                                    section.line('unsigned = ' + reference)
+                                    section.line('unsigned = unsigned < 0 ?')
+                                    section.text(' (', bits, ' + unsigned + 1)')
+                                    section.text(' : unsigned')
+                                    reference = 'unsigned'
+                                }
+                                line += reference + ' << ' + (field.bits - (bit + pack.bits))
+                                line += ') +'
+                                section.line(line)
                             }
-                            if (pack.signed) {
-                                var bits = '0x' + (mask >>> (field.bits - pack.bits)).toString(16)
-                                var top = '0x' + (1 << pack.bits - 1).toString(16)
-                                section.line('unsigned = ' + reference)
-                                section.line('unsigned = unsigned < 0 ?')
-                                section.text(' (', bits, ' + unsigned + 1)')
-                                section.text(' : unsigned')
-                                reference = 'unsigned'
-                            }
-                            line += reference + ' << ' + (field.bits - (bit + pack.bits))
-                            line += ') +'
-                            section.line(line)
+                            bit += pack.bits
                         }
-                        bit += pack.bits
-                    }
-                    section.replace(/ \+$/, '')
-                    section.replace(/ << 0\)$/, ')')
-                    section.consume(element('value', field))
+                        section.replace(/ \+$/, '')
+                        section.replace(/ << 0\)$/, ')')
+                        section.consume(element('value', field))
+                        sum += field.bytes
+                    })
                 } else {
-                    section.consume(element(reference, field))
-                    sum += field.bytes * field.repeat
+                    fix(index, function (section) {
+                        if (field.pipeline) {
+                            section.hoist(variable)
+                            section.line(variable + ' = ' + reference)
+                            field.pipeline.slice().reverse().forEach(function (transform) {
+                                var parameters = transform.parameters.map(function (paramaeter) {
+                                    return JSON.stringify(paramaeter)
+                                }).concat([ 'false', 'null', variable ]).join(', ')
+                                section.line(variable, ' = transforms.', transform.name, '(', parameters, ')')
+                            })
+                            section.consume(element(variable, field))
+                        } else {
+                            section.consume(element(reference, field))
+                        }
+                        sum += field.bytes * field.repeat
+                    })
                 }
             }
         }
@@ -848,10 +942,7 @@ function Definition (packets, transforms, options) {
         pattern.forEach(unravel)
 
         if (sum) {
-            method.consume(rangeCheck('end - start < ' + sum, 'start', incrementalIndex))
-            method.consume(section)
-            sums.push(sum)
-            sum = 0
+           unfix(pattern.length, function () { })
         } else {
             method.consume(section)
         }
@@ -864,11 +955,18 @@ function Definition (packets, transforms, options) {
             lengths.push(sums.reduce(function (sum, value) { return sum + value }, 0))
         }
 
-        method.consume(sizeOfSource('written =', variables, object))
         method.line()
 
-        method.block('                                                              \n\
-            return callback(written, buffer, start + written, end)                  \n\
+        method.block('                                          \n\
+            this.write = terminator                             \n\
+                                                                \n\
+            callback(buffer, start, end)                        \n\
+                                                                \n\
+            if (this.write === terminator) {                    \n\
+                return start                                    \n\
+            }                                                   \n\
+                                                                \n\
+            return this.write(buffer, start, end)               \n\
         ')
 
         var serializer = ('return ' + method.define('buffer', 'start', 'end')).split(/\n/)
@@ -957,7 +1055,7 @@ function Definition (packets, transforms, options) {
 
         pattern.forEach(unravel)
 
-        source.consume(sizeOfSource('return', variables, object))
+        source.consume(sizeOfSource('return ', variables, object))
 
         var sizeOf = ('return ' + source.define('object')).split(/\n/)
 
@@ -967,11 +1065,11 @@ function Definition (packets, transforms, options) {
     function compile (pattern) {
         var object = { pattern: parse(pattern) }
         object.createParser = compileParser(object)
-        if (canCompileSerializer(object.pattern)) {
-            object.createSerializer = compileSerializer(object)
-        }
         if (canCompileSizeOf(object.pattern)) {
             object.sizeOf = compileSizeOf(object)
+        }
+        if (canCompileSerializer(object.pattern)) {
+            object.createSerializer = compileSerializer(object)
         }
         return object
     }
@@ -1037,14 +1135,13 @@ function Parser (definition, options) {
         var patternIndex = 0
         var pattern = compiled.pattern.slice()
         var fields = {}
-        this.length = 0
 
         function incremental (buffer, start, end, pattern, index, object, callback) {
             this.parse = createGenericParser(options, definition, pattern, index, callback, object, true)
             return this.parse(buffer, start, end)
         }
 
-        this.parse = compiled.createParser(incremental, pattern, definition.transforms, ieee754, {}, callback)
+        this.parse = compiled.createParser(incremental, null, pattern, definition.transforms, ieee754, {}, callback)
     }
 
     return classify.call(definition.extend(this), extract)
@@ -1380,16 +1477,14 @@ function Serializer(definition, options) {
         }
     }
 
-    function read (read) { return read }
+    function start (buffer, start) { return start }
 
     function serialize () {
         var shiftable = __slice.call(arguments)
 
         compiled = definition.pattern(shiftable.shift())
 
-        var callback = typeof shiftable[shiftable.length - 1] == 'function' ? shiftable.pop() : read
-
-        this.length = 0
+        var callback = typeof shiftable[shiftable.length - 1] == 'function' ? shiftable.pop() : start
 
         incoming = shiftable.shift()
 
@@ -1399,7 +1494,7 @@ function Serializer(definition, options) {
         }
 
         if (canCompileSerializer(compiled.pattern)) {
-            this.write = compiled.createSerializer(incremental, compiled.pattern, definition.transforms, ieee754, incoming, callback)
+            this.write = compiled.createSerializer(incremental, start, compiled.pattern, definition.transforms, ieee754, incoming, callback)
             return
         }
 
@@ -1599,6 +1694,7 @@ function Serializer(definition, options) {
         outgoing, index, terminated, terminates, pattern, padding, callback
 
         var patternIndex = 0
+        var written = 0
 
         // Prepare the parser for the next field in the pattern.
         function nextField () {
@@ -1731,7 +1827,7 @@ function Serializer(definition, options) {
                     var advance     = Math.min(skipping, bufferEnd - bufferOffset)
                     bufferOffset         += advance
                     skipping      -= advance
-                    this.length  += advance
+                    written += advance
                     if (skipping) break
 
                 } else {
@@ -1740,7 +1836,7 @@ function Serializer(definition, options) {
                         for (;;) {
                             buffer[bufferOffset] = value[valueOffset]
                             valueOffset += increment
-                            this.length++
+                            written++
                             bufferOffset++
                             if (valueOffset ==  terminal) break
                             if (bufferOffset == bufferEnd) break PATTERN
@@ -1751,7 +1847,7 @@ function Serializer(definition, options) {
                         for (;;) {
                             buffer[bufferOffset] = Math.floor(value / Math.pow(256, valueOffset)) & 0xff
                             valueOffset += increment
-                            this.length++
+                            written++
                             bufferOffset++
                             if (valueOffset ==  terminal) break
                             if (bufferOffset ==  bufferEnd) break PATTERN
@@ -1799,11 +1895,14 @@ function Serializer(definition, options) {
                 // The pattern is set to null, our terminal condition, before the callback,
                 // because the callback may specify a subsequent packet to parse.
                 } else if (++patternIndex ==  pattern.length) {
+                    this.write = start
                     if (callback != null) {
-                        callback.call(context, serializer)
+                        callback.call(context, written, buffer, bufferOffset - start, bufferEnd)
+                        if (this.write !== start) {
+                            return this.write(buffer, bufferStart, bufferEnd)
+                        }
                     }
                 } else {
-
                     padding = null
                     repeat      = pattern[patternIndex].repeat
                     terminated  = ! pattern[patternIndex].terminator
@@ -1815,7 +1914,7 @@ function Serializer(definition, options) {
                 }
             }
 
-            return bufferOffset - start
+            return bufferOffset
         }
     }
 
