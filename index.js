@@ -7,7 +7,6 @@ var __slice = [].slice
 function canCompileSerializer (pattern) {
     return pattern.every(function (part) {
         return !part.terminator
-            && !part.lengthEncoding
             && !part.packing
             && !part.alternation
             && !part.pipeline
@@ -780,7 +779,15 @@ function Definition (packets, transforms, options) {
         function unravel (field, index) {
             var reference = 'object[' + JSON.stringify(field.name) + ']'
             var variable = 'field' + (++count)
-            if (field.arrayed) {
+            if (index && pattern[index - 1].lengthEncoding) {
+                section.hoist(variable, 'i', 'I')
+                section.line(variable + ' = ' + reference)
+                section.consume(element(variable + '.length', pattern[index - 1], true))
+                section.dent('for (i = 0, I = ' + variable + '.length; i < I; i++) {', function (section) {
+                    section.consume(element(variable + '[i]', field, true))
+                }, '}')
+                variables[field.name] = variable
+            } else if (field.arrayed) {
                 if (field.endianness == 'x') {
                     fixed += field.repeat * field.bytes
                     sum += field.repeat * field.bytes
@@ -802,7 +809,7 @@ function Definition (packets, transforms, options) {
                     variables[field.name] = variable
                     section.line()
                 }
-            } else {
+            } else if (!field.lengthEncoding) {
                 section.consume(element(reference, field))
                 sum += field.bytes * field.repeat
             }
@@ -826,9 +833,6 @@ function Definition (packets, transforms, options) {
         if (sums.length) {
             lengths.push(sums.reduce(function (sum, value) { return sum + value }, 0))
         }
-
-        var substart = lengths.slice()
-        if (~lengths.indexOf('(start - first)')) substart.unshift('first')
 
         method.consume(sizeOfSource('written =', variables, object))
         method.line()
