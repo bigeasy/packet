@@ -7,6 +7,7 @@ require('./proof')(1, function (parseEqual) {
         , 'type': 'n'
         , 'bytes': 1
         , 'exploded': false
+        , 'repeat': 1
         , 'packing':
             [
                 { 'signed': false

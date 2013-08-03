@@ -16,7 +16,6 @@ function canCompileSerializer (pattern) {
 function canCompileSizeOf (pattern) {
     return pattern.every(function (part) {
         return !part.terminator
-            && !part.packing
             && !part.alternation
             && !part.pipeline
     })
@@ -914,8 +913,6 @@ function Definition (packets, transforms, options) {
                 source.line(variable + ' = ' + reference)
                 fixed += field.bytes * field.repeat
                 variables[field.name] = variable
-            } else {
-                fixed += field.bytes * field.repeat
             }
         }
 

@@ -269,6 +269,7 @@ function parse (pattern, part, index, bits, next) {
 
             var packIndex = index
 
+            f.repeat = 1
             f.packing   = parse(pattern, $[1], index, 1, re['pack' /*
                 ^               // start
                 (
