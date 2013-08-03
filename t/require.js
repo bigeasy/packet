@@ -13,6 +13,7 @@ module.exports = function (type, pattern, parameters, source) {
         if (f.signed) scalar = 'S' + scalar
         if (f.named) scalar += '_' + f.name
         if (f.lengthEncoding) scalar += 'C'
+        if (f.padding != null) scalar += '_P' + f.padding
         if (f.arrayed) {
             scalar += '_array'
             if (!(i && pattern[i - 1].lengthEncoding) && f.repeat != Math.MAX_VALUE) {
