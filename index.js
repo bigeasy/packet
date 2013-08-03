@@ -7,7 +7,8 @@ var __slice = [].slice
 function canCompileSerializer (pattern) {
     return pattern.every(function (part) {
         return !/^[a]$/.test(part.type)
-            && !part.arrayed
+            && !part.terminator
+            && !part.lengthEncoding
             && !part.packing
             && !part.alternation
             && !part.pipeline
@@ -110,14 +111,6 @@ function Source () {
     this._hoisted = []
 }
 
-Source.prototype.indent = function () {
-    this._indent++
-}
-
-Source.prototype.dedent = function () {
-    this._indent--
-}
-
 Source.prototype._indentation = function () {
     return new Array(this._indent + 1).join('  ')
 }
@@ -126,6 +119,7 @@ Source.prototype.line = function () {
     var line = __slice.call(arguments).join('')
     if (line.length) this._lines.push(this._indentation() + line)
     else this._lines.push('')
+    return this
 }
 
 Source.prototype.text = function () {
@@ -158,6 +152,35 @@ Source.prototype.hoist = function () {
     }, this)
 }
 
+Source.prototype.dent = function () {
+    var vargs = __slice.call(arguments)
+    var block, end, context
+    if (typeof vargs[0] == 'string') {
+        this.line(vargs.shift())
+    }
+    block = vargs.shift()
+    if (typeof vargs[0] == 'string') {
+        end = vargs.shift()
+    }
+    context = vargs.shift()
+    var source = new Source
+    this._indent++
+    block.call(context, source)
+    this.consume(source)
+    this._indent--
+    this.line(end)
+    return this
+}
+
+Source.prototype.shift = function (block, context) {
+    var source = new Source
+    this._indent++
+    block.call(context, source)
+    this.consume(source)
+    this._indent--
+    return this
+}
+
 Source.prototype.block = function (source) {
     source = source.split(/\n/)
     source.shift()
@@ -168,6 +191,7 @@ Source.prototype.block = function (source) {
         if (/\S/.test(line)) this.line(line)
         else this.line(line)
     }, this)
+    return this
 }
 
 Source.prototype.replace = function () {
@@ -179,13 +203,13 @@ Source.prototype.replace = function () {
 Source.prototype.define = function () {
     var source = new Source
     source.line('function (', __slice.call(arguments).join(', '), ') {')
-    source.indent()
-    if (this._hoisted.length) {
-        source.line('var ', this._hoisted.join(', '), ';')
-        source.line()
-    }
-    source.consume(this)
-    source.dedent()
+    source.shift(function (source) {
+        if (this._hoisted.length) {
+            source.line('var ', this._hoisted.join(', '), ';')
+            source.line()
+        }
+        source.consume(this)
+    }, this)
     source.line('}')
     return String(source)
 }
@@ -223,16 +247,32 @@ function Definition (packets, transforms, options) {
 
         var pattern = object.pattern
 
+        function inc (increment) {
+            if (increment) return 'start++'
+            if (offset++) return 'start + ' + (offset - 1)
+            return 'start'
+        }
+
         function unsigned (source, variable, field, increment) {
-            var little = field.endianness == 'l',
-                    bytes = field.bytes,
-                    bite = little ? 0 : bytes - 1,
-                    direction = little ? 1 : -1,
-                    stop = little ? bytes : -1,
-                    line = new Source,
-                    assign
+            var little = field.endianness == 'l'
+            var bytes = field.bytes
+            var bite = little ? 0 : bytes - 1
+            var direction = little ? 1 : -1
+            var stop = little ? bytes : -1
+            var line = new Source
             var sign = '0x80' + new Array(field.bytes).join('00')
             var mask = '0xff' + new Array(field.bytes).join('ff')
+            var assign
+
+            function multiply (bite) {
+                var pow = '0x' + Math.pow(256, bite).toString(16)
+                var line = 'buffer[' + inc(increment) + '] * ' + pow + ' +'
+                line = line.replace(/ \* 1 \+$/, ' +')
+                line = line.replace(/start \+ 0/, 'start')
+                line = line.replace(/ \* 0x1\b/, '')
+                return line
+            }
+
             if (field.signed) {
                 source.hoist('value')
                 source.line('value =')
@@ -240,25 +280,18 @@ function Definition (packets, transforms, options) {
             } else {
                 source.line(variable)
             }
-            source.indent()
-            while (bite != stop) {
-                if (increment) {
-                    line.line('buffer[start++]')
-                } else {
-                    line.line('buffer[start + ', offset++, ']')
-                }
-                line.text(' * ' + Math.pow(256, bite) + ' +')
-                line.replace(/ \* 1 \+$/, ' +')
-                line.replace(/start \+ 0/, 'start')
-                if (bytes == 1) {
-                    source.consume(' ', line)
-                } else {
-                    source.consume(line)
-                }
-                bite += direction
+
+            if (bytes == 1) {
+                source.text(' ' + multiply(0).replace(/ \+$/, ''))
+            } else {
+                source.dent(function (source) {
+                    while (bite != stop) {
+                        source.line(multiply(bite))
+                        bite += direction
+                    }
+                    source.replace(/ \+$/, ';')
+                })
             }
-            source.replace(/ \+$/, ';')
-            source.dedent()
             if (field.signed) {
                 source.line(variable + ' (value & ' + sign + ') ? (' + mask + ' - value + 1) * -1 : value;')
             }
@@ -375,11 +408,11 @@ function Definition (packets, transforms, options) {
                         // TODO: It will only do one, then the offsets will be off!
                         section.line('pattern.splice.apply(pattern, [', patternIndex, ', 1].concat(pattern[', patternIndex, '].alternation[', ai, '].pattern));')
                         alternate.pattern.forEach(unravel)
-                        method.indent()
-                        section.line('start += ', sum + ';')
-                        doRangeCheck()
-                        sums.pop()
-                        method.dedent()
+                        method.shift(function (method) {
+                            section.line('start += ', sum + ';')
+                            doRangeCheck()
+                            sums.pop()
+                        })
                         offset = was
                     } else if (read.minimum == read.maximum) {
                         cond.line(ai ? '} else ' : '', 'if ')
@@ -389,11 +422,11 @@ function Definition (packets, transforms, options) {
                         // TODO: It will only do one, then the offsets will be off!
                         section.line('pattern.splice.apply(pattern, [', patternIndex, ', 1].concat(pattern[', patternIndex, '].alternation[', ai, '].pattern));')
                         alternate.pattern.forEach(unravel)
-                        method.indent()
-                        section.line('start += ', sum + ';')
-                        doRangeCheck()
-                        sums.pop()
-                        method.dedent()
+                        method.shift(function () {
+                            section.line('start += ', sum + ';')
+                            doRangeCheck()
+                            sums.pop()
+                        })
                         offset = was
                     } else if (read.minimum == -Number.MAX_VALUE && read.maximum == Number.MAX_VALUE) {
                         if (!elsed) {
@@ -406,11 +439,11 @@ function Definition (packets, transforms, options) {
                         // TODO: It will only do one, then the offsets will be off!
                         section.line('pattern.splice.apply(pattern, [', patternIndex, ', 1].concat(pattern[', patternIndex, '].alternation[', ai, '].pattern));')
                         alternate.pattern.forEach(unravel)
-                        method.indent()
-                        section.line('start += ', sum + ';')
-                        doRangeCheck()
-                        sums.pop()
-                        method.dedent()
+                        method.shift(function () {
+                            section.line('start += ', sum + ';')
+                            doRangeCheck()
+                            sums.pop()
+                        })
                         offset = was
                             }
                         }
@@ -419,15 +452,15 @@ function Definition (packets, transforms, options) {
                         cond.text('(', read.minimum, ' <= value && value <= ', read.maximum, ') {')
                         method.consume(cond)
                         section.line('pattern.splice.apply(pattern, [', patternIndex, ', 1].concat(pattern[', patternIndex, '].alternation[', ai, '].pattern));')
-                        section.indent()
                         var was = offset
-                        section.line('start += ', sum + ';')
-                        alternate.pattern.forEach(unravel)
-                        section.line('start += ', sum + ';')
+                        section.shift(function (section) {
+                            section.line('start += ', sum + ';')
+                            alternate.pattern.forEach(unravel)
+                            section.line('start += ', sum + ';')
+                        })
                         doRangeCheck()
                         sums.pop()
                         offset = was
-                        section.dedent()
                     }
                 })
                 section.line('}')
@@ -464,47 +497,44 @@ function Definition (packets, transforms, options) {
                     section.line('array = [];')
                     if (field.terminator.length == 1) {
                         section.line('for (;;) {')
-                        if (field.repeat != Number.MAX_VALUE) {
-                            section.line('  if (array.length == ' + field.repeat + ') break;')
-                        }
-                        section.indent()
-                        if (field.bytes == 1) {
-                            section.consume(rangeCheck('start == end', 'second', patternIndex))
-                        } else {
-                            section.consume(rangeCheck('start + ' + (field.bytes - 1) + ' >= end', 'second', patternIndex))
-                        }
-                        element(section, 'value =', field)
-                        section.line('start += ' + field.bytes + ';')
-                        section.line('if (value == ' + field.terminator[0] + ') break;')
-                        section.line('array.push(value);')
-                        section.dedent()
-                        section.line('}')
+                        section.shift(function (section) {
+                            if (field.repeat != Number.MAX_VALUE) {
+                                section.line('if (array.length == ' + field.repeat + ') break;')
+                            }
+                            if (field.bytes == 1) {
+                                section.consume(rangeCheck('start == end', 'second', patternIndex))
+                            } else {
+                                section.consume(rangeCheck('start + ' + (field.bytes - 1) + ' >= end', 'second', patternIndex))
+                            }
+                            element(section, 'value =', field)
+                            section.line('start += ' + field.bytes + ';')
+                            section.line('if (value == ' + field.terminator[0] + ') break;')
+                            section.line('array.push(value);')
+                        }).line('}')
                     } else {
-                        section.line('for (;;) {')
-                        section.indent()
-                        if (field.bytes == 1) {
-                            section.consume(rangeCheck('start == end', 'second', patternIndex))
-                        } else {
-                            section.consume(rangeCheck('start + ' + (field.bytes - 1) + ' >= end', 'second', patternIndex))
-                        }
-                        if (field.repeat != Number.MAX_VALUE) {
-                            section.line('if (array.length == ' + field.repeat + ') break;')
-                        }
-                        var condition = field.terminator.map(function (value, index) {
-                            return '' + value + ' == array[array.length - ' +
-                                                    Math.abs((index - field.terminator.length)) + ']'
-                        }).join(' && ')
-                        element(section, 'value =', field)
-                        section.block('\n\
-                            start += ' + field.bytes + ';                                                 \n\
-                            array.push(value);                                                            \n\
-                            if (' + condition + ') {                                                      \n\
-                                array.splice(-' + field.terminator.length + ');                             \n\
-                                break;                                                                      \n\
-                            }                                                                             \n\
-                        ')
-                        section.dedent()
-                        section.line('}')
+                        section.line('for (;;) {').shift(function (section) {
+                            if (field.bytes == 1) {
+                                section.consume(rangeCheck('start == end', 'second', patternIndex))
+                            } else {
+                                section.consume(rangeCheck('start + ' + (field.bytes - 1) + ' >= end', 'second', patternIndex))
+                            }
+                            if (field.repeat != Number.MAX_VALUE) {
+                                section.line('if (array.length == ' + field.repeat + ') break;')
+                            }
+                            var condition = field.terminator.map(function (value, index) {
+                                return '' + value + ' == array[array.length - ' +
+                                                        Math.abs((index - field.terminator.length)) + ']'
+                            }).join(' && ')
+                            element(section, 'value =', field)
+                            section.block('\n\
+                                start += ' + field.bytes + ';                                                 \n\
+                                array.push(value);                                                            \n\
+                                if (' + condition + ') {                                                      \n\
+                                    array.splice(-' + field.terminator.length + ');                           \n\
+                                    break;                                                                    \n\
+                                }                                                                             \n\
+                            ')
+                        }).line('}')
                     }
                     patternIndex = index + 1
                     if (!~length.indexOf('(start - first)')) length.push('(start - first)')
@@ -634,10 +664,14 @@ function Definition (packets, transforms, options) {
         var section = new Source
         var offset = 0
         var sum = 0
+        var fixed = 0
         var sums = []
         var lengths = []
         var incrementalIndex = 0
         var pattern = object.pattern
+        var variables = {}
+
+        method.hoist('length')
 
         function unsigned (variable, field, increment) {
             var source = new Source
@@ -670,7 +704,7 @@ function Definition (packets, transforms, options) {
                     return source
                 }
             }
-            if (bytes == 0) {
+            if (bytes == 1) {
                 source.line('buffer[' + inc() + '] = ' + variable + ' & 0xff')
             } else {
                 source.hoist('value')
@@ -684,6 +718,7 @@ function Definition (packets, transforms, options) {
                     bite += direction
                 }
             }
+
             return source
         }
 
@@ -737,9 +772,39 @@ function Definition (packets, transforms, options) {
             return source
         }
 
+        var section = new Source
+        var count = 0
+
+        // todo: size is sizeOf and calculated just as sizeOf
         function unravel (field, index) {
-            section.consume(element('object[' + JSON.stringify(field.name) + ']', field))
-            sum += field.bytes * field.repeat
+            var reference = 'object[' + JSON.stringify(field.name) + ']'
+            var variable = 'field' + (++count)
+            if (field.arrayed) {
+                if (field.endianness == 'x') {
+                    fixed += field.repeat * field.bytes
+                    sum += field.repeat * field.bytes
+                    if (field.padding == null) {
+                        offset += field.repeat * field.bytes
+                    } else {
+                        section.hoist('i')
+                        section.dent('for (i = 0; i < ' + field.repeat + '; i++) {', function (section) {
+                            section.consume(element(variable + '[i]', field, true))
+                        }, '}')
+                    }
+                } else {
+                    fixed += sum
+                    section.hoist(variable, 'i', 'I')
+                    section.line(variable + ' = ' + reference)
+                    section.dent('for (i = 0, I = ' + variable + '.length; i < I; i++) {', function (section) {
+                        section.consume(element(variable + '[i]', field, true))
+                    }, '}')
+                    variables[field.name] = variable
+                    section.line()
+                }
+            } else {
+                section.consume(element(reference, field))
+                sum += field.bytes * field.repeat
+            }
         }
 
         pattern.forEach(unravel)
@@ -753,6 +818,10 @@ function Definition (packets, transforms, options) {
             method.consume(section)
         }
 
+        if (fixed) {
+            sums.unshift(fixed)
+        }
+
         if (sums.length) {
             lengths.push(sums.reduce(function (sum, value) { return sum + value }, 0))
         }
@@ -760,24 +829,71 @@ function Definition (packets, transforms, options) {
         var substart = lengths.slice()
         if (~lengths.indexOf('(start - first)')) substart.unshift('first')
 
-        method.block('                                                                              \n\
-            this.length = ' + lengths.join(' + ') + ';                                               \n\
-                                                                                                    \n\
-            this.write = null                                                                       \n\
-                                                                                                    \n\
-            callback && callback()                                                                  \n\
-                                                                                                    \n\
-            if (this.write) {                                                                       \n\
-                return ' + lengths.join(' + ') + ' + this.write(buffer, ' + substart.join(' + ') + ', end);\n\
-            } else {                                                                                \n\
-                return ' + lengths.join(' + ') + ';                                                  \n\
-            }                                                                                       \n\
+        method.consume(sizeOfSource('this.length =', variables, object))
+        method.line()
+
+        method.block('                                                              \n\
+            length = this.length \n\
+            this.write = null                                                       \n\
+                                                                                    \n\
+            callback && callback()                                                  \n\
+                                                                                    \n\
+            if (this.write) {                                                       \n\
+                return length + this.write(buffer, start + length, end)   \n\
+            } else {                                                                \n\
+                return length                                                  \n\
+            }                                                                       \n\
         ')
 
         var serializer = ('return ' + method.define('buffer', 'start', 'end')).split(/\n/)
         serializer.pop()
 
         return precompiler('serializer', pattern, parameters, serializer)
+    }
+
+    function sizeOfName (variable) {
+        return 'sizeOf' + variable[0].toUpperCase() + variable.substring(1)
+    }
+
+    function sizeOfSource (assignment, variables, object) {
+        var pattern = object.pattern
+        var source = new Source
+
+        var values = []
+        var fixed = 0
+
+        function unravel (field, index) {
+            var variable = variables[field.name] || 'object[' + JSON.stringify(field.name) + ']'
+            if (field.arrayed) {
+                if (field.repeat != Number.MAX_VALUE) {
+                    fixed += field.bytes * field.repeat
+                } else {
+                    if (field.bytes == 1) {
+                        values.push(variable + '.length')
+                    } else {
+                        values.push('(' + variable + '.length * ' + field.bytes + ')')
+                    }
+                }
+            } else {
+                fixed += field.bytes * field.repeat
+            }
+        }
+
+        pattern.forEach(unravel)
+
+        if (fixed) values.push(fixed)
+
+        if (values.length == 1) {
+            source.line(assignment, ' ', values[0])
+        } else {
+            source.dent(assignment, function (source) {
+                values.forEach(function (value, index) {
+                    source.line(value, index < values.length - 1 ? ' +' : '')
+                })
+            })
+        }
+
+        return source
     }
 
     function compileSizeOf (object) {
