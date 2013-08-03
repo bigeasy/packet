@@ -621,7 +621,7 @@ function Definition (packets, transforms, options) {
         }
         pattern.forEach(unravel)
 
-        function unfix () {
+        function unfix (index, block) {
             if ((true || fixed) && sum) {
                 method.consume(rangeCheck('end - start < ' + sum, 'start', patternIndex))
                 method.consume(section)
@@ -631,14 +631,19 @@ function Definition (packets, transforms, options) {
                 method.line()
                 sum = 0
             }
+            var source = new Source
+            var range = function (field, variable) {
+                var summary = variable + '.length'
+                if (field.terminator) summary += ' + ' + field.terminator.length
+                source.consume(rangeCheck('end - start < ' + summary, 'start', index))
+                fixed = false
+            }
+            block(source, range)
+            method.consume(source)
         }
 
         if (sum) {
-            var range = rangeCheck('end - start < ' + sum, 'start', patternIndex)
-            method.consume(range)
-            method.consume(section)
-            sums.push(sum)
-            sum = 0
+            unfix(pattern.length, function () {})
         } else {
             method.consume(section)
         }
@@ -1074,13 +1079,13 @@ function Definition (packets, transforms, options) {
 
     function compile (pattern) {
         var object = { pattern: parse(pattern) }
-        object.createParser = compileParser(object)
         if (canCompileSizeOf(object.pattern)) {
             object.sizeOf = compileSizeOf(object)
         }
         if (canCompileSerializer(object.pattern)) {
             object.createSerializer = compileSerializer(object)
         }
+        object.createParser = compileParser(object)
         return object
     }
 
