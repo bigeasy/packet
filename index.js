@@ -16,11 +16,7 @@ function canCompileSerializer (pattern) {
 
 function canCompileSizeOf (pattern) {
     return pattern.every(function (part) {
-        return !/^[lx]$/.test(part.endianness)
-            && !/^[fa]$/.test(part.type)
-            && part.bytes == 1
-            && !part.arrayed
-            && !part.signed
+        return !part.arrayed
             && !part.packing
             && !part.alternation
             && !part.pipeline
