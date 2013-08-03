@@ -691,7 +691,7 @@ function Definition (packets, transforms, options) {
                 }
             }
             if (bytes == 1) {
-                source.line('buffer[' + inc() + '] = ' + variable + ' & 0xff')
+                source.line('buffer[' + inc() + '] = ' + variable)
             } else {
                 source.hoist('value')
                 source.line('value = ' + variable)
