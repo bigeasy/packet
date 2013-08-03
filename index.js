@@ -7,7 +7,6 @@ var __slice = [].slice
 function canCompileSerializer (pattern) {
     return pattern.every(function (part) {
         return !part.terminator
-            && !part.packing
             && !part.alternation
             && !part.pipeline
     })
@@ -797,8 +796,52 @@ function Definition (packets, transforms, options) {
                     section.line()
                 }
             } else if (!field.lengthEncoding) {
-                section.consume(element(reference, field))
-                sum += field.bytes * field.repeat
+                if (field.packing) {
+                    section.hoist('value')
+                    var bit = 0
+                    var assign = ' = '
+                    var first = true
+                    for (var i = 0, I = field.packing.length; i < I; i++) {
+                        var line = ''
+                        var pack = field.packing[i]
+                        var reference = 'object[' + JSON.stringify(pack.name) + ']'
+                        var mask = '0xff' + new Array(field.bytes).join('ff')
+                        if (pack.endianness != 'x' || pack.padding != null) {
+                            if (pack.padding != null) {
+                                reference = '0x' + pack.padding.toString(16)
+                            }
+                            if (first) {
+                                if (pack.signed) {
+                                    section.hoist('unsigned')
+                                }
+                                line = 'value'
+                                line = 'value = ('
+                                first = false
+                            } else {
+                                line = '  ('
+                            }
+                            if (pack.signed) {
+                                var bits = '0x' + (mask >>> (field.bits - pack.bits)).toString(16)
+                                var top = '0x' + (1 << pack.bits - 1).toString(16)
+                                section.line('unsigned = ' + reference)
+                                section.line('unsigned = unsigned < 0 ?')
+                                section.text(' (', bits, ' + unsigned + 1)')
+                                section.text(' : unsigned')
+                                reference = 'unsigned'
+                            }
+                            line += reference + ' << ' + (field.bits - (bit + pack.bits))
+                            line += ') +'
+                            section.line(line)
+                        }
+                        bit += pack.bits
+                    }
+                    section.replace(/ \+$/, '')
+                    section.replace(/ << 0\)$/, ')')
+                    section.consume(element('value', field))
+                } else {
+                    section.consume(element(reference, field))
+                    sum += field.bytes * field.repeat
+                }
             }
         }
 
