@@ -357,7 +357,7 @@ function Definition (packets, transforms, options) {
         var length = []
         var unfixify = false
 
-        method.hoist('object = {}')
+        method.hoist('read')
 
         function fix () {
             if (!fixed) fixed = true
@@ -641,18 +641,10 @@ function Definition (packets, transforms, options) {
         var substart = length.slice()
         if (~length.indexOf('(start - first)')) substart.unshift('first')
 
-        method.block('                                                                              \n\
-            this.length = ' + length.join(' + ') + ';                                               \n\
-                                                                                                    \n\
-            this.parse = null                                                                       \n\
-                                                                                                    \n\
-            callback(object);                                                                       \n\
-                                                                                                    \n\
-            if (this.parse) {                                                                       \n\
-                return ' + length.join(' + ') + ' + this.parse(buffer, ' + substart.join(' + ') + ', end);\n\
-            } else {                                                                                \n\
-                return ' + length.join(' + ') + ';                                                  \n\
-            }                                                                                       \n\
+        method.block('                                                    \n\
+            read = ' + length.join(' + ') + '                             \n\
+                                                                          \n\
+            return callback(object, read, buffer, start + read, end)      \n\
         ')
 
         var parser = ('return ' + method.define('buffer', 'start', 'end')).split(/\n/)
@@ -674,7 +666,7 @@ function Definition (packets, transforms, options) {
         var variables = {}
         var prefix = [ 'serializer' ]
 
-        method.hoist('length')
+        method.hoist('written')
 
         function unsigned (variable, field, increment) {
             var source = new Source
@@ -833,20 +825,11 @@ function Definition (packets, transforms, options) {
         var substart = lengths.slice()
         if (~lengths.indexOf('(start - first)')) substart.unshift('first')
 
-        method.consume(sizeOfSource('this.length =', variables, object))
+        method.consume(sizeOfSource('written =', variables, object))
         method.line()
 
         method.block('                                                              \n\
-            length = this.length \n\
-            this.write = null                                                       \n\
-                                                                                    \n\
-            callback && callback()                                                  \n\
-                                                                                    \n\
-            if (this.write) {                                                       \n\
-                return length + this.write(buffer, start + length, end)   \n\
-            } else {                                                                \n\
-                return length                                                  \n\
-            }                                                                       \n\
+            return callback(written, buffer, start + written, end)                  \n\
         ')
 
         var serializer = ('return ' + method.define('buffer', 'start', 'end')).split(/\n/)
@@ -1002,11 +985,9 @@ function Parser (definition, options) {
 
 function createGenericParser (options, definition, pattern, patternIndex, callback, fields) {
     var context = options.context || this
+    var read = 0
     var increment, valueOffset, terminal, terminated, terminator, value,
     skipping, repeat, step, index, arrayed, pattern, patternIndex, fields
-    //#### parser.parse(buffer[, start][, length])
-    // The `parse` method reads from the buffer, returning when the current pattern
-    // is read, or the end of the buffer is reached.
 
     // Prepare the parser for the next field in the pattern.
     function nextField ()  {
@@ -1062,7 +1043,7 @@ function createGenericParser (options, definition, pattern, patternIndex, callba
                 var begin    = bufferOffset
                 bufferOffset       += advance
                 skipping   -= advance
-                this.length  += advance
+                read  += advance
                 // If we have more bytes to skip, then break because we've consumed the
                 // entire buffer.
                 if (skipping) break
@@ -1074,7 +1055,7 @@ function createGenericParser (options, definition, pattern, patternIndex, callba
                         value[valueOffset] = buffer[bufferOffset]
                         bufferOffset++
                         valueOffset += increment
-                        this.length++
+                        read++
                         if (valueOffset == terminal) break
                         if (bufferOffset == bufferEnd) break PATTERN
                     }
@@ -1085,7 +1066,7 @@ function createGenericParser (options, definition, pattern, patternIndex, callba
                         value += Math.pow(256, valueOffset) * buffer[bufferOffset]
                         bufferOffset++
                         valueOffset += increment
-                        this.length++
+                        read++
                         if (valueOffset == terminal) break
                         if (bufferOffset == bufferEnd) break PATTERN
                     }
@@ -1232,7 +1213,7 @@ function createGenericParser (options, definition, pattern, patternIndex, callba
                         if (branch.failed)
                             throw new Error('Cannot match branch.')
                         bytes = arrayed.slice(0)
-                        this.length -= bytes.length
+                        read -= bytes.length
                         pattern.splice.apply(pattern, [ patternIndex, 1 ].concat(branch.pattern))
                         nextField()
                         nextValue()
@@ -1256,11 +1237,7 @@ function createGenericParser (options, definition, pattern, patternIndex, callba
                 // callback may specify a subsequent packet to parse.
                 if (++patternIndex == pattern.length) {
                     pattern = null
-                    this.parse = null
-                    callback.call(context, fields)
-                    if (this.parse) {
-                        bufferOffset += this.parse(buffer, bufferOffset, bufferEnd)
-                    }
+                    callback.call(context, fields, read, buffer, bufferOffset, bufferEnd)
                 // Otherwise we proceed to the next field in the packet pattern.
                 } else {
                     nextField()
@@ -1336,12 +1313,14 @@ function Serializer(definition, options) {
         }
     }
 
+    function read (read) { return read }
+
     function serialize () {
         var shiftable = __slice.call(arguments)
 
         compiled = definition.pattern(shiftable.shift())
 
-        var callback = typeof shiftable[shiftable.length - 1] == 'function' ? shiftable.pop() : void(0)
+        var callback = typeof shiftable[shiftable.length - 1] == 'function' ? shiftable.pop() : read
 
         this.length = 0
 
@@ -1349,7 +1328,7 @@ function Serializer(definition, options) {
 
         function incremental (buffer, start, end, pattern, patternIndex, object, callback) {
             this.write = createGenericWriter(pattern.slice(patternIndex), object, callback)
-            this.write(buffer, start, end)
+            return this.write(buffer, start, end)
         }
 
         if (canCompileSerializer(compiled.pattern)) {

@@ -14,10 +14,10 @@ module.exports = require('proof')(function (equal, deepEqual) {
         var vargs = slice(arguments, 0)
         var message = vargs.pop()
         var bytes = vargs.pop()
-        var written = vargs.pop()
+        var length = vargs.pop()
         var options = (typeof vargs[0] == 'object' && ! Array.isArray(vargs[0])) ? vargs.shift() : {}
         var buffer = Array.isArray(vargs[0]) ? vargs.shift() : new Buffer(1024)
-        var sum
+        var written
 
         if (options.require) {
             options.precompiler = require('../require')
@@ -29,18 +29,21 @@ module.exports = require('proof')(function (equal, deepEqual) {
 
         var sizeOf = serializer.sizeOf
 
-        if (Array.isArray(written)) {
-            written = written.reduce(function (previous, current) {
-                serializer.write(buffer, previous, previous + current)
+        if (Array.isArray(length)) {
+            written = length.reduce(function (previous, current) {
+                var written = serializer.write(buffer, previous, previous + current)
+                return previous + written
+            }, 0)
+            length = length.reduce(function (previous, current) {
                 return previous + current
             }, 0)
         } else {
-            serializer.write(buffer, 0, buffer.length)
+            written = serializer.write(buffer, 0, buffer.length)
         }
 
-        equal(sizeOf, written, message + ' sizeOf')
-        equal(serializer.length, written, message + ' byte count')
-        deepEqual(toArray(buffer.slice(0, serializer.length)), bytes, message + ' written')
+        equal(sizeOf, length, message + ' sizeOf')
+        equal(written, length, message + ' byte count')
+        deepEqual(toArray(buffer.slice(0, written)), bytes, message + ' written')
     }
 
     return { createSerializer: createSerializer, serialize: serialize, toArray: toArray }
