@@ -6,8 +6,7 @@ var __slice = [].slice
 
 function canCompileSerializer (pattern) {
     return pattern.every(function (part) {
-        return !/^[a]$/.test(part.type)
-            && !part.terminator
+        return !part.terminator
             && !part.lengthEncoding
             && !part.packing
             && !part.alternation
