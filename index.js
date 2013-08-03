@@ -15,9 +15,7 @@ function canCompileSerializer (pattern) {
 
 function canCompileSizeOf (pattern) {
     return pattern.every(function (part) {
-        return !part.terminator
-            && !part.alternation
-            && !part.pipeline
+        return !part.alternation
     })
 }
 
@@ -191,16 +189,6 @@ Source.prototype.replace = function () {
     var last = this._lines[this._lines.length - 1]
     last = last.replace.apply(last, __slice.call(arguments))
     this._lines[this._lines.length - 1] = last
-}
-
-Source.prototype.body = function () {
-    var source = new Source
-    if (this._hoisted.length) {
-        source.line('var ', this._hoisted.join(', '), ';')
-        source.line()
-    }
-    source.consume(this)
-    return source._lines.join('\n')
 }
 
 Source.prototype.define = function () {
@@ -874,6 +862,9 @@ function Definition (packets, transforms, options) {
                     } else {
                         values.push('(' + variable + '.length * ' + field.bytes + ')')
                     }
+                    if (field.terminator) {
+                        fixed += field.terminator.length
+                    }
                 }
             } else {
                 fixed += field.bytes * field.repeat
@@ -901,28 +892,33 @@ function Definition (packets, transforms, options) {
         var pattern = object.pattern
         var source = new Source
 
-        var fixed = 0
         var variables = []
         var count = 0
 
         function unravel (field, index) {
             var reference = 'object[' + JSON.stringify(field.name) + ']'
             var variable = 'field' + (++count)
-            if (field.arrayed && field.repeat == Math.MAX_VALUE) {
+            if (field.pipeline) {
                 source.hoist(variable)
                 source.line(variable + ' = ' + reference)
-                fixed += field.bytes * field.repeat
+                field.pipeline.slice().reverse().forEach(function (transform) {
+                    var parameters = transform.parameters.map(function (paramaeter) {
+                        return JSON.stringify(paramaeter)
+                    }).concat([ 'false', 'null', variable ]).join(', ')
+                    source.line(variable, ' = transforms.', transform.name, '(', parameters, ')')
+                })
+                source.line()
                 variables[field.name] = variable
             }
         }
 
         pattern.forEach(unravel)
 
-        source.consume(sizeOfSource('return ', variables, object))
+        source.consume(sizeOfSource('return', variables, object))
 
-        var sizeOf = (source.body()).split(/\n/)
+        var sizeOf = ('return ' + source.define('object')).split(/\n/)
 
-        return precompiler('sizeOf', pattern, [ 'object' ], sizeOf)
+        return precompiler('sizeOf', pattern, [ 'transforms' ], sizeOf)(transforms)
     }
 
     function compile (pattern) {
