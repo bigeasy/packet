@@ -11,6 +11,19 @@ function canCompileSerializer (pattern) {
     })
 }
 
+function canCompileSerializerUsingSource (pattern) {
+    return pattern.every(function (part) {
+        return !/^[lx]$/.test(part.endianness)
+            && !/^[f]$/.test(part.type)
+            && part.bytes == 1
+            && !part.arrayed
+            && !part.signed
+            && !part.packing
+            && !part.alternation
+            && !part.pipeline
+    })
+}
+
 function canCompileSizeOf (pattern) {
     return pattern.every(function (part) {
         return !part.alternation
@@ -665,6 +678,84 @@ function Definition (packets, transforms, options) {
         return precompiler(prefix.join('.'), pattern, parameters, parser)
     }
 
+    function compileSerializerUsingSource (object) {
+        var source = require('source')
+        var field = object.pattern[0]
+        var pattern = object.pattern
+        var ranges = [{ size: 0, fixed: true, pattern: [], patternIndex: 0 }]
+        var fixed
+
+        pattern.forEach(function (field, index) {
+            ranges[0].size += field.bytes * field.repeat
+            ranges[0].pattern.push(field)
+        })
+
+        var serializer = source()
+
+        ranges.forEach(function (range) {
+            var section = source()
+
+            section(function () {
+                if (end - start < $size) {
+                    inc.call(buffer, start, end, $patternIndex)
+                }
+            })
+
+            section.$patternIndex(range.patternIndex)
+            section.$size(range.size)
+
+            range.pattern.forEach(function (field, index) {
+                var assignment = source()
+                assignment(function () {
+
+                    buffer[$index] = $fiddle
+                })
+                assignment.$index('start')
+                assignment.$fiddle(function () { object[$name] })
+                assignment.$name(JSON.stringify(field.name))
+                section(String(assignment))
+            })
+
+            if (range.fixed) section(function () {
+
+                start += $size
+            })
+
+            serializer(String(section))
+        })
+
+        serializer(function () {
+
+            this.write = terminator
+
+            callback()
+
+            if (this.write === terminator) {
+                return start
+            }
+
+            return this.write(buffer, start, end)
+        })
+
+        var constructor = source(function () {
+            $.var(inc)
+        }, function () {
+
+            inc = function (buffer, start, end, index) {
+                incremental.call(this, buffer, start, end, pattern, index, object, callback)
+            }
+
+            return $serializer
+        })
+        constructor.$serializer(String(serializer.compile('buffer', 'start', 'end')))
+
+        var serializer = String(constructor).split(/\n/)
+
+        var prefix = [ 'serializer' ]
+
+        return precompiler(prefix.join('.'), pattern, parameters, serializer)
+    }
+
     function compileSerializer (object) {
         var method = new Source
         var section = new Source
@@ -1079,13 +1170,15 @@ function Definition (packets, transforms, options) {
 
     function compile (pattern) {
         var object = { pattern: parse(pattern) }
+        object.createParser = compileParser(object)
         if (canCompileSizeOf(object.pattern)) {
             object.sizeOf = compileSizeOf(object)
         }
-        if (canCompileSerializer(object.pattern)) {
+        if (canCompileSerializerUsingSource(object.pattern)) {
+            object.createSerializer = compileSerializerUsingSource(object)
+        } else if (canCompileSerializer(object.pattern)) {
             object.createSerializer = compileSerializer(object)
         }
-        object.createParser = compileParser(object)
         return object
     }
 
