@@ -679,7 +679,21 @@ function Definition (packets, transforms, options) {
     }
 
     function compileSerializerUsingSource (object) {
-        return require('./compilers').compileSerializer(object, precompiler)
+        var field = object.pattern[0]
+        var pattern = object.pattern
+        var ranges = [{ size: 0, fixed: true, pattern: [], patternIndex: 0 }]
+        var prefix = [ 'serializer' ]
+
+        pattern.forEach(function (field, index) {
+            ranges[0].size += field.bytes * field.repeat
+            ranges[0].pattern.push(field)
+        })
+
+        var serializer = require('./composers').composeSerializer(ranges)
+
+        serializer = serializer.split(/\n/)
+
+        return precompiler(prefix.join('.'), pattern, parameters, serializer)
     }
 
     function compileSerializer (object) {

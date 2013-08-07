@@ -1,17 +1,6 @@
 var source = require('source')
-var parameters = [ 'incremental', 'terminator', 'pattern', 'transforms', 'ieee754', 'object', 'callback' ]
 
-exports.compileSerializer = function (object, precompiler) {
-    var field = object.pattern[0]
-    var pattern = object.pattern
-    var ranges = [{ size: 0, fixed: true, pattern: [], patternIndex: 0 }]
-    var fixed
-
-    pattern.forEach(function (field, index) {
-        ranges[0].size += field.bytes * field.repeat
-        ranges[0].pattern.push(field)
-    })
-
+exports.composeSerializer = function (ranges) {
     var serializer = source()
 
     ranges.forEach(function (range) {
@@ -69,11 +58,7 @@ exports.compileSerializer = function (object, precompiler) {
 
         return $serializer
     })
-    constructor.$serializer(String(serializer.compile('buffer', 'start', 'end')))
+    constructor.$serializer(serializer.define('buffer', 'start', 'end'))
 
-    var serializer = String(constructor).split(/\n/)
-
-    var prefix = [ 'serializer' ]
-
-    return precompiler(prefix.join('.'), pattern, parameters, serializer)
+    return String(constructor)
 }
