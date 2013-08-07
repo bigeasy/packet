@@ -11,7 +11,33 @@ function canCompileSerializer (pattern) {
     })
 }
 
+function canCompileParserUsingSource (pattern) {
+    return pattern.every(function (part) {
+        return !/^[lx]$/.test(part.endianness)
+            && !/^[f]$/.test(part.type)
+            && part.bytes == 1
+            && !part.arrayed
+            && !part.signed
+            && !part.packing
+            && !part.alternation
+            && !part.pipeline
+    })
+}
+
 function canCompileSerializerUsingSource (pattern) {
+    return pattern.every(function (part) {
+        return !/^[lx]$/.test(part.endianness)
+            && !/^[f]$/.test(part.type)
+            && part.bytes == 1
+            && !part.arrayed
+            && !part.signed
+            && !part.packing
+            && !part.alternation
+            && !part.pipeline
+    })
+}
+
+function canCompileSizeOfUsingSource (pattern) {
     return pattern.every(function (part) {
         return !/^[lx]$/.test(part.endianness)
             && !/^[f]$/.test(part.type)
@@ -679,21 +705,51 @@ function Definition (packets, transforms, options) {
     }
 
     function compileSerializerUsingSource (object) {
-        var field = object.pattern[0]
         var pattern = object.pattern
-        var ranges = [{ size: 0, fixed: true, pattern: [], patternIndex: 0 }]
-        var prefix = [ 'serializer' ]
-
-        pattern.forEach(function (field, index) {
-            ranges[0].size += field.bytes * field.repeat
-            ranges[0].pattern.push(field)
-        })
+        var ranges = rangify(object)
+        var prefix = [ 'serialize' ]
 
         var serializer = require('./composers').composeSerializer(ranges)
 
         serializer = serializer.split(/\n/)
 
         return precompiler(prefix.join('.'), pattern, parameters, serializer)
+    }
+
+    function compileSerializerUsingSizeOf (object) {
+        var pattern = object.pattern
+        var ranges = rangify(object)
+        var prefix = [ 'serialize' ]
+
+        var serializer = require('./composers').composeSizeOf(ranges)
+
+        serializer = serializer.split(/\n/)
+
+        return precompiler(prefix.join('.'), pattern, parameters, serializer)
+    }
+
+    function rangify (object) {
+        var pattern = object.pattern
+        var ranges = [{ size: 0, fixed: true, pattern: [], patternIndex: 0 }]
+
+        pattern.forEach(function (field, index) {
+            ranges[0].size += field.bytes * field.repeat
+            ranges[0].pattern.push(field)
+        })
+
+        return ranges
+    }
+
+    function compileParserUsingSource (object) {
+        var pattern = object.pattern
+        var ranges = rangify(object)
+        var prefix = [ 'parser' ]
+
+        var parser = require('./composers').composeParser(ranges)
+
+        parser = parser.split(/\n/)
+
+        return precompiler(prefix.join('.'), pattern, parameters, parser)
     }
 
     function compileSerializer (object) {
@@ -1075,6 +1131,18 @@ function Definition (packets, transforms, options) {
         return source
     }
 
+    function compileSizeOfUsingSource (object) {
+        var pattern = object.pattern
+        var ranges = rangify(object)
+        var prefix = [ 'sizeOf' ]
+
+        var sizeOf = require('./composers').composeSizeOf(ranges)
+
+        sizeOf = sizeOf.split(/\n/)
+
+        return precompiler(prefix.join('.'), pattern, [ 'object' ], sizeOf)
+    }
+
     function compileSizeOf (object) {
         var pattern = object.pattern
         var source = new Source
@@ -1110,8 +1178,14 @@ function Definition (packets, transforms, options) {
 
     function compile (pattern) {
         var object = { pattern: parse(pattern) }
-        object.createParser = compileParser(object)
-        if (canCompileSizeOf(object.pattern)) {
+        if (canCompileSerializerUsingSource(object.pattern)) {
+            object.createParser = compileParserUsingSource(object)
+        } else {
+          object.createParser = compileParser(object)
+        }
+        if (canCompileSizeOfUsingSource(object.pattern)) {
+            object.sizeOf = compileSizeOfUsingSource(object)
+        } else if (canCompileSizeOf(object.pattern)) {
             object.sizeOf = compileSizeOf(object)
         }
         if (canCompileSerializerUsingSource(object.pattern)) {
