@@ -12,11 +12,12 @@
     "bugs":             "https://github.com/bigeasy/packet/issues",
     "devDependencies":
     {
-                        "proof": "0.0.35"
+                        "proof": "0.0.35",
+                        "uglify-js": "~1.3"
     },
     "dependencies":
     {
-        "source": "git+https://github.com/bigeasy/source.git#197020d6279f4ac28e4cb638bd628fe1cb8822ed"
+        "source": "git+https://github.com/bigeasy/source.git#b8bb1df21ed8c07758892132960d0b1380e15f77"
     },
     "repository":
     {
