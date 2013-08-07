@@ -13,9 +13,8 @@ function canCompileSerializer (pattern) {
 
 function canCompileParserUsingSource (pattern) {
     return pattern.every(function (part) {
-        return !/^[lx]$/.test(part.endianness)
+        return !/^[x]$/.test(part.endianness)
             && !/^[f]$/.test(part.type)
-            && part.bytes == 1
             && !part.arrayed
             && !part.signed
             && !part.packing
@@ -26,9 +25,8 @@ function canCompileParserUsingSource (pattern) {
 
 function canCompileSerializerUsingSource (pattern) {
     return pattern.every(function (part) {
-        return !/^[lx]$/.test(part.endianness)
+        return !/^[x]$/.test(part.endianness)
             && !/^[f]$/.test(part.type)
-            && part.bytes == 1
             && !part.arrayed
             && !part.signed
             && !part.packing
@@ -39,9 +37,8 @@ function canCompileSerializerUsingSource (pattern) {
 
 function canCompileSizeOfUsingSource (pattern) {
     return pattern.every(function (part) {
-        return !/^[lx]$/.test(part.endianness)
+        return !/^[x]$/.test(part.endianness)
             && !/^[f]$/.test(part.type)
-            && part.bytes == 1
             && !part.arrayed
             && !part.signed
             && !part.packing
@@ -1178,7 +1175,7 @@ function Definition (packets, transforms, options) {
 
     function compile (pattern) {
         var object = { pattern: parse(pattern) }
-        if (canCompileSerializerUsingSource(object.pattern)) {
+        if (canCompileParserUsingSource(object.pattern)) {
             object.createParser = compileParserUsingSource(object)
         } else {
           object.createParser = compileParser(object)
