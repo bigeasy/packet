@@ -21,17 +21,17 @@ function composeIncrementalParser (ranges) {
             variables(variable)
 
             section('\n\
-                case $initiationIndex:                  \n\
-                    $initialization                     \n\
-                    index = $parseIndex                 \n\
-                case $parseIndex:                       \n\
-                    $parse                              \
+                case $initiationIndex:                                      \n\
+                    $initialization                                         \n\
+                    index = $parseIndex                                     \n\
+                case $parseIndex:                                           \n\
+                    $parse                                                  \
             ')
             section.$initiationIndex(index)
 
             section.$initialization('\n\
-                    _$field = 0                         \n\
-                    bite = $start                       \n\
+                    _$field = 0                                             \n\
+                    bite = $start                                           \n\
             ')
             section.$start(bite)
 
@@ -40,11 +40,11 @@ function composeIncrementalParser (ranges) {
             var operation = source()
 
             operation('\n\
-                while (bite != $stop) {                                         \n\
-                    if (start == end) return start                              \n\
-                    _$field += Math.pow(256, bite) * buffer[start++]            \n\
-                    $direction                                                  \n\
-                }                                                               \n\
+                while (bite != $stop) {                                     \n\
+                    if (start == end) return start                          \n\
+                    _$field += Math.pow(256, bite) * buffer[start++]        \n\
+                    $direction                                              \n\
+                }                                                           \n\
                 object[$name] = _$field')
             operation.$stop(stop)
             operation.$name(JSON.stringify(field.name))
@@ -58,24 +58,24 @@ function composeIncrementalParser (ranges) {
 
      var parser = source()
      parser('\n\
-        switch (index) {                            \
-        $cases                                      \n\
-        }                                           \n\
-                                                    \n\
-        // todo: all wrong                          \n\
-        return callback(object)                     \n\
+        switch (index) {                                                    \
+        $cases                                                              \n\
+        }                                                                   \n\
+                                                                            \n\
+        // todo: all wrong                                                  \n\
+        return callback(object)                                             \n\
     ')
     parser.$cases(cases)
 
     var builder = source()
 
     builder('\n\
-        var bite                                    \n\
-        $variables                                  \n\
-                                                    \n\
-        this.parse = $parser                        \n\
-                                                    \n\
-        return this.parse(buffer, start, end)       \n\
+        var bite                                                            \n\
+        $variables                                                          \n\
+                                                                            \n\
+        this.parse = $parser                                                \n\
+                                                                            \n\
+        return this.parse(buffer, start, end)                               \n\
     ')
     builder.$variables(variables)
     builder.$parser(parser.define('buffer', 'start', 'end'))
@@ -89,11 +89,11 @@ exports.composeParser = function (ranges) {
     ranges.forEach(function (range) {
         var section = source()
 
-        section(function () {
-            if (end - start < $size) {
-                return inc.call(this, buffer, start, end, $patternIndex)
-            }
-        })
+        section('\n\
+            if (end - start < $size) {                                      \n\
+                return inc.call(this, buffer, start, end, $patternIndex)    \n\
+            }                                                               \
+        ')
 
         section.$patternIndex(range.patternIndex)
         section.$size(range.size)
@@ -102,10 +102,9 @@ exports.composeParser = function (ranges) {
         range.pattern.forEach(function (field, index) {
             var assignment = source()
             if (field.bytes == 1) {
-                assignment(function () {
-
-                    $variable = buffer[$inc]
-                })
+                assignment('\n\
+                    $variable = buffer[$inc]                                \n\
+                ')
                 assignment.$inc(offset ? 'start + $offset' : 'start')
                 assignment.$offset && assignment.$offset(offset)
                 offset++
@@ -133,11 +132,10 @@ exports.composeParser = function (ranges) {
                     read(String(fiddle))
                     bite += direction
                 }
-                assignment(function () {
-
-                    $variable =
-                        $read
-                })
+                assignment('\n\
+                    $variable =                                             \n\
+                        $read                                               \n\
+                ')
                 read = String(read).replace(/ \+$/, '')
                 assignment.$read(read)
             }
@@ -146,37 +144,26 @@ exports.composeParser = function (ranges) {
             section(String(assignment))
         })
 
-        if (range.fixed) section(function () {
-
-            start += $size
-        })
+        if (range.fixed) section('\n\
+            start += $size                                                  \n\
+        ')
 
         parser(String(section))
     })
 
-    parser(function () {
+    parser('\n\
+        return callback(object)                                             \n\
+    ')
 
-        return callback(object)
-    })
+    var constructor = source('\
+        var inc                                                             \n\
+                                                                            \n\
+        $incremental                                                        \n\
+                                                                            \n\
+        return $parser                                                      \
+    ')
 
-    var constructor = source(function () {
-        $.var(inc)
-    }, function () {
-
-        $incremental
-    }, function () {
-
-        return $parser
-    })
-    if (false) {
-        constructor.$incremental(function () {
-            inc = function (buffer, start, end, index) {
-                return incremental.call(this, buffer, start, end, pattern, index, object, callback)
-            }
-        })
-    } else {
-        constructor.$incremental(composeIncrementalParser(ranges))
-    }
+    constructor.$incremental(composeIncrementalParser(ranges))
 
     constructor.$parser(parser.define('buffer', 'start', 'end'))
 
