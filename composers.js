@@ -178,11 +178,11 @@ exports.composeSerializer = function (ranges) {
         var section = source()
         var offset = 0
 
-        section(function () {
-            if (end - start < $size) {
-                return inc.call(this, buffer, start, end, $patternIndex)
-            }
-        })
+        section('\n\
+            if (end - start < $size) {                                      \n\
+                return inc.call(this, buffer, start, end, $patternIndex)    \n\
+            }                                                               \n\
+        ')
 
         section.$patternIndex(range.patternIndex)
         section.$size(range.size)
@@ -190,10 +190,9 @@ exports.composeSerializer = function (ranges) {
         range.pattern.forEach(function (field, index) {
             var assignment = source()
             if (field.bytes == 1) {
-                assignment(function () {
-
-                    buffer[$inc] = $fiddle
-                })
+                assignment('\n\
+                    buffer[$inc] = $fiddle                                  \n\
+                ')
                 assignment.$inc(offset ? 'start + $offset' : 'start')
                 assignment.$offset && assignment.$offset(offset)
                 assignment.$fiddle(function () { object[$name] })
@@ -208,10 +207,9 @@ exports.composeSerializer = function (ranges) {
                 var assign
 
                 variables.value = true
-                assignment(function () {
-
-                    value = object[$name]
-                })
+                assignment('\n\
+                    value = object[$name]                                   \n\
+                ')
                 while (bite != stop) {
                     var write = source()
                     write(function () {
@@ -230,10 +228,9 @@ exports.composeSerializer = function (ranges) {
             section(String(assignment))
         })
 
-        if (range.fixed) section(function () {
-
-            start += $size
-        })
+        if (range.fixed) section('\n\
+            start += $size                                                  \n\
+        ')
 
         sections(String(section))
     })
@@ -242,41 +239,40 @@ exports.composeSerializer = function (ranges) {
 
     variables = Object.keys(variables).sort().join(', ')
     if (variables) {
-        serializer(function () {
-            $.var($variables)
-        })
+        serializer('\n\
+            var $variables                                                  \n\
+        ')
     }
 
-    serializer(function () {
-
-        $sections
-    })
+    serializer('\
+        $sections                                                           \n\
+    ')
 
     serializer.$variables && serializer.$variables(variables)
-    serializer.$sections(String(sections))
+    serializer.$sections(sections)
 
-    serializer(function () {
-        this.write = terminator
+    serializer('\
+        this.write = terminator                                             \n\
+                                                                            \n\
+        callback()                                                          \n\
+                                                                            \n\
+        if (this.write === terminator) {                                    \n\
+            return start                                                    \n\
+        }                                                                   \n\
+                                                                            \n\
+        return this.write(buffer, start, end)                               \n\
+    ')
 
-        callback()
+    var constructor = source('\
+        var inc                                                             \n\
+                                                                            \n\
+        inc = function (buffer, start, end, index) {                        \n\
+            return null                                                     \n\
+        }                                                                   \n\
+                                                                            \n\
+        return $serializer                                                  \
+    ')
 
-        if (this.write === terminator) {
-            return start
-        }
-
-        return this.write(buffer, start, end)
-    })
-
-    var constructor = source(function () {
-        $.var(inc)
-    }, function () {
-
-        inc = function (buffer, start, end, index) {
-            return incremental.call(this, buffer, start, end, pattern, index, object, callback)
-        }
-
-        return $serializer
-    })
     constructor.$serializer(serializer.define('buffer', 'start', 'end'))
 
     return String(constructor)
