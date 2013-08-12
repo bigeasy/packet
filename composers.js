@@ -170,6 +170,96 @@ exports.composeParser = function (ranges) {
     return String(constructor)
 }
 
+function composeIncrementalSerializer (ranges) {
+    var cases = source()
+
+    var variables = source()
+
+    ranges.forEach(function (range, rangeIndex) {
+        var section = source()
+        var offset = 0
+
+        range.pattern.forEach(function (field, patternIndex) {
+            var section = source()
+            var index = (rangeIndex + patternIndex) * 2
+            var little = field.endianness == 'l'
+            var bytes = field.bytes
+            var bite = little ? 0 : bytes - 1
+            var direction = little ? 1 : -1
+            var stop = little ? bytes : -1
+
+            var variable = source('var _$field')
+            variable.$field(field.name)
+            variables(variable)
+
+            section('\
+                case $initiationIndex:                                      \n\
+                    $initialization                                         \n\
+                    index = $parseIndex                                     \n\
+                case $parseIndex:                                           \n\
+                    $parse                                                  \
+            ')
+            section.$initiationIndex(index)
+
+            section.$initialization('\n\
+                    _$field = object[$name]                                 \n\
+                    bite = $start                                           \n\
+            ')
+            section.$start(bite)
+            section.$name(JSON.stringify(field.name))
+            section.$field(field.name)
+            section.$parseIndex(index + 1)
+
+            var operation = source()
+
+            operation('\n\
+                while (bite != $stop) {                                     \n\
+                    if (start == end) return start                          \n\
+                    buffer[start++] = (_$field >>> bite * 8) & 0xff         \n\
+                    $direction                                              \n\
+                }                                                           \
+            ')
+            operation.$stop(stop)
+            operation.$field(field.name)
+            operation.$direction(direction < 0 ? 'bite--' : 'bite++')
+            section.$parse(operation)
+
+            cases(section)
+        })
+    })
+
+    var serializer = source('\
+        switch (index) {                                                    \n\
+        $cases                                                              \n\
+        }                                                                   \n\
+                                                                            \n\
+        this.write = terminator                                             \n\
+                                                                            \n\
+        callback()                                                          \n\
+                                                                            \n\
+        if (this.write === terminator) {                                    \n\
+            return start                                                    \n\
+        }                                                                   \n\
+                                                                            \n\
+        return this.write(buffer, start, end)                               \n\
+    ')
+    serializer.$cases(cases)
+
+    var incremental = source('\
+        var index                                                           \n\
+        var bite                                                            \n\
+        $variables                                                          \n\
+                                                                            \n\
+        this.write = $serializer                                            \n\
+                                                                            \n\
+        return this.write(buffer, start, end)                               \n\
+    ')
+    incremental.$serializer(serializer.define('buffer', 'start', 'end'))
+    incremental.$variables(variables)
+
+    return incremental.define('buffer', 'start', 'end', 'index')
+}
+
 exports.composeSerializer = function (ranges) {
     var sections = source()
     var variables = {}
@@ -263,17 +353,17 @@ exports.composeSerializer = function (ranges) {
         return this.write(buffer, start, end)                               \n\
     ')
 
+
     var constructor = source('\
         var inc                                                             \n\
                                                                             \n\
-        inc = function (buffer, start, end, index) {                        \n\
-            return null                                                     \n\
-        }                                                                   \n\
+        inc = $incremental                                                  \n\
                                                                             \n\
         return $serializer                                                  \
     ')
 
     constructor.$serializer(serializer.define('buffer', 'start', 'end'))
+    constructor.$incremental(composeIncrementalSerializer(ranges));
 
     return String(constructor)
 }
