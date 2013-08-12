@@ -6,8 +6,6 @@ module.exports = function (type, pattern, parameters, source) {
 
     builder = builder.map(function (line) { return line.replace(/^\s+$/, '') })
 
-    console.log(builder.join('\n'))
-
     function namify (f, i) {
         var scalar = f.endianness + f.bits + f.type
         if (f.signed) scalar = 'S' + scalar

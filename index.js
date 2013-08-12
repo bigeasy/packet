@@ -740,7 +740,7 @@ function Definition (packets, transforms, options) {
     function compileParserUsingSource (object) {
         var pattern = object.pattern
         var ranges = rangify(object)
-        var prefix = [ 'parser' ]
+        var prefix = [ 'parse' ]
 
         var parser = require('./composers').composeParser(ranges)
 

@@ -17,7 +17,7 @@
     },
     "dependencies":
     {
-        "source": "git+https://github.com/bigeasy/source.git#8d3165dfbec01549d966225bfdc8ba9de27a7b4f"
+        "source": "git+https://github.com/bigeasy/source.git#d7946244b324de8bc6b8fc9220de189d8bb41568"
     },
     "repository":
     {

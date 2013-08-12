@@ -1,5 +1,89 @@
 var source = require('source')
 
+function composeIncrementalParser (ranges) {
+
+    var cases = source();
+    var variables = source()
+
+    ranges.forEach(function (range, rangeIndex) {
+
+        range.pattern.forEach(function (field, patternIndex) {
+            var little = field.endianness == 'l'
+            var bytes = field.bytes
+            var bite = little ? 0 : bytes - 1
+            var direction = little ? 1 : -1
+            var stop = little ? bytes : -1
+            var section = source()
+            var index = (rangeIndex + patternIndex) * 2
+
+            var variable = source('var _$field')
+            variable.$field(field.name)
+            variables(variable)
+
+            section('\n\
+                case $initiationIndex:                  \n\
+                    $initialization                     \n\
+                    index = $parseIndex                 \n\
+                case $parseIndex:                       \n\
+                    $parse                              \n\
+            ')
+            section.$initiationIndex(index)
+
+            section.$initialization('\n\
+                    _$field = 0                         \n\
+                    bite = $start                       \n\
+            ')
+            section.$start(bite)
+
+            section.$field(field.name)
+            section.$parseIndex(index + 1)
+            var operation = source()
+
+            operation(function () {
+                while (bite != $stop) {
+                    if (start == end) return start
+                    _$field += Math.pow(256, bite) * buffer[start++]
+                    $direction
+                }
+                object[$name] = _$field
+            })
+            operation.$stop(stop)
+            operation.$name(JSON.stringify(field.name))
+            operation.$field(field.name)
+            operation.$direction(direction < 0 ? 'bite--' : 'bite++')
+            section.$parse(operation)
+            cases(section)
+        })
+
+    })
+
+     var parser = source()
+     parser('\n\
+        switch (index) {                            \n\
+        $cases                                      \n\
+        }                                           \n\
+                                                    \n\
+        // todo: all wrong                          \n\
+        return callback(object)                     \n\
+    ')
+    parser.$cases(cases)
+
+    var builder = source()
+
+    builder('\n\
+        var bite                                    \n\
+        $variables                                  \n\
+                                                    \n\
+        this.parse = $parser                        \n\
+                                                    \n\
+        return this.parse(buffer, start, end)       \n\
+    ')
+    builder.$variables(variables)
+    builder.$parser(parser.define('buffer', 'start', 'end'))
+
+    return 'inc = ' + builder.define('buffer', 'start', 'end', 'index')
+}
+
 exports.composeParser = function (ranges) {
     var parser = source()
 
@@ -80,12 +164,21 @@ exports.composeParser = function (ranges) {
         $.var(inc)
     }, function () {
 
-        inc = function (buffer, start, end, index) {
-            return incremental.call(this, buffer, start, end, pattern, index, object, callback)
-        }
+        $incremental
+    }, function () {
 
         return $parser
     })
+    if (false) {
+        constructor.$incremental(function () {
+            inc = function (buffer, start, end, index) {
+                return incremental.call(this, buffer, start, end, pattern, index, object, callback)
+            }
+        })
+    } else {
+        constructor.$incremental(composeIncrementalParser(ranges))
+    }
+
     constructor.$parser(parser.define('buffer', 'start', 'end'))
 
     return String(constructor)
