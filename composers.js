@@ -25,7 +25,7 @@ function composeIncrementalParser (ranges) {
                     $initialization                     \n\
                     index = $parseIndex                 \n\
                 case $parseIndex:                       \n\
-                    $parse                              \n\
+                    $parse                              \
             ')
             section.$initiationIndex(index)
 
@@ -39,14 +39,13 @@ function composeIncrementalParser (ranges) {
             section.$parseIndex(index + 1)
             var operation = source()
 
-            operation(function () {
-                while (bite != $stop) {
-                    if (start == end) return start
-                    _$field += Math.pow(256, bite) * buffer[start++]
-                    $direction
-                }
-                object[$name] = _$field
-            })
+            operation('\n\
+                while (bite != $stop) {                                         \n\
+                    if (start == end) return start                              \n\
+                    _$field += Math.pow(256, bite) * buffer[start++]            \n\
+                    $direction                                                  \n\
+                }                                                               \n\
+                object[$name] = _$field')
             operation.$stop(stop)
             operation.$name(JSON.stringify(field.name))
             operation.$field(field.name)
@@ -59,7 +58,7 @@ function composeIncrementalParser (ranges) {
 
      var parser = source()
      parser('\n\
-        switch (index) {                            \n\
+        switch (index) {                            \
         $cases                                      \n\
         }                                           \n\
                                                     \n\
