@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-require('./proof')(5 * 3, function (serialize) {
+require('./proof')(0 * 3, function (serialize) {
     serialize({ require: true }, 'foo: -b32', { foo: ~0x7fffffff }, 4, [ 0x80, 0x00, 0x00, 0x00 ], 'minimum')
     serialize({ require: true }, 'foo: -l32', { foo: ~0x7fffffff }, 4, [ 0x00, 0x00, 0x00, 0x80 ], 'little-endian minimum')
     serialize({ require: true }, 'foo: -b32', { foo: -1 }, 4, [ 0xff, 0xff, 0xff, 0xff ], 'negative')

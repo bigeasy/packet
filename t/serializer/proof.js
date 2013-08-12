@@ -1,4 +1,4 @@
-module.exports = require('proof')(function (equal, deepEqual) {
+module.exports = require('proof')(function (counter, equal, deepEqual) {
     var slice = Function.prototype.call.bind(Array.prototype.slice)
     var createSerializer = require('../..').createSerializer
 
@@ -18,6 +18,8 @@ module.exports = require('proof')(function (equal, deepEqual) {
         var options = (typeof vargs[0] == 'object' && ! Array.isArray(vargs[0])) ? vargs.shift() : {}
         var buffer = Array.isArray(vargs[0]) ? vargs.shift() : new Buffer(1024)
         var written
+
+        counter(3)
 
         if (options.require) {
             options.precompiler = require('../require')
