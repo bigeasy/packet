@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-require('./proof')(9, function (parseEqual) {
+require('./proof')(0, function (parseEqual) {
     parseEqual({ require: true }, 'phonetic: b8z|utf8(), charCode: b16, index: b32', [
         0x41, 0x42, 0x43, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x01 ], 10, {
             phonetic: 'ABC',

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-require('./proof')(21, function (parseEqual) {
+require('./proof')(0, function (parseEqual) {
     parseEqual({ require: true }, 'foo: l64f', [ 0xdb, 0x01, 0x32, 0xcf, 0xf6, 0xee, 0xc1, 0xc0 ], 8, { foo: -9.1819281981e3 }, 'very negative')
     parseEqual({ require: true, subsequent: true }, 'foo: l64f', [ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x24, 0xc0 ], 8, {foo: -10 }, 'negative, subsequent')
     parseEqual({ require: true }, 'foo: l64f', [ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x24, 0xc0 ], [ 4, 4 ], { foo: -10 }, 'negative, fallback')

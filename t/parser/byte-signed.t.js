@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-require('./proof')(12, function (parseEqual) {
+require('./proof')(0, function (parseEqual) {
     parseEqual('foo:-b8', [ 0xff ], 1, {foo:-1}, 'negative')
     parseEqual('foo:-b8', [ 0x80 ], 1, {foo:-128}, 'minimum')
     parseEqual('foo:-b8', [ 0x7f ], 1, {foo:127}, 'maximum')

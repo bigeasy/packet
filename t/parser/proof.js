@@ -1,4 +1,4 @@
-module.exports = require('proof')(function (equal, deepEqual, ok) {
+module.exports = require('proof')(function (counter, equal, deepEqual, ok) {
     var createParser = require('../..').createParser
 
     var slice = Function.prototype.call.bind(Array.prototype.slice)
@@ -14,6 +14,8 @@ module.exports = require('proof')(function (equal, deepEqual, ok) {
         } else {
             options = {}
         }
+
+        counter(options.count == null ? 3 : options.count)
 
         if (options.require) {
             options.precompiler = require('../require')

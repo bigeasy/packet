@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-require('./proof')(21, function (parseEqual) {
+require('./proof')(0, function (parseEqual) {
     var bytes = [ 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08 ]
     var field = bytes.slice(0)
     parseEqual({ require: true },
