@@ -37,51 +37,51 @@ module.exports = require('proof')(function (counter, equal, deepEqual) {
         _serialize(object)
     }
 
-    function _serialize (object) {
+    function _serialize (write) {
         var written
 
-        var split = Array.isArray(object.length)
+        var split = Array.isArray(write.length)
 
-        counter(3 + (split ? 0 : object.expected.length))
+        counter(3 + (split ? 0 : write.expected.length))
 
-        object.options || (object.options = {})
-        object.buffer  || (object.buffer = new Buffer(1024))
+        write.options || (write.options = {})
+        write.buffer  || (write.buffer = new Buffer(1024))
 
-        if (object.require || object.options.require) {
-            object.options.precompiler = require('../require')
+        if (write.require || write.options.require) {
+            write.options.precompiler = require('../require')
         }
 
-        var serializer = createSerializer(object.options || {})
+        var serializer = createSerializer(write.options || {})
 
-        serializer.serialize.call(serializer, object.pattern, object.object)
+        serializer.serialize.call(serializer, write.pattern, write.object)
 
         var sizeOf = serializer.sizeOf
 
         if (split) {
-            written = object.length.reduce(function (previous, current) {
-                var written = serializer.write(object.buffer, previous, previous + current) - previous
+            written = write.length.reduce(function (previous, current) {
+                var written = serializer.write(write.buffer, previous, previous + current) - previous
                 return previous + written
             }, 0)
-            object.length = object.length.reduce(function (previous, current) {
+            write.length = write.length.reduce(function (previous, current) {
                 return previous + current
             }, 0)
         } else {
-            written = serializer.write(object.buffer, 0, object.buffer.length)
+            written = serializer.write(write.buffer, 0, write.buffer.length)
         }
 
-        equal(sizeOf, object.length, object.message + ' sizeOf')
-        equal(written, object.length, object.message + ' byte count')
-        deepEqual(toArray(object.buffer.slice(0, written)), object.expected, object.message + ' written')
+        equal(sizeOf, write.length, write.message + ' sizeOf')
+        equal(written, write.length, write.message + ' byte count')
+        deepEqual(toArray(write.buffer.slice(0, written)), write.expected, write.message + ' written')
         if (!split) {
-            for (var i = 0; i < object.expected.length; i++) {
-                var serializer = createSerializer(object.options || {})
-                serializer.serialize.call(serializer, object.pattern, object.object)
-                serializer.write(object.buffer, 0, i)
-                for (var j = i; j < object.expected.length; j++) {
-                    serializer.write(object.buffer, j, j + 1)
+            for (var i = 0; i < write.expected.length; i++) {
+                var serializer = createSerializer(write.options || {})
+                serializer.serialize.call(serializer, write.pattern, write.object)
+                serializer.write(write.buffer, 0, i)
+                for (var j = i; j < write.expected.length; j++) {
+                    serializer.write(write.buffer, j, j + 1)
                 }
-                deepEqual(toArray(object.buffer.slice(0, written)),
-                          object.expected, object.message + ' written offset ' + i)
+                deepEqual(toArray(write.buffer.slice(0, written)),
+                          write.expected, write.message + ' written offset ' + i)
             }
         }
     }
