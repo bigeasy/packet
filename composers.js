@@ -180,51 +180,63 @@ function composeIncrementalSerializer (ranges) {
         var offset = 0
 
         range.pattern.forEach(function (field, patternIndex) {
-            var section = source()
-            var index = (rangeIndex + patternIndex) * 2
-            var little = field.endianness == 'l'
-            var bytes = field.bytes
-            var bite = little ? 0 : bytes - 1
-            var direction = little ? 1 : -1
-            var stop = little ? bytes : -1
+            if (field.endianness == 'x') {
+                var section = source()
+                var index = (rangeIndex + patternIndex) * 2
+                section('\
+                    case $initiationIndex:                                      \n\
+                        start += $skip                                          \
+                ')
+                section.$initiationIndex(index)
+                section.$skip(field.bytes * field.repeat)
+                cases(section)
+            } else {
+                var section = source()
+                var index = (rangeIndex + patternIndex) * 2
+                var little = field.endianness == 'l'
+                var bytes = field.bytes
+                var bite = little ? 0 : bytes - 1
+                var direction = little ? 1 : -1
+                var stop = little ? bytes : -1
 
-            var variable = source('var _$field')
-            variable.$field(field.name)
-            variables(variable)
+                var variable = source('var _$field')
+                variable.$field(field.name)
+                variables(variable)
 
-            section('\
-                case $initiationIndex:                                      \n\
-                    $initialization                                         \n\
-                    index = $parseIndex                                     \n\
-                case $parseIndex:                                           \n\
-                    $parse                                                  \
-            ')
-            section.$initiationIndex(index)
+                section('\
+                    case $initiationIndex:                                      \n\
+                        $initialization                                         \n\
+                        index = $parseIndex                                     \n\
+                    case $parseIndex:                                           \n\
+                        $parse                                                  \
+                ')
+                section.$initiationIndex(index)
 
-            section.$initialization('\n\
-                    _$field = object[$name]                                 \n\
-                    bite = $start                                           \n\
-            ')
-            section.$start(bite)
-            section.$name(JSON.stringify(field.name))
-            section.$field(field.name)
-            section.$parseIndex(index + 1)
+                section.$initialization('\n\
+                        _$field = object[$name]                                 \n\
+                        bite = $start                                           \n\
+                ')
+                section.$start(bite)
+                section.$name(JSON.stringify(field.name))
+                section.$field(field.name)
+                section.$parseIndex(index + 1)
 
-            var operation = source()
+                var operation = source()
 
-            operation('\n\
-                while (bite != $stop) {                                     \n\
-                    if (start == end) return start                          \n\
-                    buffer[start++] = (_$field >>> bite * 8) & 0xff         \n\
-                    $direction                                              \n\
-                }                                                           \
-            ')
-            operation.$stop(stop)
-            operation.$field(field.name)
-            operation.$direction(direction < 0 ? 'bite--' : 'bite++')
-            section.$parse(operation)
+                operation('\n\
+                    while (bite != $stop) {                                     \n\
+                        if (start == end) return start                          \n\
+                        buffer[start++] = (_$field >>> bite * 8) & 0xff         \n\
+                        $direction                                              \n\
+                    }                                                           \
+                ')
+                operation.$stop(stop)
+                operation.$field(field.name)
+                operation.$direction(direction < 0 ? 'bite--' : 'bite++')
+                section.$parse(operation)
 
-            cases(section)
+                cases(section)
+            }
         })
     })
 
@@ -278,44 +290,48 @@ exports.composeSerializer = function (ranges) {
         section.$size(range.size)
 
         range.pattern.forEach(function (field, index) {
-            var assignment = source()
-            if (field.bytes == 1) {
-                assignment('\n\
-                    buffer[$inc] = $fiddle                                  \n\
-                ')
-                assignment.$inc(offset ? 'start + $offset' : 'start')
-                assignment.$offset && assignment.$offset(offset)
-                assignment.$fiddle(function () { object[$name] })
-                assignment.$name(JSON.stringify(field.name))
-                offset++
+            if (field.endianness == 'x') {
+                offset += field.bytes * field.repeat
             } else {
-                var little = field.endianness == 'l'
-                var bytes = field.bytes
-                var bite = little ? 0 : bytes - 1
-                var direction = little ? 1 : -1
-                var stop = little ? bytes : -1
-                var assign
-
-                variables.value = true
-                assignment('\n\
-                    value = object[$name]                                   \n\
-                ')
-                while (bite != stop) {
-                    var write = source()
-                    write(function () {
-                        buffer[$inc] = $value & 0xff
-                    })
-                    write.$inc(offset ? 'start + $offset' : 'start')
-                    write.$offset && write.$offset(offset)
+                var assignment = source()
+                if (field.bytes == 1) {
+                    assignment('\n\
+                        buffer[$inc] = $fiddle                                  \n\
+                    ')
+                    assignment.$inc(offset ? 'start + $offset' : 'start')
+                    assignment.$offset && assignment.$offset(offset)
+                    assignment.$fiddle(function () { object[$name] })
+                    assignment.$name(JSON.stringify(field.name))
                     offset++
-                    write.$value(bite ? '(value >>> $shift)' : 'value')
-                    write.$shift && write.$shift(bite * 8)
-                    assignment(String(write))
-                    bite += direction
+                } else {
+                    var little = field.endianness == 'l'
+                    var bytes = field.bytes
+                    var bite = little ? 0 : bytes - 1
+                    var direction = little ? 1 : -1
+                    var stop = little ? bytes : -1
+                    var assign
+
+                    variables.value = true
+                    assignment('\n\
+                        value = object[$name]                                   \n\
+                    ')
+                    while (bite != stop) {
+                        var write = source()
+                        write(function () {
+                            buffer[$inc] = $value & 0xff
+                        })
+                        write.$inc(offset ? 'start + $offset' : 'start')
+                        write.$offset && write.$offset(offset)
+                        offset++
+                        write.$value(bite ? '(value >>> $shift)' : 'value')
+                        write.$shift && write.$shift(bite * 8)
+                        assignment(String(write))
+                        bite += direction
+                    }
+                    assignment.$name(JSON.stringify(field.name))
                 }
-                assignment.$name(JSON.stringify(field.name))
+                section(String(assignment))
             }
-            section(String(assignment))
         })
 
         if (range.fixed) section('\n\
