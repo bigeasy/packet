@@ -1,7 +1,30 @@
 #!/usr/bin/env node
 
-require('./proof')(0, function (parseEqual) {
-    parseEqual('byte: b8', [ 1 ], 1, { byte: 1 }, 'named byte')
-    parseEqual({ require: true }, 'byte: b8', [ 1 ], 1, { byte: 1 }, 'named byte')
-    parseEqual({ require: true, subsequent: true }, 'byte: b8', [ 1 ], 1, { byte: 1 }, 'named byte')
+require('./proof')(0, function (parse) {
+    parse({
+        message:        'named byte',
+        pattern:        'byte: b8',
+        bytes:          [ 1 ],
+        length:         1,
+        expected:       { byte: 1 }
+    })
+
+    parse({
+        message:        'named byte',
+        pattern:        'byte: b8',
+        bytes:          [ 1 ],
+        length:         1,
+        expected:       { byte: 1 },
+        require:        true
+    })
+
+    parse({
+        message:        'named byte and subsequent pattern',
+        pattern:        'byte: b8',
+        bytes:          [ 1 ],
+        length:         1,
+        expected:       { byte: 1 },
+        require:        true,
+        subsequent:     true
+    })
 })

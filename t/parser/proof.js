@@ -4,10 +4,10 @@ module.exports = require('proof')(function (counter, equal, deepEqual, ok) {
     var slice = Function.prototype.call.bind(Array.prototype.slice)
 
     function parseEqual () {
-        var invoked = false
         var extracted = slice(arguments, 0)
         var message = extracted.pop()
-        var options = {}
+        var options
+
 
         if (typeof extracted[0] == 'object') {
             options = extracted.shift()
@@ -15,48 +15,68 @@ module.exports = require('proof')(function (counter, equal, deepEqual, ok) {
             options = {}
         }
 
-        counter(options.count == null ? 3 : options.count)
-
-        if (options.require) {
-            options.precompiler = require('../require')
-            options.directory = 't/generated'
+        var object = {}
+        var parserOptions = {}
+        for (var key in options) {
+            parserOptions[key] = options[key]
+            object[key] = options[key]
         }
 
-        var parser = createParser(options || {})
-        var pattern = extracted.shift(), bytes = extracted.shift(), length = extracted.shift()
+        object.options = parserOptions
+        object.pattern = extracted.shift()
+        object.bytes = extracted.shift()
+        object.length = extracted.shift()
+        object.expected = extracted.shift()
 
-        parser.packet('packet', pattern)
+        parse(object)
+    }
+
+    function parse (parse) {
+        var invoked = false
+
+        counter(parse.count == null ? 3 : parse.count)
+
+        parse.options || (parse.options = {})
+
+        if (parse.require) {
+            parse.options.precompiler = require('../require')
+            parse.options.directory = 't/generated'
+        }
+
+        var parser = createParser(parse.options)
+
+        parser.packet('packet', parse.pattern)
         parser.extract('packet', function (object, read) {
-            equal(0, 0, message + ' byte count')
-            deepEqual(object, extracted[0], message + ' expected')
-            if (options.subsequent) {
+            equal(0, 0, parse.message + ' byte count')
+            deepEqual(object, parse.expected, parse.message + ' expected')
+            if (false && options.subsequent) {
                 parser.extract('byte: b8', function (object, read) { return read })
             }
             invoked = true
             return read
         })
 
-        if (Array.isArray(length)) {
-            var writes = length
+        if (Array.isArray(parse.length)) {
+            var writes = parse.length
             var length = writes.reduce(function (offset, size) {
                 return offset + size
             }, 0)
             // todo: could add a test here.
             writes.reduce(function (offset, size) {
-                parser.parse(bytes, offset, offset + size)
+                parser.parse(parse.bytes, offset, offset + size)
                 return offset + size
             }, 0)
         } else {
             // todo: could add a test here.
-            parser.parse(bytes, 0, bytes.length)
+            parser.parse(parse.bytes, 0, parse.bytes.length)
         }
 
         if (false && options.subsequent) {
             parser.parse([ 0 ], 0, 1)
         }
 
-        ok(invoked, message + ' invoked')
+        ok(invoked, parse.message + ' invoked')
     }
 
-    return { createParser: createParser, parseEqual: parseEqual }
+    return { createParser: createParser, parseEqual: parseEqual, parse: parse }
 })
