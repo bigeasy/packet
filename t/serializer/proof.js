@@ -51,6 +51,7 @@ module.exports = require('proof')(function (counter, equal, deepEqual) {
             write.options.precompiler = require('../require')
         }
 
+        // todo: initialiation not necessary @trivial
         var serializer = createSerializer(write.options || {})
 
         serializer.serialize.call(serializer, write.pattern, write.object)
@@ -74,6 +75,7 @@ module.exports = require('proof')(function (counter, equal, deepEqual) {
         deepEqual(toArray(write.buffer.slice(0, written)), write.expected, write.message + ' written')
         if (!split) {
             for (var i = 0; i < write.expected.length; i++) {
+        // todo: initialiation not necessary @trivial
                 var serializer = createSerializer(write.options || {})
                 serializer.serialize.call(serializer, write.pattern, write.object)
                 serializer.write(write.buffer, 0, i)

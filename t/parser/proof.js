@@ -33,8 +33,9 @@ module.exports = require('proof')(function (counter, equal, deepEqual, ok) {
 
     function parse (parse) {
         var invoked = false
+        var count = Array.isArray(parse.length) ? 3 : parse.bytes.length + 3
 
-        counter(parse.count == null ? 3 : parse.count)
+        counter(parse.count == null ? count : parse.count)
 
         parse.options || (parse.options = {})
 
@@ -76,6 +77,18 @@ module.exports = require('proof')(function (counter, equal, deepEqual, ok) {
         }
 
         ok(invoked, parse.message + ' invoked')
+
+        if (!Array.isArray(parse.length)) {
+            for (var i = 0; i < parse.bytes.length; i++) {
+                parser.extract('packet', function (object) {
+                    deepEqual(object, parse.expected, parse.message + ' parse offset ' + i)
+                })
+                parser.parse(parse.bytes, 0, i)
+                for (var j = i; j < parse.bytes.length; j++) {
+                    parser.parse(parse.bytes, j, j + 1)
+                }
+            }
+        }
     }
 
     return { createParser: createParser, parseEqual: parseEqual, parse: parse }
