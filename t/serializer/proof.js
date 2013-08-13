@@ -17,6 +17,7 @@ module.exports = require('proof')(function (counter, equal, deepEqual) {
             return _serialize(vargs.shift())
         }
 
+        // todo: rename write?
         var object = {}
 
         var message = vargs.pop()
@@ -39,7 +40,9 @@ module.exports = require('proof')(function (counter, equal, deepEqual) {
     function _serialize (object) {
         var written
 
-        counter(3)
+        var split = Array.isArray(object.length)
+
+        counter(3 + (split ? 0 : object.expected.length))
 
         object.options || (object.options = {})
         object.buffer  || (object.buffer = new Buffer(1024))
@@ -54,7 +57,7 @@ module.exports = require('proof')(function (counter, equal, deepEqual) {
 
         var sizeOf = serializer.sizeOf
 
-        if (Array.isArray(object.length)) {
+        if (split) {
             written = object.length.reduce(function (previous, current) {
                 var written = serializer.write(object.buffer, previous, previous + current) - previous
                 return previous + written
@@ -69,6 +72,18 @@ module.exports = require('proof')(function (counter, equal, deepEqual) {
         equal(sizeOf, object.length, object.message + ' sizeOf')
         equal(written, object.length, object.message + ' byte count')
         deepEqual(toArray(object.buffer.slice(0, written)), object.expected, object.message + ' written')
+        if (!split) {
+            for (var i = 0; i < object.expected.length; i++) {
+                var serializer = createSerializer(object.options || {})
+                serializer.serialize.call(serializer, object.pattern, object.object)
+                serializer.write(object.buffer, 0, i)
+                for (var j = i; j < object.expected.length; j++) {
+                    serializer.write(object.buffer, j, j + 1)
+                }
+                deepEqual(toArray(object.buffer.slice(0, written)),
+                          object.expected, object.message + ' written offset ' + i)
+            }
+        }
     }
 
     return { createSerializer: createSerializer, serialize: serialize, toArray: toArray }
