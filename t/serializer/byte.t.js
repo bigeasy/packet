@@ -1,5 +1,12 @@
 #!/usr/bin/env node
 
 require('./proof')(0, function (serialize) {
-    serialize({ require: true }, 'foo: b8', { foo: 0x01 }, 1, [ 0x01 ], 'write a byte')
+    serialize({
+        message:    'write a byte',
+        pattern:    'foo: b8',
+        object:     { foo: 0x01 },
+        length:     1,
+        expected:   [ 0x01 ],
+        require:    true
+    })
 })
