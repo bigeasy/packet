@@ -325,15 +325,7 @@ function composeIncrementalSerializer (ranges) {
         $cases                                                              \n\
         }                                                                   \n\
                                                                             \n\
-        this.write = terminator                                             \n\
-                                                                            \n\
-        callback()                                                          \n\
-                                                                            \n\
-        if (this.write === terminator) {                                    \n\
-            return start                                                    \n\
-        }                                                                   \n\
-                                                                            \n\
-        return this.write(buffer, start, end)                               \n\
+        return start                                                        \n\
     ')
     serializer.$cases(cases)
 
