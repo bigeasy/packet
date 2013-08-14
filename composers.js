@@ -430,15 +430,7 @@ exports.composeSerializer = function (ranges) {
     serializer.$sections(sections)
 
     serializer('\
-        this.write = terminator                                             \n\
-                                                                            \n\
-        callback()                                                          \n\
-                                                                            \n\
-        if (this.write === terminator) {                                    \n\
-            return start                                                    \n\
-        }                                                                   \n\
-                                                                            \n\
-        return this.write(buffer, start, end)                               \n\
+        return start                                                        \n\
     ')
 
 
