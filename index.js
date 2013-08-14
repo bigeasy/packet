@@ -34,11 +34,7 @@ function canCompileSerializerUsingSource (pattern) {
 
 function canCompileSizeOfUsingSource (pattern) {
     return pattern.every(function (part) {
-        return !/^[x]$/.test(part.endianness)
-            && !/^[f]$/.test(part.type)
-            && !part.arrayed
-            && !part.signed
-            && !part.packing
+        return !part.arrayed
             && !part.alternation
             && !part.pipeline
     })
