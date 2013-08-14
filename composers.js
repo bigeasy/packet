@@ -17,6 +17,14 @@ function hoister () {
     }
 }
 
+function fixupSignage (field, operation) {
+    operation('\
+        _$field = (_$field & $sign) ? ($mask - _$field + 1) * -1 : _$field      \n\
+    ')
+    operation.$sign('0x80' + new Array(field.bytes).join('00'))
+    operation.$mask('0xff' + new Array(field.bytes).join('ff'))
+}
+
 function composeIncrementalParser (ranges) {
 
     var cases = source();
@@ -76,8 +84,13 @@ function composeIncrementalParser (ranges) {
                         if (start == end) return start                          \n\
                         _$field += Math.pow(256, bite) * buffer[start++]        \n\
                         $direction                                              \n\
-                    }                                                           \n\
-                    object[$name] = _$field')
+                    }')
+                if (field.signed) {
+                    fixupSignage(field, operation)
+                }
+                operation('\
+                    object[$name] = _$field \n\
+                ')
                 operation.$stop(stop)
                 operation.$name(JSON.stringify(field.name))
                 operation.$field(field.name)
@@ -91,7 +104,7 @@ function composeIncrementalParser (ranges) {
 
      var parser = source()
      parser('\
-        switch (index) {                                                   \
+        switch (index) {                                                    \n\
         $cases                                                              \n\
         }                                                                   \n\
                                                                             \n\
@@ -117,7 +130,8 @@ function composeIncrementalParser (ranges) {
 }
 
 exports.composeParser = function (ranges) {
-    var parser = source()
+    var sections = source()
+    var hoist = hoister()
 
     ranges.forEach(function (range) {
         var section = source()
@@ -137,12 +151,13 @@ exports.composeParser = function (ranges) {
                 offset += field.bytes * field.repeat
             } else {
                 var assignment = source()
-                if (field.bytes == 1) {
+                if (field.bytes == 1 && ! field.signed) {
                     assignment('\n\
                         $variable = buffer[$inc]                                \n\
                     ')
                     assignment.$inc(offset ? 'start + $offset' : 'start')
                     assignment.$offset && assignment.$offset(offset)
+                    assignment.$variable('object[$name]')
                     offset++
                 } else {
                     var little = field.endianness == 'l'
@@ -172,12 +187,23 @@ exports.composeParser = function (ranges) {
                         $variable =                                             \n\
                             $read                                               \n\
                     ')
+                    if (field.signed) {
+                        assignment.$variable('_$field')
+                        assignment.$field(field.name)
+                        hoist('_' + field.name)
+                        fixupSignage(field, assignment)
+                        assignment('\
+                            object[$name] = _$field \n\
+                        ')
+                    } else {
+                        assignment.$variable('object[$name]')
+                        assignment.$name(JSON.stringify(field.name))
+                    }
                     read = String(read).replace(/ \+$/, '')
                     assignment.$read(read)
                 }
-            assignment.$variable('object[$name]')
-            assignment.$name(JSON.stringify(field.name))
-            section(String(assignment))
+                assignment.$name(JSON.stringify(field.name))
+                section(String(assignment))
             }
         })
 
@@ -185,12 +211,25 @@ exports.composeParser = function (ranges) {
             start += $size                                                  \n\
         ')
 
-        parser(String(section))
+        sections(section)
     })
 
-    parser('\n\
-        return callback(object)                                             \n\
-    ')
+    var parser = source()
+    if (hoist()) {
+        parser('\n\
+            $variables                                                      \n\
+            $sections                                                       \n\
+            return callback(object)                                         \n\
+        ')
+        parser.$variables(hoist())
+    } else {
+        parser('\n\
+            $sections                                                       \n\
+                                                                            \n\
+            return callback(object)                                         \n\
+        ')
+    }
+    parser.$sections(sections)
 
     var constructor = source('\
         var inc                                                             \n\

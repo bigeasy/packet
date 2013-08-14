@@ -1,7 +1,34 @@
-#!/usr/bin/env node
-require('./proof')(0, function (parseEqual) {
-    parseEqual({ require: true }, 'foo: -b16', [ 0x80, 0x00 ], 2, { foo: -32768 }, 'mininum')
-    parseEqual('foo: -b16', [ 0xff, 0xff ], 2, { foo: -1 }, 'negative')
-    parseEqual('foo: -b16', [ 0x7f, 0xff ], 2, { foo: 32767 }, 'maximum')
-    parseEqual('foo: -b16', [ 0x01, 0x02 ], 2, { foo: 258 }, 'positive')
+require('./proof')(0, function (parse) {
+    parse({
+        message:        'mininum',
+        pattern:        'foo: -b16',
+        bytes:          [ 0x80, 0x00 ],
+        length:         2,
+        expected:       { foo: -32768 },
+        require:        true
+    })
+    parse({
+        message:        'negative',
+        pattern:        'foo: -b16',
+        bytes:          [ 0xff, 0xff ],
+        length:         2,
+        expected:       { foo: -1 },
+        require:        true
+    })
+    parse({
+        message:        'maximum',
+        pattern:        'foo: -b16',
+        bytes:          [ 0x7f, 0xff ],
+        length:         2,
+        expected:       { foo: 32767 },
+        require:        true
+    })
+    parse({
+        message:        'positive',
+        pattern:        'foo: -b16',
+        bytes:          [ 0x01, 0x02 ],
+        length:         2,
+        expected:       { foo: 258 },
+        require:        true
+    })
 })

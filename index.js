@@ -15,7 +15,6 @@ function canCompileParserUsingSource (pattern) {
     return pattern.every(function (part) {
         return !/^[f]$/.test(part.type)
             && !part.arrayed
-            && !part.signed
             && !part.packing
             && !part.alternation
             && !part.pipeline
