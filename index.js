@@ -13,8 +13,7 @@ function canCompileSerializer (pattern) {
 
 function canCompileParserUsingSource (pattern) {
     return pattern.every(function (part) {
-        return !/^[x]$/.test(part.endianness)
-            && !/^[f]$/.test(part.type)
+        return !/^[f]$/.test(part.type)
             && !part.arrayed
             && !part.signed
             && !part.packing

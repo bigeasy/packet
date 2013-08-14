@@ -20,62 +20,78 @@ function hoister () {
 function composeIncrementalParser (ranges) {
 
     var cases = source();
-    var variables = source();
+    var hoist = hoister();
 
     ranges.forEach(function (range, rangeIndex) {
 
         range.pattern.forEach(function (field, patternIndex) {
-            var little = field.endianness == 'l'
-            var bytes = field.bytes
-            var bite = little ? 0 : bytes - 1
-            var direction = little ? 1 : -1
-            var stop = little ? bytes : -1
-            var section = source()
             var index = (rangeIndex + patternIndex) * 2
+            if (field.endianness == 'x') {
+                var section = source()
+                var index = (rangeIndex + patternIndex) * 2
+                section('\n\
+                    case $initiationIndex:                                      \n\
+                        skip = start + $skip                                    \n\
+                        index = $parseIndex                                     \n\
+                    case $parseIndex:                                           \n\
+                        if (end < skip) return end                              \n\
+                        start = skip                                            \
+                ')
+                hoist('skip')
+                section.$initiationIndex(index)
+                section.$skip(field.bytes * field.repeat)
+                section.$parseIndex(index + 1)
+                cases(section)
+            } else {
+                var little = field.endianness == 'l'
+                var bytes = field.bytes
+                var bite = little ? 0 : bytes - 1
+                var direction = little ? 1 : -1
+                var stop = little ? bytes : -1
+                var section = source()
 
-            var variable = source('var _$field')
-            variable.$field(field.name)
-            variables(variable)
+                hoist('_' + field.name)
 
-            section('\n\
-                case $initiationIndex:                                      \n\
-                    $initialization                                         \n\
-                    index = $parseIndex                                     \n\
-                case $parseIndex:                                           \n\
-                    $parse                                                  \
-            ')
-            section.$initiationIndex(index)
+                section('\
+                    case $initiationIndex:                                      \n\
+                        $initialization                                         \n\
+                        index = $parseIndex                                     \n\
+                    case $parseIndex:                                           \n\
+                        $parse                                                  \
+                ')
+                section.$initiationIndex(index)
 
-            section.$initialization('\n\
-                    _$field = 0                                             \n\
-                    bite = $start                                           \n\
-            ')
-            section.$start(bite)
+                section.$initialization('\n\
+                        _$field = 0                                             \n\
+                        bite = $start                                           \n\
+                ')
+                section.$start(bite)
 
-            section.$field(field.name)
-            section.$parseIndex(index + 1)
-            var operation = source()
+                section.$field(field.name)
+                section.$parseIndex(index + 1)
+                var operation = source()
 
-            operation('\n\
-                while (bite != $stop) {                                     \n\
-                    if (start == end) return start                          \n\
-                    _$field += Math.pow(256, bite) * buffer[start++]        \n\
-                    $direction                                              \n\
-                }                                                           \n\
-                object[$name] = _$field')
-            operation.$stop(stop)
-            operation.$name(JSON.stringify(field.name))
-            operation.$field(field.name)
-            operation.$direction(direction < 0 ? 'bite--' : 'bite++')
-            section.$parse(operation)
-            cases(section)
+                operation('\n\
+                    while (bite != $stop) {                                     \n\
+                        if (start == end) return start                          \n\
+                        _$field += Math.pow(256, bite) * buffer[start++]        \n\
+                        $direction                                              \n\
+                    }                                                           \n\
+                    object[$name] = _$field')
+                operation.$stop(stop)
+                operation.$name(JSON.stringify(field.name))
+                operation.$field(field.name)
+                operation.$direction(direction < 0 ? 'bite--' : 'bite++')
+                section.$parse(operation)
+                cases(section)
+            }
         })
 
     })
 
      var parser = source()
-     parser('\n\
-        switch (index) {                                                    \
+     parser('\
+        switch (index) {                                                   \
         $cases                                                              \n\
         }                                                                   \n\
                                                                             \n\
@@ -94,7 +110,7 @@ function composeIncrementalParser (ranges) {
                                                                             \n\
         return this.parse(buffer, start, end)                               \n\
     ')
-    builder.$variables(variables)
+    builder.$variables(hoist())
     builder.$parser(parser.define('buffer', 'start', 'end'))
 
     return 'inc = ' + builder.define('buffer', 'start', 'end', 'index')
@@ -117,48 +133,52 @@ exports.composeParser = function (ranges) {
 
         var offset = 0
         range.pattern.forEach(function (field, index) {
-            var assignment = source()
-            if (field.bytes == 1) {
-                assignment('\n\
-                    $variable = buffer[$inc]                                \n\
-                ')
-                assignment.$inc(offset ? 'start + $offset' : 'start')
-                assignment.$offset && assignment.$offset(offset)
-                offset++
+            if (field.endianness == 'x') {
+                offset += field.bytes * field.repeat
             } else {
-                var little = field.endianness == 'l'
-                var bytes = field.bytes
-                var bite = little ? 0 : bytes - 1
-                var direction = little ? 1 : -1
-                var stop = little ? bytes : -1
-
-                var read = source()
-                while (bite != stop) {
-                    var fiddle = source()
-                    if (bite) {
-                        fiddle('buffer[$inc] * $power +')
-                        fiddle.$power('0x' + Math.pow(256, bite).toString(16))
-                    } else {
-                        fiddle('buffer[$inc] +')
-                    }
-
-                    fiddle.$inc(offset == 0 ? 'start' : 'start + $offset')
-                    fiddle.$offset && fiddle.$offset(offset)
+                var assignment = source()
+                if (field.bytes == 1) {
+                    assignment('\n\
+                        $variable = buffer[$inc]                                \n\
+                    ')
+                    assignment.$inc(offset ? 'start + $offset' : 'start')
+                    assignment.$offset && assignment.$offset(offset)
                     offset++
-                    //previous.$next(String(read))
-                    read(String(fiddle))
-                    bite += direction
+                } else {
+                    var little = field.endianness == 'l'
+                    var bytes = field.bytes
+                    var bite = little ? 0 : bytes - 1
+                    var direction = little ? 1 : -1
+                    var stop = little ? bytes : -1
+
+                    var read = source()
+                    while (bite != stop) {
+                        var fiddle = source()
+                        if (bite) {
+                            fiddle('buffer[$inc] * $power +')
+                            fiddle.$power('0x' + Math.pow(256, bite).toString(16))
+                        } else {
+                            fiddle('buffer[$inc] +')
+                        }
+
+                        fiddle.$inc(offset == 0 ? 'start' : 'start + $offset')
+                        fiddle.$offset && fiddle.$offset(offset)
+                        offset++
+                        //previous.$next(String(read))
+                        read(String(fiddle))
+                        bite += direction
+                    }
+                    assignment('\n\
+                        $variable =                                             \n\
+                            $read                                               \n\
+                    ')
+                    read = String(read).replace(/ \+$/, '')
+                    assignment.$read(read)
                 }
-                assignment('\n\
-                    $variable =                                             \n\
-                        $read                                               \n\
-                ')
-                read = String(read).replace(/ \+$/, '')
-                assignment.$read(read)
-            }
-                assignment.$variable(function () { object[$name] })
-                assignment.$name(JSON.stringify(field.name))
+            assignment.$variable('object[$name]')
+            assignment.$name(JSON.stringify(field.name))
             section(String(assignment))
+            }
         })
 
         if (range.fixed) section('\n\
