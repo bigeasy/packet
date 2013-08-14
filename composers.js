@@ -20,6 +20,7 @@ function hoister () {
 function composeIncrementalParser (ranges) {
 
     var cases = source();
+    var variables = source();
 
     ranges.forEach(function (range, rangeIndex) {
 
