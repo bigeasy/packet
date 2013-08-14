@@ -26,7 +26,6 @@ function canCompileSerializerUsingSource (pattern) {
     return pattern.every(function (part) {
         return !/^[f]$/.test(part.type)
             && !part.arrayed
-            && !part.signed
             && part.padding == null
             && !part.packing
             && !part.alternation
