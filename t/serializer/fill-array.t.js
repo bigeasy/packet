@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-require('./proof')(0 * 3 + 1, function (serialize, deepEqual) {
+require('./proof')(1, function (serialize, deepEqual) {
     serialize({ require: true },
               [ 0x01, 0x01, 0x01, 0x01, 0xff, 0xff ],
               'x16[2]{0}, foo: b16', { foo: 1 }, 6,
