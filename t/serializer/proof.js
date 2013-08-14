@@ -76,14 +76,15 @@ module.exports = require('proof')(function (counter, equal, deepEqual) {
         if (!split) {
             for (var i = 0; i < write.expected.length; i++) {
         // todo: initialiation not necessary @trivial
+                var buffer = new Buffer(written)
+                buffer.fill(0xff)
                 var serializer = createSerializer(write.options || {})
                 serializer.serialize.call(serializer, write.pattern, write.object)
-                serializer.write(write.buffer, 0, i)
+                serializer.write(buffer, 0, i)
                 for (var j = i; j < write.expected.length; j++) {
-                    serializer.write(write.buffer, j, j + 1)
+                    serializer.write(buffer, j, j + 1)
                 }
-                deepEqual(toArray(write.buffer.slice(0, written)),
-                          write.expected, write.message + ' written offset ' + i)
+                deepEqual(toArray(buffer), write.expected, write.message + ' written offset ' + i)
             }
         }
     }

@@ -1,9 +1,25 @@
 var source = require('source')
+var __slice = [].slice
+
+function hoister () {
+    var user = []
+    var system = []
+    return function () {
+        __slice.call(arguments).forEach(function (variable) {
+            var collection = variable[0] == '_' ? user : system
+            if (!~collection.indexOf(variable)) {
+                collection.push(variable)
+            }
+        })
+        return system.concat(user).map(function (variable) {
+            return 'var ' + variable
+        }).join('\n')
+    }
+}
 
 function composeIncrementalParser (ranges) {
 
     var cases = source();
-    var variables = source()
 
     ranges.forEach(function (range, rangeIndex) {
 
@@ -173,7 +189,7 @@ exports.composeParser = function (ranges) {
 function composeIncrementalSerializer (ranges) {
     var cases = source()
 
-    var variables = source()
+    var hoist = hoister()
 
     ranges.forEach(function (range, rangeIndex) {
         var section = source()
@@ -185,10 +201,16 @@ function composeIncrementalSerializer (ranges) {
                 var index = (rangeIndex + patternIndex) * 2
                 section('\
                     case $initiationIndex:                                      \n\
-                        start += $skip                                          \
+                        skip = start + $skip                                    \n\
+                        index = $parseIndex                                     \n\
+                    case $parseIndex:                                           \n\
+                        if (end < skip) return end                              \n\
+                        start = skip                                            \
                 ')
+                hoist('skip')
                 section.$initiationIndex(index)
                 section.$skip(field.bytes * field.repeat)
+                section.$parseIndex(index + 1)
                 cases(section)
             } else {
                 var section = source()
@@ -199,9 +221,7 @@ function composeIncrementalSerializer (ranges) {
                 var direction = little ? 1 : -1
                 var stop = little ? bytes : -1
 
-                var variable = source('var _$field')
-                variable.$field(field.name)
-                variables(variable)
+                hoist('_' + field.name)
 
                 section('\
                     case $initiationIndex:                                      \n\
@@ -224,7 +244,7 @@ function composeIncrementalSerializer (ranges) {
                 var operation = source()
 
                 operation('\n\
-                    while (bite != $stop) {                                     \n\
+                   while (bite != $stop) {                                     \n\
                         if (start == end) return start                          \n\
                         buffer[start++] = (_$field >>> bite * 8) & 0xff         \n\
                         $direction                                              \n\
@@ -267,7 +287,7 @@ function composeIncrementalSerializer (ranges) {
         return this.write(buffer, start, end)                               \n\
     ')
     incremental.$serializer(serializer.define('buffer', 'start', 'end'))
-    incremental.$variables(variables)
+    incremental.$variables(hoist())
 
     return incremental.define('buffer', 'start', 'end', 'index')
 }
