@@ -270,7 +270,7 @@ function Definition (packets, transforms, options) {
         if (!options.compile) return uncompiledParser
 
         var pattern = object.pattern
-        var prefix = [ 'parser' ]
+        var prefix = [ 'parse' ]
 
         function inc (increment) {
             if (increment) return 'start++'
@@ -751,7 +751,7 @@ function Definition (packets, transforms, options) {
         var incrementalIndex = 0
         var pattern = object.pattern
         var variables = {}
-        var prefix = [ 'serializer' ]
+        var prefix = [ 'serialize' ]
 
         function unsigned (variable, field, increment) {
             var source = new Source
