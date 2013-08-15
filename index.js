@@ -270,7 +270,7 @@ function Definition (packets, transforms, options) {
         if (!options.compile) return uncompiledParser
 
         var pattern = object.pattern
-        var prefix = [ 'parse' ]
+        var prefix = [ 'parse.bff' ]
 
         function inc (increment) {
             if (increment) return 'start++'
@@ -695,7 +695,7 @@ function Definition (packets, transforms, options) {
     function compileSerializerUsingSource (object) {
         var pattern = object.pattern
         var ranges = rangify(object)
-        var prefix = [ 'serialize' ]
+        var prefix = [ 'serialize.bff' ]
 
         var serializer = require('./composers').composeSerializer(ranges)
 
@@ -707,7 +707,7 @@ function Definition (packets, transforms, options) {
     function compileSerializerUsingSizeOf (object) {
         var pattern = object.pattern
         var ranges = rangify(object)
-        var prefix = [ 'serialize' ]
+        var prefix = [ 'serialize.bff' ]
 
         var serializer = require('./composers').composeSizeOf(ranges)
 
@@ -731,7 +731,7 @@ function Definition (packets, transforms, options) {
     function compileParserUsingSource (object) {
         var pattern = object.pattern
         var ranges = rangify(object)
-        var prefix = [ 'parse' ]
+        var prefix = [ 'parse.bff' ]
 
         var parser = require('./composers').composeParser(ranges)
 
@@ -751,7 +751,7 @@ function Definition (packets, transforms, options) {
         var incrementalIndex = 0
         var pattern = object.pattern
         var variables = {}
-        var prefix = [ 'serialize' ]
+        var prefix = [ 'serialize.bff' ]
 
         function unsigned (variable, field, increment) {
             var source = new Source
