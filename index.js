@@ -1,5 +1,4 @@
 var parse   = require('./tokenizer').parse
-var ieee754 = require('./ieee754')
 var util    = require('util')
 
 var __slice = [].slice
@@ -22,8 +21,7 @@ function canCompileParserUsingSource (pattern) {
 
 function canCompileSerializerUsingSource (pattern) {
     return pattern.every(function (part) {
-        return !/^[f]$/.test(part.type)
-            && !part.arrayed
+        return !part.arrayed
             && !part.packing
             && !part.alternation
             && !part.pipeline

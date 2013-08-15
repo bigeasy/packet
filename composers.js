@@ -356,6 +356,53 @@ function composeIncrementalSerializer (ranges) {
                 section.$skip(field.bytes * field.repeat)
                 section.$parseIndex(index + 1)
                 cases(section)
+            } else if (field.type == 'f') {
+                var section = source()
+
+                var little = field.endianness == 'l'
+                var bytes = field.bytes
+                var bite = little ? 0 : bytes - 1
+                var direction = little ? 1 : -1
+                var stop = little ? bytes : -1
+                var index = (rangeIndex + patternIndex) * 2
+
+                hoist('_' + field.name)
+
+                section('\
+                    case $initiationIndex:                                      \n\
+                        $initialization                                         \n\
+                        index = $patternIndex                                   \n\
+                    case $patternIndex:                                         \n\
+                        $serialize                                              \
+                ')
+                section.$initiationIndex(index)
+
+                section.$initialization('\n\
+                    _$field = new ArrayBuffer($size)                        \n\
+                    new DataView(_$field).setFloat$bits(0, object[$name], true)\n\
+                    bite = $start                                           \n\
+                ')
+                section.$start(bite)
+                section.$size(field.bytes)
+                section.$field(field.name)
+                section.$patternIndex(index + 1)
+
+                var operation = source()
+
+                operation('\n\
+                    while (bite != $stop) {                                     \n\
+                        if (start == end) return start                          \n\
+                        buffer[start++] = _$field[$direction]                   \n\
+                    }')
+
+                operation.$field(field.name)
+                operation.$stop(stop)
+                operation.$direction(direction < 0 ? 'bite--' : 'bite++')
+
+                section.$serialize(operation)
+                section.$name(JSON.stringify(field.name))
+                section.$bits(field.bits)
+                cases(section)
             } else {
                 var section = source()
                 var index = (rangeIndex + patternIndex) * 2
@@ -452,6 +499,42 @@ exports.composeSerializer = function (ranges) {
         range.pattern.forEach(function (field, index) {
             if (field.endianness == 'x' && field.padding == null) {
                 offset += field.bytes * field.repeat
+            } else if (field.type == 'f') {
+                var operation = source()
+
+                var little = field.endianness == 'l'
+                var bytes = field.bytes
+                var bite = little ? 0 : bytes - 1
+                var direction = little ? 1 : -1
+                var stop = little ? bytes : -1
+
+                hoist('_' + field.name)
+
+                operation('\n\
+                    _$field = new ArrayBuffer($size)                                \n\
+                    new DataView(_$field).setFloat$bits(0, object[$name], true)     \n\
+                    $copy                                                           \n\
+                ')
+                var copy = source()
+                while (bite != stop) {
+                    var assignment = source()
+                    assignment('buffer[$inc] = _$field[$index]')
+                    assignment.$field(field.name)
+                    assignment.$inc(offset == 0 ? 'start' : 'start + $offset')
+                    assignment.$index(bite)
+                    assignment.$offset && assignment.$offset(offset)
+                    offset++
+                    //previous.$next(String(read))
+                    copy(assignment)
+                    bite += direction
+                }
+                operation.$copy(copy)
+                operation.$name(JSON.stringify(field.name))
+                operation.$bits(field.bits)
+                operation.$field(field.name)
+                operation.$size(field.bytes)
+
+                section(operation)
             } else {
                 var assignment = source()
                 if (field.bytes == 1) {
