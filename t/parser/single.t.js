@@ -2,6 +2,7 @@
 
 require('./proof')(0, function (parseEqual) {
     parseEqual({ require: true }, 'foo: l32f', [ 0xcd, 0xcc, 0x2c, 0x41 ], 4, { foo: 10.800000190734863 }, 'positive')
+    return
     parseEqual({ require: true, subsequent: true }, 'foo: l32f', [ 0x00, 0x00, 0x20, 0xc1 ], 4, { foo: -10 }, 'negative, subsequent')
     parseEqual({ require: true }, 'foo: l32f', [ 0x00, 0x00, 0x20, 0xc1 ], [ 1, 3 ], { foo: -10 }, 'negative, fallback')
     parseEqual({ require: true }, 'foo: l32f', [ 0xcd, 0xcc, 0x2c, 0x41 ], [ 1, 3 ], { foo: 10.800000190734863 }, 'positive, fallback')

@@ -255,13 +255,15 @@ function Definition (packets, transforms, options) {
     options = options || {}
     if (!('compile' in options)) options.compile = true
 
+    options.buffersOnly = true
+
     var precompiler = options.precompiler || function (type, pattern, parameters, source) {
         return Function.apply(Function, parameters.concat(source.join('\n')))
     }
 
     // we can't disable compilation anymore. compiled sizeof is not going to
     // have a fallback.
-    function uncompiledParser (incremental, terminator, pattern, transforms, ieee754, object, callback) {
+    function uncompiledParser (incremental, terminator, pattern, transforms, x, object, callback) {
         return function (buffer, start, end) {
             return incremental.call(this, buffer, start, end, pattern, 0, object, callback)
         }
@@ -1252,7 +1254,7 @@ function Parser (definition, options) {
             return this.parse(buffer, start, end)
         }
 
-        this.parse = compiled.createParser(incremental, null, pattern, definition.transforms, ieee754, {}, callback)
+        this.parse = compiled.createParser(incremental, null, pattern, definition.transforms, null, {}, callback)
     }
 
     return classify.call(definition.extend(this), extract)
@@ -1591,7 +1593,7 @@ function Serializer(definition, options) {
         }
 
         if (canCompileSerializer(compiled.pattern)) {
-            this.write = compiled.createSerializer(incremental, start, compiled.pattern, definition.transforms, ieee754, incoming, callback)
+            this.write = compiled.createSerializer(incremental, start, compiled.pattern, definition.transforms, null, incoming, callback)
             return
         }
 

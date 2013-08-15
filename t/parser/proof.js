@@ -22,6 +22,7 @@ module.exports = require('proof')(function (counter, equal, deepEqual, ok) {
             object[key] = options[key]
         }
 
+        object.message = message
         object.options = parserOptions
         object.pattern = extracted.shift()
         object.bytes = extracted.shift()
@@ -57,6 +58,8 @@ module.exports = require('proof')(function (counter, equal, deepEqual, ok) {
             return read
         })
 
+        var bytes = new Buffer(parse.bytes)
+
         if (Array.isArray(parse.length)) {
             var writes = parse.length
             var length = writes.reduce(function (offset, size) {
@@ -64,12 +67,12 @@ module.exports = require('proof')(function (counter, equal, deepEqual, ok) {
             }, 0)
             // todo: could add a test here.
             writes.reduce(function (offset, size) {
-                parser.parse(parse.bytes, offset, offset + size)
+                parser.parse(bytes, offset, offset + size)
                 return offset + size
             }, 0)
         } else {
             // todo: could add a test here.
-            parser.parse(parse.bytes, 0, parse.bytes.length)
+            parser.parse(bytes, 0, bytes.length)
         }
 
         if (false && options.subsequent) {
@@ -79,13 +82,13 @@ module.exports = require('proof')(function (counter, equal, deepEqual, ok) {
         ok(invoked, parse.message + ' invoked')
 
         if (!Array.isArray(parse.length)) {
-            for (var i = 0; i < parse.bytes.length; i++) {
+            for (var i = 0; i < bytes.length; i++) {
                 parser.extract('packet', function (object) {
                     deepEqual(object, parse.expected, parse.message + ' parse offset ' + i)
                 })
-                parser.parse(parse.bytes, 0, i)
-                for (var j = i; j < parse.bytes.length; j++) {
-                    parser.parse(parse.bytes, j, j + 1)
+                parser.parse(bytes, 0, i)
+                for (var j = i; j < bytes.length; j++) {
+                    parser.parse(bytes, j, j + 1)
                 }
             }
         }
