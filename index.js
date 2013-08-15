@@ -13,8 +13,7 @@ function canCompileSerializer (pattern) {
 
 function canCompileParserUsingSource (pattern) {
     return pattern.every(function (part) {
-        return !/^[f]$/.test(part.type)
-            && !part.arrayed
+        return !part.arrayed
             && !part.packing
             && !part.alternation
             && !part.pipeline

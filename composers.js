@@ -50,6 +50,53 @@ function composeIncrementalParser (ranges) {
                 section.$skip(field.bytes * field.repeat)
                 section.$parseIndex(index + 1)
                 cases(section)
+            } else if (field.type == 'f') {
+                var section = source()
+
+                var little = field.endianness == 'l'
+                var bytes = field.bytes
+                var bite = little ? 0 : bytes - 1
+                var direction = little ? 1 : -1
+                var stop = little ? bytes : -1
+
+                hoist('_' + field.name)
+
+                section('\
+                    case $initiationIndex:                                      \n\
+                        $initialization                                         \n\
+                        index = $parseIndex                                     \n\
+                    case $parseIndex:                                           \n\
+                        $parse                                              \n\
+                        object[$name] = $extract                            \
+                ')
+                section.$initiationIndex(index)
+
+                section.$initialization('\n\
+                        _$field = new ArrayBuffer($size)                        \n\
+                        bite = $start                                           \n\
+                ')
+                section.$start(bite)
+                section.$size(field.bytes)
+                section.$field(field.name)
+                section.$parseIndex(index + 1)
+
+                var operation = source()
+
+                operation('\n\
+                    while (bite != $stop) {                                     \n\
+                        if (start == end) return start                          \n\
+                        _$field[$direction] = buffer[start++]                   \n\
+                    }')
+
+                operation.$field(field.name)
+                operation.$stop(stop)
+                operation.$direction(direction < 0 ? 'bite--' : 'bite++')
+
+                section.$parse(operation)
+                section.$name(JSON.stringify(field.name))
+                section.$extract('new DataView(_$field).getFloat$bits(0, true)')
+                section.$bits(field.bits)
+                cases(section)
             } else {
                 var little = field.endianness == 'l'
                 var bytes = field.bytes
@@ -149,6 +196,43 @@ exports.composeParser = function (ranges) {
         range.pattern.forEach(function (field, index) {
             if (field.endianness == 'x') {
                 offset += field.bytes * field.repeat
+            } else if (field.type == 'f') {
+                var operation = source()
+
+                var little = field.endianness == 'l'
+                var bytes = field.bytes
+                var bite = little ? 0 : bytes - 1
+                var direction = little ? 1 : -1
+                var stop = little ? bytes : -1
+
+                hoist('_' + field.name)
+
+                operation('\n\
+                    _$field = new ArrayBuffer($size)                        \n\
+                    $copy                                                   \n\
+                    object[$name] = $extract                                \n\
+                ')
+                var copy = source()
+                while (bite != stop) {
+                    var assignment = source()
+                    assignment('_$field[$index] = buffer[$inc]')
+                    assignment.$field(field.name)
+                    assignment.$inc(offset == 0 ? 'start' : 'start + $offset')
+                    assignment.$index(bite)
+                    assignment.$offset && assignment.$offset(offset)
+                    offset++
+                    //previous.$next(String(read))
+                    copy(assignment)
+                    bite += direction
+                }
+                operation.$copy(copy)
+                operation.$extract('new DataView(_$field).getFloat$bits(0, true)')
+                operation.$name(JSON.stringify(field.name))
+                operation.$bits(field.bits)
+                operation.$field(field.name)
+                operation.$size(field.bytes)
+
+                section(operation)
             } else {
                 var assignment = source()
                 if (field.bytes == 1 && ! field.signed) {
@@ -203,7 +287,7 @@ exports.composeParser = function (ranges) {
                     assignment.$read(read)
                 }
                 assignment.$name(JSON.stringify(field.name))
-                section(String(assignment))
+                section(assignment)
             }
         })
 
