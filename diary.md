@@ -357,6 +357,18 @@ Generated source is still source. While developing packing I'm writing code that
 writes code. My process is to edit and view the generated source. The generated
 source is very much under my control.
 
+## Verb Stick
+
+I don't want nouns. I want a stick with a verb tied to it, like a carrot.
+
+I'm thinking about how to use this library, and what occurs to me today is
+dismantling the objects, already in progress, and then why not let the user pick
+the function name for continuation? That can be part of the closure.
+
+Given a pattern, you build a parse, write, or sizeOf. It doesn't happen all at
+once. Which means we're really starting to dispose of `index.js` and replace it
+with the contents of `composers.js`.
+
 ## Pattern Matching
 
 The use case presented is a scan for a packet on a serial network. The packet
