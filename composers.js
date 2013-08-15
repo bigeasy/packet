@@ -256,7 +256,7 @@ function composeIncrementalSerializer (ranges) {
         var offset = 0
 
         range.pattern.forEach(function (field, patternIndex) {
-            if (field.endianness == 'x') {
+            if (field.endianness == 'x' && field.padding == null) {
                 var section = source()
                 var index = (rangeIndex + patternIndex) * 2
                 section('\
@@ -281,39 +281,43 @@ function composeIncrementalSerializer (ranges) {
                 var direction = little ? 1 : -1
                 var stop = little ? bytes : -1
 
-                hoist('_' + field.name)
-
                 section('\
                     case $initiationIndex:                                      \n\
                         $initialization                                         \n\
+                        bite = $start                                           \n\
                         index = $parseIndex                                     \n\
                     case $parseIndex:                                           \n\
                         $parse                                                  \
                 ')
                 section.$initiationIndex(index)
 
-                section.$initialization('\n\
-                        _$field = object[$name]                                 \n\
-                        bite = $start                                           \n\
-                ')
+                if (field.padding == null) {
+                    section.$initialization('\n\
+                            $variable = object[$name]                                 \n\
+                    ')
+                    var variable = '_' + field.name
+                    section.$name(JSON.stringify(field.name))
+                } else {
+                    section.$initialization('\n\
+                            $variable = 0x$padding                          \n\
+                    ')
+                    section.$padding(field.padding.toString(16))
+                    var variable = 'value'
+                }
+                hoist(variable)
+                section.$variable(variable)
                 section.$start(bite)
-                section.$name(JSON.stringify(field.name))
-                section.$field(field.name)
                 section.$parseIndex(index + 1)
 
-                var operation = source()
-
-                operation('\n\
+                section.$parse('\n\
                    while (bite != $stop) {                                     \n\
                         if (start == end) return start                          \n\
-                        buffer[start++] = (_$field >>> bite * 8) & 0xff         \n\
+                        buffer[start++] = ($variable >>> bite * 8) & 0xff       \n\
                         $direction                                              \n\
                     }                                                           \
                 ')
-                operation.$stop(stop)
-                operation.$field(field.name)
-                operation.$direction(direction < 0 ? 'bite--' : 'bite++')
-                section.$parse(operation)
+                section.$stop(stop)
+                section.$direction(direction < 0 ? 'bite--' : 'bite++')
 
                 cases(section)
             }
@@ -346,7 +350,7 @@ function composeIncrementalSerializer (ranges) {
 
 exports.composeSerializer = function (ranges) {
     var sections = source()
-    var variables = {}
+    var hoist = hoister()
 
     ranges.forEach(function (range) {
         var section = source()
@@ -362,7 +366,7 @@ exports.composeSerializer = function (ranges) {
         section.$size(range.size)
 
         range.pattern.forEach(function (field, index) {
-            if (field.endianness == 'x') {
+            if (field.endianness == 'x' && field.padding == null) {
                 offset += field.bytes * field.repeat
             } else {
                 var assignment = source()
@@ -383,10 +387,18 @@ exports.composeSerializer = function (ranges) {
                     var stop = little ? bytes : -1
                     var assign
 
-                    variables.value = true
-                    assignment('\n\
-                        value = object[$name]                                   \n\
-                    ')
+                    if (field.padding == null) {
+                        hoist('value')
+                        assignment('\n\
+                            value = object[$name]                                   \n\
+                        ')
+                        assignment.$name(JSON.stringify(field.name))
+                    } else {
+                        assignment('\n\
+                            value = 0x$padding                              \n\
+                        ')
+                        assignment.$padding(field.padding.toString(16))
+                    }
                     while (bite != stop) {
                         var write = source()
                         write(function () {
@@ -400,7 +412,6 @@ exports.composeSerializer = function (ranges) {
                         assignment(String(write))
                         bite += direction
                     }
-                    assignment.$name(JSON.stringify(field.name))
                 }
                 section(String(assignment))
             }
@@ -415,10 +426,9 @@ exports.composeSerializer = function (ranges) {
 
     var serializer = source()
 
-    variables = Object.keys(variables).sort().join(', ')
-    if (variables) {
+    if (hoist()) {
         serializer('\n\
-            var $variables                                                  \n\
+            $variables                                                  \n\
         ')
     }
 
@@ -426,7 +436,7 @@ exports.composeSerializer = function (ranges) {
         $sections                                                           \n\
     ')
 
-    serializer.$variables && serializer.$variables(variables)
+    serializer.$variables && serializer.$variables(hoist())
     serializer.$sections(sections)
 
     serializer('\

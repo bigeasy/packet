@@ -1,9 +1,10 @@
-#!/usr/bin/env node
-require('./proof')(2, function (createSerializer, equal, deepEqual) {
-    var serializer = createSerializer()
-    var buffer = [ 0xff, 0xff, 0xff, 0xff ]
-    serializer.serialize('x16{0}, foo: b16', { foo: 1 })
-    var written = serializer.write(buffer, 0, buffer.length)
-    equal(written, 4, 'bytes written')
-    deepEqual(buffer, [  0x00, 0x00, 0x00, 0x01 ], 'bytes')
+require('./proof')(0, function (serialize) {
+    serialize({
+        message:      'fill',
+        pattern:      'x16{0}, foo: b16',
+        object:       { foo: 1 },
+        length:       4,
+        expected:     [ 0x00, 0x00, 0x00, 0x01 ],
+        require:      true
+    })
 })
