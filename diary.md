@@ -340,6 +340,23 @@ takes the `pattern` and `patternIndex` and calls `nextField()` and
 
 I'll transition the `Parser` first. Then the `Serializer`.
 
+## Tracking Source Formatting Changs
+
+Checking generated source into source control.
+
+Currently concerned that I'm playing formatting whack-a-mole; removing an
+extraneous new line when this parser is generated removes all new lines when
+that parser is generated. There is no way for me to know. Gee whiz, if only I
+had a tool that would track these changes, and maybe even display where and how
+things have changed.
+
+You're not supposed to check generated source into source control. Here, let me
+give you a long, pedantic lecture on that...
+
+Generated source is still source. While developing packing I'm writing code that
+writes code. My process is to edit and view the generated source. The generated
+source is very much under my control.
+
 ## Pattern Matching
 
 The use case presented is a scan for a packet on a serial network. The packet
