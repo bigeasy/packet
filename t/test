@@ -4,6 +4,8 @@ set -e
 
 echo ""
 
+rm -f t/generated/*
+
 (proof run t/*/*.t.js | tee .proof.out | proof progress) || (proof errors < .proof.out) || exit 1
 
 if [ $(find t -name "*.t.js.broken" | wc -c) != "0" ]; then
