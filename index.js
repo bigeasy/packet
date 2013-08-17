@@ -22,7 +22,6 @@ function canCompileParserUsingSource (pattern) {
 function canCompileSerializerUsingSource (pattern) {
     return pattern.every(function (part) {
         return !part.arrayed
-            && !part.packing
             && !part.alternation
             && !part.pipeline
     })
@@ -990,7 +989,6 @@ function Definition (packets, transforms, options) {
                                 }
                                 if (pack.signed) {
                                     var bits = '0x' + (mask >>> (field.bits - pack.bits)).toString(16)
-                                    var top = '0x' + (1 << pack.bits - 1).toString(16)
                                     section.line('unsigned = ' + reference)
                                     section.line('unsigned = unsigned < 0 ?')
                                     section.text(' (', bits, ' + unsigned + 1)')
