@@ -21,7 +21,9 @@ module.exports = function (object, callback) {
           }
 
           // todo: all wrong
-          return callback(object)
+          callback(object)
+
+          return start
       }
 
       return this.parse(buffer, start, end)

@@ -156,7 +156,9 @@ function composeIncrementalParser (ranges) {
         }                                                                   \n\
                                                                             \n\
         // todo: all wrong                                                  \n\
-        return callback(object)                                             \n\
+        callback(object)                                                    \n\
+                                                                            \n\
+        return start                                                        \n\
     ')
     parser.$cases(cases)
 
