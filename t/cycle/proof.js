@@ -19,8 +19,9 @@ module.exports = require('proof')(function (counter, equal, deepEqual) {
 
     function incremental (cycle, type) {
         var self = {}
+        var prefix = cycle.message + ' ' + type + ' incremental '
 
-        counter(cycle.buffer.length * 4)
+        counter(cycle.buffer.length * 4 + 2)
 
         function increment (i) {
             var prefix = cycle.message + ' ' + type + ' offset of ' + i + ' '
@@ -47,6 +48,21 @@ module.exports = require('proof')(function (counter, equal, deepEqual) {
         for (var i = 0, I = cycle.buffer.length; i < I; i++) {
             increment(i)
         }
+
+        self.parse = cycle.parser({}, function (object) {
+            var buffer = new Buffer(cycle.buffer.length + 1)
+            return subsequent.parser({}, function (next) {
+                deepEqual(next, { foo: 1 }, prefix + 'subsequent parser')
+                self.write = cycle.serializer(object, function () {
+                    return subsequent.serializer({ foo: 1 })
+                })
+                self.write(null, 0, 0)
+                self.write(buffer, 0, buffer.length)
+                deepEqual(toArray(buffer), cycle.buffer.concat([ 1 ]), prefix + 'subsequent serializer')
+            })
+        })
+        self.parse(null, 0, 0)
+        self.parse(cycle.buffer.concat([ 1 ]), 0, cycle.buffer.length + 1)
     }
 
     function full (cycle, type) {
