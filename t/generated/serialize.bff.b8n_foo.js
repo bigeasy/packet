@@ -4,6 +4,7 @@ module.exports = function (object, callback) {
   inc = function (buffer, start, end, index) {
       var index
       var bite
+      var next
       var _foo
 
       this.write = function (buffer, start, end) {
@@ -20,6 +21,11 @@ module.exports = function (object, callback) {
                }
           }
 
+          if (next = (callback && callback(object))) {
+              this.write = next
+              return this.write(buffer, start, end)
+          }
+
           return start
       }
 
@@ -27,6 +33,8 @@ module.exports = function (object, callback) {
   }
 
   return function (buffer, start, end) {
+      var next
+
       if (end - start < 1) {
           return inc.call(this, buffer, start, end, 0)
       }
@@ -34,6 +42,11 @@ module.exports = function (object, callback) {
       buffer[start] = object["foo"]
 
       start += 1
+
+      if (next = (callback && callback(object))) {
+          this.write = next
+          return this.write(buffer, start, end)
+      }
 
       return start
   }

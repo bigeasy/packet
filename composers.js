@@ -26,9 +26,10 @@ function fixupSignage (field, operation) {
 }
 
 function composeIncrementalParser (ranges) {
+    var cases = source()
 
-    var cases = source();
-    var hoist = hoister();
+    var hoist = hoister()
+    hoist('next')
 
     ranges.forEach(function (range, rangeIndex) {
 
@@ -155,8 +156,10 @@ function composeIncrementalParser (ranges) {
         $cases                                                              \n\
         }                                                                   \n\
                                                                             \n\
-        // todo: all wrong                                                  \n\
-        callback(object)                                                    \n\
+        if (next = callback(object)) {                                      \n\
+            this.parse = next                                               \n\
+            return this.parse(buffer, start, end)                           \n\
+        }                                                                   \n\
                                                                             \n\
         return start                                                        \n\
     ')
@@ -180,7 +183,9 @@ function composeIncrementalParser (ranges) {
 
 exports.composeParser = function (ranges) {
     var sections = source()
+
     var hoist = hoister()
+    hoist('next')
 
     ranges.forEach(function (range) {
         var section = source()
@@ -305,14 +310,23 @@ exports.composeParser = function (ranges) {
         parser('\n\
             $variables                                                      \n\
             $sections                                                       \n\
-            return callback(object)                                         \n\
+                                                                            \n\
+            if (next = callback(object)) {                                  \n\
+                this.parse = next                                           \n\
+                return this.parse(buffer, start, end)                       \n\
+            }                                                               \n\
+                                                                            \n\
+            return start                                                    \n\
         ')
         parser.$variables(hoist())
     } else {
         parser('\n\
             $sections                                                       \n\
                                                                             \n\
-            callback(object)                                                \n\
+            if (next = callback(object)) {                                  \n\
+                this.parse = next                                           \n\
+                return this.parse(buffer, start, end)                       \n\
+            }                                                               \n\
                                                                             \n\
             return start                                                    \n\
         ')
@@ -338,6 +352,7 @@ function composeIncrementalSerializer (ranges) {
     var cases = source()
 
     var hoist = hoister()
+    hoist('next')
 
     ranges.forEach(function (range, rangeIndex) {
         var section = source()
@@ -467,6 +482,11 @@ function composeIncrementalSerializer (ranges) {
         $cases                                                              \n\
         }                                                                   \n\
                                                                             \n\
+        if (next = (callback && callback(object))) {                        \n\
+            this.write = next                                               \n\
+            return this.write(buffer, start, end)                           \n\
+        }                                                                   \n\
+                                                                            \n\
         return start                                                        \n\
     ')
     serializer.$cases(cases)
@@ -588,7 +608,9 @@ function packForSerialization (hoist, field) {
 
 exports.composeSerializer = function (ranges) {
     var sections = source()
+
     var hoist = hoister()
+    hoist('next')
 
     ranges.forEach(function (range) {
         var section = source()
@@ -716,6 +738,11 @@ exports.composeSerializer = function (ranges) {
     serializer.$sections(sections)
 
     serializer('\
+        if (next = (callback && callback(object))) {                        \n\
+            this.write = next                                               \n\
+            return this.write(buffer, start, end)                           \n\
+        }                                                                   \n\
+                                                                            \n\
         return start                                                        \n\
     ')
 
@@ -729,7 +756,7 @@ exports.composeSerializer = function (ranges) {
     ')
 
     constructor.$serializer(serializer.define('buffer', 'start', 'end'))
-    constructor.$incremental(composeIncrementalSerializer(ranges));
+    constructor.$incremental(composeIncrementalSerializer(ranges))
 
     return String(constructor)
 }

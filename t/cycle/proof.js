@@ -1,6 +1,14 @@
 module.exports = require('proof')(function (counter, equal, deepEqual) {
     var __slice = [].slice
 
+    var options = {}
+    options.precompiler = require('../require')
+    options.directory = 't/generated'
+    var packet = require('../..').createPacketizer(options)
+    var subsequent = {}
+    subsequent.parser = packet.createParser('foo: b8')
+    subsequent.serializer = packet.createSerializer('foo: b8')
+
     function toArray (buffer) {
         var array = [], i, I
         for (i = 0, I = buffer.length; i < I; i++) {
@@ -45,7 +53,7 @@ module.exports = require('proof')(function (counter, equal, deepEqual) {
         var self = {}
         var prefix = cycle.message + ' ' + type + ' '
 
-        counter(5)
+        counter(7)
 
         equal(cycle.sizeOf(cycle.object), cycle.buffer.length, prefix + 'sizeOf')
 
@@ -59,6 +67,19 @@ module.exports = require('proof')(function (counter, equal, deepEqual) {
         })
         var start = self.parse(cycle.buffer, 0, cycle.buffer.length)
         equal(start, cycle.buffer.length, prefix + 'parsed')
+
+        self.parse = cycle.parser({}, function (object) {
+            var buffer = new Buffer(cycle.buffer.length + 1)
+            return subsequent.parser({}, function (next) {
+                deepEqual(next, { foo: 1 }, prefix + 'subsequent parser')
+                self.write = cycle.serializer(object, function () {
+                    return subsequent.serializer({ foo: 1 })
+                })
+                self.write(buffer, 0, buffer.length)
+                deepEqual(toArray(buffer), cycle.buffer.concat([ 1 ]), prefix + 'subsequent serializer')
+            })
+        })
+        self.parse(cycle.buffer.concat([ 1 ]), 0, cycle.buffer.length + 1)
     }
 
     function cycle (cycle) {

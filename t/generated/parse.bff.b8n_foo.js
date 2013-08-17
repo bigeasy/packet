@@ -3,6 +3,7 @@ module.exports = function (object, callback) {
 
   inc = function (buffer, start, end, index) {
       var bite
+      var next
       var _foo
 
       this.parse = function (buffer, start, end) {
@@ -20,8 +21,10 @@ module.exports = function (object, callback) {
               object["foo"] = _foo
           }
 
-          // todo: all wrong
-          callback(object)
+          if (next = callback(object)) {
+              this.parse = next
+              return this.parse(buffer, start, end)
+          }
 
           return start
       }
@@ -30,6 +33,8 @@ module.exports = function (object, callback) {
   }
 
   return function (buffer, start, end) {
+      var next
+
       if (end - start < 1) {
           return inc.call(this, buffer, start, end, 0)
       }
@@ -39,7 +44,10 @@ module.exports = function (object, callback) {
       start += 1
 
 
-      callback(object)
+      if (next = callback(object)) {
+          this.parse = next
+          return this.parse(buffer, start, end)
+      }
 
       return start
   }
