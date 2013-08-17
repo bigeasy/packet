@@ -1,4 +1,4 @@
-module.exports = function (incremental, terminator, pattern, transforms, ieee754, object, callback) {
+module.exports = function (object, callback) {
   var inc
 
   inc = function (buffer, start, end, index) {

@@ -1,4 +1,4 @@
-module.exports = function (incremental, terminator, pattern, transforms, ieee754, object, callback) {
+module.exports = function (object, callback) {
   var inc
 
   inc = function (buffer, start, end, index) {
@@ -37,6 +37,8 @@ module.exports = function (incremental, terminator, pattern, transforms, ieee754
       start += 1
 
 
-      return callback(object)
+      callback(object)
+
+      return start
   }
 }

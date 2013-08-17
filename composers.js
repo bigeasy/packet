@@ -310,7 +310,9 @@ exports.composeParser = function (ranges) {
         parser('\n\
             $sections                                                       \n\
                                                                             \n\
-            return callback(object)                                         \n\
+            callback(object)                                                \n\
+                                                                            \n\
+            return start                                                    \n\
         ')
     }
     parser.$sections(sections)
