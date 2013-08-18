@@ -19,7 +19,7 @@ function hoister () {
 
 function fixupSignage (field, operation) {
     operation('\
-        _$field = (_$field & $sign) ? ($mask - _$field + 1) * -1 : _$field      \n\
+        _$field = (_$field & $sign) ? ($mask - _$field + 1) * -1 : _$field  \n\
     ')
     operation.$sign('0x80' + new Array(field.bytes).join('00'))
     operation.$mask('0xff' + new Array(field.bytes).join('ff'))
@@ -39,12 +39,12 @@ function composeIncrementalParser (ranges) {
                 var section = source()
                 var index = (rangeIndex + patternIndex) * 2
                 section('\n\
-                    case $initiationIndex:                                      \n\
-                        skip = start + $skip                                    \n\
-                        index = $parseIndex                                     \n\
-                    case $parseIndex:                                           \n\
-                        if (end < skip) return end                              \n\
-                        start = skip                                            \
+                    case $initiationIndex:                                  \n\
+                        skip = start + $skip                                \n\
+                        index = $parseIndex                                 \n\
+                    case $parseIndex:                                       \n\
+                        if (end < skip) return end                          \n\
+                        start = skip                                        \
                 ')
                 hoist('skip')
                 section.$initiationIndex(index)
@@ -63,18 +63,18 @@ function composeIncrementalParser (ranges) {
                 hoist('_' + field.name)
 
                 section('\
-                    case $initiationIndex:                                      \n\
-                        $initialization                                         \n\
-                        index = $parseIndex                                     \n\
-                    case $parseIndex:                                           \n\
+                    case $initiationIndex:                                  \n\
+                        $initialization                                     \n\
+                        index = $parseIndex                                 \n\
+                    case $parseIndex:                                       \n\
                         $parse                                              \n\
                         object[$name] = $extract                            \
                 ')
                 section.$initiationIndex(index)
 
                 section.$initialization('\n\
-                        _$field = new ArrayBuffer($size)                        \n\
-                        bite = $start                                           \n\
+                        _$field = new ArrayBuffer($size)                    \n\
+                        bite = $start                                       \n\
                 ')
                 section.$start(bite)
                 section.$size(field.bytes)
@@ -84,9 +84,9 @@ function composeIncrementalParser (ranges) {
                 var operation = source()
 
                 operation('\n\
-                    while (bite != $stop) {                                     \n\
-                        if (start == end) return start                          \n\
-                        _$field[$direction] = buffer[start++]                   \n\
+                    while (bite != $stop) {                                 \n\
+                        if (start == end) return start                      \n\
+                        _$field[$direction] = buffer[start++]               \n\
                     }')
 
                 operation.$field(field.name)
@@ -109,17 +109,17 @@ function composeIncrementalParser (ranges) {
                 hoist('_' + field.name)
 
                 section('\
-                    case $initiationIndex:                                      \n\
-                        $initialization                                         \n\
-                        index = $parseIndex                                     \n\
-                    case $parseIndex:                                           \n\
-                        $parse                                                  \
+                    case $initiationIndex:                                  \n\
+                        $initialization                                     \n\
+                        index = $parseIndex                                 \n\
+                    case $parseIndex:                                       \n\
+                        $parse                                              \
                 ')
                 section.$initiationIndex(index)
 
                 section.$initialization('\n\
-                        _$field = 0                                             \n\
-                        bite = $start                                           \n\
+                        _$field = 0                                         \n\
+                        bite = $start                                       \n\
                 ')
                 section.$start(bite)
 
@@ -128,10 +128,10 @@ function composeIncrementalParser (ranges) {
                 var operation = source()
 
                 operation('\n\
-                    while (bite != $stop) {                                     \n\
-                        if (start == end) return start                          \n\
-                        _$field += Math.pow(256, bite) * buffer[start++]        \n\
-                        $direction                                              \n\
+                    while (bite != $stop) {                                 \n\
+                        if (start == end) return start                      \n\
+                        _$field += Math.pow(256, bite) * buffer[start++]    \n\
+                        $direction                                          \n\
                     }')
                 if (field.signed) {
                     fixupSignage(field, operation)
@@ -244,7 +244,7 @@ exports.composeParser = function (ranges) {
                 var assignment = source()
                 if (field.bytes == 1 && ! field.signed) {
                     assignment('\n\
-                        $variable = buffer[$inc]                                \n\
+                        $variable = buffer[$inc]                            \n\
                     ')
                     assignment.$inc(offset ? 'start + $offset' : 'start')
                     assignment.$offset && assignment.$offset(offset)
@@ -275,8 +275,8 @@ exports.composeParser = function (ranges) {
                         bite += direction
                     }
                     assignment('\n\
-                        $variable =                                             \n\
-                            $read                                               \n\
+                        $variable =                                         \n\
+                            $read                                           \n\
                     ')
                     if (field.signed) {
                         assignment.$variable('_$field')
@@ -363,12 +363,12 @@ function composeIncrementalSerializer (ranges) {
                 var section = source()
                 var index = (rangeIndex + patternIndex) * 2
                 section('\
-                    case $initiationIndex:                                      \n\
-                        skip = start + $skip                                    \n\
-                        index = $parseIndex                                     \n\
-                    case $parseIndex:                                           \n\
-                        if (end < skip) return end                              \n\
-                        start = skip                                            \
+                    case $initiationIndex:                                  \n\
+                        skip = start + $skip                                \n\
+                        index = $parseIndex                                 \n\
+                    case $parseIndex:                                       \n\
+                        if (end < skip) return end                          \n\
+                        start = skip                                        \
                 ')
                 hoist('skip')
                 section.$initiationIndex(index)
@@ -388,11 +388,11 @@ function composeIncrementalSerializer (ranges) {
                 hoist('_' + field.name)
 
                 section('\
-                    case $initiationIndex:                                      \n\
-                        $initialization                                         \n\
-                        index = $patternIndex                                   \n\
-                    case $patternIndex:                                         \n\
-                        $serialize                                              \
+                    case $initiationIndex:                                  \n\
+                        $initialization                                     \n\
+                        index = $patternIndex                               \n\
+                    case $patternIndex:                                     \n\
+                        $serialize                                          \
                 ')
                 section.$initiationIndex(index)
 
@@ -409,9 +409,9 @@ function composeIncrementalSerializer (ranges) {
                 var operation = source()
 
                 operation('\n\
-                    while (bite != $stop) {                                     \n\
-                        if (start == end) return start                          \n\
-                        buffer[start++] = _$field[$direction]                   \n\
+                    while (bite != $stop) {                                 \n\
+                        if (start == end) return start                      \n\
+                        buffer[start++] = _$field[$direction]               \n\
                     }')
 
                 operation.$field(field.name)
@@ -432,12 +432,12 @@ function composeIncrementalSerializer (ranges) {
                 var stop = little ? bytes : -1
 
                 section('\
-                    case $initiationIndex:                                      \n\
-                        $initialization                                         \n\
-                        bite = $start                                           \n\
-                        index = $parseIndex                                     \n\
-                    case $parseIndex:                                           \n\
-                        $parse                                                  \
+                    case $initiationIndex:                                  \n\
+                        $initialization                                     \n\
+                        bite = $start                                       \n\
+                        index = $parseIndex                                 \n\
+                    case $parseIndex:                                       \n\
+                        $parse                                              \
                 ')
                 section.$initiationIndex(index)
 
@@ -446,7 +446,7 @@ function composeIncrementalSerializer (ranges) {
                     section.$initialization(packForSerialization(hoist, field))
                 } else if (field.padding == null) {
                     section.$initialization('\n\
-                            $variable = object[$name]                                 \n\
+                            $variable = object[$name]                       \n\
                     ')
                     var variable = '_' + field.name
                     section.$name(JSON.stringify(field.name))
@@ -462,11 +462,11 @@ function composeIncrementalSerializer (ranges) {
                 section.$parseIndex(index + 1)
 
                 section.$parse('\n\
-                   while (bite != $stop) {                                     \n\
-                        if (start == end) return start                          \n\
-                        buffer[start++] = ($variable >>> bite * 8) & 0xff       \n\
-                        $direction                                              \n\
-                    }                                                           \
+                   while (bite != $stop) {                                  \n\
+                        if (start == end) return start                      \n\
+                        buffer[start++] = ($variable >>> bite * 8) & 0xff   \n\
+                        $direction                                          \n\
+                    }                                                       \
                 ')
                 section.$variable(variable)
                 section.$stop(stop)
@@ -640,9 +640,9 @@ exports.composeSerializer = function (ranges) {
                 hoist('_' + field.name)
 
                 operation('\n\
-                    _$field = new ArrayBuffer($size)                                \n\
-                    new DataView(_$field).setFloat$bits(0, object[$name], true)     \n\
-                    $copy                                                           \n\
+                    _$field = new ArrayBuffer($size)                        \n\
+                    new DataView(_$field).setFloat$bits(0, object[$name], true)\n\
+                    $copy                                                   \n\
                 ')
                 var copy = source()
                 while (bite != stop) {
@@ -668,7 +668,7 @@ exports.composeSerializer = function (ranges) {
                 var assignment = source()
                 if (field.bytes == 1 && field.padding == null && !field.packing) {
                     assignment('\n\
-                        buffer[$inc] = $fiddle                                  \n\
+                        buffer[$inc] = $fiddle                              \n\
                     ')
                     assignment.$inc(offset ? 'start + $offset' : 'start')
                     assignment.$offset && assignment.$offset(offset)
@@ -688,7 +688,7 @@ exports.composeSerializer = function (ranges) {
                     } else if (field.padding == null) {
                         hoist('value')
                         assignment('\n\
-                            value = object[$name]                                   \n\
+                            value = object[$name]                           \n\
                         ')
                         assignment.$name(JSON.stringify(field.name))
                     } else {
@@ -726,7 +726,7 @@ exports.composeSerializer = function (ranges) {
 
     if (hoist()) {
         serializer('\n\
-            $variables                                                  \n\
+            $variables                                                      \n\
         ')
     }
 
