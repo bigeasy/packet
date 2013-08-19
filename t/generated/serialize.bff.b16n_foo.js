@@ -1,9 +1,10 @@
-module.exports = function (incremental, terminator, pattern, transforms, ieee754, object, callback) {
+module.exports = function (object, callback) {
   var inc
 
   inc = function (buffer, start, end, index) {
       var index
       var bite
+      var next
       var _foo
 
       this.write = function (buffer, start, end) {
@@ -20,6 +21,11 @@ module.exports = function (incremental, terminator, pattern, transforms, ieee754
                }
           }
 
+          if (next = (callback && callback(object))) {
+              this.write = next
+              return this.write(buffer, start, end)
+          }
+
           return start
       }
 
@@ -27,6 +33,7 @@ module.exports = function (incremental, terminator, pattern, transforms, ieee754
   }
 
   return function (buffer, start, end) {
+      var next
       var value
 
       if (end - start < 2) {
@@ -38,6 +45,11 @@ module.exports = function (incremental, terminator, pattern, transforms, ieee754
       buffer[start + 1] = value & 0xff
 
       start += 2
+
+      if (next = (callback && callback(object))) {
+          this.write = next
+          return this.write(buffer, start, end)
+      }
 
       return start
   }
