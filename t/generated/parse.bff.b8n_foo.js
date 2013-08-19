@@ -43,7 +43,6 @@ module.exports = function (object, callback) {
 
       start += 1
 
-
       if (next = callback(object)) {
           this.parse = next
           return this.parse(buffer, start, end)

@@ -22,7 +22,7 @@ Packetizer.prototype.createParser = function (pattern) {
 
     var parser = require('./composers').composeParser(ranges, true)
 
-    parser = parser.split(/\n/)
+    parser = parser.replace(/\n\n\n+/, '\n\n').split(/\n/)
 
     return this._options.precompiler(prefix.join('.'), pattern, [ 'object', 'callback' ], parser)
 }
@@ -34,7 +34,7 @@ Packetizer.prototype.createSerializer = function (pattern) {
 
     var parser = require('./composers').composeSerializer(ranges, true)
 
-    parser = parser.split(/\n/)
+    parser = parser.replace(/\n\n\n+/, '\n\n').split(/\n/)
 
     return this._options.precompiler(prefix.join('.'), pattern, [ 'object', 'callback' ], parser)
 }
