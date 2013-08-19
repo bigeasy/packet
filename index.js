@@ -32,11 +32,11 @@ Packetizer.prototype.createSerializer = function (pattern) {
     var ranges = rangify(pattern)
     var prefix = [ 'serialize.bff' ]
 
-    var parser = require('./composers').composeSerializer(ranges, true)
+    var serializer = require('./composers').composeSerializer(ranges, true)
 
-    parser = parser.replace(/\n\n\n+/, '\n\n').split(/\n/)
+    serializer = serializer.replace(/\n\n\n+/, '\n\n').split(/\n/)
 
-    return this._options.precompiler(prefix.join('.'), pattern, [ 'object', 'callback' ], parser)
+    return this._options.precompiler(prefix.join('.'), pattern, [ 'object', 'callback' ], serializer)
 }
 
 Packetizer.prototype.createSizeOf = function (pattern) {
