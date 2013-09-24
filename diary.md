@@ -13,7 +13,7 @@ been around for a while, so there is none.
 ## Pre-compilation
 
 Your unwind loop gets fast. Inside the compiled function, everything you need
-for a pattern so you get that closure preformance boost from V8. The loop is
+for a pattern so you get that closure performance boost from V8. The loop is
 something like.
 
 ```javascript
@@ -60,7 +60,7 @@ expects an object, instead of expecting an array.
 The `Serializer` is just that, it takes an object or parameters and flattens
 them to a stream. Currently, I'm facing a problem in that `offsetsOf` returns an
 object if the `Serializer` was told to extract from an `Object.` However, the
-sturcture of the `offsetsOf` report includes the contianing bytes of of bit
+structure of the `offsetsOf` report includes the containing bytes of of bit
 packed fields. There is no name to assign the containing bytes. They are unnamed
 in the pattern.
 
@@ -281,9 +281,9 @@ to go somewhere in any case.
 I'm seeing where callback based ought to be an option. If you don't need
 incremental, `parse` can just return an object.
 
-If speed matters, then why am I adding convience functions like figuring the
+If speed matters, then why am I adding convenience functions like figuring the
 start and end of the range? Why don't you please provide that? Now I have to
-calcuate it everywhere.
+calculate it everywhere.
 
 Alternation is becoming annoying. I'd like to keep a separate map of alternates
 that is only used if there are alternates to track. This gets passed into the
@@ -639,7 +639,7 @@ curlies though, too much going on.
 // if crc($1) returns a function can we call that function instead?
 ```
 
-I'd like to be able to have a ternary  like alernation, so that `foo, bar:` get
+I'd like to be able to have a ternary like alternation, so that `foo, bar:` get
 assigned the results of the alternation.
 
 ## Inbox
