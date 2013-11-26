@@ -4,7 +4,7 @@ set -e
 
 echo ""
 
-(proof run t/*/*.t.js | tee .proof.out | proof progress) || (proof errors < .proof.out) || exit 1
+(proof run t/*/*.t.js t/*/*/*.t.js | tee .proof.out | proof progress) || (proof errors < .proof.out) || exit 1
 
 if [ $(find t -name "*.t.js.broken" | wc -c) != "0" ]; then
   echo ""
@@ -39,7 +39,7 @@ if [ "$TRAVIS" = "true" ] || [ "$MINIFY" = "true" ]; then
     cat $bak | uglifyjs --lift-vars > composers.js
   fi
 
-  (proof run t/*/*.t.js | tee .proof.out | proof progress) || (proof errors < .proof.out) || exit 1
+  (proof run t/*/*.t.js t/*/*/*.t.js | tee .proof.out | proof progress) || (proof errors < .proof.out) || exit 1
 fi
 
 echo ""

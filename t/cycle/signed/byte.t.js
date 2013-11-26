@@ -1,4 +1,4 @@
-require('./proof')(0, function (cycle) {
+require('../proof')(0, function (cycle) {
     cycle({
         message:        'signed',
         pattern:        'foo: -b8',
