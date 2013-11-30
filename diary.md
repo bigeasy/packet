@@ -311,7 +311,7 @@ be future, ugh, proof, but flexible, but I'm going to let JavaScirpt's
 limitation set this boundaries, and get a faster unsigned integer.
 
 When you have single bytes, you can do array scans and slices. This gets back to
-doing buffer only, or maybe you have a langauge for buffer slices?
+doing buffer only, or maybe you have a language for buffer slices?
 
 ```
 "<b8z>" // slice a buffer terminated by zero.
@@ -479,10 +479,10 @@ detection, but, how hard is it to look at [Snort
 rules](http://manual.snort.org/node32.html) and see what the requirements are?
 
 They're not too steep. It's Boyer-Moore, which we'll use to implement search,
-with some thoughts on offets and depth. Implementing a basic subset of regular
-expressions would be as powerful.  (Note that Snort is operating against
-packets individually, so it is not as complicated as searching through a file or
-a stream.)
+with some thoughts on offsets and depth. Implementing a basic subset of regular
+expressions would be as powerful.  (Note that Snort is operating against packets
+individually, so it is not as complicated as searching through a file or a
+stream.)
 
 If I implement a light regular expression engine, the I can feel better about
 calling this library Packet. Yes, it does parsing. Yes, it does serialization.
