@@ -1,3 +1,3 @@
 module.exports = function (object) {
-  return 8
+    return 8
 }
