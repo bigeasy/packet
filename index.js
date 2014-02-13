@@ -15,6 +15,11 @@ function Packetizer (options) {
     this._options = options
 }
 
+Packetizer.prototype.createParserProgrammatically  = function (pattern) {
+    return require('./programmatically')
+}
+
+
 Packetizer.prototype.createParser = function (pattern) {
     var pattern = parse(pattern)
     var ranges = rangify(pattern)
