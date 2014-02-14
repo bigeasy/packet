@@ -3,6 +3,7 @@ exports.parser = function () {
         var inc
 
         inc = function (buffer, start, end, index) {
+            var next
             var bite
             var _byte
 
@@ -33,6 +34,8 @@ exports.parser = function () {
         }
 
         return function (buffer, start, end) {
+            var next
+
             if (end - start < 1) {
                 return inc.call(this, buffer, start, end, 0)
             }

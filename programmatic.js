@@ -61,6 +61,18 @@ exports.parser = function () {
                                     type: 'VariableDeclarator',
                                     id: {
                                         type: 'Identifier',
+                                        name: 'next'
+                                    },
+                                    init: null
+                                }],
+                            kind: 'var'
+                        },
+                        {
+                            type: 'VariableDeclaration',
+                            declarations: [{
+                                    type: 'VariableDeclarator',
+                                    id: {
+                                        type: 'Identifier',
                                         name: 'bite'
                                     },
                                     init: null
@@ -478,6 +490,18 @@ exports.parser = function () {
             body: {
                 type: 'BlockStatement',
                 body: [
+                    {
+                        type: 'VariableDeclaration',
+                        declarations: [{
+                                type: 'VariableDeclarator',
+                                id: {
+                                    type: 'Identifier',
+                                    name: 'next'
+                                },
+                                init: null
+                            }],
+                        kind: 'var'
+                    },
                     {
                         type: 'IfStatement',
                         test: {

@@ -27,9 +27,8 @@ fs.writeFileSync(path.join(__dirname, 'programmatic.js'), source, 'utf8')
 Packetizer.prototype.createParserProgrammatically  = function () {
     var generators = require('./programmatic')
     var source = escodegen.generate(generators.parser(1), { format: { semicolons: false } })
-    console.log(source)
-
-    return require('./programmatically')
+    fs.writeFileSync(path.join(__dirname, 'programmatic.b8n.js'), source, 'utf8')
+    return require('./programmatic.b8n')
 }
 
 Packetizer.prototype.createParser = function (pattern) {

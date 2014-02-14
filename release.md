@@ -1,5 +1,6 @@
 ### Issue by Issue
 
+ * Execute Programmatic generated single byte parser. #270.
  * Generate static single unsigned byte parser. #269.
  * Add Escodegen as a dependency. #268.
  * Upgrade Proof to 0.0.42. #267.
