@@ -17,9 +17,7 @@
     },
     "dependencies":
     {
-        "source": "git+https://github.com/bigeasy/source.git#3bd065984fb3f86e5c2eb45a22f052df6efdf749",
-                        "programmatic": "0.0.1",
-                        "escodegen": "1.2.0"
+        "source": "git+https://github.com/bigeasy/source.git#3bd065984fb3f86e5c2eb45a22f052df6efdf749"
     },
     "repository":
     {

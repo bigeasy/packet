@@ -1,5 +1,6 @@
 ### Issue by Issue
 
+ * Remove Programmatic. #271.
  * Execute Programmatic generated single byte parser. #270.
  * Generate static single unsigned byte parser. #269.
  * Add Escodegen as a dependency. #268.

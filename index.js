@@ -16,20 +16,6 @@ function Packetizer (options) {
 }
 
 var fs = require('fs'), path = require('path')
-var programmatic = require('programmatic')
-var escodegen = require('escodegen')
-var body = fs.readFileSync(path.join(__dirname, 'programmatic.s.js'), 'utf8')
-var result = programmatic.generate(body).shift()
-var source = escodegen.generate(result, { format: { semicolons: false } })
-
-fs.writeFileSync(path.join(__dirname, 'programmatic.js'), source, 'utf8')
-
-Packetizer.prototype.createParserProgrammatically  = function () {
-    var generators = require('./programmatic')
-    var source = escodegen.generate(generators.parser(1), { format: { semicolons: false } })
-    fs.writeFileSync(path.join(__dirname, 'programmatic.b8n.js'), source, 'utf8')
-    return require('./programmatic.b8n')
-}
 
 Packetizer.prototype.createParser = function (pattern) {
     var pattern = parse(pattern)
