@@ -1,5 +1,6 @@
 ### Issue by Issue
 
+ * Fix broken Travis CI minification build. #286.
  * Compiler can no longer specify new lines. #285.
  * Split lines before processing compiler source. #284.
  * Flatten nested sources. #283.
