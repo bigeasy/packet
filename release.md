@@ -1,5 +1,6 @@
 ### Issue by Issue
 
+ * Differentiate unhoisted variables. #289.
  * Flatten compiler arguments as source. #288.
  * Preserve order of hoisting. #287.
  * Fix broken Travis CI minification build. #286.
