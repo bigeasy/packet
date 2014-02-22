@@ -473,11 +473,11 @@ function composeIncrementalSerializer (ranges) {
 
                 section.$parse('\n\
                    while (bite != $stop) {                                  \n\
-                        if (start == end) {                                 \n\
-                            return start                                    \n\
-                        }                                                   \n\
-                        buffer[start++] = $variable >>> bite * 8 & 0xff     \n\
-                        $direction                                          \n\
+                       if (start == end) {                                  \n\
+                           return start                                     \n\
+                       }                                                    \n\
+                       buffer[start++] = $variable >>> bite * 8 & 0xff      \n\
+                       $direction                                           \n\
                     }                                                       \
                 ')
                 section.$variable(variable)

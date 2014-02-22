@@ -1,5 +1,6 @@
 ### Issue by Issue
 
+ * Incorrect indent in serializer while loop. #277.
  * Remove unnecessary parenthesis. #276.
  * Preserve hexadecimal. #275.
  * Always create a block in generated code. #273.

@@ -15,11 +15,11 @@ module.exports = function (object, callback) {
                 index = 1
             case 1:
                 while (bite != -1) {
-                     if (start == end) {
-                         return start
-                     }
-                     buffer[start++] = _foo >>> bite * 8 & 0xff
-                     bite--
+                    if (start == end) {
+                        return start
+                    }
+                    buffer[start++] = _foo >>> bite * 8 & 0xff
+                    bite--
                  }
             }
 
