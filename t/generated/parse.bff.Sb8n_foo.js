@@ -14,7 +14,9 @@ module.exports = function (object, callback) {
                 index = 1
             case 1:
                 while (bite != -1) {
-                    if (start == end) return start
+                    if (start == end) {
+                        return start
+                    }
                     _foo += Math.pow(256, bite) * buffer[start++]
                     bite--
                 }

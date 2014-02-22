@@ -43,7 +43,9 @@ function composeIncrementalParser (ranges) {
                         skip = start + $skip                                \n\
                         index = $parseIndex                                 \n\
                     case $parseIndex:                                       \n\
-                        if (end < skip) return end                          \n\
+                        if (end < skip) {                                   \n\
+                            return end                                      \n\
+                        }                                                   \n\
                         start = skip                                        \
                 ')
                 hoist('skip')
@@ -85,7 +87,9 @@ function composeIncrementalParser (ranges) {
 
                 operation('\n\
                     while (bite != $stop) {                                 \n\
-                        if (start == end) return start                      \n\
+                        if (start == end) {                                 \n\
+                            return start                                    \n\
+                        }                                                   \n\
                         _$field[$direction] = buffer[start++]               \n\
                     }')
 
@@ -129,7 +133,9 @@ function composeIncrementalParser (ranges) {
 
                 operation('\n\
                     while (bite != $stop) {                                 \n\
-                        if (start == end) return start                      \n\
+                        if (start == end) {                                 \n\
+                            return start                                    \n\
+                        }                                                   \n\
                         _$field += Math.pow(256, bite) * buffer[start++]    \n\
                         $direction                                          \n\
                     }')
@@ -367,7 +373,9 @@ function composeIncrementalSerializer (ranges) {
                         skip = start + $skip                                \n\
                         index = $parseIndex                                 \n\
                     case $parseIndex:                                       \n\
-                        if (end < skip) return end                          \n\
+                        if (end < skip) {                                   \n\
+                            return end                                      \n\
+                        }                                                   \n\
                         start = skip                                        \
                 ')
                 hoist('skip')
@@ -410,7 +418,9 @@ function composeIncrementalSerializer (ranges) {
 
                 operation('\n\
                     while (bite != $stop) {                                 \n\
-                        if (start == end) return start                      \n\
+                        if (start == end) {                                 \n\
+                            return start                                    \n\
+                        }                                                   \n\
                         buffer[start++] = _$field[$direction]               \n\
                     }')
 
@@ -463,7 +473,9 @@ function composeIncrementalSerializer (ranges) {
 
                 section.$parse('\n\
                    while (bite != $stop) {                                  \n\
-                        if (start == end) return start                      \n\
+                        if (start == end) {                                 \n\
+                            return start                                    \n\
+                        }                                                   \n\
                         buffer[start++] = ($variable >>> bite * 8) & 0xff   \n\
                         $direction                                          \n\
                     }                                                       \

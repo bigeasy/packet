@@ -14,7 +14,9 @@ module.exports = function (object, callback) {
                 index = 1
             case 1:
                 while (bite != 4) {
-                    if (start == end) return start
+                    if (start == end) {
+                        return start
+                    }
                     _foo[bite++] = buffer[start++]
                 }
                 object["foo"] = new DataView(_foo).getFloat32(0, true)
