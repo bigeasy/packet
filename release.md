@@ -1,5 +1,6 @@
 ### Issue by Issue
 
+ * Flatten nested sources. #283.
  * Strip blank lines in compiler. #282.
  * Implement hoisting in catenation compiler. #281.
  * Remove template parser. #278.

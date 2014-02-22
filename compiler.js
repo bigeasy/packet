@@ -1,5 +1,16 @@
+function flatten (source) {
+    return [].concat.apply([], source.map(function (source) {
+        if (Array.isArray(source)) {
+            return flatten(source)
+        } else {
+            return source
+        }
+    }))
+}
+
 module.exports = function (source) {
     var i = 0, variables = {}, $
+    source = flatten(source)
     while (i < source.length) {
         if (source[i] == '\n') {
             source[i] = '"__nl__"'
