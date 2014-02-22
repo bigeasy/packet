@@ -1,5 +1,6 @@
 ### Issue by Issue
 
+ * Use existing generated parsers. #290.
  * Differentiate unhoisted variables. #289.
  * Flatten compiler arguments as source. #288.
  * Preserve order of hoisting. #287.

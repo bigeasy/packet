@@ -15,42 +15,24 @@ function Packetizer (options) {
     this._options = options
 }
 
-var fs = require('fs'), path = require('path')
+var fs = require('fs'), path = require('path'), namify = require('./t/name')
+
+Packetizer.prototype._load = function (prefix, pattern) {
+    var pattern = parse(pattern)
+    var name = namify(prefix, pattern)
+    return require(path.join(__dirname, 't', 'generated', name + '.js'))
+}
 
 Packetizer.prototype.createParser = function (pattern) {
-    var pattern = parse(pattern)
-    var ranges = rangify(pattern)
-    var prefix = [ 'parse.bff' ]
-
-    var parser = require('./composers').composeParser(ranges, true)
-
-    parser = parser.replace(/\n\n\n+/, '\n\n').split(/\n/)
-
-    return this._options.precompiler(prefix.join('.'), pattern, [ 'object', 'callback' ], parser)
+    return this._load('parse.bff', pattern)
 }
 
 Packetizer.prototype.createSerializer = function (pattern) {
-    var pattern = parse(pattern)
-    var ranges = rangify(pattern)
-    var prefix = [ 'serialize.bff' ]
-
-    var serializer = require('./composers').composeSerializer(ranges, true)
-
-    serializer = serializer.replace(/\n\n\n+/, '\n\n').split(/\n/)
-
-    return this._options.precompiler(prefix.join('.'), pattern, [ 'object', 'callback' ], serializer)
+    return this._load('serialize.bff', pattern)
 }
 
 Packetizer.prototype.createSizeOf = function (pattern) {
-    var pattern = parse(pattern)
-    var ranges = rangify(pattern)
-    var prefix = [ 'sizeOf' ]
-
-    var sizeOf = require('./composers').composeSizeOf(ranges)
-
-    sizeOf = sizeOf.split(/\n/)
-
-    return this._options.precompiler(prefix.join('.'), pattern, [ 'object' ], sizeOf)
+    return this._load('sizeOf', pattern)
 }
 
 function createPacketizer (options) {
