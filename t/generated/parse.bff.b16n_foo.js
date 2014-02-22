@@ -41,9 +41,7 @@ module.exports = function (object, callback) {
             return inc.call(this, buffer, start, end, 0)
         }
 
-        object["foo"] =
-            buffer[start] * 0x100 +
-            buffer[start + 1]
+        object["foo"] = buffer[start] * 0x100 + buffer[start + 1]
 
         start += 2
 

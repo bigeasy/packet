@@ -28,7 +28,7 @@ module.exports = function () {
         i++
     }
     if (variables.length) {
-        source.unshift('"__nl__"')
+        source.unshift('"__nl__";')
         source.unshift.apply(source, variables.filter(function (variable) {
             var duplicate = seen[variable]
             seen[variable] = true
