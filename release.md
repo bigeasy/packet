@@ -1,5 +1,6 @@
 ### Issue by Issue
 
+ * Remove template parser. #278.
  * Incorrect indent in serializer while loop. #277.
  * Remove unnecessary parenthesis. #276.
  * Preserve hexadecimal. #275.
