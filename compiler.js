@@ -1,3 +1,5 @@
+var __slice = [].slice
+
 function flatten (source) {
     return [].concat.apply([], source.map(function (source) {
         if (Array.isArray(source)) {
@@ -8,9 +10,10 @@ function flatten (source) {
     }))
 }
 
-module.exports = function (source) {
-    var i = 0, variables = [], seen = {}, $
-    source = flatten(source)
+module.exports = function () {
+    var source = flatten(__slice.call(arguments)),
+        variables = [], seen = {},
+        i = 0, $
     while (i < source.length) {
         if (/^\s*"\\n"\s*$/.test(source[i])) {
             source[i] = '"__nl__"'

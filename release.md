@@ -1,5 +1,6 @@
 ### Issue by Issue
 
+ * Flatten compiler arguments as source. #288.
  * Preserve order of hoisting. #287.
  * Fix broken Travis CI minification build. #286.
  * Compiler can no longer specify new lines. #285.
