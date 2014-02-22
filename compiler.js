@@ -20,7 +20,7 @@ module.exports = function () {
         } else if (!/\S/.test(source[i])) {
             source.splice(i, 1)
             continue
-        } else if ($ = /^var ([\w\d_]+);$/.exec(source[i])) {
+        } else if ($ = /^var \.([\w\d_]+);$/.exec(source[i])) {
             variables.push($[1])
             source.splice(i, 1)
             continue
