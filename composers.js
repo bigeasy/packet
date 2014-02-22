@@ -19,7 +19,7 @@ function hoister () {
 
 function fixupSignage (field, operation) {
     operation('\
-        _$field = (_$field & $sign) ? ($mask - _$field + 1) * -1 : _$field  \n\
+        _$field = _$field & $sign ? ($mask - _$field + 1) * -1 : _$field  \n\
     ')
     operation.$sign('0x80' + new Array(field.bytes).join('00'))
     operation.$mask('0xff' + new Array(field.bytes).join('ff'))
@@ -476,7 +476,7 @@ function composeIncrementalSerializer (ranges) {
                         if (start == end) {                                 \n\
                             return start                                    \n\
                         }                                                   \n\
-                        buffer[start++] = ($variable >>> bite * 8) & 0xff   \n\
+                        buffer[start++] = $variable >>> bite * 8 & 0xff     \n\
                         $direction                                          \n\
                     }                                                       \
                 ')
@@ -494,7 +494,7 @@ function composeIncrementalSerializer (ranges) {
         $cases                                                              \n\
         }                                                                   \n\
                                                                             \n\
-        if (next = (callback && callback(object))) {                        \n\
+        if (next = callback && callback(object)) {                          \n\
             this.write = next                                               \n\
             return this.write(buffer, start, end)                           \n\
         }                                                                   \n\
@@ -718,7 +718,7 @@ exports.composeSerializer = function (ranges) {
                         write.$inc(offset ? 'start + $offset' : 'start')
                         write.$offset && write.$offset(offset)
                         offset++
-                        write.$value(bite ? '(value >>> $shift)' : 'value')
+                        write.$value(bite ? 'value >>> $shift' : 'value')
                         write.$shift && write.$shift(bite * 8)
                         assignment(String(write))
                         bite += direction
@@ -751,7 +751,7 @@ exports.composeSerializer = function (ranges) {
     serializer.$sections(sections)
 
     serializer('\
-        if (next = (callback && callback(object))) {                        \n\
+        if (next = callback && callback(object)) {                          \n\
             this.write = next                                               \n\
             return this.write(buffer, start, end)                           \n\
         }                                                                   \n\

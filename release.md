@@ -1,5 +1,6 @@
 ### Issue by Issue
 
+ * Remove unnecessary parenthesis. #276.
  * Preserve hexadecimal. #275.
  * Always create a block in generated code. #273.
  * Create rough draft of pretty printer. #272.

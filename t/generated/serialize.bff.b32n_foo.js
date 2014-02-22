@@ -18,12 +18,12 @@ module.exports = function (object, callback) {
                      if (start == end) {
                          return start
                      }
-                     buffer[start++] = (_foo >>> bite * 8) & 0xff
+                     buffer[start++] = _foo >>> bite * 8 & 0xff
                      bite--
                  }
             }
 
-            if (next = (callback && callback(object))) {
+            if (next = callback && callback(object)) {
                 this.write = next
                 return this.write(buffer, start, end)
             }
@@ -43,14 +43,14 @@ module.exports = function (object, callback) {
         }
 
         value = object["foo"]
-        buffer[start] = (value >>> 24) & 0xff
-        buffer[start + 1] = (value >>> 16) & 0xff
-        buffer[start + 2] = (value >>> 8) & 0xff
+        buffer[start] = value >>> 24 & 0xff
+        buffer[start + 1] = value >>> 16 & 0xff
+        buffer[start + 2] = value >>> 8 & 0xff
         buffer[start + 3] = value & 0xff
 
         start += 4
 
-        if (next = (callback && callback(object))) {
+        if (next = callback && callback(object)) {
             this.write = next
             return this.write(buffer, start, end)
         }

@@ -20,7 +20,7 @@ module.exports = function (object, callback) {
                     _foo += Math.pow(256, bite) * buffer[start++]
                     bite--
                 }
-                _foo = (_foo & 0x80000000) ? (0xffffffff - _foo + 1) * -1 : _foo
+                _foo = _foo & 0x80000000 ? (0xffffffff - _foo + 1) * -1 : _foo
                 object["foo"] = _foo
             }
 
@@ -48,7 +48,7 @@ module.exports = function (object, callback) {
             buffer[start + 1] * 0x10000 +
             buffer[start + 2] * 0x100 +
             buffer[start + 3]
-        _foo = (_foo & 0x80000000) ? (0xffffffff - _foo + 1) * -1 : _foo
+        _foo = _foo & 0x80000000 ? (0xffffffff - _foo + 1) * -1 : _foo
         object["foo"] = _foo
 
         start += 4

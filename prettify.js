@@ -41,7 +41,7 @@ var source = escodegen.generate(program, {
     },
     verbatim: 'verbatim'
 })
-console.log(source.split(/\n/).map(function (line) {
+source = source.split(/\n/).map(function (line) {
     line = line.replace(/;$/, '')
     if (/^\s*"__nl__"$/.test(line)) {
         return ''
@@ -53,4 +53,6 @@ console.log(source.split(/\n/).map(function (line) {
         }
         return fixed.join('') + line
     }
-}).join('\n'))
+})
+while (source[source.length - 1] == '') source.pop()
+console.log(source.join('\n'))

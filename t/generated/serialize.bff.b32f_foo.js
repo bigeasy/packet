@@ -23,7 +23,7 @@ module.exports = function (object, callback) {
                 }
             }
 
-            if (next = (callback && callback(object))) {
+            if (next = callback && callback(object)) {
                 this.write = next
                 return this.write(buffer, start, end)
             }
@@ -51,7 +51,7 @@ module.exports = function (object, callback) {
 
         start += 4
 
-        if (next = (callback && callback(object))) {
+        if (next = callback && callback(object)) {
             this.write = next
             return this.write(buffer, start, end)
         }
