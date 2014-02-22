@@ -1,5 +1,6 @@
 ### Issue by Issue
 
+ * Compiler can no longer specify new lines. #285.
  * Split lines before processing compiler source. #284.
  * Flatten nested sources. #283.
  * Strip blank lines in compiler. #282.

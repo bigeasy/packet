@@ -12,7 +12,7 @@ module.exports = function (source) {
     var i = 0, variables = {}, $
     source = flatten(source)
     while (i < source.length) {
-        if (source[i] == '\n') {
+        if (/^\s*"\\n"\s*$/.test(source[i])) {
             source[i] = '"__nl__"'
         } else if (!/\S/.test(source[i])) {
             source.splice(i, 1)
