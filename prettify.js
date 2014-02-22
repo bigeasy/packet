@@ -9,10 +9,10 @@ var source = fs.readFileSync(process.argv[2], 'utf8').split(/\n/).map(function (
     }
 }).join('\n')
 var program = esprima.parse(source, { raw: true })
-var source = escodegen.generate(program, { format: { semicolons: false } })
+var source = escodegen.generate(program, { format: { semicolons: false, quotes: 'double' } })
 console.log(source.split(/\n/).map(function (line) {
     line = line.replace(/;$/, '')
-    if (/^\s*'__nl__'$/.test(line)) {
+    if (/^\s*"__nl__"$/.test(line)) {
         return ''
     } else {
         return line
