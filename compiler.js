@@ -3,7 +3,7 @@ function flatten (source) {
         if (Array.isArray(source)) {
             return flatten(source)
         } else {
-            return source
+            return source.split(/\n/)
         }
     }))
 }
