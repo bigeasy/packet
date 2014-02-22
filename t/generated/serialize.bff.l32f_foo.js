@@ -16,7 +16,9 @@ module.exports = function (object, callback) {
                 index = 1
             case 1:
                 while (bite != 4) {
-                    if (start == end) return start
+                    if (start == end) {
+                        return start
+                    }
                     buffer[start++] = _foo[bite++]
                 }
             }

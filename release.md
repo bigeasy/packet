@@ -1,5 +1,6 @@
 ### Issue by Issue
 
+ * Always create a block in generated code. #273.
  * Create rough draft of pretty printer. #272.
  * Remove Programmatic. #271.
  * Execute Programmatic generated single byte parser. #270.
