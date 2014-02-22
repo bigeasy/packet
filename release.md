@@ -1,5 +1,6 @@
 ### Issue by Issue
 
+ * Create rough draft of pretty printer. #272.
  * Remove Programmatic. #271.
  * Execute Programmatic generated single byte parser. #270.
  * Generate static single unsigned byte parser. #269.
