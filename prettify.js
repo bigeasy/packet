@@ -47,7 +47,7 @@ console.log(source.split(/\n/).map(function (line) {
         return ''
     } else {
         var $, fixed = []
-        while ($ = /^((?:[^("]|"(?:[^\\"]|\\.)*")*)\((0x[0-9a-f]+)\)(.*)/.exec(line)) {
+        while ($ = /^((?:[^("]|\((?!0x)|"(?:[^\\"]|\\.)*")*)\((0x[0-9a-f]+)\)(.*)/.exec(line)) {
             fixed.push($[1], $[2])
             line = $[3]
         }
