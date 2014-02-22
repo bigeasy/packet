@@ -1,5 +1,6 @@
 ### Issue by Issue
 
+ * Strip blank lines in compiler. #282.
  * Implement hoisting in catenation compiler. #281.
  * Remove template parser. #278.
  * Incorrect indent in serializer while loop. #277.
