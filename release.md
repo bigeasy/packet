@@ -1,5 +1,6 @@
 ### Issue by Issue
 
+ * Preserve order of hoisting. #287.
  * Fix broken Travis CI minification build. #286.
  * Compiler can no longer specify new lines. #285.
  * Split lines before processing compiler source. #284.

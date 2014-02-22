@@ -9,7 +9,7 @@ function flatten (source) {
 }
 
 module.exports = function (source) {
-    var i = 0, variables = {}, $
+    var i = 0, variables = [], seen = {}, $
     source = flatten(source)
     while (i < source.length) {
         if (/^\s*"\\n"\s*$/.test(source[i])) {
@@ -18,18 +18,21 @@ module.exports = function (source) {
             source.splice(i, 1)
             continue
         } else if ($ = /^var ([\w\d_]+);$/.exec(source[i])) {
-            variables[$[1]] = true
+            variables.push($[1])
             source.splice(i, 1)
             continue
         }
         i++
     }
-    variables = Object.keys(variables).sort().map(function (variable) {
-        return 'var ' + variable + ';'
-    })
     if (variables.length) {
         source.unshift('"__nl__"')
-        source.unshift.apply(source, variables)
+        source.unshift.apply(source, variables.filter(function (variable) {
+            var duplicate = seen[variable]
+            seen[variable] = true
+            return ! duplicate;
+        }).map(function (variable) {
+            return 'var ' + variable + ';'
+        }))
     }
     return source.join('\n')
 }
