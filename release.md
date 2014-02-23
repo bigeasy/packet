@@ -1,5 +1,6 @@
 ### Issue by Issue
 
+ * Implement serializing an unsigned short. #292.
  * Add new line to end of generated files. #291.
  * Use existing generated parsers. #290.
  * Differentiate unhoisted variables. #289.

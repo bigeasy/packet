@@ -37,7 +37,15 @@ Packetizer.prototype.createParser = function (pattern) {
 
 
 Packetizer.prototype.createSerializer = function (pattern) {
-    return this._load('serialize.bff', pattern)
+    var _pattern = parse(pattern)
+    var ranges = rangify(_pattern)
+    var prefix = [ 'serialize.bff' ]
+
+    if (ranges[0].pattern[0].bytes == 1) return this._load('serialize.bff', pattern)
+
+    var serializer = require('./composers').composeSerializer(ranges)
+
+    return this._options.precompiler(prefix.join('.'), _pattern, [ 'object', 'callback' ], serializer)
 }
 
 Packetizer.prototype.createSizeOf = function (pattern) {

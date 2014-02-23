@@ -1,5 +1,10 @@
 var compile = require('./compiler')
 var pretty = require('./prettify')
+var __slice = [].slice
+
+function line () {
+    return __slice.call(arguments).join('')
+}
 
 function str (value) {
     return JSON.stringify(value)
@@ -236,5 +241,276 @@ exports.composeParser = function (ranges) {
             return function (buffer, start, end) {                          \n\
                 ' + compile(source) + '                                     \n\
         }')
+    return body
+}
+
+function composeIncrementalSerializer (ranges) {
+    var source = []
+    var outer = [ 'var .index;', 'var .bite;' ]
+    outer.push('var .next;')
+
+    source.push('switch (index) {')
+
+    ranges.forEach(function (range, rangeIndex) {
+        var offset = 0
+
+        range.pattern.forEach(function (field, patternIndex) {
+            if (field.endianness == 'x' && field.padding == null) {
+                var section = source()
+                var index = (rangeIndex + patternIndex) * 2
+                section('\
+                    case $initiationIndex:                                  \n\
+                        skip = start + $skip                                \n\
+                        index = $parseIndex                                 \n\
+                    case $parseIndex:                                       \n\
+                        if (end < skip) {                                   \n\
+                            return end                                      \n\
+                        }                                                   \n\
+                        start = skip                                        \
+                ')
+                hoist('skip')
+                section.$initiationIndex(index)
+                section.$skip(field.bytes * field.repeat)
+                section.$parseIndex(index + 1)
+                cases(section)
+            } else if (field.type == 'f') {
+                var section = source()
+
+                var little = field.endianness == 'l'
+                var bytes = field.bytes
+                var bite = little ? 0 : bytes - 1
+                var direction = little ? 1 : -1
+                var stop = little ? bytes : -1
+                var index = (rangeIndex + patternIndex) * 2
+
+                hoist('_' + field.name)
+
+                section('\
+                    case $initiationIndex:                                  \n\
+                        $initialization                                     \n\
+                        index = $patternIndex                               \n\
+                    case $patternIndex:                                     \n\
+                        $serialize                                          \
+                ')
+                section.$initiationIndex(index)
+
+                section.$initialization('\n\
+                    _$field = new ArrayBuffer($size)                        \n\
+                    new DataView(_$field).setFloat$bits(0, object[$name], true)\n\
+                    bite = $start                                           \n\
+                ')
+                section.$start(bite)
+                section.$size(field.bytes)
+                section.$field(field.name)
+                section.$patternIndex(index + 1)
+
+                var operation = source()
+
+                operation('\n\
+                    while (bite != $stop) {                                 \n\
+                        if (start == end) {                                 \n\
+                            return start                                    \n\
+                        }                                                   \n\
+                        buffer[start++] = _$field[$direction]               \n\
+                    }')
+
+                operation.$field(field.name)
+                operation.$stop(stop)
+                operation.$direction(direction < 0 ? 'bite--' : 'bite++')
+
+                section.$serialize(operation)
+                section.$name(JSON.stringify(field.name))
+                section.$bits(field.bits)
+                cases(section)
+            } else {
+                var index = (rangeIndex + patternIndex) * 2
+                var little = field.endianness == 'l'
+                var bytes = field.bytes
+                var bite = little ? 0 : bytes - 1
+                var direction = little ? 'bite++' : 'bite--'
+                var stop = little ? bytes : -1
+                var init
+                var variable = '_' + field.name
+
+                if (field.packing) {
+                    variable = 'value'
+                    section.$initialization(packForSerialization(hoist, field))
+                } else if (field.padding == null) {
+                    outer.push('var .' + variable + ';')
+                    init = line(variable, '=', 'object[' + str(field.name) + ']')
+                } else {
+                    section.$initialization('\n\
+                            $variable = 0x$padding                          \n\
+                    ')
+                    section.$padding(field.padding.toString(16))
+                    var variable = 'value'
+                }
+
+                source.push('\
+                    case ' + index + ':                                     \n\
+                        ' + init + '                                        \n\
+                        bite = ' + bite + '                                 \n\
+                        index = ' + (index + 1) + '                         \n\
+                    case ' + (index + 1) + ':                               \n\
+                ')
+
+                source.push('\n\
+                   while (bite != ' + stop + ') {                           \n\
+                       if (start == end) {                                  \n\
+                           return start                                     \n\
+                       }                                                    \n\
+                       buffer[start++] = ' + variable + ' >>> bite * 8 & 0xff      \n\
+                       ' + direction + '                                    \n\
+                    }                                                       \
+                ')
+            }
+        })
+    })
+
+    source.push('}')
+
+    source.push('\
+        "__nl__"                                                            \n\
+        if (next = callback && callback(object)) {                          \n\
+            this.write = next                                               \n\
+            return this.write(buffer, start, end)                           \n\
+        }                                                                   \n\
+        "__nl__"                                                            \n\
+        return start                                                        \n\
+    ')
+
+    outer.push('var .index;')
+    outer.push('var .bite;')
+
+    outer.push('\
+        this.write = function (buffer, start, end) {                        \n\
+            ' + compile(source) + '                                         \n\
+        }                                                                   \n\
+        "__nl__"                                                            \n\
+        return this.write(buffer, start, end)                               \n\
+    ')
+
+
+    console.log(pretty(compile('x = function () {', compile(outer), '}')))
+
+    return [ 'var .inc;', 'inc = function (buffer, start, end, index) {',
+        compile(outer),
+    '}' ]
+}
+
+exports.composeSerializer = function (ranges) {
+    var source = [ 'var .next;' ]
+
+    ranges.forEach(function (range) {
+        var offset = 0
+
+        source.push('\n\
+            if (end - start < ' + range.size + ') {                                      \n\
+                return inc.call(this, buffer, start, end, ' + range.patternIndex + ')    \n\
+            }                                                               \n\
+            "__nl__"                                                        \n\
+        ')
+
+        range.pattern.forEach(function (field, index) {
+            if (field.endianness == 'x' && field.padding == null) {
+                offset += field.bytes * field.repeat
+            } else if (field.type == 'f') {
+                var operation = source()
+
+                var little = field.endianness == 'l'
+                var bytes = field.bytes
+                var bite = little ? 0 : bytes - 1
+                var direction = little ? 1 : -1
+                var stop = little ? bytes : -1
+
+                hoist('_' + field.name)
+
+                operation('\n\
+                    _$field = new ArrayBuffer($size)                        \n\
+                    new DataView(_$field).setFloat$bits(0, object[$name], true)\n\
+                    $copy                                                   \n\
+                ')
+                var copy = source()
+                while (bite != stop) {
+                    var assignment = source()
+                    assignment('buffer[$inc] = _$field[$index]')
+                    assignment.$field(field.name)
+                    assignment.$inc(offset == 0 ? 'start' : 'start + $offset')
+                    assignment.$index(bite)
+                    assignment.$offset && assignment.$offset(offset)
+                    offset++
+                    //previous.$next(String(read))
+                    copy(assignment)
+                    bite += direction
+                }
+                operation.$copy(copy)
+                operation.$name(JSON.stringify(field.name))
+                operation.$bits(field.bits)
+                operation.$field(field.name)
+                operation.$size(field.bytes)
+
+                section(operation)
+            } else {
+                if (field.bytes == 1 && field.padding == null && !field.packing) {
+                    assignment('\n\
+                        buffer[$inc] = $fiddle                              \n\
+                    ')
+                    assignment.$inc(offset ? 'start + $offset' : 'start')
+                    assignment.$offset && assignment.$offset(offset)
+                    assignment.$fiddle(function () { object[$name] })
+                    assignment.$name(JSON.stringify(field.name))
+                    offset++
+                } else {
+                    var little = field.endianness == 'l'
+                    var bytes = field.bytes
+                    var bite = little ? 0 : bytes - 1
+                    var direction = little ? 1 : -1
+                    var stop = little ? bytes : -1
+                    var assign
+
+                    if (field.packing) {
+                        assignment = packForSerialization(hoist, field)
+                    } else if (field.padding == null) {
+                        source.push('var .value;')
+                        source.push('\n\
+                            value = object[' + str(field.name) + ']                     \n\
+                        ')
+                    } else {
+                        assignment('\n\
+                            value = 0x$padding                              \n\
+                        ')
+                        assignment.$padding(field.padding.toString(16))
+                    }
+                    while (bite != stop) {
+                        var inc = offset ? 'start + ' + offset : 'start'
+                        var value = bite ? 'value >>> ' + bite * 8 : 'value'
+                        source.push('buffer[' + inc + '] = ' + value + ' & 0xff')
+                        offset++
+                        bite += direction
+                    }
+                    source.push('"__nl__"')
+                }
+            }
+        })
+
+        if (range.fixed) source.push('\
+            start += ' + range.size + '                                     \n\
+            "__nl__"                                                        \n\
+        ')
+    })
+
+    source.push('\
+        if (next = callback && callback(object)) {                          \n\
+            this.write = next                                               \n\
+            return this.write(buffer, start, end)                           \n\
+        }                                                                   \n\
+        "__nl__"                                                            \n\
+        return start                                                        \n\
+    ')
+
+    var body = compile(composeIncrementalSerializer(ranges),
+        '"__nl__"',
+        'return function (buffer, start, end) {', compile(source), '}')
+
     return body
 }
