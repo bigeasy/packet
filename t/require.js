@@ -11,6 +11,6 @@ module.exports = function (type, pattern, parameters, source) {
 
     console.log(name)
     var file = path.join(__dirname, 'generated', name + '.js')
-    require('fs').writeFileSync(file, pretty(compile(builder)), 'utf8')
+    require('fs').writeFileSync(file, pretty(compile(builder)) + '\n', 'utf8')
     return require(file)
 }

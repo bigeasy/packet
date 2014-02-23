@@ -1,5 +1,6 @@
 ### Issue by Issue
 
+ * Add new line to end of generated files. #291.
  * Use existing generated parsers. #290.
  * Differentiate unhoisted variables. #289.
  * Flatten compiler arguments as source. #288.
