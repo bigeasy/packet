@@ -273,9 +273,9 @@ exports.composeParser = function (ranges) {
 function composeIncrementalSerializer (ranges) {
     var source = []
     var outer = [ 'var .index;', 'var .bite;' ]
+    var tmp, previous = ''
+    var variables = [ 'index', 'bite', 'next' ]
     outer.push('var .next;')
-
-    source.push('switch (index) {')
 
     ranges.forEach(function (range, rangeIndex) {
         var offset = 0
@@ -362,7 +362,7 @@ function composeIncrementalSerializer (ranges) {
                     variable = 'value'
                     section.$initialization(packForSerialization(hoist, field))
                 } else if (field.padding == null) {
-                    outer.push('var .' + variable + ';')
+                    variables.push(variables)
                     init = line(variable, '=', 'object[' + str(field.name) + ']')
                 } else {
                     section.$initialization('\n\
@@ -372,49 +372,57 @@ function composeIncrementalSerializer (ranges) {
                     var variable = 'value'
                 }
 
-                source.push('\
+                tmp = s('\
+                    ', previous, '                                          \n\
                     case ' + index + ':                                     \n\
                         ' + init + '                                        \n\
                         bite = ' + bite + '                                 \n\
                         index = ' + (index + 1) + '                         \n\
                     case ' + (index + 1) + ':                               \n\
-                ')
-
-                source.push('\n\
-                   while (bite != ' + stop + ') {                           \n\
-                       if (start == end) {                                  \n\
-                           return start                                     \n\
-                       }                                                    \n\
-                       buffer[start++] = ' + variable + ' >>> bite * 8 & 0xff      \n\
-                       ' + direction + '                                    \n\
-                    }                                                       \
+                        while (bite != ' + stop + ') {                           \n\
+                           if (start == end) {                                  \n\
+                               return start                                     \n\
+                           }                                                    \n\
+                           buffer[start++] = ' + variable + ' >>> bite * 8 & 0xff      \n\
+                           ' + direction + '                                    \n\
+                        }                                                       \
                 ')
             }
         })
     })
 
-    source.push('}')
-
-    source.push('\
-        "__nl__"                                                            \n\
-        if (next = callback && callback(object)) {                          \n\
-            this.write = next                                               \n\
-            return this.write(buffer, start, end)                           \n\
+    tmp = s('\
+        this.write = function (buffer, start, end) {                        \n\
+            switch (index) {                                                    \n\
+            ', tmp, '                                                           \n\
+            }                                                                   \n\
+            "__nl__"                                                            \n\
+            if (next = callback && callback(object)) {                          \n\
+                this.write = next                                               \n\
+                return this.write(buffer, start, end)                           \n\
+            }                                                                   \n\
+            "__nl__"                                                            \n\
+            return start                                                        \n\
         }                                                                   \n\
         "__nl__"                                                            \n\
-        return start                                                        \n\
+        return this.write(buffer, start, end)                               \n\
     ')
 
     outer.push('var .index;')
     outer.push('var .bite;')
 
-    outer.push('\
+    console.log(tmp)
+    process.exit(1)
+    tmp = s('\n\
         this.write = function (buffer, start, end) {                        \n\
-            ' + compile(source) + '                                         \n\
+            ' + tmp + '                                                     \n\
         }                                                                   \n\
         "__nl__"                                                            \n\
         return this.write(buffer, start, end)                               \n\
     ')
+
+    console.log(tmp)
+    process.exit(1)
 
     return [ 'var .inc;', 'inc = function (buffer, start, end, index) {',
         compile(outer),
