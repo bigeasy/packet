@@ -104,15 +104,17 @@ function fixupSignage (fieldName, operation) {
 exports.composeParser = function (ranges) {
     composeIncrementalParser(ranges)
 
+        var tmp
     var source = [ 'var .next;' ]
 
     ranges.forEach(function (range) {
-        source.push('\n\
+        tmp = s('\n\
             if (end - start < ' + range.size + ') {                         \n\
                 return inc.call(this, buffer, start, end, ' + range.patternIndex + ')    \n\
             }                                                               \n\
             "__nl__"                                                        \n\
         ')
+        source.push(tmp)
 
         var offset = 0
         range.pattern.forEach(function (field, index) {
@@ -171,19 +173,18 @@ exports.composeParser = function (ranges) {
                     var direction = little ? 1 : -1
                     var stop = little ? bytes : -1
 
+                    var piece = ''
                     var read = [], inc = ''
                     while (bite != stop) {
                         inc = offset == 0 ? 'start' : 'start + ' + offset
-                        read.push('buffer[', inc, ']')
+                        read.unshift('buffer[' + inc + ']')
                         if (bite) {
-                            read.push(' * ', '0x' + Math.pow(256, bite).toString(16))
+                            read[0] += ' * 0x' + Math.pow(256, bite).toString(16)
                         }
-                        read.push(' + ')
                         offset++
                         bite += direction
                     }
-                    read.pop()
-                    read = read.join('')
+                    read = read.reverse().join(' + \n    ')
                     var variable
                     if (field.signed) {
                         var fieldName = '_' + field.name
@@ -199,6 +200,11 @@ exports.composeParser = function (ranges) {
                             object[$name] = _$field; \n\
                         ')
                     } else {
+                        var assignment = s('object[' + str(field.name) + '] = \n    ' + read)
+                        tmp = s('\n\
+                            ', tmp, '\n\
+                            ', assignment, '\n\
+                        ')
                         var variable = 'object[' + str(field.name) + ']'
                     }
                     source.push([ variable, ' = ', read ].join(''))
@@ -206,7 +212,8 @@ exports.composeParser = function (ranges) {
             }
         })
 
-        if (range.fixed) source.push('\n\
+        if (range.fixed) tmp = s('\n\
+            ', tmp, '\n\
             "__nl__"                                                         \n\
             start += ' + range.size + ';                                     \n\
         ')
@@ -242,7 +249,10 @@ exports.composeParser = function (ranges) {
     parser.$sections(sections)
     }
 
-    source.push('\
+    tmp = s('\
+        var next\n\
+        "__nl__"\n\
+        ', tmp, '\n\
         "__nl__"                                                            \n\
         if (next = callback(object)) {                                      \n\
             this.parse = next                                               \n\
@@ -251,13 +261,13 @@ exports.composeParser = function (ranges) {
         "__nl__"                                                            \n\
         return start                                                        \n\
     ')
-    var body = compile('\
+    tmp = s('\
             ', composeIncrementalParser(ranges), '                          \n\
             "__nl__"                                                        \n\
             return function (buffer, start, end) {                          \n\
-                ' + compile(source) + '                                     \n\
+                ', tmp, '                                     \n\
         }')
-    return body
+    return tmp
 }
 
 function composeIncrementalSerializer (ranges) {
