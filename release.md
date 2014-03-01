@@ -1,5 +1,6 @@
 ### Issue by Issue
 
+ * Use Programmatic for best-foot forward serializer. #299.
  * Use Programmatic for incremental serializer. #298.
  * Use Programmatic for best-foot forward parser. #297.
  * Use Programmatic for incremental parser. #296.

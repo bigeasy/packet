@@ -429,22 +429,18 @@ function composeIncrementalSerializer (ranges) {
             ', tmp, '                                                       \n\
         }                                                                   \n\
     ')
-    console.log(tmp)
-    return tmp
-    process.exit(1)
 
-    return [ 'var .inc;', 'inc = function (buffer, start, end, index) {',
-        compile(outer),
-    '}' ]
+    return tmp
 }
 
 exports.composeSerializer = function (ranges) {
-    var source = [ 'var .next;' ]
+    var variables = [ 'next' ]
+    var tmp
 
     ranges.forEach(function (range) {
         var offset = 0
 
-        source.push('\n\
+        tmp = s('\n\
             if (end - start < ' + range.size + ') {                                      \n\
                 return inc.call(this, buffer, start, end, ' + range.patternIndex + ')    \n\
             }                                                               \n\
@@ -511,46 +507,62 @@ exports.composeSerializer = function (ranges) {
                     if (field.packing) {
                         assignment = packForSerialization(hoist, field)
                     } else if (field.padding == null) {
-                        source.push('var .value;')
-                        source.push('\n\
-                            value = object[' + str(field.name) + ']                     \n\
-                        ')
+                        variables.push('value')
+                        var variable = 'value = object[' + str(field.name) + ']'
                     } else {
                         assignment('\n\
                             value = 0x$padding                              \n\
                         ')
                         assignment.$padding(field.padding.toString(16))
                     }
+                    var bites = []
                     while (bite != stop) {
                         var inc = offset ? 'start + ' + offset : 'start'
                         var value = bite ? 'value >>> ' + bite * 8 : 'value'
-                        source.push('buffer[' + inc + '] = ' + value + ' & 0xff')
+                        bites.push('buffer[' + inc + '] = ' + value + ' & 0xff')
                         offset++
                         bite += direction
                     }
-                    source.push('"__nl__"')
+                    bites = bites.join('\n')
+
+                    tmp = s('                                         \n\
+                        ', tmp, '                                           \n\
+                        ', variable, '                                      \n\
+                        ', bites, '\n\
+                        "__nl__"                                            \n\
+                        ')
                 }
             }
         })
 
-        if (range.fixed) source.push('\
+        if (range.fixed) tmp = s('                                          \n\
+            ', tmp, '                                                       \n\
             start += ' + range.size + '                                     \n\
             "__nl__"                                                        \n\
         ')
     })
 
-    source.push('\
-        if (next = callback && callback(object)) {                          \n\
-            this.write = next                                               \n\
-            return this.write(buffer, start, end)                           \n\
-        }                                                                   \n\
+    var vars = variables.map(function (variable) {
+        return 'var ' + variable
+    }).join('\n')
+
+    tmp = s('                                                               \n\
+        ', composeIncrementalSerializer(ranges), '                          \n\
         "__nl__"                                                            \n\
-        return start                                                        \n\
+        return function (buffer, start, end) {                              \n\
+            ', vars, '                                                      \n\
+            "__nl__"                                                        \n\
+            ', tmp, '                                                       \n\
+            if (next = callback && callback(object)) {                      \n\
+                this.write = next                                           \n\
+                return this.write(buffer, start, end)                       \n\
+            }                                                               \n\
+            "__nl__"                                                        \n\
+            return start                                                    \n\
+        }                                                                   \n\
     ')
 
-    var body = compile(composeIncrementalSerializer(ranges),
-        '"__nl__"',
-        'return function (buffer, start, end) {', compile(source), '}')
+    console.log(tmp)
 
-    return body
+    return tmp
 }
