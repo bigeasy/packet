@@ -1,5 +1,6 @@
 ### Issue by Issue
 
+ * Use Programmatic for incremental parser. #296.
  * Remove Source dependency. #295.
  * Implement serializing an unsigned short. #292.
  * Add new line to end of generated files. #291.

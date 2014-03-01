@@ -1,6 +1,7 @@
 var compile = require('./compiler')
 var pretty = require('./prettify')
 var __slice = [].slice
+var s = require('programmatic')
 
 function line () {
     return __slice.call(arguments).join('')
@@ -11,12 +12,10 @@ function str (value) {
 }
 
 function composeIncrementalParser (ranges) {
-    var variables = [], source = []
+    var variables = []
 
     function constructor () {
-        var source = [ ]
-        source.push('this.parse = function (buffer, start, end) {           \n\
-            switch (index) {')
+        var source, previous = ''
         ranges.forEach(function (range, rangeIndex) {
             range.pattern.forEach(function (field, fieldIndex) {
                 var index = (rangeIndex + fieldIndex) * 2
@@ -30,11 +29,9 @@ function composeIncrementalParser (ranges) {
                 var fieldName = '_' + field.name
                 var parseIndex = index + 1
 
-                source.push('var .bite;')
-                source.push('var .next;')
-                source.push('var .' + fieldName + ';')
+                variables.push('bite', 'next', fieldName)
 
-                source.push('\
+                source = s('\
                     case ' + index + ':                                     \n\
                         ' + fieldName + ' = 0                               \n\
                         bite = ' + bite + '                                 \n\
@@ -44,19 +41,26 @@ function composeIncrementalParser (ranges) {
                             if (start == end) {                             \n\
                                 return start                                \n\
                             }                                               \n\
-                            ' + fieldName + ' +=                            \n\
-                                Math.pow(256, bite) * buffer[start++]       \n\
+                            ', fieldName,
+                            ' += Math.pow(256, bite) * buffer[start++]      \n\
                             ' + direction + '                               \n\
-                        }')
-                // sign fixup
-                source.push('\
-                    object[' + str(field.name) + '] = ' + fieldName + '     \n\
+                        }                                                   \n\
                 ')
+
+                // sign fixup
+                source = s('\
+                    // __reference__ \n\
+                    ', previous , '\n\
+                    ', source, '                                              \n\
+                        object[' + str(field.name) + '] = ' + fieldName )
             })
         })
 
-        source.push('\
-                }                                                           \n\
+        source = s('\n\
+        this.parse = function (buffer, start, end) {           \n\
+            switch (index) { \n\
+            ', source, '                                       \n\
+            }                                                           \n\
             "__nl__"                                                        \n\
             if (next = callback(object)) {                                  \n\
                 this.parse = next;                                          \n\
@@ -64,17 +68,29 @@ function composeIncrementalParser (ranges) {
             }                                                               \n\
             "__nl__"                                                        \n\
             return start                                                    \n\
-         }                                                                  \n\
-         "__nl__"                                                           \n\
-         return this.parse(buffer, start, end)                              \n\
-         ')
+        }                                                                  \n\
+        "__nl__"                                                           \n\
+        return this.parse(buffer, start, end)                              \n\
+        ')
 
-        return compile(source)
+        return source
     }
 
-    return [ 'var .inc;', '\n', 'inc = function (buffer, start, end, index) {',
-        constructor(),
-    '}' ]
+    var source = constructor()
+
+    var vars = variables.map(function (variable) {
+        return 'var ' + variable + '\n'
+    })
+
+    return s('\n\
+        var inc\n\
+        "__nl__"\n\
+        inc = function (buffer, start, end, index) {\n\
+            ', s.apply(null, vars), '\n\
+            "__nl__"\n\
+            ', source, '\n\
+        }\n\
+        ')
 }
 
 function fixupSignage (fieldName, operation) {
@@ -389,9 +405,6 @@ function composeIncrementalSerializer (ranges) {
         "__nl__"                                                            \n\
         return this.write(buffer, start, end)                               \n\
     ')
-
-
-    console.log(pretty(compile('x = function () {', compile(outer), '}')))
 
     return [ 'var .inc;', 'inc = function (buffer, start, end, index) {',
         compile(outer),
