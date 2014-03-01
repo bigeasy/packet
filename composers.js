@@ -362,7 +362,7 @@ function composeIncrementalSerializer (ranges) {
                     variable = 'value'
                     section.$initialization(packForSerialization(hoist, field))
                 } else if (field.padding == null) {
-                    variables.push(variables)
+                    variables.push(variable)
                     init = line(variable, '=', 'object[' + str(field.name) + ']')
                 } else {
                     section.$initialization('\n\
@@ -392,7 +392,6 @@ function composeIncrementalSerializer (ranges) {
     })
 
     tmp = s('\
-        this.write = function (buffer, start, end) {                        \n\
             switch (index) {                                                    \n\
             ', tmp, '                                                           \n\
             }                                                                   \n\
@@ -403,25 +402,35 @@ function composeIncrementalSerializer (ranges) {
             }                                                                   \n\
             "__nl__"                                                            \n\
             return start                                                        \n\
-        }                                                                   \n\
-        "__nl__"                                                            \n\
-        return this.write(buffer, start, end)                               \n\
     ')
 
     outer.push('var .index;')
     outer.push('var .bite;')
 
-    console.log(tmp)
-    process.exit(1)
+    // TODO: Add a `var next` here.
     tmp = s('\n\
         this.write = function (buffer, start, end) {                        \n\
-            ' + tmp + '                                                     \n\
+            ', tmp, '                                                     \n\
         }                                                                   \n\
         "__nl__"                                                            \n\
         return this.write(buffer, start, end)                               \n\
     ')
 
+    var vars = variables.map(function (variable) {
+        return 'var ' + variable
+    }).join('\n')
+
+    tmp = s('                                                               \n\
+        var inc                                                             \n\
+        "__nl__"                                                            \n\
+        inc = function (buffer, start, end, index) {                              \n\
+            ', vars, '                                                      \n\
+            "__nl__"                                                        \n\
+            ', tmp, '                                                       \n\
+        }                                                                   \n\
+    ')
     console.log(tmp)
+    return tmp
     process.exit(1)
 
     return [ 'var .inc;', 'inc = function (buffer, start, end, index) {',
