@@ -17,9 +17,7 @@
     },
     "dependencies":
     {
-                        "programmatic": "0.0.5",
-                        "escodegen": "1.2.0",
-                        "esprima": "1.0.4"
+                        "programmatic": "0.0.7"
     },
     "repository":
     {

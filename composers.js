@@ -1,5 +1,3 @@
-var compile = require('./compiler')
-var pretty = require('./prettify')
 var __slice = [].slice
 var s = require('programmatic')
 
@@ -60,16 +58,16 @@ function composeIncrementalParser (ranges) {
         this.parse = function (buffer, start, end) {           \n\
             switch (index) { \n\
             ', source, '                                       \n\
-            }                                                           \n\
-            "__nl__"                                                        \n\
+            }                                                               \n\
+            // __blank__                                                        \n\
             if (next = callback(object)) {                                  \n\
-                this.parse = next;                                          \n\
+                this.parse = next                                           \n\
                 return this.parse(buffer, start, end)                       \n\
             }                                                               \n\
-            "__nl__"                                                        \n\
+            // __blank__                                                        \n\
             return start                                                    \n\
         }                                                                  \n\
-        "__nl__"                                                           \n\
+        // __blank__                                                           \n\
         return this.parse(buffer, start, end)                              \n\
         ')
 
@@ -84,10 +82,10 @@ function composeIncrementalParser (ranges) {
 
     return s('\n\
         var inc\n\
-        "__nl__"\n\
+        // __blank__\n\
         inc = function (buffer, start, end, index) {\n\
             ', s.apply(null, vars), '\n\
-            "__nl__"\n\
+            // __blank__\n\
             ', source, '\n\
         }\n\
         ')
@@ -105,16 +103,14 @@ exports.composeParser = function (ranges) {
     composeIncrementalParser(ranges)
 
         var tmp
-    var source = [ 'var .next;' ]
 
     ranges.forEach(function (range) {
         tmp = s('\n\
             if (end - start < ' + range.size + ') {                         \n\
                 return inc.call(this, buffer, start, end, ' + range.patternIndex + ')    \n\
             }                                                               \n\
-            "__nl__"                                                        \n\
+            // __blank__                                                        \n\
         ')
-        source.push(tmp)
 
         var offset = 0
         range.pattern.forEach(function (field, index) {
@@ -190,14 +186,12 @@ exports.composeParser = function (ranges) {
                         var fieldName = '_' + field.name
                         var variable = fieldName
 
-                        source.push('var .' + fieldName + ';')
-
                         assignment.$variable('_$field')
                         assignment.$field(field.name)
                         hoist('_' + field.name)
                         fixupSignage(field, assignment)
                         assignment('\
-                            object[$name] = _$field; \n\
+                            object[$name] = _$field \n\
                         ')
                     } else {
                         var assignment = s('object[' + str(field.name) + '] = \n    ' + read)
@@ -207,15 +201,14 @@ exports.composeParser = function (ranges) {
                         ')
                         var variable = 'object[' + str(field.name) + ']'
                     }
-                    source.push([ variable, ' = ', read ].join(''))
                 }
             }
         })
 
         if (range.fixed) tmp = s('\n\
             ', tmp, '\n\
-            "__nl__"                                                         \n\
-            start += ' + range.size + ';                                     \n\
+            // __blank__                                                         \n\
+            start += ' + range.size + '                                     \n\
         ')
     })
 
@@ -251,19 +244,19 @@ exports.composeParser = function (ranges) {
 
     tmp = s('\
         var next\n\
-        "__nl__"\n\
+        // __blank__\n\
         ', tmp, '\n\
-        "__nl__"                                                            \n\
+        // __blank__                                                            \n\
         if (next = callback(object)) {                                      \n\
             this.parse = next                                               \n\
             return this.parse(buffer, start, end)                           \n\
         }                                                                   \n\
-        "__nl__"                                                            \n\
+        // __blank__                                                            \n\
         return start                                                        \n\
     ')
     tmp = s('\
             ', composeIncrementalParser(ranges), '                          \n\
-            "__nl__"                                                        \n\
+            // __blank__                                                        \n\
             return function (buffer, start, end) {                          \n\
                 ', tmp, '                                     \n\
         }')
@@ -271,7 +264,6 @@ exports.composeParser = function (ranges) {
 }
 
 function composeIncrementalSerializer (ranges) {
-    var source = []
     var outer = [ 'var .index;', 'var .bite;' ]
     var tmp, previous = ''
     var variables = [ 'index', 'bite', 'next' ]
@@ -363,7 +355,7 @@ function composeIncrementalSerializer (ranges) {
                     section.$initialization(packForSerialization(hoist, field))
                 } else if (field.padding == null) {
                     variables.push(variable)
-                    init = line(variable, '=', 'object[' + str(field.name) + ']')
+                    init = line(variable, ' = ', 'object[' + str(field.name) + ']')
                 } else {
                     section.$initialization('\n\
                             $variable = 0x$padding                          \n\
@@ -395,12 +387,12 @@ function composeIncrementalSerializer (ranges) {
             switch (index) {                                                    \n\
             ', tmp, '                                                           \n\
             }                                                                   \n\
-            "__nl__"                                                            \n\
+            // __blank__                                                            \n\
             if (next = callback && callback(object)) {                          \n\
                 this.write = next                                               \n\
                 return this.write(buffer, start, end)                           \n\
             }                                                                   \n\
-            "__nl__"                                                            \n\
+            // __blank__                                                            \n\
             return start                                                        \n\
     ')
 
@@ -412,7 +404,7 @@ function composeIncrementalSerializer (ranges) {
         this.write = function (buffer, start, end) {                        \n\
             ', tmp, '                                                     \n\
         }                                                                   \n\
-        "__nl__"                                                            \n\
+        // __blank__                                                            \n\
         return this.write(buffer, start, end)                               \n\
     ')
 
@@ -422,10 +414,10 @@ function composeIncrementalSerializer (ranges) {
 
     tmp = s('                                                               \n\
         var inc                                                             \n\
-        "__nl__"                                                            \n\
+        // __blank__                                                            \n\
         inc = function (buffer, start, end, index) {                              \n\
             ', vars, '                                                      \n\
-            "__nl__"                                                        \n\
+            // __blank__                                                        \n\
             ', tmp, '                                                       \n\
         }                                                                   \n\
     ')
@@ -444,7 +436,7 @@ exports.composeSerializer = function (ranges) {
             if (end - start < ' + range.size + ') {                                      \n\
                 return inc.call(this, buffer, start, end, ' + range.patternIndex + ')    \n\
             }                                                               \n\
-            "__nl__"                                                        \n\
+            // __blank__                                                        \n\
         ')
 
         range.pattern.forEach(function (field, index) {
@@ -529,7 +521,7 @@ exports.composeSerializer = function (ranges) {
                         ', tmp, '                                           \n\
                         ', variable, '                                      \n\
                         ', bites, '\n\
-                        "__nl__"                                            \n\
+                        // __blank__                                            \n\
                         ')
                 }
             }
@@ -538,7 +530,7 @@ exports.composeSerializer = function (ranges) {
         if (range.fixed) tmp = s('                                          \n\
             ', tmp, '                                                       \n\
             start += ' + range.size + '                                     \n\
-            "__nl__"                                                        \n\
+            // __blank__                                                        \n\
         ')
     })
 
@@ -548,21 +540,19 @@ exports.composeSerializer = function (ranges) {
 
     tmp = s('                                                               \n\
         ', composeIncrementalSerializer(ranges), '                          \n\
-        "__nl__"                                                            \n\
+        // __blank__                                                            \n\
         return function (buffer, start, end) {                              \n\
             ', vars, '                                                      \n\
-            "__nl__"                                                        \n\
+            // __blank__                                                        \n\
             ', tmp, '                                                       \n\
             if (next = callback && callback(object)) {                      \n\
                 this.write = next                                           \n\
                 return this.write(buffer, start, end)                       \n\
             }                                                               \n\
-            "__nl__"                                                        \n\
+            // __blank__                                                        \n\
             return start                                                    \n\
         }                                                                   \n\
     ')
-
-    console.log(tmp)
 
     return tmp
 }
