@@ -26,6 +26,7 @@ function composeIncrementalParser (ranges) {
 
                 var fieldName = '_' + field.name
                 var parseIndex = index + 1
+                var fixup = ''
 
                 variables.push('bite', 'next', fieldName)
 
@@ -50,6 +51,7 @@ function composeIncrementalParser (ranges) {
                     // __reference__                                        \n\
                     ', previous , '                                         \n\
                     ', source, '                                            \n\
+                        ', signage(field), '                                \n\
                         object[' + str(field.name) + '] = ' + fieldName)
             })
         })
@@ -91,18 +93,19 @@ function composeIncrementalParser (ranges) {
         ')
 }
 
-function fixupSignage (fieldName, operation) {
+function signage (field) {
+    if (!field.signed) return ''
+    var fieldName = '_' + field.name
     var mask = '0xff' + new Array(field.bytes).join('ff')
     var sign = '0x80' + new Array(field.bytes).join('00')
-    return [
-        fieldName, ' = ', fieldName, ' & ', sign, ' ? (', mask, ' - ', fieldName,
-            ' + 1) * -1 : , fieldName' ]
+    return fieldName + ' = ' + fieldName + ' & ' + sign +
+        ' ? (' + mask + ' - ' + fieldName + ' + 1) * -1 : ' + fieldName
 }
 
 exports.composeParser = function (ranges) {
     composeIncrementalParser(ranges)
 
-        var tmp
+    var tmp, variables = [ 'next' ]
 
     ranges.forEach(function (range) {
         tmp = s('                                                           \n\
@@ -182,25 +185,28 @@ exports.composeParser = function (ranges) {
                         bite += direction
                     }
                     read = read.reverse().join(' + \n    ')
-                    var variable
                     if (field.signed) {
                         var fieldName = '_' + field.name
-                        var variable = fieldName
-
-                        assignment.$variable('_$field')
-                        assignment.$field(field.name)
-                        hoist('_' + field.name)
-                        fixupSignage(field, assignment)
-                        assignment('\
-                            object[$name] = _$field \n\
+                        variables.push(fieldName)
+                        if (field.bytes == 1) {
+                            var assignment = s(fieldName + ' = ' + read)
+                        } else {
+                            var assignment = s(fieldName + ' = \n    ' + read)
+                        }
+                        tmp = s('                                           \n\
+                            ', tmp, '                                       \n\
+                            ', assignment, '                                \n\
+                            ', signage(field), '                            \n\
+                            object[' + str(field.name) +
+                                '] = ' + fieldName + '                      \n\
                         ')
                     } else {
+                        // todo: tidy
                         var assignment = s('object[' + str(field.name) + '] = \n    ' + read)
                         tmp = s('\n\
                             ', tmp, '\n\
                             ', assignment, '\n\
                         ')
-                        var variable = 'object[' + str(field.name) + ']'
                     }
                 }
             }
@@ -243,8 +249,12 @@ exports.composeParser = function (ranges) {
     parser.$sections(sections)
     }
 
+    var vars = variables.map(function (variable) {
+        return 'var ' + variable
+    }).join('\n')
+
     tmp = s('                                                               \n\
-        var next                                                            \n\
+        ', vars, '                                                          \n\
         // __blank__                                                        \n\
         ', tmp, '                                                           \n\
         // __blank__                                                        \n\

@@ -20,7 +20,7 @@ module.exports = function (object, callback) {
                     }
                     buffer[start++] = _foo >>> bite * 8 & 0xff
                     bite--
-                 }
+                }
             }
 
             if (next = callback && callback(object)) {
@@ -42,7 +42,6 @@ module.exports = function (object, callback) {
         }
 
         buffer[start] = object["foo"]
-
         start += 1
 
         if (next = callback && callback(object)) {
