@@ -1,5 +1,6 @@
 ### Issue by Issue
 
+ * Implement signed word cycle using Programmatic. #308.
  * Implement signed byte cycle using Programmatic. #307.
  * Tidy embedded line endings. #306.
  * Implement unsigned byte cycle using Programmatic. #305.
