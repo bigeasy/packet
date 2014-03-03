@@ -203,9 +203,9 @@ exports.composeParser = function (ranges) {
                     } else {
                         // todo: tidy
                         var assignment = s('object[' + str(field.name) + '] = \n    ' + read)
-                        tmp = s('\n\
-                            ', tmp, '\n\
-                            ', assignment, '\n\
+                        tmp = s('                                           \n\
+                            ', tmp, '                                       \n\
+                            ', assignment, '                                \n\
                         ')
                     }
                 }
