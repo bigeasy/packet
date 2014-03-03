@@ -1,5 +1,6 @@
 ### Issue by Issue
 
+ * Tidy embedded line endings. #306.
  * Implement unsigned byte cycle using Programmatic. #305.
  * Implement unsigned int cycle using Programmatic. #304.
  * Use Programmatic for size of. #303.

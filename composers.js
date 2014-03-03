@@ -29,7 +29,7 @@ function composeIncrementalParser (ranges) {
 
                 variables.push('bite', 'next', fieldName)
 
-                source = s('\
+                source = s('                                                \n\
                     case ' + index + ':                                     \n\
                         ' + fieldName + ' = 0                               \n\
                         bite = ' + bite + '                                 \n\
@@ -46,29 +46,29 @@ function composeIncrementalParser (ranges) {
                 ')
 
                 // sign fixup
-                source = s('\
-                    // __reference__ \n\
-                    ', previous , '\n\
-                    ', source, '                                              \n\
-                        object[' + str(field.name) + '] = ' + fieldName )
+                source = s('                                                \n\
+                    // __reference__                                        \n\
+                    ', previous , '                                         \n\
+                    ', source, '                                            \n\
+                        object[' + str(field.name) + '] = ' + fieldName)
             })
         })
 
-        source = s('\n\
-        this.parse = function (buffer, start, end) {           \n\
-            switch (index) { \n\
-            ', source, '                                       \n\
+        source = s('                                                        \n\
+        this.parse = function (buffer, start, end) {                        \n\
+            switch (index) {                                                \n\
+            ', source, '                                                    \n\
             }                                                               \n\
-            // __blank__                                                        \n\
+            // __blank__                                                    \n\
             if (next = callback(object)) {                                  \n\
                 this.parse = next                                           \n\
                 return this.parse(buffer, start, end)                       \n\
             }                                                               \n\
-            // __blank__                                                        \n\
+            // __blank__                                                    \n\
             return start                                                    \n\
-        }                                                                  \n\
-        // __blank__                                                           \n\
-        return this.parse(buffer, start, end)                              \n\
+        }                                                                   \n\
+        // __blank__                                                        \n\
+        return this.parse(buffer, start, end)                               \n\
         ')
 
         return source
@@ -80,14 +80,14 @@ function composeIncrementalParser (ranges) {
         return 'var ' + variable + '\n'
     })
 
-    return s('\n\
-        var inc\n\
-        // __blank__\n\
-        inc = function (buffer, start, end, index) {\n\
-            ', s.apply(null, vars), '\n\
-            // __blank__\n\
-            ', source, '\n\
-        }\n\
+    return s('                                                              \n\
+        var inc                                                             \n\
+        // __blank__                                                        \n\
+        inc = function (buffer, start, end, index) {                        \n\
+            ', s.apply(null, vars), '                                       \n\
+            // __blank__                                                    \n\
+            ', source, '                                                    \n\
+        }                                                                   \n\
         ')
 }
 
@@ -105,11 +105,12 @@ exports.composeParser = function (ranges) {
         var tmp
 
     ranges.forEach(function (range) {
-        tmp = s('\n\
+        tmp = s('                                                           \n\
             if (end - start < ' + range.size + ') {                         \n\
-                return inc.call(this, buffer, start, end, ' + range.patternIndex + ')    \n\
+                return inc.call(this, buffer, start, end, ' +
+                    range.patternIndex + ')                                 \n\
             }                                                               \n\
-            // __blank__                                                        \n\
+            // __blank__                                                    \n\
         ')
 
         var offset = 0
@@ -155,10 +156,11 @@ exports.composeParser = function (ranges) {
                 section(operation)
             } else {
                 if (field.bytes == 1 && ! field.signed) {
-                    tmp = s('\n\
-                        ', tmp, '\n\
+                    tmp = s('                                               \n\
+                        ', tmp, '                                           \n\
                         object[' + str(field.name) +
-                            '] = buffer[' + (offset ? 'start + ' + offset : 'start') + ']       \n\
+                            '] = buffer[' + (offset ? 'start + ' + offset : 'start') +
+                            ']                                              \n\
                     ')
                     offset++
                 } else {
@@ -204,9 +206,9 @@ exports.composeParser = function (ranges) {
             }
         })
 
-        if (range.fixed) tmp = s('\n\
-            ', tmp, '\n\
-            // __blank__                                                         \n\
+        if (range.fixed) tmp = s('                                          \n\
+            ', tmp, '                                                       \n\
+            // __blank__                                                    \n\
             start += ' + range.size + '                                     \n\
         ')
     })
@@ -241,23 +243,23 @@ exports.composeParser = function (ranges) {
     parser.$sections(sections)
     }
 
-    tmp = s('\
-        var next\n\
-        // __blank__\n\
-        ', tmp, '\n\
-        // __blank__                                                            \n\
+    tmp = s('                                                               \n\
+        var next                                                            \n\
+        // __blank__                                                        \n\
+        ', tmp, '                                                           \n\
+        // __blank__                                                        \n\
         if (next = callback(object)) {                                      \n\
             this.parse = next                                               \n\
             return this.parse(buffer, start, end)                           \n\
         }                                                                   \n\
-        // __blank__                                                            \n\
+        // __blank__                                                        \n\
         return start                                                        \n\
     ')
-    tmp = s('\
+    tmp = s('                                                               \n\
             ', composeIncrementalParser(ranges), '                          \n\
-            // __blank__                                                        \n\
+            // __blank__                                                    \n\
             return function (buffer, start, end) {                          \n\
-                ', tmp, '                                     \n\
+                ', tmp, '                                                   \n\
         }')
     return tmp
 }
@@ -356,13 +358,14 @@ function composeIncrementalSerializer (ranges) {
                     variables.push(variable)
                     init = line(variable, ' = ', 'object[' + str(field.name) + ']')
                 } else {
-                    section.$initialization('\n\
+                    section.$initialization('                               \n\
                             $variable = 0x$padding                          \n\
                     ')
                     section.$padding(field.padding.toString(16))
                     var variable = 'value'
                 }
 
+                // todo: bad indent on while loop below.
                 tmp = s('\
                     ', previous, '                                          \n\
                     case ' + index + ':                                     \n\
@@ -370,40 +373,41 @@ function composeIncrementalSerializer (ranges) {
                         bite = ' + bite + '                                 \n\
                         index = ' + (index + 1) + '                         \n\
                     case ' + (index + 1) + ':                               \n\
-                        while (bite != ' + stop + ') {                           \n\
-                           if (start == end) {                                  \n\
-                               return start                                     \n\
-                           }                                                    \n\
-                           buffer[start++] = ' + variable + ' >>> bite * 8 & 0xff      \n\
-                           ' + direction + '                                    \n\
-                        }                                                       \
+                        while (bite != ' + stop + ') {                      \n\
+                           if (start == end) {                              \n\
+                               return start                                 \n\
+                           }                                                \n\
+                           buffer[start++] = ' + variable +
+                                ' >>> bite * 8 & 0xff                       \n\
+                           ' + direction + '                                \n\
+                        }                                                   \
                 ')
             }
         })
     })
 
     tmp = s('\
-            switch (index) {                                                    \n\
-            ', tmp, '                                                           \n\
-            }                                                                   \n\
-            // __blank__                                                            \n\
-            if (next = callback && callback(object)) {                          \n\
-                this.write = next                                               \n\
-                return this.write(buffer, start, end)                           \n\
-            }                                                                   \n\
-            // __blank__                                                            \n\
-            return start                                                        \n\
+            switch (index) {                                                \n\
+            ', tmp, '                                                       \n\
+            }                                                               \n\
+            // __blank__                                                    \n\
+            if (next = callback && callback(object)) {                      \n\
+                this.write = next                                           \n\
+                return this.write(buffer, start, end)                       \n\
+            }                                                               \n\
+            // __blank__                                                    \n\
+            return start                                                    \n\
     ')
 
     outer.push('var .index;')
     outer.push('var .bite;')
 
     // TODO: Add a `var next` here.
-    tmp = s('\n\
+    tmp = s('                                                               \n\
         this.write = function (buffer, start, end) {                        \n\
-            ', tmp, '                                                     \n\
+            ', tmp, '                                                       \n\
         }                                                                   \n\
-        // __blank__                                                            \n\
+        // __blank__                                                        \n\
         return this.write(buffer, start, end)                               \n\
     ')
 
@@ -413,10 +417,10 @@ function composeIncrementalSerializer (ranges) {
 
     tmp = s('                                                               \n\
         var inc                                                             \n\
-        // __blank__                                                            \n\
-        inc = function (buffer, start, end, index) {                              \n\
+        // __blank__                                                        \n\
+        inc = function (buffer, start, end, index) {                        \n\
             ', vars, '                                                      \n\
-            // __blank__                                                        \n\
+            // __blank__                                                    \n\
             ', tmp, '                                                       \n\
         }                                                                   \n\
     ')
@@ -432,10 +436,10 @@ exports.composeSerializer = function (ranges) {
         var offset = 0
 
         tmp = s('\n\
-            if (end - start < ' + range.size + ') {                                      \n\
+            if (end - start < ' + range.size + ') {                         \n\
                 return inc.call(this, buffer, start, end, ' + range.patternIndex + ')    \n\
             }                                                               \n\
-            // __blank__                                                        \n\
+            // __blank__                                                    \n\
         ')
 
         range.pattern.forEach(function (field, index) {
@@ -514,11 +518,11 @@ exports.composeSerializer = function (ranges) {
                     }
                     bites = bites.join('\n')
 
-                    tmp = s('                                         \n\
+                    tmp = s('                                               \n\
                         ', tmp, '                                           \n\
                         ', variable, '                                      \n\
-                        ', bites, '\n\
-                        // __blank__                                            \n\
+                        ', bites, '                                         \n\
+                        // __blank__                                        \n\
                         ')
                 }
             }
@@ -527,7 +531,7 @@ exports.composeSerializer = function (ranges) {
         if (range.fixed) tmp = s('                                          \n\
             ', tmp, '                                                       \n\
             start += ' + range.size + '                                     \n\
-            // __blank__                                                        \n\
+            // __blank__                                                    \n\
         ')
     })
 
@@ -537,16 +541,16 @@ exports.composeSerializer = function (ranges) {
 
     tmp = s('                                                               \n\
         ', composeIncrementalSerializer(ranges), '                          \n\
-        // __blank__                                                            \n\
+        // __blank__                                                        \n\
         return function (buffer, start, end) {                              \n\
             ', vars, '                                                      \n\
-            // __blank__                                                        \n\
+            // __blank__                                                    \n\
             ', tmp, '                                                       \n\
             if (next = callback && callback(object)) {                      \n\
                 this.write = next                                           \n\
                 return this.write(buffer, start, end)                       \n\
             }                                                               \n\
-            // __blank__                                                        \n\
+            // __blank__                                                    \n\
             return start                                                    \n\
         }                                                                   \n\
     ')
