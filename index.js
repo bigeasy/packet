@@ -49,7 +49,13 @@ Packetizer.prototype.createSerializer = function (pattern) {
 }
 
 Packetizer.prototype.createSizeOf = function (pattern) {
-    return this._load('sizeOf', pattern)
+    var pattern = parse(pattern)
+    var ranges = rangify(pattern)
+    var prefix = [ 'sizeOf' ]
+
+    var sizeOf = require('./composers').composeSizeOf(ranges)
+
+    return this._options.precompiler(prefix.join('.'), pattern, [ 'object' ], sizeOf)
 }
 
 function createPacketizer (options) {
