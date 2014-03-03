@@ -155,12 +155,11 @@ exports.composeParser = function (ranges) {
                 section(operation)
             } else {
                 if (field.bytes == 1 && ! field.signed) {
-                    assignment('\n\
-                        $variable = buffer[$inc]                            \n\
+                    tmp = s('\n\
+                        ', tmp, '\n\
+                        object[' + str(field.name) +
+                            '] = buffer[' + (offset ? 'start + ' + offset : 'start') + ']       \n\
                     ')
-                    assignment.$inc(offset ? 'start + $offset' : 'start')
-                    assignment.$offset && assignment.$offset(offset)
-                    assignment.$variable('object[$name]')
                     offset++
                 } else {
                     var little = field.endianness == 'l'
@@ -480,13 +479,11 @@ exports.composeSerializer = function (ranges) {
                 section(operation)
             } else {
                 if (field.bytes == 1 && field.padding == null && !field.packing) {
-                    assignment('\n\
-                        buffer[$inc] = $fiddle                              \n\
+                    tmp = s('                                               \n\
+                        ', tmp, '\n\
+                        buffer[' + (offset ? 'start + ' + offset : 'start') +
+                            '] = object[' + str(field.name) + ']            \n\
                     ')
-                    assignment.$inc(offset ? 'start + $offset' : 'start')
-                    assignment.$offset && assignment.$offset(offset)
-                    assignment.$fiddle(function () { object[$name] })
-                    assignment.$name(JSON.stringify(field.name))
                     offset++
                 } else {
                     var little = field.endianness == 'l'

@@ -28,8 +28,6 @@ Packetizer.prototype.createParser = function (pattern) {
     var ranges = rangify(_pattern)
     var prefix = [ 'parse.bff' ]
 
-    if (ranges[0].pattern[0].bytes == 1) return this._load('parse.bff', pattern)
-
     var parser = require('./composers').composeParser(ranges)
 
     return this._options.precompiler(prefix.join('.'), _pattern, [ 'object', 'callback' ], parser)
@@ -40,8 +38,6 @@ Packetizer.prototype.createSerializer = function (pattern) {
     var _pattern = parse(pattern)
     var ranges = rangify(_pattern)
     var prefix = [ 'serialize.bff' ]
-
-    if (ranges[0].pattern[0].bytes == 1) return this._load('serialize.bff', pattern)
 
     var serializer = require('./composers').composeSerializer(ranges)
 

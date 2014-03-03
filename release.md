@@ -1,5 +1,6 @@
 ### Issue by Issue
 
+ * Implement unsigned byte cycle using Programmatic. #305.
  * Implement unsigned int cycle using Programmatic. #304.
  * Use Programmatic for size of. #303.
  * Use Programmatic for best-foot forward serializer. #299.
