@@ -26,13 +26,33 @@ function composeIncrementalParser (ranges) {
 
                 var fieldName = '_' + field.name
                 var parseIndex = index + 1
-                var fixup = ''
+                var fixup = '', assign
+
+                var initialization, fixup
+                if (field.type == 'f') {
+                    initialization = s('                                    \n\
+                        ' + fieldName +
+                            ' = new ArrayBuffer(' + field.bytes + ')        \n\
+                    ')
+                    fixup = s('                                             \n\
+                        ' + fieldName + ' = new DataView(' +
+                            fieldName + ').getFloat' +
+                                field.bits + '(0, true)                     \n\
+                    ')
+                    assign = '[bite] = buffer[start++]'
+                } else {
+                    initialization = s('                                    \n\
+                        ' + fieldName + ' = 0                               \n\
+                    ')
+                    fixup = signage(field)
+                    assign = ' += Math.pow(256, bite) * buffer[start++]'
+                }
 
                 variables.push('bite', 'next', fieldName)
 
                 source = s('                                                \n\
                     case ' + index + ':                                     \n\
-                        ' + fieldName + ' = 0                               \n\
+                        ', initialization, '                                \n\
                         bite = ' + bite + '                                 \n\
                         index = ' + parseIndex + '                          \n\
                     case ' + parseIndex + ':                                \n\
@@ -40,8 +60,7 @@ function composeIncrementalParser (ranges) {
                             if (start == end) {                             \n\
                                 return start                                \n\
                             }                                               \n\
-                            ', fieldName,
-                            ' += Math.pow(256, bite) * buffer[start++]      \n\
+                            ' + fieldName + assign + '                      \n\
                             ' + direction + '                               \n\
                         }                                                   \n\
                 ')
@@ -51,7 +70,7 @@ function composeIncrementalParser (ranges) {
                     // __reference__                                        \n\
                     ', previous , '                                         \n\
                     ', source, '                                            \n\
-                        ', signage(field), '                                \n\
+                        ', fixup, '                                         \n\
                         object[' + str(field.name) + '] = ' + fieldName)
             })
         })
@@ -121,48 +140,51 @@ exports.composeParser = function (ranges) {
             if (field.endianness == 'x') {
                 offset += field.bytes * field.repeat
             } else if (field.type == 'f') {
-                var operation = source()
-
+                var name = '_' + field.name
                 var little = field.endianness == 'l'
                 var bytes = field.bytes
                 var bite = little ? 0 : bytes - 1
                 var direction = little ? 1 : -1
                 var stop = little ? bytes : -1
+                var index = little ? 0 : bytes - 1
 
-                hoist('_' + field.name)
+                variables.push(name)
 
-                operation('\n\
-                    _$field = new ArrayBuffer($size)                        \n\
-                    $copy                                                   \n\
-                    object[$name] = $extract                                \n\
-                ')
-                var copy = source()
+                var copy = [], inc
                 while (bite != stop) {
-                    var assignment = source()
-                    assignment('_$field[$index] = buffer[$inc]')
-                    assignment.$field(field.name)
-                    assignment.$inc(offset == 0 ? 'start' : 'start + $offset')
-                    assignment.$index(bite)
-                    assignment.$offset && assignment.$offset(offset)
+                    copy.push(
+                        name +
+                        '[' +
+                            index +
+                        '] = buffer[' +
+                            (offset == 0 ? 'start' : 'start + ' + offset) +
+                        ']')
                     offset++
-                    //previous.$next(String(read))
-                    copy(assignment)
+                    index += direction
                     bite += direction
                 }
-                operation.$copy(copy)
-                operation.$extract('new DataView(_$field).getFloat$bits(0, true)')
-                operation.$name(JSON.stringify(field.name))
-                operation.$bits(field.bits)
-                operation.$field(field.name)
-                operation.$size(field.bytes)
+                copy = copy.join('\n')
 
-                section(operation)
+                tmp = s('                                                   \n\
+                    ', tmp, '                                               \n\
+                    ' + name + ' = new ArrayBuffer(' + field.bytes + ')     \n\
+                    ', copy, '                                              \n\
+                    object[' +
+                            str(field.name) +
+                        '] = new DataView(' +
+                            name +
+                        ').getFloat' +
+                            field.bits +
+                        '(0, true)                                          \n\
+                ')
             } else {
                 if (field.bytes == 1 && ! field.signed) {
                     tmp = s('                                               \n\
                         ', tmp, '                                           \n\
-                        object[' + str(field.name) +
-                            '] = buffer[' + (offset ? 'start + ' + offset : 'start') +
+                        object[' +
+                            str(field.name) +
+                            '] = buffer[' +
+                            (offset ? 'start + ' + offset : 'start') +
                             ']                                              \n\
                     ')
                     offset++
@@ -302,32 +324,30 @@ function composeIncrementalSerializer (ranges) {
                 section.$skip(field.bytes * field.repeat)
                 section.$parseIndex(index + 1)
                 cases(section)
-            } else if (field.type == 'f') {
-                var section = source()
-
+            } else if (false && field.type == 'f') {
+                var name = '_' + field.name
+                var key = str(field.name)
                 var little = field.endianness == 'l'
+                var bits = field.bits
                 var bytes = field.bytes
                 var bite = little ? 0 : bytes - 1
                 var direction = little ? 1 : -1
                 var stop = little ? bytes : -1
                 var index = (rangeIndex + patternIndex) * 2
 
-                hoist('_' + field.name)
+                variables.push(name)
 
-                section('\
-                    case $initiationIndex:                                  \n\
-                        $initialization                                     \n\
-                        index = $patternIndex                               \n\
-                    case $patternIndex:                                     \n\
+                tmp = s('\
+                    ', previous, '                                          \n\
+                    case ' + index + ':                                     \n\
+                        ', init, '                                          \n\
+                        index = ' + (index + 1) + '                         \n\
+                    case ' + (index + 1) + ':                               \n\
                         $serialize                                          \
                 ')
                 section.$initiationIndex(index)
 
-                section.$initialization('\n\
-                    _$field = new ArrayBuffer($size)                        \n\
-                    new DataView(_$field).setFloat$bits(0, object[$name], true)\n\
-                    bite = $start                                           \n\
-                ')
+                section.$initialization
                 section.$start(bite)
                 section.$size(field.bytes)
                 section.$field(field.name)
@@ -352,21 +372,32 @@ function composeIncrementalSerializer (ranges) {
                 section.$bits(field.bits)
                 cases(section)
             } else {
+                var name = '_' + field.name
+                var key = str(field.name)
                 var index = (rangeIndex + patternIndex) * 2
                 var little = field.endianness == 'l'
                 var bytes = field.bytes
+                var bits = field.bits
                 var bite = little ? 0 : bytes - 1
                 var direction = little ? 'bite++' : 'bite--'
                 var stop = little ? bytes : -1
-                var init
-                var variable = '_' + field.name
+                var init, assign
 
-                if (field.packing) {
-                    variable = 'value'
+                if (field.type == 'f') {
+                    init = s('\n\
+                        ' + name + ' = new ArrayBuffer(' + bytes + ')       \n\
+                        new DataView(' + name + ').setFloat' + bits +
+                            '(0, object[' + key + '], true)                 \n\
+                    ')
+                    assign = name + '[bite]'
+                    variables.push(name)
+                } else if (field.packing) {
+                    name = 'value'
                     section.$initialization(packForSerialization(hoist, field))
                 } else if (field.padding == null) {
-                    variables.push(variable)
-                    init = line(variable, ' = ', 'object[' + str(field.name) + ']')
+                    variables.push(name)
+                    init = line(name, ' = ', 'object[' + str(field.name) + ']')
+                    assign = name + ' >>> bite * 8 & 0xff'
                 } else {
                     section.$initialization('                               \n\
                             $variable = 0x$padding                          \n\
@@ -379,7 +410,7 @@ function composeIncrementalSerializer (ranges) {
                 tmp = s('\
                     ', previous, '                                          \n\
                     case ' + index + ':                                     \n\
-                        ' + init + '                                        \n\
+                        ', init, '                                          \n\
                         bite = ' + bite + '                                 \n\
                         index = ' + (index + 1) + '                         \n\
                     case ' + (index + 1) + ':                               \n\
@@ -387,8 +418,7 @@ function composeIncrementalSerializer (ranges) {
                            if (start == end) {                              \n\
                                return start                                 \n\
                            }                                                \n\
-                           buffer[start++] = ' + variable +
-                                ' >>> bite * 8 & 0xff                       \n\
+                           buffer[start++] = ' + assign + '                 \n\
                            ' + direction + '                                \n\
                         }                                                   \
                 ')
@@ -456,41 +486,36 @@ exports.composeSerializer = function (ranges) {
             if (field.endianness == 'x' && field.padding == null) {
                 offset += field.bytes * field.repeat
             } else if (field.type == 'f') {
-                var operation = source()
-
+                var name = '_' + field.name
                 var little = field.endianness == 'l'
                 var bytes = field.bytes
                 var bite = little ? 0 : bytes - 1
                 var direction = little ? 1 : -1
                 var stop = little ? bytes : -1
+                var index = little ? 0 : bytes - 1
 
-                hoist('_' + field.name)
+                variables.push(name)
 
-                operation('\n\
-                    _$field = new ArrayBuffer($size)                        \n\
-                    new DataView(_$field).setFloat$bits(0, object[$name], true)\n\
-                    $copy                                                   \n\
-                ')
-                var copy = source()
+                var copy = []
                 while (bite != stop) {
-                    var assignment = source()
-                    assignment('buffer[$inc] = _$field[$index]')
-                    assignment.$field(field.name)
-                    assignment.$inc(offset == 0 ? 'start' : 'start + $offset')
-                    assignment.$index(bite)
-                    assignment.$offset && assignment.$offset(offset)
+                    copy.push('buffer[' +
+                            (offset == 0 ? 'start' : 'start + ' + offset) +
+                        '] = ' + name + '[' + index + ']')
                     offset++
-                    //previous.$next(String(read))
-                    copy(assignment)
                     bite += direction
+                    index += direction
                 }
-                operation.$copy(copy)
-                operation.$name(JSON.stringify(field.name))
-                operation.$bits(field.bits)
-                operation.$field(field.name)
-                operation.$size(field.bytes)
+                copy = copy.join('\n')
 
-                section(operation)
+                tmp = s('                                                   \n\
+                    ', tmp, '                                               \n\
+                    ' + name + ' = new ArrayBuffer(' + field.bytes + ')     \n\
+                    new DataView(' +
+                            name +
+                        ').setFloat' + field.bits + '(0, object[' +
+                            str(field.name) + '], true)                     \n\
+                    ', copy, '                                              \n\
+                ')
             } else {
                 if (field.bytes == 1 && field.padding == null && !field.packing) {
                     tmp = s('                                               \n\

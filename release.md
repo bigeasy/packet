@@ -1,5 +1,6 @@
 ### Issue by Issue
 
+ * Implement double cycle using Programmatic. #311.
  * Implement signed short cycle using Programmatic. #310.
  * Upgrade Proof to 0.0.44. #309.
  * Implement signed word cycle using Programmatic. #308.
