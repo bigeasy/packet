@@ -19,7 +19,8 @@ module.exports = function (object, callback) {
                     if (start == end) {
                         return start
                     }
-                    buffer[start++] = _foo[bite--]
+                    buffer[start++] = _foo[bite]
+                    bite--
                 }
             }
 
@@ -48,7 +49,6 @@ module.exports = function (object, callback) {
         buffer[start + 1] = _foo[2]
         buffer[start + 2] = _foo[1]
         buffer[start + 3] = _foo[0]
-
         start += 4
 
         if (next = callback && callback(object)) {

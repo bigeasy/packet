@@ -17,9 +17,11 @@ module.exports = function (object, callback) {
                     if (start == end) {
                         return start
                     }
-                    _foo[bite--] = buffer[start++]
+                    _foo[bite] = buffer[start++]
+                    bite--
                 }
-                object["foo"] = new DataView(_foo).getFloat32(0, true)
+                _foo = new DataView(_foo).getFloat32(0, true)
+                object["foo"] = _foo
             }
 
             if (next = callback(object)) {
