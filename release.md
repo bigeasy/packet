@@ -1,5 +1,6 @@
 ### Issue by Issue
 
+ * Sketch bit-packing integers. #314.
  * Implement single cycle using Programmatic. #312.
  * Implement double cycle using Programmatic. #311.
  * Implement signed short cycle using Programmatic. #310.
