@@ -1,5 +1,6 @@
 ### Issue by Issue
 
+ * Convert unpack sketch to a test. #317.
  * Use `signage` for signed whole integers. #316.
  * Sketch two's compliment signage fixup. #315.
  * Sketch bit-packing integers. #314.
