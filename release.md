@@ -1,5 +1,6 @@
 ### Issue by Issue
 
+ * Convert signage sketch to a test. #318.
  * Convert unpack sketch to a test. #317.
  * Use `signage` for signed whole integers. #316.
  * Sketch two's compliment signage fixup. #315.
