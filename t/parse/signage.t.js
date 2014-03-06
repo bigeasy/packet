@@ -9,6 +9,7 @@ require('proof')(8, function (equal) {
     }
 
     var f = new Function('value', 'return ' + signage('value', 16, 3))
+    console.log(signage('value', 16, 3))
     equal(f(0x7), -1, '-1')
     equal(f(0x6), -2, '-2')
     equal(f(0x5), -3, '-3')
