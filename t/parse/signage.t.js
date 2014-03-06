@@ -1,4 +1,5 @@
 require('proof')(8, function (equal) {
+    require('../..') // satisfy coverage
     function signage (name, width, bits) {
         var mask = 0xffffffff, test = 1
         mask = mask >>> (32 - bits)

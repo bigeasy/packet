@@ -1,4 +1,5 @@
 require('proof')(1, function (equal) {
+    require('../..') // satisfy coverage
     function unpack (bits, offset, length) {
         var mask = 0xffffffff, shift
         mask = mask >>> (32 - bits)
