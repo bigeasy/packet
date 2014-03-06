@@ -112,13 +112,20 @@ function composeIncrementalParser (ranges) {
         ')
 }
 
-function signage (field) {
-    if (!field.signed) return ''
-    var fieldName = '_' + field.name
-    var mask = '0xff' + new Array(field.bytes).join('ff')
-    var sign = '0x80' + new Array(field.bytes).join('00')
-    return fieldName + ' = ' + fieldName + ' & ' + sign +
-        ' ? (' + mask + ' - ' + fieldName + ' + 1) * -1 : ' + fieldName
+function signage (signed, name, bits, width) {
+    var vargs = __slice.call(arguments),
+        mask = 0xffffffff, test = 1
+    if (vargs.length == 1) {
+        signed = vargs[0].signed
+        name = '_' + vargs[0].name
+        bits = vargs[0].bytes * 8
+        width = vargs[0].bytes * 8
+    }
+    if (!signed) return ''
+    mask = mask >>> (32 - bits)
+    test = test << (width - 1) >>> 0
+    return name + ' = ' + name + ' & 0x' + test.toString(16) +
+        ' ? (0x' + mask.toString(16) + ' - ' + name + ' + 1) * -1 : ' + name
 }
 
 exports.composeParser = function (ranges) {

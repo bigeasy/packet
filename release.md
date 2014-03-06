@@ -1,5 +1,6 @@
 ### Issue by Issue
 
+ * Use `signage` for signed whole integers. #316.
  * Sketch two's compliment signage fixup. #315.
  * Sketch bit-packing integers. #314.
  * Implement single cycle using Programmatic. #312.
