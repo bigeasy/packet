@@ -1,5 +1,6 @@
 ### Issue by Issue
 
+ * No parens in pack if not necessary. #321.
  * Rename Programmatic function to `$`. #320.
  * Convert pack sketch to a test. #319.
  * Convert signage sketch to a test. #318.
