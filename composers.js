@@ -1,5 +1,5 @@
 var __slice = [].slice
-var s = require('programmatic')
+var $ = require('programmatic')
 
 function line () {
     return __slice.call(arguments).join('')
@@ -10,102 +10,95 @@ function str (value) {
 }
 
 function composeIncrementalParser (ranges) {
-    var variables = []
+    var variables = [], source, previous = ''
 
-    function constructor () {
-        var source, previous = ''
-        ranges.forEach(function (range, rangeIndex) {
-            range.pattern.forEach(function (field, fieldIndex) {
-                var index = (rangeIndex + fieldIndex) * 2
+    ranges.forEach(function (range, rangeIndex) {
+        range.pattern.forEach(function (field, fieldIndex) {
+            var index = (rangeIndex + fieldIndex) * 2
 
-                var little = field.endianness == 'l'
-                var bytes = field.bytes
-                var bite = little ? 0 : bytes - 1
-                var direction = little ? 'bite++' : 'bite--'
-                var stop = little ? bytes : -1
+            var little = field.endianness == 'l'
+            var bytes = field.bytes
+            var bite = little ? 0 : bytes - 1
+            var direction = little ? 'bite++' : 'bite--'
+            var stop = little ? bytes : -1
 
-                var fieldName = '_' + field.name
-                var parseIndex = index + 1
-                var fixup = '', assign
+            var fieldName = '_' + field.name
+            var parseIndex = index + 1
+            var fixup = '', assign
 
-                var initialization, fixup
-                if (field.type == 'f') {
-                    initialization = s('                                    \n\
-                        ' + fieldName +
-                            ' = new ArrayBuffer(' + field.bytes + ')        \n\
-                    ')
-                    fixup = s('                                             \n\
-                        ' + fieldName + ' = new DataView(' +
-                            fieldName + ').getFloat' +
-                                field.bits + '(0, true)                     \n\
-                    ')
-                    assign = '[bite] = buffer[start++]'
-                } else {
-                    initialization = s('                                    \n\
-                        ' + fieldName + ' = 0                               \n\
-                    ')
-                    fixup = signage(field)
-                    assign = ' += Math.pow(256, bite) * buffer[start++]'
-                }
-
-                variables.push('bite', 'next', fieldName)
-
-                source = s('                                                \n\
-                    case ' + index + ':                                     \n\
-                        ', initialization, '                                \n\
-                        bite = ' + bite + '                                 \n\
-                        index = ' + parseIndex + '                          \n\
-                    case ' + parseIndex + ':                                \n\
-                        while (bite != ' + stop + ') {                      \n\
-                            if (start == end) {                             \n\
-                                return start                                \n\
-                            }                                               \n\
-                            ' + fieldName + assign + '                      \n\
-                            ' + direction + '                               \n\
-                        }                                                   \n\
+            var initialization, fixup
+            if (field.type == 'f') {
+                initialization = $('                                        \n\
+                    ' + fieldName +
+                        ' = new ArrayBuffer(' + field.bytes + ')            \n\
                 ')
+                fixup = $('                                                 \n\
+                    ' + fieldName + ' = new DataView(' +
+                        fieldName + ').getFloat' +
+                            field.bits + '(0, true)                         \n\
+                ')
+                assign = '[bite] = buffer[start++]'
+            } else {
+                initialization = $('                                        \n\
+                    ' + fieldName + ' = 0                                   \n\
+                ')
+                fixup = signage(field)
+                assign = ' += Math.pow(256, bite) * buffer[start++]'
+            }
 
-                // sign fixup
-                source = s('                                                \n\
-                    // __reference__                                        \n\
-                    ', previous , '                                         \n\
-                    ', source, '                                            \n\
-                        ', fixup, '                                         \n\
-                        object[' + str(field.name) + '] = ' + fieldName)
-            })
+            variables.push('bite', 'next', fieldName)
+
+            source = $('                                                    \n\
+                case ' + index + ':                                         \n\
+                    ', initialization, '                                    \n\
+                    bite = ' + bite + '                                     \n\
+                    index = ' + parseIndex + '                              \n\
+                case ' + parseIndex + ':                                    \n\
+                    while (bite != ' + stop + ') {                          \n\
+                        if (start == end) {                                 \n\
+                            return start                                    \n\
+                        }                                                   \n\
+                        ' + fieldName + assign + '                          \n\
+                        ' + direction + '                                   \n\
+                    }                                                       \n\
+            ')
+
+            // sign fixup
+            source = $('                                                    \n\
+                // __reference__                                            \n\
+                ', previous , '                                             \n\
+                ', source, '                                                \n\
+                    ', fixup, '                                             \n\
+                    object[' + str(field.name) + '] = ' + fieldName)
         })
+    })
 
-        source = s('                                                        \n\
-        this.parse = function (buffer, start, end) {                        \n\
-            switch (index) {                                                \n\
-            ', source, '                                                    \n\
-            }                                                               \n\
-            // __blank__                                                    \n\
-            if (next = callback(object)) {                                  \n\
-                this.parse = next                                           \n\
-                return this.parse(buffer, start, end)                       \n\
-            }                                                               \n\
-            // __blank__                                                    \n\
-            return start                                                    \n\
+    source = $('                                                            \n\
+    this.parse = function (buffer, start, end) {                            \n\
+        switch (index) {                                                    \n\
+        ', source, '                                                        \n\
         }                                                                   \n\
         // __blank__                                                        \n\
-        return this.parse(buffer, start, end)                               \n\
-        ')
-
-        return source
-    }
-
-    var source = constructor()
+        if (next = callback(object)) {                                      \n\
+            this.parse = next                                               \n\
+            return this.parse(buffer, start, end)                           \n\
+        }                                                                   \n\
+        // __blank__                                                        \n\
+        return start                                                        \n\
+    }                                                                       \n\
+    // __blank__                                                            \n\
+    return this.parse(buffer, start, end)                                   \n\
+    ')
 
     var vars = variables.map(function (variable) {
         return 'var ' + variable + '\n'
     })
 
-    return s('                                                              \n\
+    return $('                                                              \n\
         var inc                                                             \n\
         // __blank__                                                        \n\
         inc = function (buffer, start, end, index) {                        \n\
-            ', s.apply(null, vars), '                                       \n\
+            ', $.apply(null, vars), '                                       \n\
             // __blank__                                                    \n\
             ', source, '                                                    \n\
         }                                                                   \n\
@@ -134,7 +127,7 @@ exports.composeParser = function (ranges) {
     var tmp, variables = [ 'next' ]
 
     ranges.forEach(function (range) {
-        tmp = s('                                                           \n\
+        tmp = $('                                                           \n\
             if (end - start < ' + range.size + ') {                         \n\
                 return inc.call(this, buffer, start, end, ' +
                     range.patternIndex + ')                                 \n\
@@ -172,7 +165,7 @@ exports.composeParser = function (ranges) {
                 }
                 copy = copy.join('\n')
 
-                tmp = s('                                                   \n\
+                tmp = $('                                                   \n\
                     ', tmp, '                                               \n\
                     ' + name + ' = new ArrayBuffer(' + field.bytes + ')     \n\
                     ', copy, '                                              \n\
@@ -186,7 +179,7 @@ exports.composeParser = function (ranges) {
                 ')
             } else {
                 if (field.bytes == 1 && ! field.signed) {
-                    tmp = s('                                               \n\
+                    tmp = $('                                               \n\
                         ', tmp, '                                           \n\
                         object[' +
                             str(field.name) +
@@ -218,11 +211,11 @@ exports.composeParser = function (ranges) {
                         var fieldName = '_' + field.name
                         variables.push(fieldName)
                         if (field.bytes == 1) {
-                            var assignment = s(fieldName + ' = ' + read)
+                            var assignment = $(fieldName + ' = ' + read)
                         } else {
-                            var assignment = s(fieldName + ' = \n    ' + read)
+                            var assignment = $(fieldName + ' = \n    ' + read)
                         }
-                        tmp = s('                                           \n\
+                        tmp = $('                                           \n\
                             ', tmp, '                                       \n\
                             ', assignment, '                                \n\
                             ', signage(field), '                            \n\
@@ -231,8 +224,8 @@ exports.composeParser = function (ranges) {
                         ')
                     } else {
                         // todo: tidy
-                        var assignment = s('object[' + str(field.name) + '] = \n    ' + read)
-                        tmp = s('                                           \n\
+                        var assignment = $('object[' + str(field.name) + '] = \n    ' + read)
+                        tmp = $('                                           \n\
                             ', tmp, '                                       \n\
                             ', assignment, '                                \n\
                         ')
@@ -241,7 +234,7 @@ exports.composeParser = function (ranges) {
             }
         })
 
-        if (range.fixed) tmp = s('                                          \n\
+        if (range.fixed) tmp = $('                                          \n\
             ', tmp, '                                                       \n\
             // __blank__                                                    \n\
             start += ' + range.size + '                                     \n\
@@ -282,7 +275,7 @@ exports.composeParser = function (ranges) {
         return 'var ' + variable
     }).join('\n')
 
-    tmp = s('                                                               \n\
+    tmp = $('                                                               \n\
         ', vars, '                                                          \n\
         // __blank__                                                        \n\
         ', tmp, '                                                           \n\
@@ -294,7 +287,7 @@ exports.composeParser = function (ranges) {
         // __blank__                                                        \n\
         return start                                                        \n\
     ')
-    tmp = s('                                                               \n\
+    tmp = $('                                                               \n\
             ', composeIncrementalParser(ranges), '                          \n\
             // __blank__                                                    \n\
             return function (buffer, start, end) {                          \n\
@@ -344,7 +337,7 @@ function composeIncrementalSerializer (ranges) {
 
                 variables.push(name)
 
-                tmp = s('\
+                tmp = $('\
                     ', previous, '                                          \n\
                     case ' + index + ':                                     \n\
                         ', init, '                                          \n\
@@ -391,7 +384,7 @@ function composeIncrementalSerializer (ranges) {
                 var init, assign
 
                 if (field.type == 'f') {
-                    init = s('\n\
+                    init = $('\n\
                         ' + name + ' = new ArrayBuffer(' + bytes + ')       \n\
                         new DataView(' + name + ').setFloat' + bits +
                             '(0, object[' + key + '], true)                 \n\
@@ -414,7 +407,7 @@ function composeIncrementalSerializer (ranges) {
                 }
 
                 // todo: bad indent on while loop below.
-                tmp = s('\
+                tmp = $('\
                     ', previous, '                                          \n\
                     case ' + index + ':                                     \n\
                         ', init, '                                          \n\
@@ -433,7 +426,7 @@ function composeIncrementalSerializer (ranges) {
         })
     })
 
-    tmp = s('\
+    tmp = $('\
             switch (index) {                                                \n\
             ', tmp, '                                                       \n\
             }                                                               \n\
@@ -450,7 +443,7 @@ function composeIncrementalSerializer (ranges) {
     outer.push('var .bite;')
 
     // TODO: Add a `var next` here.
-    tmp = s('                                                               \n\
+    tmp = $('                                                               \n\
         this.write = function (buffer, start, end) {                        \n\
             ', tmp, '                                                       \n\
         }                                                                   \n\
@@ -462,7 +455,7 @@ function composeIncrementalSerializer (ranges) {
         return 'var ' + variable
     }).join('\n')
 
-    tmp = s('                                                               \n\
+    tmp = $('                                                               \n\
         var inc                                                             \n\
         // __blank__                                                        \n\
         inc = function (buffer, start, end, index) {                        \n\
@@ -482,7 +475,7 @@ exports.composeSerializer = function (ranges) {
     ranges.forEach(function (range) {
         var offset = 0
 
-        tmp = s('\n\
+        tmp = $('\n\
             if (end - start < ' + range.size + ') {                         \n\
                 return inc.call(this, buffer, start, end, ' + range.patternIndex + ')    \n\
             }                                                               \n\
@@ -514,7 +507,7 @@ exports.composeSerializer = function (ranges) {
                 }
                 copy = copy.join('\n')
 
-                tmp = s('                                                   \n\
+                tmp = $('                                                   \n\
                     ', tmp, '                                               \n\
                     ' + name + ' = new ArrayBuffer(' + field.bytes + ')     \n\
                     new DataView(' +
@@ -525,7 +518,7 @@ exports.composeSerializer = function (ranges) {
                 ')
             } else {
                 if (field.bytes == 1 && field.padding == null && !field.packing) {
-                    tmp = s('                                               \n\
+                    tmp = $('                                               \n\
                         ', tmp, '\n\
                         buffer[' + (offset ? 'start + ' + offset : 'start') +
                             '] = object[' + str(field.name) + ']            \n\
@@ -560,7 +553,7 @@ exports.composeSerializer = function (ranges) {
                     }
                     bites = bites.join('\n')
 
-                    tmp = s('                                               \n\
+                    tmp = $('                                               \n\
                         ', tmp, '                                           \n\
                         ', variable, '                                      \n\
                         ', bites, '                                         \n\
@@ -570,7 +563,7 @@ exports.composeSerializer = function (ranges) {
             }
         })
 
-        if (range.fixed) tmp = s('                                          \n\
+        if (range.fixed) tmp = $('                                          \n\
             ', tmp, '                                                       \n\
             start += ' + range.size + '                                     \n\
             // __blank__                                                    \n\
@@ -581,7 +574,7 @@ exports.composeSerializer = function (ranges) {
         return 'var ' + variable
     }).join('\n')
 
-    tmp = s('                                                               \n\
+    tmp = $('                                                               \n\
         ', composeIncrementalSerializer(ranges), '                          \n\
         // __blank__                                                        \n\
         return function (buffer, start, end) {                              \n\

@@ -1,5 +1,6 @@
 ### Issue by Issue
 
+ * Rename Programmatic function to `$`. #320.
  * Convert pack sketch to a test. #319.
  * Convert signage sketch to a test. #318.
  * Convert unpack sketch to a test. #317.
