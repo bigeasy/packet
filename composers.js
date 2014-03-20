@@ -22,31 +22,31 @@ function composeIncrementalParser (ranges) {
             var direction = little ? 'bite++' : 'bite--'
             var stop = little ? bytes : -1
 
-            var fieldName = '_' + field.name
+            var variable = field.packing ? 'value' : '_' + field.name
             var parseIndex = index + 1
             var fixup = '', assign
 
             var initialization, fixup
             if (field.type == 'f') {
                 initialization = $('                                        \n\
-                    ' + fieldName +
+                    ' + variable +
                         ' = new ArrayBuffer(' + field.bytes + ')            \n\
                 ')
                 fixup = $('                                                 \n\
-                    ' + fieldName + ' = new DataView(' +
-                        fieldName + ').getFloat' +
+                    ' + variable + ' = new DataView(' +
+                        variable + ').getFloat' +
                             field.bits + '(0, true)                         \n\
                 ')
                 assign = '[bite] = buffer[start++]'
             } else {
                 initialization = $('                                        \n\
-                    ' + fieldName + ' = 0                                   \n\
+                    ' + variable + ' = 0                                    \n\
                 ')
                 fixup = signage(field)
                 assign = ' += Math.pow(256, bite) * buffer[start++]'
             }
 
-            variables.push('bite', 'next', fieldName)
+            variables.push('bite', 'next', variable)
 
             source = $('                                                    \n\
                 case ' + index + ':                                         \n\
@@ -58,7 +58,7 @@ function composeIncrementalParser (ranges) {
                         if (start == end) {                                 \n\
                             return start                                    \n\
                         }                                                   \n\
-                        ' + fieldName + assign + '                          \n\
+                        ' + variable + assign + '                           \n\
                         ' + direction + '                                   \n\
                     }                                                       \n\
             ')
@@ -68,8 +68,21 @@ function composeIncrementalParser (ranges) {
                 // __reference__                                            \n\
                 ', previous , '                                             \n\
                 ', source, '                                                \n\
-                    ', fixup, '                                             \n\
-                    object[' + str(field.name) + '] = ' + fieldName)
+                    ', fixup)
+            if (field.packing) {
+                // TODO: Not sure why indent is necessary.
+                source = $('                                                \n\
+                    // __reference__                                        \n\
+                    ', source, '                                            \n\
+                        ', unpackAll(field, source) + '                     \n\
+                ')
+            } else {
+                source = $('                                                \n\
+                    // __reference__                                        \n\
+                    ', source, '                                            \n\
+                        object[' + str(field.name) + '] = ' + variable + '  \n\
+                ')
+            }
         })
     })
 
@@ -119,6 +132,32 @@ function signage (signed, name, bits, width) {
     test = test << (width - 1) >>> 0
     return name + ' = ' + name + ' & 0x' + test.toString(16) +
         ' ? (0x' + mask.toString(16) + ' - ' + name + ' + 1) * -1 : ' + name
+}
+
+function unpack (bits, offset, length) {
+    var mask = 0xffffffff, shift
+    mask = mask >>> (32 - bits)
+    mask = mask >>> (bits - length)
+    shift = bits - offset - length
+    shift = shift ? 'value >>> ' + shift : 'value'
+    return shift + ' & 0x' + mask.toString(16)
+}
+
+function unpackAll (field) {
+    var source = ''
+    var bits = field.bytes * 8
+    var offset = 0
+    var bit = 0
+    var packing = field.packing.map(function (field) {
+        field.offset = bit
+        bit += field.bits
+        return field
+    })
+    return packing.map(function (field) {
+        return 'object[' +
+                str(field.name) + '] = ' +
+                unpack(bits, field.offset, field.bits)
+    }).join('\n')
 }
 
 exports.composeParser = function (ranges) {
@@ -207,21 +246,32 @@ exports.composeParser = function (ranges) {
                         bite += direction
                     }
                     read = read.reverse().join(' + \n    ')
-                    if (field.signed) {
-                        var fieldName = '_' + field.name
-                        variables.push(fieldName)
+                    if (field.packing || field.signed) {
+                        var variable = field.packing ? 'value' : '_' + field.name
+                        variables.push(variable)
                         if (field.bytes == 1) {
-                            var assignment = $(fieldName + ' = ' + read)
+                            var assignment = $(variable + ' = ' + read)
                         } else {
-                            var assignment = $(fieldName + ' = \n    ' + read)
+                            var assignment = $(variable + ' = \n    ' + read)
                         }
                         tmp = $('                                           \n\
                             ', tmp, '                                       \n\
                             ', assignment, '                                \n\
                             ', signage(field), '                            \n\
-                            object[' + str(field.name) +
-                                '] = ' + fieldName + '                      \n\
                         ')
+                        if (field.packing) {
+                            tmp = $('                                       \n\
+                                ', tmp, '                                   \n\
+                                ', unpackAll(field), '                      \n\
+                            ')
+                        } else {
+                            tmp = $('                                       \n\
+                                ', tmp, '                                   \n\
+                                object[' +
+                                    str(field.name) + '] = ' +
+                                    variable + '                            \n\
+                            ')
+                        }
                     } else {
                         // todo: tidy
                         var assignment = $('object[' + str(field.name) + '] = \n    ' + read)

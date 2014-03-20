@@ -11,9 +11,9 @@ module.exports = function (object, callback) {
             switch (index) {
             case 0:
                 value =
-                    (object["one"] << 12 & 0xf000) >>> 0 +
-                    (object["two"] << 4 & 0xff0) >>> 0 +
-                    (object["three"] & 0xf) >>> 0
+                    (object["one"] << 12 & 0xf000) +
+                    (object["two"] << 4 & 0xff0) +
+                    (object["three"] & 0xf)
                 bite = 1
                 index = 1
             case 1:
@@ -21,7 +21,7 @@ module.exports = function (object, callback) {
                     if (start == end) {
                         return start
                     }
-                    buffer[start++] = undefined
+                    buffer[start++] = value >>> bite * 8 & 0xff
                     bite--
                 }
             }
@@ -46,9 +46,9 @@ module.exports = function (object, callback) {
         }
 
         value =
-            (object["one"] << 12 & 0xf000) >>> 0 +
-            (object["two"] << 4 & 0xff0) >>> 0 +
-            (object["three"] & 0xf) >>> 0
+            (object["one"] << 12 & 0xf000) +
+            (object["two"] << 4 & 0xff0) +
+            (object["three"] & 0xf)
         buffer[start] = value >>> 8 & 0xff
         buffer[start + 1] = value & 0xff
 

@@ -1,5 +1,6 @@
 ### Issue by Issue
 
+ *  Implement unpacking of unsigned integers. #323.
  * Implement packing of unsigned integers. #322.
  * No parens in pack if not necessary. #321.
  * Rename Programmatic function to `$`. #320.
