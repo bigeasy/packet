@@ -1,5 +1,6 @@
 ### Issue by Issue
 
+ * Upgrade Proof to 0.0.47. #325.
  *  Implement unpacking of unsigned integers. #323.
  * Implement packing of unsigned integers. #322.
  * No parens in pack if not necessary. #321.
