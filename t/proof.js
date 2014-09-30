@@ -1,9 +1,6 @@
-
-module.exports = require('proof')(function (counter, equal, deepEqual) {
+require('proof')(module, function (body, assert) {
     var options = {}
     options.precompiler = require('./require')
     options.directory = 't/generated'
-    return {
-        packet: require('..').createPacketizer(options)
-    }
+    body(require('..').createPacketizer(options), assert)
 })

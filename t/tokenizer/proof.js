@@ -1,4 +1,4 @@
-module.exports = require("proof")(function (deepEqual) {
+require('proof')(module, function (body, assert) {
   var parse = require('../../tokenizer').parse
     var parseEqual = function (pattern, expected, message) {
     // TODO: Remove after completing object first.
@@ -19,7 +19,7 @@ module.exports = require("proof")(function (deepEqual) {
       return field;
     }
     var parsed = parse(pattern).map(unname);
-    deepEqual(parsed, expected, message);
+    assert(parsed, expected, message);
   }
-  return { parseEqual: parseEqual };
+  body(parseEqual);
 });

@@ -1,3 +1,3 @@
-module.exports = require('proof')(function () {
-    return { parse:  require('../../tokenizer').parse }
+require('proof')(module, function (body, assert) {
+    body(require('../../tokenizer').parse, assert)
 })
