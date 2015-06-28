@@ -284,36 +284,6 @@ exports.composeParser = function (ranges) {
         ')
     })
 
-    if (false) {
-    var parser = source()
-    if (hoist()) {
-        parser('\n\
-            $variables                                                      \n\
-            $sections                                                       \n\
-                                                                            \n\
-            if (next = callback(object)) {                                  \n\
-                this.parse = next                                           \n\
-                return this.parse(buffer, start, end)                       \n\
-            }                                                               \n\
-                                                                            \n\
-            return start                                                    \n\
-        ')
-        parser.$variables(hoist())
-    } else {
-        parser('\n\
-            $sections                                                       \n\
-                                                                            \n\
-            if (next = callback(object)) {                                  \n\
-                this.parse = next                                           \n\
-                return this.parse(buffer, start, end)                       \n\
-            }                                                               \n\
-                                                                            \n\
-            return start                                                    \n\
-        ')
-    }
-    parser.$sections(sections)
-    }
-
     var vars = variables.map(function (variable) {
         return 'var ' + variable
     }).join('\n')
