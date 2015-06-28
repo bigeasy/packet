@@ -26,7 +26,7 @@ function composeIncrementalParser (ranges) {
             var parseStep = step + 1
             var fixup = '', assign
 
-            var initialization, fixup
+            var initialization, fixup, asignee = variable
             if (field.type == 'f') {
                 initialization = $('                                        \n\
                     ' + variable +
@@ -38,15 +38,47 @@ function composeIncrementalParser (ranges) {
                             field.bits + '(0, true)                         \n\
                 ')
                 assign = '[bite] = buffer[start++]'
-            } else {
-                initialization = $('                                        \n\
-                    ' + variable + ' = 0                                    \n\
+            } else if (field.arrayed) {
+                initialization = $('\n\
+                    ' + variable + ' = [ 0 ]                                \n\
+                    i = 0                                                   \n\
                 ')
+                asignee = asignee + '[i]'
+                assign = ' += Math.pow(256, bite) * buffer[start++]'
+            } else {
+                initialization = variable + ' = 0'
                 fixup = signage(field)
                 assign = ' += Math.pow(256, bite) * buffer[start++]'
             }
 
             variables.push('bite', 'next', variable)
+
+            if (field.arrayed) {
+                variables.push('i')
+            }
+
+            var parse = $('\n\
+                    while (bite != ' + stop + ') {                          \n\
+                        if (start == end) {                                 \n\
+                            return start                                    \n\
+                        }                                                   \n\
+                        ' + asignee + assign + '                            \n\
+                        ' + direction + '                                   \n\
+                    }                                                       \n\
+            ')
+
+            if (field.arrayed) {
+                parse = $('\n\
+                    for (;;) {                                              \n\
+                        ', parse, '                                         \n\
+                        if (++i == ' + field.repeat + ') {                  \n\
+                            break                                           \n\
+                        }                                                   \n\
+                        ' + asignee + ' = 0                                 \n\
+                        bite = ' + bite + '                                 \n\
+                    }                                                       \n\
+                ')
+            }
 
             source = $('                                                    \n\
                 case ' + step + ':                                          \n\
@@ -54,13 +86,7 @@ function composeIncrementalParser (ranges) {
                     bite = ' + bite + '                                     \n\
                     step = ' + parseStep + '                                \n\
                 case ' + parseStep + ':                                     \n\
-                    while (bite != ' + stop + ') {                          \n\
-                        if (start == end) {                                 \n\
-                            return start                                    \n\
-                        }                                                   \n\
-                        ' + variable + assign + '                           \n\
-                        ' + direction + '                                   \n\
-                    }                                                       \n\
+                    ', parse, '                                             \n\
             ')
 
             // sign fixup
@@ -107,7 +133,7 @@ function composeIncrementalParser (ranges) {
         return 'var ' + variable + '\n'
     })
 
-    return $('                                                              \n\
+    var out = $('                                                              \n\
         var inc                                                             \n\
         // __blank__                                                        \n\
         inc = function (buffer, start, end, step) {                         \n\
@@ -116,6 +142,7 @@ function composeIncrementalParser (ranges) {
             ', source, '                                                    \n\
         }                                                                   \n\
         ')
+    return out
 }
 
 function signage (signed, name, bits, width) {
@@ -269,9 +296,25 @@ exports.composeParser = function (ranges) {
                                     variable + '                            \n\
                             ')
                         }
+                    } else if (field.arrayed) {
+                        if (field.bytes == 1) {
+                        } else {
+                            assignment = $('\n\
+                                array[i] =                                  \n\
+                                    ', read, '                              \n\
+                                // __reference__                            \n\
+                            ')
+                        }
+                        variables.push('array', 'i')
+                        tmp = $('                                           \n\
+                            ', tmp, '                                       \n\
+                            array = []                                      \n\
+                            for (i = 0; i < ' + field.repeat + '; i++) {    \n\
+                                ', assignment, '                            \n\
+                            }                                               \n\
+                            object[' + str(field.name) + '] = array         \n\
+                        ')
                     } else {
-                        // todo: tidy
-                        var assignment = $('object[' + str(field.name) + '] = \n    ' + read)
                         var assignment = $('\n\
                             object[' + str(field.name) + '] =               \n\
                                 ', read, '')
@@ -311,6 +354,7 @@ exports.composeParser = function (ranges) {
             return function (buffer, start, end) {                          \n\
                 ', tmp, '                                                   \n\
         }')
+
     return tmp
 }
 
@@ -414,8 +458,12 @@ function composeIncrementalSerializer (ranges) {
                     assign = name + ' >>> bite * 8 & 0xff'
                 } else if (field.padding == null) {
                     variables.push(name)
-                    init = line(name, ' = ', 'object[' + str(field.name) + ']')
+                    init = name + ' = object[' + str(field.name) + ']'
                     // todo: DRY see above
+                    if (field.arrayed) {
+                        name = name + '[i]'
+                        init += '\ni = 0'
+                    }
                     assign = name + ' >>> bite * 8 & 0xff'
                 } else {
                     section.$initialization('                               \n\
@@ -425,21 +473,35 @@ function composeIncrementalSerializer (ranges) {
                     var variable = 'value'
                 }
 
+                var compose = $('\n\
+                    while (bite != ' + stop + ') {                      \n\
+                       if (start == end) {                              \n\
+                           return start                                 \n\
+                       }                                                \n\
+                       buffer[start++] = ' + assign + '                 \n\
+                       ' + direction + '                                \n\
+                    }                                                   \
+                ')
+
+                if (field.arrayed) {
+                    variables.push('i')
+                    compose = $('\n\
+                        do {                                                \n\
+                            ', compose, '                                   \n\
+                            bite = ' + bite + '                             \n\
+                        } while (++i < ' + field.repeat + ')                \n\
+                    ')
+                }
+
                 // todo: bad indent on while loop below.
                 tmp = $('\
                     ', previous, '                                          \n\
-                    case ' + step + ':                                     \n\
+                    case ' + step + ':                                      \n\
                         ', init, '                                          \n\
                         bite = ' + bite + '                                 \n\
-                        step = ' + (step + 1) + '                         \n\
-                    case ' + (step + 1) + ':                               \n\
-                        while (bite != ' + stop + ') {                      \n\
-                           if (start == end) {                              \n\
-                               return start                                 \n\
-                           }                                                \n\
-                           buffer[start++] = ' + assign + '                 \n\
-                           ' + direction + '                                \n\
-                        }                                                   \
+                        step = ' + (step + 1) + '                           \n\
+                    case ' + (step + 1) + ':                                \n\
+                        ', compose, '                                       \n\
                 ')
             }
         })
@@ -483,6 +545,8 @@ function composeIncrementalSerializer (ranges) {
 
     return tmp
 }
+
+var count = 0
 
 function pack (value, bits, offset, size) {
     var mask = 0xffffffff, shift
@@ -666,13 +730,19 @@ exports.composeSerializer = function (ranges) {
                     var bite = little ? 0 : bytes - 1
                     var direction = little ? 1 : -1
                     var stop = little ? bytes : -1
-                    var assign
+                    var assign, array = '', variable
 
                     if (field.packing) {
                         variable = packForSerialization(variables, field)
                     } else if (field.padding == null) {
                         variables.push('value')
-                        var variable = 'value = object[' + str(field.name) + ']'
+                        if (field.arrayed) {
+                            variables.push('array', 'i', 'I')
+                            array = 'array = object[' + str(field.name) + ']'
+                            variable = 'value = array[i]'
+                        } else {
+                            variable = 'value = object[' + str(field.name) + ']'
+                        }
                     } else {
                         assignment('\n\
                             value = 0x$padding                              \n\
@@ -688,12 +758,24 @@ exports.composeSerializer = function (ranges) {
                     }
                     bites = bites.join('\n')
 
-                    tmp = $('                                               \n\
-                        ', tmp, '                                           \n\
-                        ', variable, '                                      \n\
-                        ', bites, '                                         \n\
-                        // __blank__                                        \n\
-                        ')
+                    if (field.arrayed) {
+                        tmp = $('                                           \n\
+                            ', tmp, '                                       \n\
+                            ', array, '                                     \n\
+                            for (i = 0; i < ' + field.repeat + '; i++) { \n\
+                                ', variable, '                                  \n\
+                                ', bites, '                                     \n\
+                            } \n\
+                            // __blank__                                    \n\
+                            ')
+                    } else {
+                        tmp = $('                                           \n\
+                            ', tmp, '                                       \n\
+                            ', variable, '                                  \n\
+                            ', bites, '                                     \n\
+                            // __blank__                                    \n\
+                            ')
+                    }
                 }
             }
         })
