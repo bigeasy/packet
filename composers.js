@@ -240,14 +240,16 @@ exports.composeParser = function (ranges) {
                         offset++
                         bite += direction
                     }
-                    read = read.reverse().join(' + \n    ')
+                    read = read.reverse().join(' + \n')
                     if (field.packing || field.signed) {
                         var variable = field.packing ? 'value' : '_' + field.name
                         variables.push(variable)
                         if (field.bytes == 1) {
                             var assignment = $(variable + ' = ' + read)
                         } else {
-                            var assignment = $(variable + ' = \n    ' + read)
+                            var assignment = $('\n\
+                                ' + variable + ' =                          \n\
+                                    ', read, '')
                         }
                         tmp = $('                                           \n\
                             ', tmp, '                                       \n\
@@ -270,6 +272,9 @@ exports.composeParser = function (ranges) {
                     } else {
                         // todo: tidy
                         var assignment = $('object[' + str(field.name) + '] = \n    ' + read)
+                        var assignment = $('\n\
+                            object[' + str(field.name) + '] =               \n\
+                                ', read, '')
                         tmp = $('                                           \n\
                             ', tmp, '                                       \n\
                             ', assignment, '                                \n\
