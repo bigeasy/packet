@@ -674,9 +674,7 @@ exports.composeSerializer = function (ranges) {
 
                 var copy = []
                 while (bite != stop) {
-                    copy.push('buffer[' +
-                            (offset == 0 ? 'start' : 'start + ' + offset) +
-                        '] = ' + name + '[' + index + ']')
+                    copy.push('buffer[start++] = ' + name + '[' + index + ']')
                     offset++
                     bite += direction
                     index += direction
@@ -696,8 +694,7 @@ exports.composeSerializer = function (ranges) {
                 if (field.bytes == 1 && field.padding == null && !field.packing) {
                     tmp = $('                                               \n\
                         ', tmp, '\n\
-                        buffer[' + (offset ? 'start + ' + offset : 'start') +
-                            '] = object[' + str(field.name) + ']            \n\
+                        buffer[start++] = object[' + str(field.name) + ']   \n\
                     ')
                     offset++
                 } else {
@@ -721,9 +718,8 @@ exports.composeSerializer = function (ranges) {
                     }
                     var bites = []
                     while (bite != stop) {
-                        var inc = offset ? 'start + ' + offset : 'start'
                         var value = bite ? 'value >>> ' + bite * 8 : 'value'
-                        bites.push('buffer[' + inc + '] = ' + value + ' & 0xff')
+                        bites.push('buffer[start++] = ' + value + ' & 0xff')
                         offset++
                         bite += direction
                     }
@@ -741,8 +737,6 @@ exports.composeSerializer = function (ranges) {
 
         if (range.fixed) tmp = $('                                          \n\
             ', tmp, '                                                       \n\
-            start += ' + range.size + '                                     \n\
-            // __blank__                                                    \n\
         ')
     })
 

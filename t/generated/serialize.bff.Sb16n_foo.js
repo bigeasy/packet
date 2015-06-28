@@ -43,10 +43,8 @@ module.exports = function (object, callback) {
         }
 
         value = object["foo"]
-        buffer[start] = value >>> 8 & 0xff
-        buffer[start + 1] = value & 0xff
-
-        start += 2
+        buffer[start++] = value >>> 8 & 0xff
+        buffer[start++] = value & 0xff
 
         if (next = callback && callback(object)) {
             this.write = next

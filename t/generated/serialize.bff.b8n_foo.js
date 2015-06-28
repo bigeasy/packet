@@ -41,9 +41,7 @@ module.exports = function (object, callback) {
             return inc.call(this, buffer, start, end, 0)
         }
 
-        buffer[start] = object["foo"]
-        start += 1
-
+        buffer[start++] = object["foo"]
         if (next = callback && callback(object)) {
             this.write = next
             return this.write(buffer, start, end)

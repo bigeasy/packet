@@ -45,12 +45,10 @@ module.exports = function (object, callback) {
 
         _foo = new ArrayBuffer(4)
         new DataView(_foo).setFloat32(0, object["foo"], true)
-        buffer[start] = _foo[3]
-        buffer[start + 1] = _foo[2]
-        buffer[start + 2] = _foo[1]
-        buffer[start + 3] = _foo[0]
-        start += 4
-
+        buffer[start++] = _foo[3]
+        buffer[start++] = _foo[2]
+        buffer[start++] = _foo[1]
+        buffer[start++] = _foo[0]
         if (next = callback && callback(object)) {
             this.write = next
             return this.write(buffer, start, end)
