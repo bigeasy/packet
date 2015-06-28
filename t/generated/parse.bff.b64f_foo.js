@@ -44,17 +44,15 @@ module.exports = function (object, callback) {
         }
 
         _foo = new ArrayBuffer(8)
-        _foo[7] = buffer[start]
-        _foo[6] = buffer[start + 1]
-        _foo[5] = buffer[start + 2]
-        _foo[4] = buffer[start + 3]
-        _foo[3] = buffer[start + 4]
-        _foo[2] = buffer[start + 5]
-        _foo[1] = buffer[start + 6]
-        _foo[0] = buffer[start + 7]
+        _foo[7] = buffer[start++]
+        _foo[6] = buffer[start++]
+        _foo[5] = buffer[start++]
+        _foo[4] = buffer[start++]
+        _foo[3] = buffer[start++]
+        _foo[2] = buffer[start++]
+        _foo[1] = buffer[start++]
+        _foo[0] = buffer[start++]
         object["foo"] = new DataView(_foo).getFloat64(0, true)
-
-        start += 8
 
         if (next = callback(object)) {
             this.parse = next

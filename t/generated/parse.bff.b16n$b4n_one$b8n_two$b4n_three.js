@@ -45,13 +45,11 @@ module.exports = function (object, callback) {
         }
 
         value =
-            buffer[start] * 0x100 +
-            buffer[start + 1]
+            buffer[start++] * 0x100 +
+            buffer[start++]
         object["one"] = value >>> 12 & 0xf
         object["two"] = value >>> 4 & 0xff
         object["three"] = value & 0xf
-
-        start += 2
 
         if (next = callback(object)) {
             this.parse = next

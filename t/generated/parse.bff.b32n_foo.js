@@ -42,12 +42,10 @@ module.exports = function (object, callback) {
         }
 
         object["foo"] =
-            buffer[start] * 0x1000000 +
-            buffer[start + 1] * 0x10000 +
-            buffer[start + 2] * 0x100 +
-            buffer[start + 3]
-
-        start += 4
+            buffer[start++] * 0x1000000 +
+            buffer[start++] * 0x10000 +
+            buffer[start++] * 0x100 +
+            buffer[start++]
 
         if (next = callback(object)) {
             this.parse = next

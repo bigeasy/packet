@@ -195,9 +195,7 @@ exports.composeParser = function (ranges) {
                         name +
                         '[' +
                             index +
-                        '] = buffer[' +
-                            (offset == 0 ? 'start' : 'start + ' + offset) +
-                        ']')
+                        '] = buffer[start++]')
                     offset++
                     index += direction
                     bite += direction
@@ -222,9 +220,7 @@ exports.composeParser = function (ranges) {
                         ', tmp, '                                           \n\
                         object[' +
                             str(field.name) +
-                            '] = buffer[' +
-                            (offset ? 'start + ' + offset : 'start') +
-                            ']                                              \n\
+                            '] = buffer[start++]                            \n\
                     ')
                     offset++
                 } else {
@@ -237,8 +233,7 @@ exports.composeParser = function (ranges) {
                     var piece = ''
                     var read = [], inc = ''
                     while (bite != stop) {
-                        inc = offset == 0 ? 'start' : 'start + ' + offset
-                        read.unshift('buffer[' + inc + ']')
+                        read.unshift('buffer[start++]')
                         if (bite) {
                             read[0] += ' * 0x' + Math.pow(256, bite).toString(16)
                         }
@@ -286,8 +281,6 @@ exports.composeParser = function (ranges) {
 
         if (range.fixed) tmp = $('                                          \n\
             ', tmp, '                                                       \n\
-            // __blank__                                                    \n\
-            start += ' + range.size + '                                     \n\
         ')
     })
 

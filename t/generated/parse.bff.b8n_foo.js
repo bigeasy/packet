@@ -41,9 +41,7 @@ module.exports = function (object, callback) {
             return inc.call(this, buffer, start, end, 0)
         }
 
-        object["foo"] = buffer[start]
-
-        start += 1
+        object["foo"] = buffer[start++]
 
         if (next = callback(object)) {
             this.parse = next
