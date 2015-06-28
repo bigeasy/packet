@@ -26,7 +26,7 @@ function composeIncrementalParser (ranges) {
             var parseStep = step + 1
             var fixup = '', assign
 
-            var initialization, fixup
+            var initialization, fixup, asignee = variable
             if (field.type == 'f') {
                 initialization = $('                                        \n\
                     ' + variable +
@@ -38,15 +38,39 @@ function composeIncrementalParser (ranges) {
                             field.bits + '(0, true)                         \n\
                 ')
                 assign = '[bite] = buffer[start++]'
+            } else if (field.arrayed) {
+                initialization = variable + ' = [ 0 ]'
+                asignee = asignee + '[i]'
+                assign = ' += Math.pow(256, bite) * buffer[start++]'
             } else {
-                initialization = $('                                        \n\
-                    ' + variable + ' = 0                                    \n\
-                ')
+                initialization = variable + ' = 0'
                 fixup = signage(field)
                 assign = ' += Math.pow(256, bite) * buffer[start++]'
             }
 
             variables.push('bite', 'next', variable)
+
+            var parse = $('\n\
+                    while (bite != ' + stop + ') {                          \n\
+                        if (start == end) {                                 \n\
+                            return start                                    \n\
+                        }                                                   \n\
+                        ' + asignee + assign + '                            \n\
+                        ' + direction + '                                   \n\
+                    }                                                       \n\
+            ')
+
+            if (field.arrayed) {
+                parse = $('\n\
+                    for (;;) {                                              \n\
+                        ', parse, '                                         \n\
+                        if (++i == ' + field.repeat + ') {                  \n\
+                            break                                           \n\
+                        }                                                   \n\
+                        ' + asignee + ' = 0                                 \n\
+                    }                                                       \n\
+                ')
+            }
 
             source = $('                                                    \n\
                 case ' + step + ':                                          \n\
@@ -54,13 +78,7 @@ function composeIncrementalParser (ranges) {
                     bite = ' + bite + '                                     \n\
                     step = ' + parseStep + '                                \n\
                 case ' + parseStep + ':                                     \n\
-                    while (bite != ' + stop + ') {                          \n\
-                        if (start == end) {                                 \n\
-                            return start                                    \n\
-                        }                                                   \n\
-                        ' + variable + assign + '                           \n\
-                        ' + direction + '                                   \n\
-                    }                                                       \n\
+                    ', parse, '                                             \n\
             ')
 
             // sign fixup
@@ -107,7 +125,7 @@ function composeIncrementalParser (ranges) {
         return 'var ' + variable + '\n'
     })
 
-    return $('                                                              \n\
+    var out = $('                                                              \n\
         var inc                                                             \n\
         // __blank__                                                        \n\
         inc = function (buffer, start, end, step) {                         \n\
@@ -116,6 +134,8 @@ function composeIncrementalParser (ranges) {
             ', source, '                                                    \n\
         }                                                                   \n\
         ')
+    console.log(out)
+    return out
 }
 
 function signage (signed, name, bits, width) {
@@ -269,9 +289,23 @@ exports.composeParser = function (ranges) {
                                     variable + '                            \n\
                             ')
                         }
+                    } else if (field.arrayed) {
+                        if (field.bytes == 1) {
+                        } else {
+                            assignment = $('\n\
+                                array[i] =                                  \n\
+                                    ', read, '                              \n\
+                                // __reference__                            \n\
+                            ')
+                        }
+                        tmp = $('                                           \n\
+                            ', tmp, '                                       \n\
+                            array = []                                      \n\
+                            for (i = 0; i < ' + field.repeat + '; i++) {    \n\
+                                ', assignment, '                            \n\
+                            }                                               \n\
+                        ')
                     } else {
-                        // todo: tidy
-                        var assignment = $('object[' + str(field.name) + '] = \n    ' + read)
                         var assignment = $('\n\
                             object[' + str(field.name) + '] =               \n\
                                 ', read, '')
@@ -311,10 +345,6 @@ exports.composeParser = function (ranges) {
             return function (buffer, start, end) {                          \n\
                 ', tmp, '                                                   \n\
         }')
-
-    console.log($(tmp))
-
-    if (++count ==2) throw new Error
 
     return tmp
 }
