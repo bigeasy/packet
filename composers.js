@@ -340,10 +340,8 @@ exports.composeParser = function (ranges) {
 }
 
 function composeIncrementalSerializer (ranges) {
-    var outer = [ 'var .index;', 'var .bite;' ]
     var tmp, previous = ''
     var variables = [ 'index', 'bite', 'next' ]
-    outer.push('var .next;')
 
     ranges.forEach(function (range, rangeIndex) {
         var offset = 0
@@ -484,9 +482,6 @@ function composeIncrementalSerializer (ranges) {
             // __blank__                                                    \n\
             return start                                                    \n\
     ')
-
-    outer.push('var .index;')
-    outer.push('var .bite;')
 
     // TODO: Add a `var next` here.
     tmp = $('                                                               \n\
