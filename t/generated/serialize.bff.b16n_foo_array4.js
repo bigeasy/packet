@@ -1,26 +1,30 @@
 module.exports = function (object, callback) {
     var inc
 
-    inc = function (buffer, start, end, index) {
-        var index
+    inc = function (buffer, start, end, step) {
+        var step
         var bite
         var next
         var _foo
 
         this.write = function (buffer, start, end) {
-            switch (index) {
+            switch (step) {
             case 0:
                 _foo = object["foo"]
+                i = 0
                 bite = 1
-                index = 1
+                step = 1
             case 1:
-                while (bite != -1) {
-                    if (start == end) {
-                        return start
+                do {
+                    while (bite != -1) {
+                        if (start == end) {
+                            return start
+                        }
+                        buffer[start++] = _foo[i] >>> bite * 8 & 0xff
+                        bite--
                     }
-                    buffer[start++] = _foo >>> bite * 8 & 0xff
-                    bite--
-                }
+                    bite = 1
+                } while (++i < 4)
             }
 
             if (next = callback && callback(object)) {

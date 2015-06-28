@@ -311,6 +311,11 @@ exports.composeParser = function (ranges) {
             return function (buffer, start, end) {                          \n\
                 ', tmp, '                                                   \n\
         }')
+
+    console.log($(tmp))
+
+    if (++count ==2) throw new Error
+
     return tmp
 }
 
@@ -414,8 +419,12 @@ function composeIncrementalSerializer (ranges) {
                     assign = name + ' >>> bite * 8 & 0xff'
                 } else if (field.padding == null) {
                     variables.push(name)
-                    init = line(name, ' = ', 'object[' + str(field.name) + ']')
+                    init = name + ' = object[' + str(field.name) + ']'
                     // todo: DRY see above
+                    if (field.arrayed) {
+                        name = name + '[i]'
+                        init += '\ni = 0'
+                    }
                     assign = name + ' >>> bite * 8 & 0xff'
                 } else {
                     section.$initialization('                               \n\
@@ -425,21 +434,34 @@ function composeIncrementalSerializer (ranges) {
                     var variable = 'value'
                 }
 
+                var compose = $('\n\
+                    while (bite != ' + stop + ') {                      \n\
+                       if (start == end) {                              \n\
+                           return start                                 \n\
+                       }                                                \n\
+                       buffer[start++] = ' + assign + '                 \n\
+                       ' + direction + '                                \n\
+                    }                                                   \
+                ')
+
+                if (field.arrayed) {
+                    compose = $('\n\
+                        do {                                                \n\
+                            ', compose, '                                   \n\
+                            bite = ' + bite + '                             \n\
+                        } while (++i < ' + field.repeat + ')                \n\
+                    ')
+                }
+
                 // todo: bad indent on while loop below.
                 tmp = $('\
                     ', previous, '                                          \n\
-                    case ' + step + ':                                     \n\
+                    case ' + step + ':                                      \n\
                         ', init, '                                          \n\
                         bite = ' + bite + '                                 \n\
-                        step = ' + (step + 1) + '                         \n\
-                    case ' + (step + 1) + ':                               \n\
-                        while (bite != ' + stop + ') {                      \n\
-                           if (start == end) {                              \n\
-                               return start                                 \n\
-                           }                                                \n\
-                           buffer[start++] = ' + assign + '                 \n\
-                           ' + direction + '                                \n\
-                        }                                                   \
+                        step = ' + (step + 1) + '                           \n\
+                    case ' + (step + 1) + ':                                \n\
+                        ', compose, '                                       \n\
                 ')
             }
         })
@@ -481,9 +503,10 @@ function composeIncrementalSerializer (ranges) {
         }                                                                   \n\
     ')
 
-    console.log($(tmp))
     return tmp
 }
+
+var count = 0
 
 function pack (value, bits, offset, size) {
     var mask = 0xffffffff, shift
