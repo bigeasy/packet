@@ -666,13 +666,19 @@ exports.composeSerializer = function (ranges) {
                     var bite = little ? 0 : bytes - 1
                     var direction = little ? 1 : -1
                     var stop = little ? bytes : -1
-                    var assign
+                    var assign, array = '', variable
 
                     if (field.packing) {
                         variable = packForSerialization(variables, field)
                     } else if (field.padding == null) {
                         variables.push('value')
-                        var variable = 'value = object[' + str(field.name) + ']'
+                        if (field.arrayed) {
+                            variables.push('array', 'i', 'I')
+                            array = 'array = object[' + str(field.name) + ']'
+                            variable = 'value = array[i]'
+                        } else {
+                            variable = 'value = object[' + str(field.name) + ']'
+                        }
                     } else {
                         assignment('\n\
                             value = 0x$padding                              \n\
@@ -688,12 +694,26 @@ exports.composeSerializer = function (ranges) {
                     }
                     bites = bites.join('\n')
 
-                    tmp = $('                                               \n\
-                        ', tmp, '                                           \n\
-                        ', variable, '                                      \n\
-                        ', bites, '                                         \n\
-                        // __blank__                                        \n\
-                        ')
+                    if (field.arrayed) {
+                        tmp = $('                                           \n\
+                            ', tmp, '                                       \n\
+                            ', array, '                                     \n\
+                            for (i = 0, I = array.length; i < I; i++) { \n\
+                                ', variable, '                                  \n\
+                                ', bites, '                                     \n\
+                            } \n\
+                            // __blank__                                    \n\
+                            ')
+                    } else {
+                        tmp = $('                                           \n\
+                            ', tmp, '                                       \n\
+                            ', variable, '                                  \n\
+                            ', bites, '                                     \n\
+                            // __blank__                                    \n\
+                            ')
+                    }
+
+                    console.log($(tmp))
                 }
             }
         })
