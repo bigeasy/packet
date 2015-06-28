@@ -40,7 +40,6 @@ Packetizer.prototype.createSerializer = function (pattern) {
     var prefix = [ 'serialize.bff' ]
 
     var serializer = require('./composers').composeSerializer(ranges)
-    console.log(serializer)
 
     return this._options.precompiler(prefix.join('.'), _pattern, [ 'object', 'callback' ], serializer)
 }

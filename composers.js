@@ -481,6 +481,7 @@ function composeIncrementalSerializer (ranges) {
         }                                                                   \n\
     ')
 
+    console.log($(tmp))
     return tmp
 }
 
@@ -698,7 +699,7 @@ exports.composeSerializer = function (ranges) {
                         tmp = $('                                           \n\
                             ', tmp, '                                       \n\
                             ', array, '                                     \n\
-                            for (i = 0, I = array.length; i < I; i++) { \n\
+                            for (i = 0; i < ' + field.repeat + '; i++) { \n\
                                 ', variable, '                                  \n\
                                 ', bites, '                                     \n\
                             } \n\
@@ -712,8 +713,6 @@ exports.composeSerializer = function (ranges) {
                             // __blank__                                    \n\
                             ')
                     }
-
-                    console.log($(tmp))
                 }
             }
         })
