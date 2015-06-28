@@ -1,17 +1,17 @@
 module.exports = function (object, callback) {
     var inc
 
-    inc = function (buffer, start, end, index) {
+    inc = function (buffer, start, end, step) {
         var bite
         var next
         var _foo
 
         this.parse = function (buffer, start, end) {
-            switch (index) {
+            switch (step) {
             case 0:
                 _foo = new ArrayBuffer(4)
                 bite = 3
-                index = 1
+                step = 1
             case 1:
                 while (bite != -1) {
                     if (start == end) {

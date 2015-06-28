@@ -1,19 +1,19 @@
 module.exports = function (object, callback) {
     var inc
 
-    inc = function (buffer, start, end, index) {
-        var index
+    inc = function (buffer, start, end, step) {
+        var step
         var bite
         var next
         var _foo
 
         this.write = function (buffer, start, end) {
-            switch (index) {
+            switch (step) {
             case 0:
                 _foo = new ArrayBuffer(8)
                 new DataView(_foo).setFloat64(0, object["foo"], true)
                 bite = 7
-                index = 1
+                step = 1
             case 1:
                 while (bite != -1) {
                     if (start == end) {

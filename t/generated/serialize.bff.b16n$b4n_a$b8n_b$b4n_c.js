@@ -1,21 +1,21 @@
 module.exports = function (object, callback) {
     var inc
 
-    inc = function (buffer, start, end, index) {
-        var index
+    inc = function (buffer, start, end, step) {
+        var step
         var bite
         var next
         var value
 
         this.write = function (buffer, start, end) {
-            switch (index) {
+            switch (step) {
             case 0:
                 value =
                     (object["a"] << 12 & 0xf000) +
                     (object["b"] << 4 & 0xff0) +
                     (object["c"] & 0xf)
                 bite = 1
-                index = 1
+                step = 1
             case 1:
                 while (bite != -1) {
                     if (start == end) {

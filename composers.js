@@ -14,7 +14,7 @@ function composeIncrementalParser (ranges) {
 
     ranges.forEach(function (range, rangeIndex) {
         range.pattern.forEach(function (field, fieldIndex) {
-            var index = (rangeIndex + fieldIndex) * 2
+            var step = (rangeIndex + fieldIndex) * 2
 
             var little = field.endianness == 'l'
             var bytes = field.bytes
@@ -23,7 +23,7 @@ function composeIncrementalParser (ranges) {
             var stop = little ? bytes : -1
 
             var variable = field.packing ? 'value' : '_' + field.name
-            var parseIndex = index + 1
+            var parseStep = step + 1
             var fixup = '', assign
 
             var initialization, fixup
@@ -49,11 +49,11 @@ function composeIncrementalParser (ranges) {
             variables.push('bite', 'next', variable)
 
             source = $('                                                    \n\
-                case ' + index + ':                                         \n\
+                case ' + step + ':                                          \n\
                     ', initialization, '                                    \n\
                     bite = ' + bite + '                                     \n\
-                    index = ' + parseIndex + '                              \n\
-                case ' + parseIndex + ':                                    \n\
+                    step = ' + parseStep + '                                \n\
+                case ' + parseStep + ':                                     \n\
                     while (bite != ' + stop + ') {                          \n\
                         if (start == end) {                                 \n\
                             return start                                    \n\
@@ -88,7 +88,7 @@ function composeIncrementalParser (ranges) {
 
     source = $('                                                            \n\
     this.parse = function (buffer, start, end) {                            \n\
-        switch (index) {                                                    \n\
+        switch (step) {                                                     \n\
         ', source, '                                                        \n\
         }                                                                   \n\
         // __blank__                                                        \n\
@@ -110,7 +110,7 @@ function composeIncrementalParser (ranges) {
     return $('                                                              \n\
         var inc                                                             \n\
         // __blank__                                                        \n\
-        inc = function (buffer, start, end, index) {                        \n\
+        inc = function (buffer, start, end, step) {                         \n\
             ', $.apply(null, vars), '                                       \n\
             // __blank__                                                    \n\
             ', source, '                                                    \n\
@@ -341,7 +341,7 @@ exports.composeParser = function (ranges) {
 
 function composeIncrementalSerializer (ranges) {
     var tmp, previous = ''
-    var variables = [ 'index', 'bite', 'next' ]
+    var variables = [ 'step', 'bite', 'next' ]
 
     ranges.forEach(function (range, rangeIndex) {
         var offset = 0
@@ -349,21 +349,21 @@ function composeIncrementalSerializer (ranges) {
         range.pattern.forEach(function (field, patternIndex) {
             if (field.endianness == 'x' && field.padding == null) {
                 var section = source()
-                var index = (rangeIndex + patternIndex) * 2
+                var step = (rangeIndex + patternIndex) * 2
                 section('\
-                    case $initiationIndex:                                  \n\
+                    case $initiationStep:                                   \n\
                         skip = start + $skip                                \n\
-                        index = $parseIndex                                 \n\
-                    case $parseIndex:                                       \n\
+                        step = $parseStep                                   \n\
+                    case $parseStep:                                        \n\
                         if (end < skip) {                                   \n\
                             return end                                      \n\
                         }                                                   \n\
                         start = skip                                        \
                 ')
                 hoist('skip')
-                section.$initiationIndex(index)
+                section.$initiationStep(step)
                 section.$skip(field.bytes * field.repeat)
-                section.$parseIndex(index + 1)
+                section.$parseStep(step + 1)
                 cases(section)
             } else if (false && field.type == 'f') {
                 var name = '_' + field.name
@@ -374,15 +374,15 @@ function composeIncrementalSerializer (ranges) {
                 var bite = little ? 0 : bytes - 1
                 var direction = little ? 1 : -1
                 var stop = little ? bytes : -1
-                var index = (rangeIndex + patternIndex) * 2
+                var step = (rangeIndex + patternIndex) * 2
 
                 variables.push(name)
 
                 tmp = $('\
                     ', previous, '                                          \n\
-                    case ' + index + ':                                     \n\
+                    case ' + step + ':                                      \n\
                         ', init, '                                          \n\
-                        index = ' + (index + 1) + '                         \n\
+                        index = ' + (step + 1) + '                          \n\
                     case ' + (index + 1) + ':                               \n\
                         $serialize                                          \
                 ')
@@ -415,7 +415,7 @@ function composeIncrementalSerializer (ranges) {
             } else {
                 var name = '_' + field.name
                 var key = str(field.name)
-                var index = (rangeIndex + patternIndex) * 2
+                var step = (rangeIndex + patternIndex) * 2
                 var little = field.endianness == 'l'
                 var bytes = field.bytes
                 var bits = field.bits
@@ -453,11 +453,11 @@ function composeIncrementalSerializer (ranges) {
                 // todo: bad indent on while loop below.
                 tmp = $('\
                     ', previous, '                                          \n\
-                    case ' + index + ':                                     \n\
+                    case ' + step + ':                                     \n\
                         ', init, '                                          \n\
                         bite = ' + bite + '                                 \n\
-                        index = ' + (index + 1) + '                         \n\
-                    case ' + (index + 1) + ':                               \n\
+                        step = ' + (step + 1) + '                         \n\
+                    case ' + (step + 1) + ':                               \n\
                         while (bite != ' + stop + ') {                      \n\
                            if (start == end) {                              \n\
                                return start                                 \n\
@@ -471,7 +471,7 @@ function composeIncrementalSerializer (ranges) {
     })
 
     tmp = $('\
-            switch (index) {                                                \n\
+            switch (step) {                                                \n\
             ', tmp, '                                                       \n\
             }                                                               \n\
             // __blank__                                                    \n\
@@ -499,7 +499,7 @@ function composeIncrementalSerializer (ranges) {
     tmp = $('                                                               \n\
         var inc                                                             \n\
         // __blank__                                                        \n\
-        inc = function (buffer, start, end, index) {                        \n\
+        inc = function (buffer, start, end, step) {                         \n\
             ', vars, '                                                      \n\
             // __blank__                                                    \n\
             ', tmp, '                                                       \n\
