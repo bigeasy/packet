@@ -1,7 +1,7 @@
 var parse   = require('./tokenizer').parse
 
 function rangify (pattern) {
-    var ranges = [{ size: 0, fixed: true, pattern: [], patternIndex: 0 }]
+    var ranges = [{ size: 0, fixed: true, pattern: [] }]
 
     pattern.forEach(function (field, index) {
         ranges[0].size += field.bytes * field.repeat

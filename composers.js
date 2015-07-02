@@ -190,13 +190,13 @@ function unpackAll (field) {
 exports.composeParser = function (ranges) {
     composeIncrementalParser(ranges)
 
-    var tmp, variables = [ 'next' ]
+    var tmp, variables = [ 'next' ], rangeIndex = 0
 
     ranges.forEach(function (range) {
         tmp = $('                                                           \n\
             if (end - start < ' + range.size + ') {                         \n\
                 return inc.call(this, buffer, start, end, ' +
-                    range.patternIndex + ')                                 \n\
+                    rangeIndex + ')                                         \n\
             }                                                               \n\
             // __blank__                                                    \n\
         ')
@@ -674,13 +674,14 @@ function packForSerialization (variables, field) {
 exports.composeSerializer = function (ranges) {
     var variables = [ 'next' ]
     var tmp
+    var rangeIndex = 0
 
     ranges.forEach(function (range) {
         var offset = 0
 
         tmp = $('\n\
             if (end - start < ' + range.size + ') {                         \n\
-                return inc.call(this, buffer, start, end, ' + range.patternIndex + ')    \n\
+                return inc.call(this, buffer, start, end, ' + rangeIndex + ')    \n\
             }                                                               \n\
             // __blank__                                                    \n\
         ')
