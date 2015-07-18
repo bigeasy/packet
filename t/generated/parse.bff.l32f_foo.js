@@ -2,6 +2,7 @@ module.exports = function (object, callback) {
     var inc
 
     inc = function (buffer, start, end, step) {
+        var value
         var bite
         var next
 

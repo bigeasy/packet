@@ -1,6 +1,7 @@
 var $ = require('programmatic')
 var bits
 var composeIncrementalSerializer = require('./inc')
+var packForSerialization = require('./pack')
 
 function composeSerializer (ranges) {
     var variables = [ 'next' ]
@@ -64,8 +65,8 @@ function composeSerializer (ranges) {
                     ' + name + ' = new ArrayBuffer(' + field.bytes + ')     \n\
                     new DataView(' +
                             name +
-                        ').setFloat' + field.bits + '(0, object[' +
-                            str(field.name) + '], true)                     \n\
+                        ').setFloat' + field.bits + '(0, object.' +
+                            field.name + ', true)                           \n\
                     ', copy, '                                              \n\
                 ')
             } else {

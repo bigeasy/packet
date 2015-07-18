@@ -1,6 +1,7 @@
 var $ = require('programmatic')
 var signage = require('./signage')
 var composeIncrementalParser = require('./inc')
+var unpackAll = require('./unpack')
 
 function composeParser (ranges) {
     composeIncrementalParser(ranges)

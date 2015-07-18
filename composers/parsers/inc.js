@@ -1,5 +1,6 @@
 var $ = require('programmatic')
 var signage = require('./signage')
+var unpackAll = require('./unpack')
 
 function composeIncrementalParser (ranges) {
     var variables = [], source = '', previous = ''
@@ -29,6 +30,7 @@ function composeIncrementalParser (ranges) {
 
             var initialization, fixup, assignee = variable
             if (field.type == 'f') {
+                hoist('value')
                 initialization = $('                                        \n\
                     ' + variable + ' = new ArrayBuffer(' + field.bytes + ') \n\
                 ')

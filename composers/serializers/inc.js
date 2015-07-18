@@ -1,5 +1,5 @@
+var packForSerialization = require('./pack')
 var $ = require('programmatic')
-var bits
 
 function composeIncrementalSerializer (ranges) {
     var tmp = ''

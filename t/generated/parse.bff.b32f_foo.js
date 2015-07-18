@@ -2,13 +2,14 @@ module.exports = function (object, callback) {
     var inc
 
     inc = function (buffer, start, end, step) {
-        var byte
+        var value
+        var bite
         var next
 
         this.parse = function (buffer, start, end) {
             switch (step) {
             case 0:
-                _foo = new ArrayBuffer(4)
+                value = new ArrayBuffer(4)
                 bite = 3
                 step = 1
             case 1:
@@ -16,11 +17,11 @@ module.exports = function (object, callback) {
                     if (start == end) {
                         return start
                     }
-                    _foo[bite] = buffer[start++]
+                    value[bite] = buffer[start++]
                     bite--
                 }
-                _foo = new DataView(_foo).getFloat32(0, true)
-                object["foo"] = _foo
+                value = new DataView(value).getFloat32(0, true)
+                object.foo = value
             }
 
             if (next = callback(object)) {
@@ -36,18 +37,18 @@ module.exports = function (object, callback) {
 
     return function (buffer, start, end) {
         var next
-        var _foo
+        var value
 
         if (end - start < 4) {
             return inc.call(this, buffer, start, end, 0)
         }
 
-        _foo = new ArrayBuffer(4)
-        _foo[3] = buffer[start++]
-        _foo[2] = buffer[start++]
-        _foo[1] = buffer[start++]
-        _foo[0] = buffer[start++]
-        object["foo"] = new DataView(_foo).getFloat32(0, true)
+        value = new ArrayBuffer(4)
+        value[3] = buffer[start++]
+        value[2] = buffer[start++]
+        value[1] = buffer[start++]
+        value[0] = buffer[start++]
+        object.foo = new DataView(value).getFloat32(0, true)
 
         if (next = callback(object)) {
             this.parse = next
