@@ -11,7 +11,7 @@ module.exports = function (object, callback) {
             switch (step) {
             case 0:
                 _foo = new ArrayBuffer(4)
-                new DataView(_foo).setFloat32(0, object["foo"], true)
+                new DataView(_foo).setFloat32(0, object. foo, true)
                 bite = 0
                 step = 1
             case 1:
@@ -44,7 +44,7 @@ module.exports = function (object, callback) {
         }
 
         _foo = new ArrayBuffer(4)
-        new DataView(_foo).setFloat32(0, object["foo"], true)
+        new DataView(_foo).setFloat32(0, object.foo, true)
         buffer[start++] = _foo[0]
         buffer[start++] = _foo[1]
         buffer[start++] = _foo[2]

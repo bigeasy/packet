@@ -1,11 +1,25 @@
 var parse   = require('./tokenizer').parse
+var composers = {
+    composeSerializer: require('./composers/serializers/bff'),
+    composeParser: require('./composers/parsers/bff'),
+    composeSizeOf: require('./composers/sizeof')
+}
 
 function rangify (pattern) {
     var ranges = [{ size: 0, fixed: true, pattern: [] }]
 
     pattern.forEach(function (field, index) {
-        ranges[0].size += field.bytes * field.repeat
-        ranges[0].pattern.push(field)
+        ranges[ranges.length - 1].size += field.bytes * field.repeat
+        ranges[ranges.length - 1].pattern.push(field)
+        if (field.lengthEncoding) {
+            ranges[ranges.length - 1].name = pattern[index + 1].name
+            ranges.push({
+                lengthEncoded: true,
+                size: 0,
+                fixed: false,
+                pattern: []
+            })
+        }
     })
 
     return ranges
@@ -28,7 +42,7 @@ Packetizer.prototype.createParser = function (pattern) {
     var ranges = rangify(_pattern)
     var prefix = [ 'parse.bff' ]
 
-    var parser = require('./composers').composeParser(ranges)
+    var parser = composers.composeParser(ranges)
 
     return this._options.precompiler(prefix.join('.'), _pattern, [ 'object', 'callback' ], parser)
 }
@@ -39,7 +53,7 @@ Packetizer.prototype.createSerializer = function (pattern) {
     var ranges = rangify(_pattern)
     var prefix = [ 'serialize.bff' ]
 
-    var serializer = require('./composers').composeSerializer(ranges)
+    var serializer = composers.composeSerializer(ranges)
 
     return this._options.precompiler(prefix.join('.'), _pattern, [ 'object', 'callback' ], serializer)
 }
@@ -49,7 +63,7 @@ Packetizer.prototype.createSizeOf = function (pattern) {
     var ranges = rangify(pattern)
     var prefix = [ 'sizeOf' ]
 
-    var sizeOf = require('./composers').composeSizeOf(ranges)
+    var sizeOf = composers.composeSizeOf(ranges)
 
     return this._options.precompiler(prefix.join('.'), pattern, [ 'object' ], sizeOf)
 }

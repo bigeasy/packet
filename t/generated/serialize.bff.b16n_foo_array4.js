@@ -5,13 +5,12 @@ module.exports = function (object, callback) {
         var step
         var bite
         var next
-        var _foo
         var i
 
         this.write = function (buffer, start, end) {
             switch (step) {
             case 0:
-                _foo = object["foo"]
+                array = object.foo
                 i = 0
                 bite = 1
                 step = 1
@@ -21,11 +20,11 @@ module.exports = function (object, callback) {
                         if (start == end) {
                             return start
                         }
-                        buffer[start++] = _foo[i] >>> bite * 8 & 0xff
+                        buffer[start++] = array[i] >>> bite * 8 & 0xff
                         bite--
                     }
                     bite = 1
-                } while (++i < 4)
+                } while (++i < array.length)
             }
 
             if (next = callback && callback(object)) {

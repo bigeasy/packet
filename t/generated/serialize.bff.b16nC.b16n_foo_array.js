@@ -5,14 +5,24 @@ module.exports = function (object, callback) {
         var step
         var bite
         var next
-        var _undefined
-        var _foo
         var i
 
         this.write = function (buffer, start, end) {
             switch (step) {
+            case 0:
+                value = object.foo.length
+                bite = 1
+                step = 1
+            case 1:
+                while (bite != -1) {
+                    if (start == end) {
+                        return start
+                    }
+                    buffer[start++] = value >>> bite * 8 & 0xff
+                    bite--
+                }
             case 2:
-                _foo = object["foo"]
+                array = object.foo
                 i = 0
                 bite = 1
                 step = 3
@@ -22,11 +32,11 @@ module.exports = function (object, callback) {
                         if (start == end) {
                             return start
                         }
-                        buffer[start++] = _foo[i] >>> bite * 8 & 0xff
+                        buffer[start++] = array[i] >>> bite * 8 & 0xff
                         bite--
                     }
                     bite = 1
-                } while (++i < 1)
+                } while (++i < array.length)
             }
 
             if (next = callback && callback(object)) {
@@ -42,22 +52,26 @@ module.exports = function (object, callback) {
 
     return function (buffer, start, end) {
         var next
-        var value
+        var length
         var value
         var array
         var i
         var I
 
-        if (end - start < 4) {
+        if (end - start < 2) {
             return inc.call(this, buffer, start, end, 0)
         }
 
-        value = object[undefined]
+        length = object["foo"].length
         buffer[start++] = value >>> 8 & 0xff
         buffer[start++] = value & 0xff
 
+        if (end - start < value) {
+            return inc.call(this, buffer, start, end, 2)
+        }
+
         array = object["foo"]
-        for (i = 0; i < 1; i++) {
+        for (i = 0; i < length; i++) {
             value = array[i]
             buffer[start++] = value >>> 8 & 0xff
             buffer[start++] = value & 0xff

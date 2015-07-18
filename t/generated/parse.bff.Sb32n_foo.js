@@ -2,14 +2,14 @@ module.exports = function (object, callback) {
     var inc
 
     inc = function (buffer, start, end, step) {
+        var value
         var bite
         var next
-        var _foo
 
         this.parse = function (buffer, start, end) {
             switch (step) {
             case 0:
-                _foo = 0
+                value = 0
                 bite = 3
                 step = 1
             case 1:
@@ -17,11 +17,11 @@ module.exports = function (object, callback) {
                     if (start == end) {
                         return start
                     }
-                    _foo += Math.pow(256, bite) * buffer[start++]
+                    value += Math.pow(256, bite) * buffer[start++]
                     bite--
                 }
-                _foo = _foo & 0x80000000 ? (0xffffffff - _foo + 1) * -1 : _foo
-                object["foo"] = _foo
+                value = value & 0x80000000 ? (0xffffffff - value + 1) * -1 : value
+                object.foo = value
             }
 
             if (next = callback(object)) {
@@ -37,19 +37,19 @@ module.exports = function (object, callback) {
 
     return function (buffer, start, end) {
         var next
-        var _foo
+        var value
 
         if (end - start < 4) {
             return inc.call(this, buffer, start, end, 0)
         }
 
-        _foo =
+        value =
             buffer[start++] * 0x1000000 +
             buffer[start++] * 0x10000 +
             buffer[start++] * 0x100 +
             buffer[start++]
-        _foo = _foo & 0x80000000 ? (0xffffffff - _foo + 1) * -1 : _foo
-        object["foo"] = _foo
+        value = value & 0x80000000 ? (0xffffffff - value + 1) * -1 : value
+        object.foo = value
 
         if (next = callback(object)) {
             this.parse = next

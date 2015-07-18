@@ -2,9 +2,9 @@ module.exports = function (object, callback) {
     var inc
 
     inc = function (buffer, start, end, step) {
+        var value
         var bite
         var next
-        var value
 
         this.parse = function (buffer, start, end) {
             switch (step) {
@@ -20,9 +20,9 @@ module.exports = function (object, callback) {
                     value += Math.pow(256, bite) * buffer[start++]
                     bite--
                 }
-                object["one"] = value >>> 12 & 0xf
-                object["two"] = value >>> 4 & 0xff
-                object["three"] = value & 0xf
+                object.one = value >>> 12 & 0xf
+                object.two = value >>> 4 & 0xff
+                object.three = value & 0xf
             }
 
             if (next = callback(object)) {
@@ -47,9 +47,9 @@ module.exports = function (object, callback) {
         value =
             buffer[start++] * 0x100 +
             buffer[start++]
-        object["one"] = value >>> 12 & 0xf
-        object["two"] = value >>> 4 & 0xff
-        object["three"] = value & 0xf
+        object.one = value >>> 12 & 0xf
+        object.two = value >>> 4 & 0xff
+        object.three = value & 0xf
 
         if (next = callback(object)) {
             this.parse = next
