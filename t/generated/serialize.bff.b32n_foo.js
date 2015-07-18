@@ -5,12 +5,12 @@ module.exports = function (object, callback) {
         var step
         var bite
         var next
-        var _foo
+        var value
 
         this.write = function (buffer, start, end) {
             switch (step) {
             case 0:
-                _foo = object["foo"]
+                value = object.foo
                 bite = 3
                 step = 1
             case 1:
@@ -18,7 +18,7 @@ module.exports = function (object, callback) {
                     if (start == end) {
                         return start
                     }
-                    buffer[start++] = _foo >>> bite * 8 & 0xff
+                    buffer[start++] = value >>> bite * 8 & 0xff
                     bite--
                 }
             }
@@ -42,7 +42,7 @@ module.exports = function (object, callback) {
             return inc.call(this, buffer, start, end, 0)
         }
 
-        value = object["foo"]
+        value = object.foo
         buffer[start++] = value >>> 24 & 0xff
         buffer[start++] = value >>> 16 & 0xff
         buffer[start++] = value >>> 8 & 0xff

@@ -2,15 +2,17 @@ module.exports = function (object, callback) {
     var inc
 
     inc = function (buffer, start, end, step) {
-        var bite
+        var byte
         var next
-        var _foo
         var i
 
         this.parse = function (buffer, start, end) {
             switch (step) {
             case 0:
-                _foo = [ 0 ]
+                array = new Array(4)
+                if (array.length !== 0) {
+                    array[0] = 0
+                }
                 i = 0
                 bite = 1
                 step = 1
@@ -20,16 +22,15 @@ module.exports = function (object, callback) {
                         if (start == end) {
                             return start
                         }
-                        _foo[i] += Math.pow(256, bite) * buffer[start++]
+                        array[i] += Math.pow(256, bite) * buffer[start++]
                         bite--
                     }
-                    if (++i == 4) {
+                    if (++i === array.length) {
                         break
                     }
-                    _foo[i] = 0
+                    array[i] = 0
                     bite = 1
                 }
-                object["foo"] = _foo
             }
 
             if (next = callback(object)) {
@@ -52,7 +53,7 @@ module.exports = function (object, callback) {
             return inc.call(this, buffer, start, end, 0)
         }
 
-        array = []
+        object.foo = array = new Array(4)
         for (i = 0; i < 4; i++) {
             array[i] =
                 buffer[start++] * 0x100 +

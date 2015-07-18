@@ -2,9 +2,8 @@ module.exports = function (object, callback) {
     var inc
 
     inc = function (buffer, start, end, step) {
-        var bite
+        var byte
         var next
-        var _foo
 
         this.parse = function (buffer, start, end) {
             switch (step) {

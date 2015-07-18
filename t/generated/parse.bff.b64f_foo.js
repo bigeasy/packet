@@ -4,12 +4,11 @@ module.exports = function (object, callback) {
     inc = function (buffer, start, end, step) {
         var bite
         var next
-        var _foo
 
         this.parse = function (buffer, start, end) {
             switch (step) {
             case 0:
-                _foo = new ArrayBuffer(8)
+                value = new ArrayBuffer(8)
                 bite = 7
                 step = 1
             case 1:
@@ -17,11 +16,11 @@ module.exports = function (object, callback) {
                     if (start == end) {
                         return start
                     }
-                    _foo[bite] = buffer[start++]
+                    value[bite] = buffer[start++]
                     bite--
                 }
-                _foo = new DataView(_foo).getFloat64(0, true)
-                object["foo"] = _foo
+                value = new DataView(value).getFloat64(0, true)
+                object.foo = value
             }
 
             if (next = callback(object)) {
@@ -37,22 +36,22 @@ module.exports = function (object, callback) {
 
     return function (buffer, start, end) {
         var next
-        var _foo
+        var value
 
         if (end - start < 8) {
             return inc.call(this, buffer, start, end, 0)
         }
 
-        _foo = new ArrayBuffer(8)
-        _foo[7] = buffer[start++]
-        _foo[6] = buffer[start++]
-        _foo[5] = buffer[start++]
-        _foo[4] = buffer[start++]
-        _foo[3] = buffer[start++]
-        _foo[2] = buffer[start++]
-        _foo[1] = buffer[start++]
-        _foo[0] = buffer[start++]
-        object["foo"] = new DataView(_foo).getFloat64(0, true)
+        value = new ArrayBuffer(8)
+        value[7] = buffer[start++]
+        value[6] = buffer[start++]
+        value[5] = buffer[start++]
+        value[4] = buffer[start++]
+        value[3] = buffer[start++]
+        value[2] = buffer[start++]
+        value[1] = buffer[start++]
+        value[0] = buffer[start++]
+        object.foo = new DataView(value).getFloat64(0, true)
 
         if (next = callback(object)) {
             this.parse = next
