@@ -27,53 +27,6 @@ function composeIncrementalSerializer (ranges) {
                 section.$skip(field.bytes * field.repeat)
                 section.$parseStep(step + 1)
                 cases(section)
-            } else if (false && field.type == 'f') {
-                var name = '_' + field.name
-                var key = str(field.name)
-                var little = field.endianness == 'l'
-                var bits = field.bits
-                var bytes = field.bytes
-                var bite = little ? 0 : bytes - 1
-                var direction = little ? 1 : -1
-                var stop = little ? bytes : -1
-                var step = (rangeIndex + patternIndex) * 2
-
-                variables.push(name)
-
-                tmp = $('\
-                    ', previous, '                                          \n\
-                    case ' + step + ':                                      \n\
-                        ', init, '                                          \n\
-                        index = ' + (step + 1) + '                          \n\
-                    case ' + (index + 1) + ':                               \n\
-                        $serialize                                          \
-                ')
-                section.$initiationIndex(index)
-
-                section.$initialization
-                section.$start(bite)
-                section.$size(field.bytes)
-                section.$field(field.name)
-                section.$patternIndex(index + 1)
-
-                var operation = source()
-
-                operation('\n\
-                    while (bite != $stop) {                                 \n\
-                        if (start == end) {                                 \n\
-                            return start                                    \n\
-                        }                                                   \n\
-                        buffer[start++] = _$field[$direction]               \n\
-                    }')
-
-                operation.$field(field.name)
-                operation.$stop(stop)
-                operation.$direction(direction < 0 ? 'bite--' : 'bite++')
-
-                section.$serialize(operation)
-                section.$name(JSON.stringify(field.name))
-                section.$bits(field.bits)
-                cases(section)
             } else {
                 var name = '_' + field.name
                 var key = field.name
