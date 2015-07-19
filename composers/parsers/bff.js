@@ -37,7 +37,13 @@ function composeParser (ranges) {
         range.pattern.forEach(function (field, index) {
             step += 2
             if (field.endianness == 'x') {
-                offset += field.bytes * field.repeat
+                var skip = field.bytes * field.repeat
+                offset += skip
+                tmp = $('                                                   \n\
+                    ', tmp, '                                               \n\
+                    start += ' + skip + '                                   \n\
+                    // __blank__                                            \n\
+                ')
             } else if (field.type == 'f') {
                 var name = 'value'
                 var little = field.endianness == 'l'
@@ -191,7 +197,6 @@ function composeParser (ranges) {
                 ', tmp, '                                                   \n\
         }')
 
-    console.log($([tmp]))
     return tmp
 }
 

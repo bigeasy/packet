@@ -9,28 +9,26 @@ function composeIncrementalSerializer (ranges) {
         var offset = 0
 
         range.pattern.forEach(function (field, patternIndex) {
+            var step = (rangeIndex + patternIndex) * 2
             if (field.endianness == 'x' && field.padding == null) {
-                var section = source()
-                var step = (rangeIndex + patternIndex) * 2
-                section('\
-                    case $initiationStep:                                   \n\
-                        skip = start + $skip                                \n\
-                        step = $parseStep                                   \n\
-                    case $parseStep:                                        \n\
-                        if (end < skip) {                                   \n\
+                hoist('skip')
+                hoist('remaining')
+                tmp = $('                                                   \n\
+                    ', tmp, '                                               \n\
+                    case ' + step + ':                                      \n\
+                        skip = start + ' + (field.bytes * field.repeat) + ' \n\
+                        step = ' + (step + 1) + '                           \n\
+                    case ' + (step + 1) + ':                                \n\
+                        remaining = end - start                             \n\
+                        if (remaining < skip) {                             \n\
+                            skip -= remaining                               \n\
                             return end                                      \n\
                         }                                                   \n\
-                        start = skip                                        \
+                        start += skip                                       \n\
                 ')
-                hoist('skip')
-                section.$initiationStep(step)
-                section.$skip(field.bytes * field.repeat)
-                section.$parseStep(step + 1)
-                cases(section)
             } else {
                 var name = '_' + field.name
                 var key = field.name
-                var step = (rangeIndex + patternIndex) * 2
                 var little = field.endianness == 'l'
                 var bytes = field.bytes
                 var bits = field.bits

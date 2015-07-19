@@ -29,104 +29,122 @@ function composeIncrementalParser (ranges) {
             }
 
             var initialization, fixup, assignee = variable
-            if (field.type == 'f') {
-                hoist('value')
-                initialization = $('                                        \n\
-                    ' + variable + ' = new ArrayBuffer(' + field.bytes + ') \n\
+            if (field.endianness == 'x') {
+                hoist('skip')
+                hoist('remaining')
+                source = $('                                                \n\
+                    ', source, '                                            \n\
+                    case ' + step + ':                                      \n\
+                        skip = ' + (field.bytes * field.repeat) + '         \n\
+                        step = ' + (step + 1) + '                           \n\
+                    case ' + (step + 1) + ':                                \n\
+                        remaining = end - start                             \n\
+                        if (remaining < skip) {                             \n\
+                            skip -= remaining                               \n\
+                            return end                                      \n\
+                        }                                                   \n\
+                        start += skip                                       \n\
                 ')
-                fixup = $('                                                 \n\
-                    ' + variable + ' = new DataView(' +
-                        variable + ').getFloat' +
-                            field.bits + '(0, true)                         \n\
-                ')
-                assign = '[bite] = buffer[start++]'
-            } else if (field.arrayed) {
-                initialization = $('\n\
-                    if (array.length !== 0) {                               \n\
-                        array[0] = 0                                        \n\
-                    }                                                       \n\
-                    i = 0                                                   \n\
-                ')
-                assignee = 'array[i]'
-                assign = ' += Math.pow(256, bite) * buffer[start++]'
             } else {
-                if (field.lengthEncoding) {
-                    initialization = 'length = 0'
-                    assignee = 'length'
+                if (field.type == 'f') {
+                    hoist('value')
+                    initialization = $('                                        \n\
+                        ' + variable + ' = new ArrayBuffer(' + field.bytes + ') \n\
+                    ')
+                    fixup = $('                                                 \n\
+                        ' + variable + ' = new DataView(' +
+                            variable + ').getFloat' +
+                                field.bits + '(0, true)                         \n\
+                    ')
+                    assign = '[bite] = buffer[start++]'
+                } else if (field.arrayed) {
+                    initialization = $('\n\
+                        if (array.length !== 0) {                               \n\
+                            array[0] = 0                                        \n\
+                        }                                                       \n\
+                        i = 0                                                   \n\
+                    ')
+                    assignee = 'array[i]'
+                    assign = ' += Math.pow(256, bite) * buffer[start++]'
                 } else {
-                    initialization = variable + ' = 0'
+                    if (field.lengthEncoding) {
+                        initialization = 'length = 0'
+                        assignee = 'length'
+                    } else {
+                        initialization = variable + ' = 0'
+                    }
+                    hoist(variable)
+                    fixup = signage(field)
+                    assign = ' += Math.pow(256, bite) * buffer[start++]'
                 }
-                hoist(variable)
-                fixup = signage(field)
-                assign = ' += Math.pow(256, bite) * buffer[start++]'
-            }
 
-            hoist('bite')
-            hoist('next')
+                hoist('bite')
+                hoist('next')
 
-            if (field.arrayed) {
-                hoist('i')
-            }
+                if (field.arrayed) {
+                    hoist('i')
+                }
 
-            var parse = $('                                                 \n\
-                    while (bite != ' + stop + ') {                          \n\
-                        if (start == end) {                                 \n\
-                            return start                                    \n\
-                        }                                                   \n\
-                        ' + assignee + assign + '                           \n\
-                        ' + direction + '                                   \n\
-                    }                                                       \n\
-            ')
-
-            if (field.arrayed) {
-                parse = $('                                                 \n\
-                    for (;;) {                                              \n\
-                        ', parse, '                                         \n\
-                        if (++i === array.length) {                         \n\
-                            break                                           \n\
-                        }                                                   \n\
-                        ' + assignee + ' = 0                                \n\
-                        bite = ' + bite + '                                 \n\
-                    }                                                       \n\
+                var parse = $('                                                 \n\
+                        while (bite != ' + stop + ') {                          \n\
+                            if (start == end) {                                 \n\
+                                return start                                    \n\
+                            }                                                   \n\
+                            ' + assignee + assign + '                           \n\
+                            ' + direction + '                                   \n\
+                        }                                                       \n\
                 ')
-            }
 
-            source = $('                                                    \n\
-                ', source, '                                                \n\
-                case ' + step + ':                                          \n\
-                    ', fetch, '                                             \n\
-                    ', initialization, '                                    \n\
-                    bite = ' + bite + '                                     \n\
-                    step = ' + parseStep + '                                \n\
-                case ' + parseStep + ':                                     \n\
-                    ', parse, '                                             \n\
-            ')
+                if (field.arrayed) {
+                    parse = $('                                                 \n\
+                        for (;;) {                                              \n\
+                            ', parse, '                                         \n\
+                            if (++i === array.length) {                         \n\
+                                break                                           \n\
+                            }                                                   \n\
+                            ' + assignee + ' = 0                                \n\
+                            bite = ' + bite + '                                 \n\
+                        }                                                       \n\
+                    ')
+                }
 
-            // sign fixup
-            source = $('                                                    \n\
-                // __reference__                                            \n\
-                ', previous , '                                             \n\
-                ', source, '                                                \n\
-                    ', fixup)
-            if (field.packing) {
-                // TODO: Not sure why indent is necessary.
-                source = $('                                                \n\
-                    // __reference__                                        \n\
-                    ', source, '                                            \n\
-                        ', unpackAll(field, source) + '                     \n\
+                source = $('                                                    \n\
+                    ', source, '                                                \n\
+                    case ' + step + ':                                          \n\
+                        ', fetch, '                                             \n\
+                        ', initialization, '                                    \n\
+                        bite = ' + bite + '                                     \n\
+                        step = ' + parseStep + '                                \n\
+                    case ' + parseStep + ':                                     \n\
+                        ', parse, '                                             \n\
                 ')
-            } else if (field.lengthEncoding) {
-                source = $('                                                \n\
-                    // __reference__                                        \n\
-                    ', source, '                                            \n\
-                        object.' + range.name + ' = new Array(length)       \n\
-                ')
-            } else if (!field.arrayed) {
-                source = $('                                                \n\
-                    // __reference__                                        \n\
-                    ', source, '                                            \n\
-                        object.' + field.name + ' = ' + variable + '       \n\
-                ')
+
+                // sign fixup
+                source = $('                                                    \n\
+                    // __reference__                                            \n\
+                    ', previous , '                                             \n\
+                    ', source, '                                                \n\
+                        ', fixup)
+                if (field.packing) {
+                    // TODO: Not sure why indent is necessary.
+                    source = $('                                                \n\
+                        // __reference__                                        \n\
+                        ', source, '                                            \n\
+                            ', unpackAll(field, source) + '                     \n\
+                    ')
+                } else if (field.lengthEncoding) {
+                    source = $('                                                \n\
+                        // __reference__                                        \n\
+                        ', source, '                                            \n\
+                            object.' + range.name + ' = new Array(length)       \n\
+                    ')
+                } else if (!field.arrayed) {
+                    source = $('                                                \n\
+                        // __reference__                                        \n\
+                        ', source, '                                            \n\
+                            object.' + field.name + ' = ' + variable + '       \n\
+                    ')
+                }
             }
         })
     })

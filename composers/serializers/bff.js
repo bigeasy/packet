@@ -39,7 +39,12 @@ function composeSerializer (ranges) {
         range.pattern.forEach(function (field, index) {
             step += 2
             if (field.endianness == 'x' && field.padding == null) {
-                offset += field.bytes * field.repeat
+                var skip = field.bytes * field.repeat
+                offset += skip
+                tmp = $('                                                   \n\
+                    ', tmp, '                                               \n\
+                    start += ' + skip + '                                   \n\
+                ')
             } else if (field.type == 'f') {
                 var name = '_' + field.name
                 var little = field.endianness == 'l'

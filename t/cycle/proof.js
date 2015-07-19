@@ -28,6 +28,7 @@ require('proof')(module, function (body, assert) {
             self.parse = cycle.parser({}, function (object) {
                 assert(object, cycle.object, prefix + 'parse')
                 var buffer = new Buffer(cycle.buffer.length)
+                buffer.fill(0)
                 self.write = cycle.serializer(object)
                 var start = self.write(buffer, 0, i)
                 var end = cycle.buffer.length
@@ -51,6 +52,7 @@ require('proof')(module, function (body, assert) {
 
         self.parse = cycle.parser({}, function (object) {
             var buffer = new Buffer(cycle.buffer.length + 1)
+            buffer.fill(0)
             return subsequent.parser({}, function (next) {
                 assert(next, { foo: 1 }, prefix + 'subsequent parser')
                 self.write = cycle.serializer(object, function () {
@@ -76,6 +78,7 @@ require('proof')(module, function (body, assert) {
         self.parse = cycle.parser({}, function (object) {
             assert(object, cycle.object, prefix + 'parse')
             var buffer = new Buffer(cycle.buffer.length)
+            buffer.fill(0)
             self.write = cycle.serializer(object)
             var start = self.write(buffer, 0, buffer.length)
             assert(start, cycle.buffer.length, prefix + 'written')
@@ -86,6 +89,7 @@ require('proof')(module, function (body, assert) {
 
         self.parse = cycle.parser({}, function (object) {
             var buffer = new Buffer(cycle.buffer.length + 1)
+            buffer.fill(0)
             return subsequent.parser({}, function (next) {
                 assert(next, { foo: 1 }, prefix + 'subsequent parser')
                 self.write = cycle.serializer(object, function () {
