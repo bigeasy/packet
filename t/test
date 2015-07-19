@@ -28,17 +28,6 @@ if [ "$TRAVIS" = "true" ] || [ "$MINIFY" = "true" ]; then
   echo "minified"
   echo ""
 
-  default=$(cat composers.js | uglifyjs | gzip -c | wc -c)
-  lift=$(cat composers.js | uglifyjs --lift-vars | gzip -c | wc -c)
-
-  bak=composers-$(date +'%FT%T').js
-  mv composers.js $bak
-  if [ $default -lt $lift ]; then
-    cat $bak | uglifyjs > composers.js
-  else
-    cat $bak | uglifyjs --lift-vars > composers.js
-  fi
-
   (proof run t/*/*.t.js t/*/*/*.t.js | tee .proof.out | proof progress) || (proof errors < .proof.out) || exit 1
 fi
 
