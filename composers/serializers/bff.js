@@ -46,7 +46,7 @@ function composeSerializer (ranges) {
                     start += ' + skip + '                                   \n\
                 ')
             } else if (field.type == 'f') {
-                var name = '_' + field.name
+                var name = 'value'
                 var little = field.endianness == 'l'
                 var bytes = field.bytes
                 var bite = little ? 0 : bytes - 1
