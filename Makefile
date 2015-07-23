@@ -3,12 +3,7 @@ sources = css/packet.css index.html
 all: $(sources)
 
 watch: all
-	@inotifywait -q -m -e modify pages css | while read line; \
-		do \
-		if echo $$line | grep '.\(less\|html\)$$'; then \
-			make --no-print-directory all; \
-	fi \
-	done;
+	fswatch pages/*.html | (while read -r line; do make < /dev/null; done)
 
 css/%.css: css/%.less
 	node_modules/.bin/lessc $< > $@ || rm -f $@

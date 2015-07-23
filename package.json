@@ -1,17 +1,24 @@
 {
-    "name":             "package",
-    "version":          "0.0.1",
+    "private":          true,
+    "name":             "packet",
+    "version":          "0.0.0",
     "author":           "Alan Gutierrez",
     "url" :             "http://bigeasy.github.io/packet",
     "keywords" :        [],
     "author" :          "Alan Gutierrez <alan@prettyrobots.com>",
     "contributors" :    [],
+    "license":          "MIT",
+    "repository":
+    {
+                        "url": "git://github.com/bigeasy/packet.git",
+                        "type": "git"
+    },
     "dependencies":
     {
-        "serve": "1.3.0",
-        "cadence": "0.0.24",
-        "edify": "0.0.4",
+        "cadence": "0.0.56",
+        "edify": "0.0.5",
         "less": "1.4.2",
-        "marked": "0.2.9"
+        "serve-static": "1.6.3",
+        "finalhandler": "0.3.0"
     }
 }

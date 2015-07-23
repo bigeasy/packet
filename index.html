@@ -5,7 +5,7 @@
 <link rel="stylesheet" type="text/css" href="css/packet.css">
 <link rel="stylesheet" type="text/css" href="css/syntax.css">
 <title>Packet</title>
-<body><a href="https://github.com/bigeasy/packet/"><img style="position: absolute; top: 0; left: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_left_gray_6d6d6d.png" alt="Fork me on GitHub"></a><div class="container">
+<body><a href="https://github.com/bigeasy/edify/"><img style="position: absolute; top: 0; left: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_left_gray_6d6d6d.png" alt="Fork me on GitHub"></a><div class="container">
 
 <div class="unit welcome">
 <h1>Packet</h1>
@@ -48,7 +48,7 @@ give the values to write along with the pattern to follow when writing them.</p>
 <li>custom transformations,</li>
 <li>and pipelines of character encodings and custom transformations.</li>
 </ul>
-<h3>Limitations</h3>
+<h3 id="limitations">Limitations</h3>
 <p><strong>Parsing not searching</strong> — Packet is not a pattern matching library. It
 does not search binary streams for patterns. Packet is used for parsing
 well-defined streams of binary data.</p>
@@ -62,18 +62,18 @@ align to an 8-bit boundary. Packet can parse 7-bit ASCII formats like <code>tar<
 archives, because they are 8-bit aligned with the top bit ignored. Packet can
 also parse and serialize bit packed integers, so it does support awkward integer
 sizes, but within an 8-bit aligned integer.</p>
-<h2>Installing</h2>
+<h2 id="installing">Installing</h2>
 <p>Install Packet using NPM.</p>
-<pre><code>npm install packet</code></pre>
-<p>The source is available on <a href="https://github.com/bigeasy/packet">GitHub</a>.</p>
-<h2>Parsers and Serializers</h2>
+<pre><code>npm install packet
+</code></pre><p>The source is available on <a href="https://github.com/bigeasy/packet">GitHub</a>.</p>
+<h2 id="parsers-and-serializers">Parsers and Serializers</h2>
 <p>Packet defines a binary format using a binary pattern language inspired by
 Perl&#39;s <code>pack</code> function. The pattern language is used in a <code>Parser</code> to define the
 parameters passed to callback when enough bytes are read from the input stream
 to satisfy the pattern. The pattern language is used in a <code>Serializer</code> to define
 how JavaScript primitives passed to the <code>serialize</code> method are written to
 stream.</p>
-<h3>Patterns</h3>
+<h3 id="patterns">Patterns</h3>
 <p>Patterns are a series of element declarations joined by commas.</p>
 <pre><code class="lang-javascript"><div class="highlight"><pre><span class="nx">parser</span><span class="p">.</span><span class="nx">extract</span><span class="p">(</span><span class="s2">&quot;length: b16, address: b32, name: b8z&quot;</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">object</span><span class="p">)</span> <span class="p">{</span>
   <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">object</span><span class="p">.</span><span class="nx">length</span><span class="p">,</span> <span class="nx">object</span><span class="p">.</span><span class="nx">address</span><span class="p">,</span> <span class="nx">object</span><span class="p">.</span><span class="nx">name</span><span class="p">);</span>
@@ -148,7 +148,7 @@ the prototype pattern above.</p>
 <span class="p">});</span>
 </pre></div>
 </code></pre>
-<h3>Parsers</h3>
+<h3 id="parsers">Parsers</h3>
 <p>Parsers parse a buffer extracting a specified pattern. The pattern is specified
 using the <code>extract</code> method. The <code>extract</code> method accept either a pattern or the
 name a pre-compiled pattern.</p>
@@ -174,13 +174,13 @@ callback with more than one argument and it will be invoked with the extract
 values as parameters.</p>
 <p>A callback for a pattern without any named elements is always invoked with
 values as parameters regardless of arity.</p>
-<h3>Serializers</h3>
+<h3 id="serializers">Serializers</h3>
 <p>First you call <code>serialize</code> with a pattern and arguments to serialize, then you
 call <code>write</code> with a series of buffers.</p>
-<h2>Binary Pattern Fields</h2>
+<h2 id="binary-pattern-fields">Binary Pattern Fields</h2>
 <p>The binary pattern language is used to specify the fields binary structures in
 data streams, using a comma separated field pattern.</p>
-<h3>Big-Endian Byte Ordering</h3>
+<h3 id="big-endian-byte-ordering">Big-Endian Byte Ordering</h3>
 <p>To define a big-endian byte ordering for a field, prefix the bit size with <code>b</code>.</p>
 <pre><code class="lang-yaml">mnemonic: The letter `b` stands for big-endian.
 examples:
@@ -199,14 +199,15 @@ examples:
     object:
       word: 1
       byte: 1
-    parsed: 0x01, 0x00, 0x01</code></pre>
+    parsed: 0x01, 0x00, 0x01
+</code></pre>
 <p><strong>Mnemonic</strong>: The letter <code>b</code> stands for big-endian.</p>
 <pre><code class="lang-javascript"><div class="highlight"><pre><span class="s2">&quot;b16&quot;</span>             <span class="c1">// Big-endian 32 bit number.</span>
 <span class="s2">&quot;b8&quot;</span>              <span class="c1">// Endianess of a single byte is irrelevant.</span>
 <span class="s2">&quot;l16, b8&quot;</span>         <span class="c1">// Big-endian 16 bit integer followed by a byte.</span>
 </pre></div>
 </code></pre>
-<h3>Little-Endian Byte Ordering</h3>
+<h3 id="little-endian-byte-ordering">Little-Endian Byte Ordering</h3>
 <p>To define a little-endian byte ordering for a field, prefix the bit size with <code>l</code>.</p>
 <p><strong>Mnemonic</strong>: The letter <code>l</code> stands for little-endian.</p>
 <pre><code class="lang-javascript"><div class="highlight"><pre><span class="s2">&quot;l32&quot;</span>             <span class="c1">// Little-endian 32 bit integer.</span>
@@ -214,14 +215,14 @@ examples:
 <span class="s2">&quot;l16, b8&quot;</span>         <span class="c1">// Little endian 16 bit integer followed by a byte.</span>
 </pre></div>
 </code></pre>
-<h3>Skipping Bytes</h3>
+<h3 id="skipping-bytes">Skipping Bytes</h3>
 <p>You can skip over bytes your pattern with <code>x</code>.</p>
 <p><strong>Mnemonic</strong>: The letter <code>x</code> means to cross-out, which is kind of like skipping.</p>
 <pre><code class="lang-javascript"><div class="highlight"><pre><span class="s2">&quot;b8, x16, l16&quot;</span>    <span class="c1">// A byte, two skipped bytes, and a little-endian 16 bit</span>
                   <span class="c1">// integer.</span>
 </pre></div>
 </code></pre>
-<h3>Signed Versus Unsigned Integers</h3>
+<h3 id="signed-versus-unsigned-integers">Signed Versus Unsigned Integers</h3>
 <p>All numbers are assumed to be unsigned, unless prefixed by a negative symbol.</p>
 <p><strong>Mnemonic</strong>: The <code>-</code> symbol indicates the possibility of negative numbers.</p>
 <pre><code class="lang-javascript"><div class="highlight"><pre><span class="s2">&quot;-b32&quot;</span>            <span class="c1">// Big-endian 32 bit signed integer.</span>
@@ -229,7 +230,7 @@ examples:
 <span class="s2">&quot;b32&quot;</span>             <span class="c1">// Big-endian 32 bit unsigned integer.</span>
 </pre></div>
 </code></pre>
-<h3>IEEE 754 Floating Point Numbers</h3>
+<h3 id="ieee-754-floating-point-numbers">IEEE 754 Floating Point Numbers</h3>
 <p>The number type for JavaScript is the  64 bit IEEE 754 floating point. Packet
 can read write 64 bit and 32 bit IEEE 754 floating point numbers.</p>
 <p>To indicated that the type is a floating point number, use the <code>f</code> type suffix.
@@ -241,7 +242,7 @@ This is indicated with a <code>f</code> suffix.</p>
 </pre></div>
 </code></pre>
 <p>The floating-point numbers can be stored in little-endian or big-endian byte order.</p>
-<h3>Arrays of Raw Bytes</h3>
+<h3 id="arrays-of-raw-bytes">Arrays of Raw Bytes</h3>
 <p>A value will be converted to a big-endian array of bytes if followed by an <code>a</code>
 suffix.</p>
 <p><strong>Mnemonic</strong>: The letter <code>a</code> stands for <em>array</em>.</p>
@@ -257,7 +258,7 @@ about. (Big-endian orders like Arabic numerals, while little-endian orders like
 offsets into memory.)</p>
 <p>If you&#39;d prefer a little-endian array, simply call <code>reverse</code> on the array passed
 to you.</p>
-<h3>Arrays of Common Types</h3>
+<h3 id="arrays-of-common-types">Arrays of Common Types</h3>
 <p>It is often the case that a binary format contains an array of values. The most
 common case are arrays of bytes representing ASCII or UTF-8 strings.</p>
 <p>Arrays are specified with an subscript and a count.</p>
@@ -268,7 +269,7 @@ and used to declare array length in other C dialect languages.</p>
 </pre></div>
 </code></pre>
 <p>The array notation produces an array of the type before the subscript.</p>
-<h3>Zero Terminated Arrays</h3>
+<h3 id="zero-terminated-arrays">Zero Terminated Arrays</h3>
 <p>Zero terminated series are specified with a <code>z</code> qualifier.</p>
 <p>You can specify both termination and width together. Why would you need this?
 This occurs in underlying C structures when there is a fixed width character
@@ -280,7 +281,7 @@ array in a structure, but the structure still contains a zero terminated string.
 <span class="s2">&quot;b8[12]z&quot;</span>         <span class="c1">// Byte string terminated by zero in a field 12 bytes long.</span>
 </pre></div>
 </code></pre>
-<h3>Array Padding</h3>
+<h3 id="array-padding">Array Padding</h3>
 <p>You can specify a padding value immediately after the array brackets using curly
 braces. This should be the numeric value, or character code for padding. If you
 want to zero pad, use <code>0</code>. If you want to pad with ASCII spaces use <code>32</code>.</p>
@@ -290,7 +291,7 @@ want to zero pad, use <code>0</code>. If you want to pad with ASCII spaces use <
                   <span class="c1">// ascii space padded.</span>
 </pre></div>
 </code></pre>
-<h3>Length Encoded Arrays</h3>
+<h3 id="length-encoded-arrays">Length Encoded Arrays</h3>
 <p>Length encoded arrays are specified by joining a count type and a value type
 with a forward slash character <code>/</code>.</p>
 <p><strong>Mnemonic</strong>: Inspired by Perl&#39;s <code>pack</code>, which uses the slash to separate count
@@ -299,7 +300,7 @@ and type.</p>
 <span class="s2">&quot;l16/b8&quot;</span>          <span class="c1">// Length encoded byte array with 16 bit little-endian length.</span>
 </pre></div>
 </code></pre>
-<h3>Bit Packed Integers</h3>
+<h3 id="bit-packed-integers">Bit Packed Integers</h3>
 <p>Integers are often divided into smaller integers through a process called bit
 packing. Bit packing is specified by following an integer specification with
 a curly brace enclosed series series of integers patterns whose total size in
@@ -315,7 +316,7 @@ kind of like a structure.</p>
 <pre><code class="lang-javascript"><div class="highlight"><pre><span class="s2">&quot;b16{b3 =&gt; type, x6, -b7 =&gt; count}&quot;</span>
 </pre></div>
 </code></pre>
-<h3>Alternate Patterns</h3>
+<h3 id="alternate-patterns">Alternate Patterns</h3>
 <p>A common pattern in binary formats is using the value of a byte, or the high
 order bits of a byte to specify the type of data to follow. <a href="#length-encoded-arrays">Length Encoded
 Arrays</a> are one example of this practice, where a
@@ -344,7 +345,7 @@ condition will always match. This is used to specify a default pattern.</p>
 </pre></div>
 </code></pre>
 <p>The values can be expressed in binary, decimal or hexadecimal.</p>
-<h3>Bitwise Alternate Patterns</h3>
+<h3 id="bitwise-alternate-patterns">Bitwise Alternate Patterns</h3>
 <p>You can also indicate a branch based on set bits by prefixing the value with an
 ampersand. <strong>Packet</strong> will use the value as a bit mask. If the result of a
 logical <em>and</em> with the bit mask equals the bit mask, then <strong>Packet</strong> use use
@@ -364,7 +365,7 @@ alternate tests for reading and writing, we use a slash in the condition.</p>
 <span class="s2">&quot;b8(&amp;0x80/0x80-0xffff: b16{x1{1},b15} | b8)&quot;</span>
 </pre></div>
 </code></pre>
-<h3>Multi-Field Alternate Patterns</h3>
+<h3 id="multi-field-alternate-patterns">Multi-Field Alternate Patterns</h3>
 <p>Alternate patterns can define either a single field or multiple field.
 Alternate patterns can contain bit-packed patterns, but they cannot contain
 still more alternate patterns.</p>
@@ -374,13 +375,13 @@ still more alternate patterns.</p>
 </code></pre>
 <p>In the above example, the serialization test would be applied to the field value
 in the position of the <code>b1</code> field for either alternate.</p>
-<h3>Named Alternate Patterns</h3>
+<h3 id="named-alternate-patterns">Named Alternate Patterns</h3>
 <p>Names can be applied either to the entire alternation if the alternation
 produces a single field, or else to individual members of the alternate
 patterns.</p>
 <pre><code>// A single field mapped to a name.
-&quot;b8(&amp;0x80/0x80-0xffff: b16{x1{1},b15} | b8) =&gt; number&quot;</code></pre>
-<p>When serializing named multi-field patterns, for each alternate, <strong>Packet</strong> will
+&quot;b8(&amp;0x80/0x80-0xffff: b16{x1{1},b15} | b8) =&gt; number&quot;
+</code></pre><p>When serializing named multi-field patterns, for each alternate, <strong>Packet</strong> will
 use the first value of the property in the alternate for the serialization
 condition. <strong>Packet</strong> reads the property from the object we&#39;re serializing. If
 the value is not null, it is tested against the serialization condition. If it
@@ -390,7 +391,7 @@ is not null and whose serialization condition matches the object property.</p>
 <span class="s2">&quot;b8(&amp;0x80/1: b16{b1 =&gt; control, b15 =&gt; type}, x16|b32{b1 =&gt; control, b31 =&gt; sequence})&quot;</span>
 </pre></div>
 </code></pre>
-<h3>Transforms</h3>
+<h3 id="transforms">Transforms</h3>
 <p>Often there are transformations that you need to perform on an field to get
 it to its final state. You may need to convert a byte array to string of a
 particular character encoding, for example. This is done with a transformation
@@ -427,7 +428,7 @@ serialization. The transformations can accept scalar JavaScript parameters.</p>
 </code></pre>
 <p>The <code>str</code> transform is defined by default. The transform names are purposely
 terse to fit with the brevity of the pattern language.</p>
-<h2>Error Messages</h2>
+<h2 id="error-messages">Error Messages</h2>
 <p>Error messages for pattern parsing.</p>
 <ul>
 <li><strong>invalid pattern at N</strong> — The characters starting at the specified
@@ -449,9 +450,9 @@ with an unsupported bit size. Only 32 and 64 bit floats are supported.</li>
 <li><strong>&quot;array length must be non-zero at N</strong> — Encountered an array length
 of zero. Arrays must have a non-zero length.</li>
 </ul>
-<h2>Change Log</h2>
+<h2 id="change-log">Change Log</h2>
 <p>Changes for each release.</p>
-<h3>Version 0.0.6</h3>
+<h3 id="version-0-0-6">Version 0.0.6</h3>
 <p>Wed Jul  3 21:52:20 UTC 2013</p>
 <ul>
 <li>Implement <code>Serializer.offsetsOf</code>. #87. #85. #86. #63.</li>
@@ -468,7 +469,7 @@ of zero. Arrays must have a non-zero length.</li>
 <li>Rename <code>pattern</code> to <code>field</code>. #57.</li>
 <li>Massive tidy after change in enclosed objects.</li>
 </ul>
-<h3>Version 0.0.5</h3>
+<h3 id="version-0-0-5">Version 0.0.5</h3>
 <p>Fri Mar  1 03:05:15 UTC 2013</p>
 <ul>
 <li>Chunked serialization bug fixes. #59. #58. #55.</li>
@@ -477,7 +478,7 @@ of zero. Arrays must have a non-zero length.</li>
 <li>Implement <code>sizeOf</code> property for serializer. #37.</li>
 <li>Fix minimum number value. #54.</li>
 </ul>
-<h3>Version 0.0.4</h3>
+<h3 id="version-0-0-4">Version 0.0.4</h3>
 <p>Mon Nov  6 04:50:16 UTC 2012.</p>
 <ul>
 <li>Create parsers and serializers from prototypes. #53.</li>
@@ -491,7 +492,7 @@ of zero. Arrays must have a non-zero length.</li>
 <li>Single letter field names. #45.</li>
 <li>Remove streams from API. #41.</li>
 </ul>
-<h3>Version 0.0.3</h3>
+<h3 id="version-0-0-3">Version 0.0.3</h3>
 <p>Fri Aug 17 00:40:37 UTC 2012.</p>
 <ul>
 <li>Fix Packet in NPM. #12.</li>
@@ -505,7 +506,7 @@ of zero. Arrays must have a non-zero length.</li>
 <li>Fix too greedy match of bit packing pattern. #19.</li>
 <li>Skip leading whitespace in pattern. #15.</li>
 </ul>
-<h2>Contributors</h2>
+<h2 id="contributors">Contributors</h2>
 <ul>
 <li><a href="https://github.com/neonstalwart">Ben Hockey</a></li>
 <li><a href="https://github.com/aq1018">Aaron Qian</a></li>
