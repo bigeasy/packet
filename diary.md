@@ -671,14 +671,13 @@ given array and make the parser start at an offset.
    easy to document, so I'm going to not be clever about anything, and simply
    check to see if `isNamed` is set.
 
-## Next Change Log
 
- * Move context object to `options`. #126.
- * Floats are not `signed`. #113.
- * Packed integer length incorrect in `offsetsOf`. #105.
- * Add `offset` argument to `offsetsOf`. #101.
- * Pre-compiled packets. #123. #122. #119. #118. #117. #116. #115. #112. #109. #108. #107. #106. #103. #102. #99.
- * Parse and serialize as composition strategy. #111. #110. #104. #100. #98. #97.
- * Display padding in patterns in `offsetsOf`. #88.
- * Update `contributors` in `package.json`. #90.
- * 100% test coverage prior to refactor. #96. #94. #95. #93. #92. #79. #78. #76. #75. #74. #73. #72. #71. #70.
+## Nested Structures
+
+Nested structures and structural alternation, that blows this up into a great
+big language, almost asking for a transpiler, but let's not do that, but we are
+definately on a collision course with curly braces.
+
+Because nested length encoded or null terminated arrays of structures are not
+really an issue. In the nested parser you just punt and return. In the
+incremental parser you move to a previous step.
