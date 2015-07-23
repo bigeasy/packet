@@ -1,3 +1,0 @@
-[submodule "vendor/lesshat"]
-	path = vendor/lesshat
-	url = url = git://github.com/csshat/lesshat.git
