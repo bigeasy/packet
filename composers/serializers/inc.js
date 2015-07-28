@@ -9,7 +9,7 @@ function composeIncrementalSerializer (ranges) {
         var offset = 0
 
         range.pattern.forEach(function (field, patternIndex) {
-            var step = (rangeIndex + patternIndex) * 2
+            var step = field.index * 2
             if (field.endianness == 'x' && field.padding == null) {
                 hoist('skip')
                 hoist('remaining')

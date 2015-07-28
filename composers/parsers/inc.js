@@ -7,7 +7,7 @@ function composeIncrementalParser (ranges) {
 
     ranges.forEach(function (range, rangeIndex) {
         range.pattern.forEach(function (field, fieldIndex) {
-            var step = (rangeIndex + fieldIndex) * 2
+            var step = field.index * 2
 
             var little = field.endianness == 'l'
             var bytes = field.bytes

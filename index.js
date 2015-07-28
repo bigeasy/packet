@@ -5,7 +5,30 @@ var composers = {
     composeSizeOf: require('./composers/sizeof')
 }
 
+function padify (pattern) {
+    var padded = []
+    pattern.forEach(function (field) {
+        if (field.padding) {
+            padded.push({
+                endianess: 'padding',
+                padding: field.padding,
+                name: field.name,
+                bytes: field.bytes,
+                repeat: field.repeat
+            })
+        }
+        padded.push(field)
+    })
+    return padded
+}
+
 function rangify (pattern) {
+    pattern = padify(pattern)
+
+    pattern.forEach(function (field, index) {
+        field.index = index
+    })
+
     var ranges = [{ size: 0, fixed: true, pattern: [] }]
 
     pattern.forEach(function (field, index) {
