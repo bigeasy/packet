@@ -3,6 +3,42 @@ var signage = require('./signage')
 var composeIncrementalParser = require('./inc')
 var unpackAll = require('./unpack')
 
+function _assignment (field, variables) {
+    var little = field.endianness == 'l'
+    var bytes = field.bytes
+    var bite = little ? 0 : bytes - 1
+    var direction = little ? 1 : -1
+    var stop = little ? bytes : -1
+    var read = []
+    while (bite != stop) {
+        read.unshift('buffer[start++]')
+        if (bite) {
+            read[0] += ' * 0x' + Math.pow(256, bite).toString(16)
+        }
+        bite += direction
+    }
+    read = read.reverse().join(' + \n')
+
+    var assignee
+
+    if (field.packing || field.signed || field.lengthEncoding) {
+        variables.push('value')
+        assignee = 'value'
+    } else if (field.arrayed) {
+        assignee = 'array[i]'
+    } else {
+        assignee = 'object.' + field.name
+    }
+
+    if (field.bytes == 1) {
+        return assignee + ' = ' + read
+    } else {
+        return $('\n\
+            ' + assignee + ' =                              \n\
+                ', read, '')
+    }
+}
+
 var formatters = {
     blank: function (source) {
         return $('                                                          \n\
@@ -89,41 +125,11 @@ function composeParser (ranges) {
                             '(0, true)                                          \n\
                     ')
                 } else {
-                    var read = []
-                    while (bite != stop) {
-                        read.unshift('buffer[start++]')
-                        if (bite) {
-                            read[0] += ' * 0x' + Math.pow(256, bite).toString(16)
-                        }
-                        offset++
-                        bite += direction
-                    }
-                    read = read.reverse().join(' + \n')
-
-                    var assignee
-
-                    if (field.packing || field.signed || field.lengthEncoding) {
-                        variables.push('value')
-                        assignee = 'value'
-                    } else if (field.arrayed) {
-                        assignee = 'array[i]'
-                    } else {
-                        assignee = 'object.' + field.name
-                    }
-
-                    if (field.bytes == 1) {
-                        var assignment = assignee + ' = ' + read
-                    } else {
-                        var assignment = $('\n\
-                            ' + assignee + ' =                              \n\
-                                ', read, '')
-                    }
-
                     if (field.packing || field.signed) {
                         var variable = 'value'
                         source = $('                                        \n\
                             ', source, '                                    \n\
-                            ', assignment, '                                \n\
+                            ', _assignment(field, variables), '              \n\
                             ', signage(field), '                            \n\
                         ')
                         if (field.packing) {
@@ -146,7 +152,7 @@ function composeParser (ranges) {
                             ', source, '                                    \n\
                             object.' + field.name + ' = array = new Array(' + stop + ') \n\
                             for (i = 0; i < ' + stop + '; i++) {                        \n\
-                                ', assignment, '                            \n\
+                                ', _assignment(field, variables), '         \n\
                             }                                               \n\
                             object[' + str(field.name) + '] = array         \n\
                         ')
@@ -154,13 +160,13 @@ function composeParser (ranges) {
                         variables.push('value')
                         source = $('                                        \n\
                             ', source, '                                    \n\
-                            ', assignment, '                                \n\
+                            ', _assignment(field, variables), '             \n\
                             object.' + range.name + ' = array = new Array(value) \n\
                         ')
                     } else {
                         source = $('                                        \n\
                             ', source, '                                    \n\
-                            ', assignment, '                                \n\
+                            ', _assignment(field, variables), '             \n\
                         ')
                     }
                 }
