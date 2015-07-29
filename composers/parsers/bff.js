@@ -15,23 +15,15 @@ function composeParser (ranges) {
                 // __blank__                                                \n\
             ')
         }
-        if (range.fixed) {
-            source = $('                                                    \n\
-                ', source, '                                                \n\
-                if (end - start < ' + range.size + ') {                     \n\
-                    return inc.call(this, buffer, start, end, ' + step + ') \n\
-                }                                                           \n\
-                // __blank__                                                \n\
-            ')
-        } else if (range.lengthEncoded) {
-            source = $('                                                    \n\
-                ', source, '                                                \n\
-                if (end - start < value) {                                  \n\
-                    return inc.call(this, buffer, start, end, ' + step + ') \n\
-                }                                                           \n\
-                // __blank__                                                \n\
-            ')
-        }
+
+        var sentry = range.fixed ? range.size : 'value'
+        source = $('                                                        \n\
+            ', source, '                                                    \n\
+            if (end - start < ' + sentry + ') {                             \n\
+                return inc.call(this, buffer, start, end, ' + step + ')     \n\
+            }                                                               \n\
+            // __blank__                                                    \n\
+        ')
 
         var offset = 0
         range.pattern.forEach(function (field, index) {
