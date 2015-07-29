@@ -6,26 +6,26 @@ var unpackAll = require('./unpack')
 function composeParser (ranges) {
     composeIncrementalParser(ranges)
 
-    var tmp = '', variables = [ 'next' ], rangeIndex = 0, source = '', step = 0
+    var source = '', variables = [ 'next' ], rangeIndex = 0, source = '', step = 0
 
     ranges.forEach(function (range, rangeIndex) {
         if (rangeIndex) {
-            tmp = $('                                                       \n\
-                ', tmp, '                                                   \n\
+            source = $('                                                    \n\
+                ', source, '                                                \n\
                 // __blank__                                                \n\
             ')
         }
         if (range.fixed) {
-            tmp = $('                                                       \n\
-                ', tmp, '                                                   \n\
+            source = $('                                                    \n\
+                ', source, '                                                \n\
                 if (end - start < ' + range.size + ') {                     \n\
                     return inc.call(this, buffer, start, end, ' + step + ') \n\
                 }                                                           \n\
                 // __blank__                                                \n\
             ')
         } else if (range.lengthEncoded) {
-            tmp = $('                                                       \n\
-                ', tmp, '                                                   \n\
+            source = $('                                                    \n\
+                ', source, '                                                \n\
                 if (end - start < value) {                                  \n\
                     return inc.call(this, buffer, start, end, ' + step + ') \n\
                 }                                                           \n\
@@ -39,15 +39,15 @@ function composeParser (ranges) {
             if (field.endianness == 'x') {
                 var skip = field.bytes * field.repeat
                 offset += skip
-                tmp = $('                                                   \n\
-                    ', tmp, '                                               \n\
+                source = $('                                                \n\
+                    ', source, '                                            \n\
                     start += ' + skip + '                                   \n\
                     // __blank__                                            \n\
                 ')
             } else if (field.bytes == 1 && ! field.signed) {
-                tmp = $('                                               \n\
-                    ', tmp, '                                           \n\
-                    object.' + field.name + ' = buffer[start++]   \n\
+                source = $('                                                \n\
+                    ', source, '                                            \n\
+                    object.' + field.name + ' = buffer[start++]             \n\
                 ')
                 offset++
             } else if (field.type == 'f') {
@@ -74,8 +74,8 @@ function composeParser (ranges) {
                 }
                 copy = copy.join('\n')
 
-                tmp = $('                                                   \n\
-                    ', tmp, '                                               \n\
+                source = $('                                                \n\
+                    ', source, '                                            \n\
                     ' + name + ' = new ArrayBuffer(' + field.bytes + ')     \n\
                     ', copy, '                                              \n\
                     object.' + field.name + ' = new DataView(' +
@@ -112,19 +112,19 @@ function composeParser (ranges) {
                             ' + variable + ' =                          \n\
                                 ', read, '')
                     }
-                    tmp = $('                                           \n\
-                        ', tmp, '                                       \n\
+                    source = $('                                        \n\
+                        ', source, '                                    \n\
                         ', assignment, '                                \n\
                         ', signage(field), '                            \n\
                     ')
                     if (field.packing) {
-                        tmp = $('                                       \n\
-                            ', tmp, '                                   \n\
+                        source = $('                                    \n\
+                            ', source, '                                \n\
                             ', unpackAll(field), '                      \n\
                         ')
                     } else {
-                        tmp = $('                                       \n\
-                            ', tmp, '                                   \n\
+                        source = $('                                    \n\
+                            ', source, '                                \n\
                             object.' +
                                 field.name + ' = ' +
                                 variable + '                            \n\
@@ -141,8 +141,8 @@ function composeParser (ranges) {
                     }
                     var stop = range.lengthEncoded ? 'value' : field.repeat
                     variables.push('array', 'i')
-                    tmp = $('                                           \n\
-                        ', tmp, '                                                   \n\
+                    source = $('                                        \n\
+                        ', source, '                                    \n\
                         object.' + field.name + ' = array = new Array(' + stop + ') \n\
                         for (i = 0; i < ' + stop + '; i++) {                        \n\
                             ', assignment, '                            \n\
@@ -154,8 +154,8 @@ function composeParser (ranges) {
                     var assignment = $('                                \n\
                         value =                                         \n\
                             ', read, '')
-                    tmp = $('                                           \n\
-                        ', tmp, '                                       \n\
+                    source = $('                                        \n\
+                        ', source, '                                    \n\
                         ', assignment, '                                \n\
                         object.' + range.name + ' = array = new Array(value) \n\
                     ')
@@ -163,8 +163,8 @@ function composeParser (ranges) {
                     var assignment = $('                                \n\
                         object.' + field.name + ' =                     \n\
                             ', read, '')
-                    tmp = $('                                           \n\
-                        ', tmp, '                                       \n\
+                    source = $('                                        \n\
+                        ', source, '                                    \n\
                         ', assignment, '                                \n\
                     ')
                 }
@@ -176,10 +176,10 @@ function composeParser (ranges) {
         return 'var ' + variable
     }).join('\n')
 
-    tmp = $('                                                               \n\
+    source = $('                                                            \n\
         ', vars, '                                                          \n\
         // __blank__                                                        \n\
-        ', tmp, '                                                           \n\
+        ', source, '                                                        \n\
         // __blank__                                                        \n\
         if (next = callback(object)) {                                      \n\
             this.parse = next                                               \n\
@@ -188,14 +188,14 @@ function composeParser (ranges) {
         // __blank__                                                        \n\
         return start                                                        \n\
     ')
-    tmp = $('                                                               \n\
+    source = $('                                                            \n\
             ', composeIncrementalParser(ranges), '                          \n\
             // __blank__                                                    \n\
             return function (buffer, start, end) {                          \n\
-                ', tmp, '                                                   \n\
+                ', source, '                                                \n\
         }')
 
-    return tmp
+    return source
 }
 
 module.exports = composeParser
