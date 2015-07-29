@@ -141,24 +141,6 @@ function composeParser (ranges) {
                                     variable + '                            \n\
                             ')
                         }
-                    } else if (field.arrayed) {
-                        var stop = range.lengthEncoded ? 'value' : field.repeat
-                        variables.push('array', 'i')
-                        source = $('                                        \n\
-                            ', source, '                                    \n\
-                            object.' + field.name + ' = array = new Array(' + stop + ') \n\
-                            for (i = 0; i < ' + stop + '; i++) {                        \n\
-                                ', assignment(field, variables), '          \n\
-                            }                                               \n\
-                            object[' + str(field.name) + '] = array         \n\
-                        ')
-                    } else if (field.lengthEncoding) {
-                        variables.push('value')
-                        source = $('                                        \n\
-                            ', source, '                                    \n\
-                            ', assignment(field, variables), '             \n\
-                            object.' + range.name + ' = array = new Array(value) \n\
-                        ')
                     } else {
                         source = $('                                        \n\
                             ', source, '                                    \n\
