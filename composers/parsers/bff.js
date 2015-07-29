@@ -76,6 +76,14 @@ var formatters = {
             object.' + name +
                 ' = new DataView(value).getFloat' + bits + '(0, true)       \n\
         ')
+    },
+    skip: function (source, vars) {
+        var skip = vars.field.bytes * vars.field.repeat
+        return $('                                                          \n\
+            ', source, '                                                    \n\
+            start += ' + skip + '                                           \n\
+            // __blank__                                                    \n\
+        ')
     }
 }
 
@@ -98,13 +106,7 @@ function composeParser (ranges) {
         range.pattern.forEach(function (field, index) {
             step += 2
             if (field.endianness == 'x') {
-                var skip = field.bytes * field.repeat
-                offset += skip
-                source = $('                                                \n\
-                    ', source, '                                            \n\
-                    start += ' + skip + '                                   \n\
-                    // __blank__                                            \n\
-                ')
+                source = formatters.skip(source, { field: field })
             } else if (field.bytes == 1 && ! field.signed) {
                 source = $('                                                \n\
                     ', source, '                                            \n\
