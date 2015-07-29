@@ -89,8 +89,7 @@ function composeParser (ranges) {
                             '(0, true)                                          \n\
                     ')
                 } else {
-                    var piece = ''
-                    var read = [], inc = ''
+                    var read = []
                     while (bite != stop) {
                         read.unshift('buffer[start++]')
                         if (bite) {
@@ -100,16 +99,28 @@ function composeParser (ranges) {
                         bite += direction
                     }
                     read = read.reverse().join(' + \n')
+
+                    var assignee
+
+                    if (field.packing || field.signed || field.lengthEncoding) {
+                        variables.push('value')
+                        assignee = 'value'
+                    } else if (field.arrayed) {
+                        assignee = 'array[i]'
+                    } else {
+                        assignee = 'object.' + field.name
+                    }
+
+                    if (field.bytes == 1) {
+                        var assignment = assignee + ' = ' + read
+                    } else {
+                        var assignment = $('\n\
+                            ' + assignee + ' =                              \n\
+                                ', read, '')
+                    }
+
                     if (field.packing || field.signed) {
                         var variable = 'value'
-                        variables.push(variable)
-                        if (field.bytes == 1) {
-                            var assignment = $(variable + ' = ' + read)
-                        } else {
-                            var assignment = $('\n\
-                                ' + variable + ' =                          \n\
-                                    ', read, '')
-                        }
                         source = $('                                        \n\
                             ', source, '                                    \n\
                             ', assignment, '                                \n\
@@ -129,14 +140,6 @@ function composeParser (ranges) {
                             ')
                         }
                     } else if (field.arrayed) {
-                        if (field.bytes == 1) {
-                        } else {
-                            assignment = $('\n\
-                                array[i] =                                  \n\
-                                    ', read, '                              \n\
-                                // __reference__                            \n\
-                            ')
-                        }
                         var stop = range.lengthEncoded ? 'value' : field.repeat
                         variables.push('array', 'i')
                         source = $('                                        \n\
@@ -149,18 +152,12 @@ function composeParser (ranges) {
                         ')
                     } else if (field.lengthEncoding) {
                         variables.push('value')
-                        var assignment = $('                                \n\
-                            value =                                         \n\
-                                ', read, '')
                         source = $('                                        \n\
                             ', source, '                                    \n\
                             ', assignment, '                                \n\
                             object.' + range.name + ' = array = new Array(value) \n\
                         ')
                     } else {
-                        var assignment = $('                                \n\
-                            object.' + field.name + ' =                     \n\
-                                ', read, '')
                         source = $('                                        \n\
                             ', source, '                                    \n\
                             ', assignment, '                                \n\
