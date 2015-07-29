@@ -27,6 +27,22 @@ function assignment (field) {
     }
 }
 
+function copy (field) {
+    var little = field.endianness == 'l'
+    var bytes = field.bytes
+    var bite = little ? 0 : bytes - 1
+    var direction = little ? 1 : -1
+    var stop = little ? bytes : -1
+    var index = little ? 0 : bytes - 1
+    var copy = []
+    while (bite != stop) {
+        copy.push('value[' + index + '] = buffer[start++]')
+        index += direction
+        bite += direction
+    }
+    return copy.join('\n')
+}
+
 var formatters = {
     blank: function (source) {
         return $('                                                          \n\
@@ -79,33 +95,13 @@ function composeParser (ranges) {
                 offset++
             } else {
                 var name = 'value'
-                var little = field.endianness == 'l'
-                var bytes = field.bytes
-                var bite = little ? 0 : bytes - 1
-                var direction = little ? 1 : -1
-                var stop = little ? bytes : -1
-                var index = little ? 0 : bytes - 1
 
                 if (field.type == 'f') {
-                    variables.push(name)
-
-                    var copy = [], inc
-                    while (bite != stop) {
-                        copy.push(
-                            name +
-                            '[' +
-                                index +
-                            '] = buffer[start++]')
-                        offset++
-                        index += direction
-                        bite += direction
-                    }
-                    copy = copy.join('\n')
-
+                    variables.push('value')
                     source = $('                                                \n\
                         ', source, '                                            \n\
                         ' + name + ' = new ArrayBuffer(' + field.bytes + ')     \n\
-                        ', copy, '                                              \n\
+                        ', copy(field), '                                       \n\
                         object.' + field.name + ' = new DataView(' +
                                 name +
                             ').getFloat' +
