@@ -107,12 +107,6 @@ function composeParser (ranges) {
             step += 2
             if (field.endianness == 'x') {
                 source = formatters.skip(source, { field: field })
-            } else if (field.bytes == 1 && ! field.signed) {
-                source = $('                                                \n\
-                    ', source, '                                            \n\
-                    object.' + field.name + ' = buffer[start++]             \n\
-                ')
-                offset++
             } else {
                 var name = 'value'
 
