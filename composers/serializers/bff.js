@@ -1,34 +1,26 @@
 var $ = require('programmatic')
-var bits
 var composeIncrementalSerializer = require('./inc')
 var packForSerialization = require('./pack')
 
 function composeSerializer (ranges) {
     var variables = [ 'next' ]
-    var tmp = ''
+    var source = ''
     var step = 0
 
     ranges.forEach(function (range, rangeIndex) {
         var offset = 0
 
-        if (false && rangeIndex != 0) {
-            tmp = $('                                                       \n\
-                ', tmp, '                                                   \n\
-                // __blank__                                                \n\
-            ')
-        }
-
         if (range.fixed) {
-            tmp = $('                                                       \n\
-                ', tmp, '                                                   \n\
+            source = $('                                                    \n\
+                ', source, '                                                \n\
                 if (end - start < ' + range.size + ') {                     \n\
                     return inc.call(this, buffer, start, end, ' + step + ') \n\
                 }                                                           \n\
                 // __blank__                                                \n\
             ')
         } else if (range.lengthEncoded) {
-            tmp = $('                                                       \n\
-                ', tmp, '                                                   \n\
+            source = $('                                                    \n\
+                ', source, '                                                \n\
                 if (end - start < value) {                                  \n\
                     return inc.call(this, buffer, start, end, ' + step + ') \n\
                 }                                                           \n\
@@ -41,8 +33,8 @@ function composeSerializer (ranges) {
             if (field.endianness == 'x' && field.padding == null) {
                 var skip = field.bytes * field.repeat
                 offset += skip
-                tmp = $('                                                   \n\
-                    ', tmp, '                                               \n\
+                source = $('                                                \n\
+                    ', source, '                                            \n\
                     start += ' + skip + '                                   \n\
                 ')
             } else if (field.type == 'f') {
@@ -65,8 +57,8 @@ function composeSerializer (ranges) {
                 }
                 copy = copy.join('\n')
 
-                tmp = $('                                                   \n\
-                    ', tmp, '                                               \n\
+                source = $('                                                \n\
+                    ', source, '                                            \n\
                     ' + name + ' = new ArrayBuffer(' + field.bytes + ')     \n\
                     new DataView(' +
                             name +
@@ -76,8 +68,8 @@ function composeSerializer (ranges) {
                 ')
             } else {
                 if (field.bytes == 1 && field.padding == null && !field.packing) {
-                    tmp = $('                                               \n\
-                        ', tmp, '                                           \n\
+                    source = $('                                            \n\
+                        ', source, '                                        \n\
                         buffer[start++] = object.' + field.name + '         \n\
                     ')
                     offset++
@@ -120,8 +112,8 @@ function composeSerializer (ranges) {
 
                     if (field.arrayed) {
                         var repeat = range.lengthEncoded ? 'length' : field.repeat
-                        tmp = $('                                           \n\
-                            ', tmp, '                                       \n\
+                        source = $('                                        \n\
+                            ', source, '                                    \n\
                             ', array, '                                     \n\
                             for (i = 0; i < ' + repeat + '; i++) {          \n\
                                 ', variable, '                              \n\
@@ -130,8 +122,8 @@ function composeSerializer (ranges) {
                             // __blank__                                    \n\
                             ')
                     } else {
-                        tmp = $('                                           \n\
-                            ', tmp, '                                       \n\
+                        source = $('                                        \n\
+                            ', source, '                                    \n\
                             ', variable, '                                  \n\
                             ', bites, '                                     \n\
                             // __blank__                                    \n\
@@ -141,8 +133,8 @@ function composeSerializer (ranges) {
             }
         })
 
-        if (range.fixed) tmp = $('                                          \n\
-            ', tmp, '                                                       \n\
+        if (range.fixed) source = $('                                       \n\
+            ', source, '                                                    \n\
         ')
     })
 
@@ -150,13 +142,13 @@ function composeSerializer (ranges) {
         return 'var ' + variable
     }).join('\n')
 
-    tmp = $('                                                               \n\
+    source = $('                                                            \n\
         ', composeIncrementalSerializer(ranges), '                          \n\
         // __blank__                                                        \n\
         return function (buffer, start, end) {                              \n\
             ', vars, '                                                      \n\
             // __blank__                                                    \n\
-            ', tmp, '                                                       \n\
+            ', source, '                                                    \n\
             if (next = callback && callback(object)) {                      \n\
                 this.write = next                                           \n\
                 return this.write(buffer, start, end)                       \n\
@@ -166,7 +158,7 @@ function composeSerializer (ranges) {
         }                                                                   \n\
     ')
 
-    return tmp
+    return source
 
     function hoist (name) {
         if (variables.indexOf(name) == -1) {
