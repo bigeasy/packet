@@ -3,6 +3,24 @@ var signage = require('./signage')
 var composeIncrementalParser = require('./inc')
 var unpackAll = require('./unpack')
 
+var formatters = {
+    blank: function (source) {
+        return $('                                                          \n\
+            ', source, '                                                    \n\
+            // __blank__                                                    \n\
+        ')
+    },
+    range: function (source, vars) {
+        return $('                                                          \n\
+            ', source, '                                                    \n\
+            if (end - start < ' + vars.sentry + ') {                        \n\
+                return inc.call(this, buffer, start, end, ' + vars.step + ')\n\
+            }                                                               \n\
+            // __blank__                                                    \n\
+        ')
+    }
+}
+
 function composeParser (ranges) {
     composeIncrementalParser(ranges)
 
@@ -10,20 +28,13 @@ function composeParser (ranges) {
 
     ranges.forEach(function (range, rangeIndex) {
         if (rangeIndex) {
-            source = $('                                                    \n\
-                ', source, '                                                \n\
-                // __blank__                                                \n\
-            ')
+            source = formatters.blank(source)
         }
 
-        var sentry = range.fixed ? range.size : 'value'
-        source = $('                                                        \n\
-            ', source, '                                                    \n\
-            if (end - start < ' + sentry + ') {                             \n\
-                return inc.call(this, buffer, start, end, ' + step + ')     \n\
-            }                                                               \n\
-            // __blank__                                                    \n\
-        ')
+        source = formatters.range(source, {
+            sentry: range.fixed ? range.size : 'value',
+            step: step
+        })
 
         var offset = 0
         range.pattern.forEach(function (field, index) {
