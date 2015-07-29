@@ -27,7 +27,7 @@ function composeIncrementalSerializer (ranges) {
                         start += skip                                       \n\
                 ')
             } else {
-                var name = '_' + field.name
+                var name = 'value'
                 var key = field.name
                 var little = field.endianness == 'l'
                 var bytes = field.bytes

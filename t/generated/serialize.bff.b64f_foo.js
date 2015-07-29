@@ -5,13 +5,13 @@ module.exports = function (object, callback) {
         var step
         var bite
         var next
-        var _foo
+        var value
 
         this.write = function (buffer, start, end) {
             switch (step) {
             case 0:
-                _foo = new ArrayBuffer(8)
-                new DataView(_foo).setFloat64(0, object. foo, true)
+                value = new ArrayBuffer(8)
+                new DataView(value).setFloat64(0, object. foo, true)
                 bite = 7
                 step = 1
             case 1:
@@ -19,7 +19,7 @@ module.exports = function (object, callback) {
                     if (start == end) {
                         return start
                     }
-                    buffer[start++] = _foo[bite]
+                    buffer[start++] = value[bite]
                     bite--
                 }
             }
