@@ -27,21 +27,6 @@ function assignment (field) {
     }
 }
 
-function copy (field) {
-    var little = field.endianness == 'l'
-    var bytes = field.bytes
-    var bite = little ? 0 : bytes - 1
-    var direction = little ? 1 : -1
-    var stop = little ? bytes : -1
-    var index = little ? 0 : bytes - 1
-    var copy = []
-    while (bite != stop) {
-        copy.push('value[' + index + '] = buffer[start++]')
-        index += direction
-        bite += direction
-    }
-    return copy.join('\n')
-}
 
 var formatters = {
     blank: function (source) {
@@ -57,6 +42,39 @@ var formatters = {
                 return inc.call(this, buffer, start, end, ' + vars.step + ')\n\
             }                                                               \n\
             // __blank__                                                    \n\
+        ')
+    },
+    arrayBuffer: function (source, vars) {
+        return $('                                                          \n\
+            ', source, '                                                    \n\
+            value = new ArrayBuffer(' + vars.field.bytes + ')               \n\
+        ')
+    },
+    copy: function (source, vars) {
+        var field = vars.field
+        var little = field.endianness == 'l'
+        var bytes = field.bytes
+        var bite = little ? 0 : bytes - 1
+        var direction = little ? 1 : -1
+        var stop = little ? bytes : -1
+        var index = little ? 0 : bytes - 1
+        var copy = []
+        while (bite != stop) {
+            copy.push('value[' + index + '] = buffer[start++]')
+            index += direction
+            bite += direction
+        }
+        return $('                                                          \n\
+            ', source, '                                                    \n\
+            ', copy.join('\n'), '                                           \n\
+        ')
+    },
+    toFloat: function (source, vars) {
+        var bits = vars.field.bits, name = vars.field.name
+        return $('                                                          \n\
+            ', source, '                                                    \n\
+            object.' + name +
+                ' = new DataView(value).getFloat' + bits + '(0, true)       \n\
         ')
     }
 }
@@ -98,16 +116,9 @@ function composeParser (ranges) {
 
                 if (field.type == 'f') {
                     variables.push('value')
-                    source = $('                                                \n\
-                        ', source, '                                            \n\
-                        ' + name + ' = new ArrayBuffer(' + field.bytes + ')     \n\
-                        ', copy(field), '                                       \n\
-                        object.' + field.name + ' = new DataView(' +
-                                name +
-                            ').getFloat' +
-                                field.bits +
-                            '(0, true)                                          \n\
-                    ')
+                    source = formatters.arrayBuffer(source, { field: field })
+                    source = formatters.copy(source, { field: field })
+                    source = formatters.toFloat(source, { field: field })
                 } else {
                     if (field.packing || field.signed || field.lengthEncoding) {
                         variables.push('value')
