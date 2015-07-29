@@ -46,8 +46,7 @@ module.exports = function (object, callback) {
         value =
             buffer[start++] * 0x100 +
             buffer[start++]
-        value = value & 0x8000 ? (0xffff - value + 1) * -1 : value
-        object.foo = value
+        object.foo = value & 0x8000 ? (0xffff - value + 1) * -1 : value
 
         if (next = callback(object)) {
             this.parse = next

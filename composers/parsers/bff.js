@@ -3,30 +3,6 @@ var signage = require('./signage')
 var composeIncrementalParser = require('./inc')
 var unpackAll = require('./unpack')
 
-function assignment (field) {
-    var little = field.endianness == 'l'
-    var bytes = field.bytes
-    var bite = little ? 0 : bytes - 1
-    var direction = little ? 1 : -1
-    var stop = little ? bytes : -1
-    var read = []
-    while (bite != stop) {
-        read.unshift('buffer[start++]')
-        if (bite) {
-            read[0] += ' * 0x' + Math.pow(256, bite).toString(16)
-        }
-        bite += direction
-    }
-    read = read.reverse().join(' + \n')
-    if (field.bytes == 1) {
-        return field.assignee + ' = ' + read
-    } else {
-        return $('\n\
-            ' + field.assignee + ' =                              \n\
-                ', read, '')
-    }
-}
-
 
 var formatters = {
     blank: function (source) {
@@ -84,6 +60,46 @@ var formatters = {
             start += ' + skip + '                                           \n\
             // __blank__                                                    \n\
         ')
+    },
+    assignment: function (source, vars) {
+        var field = vars.field
+        var little = field.endianness == 'l'
+        var bytes = field.bytes
+        var bite = little ? 0 : bytes - 1
+        var direction = little ? 1 : -1
+        var stop = little ? bytes : -1
+        var read = []
+        while (bite != stop) {
+            read.unshift('buffer[start++]')
+            if (bite) {
+                read[0] += ' * 0x' + Math.pow(256, bite).toString(16)
+            }
+            bite += direction
+        }
+        read = read.reverse().join(' + \n')
+        if (field.bytes == 1) {
+            var assignment = vars.assignee + ' = ' + read
+        } else {
+            var assignment = $('\n\
+                ' + vars.assignee + ' =                                     \n\
+                    ', read, '')
+        }
+        return $('                                                          \n\
+            ', source, '                                                    \n\
+            ', assignment, '                                                \n\
+        ')
+    },
+    signage: function (source, vars) {
+        return $('                                                          \n\
+            ', source, '                                                    \n\
+            ', signage(vars.field, 'object.' + vars.field.name), '          \n\
+        ')
+    },
+    unpack: function (source, vars) {
+        return $('                                                          \n\
+            ', source, '                                                    \n\
+            ', unpackAll(vars.field), '                                     \n\
+        ')
     }
 }
 
@@ -116,39 +132,21 @@ function composeParser (ranges) {
                     source = formatters.copy(source, { field: field })
                     source = formatters.toFloat(source, { field: field })
                 } else {
+                    var vars = {
+                        variable: null,
+                        field: field
+                    }
                     if (field.packing || field.signed || field.lengthEncoding) {
                         variables.push('value')
-                        field.assignee = 'value'
-                    } else if (field.arrayed) {
-                        field.assignee = 'array[i]'
+                        vars.assignee = 'value'
                     } else {
-                        field.assignee = 'object.' + field.name
+                        vars.assignee = 'object.' + field.name
                     }
-                    if (field.packing || field.signed) {
-                        var variable = 'value'
-                        source = $('                                        \n\
-                            ', source, '                                    \n\
-                            ', assignment(field, variables), '              \n\
-                            ', signage(field), '                            \n\
-                        ')
-                        if (field.packing) {
-                            source = $('                                    \n\
-                                ', source, '                                \n\
-                                ', unpackAll(field), '                      \n\
-                            ')
-                        } else {
-                            source = $('                                    \n\
-                                ', source, '                                \n\
-                                object.' +
-                                    field.name + ' = ' +
-                                    variable + '                            \n\
-                            ')
-                        }
-                    } else {
-                        source = $('                                        \n\
-                            ', source, '                                    \n\
-                            ', assignment(field, variables), '              \n\
-                        ')
+                    source = formatters.assignment(source, vars)
+                    if (field.packing) {
+                        source = formatters.unpack(source, { field: field })
+                    } else if (field.signed) {
+                        source = formatters.signage(source, { field: field })
                     }
                 }
             }
