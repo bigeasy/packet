@@ -44,6 +44,12 @@ function composeParser (ranges) {
                     start += ' + skip + '                                   \n\
                     // __blank__                                            \n\
                 ')
+            } else if (field.bytes == 1 && ! field.signed) {
+                tmp = $('                                               \n\
+                    ', tmp, '                                           \n\
+                    object.' + field.name + ' = buffer[start++]   \n\
+                ')
+                offset++
             } else if (field.type == 'f') {
                 var name = 'value'
                 var little = field.endianness == 'l'
@@ -79,96 +85,88 @@ function composeParser (ranges) {
                         '(0, true)                                          \n\
                 ')
             } else {
-                if (field.bytes == 1 && ! field.signed) {
-                    tmp = $('                                               \n\
-                        ', tmp, '                                           \n\
-                        object.' + field.name + ' = buffer[start++]   \n\
-                    ')
-                    offset++
-                } else {
-                    var little = field.endianness == 'l'
-                    var bytes = field.bytes
-                    var bite = little ? 0 : bytes - 1
-                    var direction = little ? 1 : -1
-                    var stop = little ? bytes : -1
+                var little = field.endianness == 'l'
+                var bytes = field.bytes
+                var bite = little ? 0 : bytes - 1
+                var direction = little ? 1 : -1
+                var stop = little ? bytes : -1
 
-                    var piece = ''
-                    var read = [], inc = ''
-                    while (bite != stop) {
-                        read.unshift('buffer[start++]')
-                        if (bite) {
-                            read[0] += ' * 0x' + Math.pow(256, bite).toString(16)
-                        }
-                        offset++
-                        bite += direction
+                var piece = ''
+                var read = [], inc = ''
+                while (bite != stop) {
+                    read.unshift('buffer[start++]')
+                    if (bite) {
+                        read[0] += ' * 0x' + Math.pow(256, bite).toString(16)
                     }
-                    read = read.reverse().join(' + \n')
-                    if (field.packing || field.signed) {
-                        var variable = 'value'
-                        variables.push(variable)
-                        if (field.bytes == 1) {
-                            var assignment = $(variable + ' = ' + read)
-                        } else {
-                            var assignment = $('\n\
-                                ' + variable + ' =                          \n\
-                                    ', read, '')
-                        }
-                        tmp = $('                                           \n\
-                            ', tmp, '                                       \n\
-                            ', assignment, '                                \n\
-                            ', signage(field), '                            \n\
-                        ')
-                        if (field.packing) {
-                            tmp = $('                                       \n\
-                                ', tmp, '                                   \n\
-                                ', unpackAll(field), '                      \n\
-                            ')
-                        } else {
-                            tmp = $('                                       \n\
-                                ', tmp, '                                   \n\
-                                object.' +
-                                    field.name + ' = ' +
-                                    variable + '                            \n\
-                            ')
-                        }
-                    } else if (field.arrayed) {
-                        if (field.bytes == 1) {
-                        } else {
-                            assignment = $('\n\
-                                array[i] =                                  \n\
-                                    ', read, '                              \n\
-                                // __reference__                            \n\
-                            ')
-                        }
-                        var stop = range.lengthEncoded ? 'value' : field.repeat
-                        variables.push('array', 'i')
-                        tmp = $('                                           \n\
-                            ', tmp, '                                                   \n\
-                            object.' + field.name + ' = array = new Array(' + stop + ') \n\
-                            for (i = 0; i < ' + stop + '; i++) {                        \n\
-                                ', assignment, '                            \n\
-                            }                                               \n\
-                            object[' + str(field.name) + '] = array         \n\
-                        ')
-                    } else if (field.lengthEncoding) {
-                        variables.push('value')
-                        var assignment = $('                                \n\
-                            value =                                         \n\
+                    offset++
+                    bite += direction
+                }
+                read = read.reverse().join(' + \n')
+                if (field.packing || field.signed) {
+                    var variable = 'value'
+                    variables.push(variable)
+                    if (field.bytes == 1) {
+                        var assignment = $(variable + ' = ' + read)
+                    } else {
+                        var assignment = $('\n\
+                            ' + variable + ' =                          \n\
                                 ', read, '')
-                        tmp = $('                                           \n\
-                            ', tmp, '                                       \n\
-                            ', assignment, '                                \n\
-                            object.' + range.name + ' = array = new Array(value) \n\
+                    }
+                    tmp = $('                                           \n\
+                        ', tmp, '                                       \n\
+                        ', assignment, '                                \n\
+                        ', signage(field), '                            \n\
+                    ')
+                    if (field.packing) {
+                        tmp = $('                                       \n\
+                            ', tmp, '                                   \n\
+                            ', unpackAll(field), '                      \n\
                         ')
                     } else {
-                        var assignment = $('                                \n\
-                            object.' + field.name + ' =                     \n\
-                                ', read, '')
-                        tmp = $('                                           \n\
-                            ', tmp, '                                       \n\
-                            ', assignment, '                                \n\
+                        tmp = $('                                       \n\
+                            ', tmp, '                                   \n\
+                            object.' +
+                                field.name + ' = ' +
+                                variable + '                            \n\
                         ')
                     }
+                } else if (field.arrayed) {
+                    if (field.bytes == 1) {
+                    } else {
+                        assignment = $('\n\
+                            array[i] =                                  \n\
+                                ', read, '                              \n\
+                            // __reference__                            \n\
+                        ')
+                    }
+                    var stop = range.lengthEncoded ? 'value' : field.repeat
+                    variables.push('array', 'i')
+                    tmp = $('                                           \n\
+                        ', tmp, '                                                   \n\
+                        object.' + field.name + ' = array = new Array(' + stop + ') \n\
+                        for (i = 0; i < ' + stop + '; i++) {                        \n\
+                            ', assignment, '                            \n\
+                        }                                               \n\
+                        object[' + str(field.name) + '] = array         \n\
+                    ')
+                } else if (field.lengthEncoding) {
+                    variables.push('value')
+                    var assignment = $('                                \n\
+                        value =                                         \n\
+                            ', read, '')
+                    tmp = $('                                           \n\
+                        ', tmp, '                                       \n\
+                        ', assignment, '                                \n\
+                        object.' + range.name + ' = array = new Array(value) \n\
+                    ')
+                } else {
+                    var assignment = $('                                \n\
+                        object.' + field.name + ' =                     \n\
+                            ', read, '')
+                    tmp = $('                                           \n\
+                        ', tmp, '                                       \n\
+                        ', assignment, '                                \n\
+                    ')
                 }
             }
         })
