@@ -20,8 +20,7 @@ module.exports = function (object, callback) {
                     value[bite] = buffer[start++]
                     bite--
                 }
-                value = new DataView(value).getFloat64(0, true)
-                object.foo = value
+                object.foo = new DataView(value).getFloat64(0, true)
             }
 
             if (next = callback(object)) {
