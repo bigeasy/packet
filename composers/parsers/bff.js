@@ -106,14 +106,17 @@ var formatters = {
 function composeParser (ranges) {
     composeIncrementalParser(ranges)
 
-    var source = '', variables = [ 'next' ], rangeIndex = 0, source = '', step = 0
+    var source = '', variables = [ 'next' ], step = 0
+
+    var operations = []
 
     ranges.forEach(function (range, rangeIndex) {
         if (rangeIndex) {
-            source = formatters.blank(source)
+            operations.push({ formatter: 'blank' })
         }
 
-        source = formatters.range(source, {
+        operations.push({
+            formatter: 'range',
             sentry: range.fixed ? range.size : 'value',
             step: step
         })
@@ -122,35 +125,40 @@ function composeParser (ranges) {
         range.pattern.forEach(function (field, index) {
             step += 2
             if (field.endianness == 'x') {
-                source = formatters.skip(source, { field: field })
+                operations.push({ formatter: 'skip', field: field })
             } else {
                 var name = 'value'
 
                 if (field.type == 'f') {
                     variables.push('value')
-                    source = formatters.arrayBuffer(source, { field: field })
-                    source = formatters.copy(source, { field: field })
-                    source = formatters.toFloat(source, { field: field })
+                    operations.push({ formatter: 'arrayBuffer', field: field })
+                    operations.push({ formatter: 'copy', field: field })
+                    operations.push({ formatter: 'toFloat', field: field })
                 } else {
-                    var vars = {
-                        variable: null,
-                        field: field
-                    }
                     if (field.packing || field.signed || field.lengthEncoding) {
                         variables.push('value')
-                        vars.assignee = 'value'
+                        var assignee = 'value'
                     } else {
-                        vars.assignee = 'object.' + field.name
+                        var assignee = 'object.' + field.name
                     }
-                    source = formatters.assignment(source, vars)
+                    operations.push({
+                        formatter: 'assignment',
+                        field: field,
+                        assignee: assignee
+                    })
                     if (field.packing) {
-                        source = formatters.unpack(source, { field: field })
+                        operations.push({ formatter: 'unpack', field: field })
                     } else if (field.signed) {
-                        source = formatters.signage(source, { field: field })
+                        operations.push({ formatter: 'signage', field: field })
                     }
                 }
             }
         })
+    })
+
+    var source = ''
+    operations.forEach(function (operation) {
+        source = formatters[operation.formatter](source, operation)
     })
 
     var vars = variables.map(function (variable) {
