@@ -1,7 +1,5 @@
 module.exports = (function () {
-    var parsers
-
-    parsers = {}
+    var parsers = {}
 
     parsers.object = function () {
     }
