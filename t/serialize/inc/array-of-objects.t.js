@@ -35,7 +35,7 @@ function prove (assert) {
     }
     var serializer = new serializers.object(object)
     serializer.serialize(engine)
-    assert(engine.buffer.toJSON() , [
+    assert(buffer.toJSON() , [
         0x0, 0x2, 0xa, 0xa, 0x0, 0x1, 0x0, 0x2, 0x0, 0x3
     ], 'compiled')
     assert(engine.start, buffer.length, 'start moved')

@@ -67,22 +67,22 @@ Generator.prototype.lengthEncoded = function (name, field, depth) {
     this.forever = true
     var step = this.step + 2
     source = $('                                                            \n\
-        ', this.integer(explode(field.$length), 'object.' + name + '.length'), '\n\
+        // __reference__                                                    \n\
+        ', this.integer(explode(field.$length), 'frame.object.' + name + '.length'), '\n\
         // __blank__                                                        \n\
         case ' + (this.step++) + ':                                         \n\
             // __blank__                                                    \n\
-            this.stack[this.stack.length - 1].index = 0                     \n\
-            this.stack.push({                                               \n\
-                object: {                                                   \n\
-                    ', this.construct(field, 0), '                          \n\
-                }                                                           \n\
-            })                                                              \n\
+            this.stack.push(frame = {\n\
+                object: frame.object.' + name + '[frame.index],                          \n\
+                index: 0                                                    \n\
+            })                                         \n\
+            this.step = ' + this.step + '                                   \n\
             // __blank__                                                    \n\
         ', this.nested(field), '                                            \n\
             // __blank__                                                    \n\
-            frame = this.stack[this.stack.length - 2]                       \n\
-            frame.object.' + name + '.push(this.stack.pop().object)         \n\
-            if (++frame.index != frame.length) {                            \n\
+            this.stack.pop()                                                \n\
+            frame = this.stack[this.stack.length - 1]                      \n\
+            if (++frame.index != frame.object.' + name + '.length) {                              \n\
                 this.step = ' + step + '                                    \n\
                 continue                                                    \n\
             }                                                               \n\
@@ -103,10 +103,9 @@ Generator.prototype.serialize = function (definition) {
                 sources.push(this.lengthEncoded(name, field))
             }
         } else {
-            var object = qualify('object')
             field = explode(field)
             if (field.type === 'integer')  {
-                sources.push(this.integer(field, object + '.' + name))
+                sources.push(this.integer(field, 'frame.object.' + name))
             }
         }
     }
@@ -135,6 +134,7 @@ Generator.prototype.generate = function () {
         dispatch = $('                                                      \n\
             for (;;) {                                                      \n\
                 ', dispatch, '                                              \n\
+                engine.start = start                                        \n\
                 return                                                      \n\
             }                                                               \n\
         ')
@@ -144,7 +144,11 @@ Generator.prototype.generate = function () {
             this.step = 0                                                   \n\
             this.bite = 0                                                   \n\
             this.stop = 0                                                   \n\
-            this.stack = [ object ]                                         \n\
+            this.stack = [{                                                 \n\
+                object: object,                                             \n\
+                index: 0,                                                   \n\
+                length: 0                                                   \n\
+            }]                                                              \n\
         }                                                                   \n\
         // __blank__                                                        \n\
         serializers.' + this.name + '.prototype.serialize = function (engine) { \n\
@@ -152,7 +156,7 @@ Generator.prototype.generate = function () {
             var start = engine.start                                        \n\
             var end = engine.end                                            \n\
             // __blank__                                                    \n\
-            var object = this.stack[this.stack.length - 1]                  \n\
+            var frame = this.stack[this.stack.length - 1]                   \n\
             // __blank__                                                    \n\
             ', String(this.variables), '                                    \n\
             // __blank__                                                    \n\

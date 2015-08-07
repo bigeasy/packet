@@ -5,7 +5,11 @@ module.exports = (function () {
         this.step = 0
         this.bite = 0
         this.stop = 0
-        this.stack = [ object ]
+        this.stack = [{
+            object: object,
+            index: 0,
+            length: 0
+        }]
     }
 
     serializers.object.prototype.serialize = function (engine) {
@@ -13,7 +17,7 @@ module.exports = (function () {
         var start = engine.start
         var end = engine.end
 
-        var object = this.stack[this.stack.length - 1]
+        var frame = this.stack[this.stack.length - 1]
 
         var i
         var length
@@ -32,7 +36,7 @@ module.exports = (function () {
                         engine.start = start
                         return
                     }
-                    buffer[start++] = object.values.length >>> this.bite * 8 & 0xff
+                    buffer[start++] = frame.object.values.length >>> this.bite * 8 & 0xff
                     this.bite--
                 }
 
@@ -40,13 +44,11 @@ module.exports = (function () {
 
             case 2:
 
-                this.stack[this.stack.length - 1].index = 0
-                this.stack.push({
-                    object: {
-                        key: null,
-                        value: null
-                    }
+                this.stack.push(frame = {
+                    object: frame.object.values[frame.index],
+                    index: 0
                 })
+                this.step = 3
 
             case 3:
 
@@ -60,7 +62,7 @@ module.exports = (function () {
                         engine.start = start
                         return
                     }
-                    buffer[start++] = object.key >>> this.bite * 8 & 0xff
+                    buffer[start++] = frame.object.key >>> this.bite * 8 & 0xff
                     this.bite--
                 }
 
@@ -78,19 +80,20 @@ module.exports = (function () {
                         engine.start = start
                         return
                     }
-                    buffer[start++] = object.value >>> this.bite * 8 & 0xff
+                    buffer[start++] = frame.object.value >>> this.bite * 8 & 0xff
                     this.bite--
                 }
 
                 this.step = 7
 
-                frame = this.stack[this.stack.length - 2]
-                frame.object.values.push(this.stack.pop().object)
-                if (++frame.index != frame.length) {
+                this.stack.pop()
+                frame = this.stack[this.stack.length - 1]
+                if (++frame.index != frame.object.values.length) {
                     this.step = 2
                     continue
                 }
             }
+            engine.start = start
             return
         }
 
