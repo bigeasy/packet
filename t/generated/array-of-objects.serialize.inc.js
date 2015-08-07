@@ -1,12 +1,14 @@
 module.exports = (function () {
-    var parsers = {}
+    var serializers = {}
 
-    parsers.object = function (object) {
+    serializers.object = function (object) {
         this.step = 0
+        this.bite = 0
+        this.stop = 0
         this.stack = [ object ]
     }
 
-    parsers.object.prototype.serialize = function (engine) {
+    serializers.object.prototype.serialize = function (engine) {
         var buffer = engine.buffer
         var start = engine.start
         var end = engine.end
@@ -20,27 +22,20 @@ module.exports = (function () {
             switch (this.step) {
             case 0:
 
-                this.stack.push({
-                    value: 0,
-                    bite: 1
-                })
                 this.step = 1
+                this.bite = 1
 
             case 1:
 
-                frame = this.stack[this.stack.length - 1]
-
-                while (frame.bite != -1) {
+                while (this.bite != -1) {
                     if (start == end) {
                         engine.start = start
                         return
                     }
-                    frame.value += Math.pow(256, frame.bite) * buffer[start++]
-                    frame.bite--
+                    buffer[start++] = object.values.length >>> this.bite * 8 & 0xff
+                    this.bite--
                 }
 
-                this.stack.pop()
-                this.stack[this.stack.length - 1].length = frame.value
                 this.step = 2
 
             case 2:
@@ -55,52 +50,38 @@ module.exports = (function () {
 
             case 3:
 
-                this.stack.push({
-                    value: 0,
-                    bite: 1
-                })
                 this.step = 4
+                this.bite = 1
 
             case 4:
 
-                frame = this.stack[this.stack.length - 1]
-
-                while (frame.bite != -1) {
+                while (this.bite != -1) {
                     if (start == end) {
                         engine.start = start
                         return
                     }
-                    frame.value += Math.pow(256, frame.bite) * buffer[start++]
-                    frame.bite--
+                    buffer[start++] = object.key >>> this.bite * 8 & 0xff
+                    this.bite--
                 }
 
-                this.stack.pop()
-                this.stack[this.stack.length - 1].object.key = frame.value
                 this.step = 5
 
             case 5:
 
-                this.stack.push({
-                    value: 0,
-                    bite: 1
-                })
                 this.step = 6
+                this.bite = 1
 
             case 6:
 
-                frame = this.stack[this.stack.length - 1]
-
-                while (frame.bite != -1) {
+                while (this.bite != -1) {
                     if (start == end) {
                         engine.start = start
                         return
                     }
-                    frame.value += Math.pow(256, frame.bite) * buffer[start++]
-                    frame.bite--
+                    buffer[start++] = object.value >>> this.bite * 8 & 0xff
+                    this.bite--
                 }
 
-                this.stack.pop()
-                this.stack[this.stack.length - 1].object.value = frame.value
                 this.step = 7
 
                 frame = this.stack[this.stack.length - 2]
@@ -118,5 +99,5 @@ module.exports = (function () {
         return frame.object
     }
 
-    return parsers
+    return serializers
 })()

@@ -5,44 +5,31 @@ var $ = require('programmatic')
 var joinSources = require('../join-sources')
 
 Generator.prototype.integer = function (field, property) {
-    var read = [], bite = field.bite, stop = field.stop
+    var bites = [], bite = field.bite, stop = field.stop, shift
     while (bite != stop) {
-        read.unshift('buffer[start++]')
-        if (bite) {
-            read[0] += ' * 0x' + Math.pow(256, bite).toString(16)
-        }
+        var value = bite ? 'value >>> ' + bite * 8 : 'value'
+        bites.push('buffer[start++] = ' + value + ' & 0xff')
         bite += field.direction
     }
-    read = read.reverse().join(' + \n')
-    if (field.bytes == 1) {
-        return assignee + ' = ' + read
-    }
-    field = explode(field)
+    bites = bites.join('\n')
     var direction = field.little ? '++' : '--'
     return $('                                                              \n\
         case ' + (this.step++) + ':                                         \n\
             // __blank__                                                    \n\
-            this.stack.push({                                               \n\
-                value: 0,                                                   \n\
-                bite: ' + field.bite + '                                    \n\
-            })                                                              \n\
             this.step = ' + this.step + '                                   \n\
+            this.bite = ' + field.bite + '                                  \n\
             // __blank__                                                    \n\
         case ' + (this.step++) + ':                                         \n\
             // __blank__                                                    \n\
-            frame = this.stack[this.stack.length - 1]                       \n\
-            // __blank__                                                    \n\
-            while (frame.bite != ' + stop + ') {                            \n\
+            while (this.bite != ' + field.stop + ') {                       \n\
                 if (start == end) {                                         \n\
                     engine.start = start                                    \n\
                     return                                                  \n\
                 }                                                           \n\
-                frame.value += Math.pow(256, frame.bite) * buffer[start++]  \n\
-                frame.bite', direction, '                                   \n\
+                buffer[start++] = ' + property + ' >>> this.bite * 8 & 0xff \n\
+                this.bite', direction, '                                    \n\
             }                                                               \n\
             // __blank__                                                    \n\
-            this.stack.pop()                                                \n\
-            this.stack[this.stack.length - 1].' + property + ' = frame.value\n\
             this.step = ' + this.step + '                                   \n\
     ')
 }
@@ -63,9 +50,9 @@ Generator.prototype.construct = function (definition) {
     return fields.join(',\n')
 }
 
-Generator.prototype.nested = function (definition, depth) {
+Generator.prototype.nested = function (definition) {
     return $('                                                              \n\
-        ', this.parse(definition, depth), '                                 \n\
+        ', this.serialize(definition), '                                    \n\
     ')
 }
 
@@ -80,7 +67,7 @@ Generator.prototype.lengthEncoded = function (name, field, depth) {
     this.forever = true
     var step = this.step + 2
     source = $('                                                            \n\
-        ', this.integer(explode(field.$length), 'length'), '                \n\
+        ', this.integer(explode(field.$length), 'object.' + name + '.length'), '\n\
         // __blank__                                                        \n\
         case ' + (this.step++) + ':                                         \n\
             // __blank__                                                    \n\
@@ -113,10 +100,10 @@ Generator.prototype.serialize = function (definition) {
         if (Array.isArray(field)) {
             field = field[0]
             if (field.$length) {
-                sources.push(this.lengthEncoded(name, field, depth))
+                sources.push(this.lengthEncoded(name, field))
             }
         } else {
-            var object = qualify('object', depth)
+            var object = qualify('object')
             field = explode(field)
             if (field.type === 'integer')  {
                 sources.push(this.integer(field, object + '.' + name))
@@ -153,12 +140,14 @@ Generator.prototype.generate = function () {
         ')
     }
     return $('                                                              \n\
-        parsers.' + this.name + ' = function (object) {                     \n\
+        serializers.' + this.name + ' = function (object) {                 \n\
             this.step = 0                                                   \n\
+            this.bite = 0                                                   \n\
+            this.stop = 0                                                   \n\
             this.stack = [ object ]                                         \n\
         }                                                                   \n\
         // __blank__                                                        \n\
-        parsers.' + this.name + '.prototype.serialize = function (engine) { \n\
+        serializers.' + this.name + '.prototype.serialize = function (engine) { \n\
             var buffer = engine.buffer                                      \n\
             var start = engine.start                                        \n\
             var end = engine.end                                            \n\
@@ -178,7 +167,7 @@ Generator.prototype.generate = function () {
 
 module.exports = function (compiler, definition) {
     var source = $('                                                        \n\
-        var parsers = {}                                                    \n\
+        var serializers = {}                                                \n\
     ')
     Object.keys(definition).forEach(function (packet) {
         source = $('                                                        \n\
@@ -190,7 +179,7 @@ module.exports = function (compiler, definition) {
     source = $('                                                            \n\
         ', source, '                                                        \n\
         // __blank__                                                        \n\
-        return parsers                                                      \n\
+        return serializers                                                      \n\
     ')
     return compiler(source)
 }
