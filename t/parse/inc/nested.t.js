@@ -4,7 +4,7 @@ function prove (assert) {
     var path = require('path')
     var compiler = require('../../../compiler/require')
     var composer = require('../../../compose/parser/inc.js')
-    var filename = path.resolve(__filename, '../../../generated/array-of-objects.parse.inc.js')
+    var filename = path.resolve(__filename, '../../../generated/nested.parse.inc.js')
 
     var f = composer(compiler(filename), {
         object: {

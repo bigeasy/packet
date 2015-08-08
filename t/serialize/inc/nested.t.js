@@ -4,7 +4,7 @@ function prove (assert) {
     var path = require('path')
     var compiler = require('../../../compiler/require')
     var composer = require('../../../compose/serializer/inc.js')
-    var filename = path.resolve(__filename, '../../../generated/array-of-objects.serialize.inc.js')
+    var filename = path.resolve(__filename, '../../../generated/nested.serialize.inc.js')
 
     var serializers = composer(compiler(filename), {
         object: {
