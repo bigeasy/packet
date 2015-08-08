@@ -49,6 +49,54 @@ function nested (variables, definition, depth) {
     ')
 }
 
+function alternation (variables, name, field, depth) {
+    var select = qualify('select', depth)
+    variables.hoist(select)
+    field.select = explode(field.select)
+    var rewind = field.select.bytes
+    var source = $('                                                        \n\
+        ', integer(field.select, select), '                                 \n\
+        start -= ' + rewind + '                                             \n\
+    ')
+    field.choose.forEach(function (option, index) {
+        var when = option.read.when || {}, test
+        if (when.and != null) {
+            test = 'select & 0x' + when.and.toString(16)
+        }
+        option.condition = '} else {'
+        if (test) {
+            if (index === 0) {
+                option.condition = 'if (' + test + ') {'
+            } else {
+                option.condition = '} else if (' + test + ') {'
+            }
+        }
+    })
+    var choices = ''
+    function slurp (option) {
+        return subParse('', variables, name, explode(option.read), depth)
+    }
+    field.choose.forEach(function (option) {
+        choices = $('                                                       \n\
+            // __reference__                                                \n\
+            ', choices, '                                                   \n\
+            ', option.condition, '                                          \n\
+                ', slurp(option), '                                         \n\
+            // __blank__                                                    \n\
+        ')
+    })
+    choices = $('                                                           \n\
+        // __reference__                                                    \n\
+        ', choices, '                                                       \n\
+        }                                                                   \n\
+    ')
+    return $('                                                              \n\
+        ', source, '                                                        \n\
+        // __blank__                                                        \n\
+        ', choices, '                                                       \n\
+    ')
+}
+
 function lengthEncoded (variables, name, field, depth) {
     var source = ''
     var length = qualify('length', depth)
@@ -58,8 +106,8 @@ function lengthEncoded (variables, name, field, depth) {
     variables.hoist(i)
     variables.hoist(length)
     var looped = nested(variables, field.element, depth + 1)
-    source = $('                                                            \n\
-        ', integer(explode(field.length), length), '                       \n\
+    return $('                                                              \n\
+        ', integer(explode(field.length), length), '                        \n\
         // __blank__                                                        \n\
         for (' + i + ' = 0; ' + i + ' < ' + length + '; ' + i + '++) {      \n\
             ', looped, '                                                    \n\
@@ -67,33 +115,38 @@ function lengthEncoded (variables, name, field, depth) {
             ' + object + '.' + name + '.push(' + subObject + ')             \n\
         }                                                                   \n\
     ')
+}
+
+function subParse (source, variables, name, field, depth) {
+    if (field.type === 'alternation') {
+        source = $('                                                    \n\
+            // __blank__                                                \n\
+            ', alternation(variables, name, field, depth), '            \n\
+        ')
+    } else if (field.length) {
+        source = $('                                                    \n\
+            // __blank__                                                \n\
+            ', lengthEncoded(variables, name, field, depth), '          \n\
+        ')
+    } else {
+        var object = qualify('object', depth)
+        field = explode(field)
+        if (field.type === 'integer')  {
+            source = $('                                                \n\
+                ', source, '                                            \n\
+                // __blank__                                            \n\
+                ', integer(field, object + '.' + name), '               \n\
+                // __reference__                                        \n\
+            ')
+        }
+    }
     return source
 }
 
 function parse (variables, definition, depth) {
     var source = ''
     for (var name in definition) {
-        if (name[0] === '$') {
-            continue
-        }
-        var field = definition[name]
-        if (field.length) {
-            source = $('                                                \n\
-                // __blank__                                            \n\
-                ', lengthEncoded(variables, name, field, depth), '      \n\
-            ')
-        } else {
-            var object = qualify('object', depth)
-            field = explode(field)
-            if (field.type === 'integer')  {
-                source = $('                                                \n\
-                    ', source, '                                            \n\
-                    // __blank__                                            \n\
-                    ', integer(field, object + '.' + name), '               \n\
-                    // __reference__                                        \n\
-                ')
-            }
-        }
+        source = subParse(source, variables, name, definition[name], depth)
     }
     return source
 }
