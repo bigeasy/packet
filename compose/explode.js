@@ -1,7 +1,8 @@
 function explode (field) {
-    var little = field.endianness === 'l'
+    var little = field.endianess === 'l'
     var bytes = field.bits / 8
     return {
+        length: field.length,
         endianness: field.endianess,
         type: 'integer',
         little: little,

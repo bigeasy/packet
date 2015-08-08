@@ -54,7 +54,7 @@ Generator.prototype.construct = function (definition) {
             continue
         }
         var field = definition[name]
-        if (Array.isArray(field)) {
+        if (field.length) {
             fields.push(name + ': new Array')
         } else {
             fields.push(name + ': null')
@@ -80,24 +80,24 @@ Generator.prototype.lengthEncoded = function (name, field, depth) {
     this.forever = true
     var step = this.step + 2
     source = $('                                                            \n\
-        ', this.integer(explode(field.$length), 'length'), '                \n\
+        ', this.integer(explode(field.length), 'length'), '                 \n\
         // __blank__                                                        \n\
         case ' + (this.step++) + ':                                         \n\
             // __blank__                                                    \n\
             this.stack[this.stack.length - 1].index = 0                     \n\
             this.stack.push({                                               \n\
                 object: {                                                   \n\
-                    ', this.construct(field, 0), '                          \n\
+                    ', this.construct(field.element, 0), '                  \n\
                 }                                                           \n\
             })                                                              \n\
             // __blank__                                                    \n\
-        ', this.nested(field), '                                            \n\
+        ', this.nested(field.element), '                                    \n\
             // __blank__                                                    \n\
             frame = this.stack[this.stack.length - 2]                       \n\
             frame.object.' + name + '.push(this.stack.pop().object)         \n\
             if (++frame.index != frame.length) {                            \n\
                 this.step = ' + step + '                                    \n\
-                continue                                                       \n\
+                continue                                                    \n\
             }                                                               \n\
     ')
     return source
@@ -110,9 +110,8 @@ Generator.prototype.parse = function (definition, depth) {
             continue
         }
         var field = definition[name]
-        if (Array.isArray(field)) {
-            field = field[0]
-            if (field.$length) {
+        if (field.length) {
+            if (field.length) {
                 sources.push(this.lengthEncoded(name, field, depth))
             }
         } else {

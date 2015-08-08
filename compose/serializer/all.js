@@ -30,12 +30,12 @@ function lengthEncoded (variables, name, field, depth) {
     variables.hoist(length)
     variables.hoist(array)
     variables.hoist(subObject)
-    var looped = nested(variables, field, depth + 1)
+    var looped = nested(variables, field.element, depth + 1)
     source = $('                                                            \n\
         ' + array + ' = ' + object + '.' + name + '                         \n\
         ' + length + ' = array.length                                       \n\
         // __blank__                                                        \n\
-        ', integer(explode(field.$length), length), '                       \n\
+        ', integer(explode(field.length), length), '                        \n\
         // __blank__                                                        \n\
         for (' + i + ' = 0; ' + i + ' < length; ' + i + '++) {              \n\
             ' + subObject + ' = array[' + i + ']                            \n\
@@ -52,11 +52,8 @@ function serialize (variables, definition, depth) {
             continue
         }
         var field = definition[name]
-        if (Array.isArray(field)) {
-            field = field[0]
-            if (field.$length) {
-                sources.push(lengthEncoded(variables, name, field, depth))
-            }
+        if (field.length) {
+            sources.push(lengthEncoded(variables, name, field, depth))
         } else {
             var object = qualify('object', depth)
             field = explode(field)

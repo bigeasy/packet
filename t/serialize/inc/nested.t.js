@@ -8,20 +8,22 @@ function prove (assert) {
 
     var serializers = composer(compiler(filename), {
         object: {
-            values: [{
-                $length: {
+            values: {
+                length: {
                     endianess: 'b',
                     bits: 16
                 },
-                key: {
-                    endianess: 'b',
-                    bits: 16
-                },
-                value: {
-                    endianess: 'b',
-                    bits: 16
+                element: {
+                    key: {
+                        endianess: 'b',
+                        bits: 16
+                    },
+                    value: {
+                        endianess: 'b',
+                        bits: 16
+                    }
                 }
-            }]
+            }
         }
     })
     var bufferLength = 10

@@ -29,7 +29,7 @@ function constructor (variables, definition, depth) {
             continue
         }
         var field = definition[name]
-        if (Array.isArray(field)) {
+        if (field.length) {
             fields.push(name + ': new Array')
         } else {
             fields.push(name + ': null')
@@ -57,9 +57,9 @@ function lengthEncoded (variables, name, field, depth) {
     var i = qualify('i', depth)
     variables.hoist(i)
     variables.hoist(length)
-    var looped = nested(variables, field, depth + 1)
+    var looped = nested(variables, field.element, depth + 1)
     source = $('                                                            \n\
-        ', integer(explode(field.$length), length), '                       \n\
+        ', integer(explode(field.length), length), '                       \n\
         // __blank__                                                        \n\
         for (' + i + ' = 0; ' + i + ' < ' + length + '; ' + i + '++) {      \n\
             ', looped, '                                                    \n\
@@ -77,14 +77,11 @@ function parse (variables, definition, depth) {
             continue
         }
         var field = definition[name]
-        if (Array.isArray(field)) {
-            field = field[0]
-            if (field.$length) {
-                source = $('                                                \n\
-                    // __blank__                                            \n\
-                    ', lengthEncoded(variables, name, field, depth), '      \n\
-                ')
-            }
+        if (field.length) {
+            source = $('                                                \n\
+                // __blank__                                            \n\
+                ', lengthEncoded(variables, name, field, depth), '      \n\
+            ')
         } else {
             var object = qualify('object', depth)
             field = explode(field)

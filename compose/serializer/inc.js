@@ -68,21 +68,21 @@ Generator.prototype.lengthEncoded = function (name, field, depth) {
     var step = this.step + 2
     source = $('                                                            \n\
         // __reference__                                                    \n\
-        ', this.integer(explode(field.$length), 'frame.object.' + name + '.length'), '\n\
+        ', this.integer(explode(field.length), 'frame.object.' + name + '.length'), '\n\
         // __blank__                                                        \n\
         case ' + (this.step++) + ':                                         \n\
             // __blank__                                                    \n\
-            this.stack.push(frame = {\n\
-                object: frame.object.' + name + '[frame.index],                          \n\
+            this.stack.push(frame = {                                       \n\
+                object: frame.object.' + name + '[frame.index],             \n\
                 index: 0                                                    \n\
             })                                         \n\
             this.step = ' + this.step + '                                   \n\
             // __blank__                                                    \n\
-        ', this.nested(field), '                                            \n\
+        ', this.nested(field.element), '                                    \n\
             // __blank__                                                    \n\
             this.stack.pop()                                                \n\
-            frame = this.stack[this.stack.length - 1]                      \n\
-            if (++frame.index != frame.object.' + name + '.length) {                              \n\
+            frame = this.stack[this.stack.length - 1]                       \n\
+            if (++frame.index != frame.object.' + name + '.length) {        \n\
                 this.step = ' + step + '                                    \n\
                 continue                                                    \n\
             }                                                               \n\
@@ -97,11 +97,8 @@ Generator.prototype.serialize = function (definition) {
             continue
         }
         var field = definition[name]
-        if (Array.isArray(field)) {
-            field = field[0]
-            if (field.$length) {
-                sources.push(this.lengthEncoded(name, field))
-            }
+        if (field.length) {
+            sources.push(this.lengthEncoded(name, field))
         } else {
             field = explode(field)
             if (field.type === 'integer')  {
