@@ -86,14 +86,16 @@ function serializer (name, definition) {
         ', serialize(variables, definition, 0), '                           \n\
     ')
     return $('                                                              \n\
-        serializers.' + name + ' = function () {                            \n\
+        serializers.' + name + ' = function (object) {                      \n\
+            this.object = object                                            \n\
         }                                                                   \n\
         // __blank__                                                        \n\
         serializers.' + name + '.prototype.serialize = function (engine) {  \n\
             var buffer = engine.buffer                                      \n\
             var start = engine.start                                        \n\
             var end = engine.end                                            \n\
-            var object = engine.object                                      \n\
+            // __blank__                                                    \n\
+            var object = this.object                                        \n\
             // __blank__                                                    \n\
             ', String(variables), '                                         \n\
             // __blank__                                                    \n\

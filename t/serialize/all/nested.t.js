@@ -33,10 +33,9 @@ function prove (assert) {
     var engine = {
         buffer: buffer,
         start: 0,
-        end: buffer.length,
-        object: object
+        end: buffer.length
     }
-    var serializer = new serializers.object
+    var serializer = new serializers.object(object)
     serializer.serialize(engine)
     assert(engine.buffer.toJSON() , [
         0x0, 0x2, 0xa, 0xa, 0x0, 0x1, 0x0, 0x2, 0x0, 0x3

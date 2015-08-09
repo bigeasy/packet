@@ -1,14 +1,16 @@
 module.exports = (function () {
     var serializers = {}
 
-    serializers.object = function () {
+    serializers.object = function (object) {
+        this.object = object
     }
 
     serializers.object.prototype.serialize = function (engine) {
         var buffer = engine.buffer
         var start = engine.start
         var end = engine.end
-        var object = engine.object
+
+        var object = this.object
 
         var array
         var i
