@@ -19,6 +19,59 @@ function nested (variables, definition, depth) {
     ')
 }
 
+function alternation (variables, name, field, depth) {
+    var select = qualify('select', depth)
+    variables.hoist(select)
+    field.choose.forEach(function (option, index) {
+        var when = option.write.when || {}, test
+        if (when.range != null) {
+            var range = []
+            if (when.range.from) {
+                range.push(when.range.from + ' <= select')
+            }
+            if (when.range.to) {
+                range.push('select < ' + when.range.to)
+            }
+            test = range.join(' && ')
+        }
+        option.condition = '} else {'
+        if (test) {
+            if (index === 0) {
+                option.condition = 'if (' + test + ') {'
+            } else {
+                option.condition = '} else if (' + test + ') {'
+            }
+        }
+    })
+    var choices = ''
+    function slurp (option) {
+        return subSerialize(variables, name, explode(option.write), depth)
+    }
+    field.choose.forEach(function (option) {
+        choices = $('                                                       \n\
+            // __reference__                                                \n\
+            ', choices, '                                                   \n\
+            ', option.condition, '                                          \n\
+            // __blank__                                                    \n\
+                ', slurp(option), '                                         \n\
+            // __blank__                                                    \n\
+        ')
+    })
+    var source = $('                                                        \n\
+        ' + select + ' = object.' + name + '                                \n\
+    ')
+    choices = $('                                                           \n\
+        // __reference__                                                    \n\
+        ', choices, '                                                       \n\
+        }                                                                   \n\
+    ')
+    return $('                                                              \n\
+        ', source, '                                                        \n\
+        // __blank__                                                        \n\
+        ', choices, '                                                       \n\
+    ')
+}
+
 function lengthEncoded (variables, name, field, depth) {
     var source = ''
     var object = qualify('object', depth)
@@ -45,25 +98,27 @@ function lengthEncoded (variables, name, field, depth) {
     return source
 }
 
+function subSerialize (variables, name, field, depth) {
+    if (field.type === 'alternation') {
+        return alternation(variables, name, field, depth)
+    } else if (field.length) {
+        return lengthEncoded(variables, name, field, depth)
+    } else {
+        var object = qualify('object', depth)
+        field = explode(field)
+        if (field.type === 'integer')  {
+            return $('                                                      \n\
+                ', integer(field, object + '.' + name), '                   \n\
+                // __reference__                                            \n\
+            ')
+        }
+    }
+}
+
 function serialize (variables, definition, depth) {
     var sources = []
     for (var name in definition) {
-        if (name[0] === '$') {
-            continue
-        }
-        var field = definition[name]
-        if (field.length) {
-            sources.push(lengthEncoded(variables, name, field, depth))
-        } else {
-            var object = qualify('object', depth)
-            field = explode(field)
-            if (field.type === 'integer')  {
-                sources.push($('                                                \n\
-                    ', integer(field, object + '.' + name), '               \n\
-                    // __reference__                                        \n\
-                '))
-            }
-        }
+        sources.push(subSerialize(variables, name, definition[name], depth))
     }
     return joinSources(sources)
 }
