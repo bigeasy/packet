@@ -4,8 +4,12 @@ var qualify = require('../qualify')
 var $ = require('programmatic')
 var joinSources = require('../join-sources')
 
-Generator.prototype.integer = function (field, property) {
-    var read = [], bite = field.bite, stop = field.stop
+function when (condition, source) {
+    return condition ? source : ''
+}
+
+Generator.prototype.integer = function (field, property, cached) {
+    var read = [], bite = field.bite, stop = field.stop, step = this.step
     while (bite != stop) {
         read.unshift('buffer[start++]')
         if (bite) {
@@ -13,15 +17,16 @@ Generator.prototype.integer = function (field, property) {
         }
         bite += field.direction
     }
-    read = read.reverse().join(' + \n')
-    if (field.bytes == 1) {
-        return assignee + ' = ' + read
+    if (cached) {
+        this.cached = true
     }
+    read = read.reverse().join(' + \n')
     field = explode(field)
     var direction = field.little ? '++' : '--'
-    return $('                                                              \n\
+    var source = $('                                                        \n\
         case ' + (this.step++) + ':                                         \n\
             // __blank__                                                    \n\
+            ' + when(cached, 'this.cache = []') + '                         \n\
             this.stack.push({                                               \n\
                 value: 0,                                                   \n\
                 bite: ' + field.bite + '                                    \n\
@@ -37,14 +42,18 @@ Generator.prototype.integer = function (field, property) {
                     engine.start = start                                    \n\
                     return                                                  \n\
                 }                                                           \n\
+                ' + when(cached, 'this.cache.push(buffer[start])') + '      \n\
                 frame.value += Math.pow(256, frame.bite) * buffer[start++]  \n\
                 frame.bite', direction, '                                   \n\
             }                                                               \n\
             // __blank__                                                    \n\
             this.stack.pop()                                                \n\
             this.stack[this.stack.length - 1].' + property + ' = frame.value\n\
-            this.step = ' + this.step + '                                   \n\
     ')
+    return {
+        step: step,
+        source: source
+    }
 }
 
 Generator.prototype.construct = function (definition) {
@@ -69,22 +78,83 @@ Generator.prototype.nested = function (definition, depth) {
     ')
 }
 
+Generator.prototype.alternation = function (name, field, depth) {
+    var step = this.step
+    this.forever = true
+    var integer = this.integer(explode(field.select), 'select', true)
+    var source = integer.source
+    field.choose.forEach(function (choice, index) {
+        var when = choice.read.when || {}, test
+        if (when.and != null) {
+            test = 'frame.select & 0x' + when.and.toString(16)
+        }
+        choice.condition = '} else {'
+        if (test) {
+            if (index === 0) {
+                choice.condition = 'if (' + test + ') {'
+            } else {
+                choice.condition = '} else if (' + test + ') {'
+            }
+        }
+    })
+    var sources = [], dispatch = ''
+    field.choose.forEach(function (option) {
+        var compiled = this.subParse(name, option.read)
+        dispatch = $('                                                      \n\
+            // __reference__                                                \n\
+            ', dispatch, '                                                  \n\
+            ', option.condition, '                                          \n\
+            // __blank__                                                    \n\
+                this.step = ' + compiled.step + '                           \n\
+                this.parse({                                                \n\
+                    buffer: this.cache,                                     \n\
+                    start: 0,                                               \n\
+                    end: this.cache.length                                  \n\
+                })                                                          \n\
+                continue                                                    \n\
+                // __blank__                                                \n\
+        ')
+        sources.push(compiled.source)
+    }, this)
+    var steps = ''
+    sources.forEach(function (source) {
+        steps = $('                                                         \n\
+            // __reference__                                                \n\
+            ', steps, '                                                     \n\
+            ', source, '                                                    \n\
+                this.step = ' + this.step + '                               \n\
+            // __blank__                                                    \n\
+        ')
+    }, this)
+    source = $('                                                            \n\
+        // __reference__                                                    \n\
+        ', source, '                                                        \n\
+            frame = this.stack[this.stack.length - 1]                       \n\
+            // __blank__                                                    \n\
+            ', dispatch, '                                                  \n\
+            }                                                               \n\
+        // __blank__                                                        \n\
+        ', steps, '                                                         \n\
+    ')
+    return {
+        step: integer.step,
+        source: source
+    }
+}
+
 Generator.prototype.lengthEncoded = function (name, field, depth) {
     var source = ''
-    var length = qualify('length', depth)
-    var object = qualify('object', depth)
-    var subObject = qualify('object', depth + 1)
-    var i = qualify('i', depth)
-    this.variables.hoist(i)
-    this.variables.hoist(length)
     this.forever = true
-    var step = this.step + 2
+    var integer = this.integer(explode(field.length), 'length')
+    var again = this.step
     source = $('                                                            \n\
-        ', this.integer(explode(field.length), 'length'), '                 \n\
+        // __reference__                                                    \n\
+        ', integer.source, '                                                \n\
+        // __blank__                                                        \n\
+            this.stack[this.stack.length - 1].index = 0                     \n\
         // __blank__                                                        \n\
         case ' + (this.step++) + ':                                         \n\
             // __blank__                                                    \n\
-            this.stack[this.stack.length - 1].index = 0                     \n\
             this.stack.push({                                               \n\
                 object: {                                                   \n\
                     ', this.construct(field.element, 0), '                  \n\
@@ -96,31 +166,34 @@ Generator.prototype.lengthEncoded = function (name, field, depth) {
             frame = this.stack[this.stack.length - 2]                       \n\
             frame.object.' + name + '.push(this.stack.pop().object)         \n\
             if (++frame.index != frame.length) {                            \n\
-                this.step = ' + step + '                                    \n\
+                this.step = ' + again + '                                   \n\
                 continue                                                    \n\
             }                                                               \n\
     ')
-    return source
+    return {
+        step: integer.step,
+        source: source
+    }
+}
+
+Generator.prototype.subParse = function (name, field) {
+    if (field.type == 'alternation') {
+        return this.alternation(name, field)
+    } else if (field.length) {
+        return this.lengthEncoded(name, field)
+    } else {
+        var object = 'object'
+        field = explode(field)
+        if (field.type === 'integer')  {
+            return this.integer(field, object + '.' + name)
+        }
+    }
 }
 
 Generator.prototype.parse = function (definition, depth) {
     var sources = []
     for (var name in definition) {
-        if (name[0] === '$') {
-            continue
-        }
-        var field = definition[name]
-        if (field.length) {
-            if (field.length) {
-                sources.push(this.lengthEncoded(name, field, depth))
-            }
-        } else {
-            var object = qualify('object', depth)
-            field = explode(field)
-            if (field.type === 'integer')  {
-                sources.push(this.integer(field, object + '.' + name))
-            }
-        }
+        sources.push(this.subParse(name, definition[name]).source)
     }
     return joinSources(sources)
 }
@@ -141,13 +214,19 @@ Generator.prototype.generate = function () {
     var dispatch = $('                                                      \n\
         switch (this.step) {                                                \n\
         ', source, '                                                        \n\
+        case ' + this.step + ':                                             \n\
+            // __blank__                                                    \n\
+            engine.start = start                                            \n\
+            // __blank__                                                    \n\
         }                                                                   \n\
     ')
     if (this.forever) {
         dispatch = $('                                                      \n\
             for (;;) {                                                      \n\
+                // __blank__                                                \n\
                 ', dispatch, '                                              \n\
-                return                                                      \n\
+                // __blank__                                                \n\
+                break                                                       \n\
             }                                                               \n\
         ')
     }
@@ -162,6 +241,7 @@ Generator.prototype.generate = function () {
                 index: 0,                                                   \n\
                 length: 0                                                   \n\
             }]                                                              \n\
+            ' + when(this.cached, 'this.cache = null') + '                  \n\
         }                                                                   \n\
         // __blank__                                                        \n\
         parsers.' + this.name + '.prototype.parse = function (engine) {     \n\
@@ -171,13 +251,7 @@ Generator.prototype.generate = function () {
             // __blank__                                                    \n\
             var frame = this.stack[this.stack.length - 1]                   \n\
             // __blank__                                                    \n\
-            ', String(this.variables), '                                    \n\
-            // __blank__                                                    \n\
             ', dispatch, '                                                  \n\
-            // __blank__                                                    \n\
-            engine.start = start                                            \n\
-            // __blank__                                                    \n\
-            return frame.object                                             \n\
         }                                                                   \n\
     ')
 }

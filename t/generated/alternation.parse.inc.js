@@ -5,12 +5,13 @@ module.exports = (function () {
         this.step = 0
         this.stack = [{
             object: this.object = {
-                values: new Array
+                number: null
             },
             array: null,
             index: 0,
             length: 0
         }]
+        this.cache = null
     }
 
     parsers.object.prototype.parse = function (engine) {
@@ -25,9 +26,10 @@ module.exports = (function () {
             switch (this.step) {
             case 0:
 
+                this.cache = []
                 this.stack.push({
                     value: 0,
-                    bite: 1
+                    bite: 0
                 })
                 this.step = 1
 
@@ -40,58 +42,72 @@ module.exports = (function () {
                         engine.start = start
                         return
                     }
+                    this.cache.push(buffer[start])
                     frame.value += Math.pow(256, frame.bite) * buffer[start++]
                     frame.bite--
                 }
 
                 this.stack.pop()
-                this.stack[this.stack.length - 1].length = frame.value
+                this.stack[this.stack.length - 1].select = frame.value
+                frame = this.stack[this.stack.length - 1]
 
-                this.stack[this.stack.length - 1].index = 0
+                if (frame.select & 0x80) {
+
+                    this.step = 2
+                    this.parse({
+                        buffer: this.cache,
+                        start: 0,
+                        end: this.cache.length
+                    })
+                    continue
+
+                } else {
+
+                    this.step = 4
+                    this.parse({
+                        buffer: this.cache,
+                        start: 0,
+                        end: this.cache.length
+                    })
+                    continue
+
+                }
 
             case 2:
 
                 this.stack.push({
-                    object: {
-                        key: null,
-                        value: null
-                    }
+                    value: 0,
+                    bite: 1
                 })
+                this.step = 3
 
             case 3:
 
-                this.stack.push({
-                    value: 0,
-                    bite: 1
-                })
-                this.step = 4
+                frame = this.stack[this.stack.length - 1]
+
+                while (frame.bite != -1) {
+                    if (start == end) {
+                        engine.start = start
+                        return
+                    }
+                    frame.value += Math.pow(256, frame.bite) * buffer[start++]
+                    frame.bite--
+                }
+
+                this.stack.pop()
+                this.stack[this.stack.length - 1].object.number = frame.value
+                this.step = 6
 
             case 4:
 
-                frame = this.stack[this.stack.length - 1]
-
-                while (frame.bite != -1) {
-                    if (start == end) {
-                        engine.start = start
-                        return
-                    }
-                    frame.value += Math.pow(256, frame.bite) * buffer[start++]
-                    frame.bite--
-                }
-
-                this.stack.pop()
-                this.stack[this.stack.length - 1].object.key = frame.value
+                this.stack.push({
+                    value: 0,
+                    bite: 0
+                })
+                this.step = 5
 
             case 5:
 
-                this.stack.push({
-                    value: 0,
-                    bite: 1
-                })
-                this.step = 6
-
-            case 6:
-
                 frame = this.stack[this.stack.length - 1]
 
                 while (frame.bite != -1) {
@@ -104,15 +120,10 @@ module.exports = (function () {
                 }
 
                 this.stack.pop()
-                this.stack[this.stack.length - 1].object.value = frame.value
+                this.stack[this.stack.length - 1].object.number = frame.value
+                this.step = 6
 
-                frame = this.stack[this.stack.length - 2]
-                frame.object.values.push(this.stack.pop().object)
-                if (++frame.index != frame.length) {
-                    this.step = 2
-                    continue
-                }
-            case 7:
+            case 6:
 
                 engine.start = start
 
