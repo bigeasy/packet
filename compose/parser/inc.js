@@ -98,12 +98,12 @@ Generator.prototype.alternation = function (name, field, depth) {
         }
     })
     var sources = [], dispatch = ''
-    field.choose.forEach(function (option) {
-        var compiled = this.subParse(name, option.read)
+    field.choose.forEach(function (choice) {
+        var compiled = this.subParse(name, choice.read)
         dispatch = $('                                                      \n\
             // __reference__                                                \n\
             ', dispatch, '                                                  \n\
-            ', option.condition, '                                          \n\
+            ', choice.condition, '                                          \n\
             // __blank__                                                    \n\
                 this.step = ' + compiled.step + '                           \n\
                 this.parse({                                                \n\

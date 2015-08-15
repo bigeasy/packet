@@ -23,35 +23,42 @@ module.exports = (function () {
             switch (this.step) {
             case 0:
 
-                this.step = 1
-                this.bite = 1
+                frame = this.stack[this.stack.length - 1]
+
+                if (128 <= frame.object.number) {
+
+                    this.step = 1
+                    continue
+
+                } else {
+
+                    this.step = 3
+                    continue
+
+                }
 
             case 1:
+
+                this.step = 2
+                this.bite = 1
+
+            case 2:
 
                 while (this.bite != -1) {
                     if (start == end) {
                         engine.start = start
                         return
                     }
-                    buffer[start++] = frame.object.values.length >>> this.bite * 8 & 0xff
+                    buffer[start++] = frame.object.number >>> this.bite * 8 & 0xff
                     this.bite--
                 }
 
-
-                this.step = 2
-
-            case 2:
-
-                this.stack.push(frame = {
-                    object: frame.object.values[frame.index],
-                    index: 0
-                })
-                this.step = 3
+                this.step = 5
 
             case 3:
 
                 this.step = 4
-                this.bite = 1
+                this.bite = 0
 
             case 4:
 
@@ -60,38 +67,14 @@ module.exports = (function () {
                         engine.start = start
                         return
                     }
-                    buffer[start++] = frame.object.key >>> this.bite * 8 & 0xff
+                    buffer[start++] = frame.object.number >>> this.bite * 8 & 0xff
                     this.bite--
                 }
 
                 this.step = 5
 
+                this.step = 5
             case 5:
-
-                this.step = 6
-                this.bite = 1
-
-            case 6:
-
-                while (this.bite != -1) {
-                    if (start == end) {
-                        engine.start = start
-                        return
-                    }
-                    buffer[start++] = frame.object.value >>> this.bite * 8 & 0xff
-                    this.bite--
-                }
-
-                this.step = 7
-
-                this.stack.pop()
-                frame = this.stack[this.stack.length - 1]
-                if (++frame.index != frame.object.values.length) {
-                    this.step = 2
-                    continue
-                }
-                this.step = 7
-            case 7:
 
                 engine.start = start
 

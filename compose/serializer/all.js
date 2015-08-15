@@ -22,8 +22,8 @@ function nested (variables, definition, depth) {
 function alternation (variables, name, field, depth) {
     var select = qualify('select', depth)
     variables.hoist(select)
-    field.choose.forEach(function (option, index) {
-        var when = option.write.when || {}, test
+    field.choose.forEach(function (choice, index) {
+        var when = choice.write.when || {}, test
         if (when.range != null) {
             var range = []
             if (when.range.from) {
@@ -34,26 +34,26 @@ function alternation (variables, name, field, depth) {
             }
             test = range.join(' && ')
         }
-        option.condition = '} else {'
+        choice.condition = '} else {'
         if (test) {
             if (index === 0) {
-                option.condition = 'if (' + test + ') {'
+                choice.condition = 'if (' + test + ') {'
             } else {
-                option.condition = '} else if (' + test + ') {'
+                choice.condition = '} else if (' + test + ') {'
             }
         }
     })
     var choices = ''
-    function slurp (option) {
-        return subSerialize(variables, name, explode(option.write), depth)
+    function slurp (choice) {
+        return subSerialize(variables, name, explode(choice.write), depth)
     }
-    field.choose.forEach(function (option) {
+    field.choose.forEach(function (choice) {
         choices = $('                                                       \n\
             // __reference__                                                \n\
             ', choices, '                                                   \n\
-            ', option.condition, '                                          \n\
+            ', choice.condition, '                                          \n\
             // __blank__                                                    \n\
-                ', slurp(option), '                                         \n\
+                ', slurp(choice), '                                         \n\
             // __blank__                                                    \n\
         ')
     })
