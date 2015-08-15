@@ -56,14 +56,8 @@ Generator.prototype.nested = function (definition) {
     ')
 }
 
-Generator.prototype.lengthEncoded = function (name, field, depth) {
+Generator.prototype.lengthEncoded = function (name, field) {
     var source = ''
-    var length = qualify('length', depth)
-    var object = qualify('object', depth)
-    var subObject = qualify('object', depth + 1)
-    var i = qualify('i', depth)
-    this.variables.hoist(i)
-    this.variables.hoist(length)
     this.forever = true
     var step = this.step + 2
     source = $('                                                            \n\
@@ -154,8 +148,6 @@ Generator.prototype.generate = function () {
             var end = engine.end                                            \n\
             // __blank__                                                    \n\
             var frame = this.stack[this.stack.length - 1]                   \n\
-            // __blank__                                                    \n\
-            ', String(this.variables), '                                    \n\
             // __blank__                                                    \n\
             ', dispatch, '                                                  \n\
             // __blank__                                                    \n\

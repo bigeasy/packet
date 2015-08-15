@@ -19,9 +19,6 @@ module.exports = (function () {
 
         var frame = this.stack[this.stack.length - 1]
 
-        var i
-        var length
-
         for (;;) {
             switch (this.step) {
             case 0:
