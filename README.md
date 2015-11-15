@@ -1,5 +1,14 @@
 Incremental binary parsers and serializers for Node.js.
 
+### Diary
+
+In the middle of the final rewrite after many years of learning about Node.js.
+
+Currently working in the `compose` folder to create compiled parsers based on
+the work in `composer`.
+
+### Continue
+
 Packet creates **pre-compiled**, **pure-JavaScript**, **binary parsers** and
 **serializers** that are **incremental** through a binary pattern language that
 is **declarative** and very **expressive**.
