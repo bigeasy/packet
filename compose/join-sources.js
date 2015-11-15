@@ -1,13 +1,15 @@
 var $ = require('programmatic')
 
-module.exports = function (sources) {
-    var source = sources[0]
-    for (var i = 1, I = sources.length; i < I; i++) {
-        source = $('                                                        \n\
-            ', source, '                                                    \n\
+// Join an array of code blocks into a single chunk separated by blank lines.
+
+module.exports = function (blocks) {
+    var block = blocks[0]
+    for (var i = 1, I = blocks.length; i < I; i++) {
+        block = $('                                                         \n\
+            ', block, '                                                     \n\
             // __blank__                                                    \n\
-            ', sources[i], '                                                \n\
+            ', blocks[i], '                                                 \n\
         ')
     }
-    return source
+    return block
 }

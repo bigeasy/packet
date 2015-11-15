@@ -1,3 +1,7 @@
+// Explode a field specified in the intermediate language, filling in all the
+// properties needed by a generator. Saves the hastle and clutter of repeating
+// these calculations as needed.
+
 function explode (field) {
     var little = field.endianess === 'l'
     var bytes = field.bits / 8
