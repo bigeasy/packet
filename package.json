@@ -47,11 +47,7 @@
                         "email":  "chrite.demarius@gmail.com",
                         "web":    "https://github.com/demarius"
     }],
-    "licenses":
-    [{
-                        "type": "MIT",
-                        "url": "http://github.com/bigeasy/packet/raw/master/LICENSE"
-    }],
+    "license":          "MIT",
     "scripts" :
     {
                         "test": "proof platform win32 && proof test */*/*.t.js || t/test"
