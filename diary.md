@@ -676,8 +676,30 @@ given array and make the parser start at an offset.
 
 Nested structures and structural alternation, that blows this up into a great
 big language, almost asking for a transpiler, but let's not do that, but we are
-definately on a collision course with curly braces.
+definitely on a collision course with curly braces.
 
 Because nested length encoded or null terminated arrays of structures are not
 really an issue. In the nested parser you just punt and return. In the
 incremental parser you move to a previous step.
+
+## Redux
+
+Probably am going to embrace the new nested style of language and remove the old
+parser at some point. This project is not going to be a module. It will produce
+a module, but I'm going to build it into a module, so I can take my time letting
+go of old ideas, leaving the old language parser in place, bringing in a new
+means of expressing the structure.
+
+From my notes I can see that the challenges where alternation and nested
+structures. My goal was to make them arbitrarily nested and create a test of the
+most convoluted structure imaginable.
+
+I also recall agonizing over invocation. The output objects are indeed little
+state machines, they are going to know when the packet is finished and how much
+of the buffer has been consumed. I know that I was trying to figure out how to
+support different forms of invocation, whole packets versus incremental packets.
+I was trying to consider a minimalist structure, maybe an array with three
+items, buffer, index, and object under construction, something along those
+lines, essentially trying to minimize the energy spent trying to figure out what
+to do next. This might become apparent to me as I continue to implement the
+parsers, sorting out how to invoke them.
