@@ -56,18 +56,23 @@ Generator.prototype.integer = function (field, property, cached) {
     }
 }
 
-Generator.prototype.construct = function (definition) {
+Generator.prototype.construct = function (packet) {
     var fields = []
-    for (var name in definition) {
-        if (name[0] === '$') {
-            continue
-        }
-        var field = definition[name]
-        if (field.length) {
-            fields.push(name + ': new Array')
-        } else {
-            fields.push(name + ': null')
-        }
+    // todo: not always a structure, sometimes it is an object.
+    if (packet.type == 'structure') {
+        packet.fields.forEach(function (packet) {
+            switch (packet.type) {
+            case 'integer':
+            case 'alternation':
+                fields.push(packet.name + ': null')
+                break
+            case 'lengthEncoded':
+                fields.push(packet.name + ': new Array')
+                break
+            }
+        }, this)
+    } else {
+        throw new Error('todo')
     }
     return fields.join(',\n')
 }
@@ -78,12 +83,12 @@ Generator.prototype.nested = function (definition, depth) {
     ')
 }
 
-Generator.prototype.alternation = function (name, field, depth) {
+Generator.prototype.alternation = function (packet, depth) {
     var step = this.step
     this.forever = true
-    var integer = this.integer(explode(field.select), 'select', true)
+    var integer = this.integer(explode(packet.select), 'select', true)
     var source = integer.source
-    field.choose.forEach(function (choice, index) {
+    packet.choose.forEach(function (choice, index) {
         var when = choice.read.when || {}, test
         if (when.and != null) {
             test = 'frame.select & 0x' + when.and.toString(16)
@@ -98,8 +103,9 @@ Generator.prototype.alternation = function (name, field, depth) {
         }
     })
     var sources = [], dispatch = ''
-    field.choose.forEach(function (choice) {
-        var compiled = this.subParse(name, choice.read)
+    packet.choose.forEach(function (choice) {
+        choice.read.name = packet.name
+        var compiled = this.subParse(choice.read)
         dispatch = $('                                                      \n\
             // __reference__                                                \n\
             ', dispatch, '                                                  \n\
@@ -142,10 +148,10 @@ Generator.prototype.alternation = function (name, field, depth) {
     }
 }
 
-Generator.prototype.lengthEncoded = function (name, field, depth) {
+Generator.prototype.lengthEncoded = function (packet, depth) {
     var source = ''
     this.forever = true
-    var integer = this.integer(explode(field.length), 'length')
+    var integer = this.integer(explode(packet.length), 'length')
     var again = this.step
     source = $('                                                            \n\
         // __reference__                                                    \n\
@@ -157,14 +163,14 @@ Generator.prototype.lengthEncoded = function (name, field, depth) {
             // __blank__                                                    \n\
             this.stack.push({                                               \n\
                 object: {                                                   \n\
-                    ', this.construct(field.element, 0), '                  \n\
+                    ', this.construct(packet.element, 0), '                 \n\
                 }                                                           \n\
             })                                                              \n\
             // __blank__                                                    \n\
-        ', this.nested(field.element), '                                    \n\
+        ', this.nested(packet.element), '                                   \n\
             // __blank__                                                    \n\
             frame = this.stack[this.stack.length - 2]                       \n\
-            frame.object.' + name + '.push(this.stack.pop().object)         \n\
+            frame.object.' + packet.name + '.push(this.stack.pop().object)  \n\
             if (++frame.index != frame.length) {                            \n\
                 this.step = ' + again + '                                   \n\
                 continue                                                    \n\
@@ -176,41 +182,41 @@ Generator.prototype.lengthEncoded = function (name, field, depth) {
     }
 }
 
-Generator.prototype.subParse = function (name, field) {
-    if (field.type == 'alternation') {
-        return this.alternation(name, field)
-    } else if (field.length) {
-        return this.lengthEncoded(name, field)
-    } else {
+Generator.prototype.subParse = function (packet) {
+    switch (packet.type) {
+    case 'alternation':
+        return this.alternation(packet)
+    case 'lengthEncoded':
+        return this.lengthEncoded(packet)
+    default:
         var object = 'object'
-        field = explode(field)
+        var field = explode(packet)
         if (field.type === 'integer')  {
-            return this.integer(field, object + '.' + name)
+            return this.integer(field, object + '.' + packet.name)
         }
     }
 }
 
-Generator.prototype.parse = function (definition, depth) {
+Generator.prototype.parse = function (packet, depth) {
     var sources = []
-    for (var name in definition) {
-        sources.push(this.subParse(name, definition[name]).source)
-    }
+    packet.fields.forEach(function (packet) {
+        sources.push(this.subParse(packet).source)
+    }, this)
     return joinSources(sources)
 }
 
-function parser (name, definition) {
-    return new Generator(name, definition).generate()
+function parser (packet) {
+    return new Generator(packet).generate()
 }
 
-function Generator (name, definition) {
+function Generator (packet) {
     this.step = 0
-    this.name = name
-    this.definition = definition
+    this.packet = packet
     this.variables = new Variables
 }
 
 Generator.prototype.generate = function () {
-    var source = this.parse(this.definition, 0)
+    var source = this.parse(this.packet, 0)
     var dispatch = $('                                                      \n\
         switch (this.step) {                                                \n\
         ', source, '                                                        \n\
@@ -231,11 +237,11 @@ Generator.prototype.generate = function () {
         ')
     }
     return $('                                                              \n\
-        parsers.' + this.name + ' = function () {                           \n\
+        parsers.' + this.packet.name + ' = function () {                    \n\
             this.step = 0                                                   \n\
             this.stack = [{                                                 \n\
                 object: this.object = {                                     \n\
-                    ', this.construct(this.definition), '                   \n\
+                    ', this.construct(this.packet), '                       \n\
                 },                                                          \n\
                 array: null,                                                \n\
                 index: 0,                                                   \n\
@@ -244,7 +250,7 @@ Generator.prototype.generate = function () {
             ' + when(this.cached, 'this.cache = null') + '                  \n\
         }                                                                   \n\
         // __blank__                                                        \n\
-        parsers.' + this.name + '.prototype.parse = function (engine) {     \n\
+        parsers.' + this.packet.name + '.prototype.parse = function (engine) {      \n\
             var buffer = engine.buffer                                      \n\
             var start = engine.start                                        \n\
             var end = engine.end                                            \n\
@@ -260,11 +266,11 @@ module.exports = function (compiler, definition) {
     var source = $('                                                        \n\
         var parsers = {}                                                    \n\
     ')
-    Object.keys(definition).forEach(function (packet) {
+    definition.forEach(function (packet) {
         source = $('                                                        \n\
             ', source, '                                                    \n\
             // __blank__                                                    \n\
-            ', parser(packet, definition[packet]), '                        \n\
+            ', parser(packet), '                                            \n\
         ')
     })
     source = $('                                                            \n\

@@ -6,26 +6,33 @@ function prove (assert) {
     var composer = require('../../../compose/parser/inc.js')
     var filename = path.resolve(__filename, '../../../generated/nested.parse.inc.js')
 
-    var parsers = composer(compiler(filename), {
-        object: {
-            values: {
-                length: {
+    var parsers = composer(compiler(filename), [{
+        type: 'structure',
+        name: 'object',
+        fields: [{
+            type: 'lengthEncoded',
+            name: 'values',
+            length: {
+                type: 'integer',
+                endianess: 'b',
+                bits: 16
+            },
+            element: {
+                type: 'structure',
+                fields: [{
+                    type: 'integer',
+                    name: 'key',
                     endianess: 'b',
                     bits: 16
-                },
-                element: {
-                    key: {
-                        endianess: 'b',
-                        bits: 16
-                    },
-                    value: {
-                        endianess: 'b',
-                        bits: 16
-                    }
-                }
+                }, {
+                    type: 'integer',
+                    name: 'value',
+                    endianess: 'b',
+                    bits: 16
+                }]
             }
-        }
-    })
+        }]
+    }])
 
     var buffer = new Buffer([ 0x0, 0x2, 0xa, 0xa, 0x0, 0x1, 0x0, 0x2, 0x0, 0x3 ])
     for (var i = 0; i < buffer.length; i++) {
