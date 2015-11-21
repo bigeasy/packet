@@ -56,15 +56,15 @@ Generator.prototype.nested = function (definition) {
     ')
 }
 
-Generator.prototype.alternation = function (name, field) {
+Generator.prototype.alternation = function (packet) {
     var step = this.step++
     this.forever = true
-    field.choose.forEach(function (choice, index) {
+    packet.choose.forEach(function (choice, index) {
         var when = choice.write.when || {}, test
         if (when.range != null) {
             var range = []
             if (when.range.from) {
-                range.push(when.range.from + ' <= frame.object.' + name)
+                range.push(when.range.from + ' <= frame.object.' + packet.name)
             }
             if (when.range.to) {
                 range.push('frame.object.' + name + ' < ' + when.range.to)
@@ -81,8 +81,9 @@ Generator.prototype.alternation = function (name, field) {
         }
     })
     var sources = [], dispatch = ''
-    field.choose.forEach(function (choice) {
-        var compiled = this.subSerialize(name, choice.read)
+    packet.choose.forEach(function (choice) {
+        choice.read.name = packet.name
+        var compiled = this.subSerialize(choice.read)
         dispatch = $('                                                      \n\
             // __reference__                                                \n\
             ', dispatch, '                                                  \n\
@@ -117,30 +118,30 @@ Generator.prototype.alternation = function (name, field) {
     return { step: step, source: source }
 }
 
-Generator.prototype.lengthEncoded = function (name, field) {
+Generator.prototype.lengthEncoded = function (packet) {
     var source = ''
     this.forever = true
     var step = this.step
     var again = this.step + 2
     source = $('                                                            \n\
         // __reference__                                                    \n\
-        ', this.integer(explode(field.length), 'frame.object.' + name + '.length').source, '\n\
+        ', this.integer(explode(packet.length), 'frame.object.' + packet.name + '.length').source, '\n\
             // __blank__                                                    \n\
             this.step = ' + again + '                                       \n\
         // __blank__                                                        \n\
         case ' + (this.step++) + ':                                         \n\
             // __blank__                                                    \n\
             this.stack.push(frame = {                                       \n\
-                object: frame.object.' + name + '[frame.index],             \n\
+                object: frame.object.' + packet.name + '[frame.index],             \n\
                 index: 0                                                    \n\
             })                                         \n\
             this.step = ' + this.step + '                                   \n\
             // __blank__                                                    \n\
-        ', this.nested(field.element), '                                    \n\
+        ', this.nested(packet.element), '                                    \n\
             // __blank__                                                    \n\
             this.stack.pop()                                                \n\
             frame = this.stack[this.stack.length - 1]                       \n\
-            if (++frame.index != frame.object.' + name + '.length) {        \n\
+            if (++frame.index != frame.object.' + packet.name + '.length) {        \n\
                 this.step = ' + again + '                                   \n\
                 continue                                                    \n\
             }                                                               \n\
@@ -148,29 +149,30 @@ Generator.prototype.lengthEncoded = function (name, field) {
     return { step: step, source: source }
 }
 
-Generator.prototype.subSerialize = function (name, field) {
-    if (field.type == 'alternation') {
-        return this.alternation(name, field)
-    } else if (field.length) {
-        return this.lengthEncoded(name, field)
-    } else {
-        field = explode(field)
+Generator.prototype.subSerialize = function (packet) {
+    switch (packet.type) {
+    case 'alternation':
+        return this.alternation(packet)
+    case 'lengthEncoded':
+        return this.lengthEncoded(packet)
+    default:
+        var field = explode(packet)
         if (field.type === 'integer')  {
-            return this.integer(field, 'frame.object.' + name)
+            return this.integer(field, 'frame.object.' + packet.name)
         }
     }
 }
 
 Generator.prototype.serialize = function (definition) {
     var sources = []
-    for (var name in definition) {
-        var source = this.subSerialize(name, definition[name]).source
+    definition.fields.forEach(function (packet) {
+        var source = this.subSerialize(packet).source
         sources.push($('                                                    \n\
             // __reference__                                                \n\
             ', source, '                                                    \n\
                 this.step = ' + this.step + '                               \n\
         '))
-    }
+    }, this)
     return joinSources(sources)
 }
 
@@ -178,15 +180,14 @@ function parser (name, definition) {
     return new Generator(name, definition).generate()
 }
 
-function Generator (name, definition) {
+function Generator (packet) {
     this.step = 0
-    this.name = name
-    this.definition = definition
+    this.packet = packet
     this.variables = new Variables
 }
 
 Generator.prototype.generate = function () {
-    var source = this.serialize(this.definition)
+    var source = this.serialize(this.packet)
     var dispatch = $('                                                      \n\
         switch (this.step) {                                                \n\
         ', source, '                                                        \n\
@@ -205,7 +206,7 @@ Generator.prototype.generate = function () {
         ')
     }
     return $('                                                              \n\
-        serializers.' + this.name + ' = function (object) {                 \n\
+        serializers.' + this.packet.name + ' = function (object) {          \n\
             this.step = 0                                                   \n\
             this.bite = 0                                                   \n\
             this.stop = 0                                                   \n\
@@ -216,7 +217,7 @@ Generator.prototype.generate = function () {
             }]                                                              \n\
         }                                                                   \n\
         // __blank__                                                        \n\
-        serializers.' + this.name + '.prototype.serialize = function (engine) { \n\
+        serializers.' + this.packet.name + '.prototype.serialize = function (engine) { \n\
             var buffer = engine.buffer                                      \n\
             var start = engine.start                                        \n\
             var end = engine.end                                            \n\
@@ -236,7 +237,7 @@ module.exports = function (compiler, definition) {
     var source = $('                                                        \n\
         var serializers = {}                                                \n\
     ')
-    Object.keys(definition).forEach(function (packet) {
+    definition.forEach(function (packet) {
         source = $('                                                        \n\
             ', source, '                                                    \n\
             // __blank__                                                    \n\
@@ -246,7 +247,7 @@ module.exports = function (compiler, definition) {
     source = $('                                                            \n\
         ', source, '                                                        \n\
         // __blank__                                                        \n\
-        return serializers                                                      \n\
+        return serializers                                                  \n\
     ')
     return compiler(source)
 }
