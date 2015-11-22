@@ -6,26 +6,34 @@ function prove (assert) {
     var composer = require('../../../compose/serializer/all.js')
     var filename = path.resolve(__filename, '../../../generated/nested.serialize.all.js')
 
-    var serializers = composer(compiler(filename), {
-        object: {
-            values: {
-                length: {
+    var serializers = composer(compiler(filename), [{
+        type: 'structure',
+        name: 'object',
+        fields: [{
+            type: 'lengthEncoded',
+            name: 'values',
+            length: {
+                type: 'integer',
+                endianess: 'b',
+                bits: 16
+            },
+            element: {
+                type: 'structure',
+                fields: [{
+                    type: 'integer',
+                    name: 'key',
                     endianess: 'b',
                     bits: 16
-                },
-                element: {
-                    key: {
-                        endianess: 'b',
-                        bits: 16
-                    },
-                    value: {
-                        endianess: 'b',
-                        bits: 16
-                    }
-                }
+                }, {
+                    type: 'integer',
+                    name: 'value',
+                    endianess: 'b',
+                    bits: 16
+                }]
             }
-        }
-    })
+        }]
+    }])
+
     var buffer = new Buffer(10)
     var object = {
         values: [ { key: 2570, value: 1 }, { key: 2, value: 3 } ]
