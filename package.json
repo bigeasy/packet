@@ -1,6 +1,6 @@
 {
     "name":             "packet",
-    "version":          "0.0.6",
+    "version":          "0.0.7",
     "author":           "Alan Gutierrez <alan@prettyrobots.com>",
     "description":      "Pure JavaScript evented binary parsers and serializers for Node.js.",
     "keywords":
