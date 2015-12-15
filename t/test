@@ -4,31 +4,17 @@ set -e
 
 echo ""
 
-(proof run t/compiler/*.t.js t/*/inc/*.t.js t/*/all/*.t.js | tee .proof.out | proof progress) || (proof errors < .proof.out) || exit 1
-
-if [ $(find t -name "*.t.js.broken" | wc -c) != "0" ]; then
-  echo ""
-  echo "broken tests"
-  echo ""
-  find t -name "*.t.js.broken"
-fi
+(proof run t/*/*.t.js | tee .proof.out | proof progress) || (proof errors < .proof.out) || exit 1
 
 if [ "$TRAVIS" = "true" ]; then
+  echo ""
   echo "running with coverage"
   t/cover
+  node_modules/.bin/istanbul report --format text
+  echo ""
 
   echo "submitting to coveralls.io"
   (cat coverage/lcov.info | node_modules/.bin/coveralls) > /dev/null 2>&1
-
-  curl 'https://www.prettyrobots.com/travisty' | sh
-fi
-
-if [ "$TRAVIS" = "true" ] || [ "$MINIFY" = "true" ]; then
-  echo ""
-  echo "minified"
-  echo ""
-
-  (proof run t/compiler/*.t.js t/*/all/*.t.js | tee .proof.out | proof progress) || (proof errors < .proof.out) || exit 1
 fi
 
 echo ""
