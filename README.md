@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/bigeasy/packet.svg?branch=master)](https://travis-ci.org/bigeasy/packet) [![Coverage Status](https://coveralls.io/repos/bigeasy/packet/badge.svg?branch=master&service=github)](https://coveralls.io/github/bigeasy/packet?branch=master) [![Stories in Ready](https://badge.waffle.io/bigeasy/packet.png?label=ready&title=Ready)](https://waffle.io/bigeasy/packet)
+
 Incremental binary parsers and serializers for Node.js.
 
 ### Diary
