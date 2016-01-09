@@ -308,8 +308,8 @@ function parse (pattern, part, index, bits, next) {
 
         // Check for alternation.
         } else if ($ = /^\(([^)]+)\)(.*)$/.exec(rest)) {
-            // todo: better error message - user may think given name is
-            // unusable
+            // TODO Better error message - user may think given name is
+            // unusable.
             if (f.named) throw new Error(error('name forbidden', pattern, index))
 
             f.arrayed     = true

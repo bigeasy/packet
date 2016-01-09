@@ -58,7 +58,7 @@ Generator.prototype.integer = function (field, property, cached) {
 
 Generator.prototype.construct = function (packet) {
     var fields = []
-    // todo: not always a structure, sometimes it is an object.
+    // TODO Not always a structure, sometimes it is an object.
     if (packet.type == 'structure') {
         packet.fields.forEach(function (packet) {
             switch (packet.type) {
@@ -72,7 +72,7 @@ Generator.prototype.construct = function (packet) {
             }
         }, this)
     } else {
-        throw new Error('todo')
+        throw new Error('to do')
     }
     return fields.join(',\n')
 }

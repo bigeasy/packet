@@ -101,7 +101,7 @@ function packForSerialization (variables, field) {
             }
             if (pack.signed) {
                 //var bits = '0x' + (mask >>> (field.bits - pack.bits)).toString(16)
-                // todo: not honoring top.
+                // TODO Not honoring top.
                 var top = '0x' + (1 << pack.bits - 1).toString(16)
                 section.line('unsigned = ' + reference)
                 section.line('unsigned = unsigned < 0 ?')

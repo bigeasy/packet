@@ -152,7 +152,7 @@ function subParse (source, variables, packet, depth) {
 
 function parse (variables, packet, depth) {
     var source = ''
-    // todo: switch and this is structure, sub parse is others.
+    // TODO Switch and this is structure, sub parse is others.
     packet.fields.forEach(function (packet) {
         source = subParse(source, variables, packet, depth)
     })

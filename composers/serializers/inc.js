@@ -48,7 +48,7 @@ function composeIncrementalSerializer (ranges) {
                 } else if (field.packing) {
                     name = 'value'
                     init = packForSerialization(variables, field)
-                    // todo: DRY
+                    // TODO DRY
                     assign = name + ' >>> bite * 8 & 0xff'
                 } else if (field.padding == null) {
                     name = field.arrayed ? 'array' : 'value'
@@ -57,7 +57,7 @@ function composeIncrementalSerializer (ranges) {
                     if (field.lengthEncoding) {
                         init += '.length'
                     }
-                    // todo: DRY see above
+                    // TODO DRY see above
                     if (field.arrayed) {
                         name = 'array[i]'
                         init += '\ni = 0'
@@ -91,7 +91,7 @@ function composeIncrementalSerializer (ranges) {
                     ')
                 }
 
-                // todo: bad indent on while loop below.
+                // TODO bad indent on while loop below.
                 tmp = $('\
                     ', tmp, '                                               \n\
                     case ' + step + ':                                      \n\
@@ -118,7 +118,7 @@ function composeIncrementalSerializer (ranges) {
             return start                                                    \n\
     ')
 
-    // TODO: Add a `var next` here.
+    // TODO Add a `var next` here.
     tmp = $('                                                               \n\
         this.write = function (buffer, start, end) {                        \n\
             ', tmp, '                                                       \n\
