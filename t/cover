@@ -9,7 +9,7 @@ for file in t/compiler/*.t.js t/*/inc/*.t.js t/*/all/*.t.js; do
   node_modules/.bin/istanbul cover \
     -x 'composers.js' \
     -x 't/require.js' -x 'ieee754.js' \
-    -x 't/**/proof.js' -x 't/**/*.t.js' $file
+    -x 't/**/proof.js' -x 't/**/*.t.js' $file >/dev/null 2>&1
   mv coverage/coverage.json coverage/coverage$count.json
   count=$(expr $count + 1)
 done
