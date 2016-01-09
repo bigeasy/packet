@@ -5,7 +5,7 @@ function prove (assert) {
     var compiler = require('../../../compiler/require')
     var composer = require('../../../compose/serializer/inc.js')
     var filename = path.resolve(__filename, '../../../generated/alternation.serialize.inc.js')
-    var toJSON = require('../../toJSON')
+    var toJSON = require('../../tojson')
 
     var serializers = composer(compiler(filename), [{
         type: 'structure',
