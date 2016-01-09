@@ -22,9 +22,9 @@ var BASE = { '0x': 16, '0': 8 }
 
 var re = {}
 
-function compileRegularExpressions() {
-    var name, $, lines, i, I, source
-    source = require('fs').readFileSync(__filename, 'utf8').split(/\r?\n/)
+function compileRegularExpressions(source) {
+    var name, $, lines, i, I
+    source = source.split(/\r?\n/)
     for (i = 0, I = source.length; i < I; i++, $ = null) {
         for (; !$ && i < I; i++) {
             $ = /re\['([^']+)'\s*\/\*\s*$/.exec(source[i])
@@ -39,7 +39,8 @@ function compileRegularExpressions() {
     }
 }
 
-compileRegularExpressions()
+compileRegularExpressions(arguments.callee.toString());
+// compileRegularExpressions(require('fs').readFileSync(__filename, 'utf8'));
 
 // Extract an alternation range number or bit mask from at the current pattern
 // substring given by `rest`.
