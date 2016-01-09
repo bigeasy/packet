@@ -20,26 +20,34 @@ function prove (assert) {
             choose: [{
                 read: {
                     when: { and: 0x80 },
-                    type: 'integer',
-                    endianess: 'b',
-                    bits: 16
+                    field: {
+                        type: 'integer',
+                        endianess: 'b',
+                        bits: 16
+                    }
                 },
                 write: {
                     when: { range: { from: 0x80 }  },
-                    type: 'integer',
-                    endianess: 'b',
-                    bits: 16
+                    field: {
+                        type: 'integer',
+                        endianess: 'b',
+                        bits: 16
+                    }
                 }
             }, {
                 read: {
-                    type: 'integer',
-                    endianess: 'b',
-                    bits: 8
+                    field: {
+                        type: 'integer',
+                        endianess: 'b',
+                        bits: 8
+                    }
                 },
                 write: {
-                    type: 'integer',
-                    endianess: 'b',
-                    bits: 8
+                    field: {
+                        type: 'integer',
+                        endianess: 'b',
+                        bits: 8
+                    }
                 }
             }]
         }]

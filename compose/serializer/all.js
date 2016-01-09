@@ -1,8 +1,8 @@
 var Variables = require('../variables')
 var explode = require('../explode')
 var qualify = require('../qualify')
-var $ = require('programmatic')
 var joinSources = require('../join-sources')
+var $ = require('programmatic')
 
 function integer (field, value) {
     var bites = [], bite = field.bite, stop = field.stop, shift
@@ -40,9 +40,8 @@ function alternation (variables, packet, depth) {
     })
     var choices = ''
     function slurp (choice) {
-        var exploded = explode(choice.write)
-        exploded.name = packet.name
-        return field(variables, exploded, depth)
+        choice.write.field.name = packet.name
+        return field(variables, choice.write.field, depth)
     }
     packet.choose.forEach(function (choice) {
         choices = $('                                                       \n\
@@ -85,7 +84,7 @@ function lengthEncoded (variables, packet, depth) {
         ' + array + ' = ' + object + '.' + packet.name + '                  \n\
         ' + length + ' = array.length                                       \n\
         // __blank__                                                        \n\
-        ', integer(explode(packet.length), length), '                       \n\
+        ', integer(packet.length, length), '                                \n\
         // __blank__                                                        \n\
         for (' + i + ' = 0; ' + i + ' < length; ' + i + '++) {              \n\
             ' + subObject + ' = array[' + i + ']                            \n\
@@ -107,7 +106,6 @@ function field (variables, packet, depth) {
         return lengthEncoded(variables, packet, depth)
     default:
         var object = qualify('object', depth)
-        packet = explode(packet)
         if (packet.type === 'integer')  {
             return $('                                                      \n\
                 ', integer(packet, object + '.' + packet.name), '           \n\
@@ -145,7 +143,7 @@ function serializer (packet) {
 
 module.exports = function (compiler, definition) {
     var source = joinSources(definition.map(function (packet) {
-        return serializer(packet)
+        return serializer(explode(packet))
     }))
     source = $('                                                            \n\
         var serializers = {}                                                \n\

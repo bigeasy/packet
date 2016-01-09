@@ -81,8 +81,8 @@ Generator.prototype.alternation = function (packet) {
     })
     var sources = [], dispatch = ''
     packet.choose.forEach(function (choice) {
-        choice.read.name = packet.name
-        var compiled = this.field(choice.read)
+        choice.write.field.name = packet.name
+        var compiled = this.field(choice.write.field)
         dispatch = $('                                                      \n\
             // __reference__                                                \n\
             ', dispatch, '                                                  \n\
@@ -124,7 +124,7 @@ Generator.prototype.lengthEncoded = function (packet) {
     var again = this.step + 2
     source = $('                                                            \n\
         // __reference__                                                    \n\
-        ', this.integer(explode(packet.length), 'frame.object.' + packet.name + '.length').source, '\n\
+        ', this.integer(packet.length, 'frame.object.' + packet.name + '.length').source, '\n\
             // __blank__                                                    \n\
             this.step = ' + again + '                                       \n\
         // __blank__                                                        \n\
@@ -164,7 +164,7 @@ Generator.prototype.field = function (packet) {
     case 'lengthEncoded':
         return this.lengthEncoded(packet)
     default:
-        var field = explode(packet)
+        var field = packet
         if (field.type === 'integer')  {
             return this.integer(field, 'frame.object.' + packet.name)
         }
@@ -220,7 +220,7 @@ Generator.prototype.serializer = function (packet) {
 
 module.exports = function (compiler, definition) {
     var source = joinSources(definition.map(function (packet) {
-        return new Generator().serializer(packet)
+        return new Generator().serializer(explode(packet))
     }))
     source = $('                                                            \n\
         var serializers = {}                                                \n\

@@ -26,7 +26,6 @@ Generator.prototype.integer = function (field, property, cached) {
         this.cached = true
     }
     read = read.reverse().join(' + \n')
-    field = explode(field)
     var direction = field.little ? '++' : '--'
     var source = $('                                                        \n\
         case ' + (this.step++) + ':                                         \n\
@@ -85,7 +84,7 @@ Generator.prototype.construct = function (packet) {
 Generator.prototype.alternation = function (packet, depth) {
     var step = this.step
     this.forever = true
-    var integer = this.integer(explode(packet.select), 'select', true)
+    var integer = this.integer(packet.select, 'select', true)
     var source = integer.source
     packet.choose.forEach(function (choice, index) {
         var when = choice.read.when || {}, test
@@ -103,8 +102,8 @@ Generator.prototype.alternation = function (packet, depth) {
     })
     var sources = [], dispatch = ''
     packet.choose.forEach(function (choice) {
-        choice.read.name = packet.name
-        var compiled = this.field(choice.read)
+        choice.read.field.name = packet.name
+        var compiled = this.field(choice.read.field)
         dispatch = $('                                                      \n\
             // __reference__                                                \n\
             ', dispatch, '                                                  \n\
@@ -150,7 +149,7 @@ Generator.prototype.alternation = function (packet, depth) {
 Generator.prototype.lengthEncoded = function (packet, depth) {
     var source = ''
     this.forever = true
-    var integer = this.integer(explode(packet.length), 'length')
+    var integer = this.integer(packet.length, 'length')
     var again = this.step
     source = $('                                                            \n\
         // __reference__                                                    \n\
@@ -193,7 +192,6 @@ Generator.prototype.field = function (packet) {
         return this.lengthEncoded(packet)
     default:
         var object = 'object'
-        var packet = explode(packet)
         if (packet.type === 'integer')  {
             return this.integer(packet, object + '.' + packet.name)
         }
@@ -249,7 +247,7 @@ Generator.prototype.parser = function (packet) {
 
 module.exports = function (compiler, definition) {
     var source = joinSources(definition.map(function (packet) {
-        return new Generator().parser(packet)
+        return new Generator().parser(explode(packet))
     }))
     source = $('                                                            \n\
         var parsers = {}                                                    \n\

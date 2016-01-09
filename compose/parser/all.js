@@ -45,7 +45,7 @@ function constructor (variables, packet, depth) {
 function alternation (variables, packet, depth) {
     var select = qualify('select', depth)
     variables.hoist(select)
-    packet.select = explode(packet.select)
+    packet.select = packet.select
     var rewind = packet.select.bytes
     var source = $('                                                        \n\
         ', integer(packet.select, select), '                                \n\
@@ -67,8 +67,8 @@ function alternation (variables, packet, depth) {
     })
     var choices = ''
     function slurp (option) {
-        option.read.name = packet.name
-        return field(variables, explode(option.read), depth)
+        option.read.field.name = packet.name
+        return field(variables, option.read.field, depth)
     }
     packet.choose.forEach(function (option) {
         choices = $('                                                       \n\
@@ -102,7 +102,7 @@ function lengthEncoded (variables, packet, depth) {
     variables.hoist(length)
     var looped = field(variables, packet.element, depth + 1)
     return $('                                                              \n\
-        ', integer(explode(packet.length), length), '                       \n\
+        ', integer(packet.length, length), '                       \n\
         // __blank__                                                        \n\
         for (' + i + ' = 0; ' + i + ' < ' + length + '; ' + i + '++) {      \n\
             ', looped, '                                                    \n\
@@ -128,7 +128,6 @@ function field (variables, packet, depth) {
         return lengthEncoded(variables, packet, depth)
     default:
         var object = qualify('object', depth)
-        packet = explode(packet)
         if (packet.type === 'integer')  {
             return $('                                                      \n\
                 ', integer(packet, object + '.' + packet.name), '           \n\
@@ -165,7 +164,7 @@ function parser (packet) {
 
 module.exports = function (compiler, definition) {
     var source = joinSources(definition.map(function (packet) {
-        return parser(packet)
+        return parser(explode(packet))
     }))
     source = $('                                                            \n\
         var parsers = {}                                                    \n\
