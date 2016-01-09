@@ -4,6 +4,11 @@ var qualify = require('../qualify')
 var $ = require('programmatic')
 var joinSources = require('../join-sources')
 
+function Generator () {
+    this.step = 0
+    this.variables = new Variables
+}
+
 Generator.prototype.integer = function (field, property) {
     var step = this.step, bites = [], bite = field.bite, stop = field.stop, shift
     while (bite != stop) {
@@ -50,12 +55,6 @@ Generator.prototype.construct = function (definition) {
     return fields.join(',\n')
 }
 
-Generator.prototype.nested = function (definition) {
-    return $('                                                              \n\
-        ', this.serialize(definition), '                                    \n\
-    ')
-}
-
 Generator.prototype.alternation = function (packet) {
     var step = this.step++
     this.forever = true
@@ -83,7 +82,7 @@ Generator.prototype.alternation = function (packet) {
     var sources = [], dispatch = ''
     packet.choose.forEach(function (choice) {
         choice.read.name = packet.name
-        var compiled = this.subSerialize(choice.read)
+        var compiled = this.field(choice.read)
         dispatch = $('                                                      \n\
             // __reference__                                                \n\
             ', dispatch, '                                                  \n\
@@ -132,16 +131,16 @@ Generator.prototype.lengthEncoded = function (packet) {
         case ' + (this.step++) + ':                                         \n\
             // __blank__                                                    \n\
             this.stack.push(frame = {                                       \n\
-                object: frame.object.' + packet.name + '[frame.index],             \n\
+                object: frame.object.' + packet.name + '[frame.index],      \n\
                 index: 0                                                    \n\
-            })                                         \n\
+            })                                                              \n\
             this.step = ' + this.step + '                                   \n\
             // __blank__                                                    \n\
-        ', this.nested(packet.element), '                                    \n\
+        ', this.field(packet.element), '                                    \n\
             // __blank__                                                    \n\
             this.stack.pop()                                                \n\
             frame = this.stack[this.stack.length - 1]                       \n\
-            if (++frame.index != frame.object.' + packet.name + '.length) {        \n\
+            if (++frame.index != frame.object.' + packet.name + '.length) { \n\
                 this.step = ' + again + '                                   \n\
                 continue                                                    \n\
             }                                                               \n\
@@ -149,8 +148,17 @@ Generator.prototype.lengthEncoded = function (packet) {
     return { step: step, source: source }
 }
 
-Generator.prototype.subSerialize = function (packet) {
+Generator.prototype.field = function (packet) {
     switch (packet.type) {
+    case 'structure':
+        return joinSources(packet.fields.map(function (packet) {
+            var source = this.field(packet).source
+            return $('                                                      \n\
+                // __reference__                                            \n\
+                ', source, '                                                \n\
+                    this.step = ' + this.step + '                           \n\
+            ')
+        }.bind(this)))
     case 'alternation':
         return this.alternation(packet)
     case 'lengthEncoded':
@@ -163,31 +171,8 @@ Generator.prototype.subSerialize = function (packet) {
     }
 }
 
-Generator.prototype.serialize = function (definition) {
-    var sources = []
-    definition.fields.forEach(function (packet) {
-        var source = this.subSerialize(packet).source
-        sources.push($('                                                    \n\
-            // __reference__                                                \n\
-            ', source, '                                                    \n\
-                this.step = ' + this.step + '                               \n\
-        '))
-    }, this)
-    return joinSources(sources)
-}
-
-function parser (name, definition) {
-    return new Generator(name, definition).generate()
-}
-
-function Generator (packet) {
-    this.step = 0
-    this.packet = packet
-    this.variables = new Variables
-}
-
-Generator.prototype.generate = function () {
-    var source = this.serialize(this.packet)
+Generator.prototype.serializer = function (packet) {
+    var source = this.field(packet)
     var dispatch = $('                                                      \n\
         switch (this.step) {                                                \n\
         ', source, '                                                        \n\
@@ -206,7 +191,7 @@ Generator.prototype.generate = function () {
         ')
     }
     return $('                                                              \n\
-        serializers.' + this.packet.name + ' = function (object) {          \n\
+        serializers.' + packet.name + ' = function (object) {               \n\
             this.step = 0                                                   \n\
             this.bite = 0                                                   \n\
             this.stop = 0                                                   \n\
@@ -217,7 +202,7 @@ Generator.prototype.generate = function () {
             }]                                                              \n\
         }                                                                   \n\
         // __blank__                                                        \n\
-        serializers.' + this.packet.name + '.prototype.serialize = function (engine) { \n\
+        serializers.' + packet.name + '.prototype.serialize = function (engine) { \n\
             var buffer = engine.buffer                                      \n\
             var start = engine.start                                        \n\
             var end = engine.end                                            \n\
@@ -234,17 +219,12 @@ Generator.prototype.generate = function () {
 }
 
 module.exports = function (compiler, definition) {
-    var source = $('                                                        \n\
-        var serializers = {}                                                \n\
-    ')
-    definition.forEach(function (packet) {
-        source = $('                                                        \n\
-            ', source, '                                                    \n\
-            // __blank__                                                    \n\
-            ', parser(packet, definition[packet]), '                        \n\
-        ')
-    })
+    var source = joinSources(definition.map(function (packet) {
+        return new Generator().serializer(packet)
+    }))
     source = $('                                                            \n\
+        var serializers = {}                                                \n\
+        // __blank__                                                        \n\
         ', source, '                                                        \n\
         // __blank__                                                        \n\
         return serializers                                                  \n\

@@ -2,6 +2,7 @@ var Variables = require('../variables')
 var explode = require('../explode')
 var qualify = require('../qualify')
 var $ = require('programmatic')
+var joinSources = require('../join-sources')
 
 function integer (field, value) {
     var bites = [], bite = field.bite, stop = field.stop, shift
@@ -11,12 +12,6 @@ function integer (field, value) {
         bite += field.direction
     }
     return bites.join('\n')
-}
-
-function nested (variables, definition, depth) {
-    return $('                                                              \n\
-        ', serialize(variables, definition, depth), '                       \n\
-    ')
 }
 
 function alternation (variables, packet, depth) {
@@ -47,7 +42,7 @@ function alternation (variables, packet, depth) {
     function slurp (choice) {
         var exploded = explode(choice.write)
         exploded.name = packet.name
-        return subSerialize(variables, exploded, depth)
+        return field(variables, exploded, depth)
     }
     packet.choose.forEach(function (choice) {
         choices = $('                                                       \n\
@@ -85,7 +80,7 @@ function lengthEncoded (variables, packet, depth) {
     variables.hoist(length)
     variables.hoist(array)
     variables.hoist(subObject)
-    var looped = nested(variables, packet.element, depth + 1)
+    var looped = field(variables, packet.element, depth + 1)
     source = $('                                                            \n\
         ' + array + ' = ' + object + '.' + packet.name + '                  \n\
         ' + length + ' = array.length                                       \n\
@@ -100,49 +95,31 @@ function lengthEncoded (variables, packet, depth) {
     return source
 }
 
-function subSerialize (variables, packet, depth) {
+function field (variables, packet, depth) {
     switch (packet.type) {
+    case 'structure':
+        return joinSources(packet.fields.map(function (packet) {
+            return field(variables, packet, depth)
+        }))
     case 'alternation':
         return alternation(variables, packet, depth)
     case 'lengthEncoded':
         return lengthEncoded(variables, packet, depth)
     default:
         var object = qualify('object', depth)
-        var field = explode(packet)
-        if (field.type === 'integer')  {
+        packet = explode(packet)
+        if (packet.type === 'integer')  {
             return $('                                                      \n\
-                ', integer(field, object + '.' + packet.name), '            \n\
+                ', integer(packet, object + '.' + packet.name), '           \n\
                 // __reference__                                            \n\
             ')
         }
     }
 }
 
-function serialize (variables, definition, depth) {
-    var sources = []
-    definition.fields.forEach(function (packet) {
-        sources.push(subSerialize(variables, packet, depth))
-    })
-    return joinSources(sources)
-}
-
-function joinSources (sources) {
-    var source = sources[0]
-    for (var i = 1, I = sources.length; i < I; i++) {
-        source = $('                                                        \n\
-            ', source, '                                                    \n\
-            // __blank__                                                    \n\
-            ', sources[i], '                                                \n\
-        ')
-    }
-    return source
-}
-
 function serializer (packet) {
     var variables = new Variables
-    var source = $('                                                        \n\
-        ', serialize(variables, packet, 0), '                               \n\
-    ')
+    var source = field(variables, packet, 0)
     return $('                                                              \n\
         serializers.' + packet.name + ' = function (object) {               \n\
             this.object = object                                            \n\
@@ -167,17 +144,12 @@ function serializer (packet) {
 }
 
 module.exports = function (compiler, definition) {
-    var source = $('                                                        \n\
-        var serializers = {}                                                \n\
-    ')
-    definition.forEach(function (packet) {
-        source = $('                                                        \n\
-            ', source, '                                                    \n\
-            // __blank__                                                    \n\
-            ', serializer(packet), '                    \n\
-        ')
-    })
+    var source = joinSources(definition.map(function (packet) {
+        return serializer(packet)
+    }))
     source = $('                                                            \n\
+        var serializers = {}                                                \n\
+        // __blank__                                                        \n\
         ', source, '                                                        \n\
         // __blank__                                                        \n\
         return serializers                                                  \n\

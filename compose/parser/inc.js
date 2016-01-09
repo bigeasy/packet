@@ -1,8 +1,13 @@
 var Variables = require('../variables')
 var explode = require('../explode')
 var qualify = require('../qualify')
-var $ = require('programmatic')
 var joinSources = require('../join-sources')
+var $ = require('programmatic')
+
+function Generator () {
+    this.step = 0
+    this.variables = new Variables
+}
 
 function when (condition, source) {
     return condition ? source : ''
@@ -77,12 +82,6 @@ Generator.prototype.construct = function (packet) {
     return fields.join(',\n')
 }
 
-Generator.prototype.nested = function (definition, depth) {
-    return $('                                                              \n\
-        ', this.parse(definition, depth), '                                 \n\
-    ')
-}
-
 Generator.prototype.alternation = function (packet, depth) {
     var step = this.step
     this.forever = true
@@ -105,7 +104,7 @@ Generator.prototype.alternation = function (packet, depth) {
     var sources = [], dispatch = ''
     packet.choose.forEach(function (choice) {
         choice.read.name = packet.name
-        var compiled = this.subParse(choice.read)
+        var compiled = this.field(choice.read)
         dispatch = $('                                                      \n\
             // __reference__                                                \n\
             ', dispatch, '                                                  \n\
@@ -167,7 +166,7 @@ Generator.prototype.lengthEncoded = function (packet, depth) {
                 }                                                           \n\
             })                                                              \n\
             // __blank__                                                    \n\
-        ', this.nested(packet.element), '                                   \n\
+        ', this.field(packet.element), '                                    \n\
             // __blank__                                                    \n\
             frame = this.stack[this.stack.length - 2]                       \n\
             frame.object.' + packet.name + '.push(this.stack.pop().object)  \n\
@@ -182,41 +181,27 @@ Generator.prototype.lengthEncoded = function (packet, depth) {
     }
 }
 
-Generator.prototype.subParse = function (packet) {
+Generator.prototype.field = function (packet) {
     switch (packet.type) {
+    case 'structure':
+        return joinSources(packet.fields.map(function (packet) {
+            return this.field(packet).source
+        }.bind(this)))
     case 'alternation':
         return this.alternation(packet)
     case 'lengthEncoded':
         return this.lengthEncoded(packet)
     default:
         var object = 'object'
-        var field = explode(packet)
-        if (field.type === 'integer')  {
-            return this.integer(field, object + '.' + packet.name)
+        var packet = explode(packet)
+        if (packet.type === 'integer')  {
+            return this.integer(packet, object + '.' + packet.name)
         }
     }
 }
 
-Generator.prototype.parse = function (packet, depth) {
-    var sources = []
-    packet.fields.forEach(function (packet) {
-        sources.push(this.subParse(packet).source)
-    }, this)
-    return joinSources(sources)
-}
-
-function parser (packet) {
-    return new Generator(packet).generate()
-}
-
-function Generator (packet) {
-    this.step = 0
-    this.packet = packet
-    this.variables = new Variables
-}
-
-Generator.prototype.generate = function () {
-    var source = this.parse(this.packet, 0)
+Generator.prototype.parser = function (packet) {
+    var source = this.field(packet, 0)
     var dispatch = $('                                                      \n\
         switch (this.step) {                                                \n\
         ', source, '                                                        \n\
@@ -237,11 +222,11 @@ Generator.prototype.generate = function () {
         ')
     }
     return $('                                                              \n\
-        parsers.' + this.packet.name + ' = function () {                    \n\
+        parsers.' + packet.name + ' = function () {                         \n\
             this.step = 0                                                   \n\
             this.stack = [{                                                 \n\
                 object: this.object = {                                     \n\
-                    ', this.construct(this.packet), '                       \n\
+                    ', this.construct(packet), '                            \n\
                 },                                                          \n\
                 array: null,                                                \n\
                 index: 0,                                                   \n\
@@ -250,7 +235,7 @@ Generator.prototype.generate = function () {
             ' + when(this.cached, 'this.cache = null') + '                  \n\
         }                                                                   \n\
         // __blank__                                                        \n\
-        parsers.' + this.packet.name + '.prototype.parse = function (engine) {      \n\
+        parsers.' + packet.name + '.prototype.parse = function (engine) {   \n\
             var buffer = engine.buffer                                      \n\
             var start = engine.start                                        \n\
             var end = engine.end                                            \n\
@@ -263,17 +248,12 @@ Generator.prototype.generate = function () {
 }
 
 module.exports = function (compiler, definition) {
-    var source = $('                                                        \n\
-        var parsers = {}                                                    \n\
-    ')
-    definition.forEach(function (packet) {
-        source = $('                                                        \n\
-            ', source, '                                                    \n\
-            // __blank__                                                    \n\
-            ', parser(packet), '                                            \n\
-        ')
-    })
+    var source = joinSources(definition.map(function (packet) {
+        return new Generator().parser(packet)
+    }))
     source = $('                                                            \n\
+        var parsers = {}                                                    \n\
+        // __blank__                                                        \n\
         ', source, '                                                        \n\
         // __blank__                                                        \n\
         return parsers                                                      \n\

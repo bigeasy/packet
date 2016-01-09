@@ -1,8 +1,8 @@
 var Variables = require('../variables')
 var explode = require('../explode')
 var qualify = require('../qualify')
-var $ = require('programmatic')
 var joinSources = require('../join-sources')
+var $ = require('programmatic')
 
 function integer (field, assignee) {
     var read = [], bite = field.bite, stop = field.stop
@@ -42,14 +42,6 @@ function constructor (variables, packet, depth) {
     ')
 }
 
-function nested (variables, definition, depth) {
-    return $('                                                              \n\
-        ', constructor(variables, definition, depth), '                     \n\
-        // __blank__                                                        \n\
-        ', parse(variables, definition, depth), '                           \n\
-    ')
-}
-
 function alternation (variables, packet, depth) {
     var select = qualify('select', depth)
     variables.hoist(select)
@@ -76,7 +68,7 @@ function alternation (variables, packet, depth) {
     var choices = ''
     function slurp (option) {
         option.read.name = packet.name
-        return subParse(variables, explode(option.read), depth)
+        return field(variables, explode(option.read), depth)
     }
     packet.choose.forEach(function (option) {
         choices = $('                                                       \n\
@@ -108,7 +100,7 @@ function lengthEncoded (variables, packet, depth) {
     var i = qualify('i', depth)
     variables.hoist(i)
     variables.hoist(length)
-    var looped = nested(variables, packet.element, depth + 1)
+    var looped = field(variables, packet.element, depth + 1)
     return $('                                                              \n\
         ', integer(explode(packet.length), length), '                       \n\
         // __blank__                                                        \n\
@@ -120,13 +112,15 @@ function lengthEncoded (variables, packet, depth) {
     ')
 }
 
-function subParse (variables, packet, depth) {
+function field (variables, packet, depth) {
     switch (packet.type) {
     case 'structure':
         return $('                                                          \n\
             ', constructor(variables, packet, depth), '                     \n\
             __blank__                                                       \n\
-            ', parse(variables, packet, depth), '                           \n\
+            ', joinSources(packet.fields.map(function (packet) {
+                return field(variables, packet, depth)
+            })), '                                                          \n\
         ')
     case 'alternation':
         return alternation(variables, packet, depth)
@@ -134,10 +128,10 @@ function subParse (variables, packet, depth) {
         return lengthEncoded(variables, packet, depth)
     default:
         var object = qualify('object', depth)
-        var field = explode(packet)
-        if (field.type === 'integer')  {
+        packet = explode(packet)
+        if (packet.type === 'integer')  {
             return $('                                                      \n\
-                ', integer(field, object + '.' + field.name), '             \n\
+                ', integer(packet, object + '.' + packet.name), '           \n\
                 // __reference__                                            \n\
             ')
         }
@@ -146,15 +140,9 @@ function subParse (variables, packet, depth) {
     return source
 }
 
-function parse (variables, packet, depth) {
-    return joinSources(packet.fields.map(function (packet) {
-        return subParse(variables, packet, depth)
-    }))
-}
-
 function parser (packet) {
     var variables = new Variables
-    var source = parse(variables, { fields: [ packet ] }, 0)
+    var source = field(variables, packet, 0)
     return $('                                                              \n\
         parsers.' + packet.name + ' = function () {                         \n\
         }                                                                   \n\
@@ -176,17 +164,12 @@ function parser (packet) {
 }
 
 module.exports = function (compiler, definition) {
-    var source = $('                                                        \n\
-        var parsers = {}                                                    \n\
-    ')
-    definition.forEach(function (packet) {
-        source = $('                                                        \n\
-            ', source, '                                                    \n\
-            // __blank__                                                    \n\
-            ', parser(packet), '                                            \n\
-        ')
-    })
+    var source = joinSources(definition.map(function (packet) {
+        return parser(packet)
+    }))
     source = $('                                                            \n\
+        var parsers = {}                                                    \n\
+        // __blank__                                                        \n\
         ', source, '                                                        \n\
         // __blank__                                                        \n\
         return parsers                                                      \n\
