@@ -2,6 +2,7 @@ var Variables = require('../variables')
 var explode = require('../explode')
 var qualify = require('../qualify')
 var $ = require('programmatic')
+var joinSources = require('../join-sources')
 
 function integer (field, assignee) {
     var read = [], bite = field.bite, stop = field.stop
@@ -44,6 +45,7 @@ function constructor (variables, packet, depth) {
 function nested (variables, definition, depth) {
     return $('                                                              \n\
         ', constructor(variables, definition, depth), '                     \n\
+        // __blank__                                                        \n\
         ', parse(variables, definition, depth), '                           \n\
     ')
 }
@@ -54,7 +56,7 @@ function alternation (variables, packet, depth) {
     packet.select = explode(packet.select)
     var rewind = packet.select.bytes
     var source = $('                                                        \n\
-        ', integer(packet.select, select), '                                 \n\
+        ', integer(packet.select, select), '                                \n\
         start -= ' + rewind + '                                             \n\
     ')
     packet.choose.forEach(function (option, index) {
@@ -74,13 +76,14 @@ function alternation (variables, packet, depth) {
     var choices = ''
     function slurp (option) {
         option.read.name = packet.name
-        return subParse('', variables, explode(option.read), depth)
+        return subParse(variables, explode(option.read), depth)
     }
     packet.choose.forEach(function (option) {
         choices = $('                                                       \n\
             // __reference__                                                \n\
             ', choices, '                                                   \n\
             ', option.condition, '                                          \n\
+                // __blank__                                                \n\
                 ', slurp(option), '                                         \n\
             // __blank__                                                    \n\
         ')
@@ -112,44 +115,30 @@ function lengthEncoded (variables, packet, depth) {
         for (' + i + ' = 0; ' + i + ' < ' + length + '; ' + i + '++) {      \n\
             ', looped, '                                                    \n\
             // __blank__                                                    \n\
-            ' + object + '.' + packet.name + '.push(' + subObject + ')       \n\
+            ' + object + '.' + packet.name + '.push(' + subObject + ')      \n\
         }                                                                   \n\
     ')
 }
 
-function subParse (source, variables, packet, depth) {
+function subParse (variables, packet, depth) {
     switch (packet.type) {
     case 'structure':
-        source = $('                                                    \n\
-            ', source, '                                                \n\
-            // __blank__                                                \n\
-            ', constructor(variables, packet, depth), '                 \n\
-            ', parse(variables, packet, depth), '                       \n\
+        return $('                                                          \n\
+            ', constructor(variables, packet, depth), '                     \n\
+            __blank__                                                       \n\
+            ', parse(variables, packet, depth), '                           \n\
         ')
-        break
     case 'alternation':
-        source = $('                                                    \n\
-            ', source, '                                                \n\
-            // __blank__                                                \n\
-            ', alternation(variables, packet, depth), '                 \n\
-        ')
-        break
+        return alternation(variables, packet, depth)
     case 'lengthEncoded':
-        source = $('                                                    \n\
-            ', source, '                                                \n\
-            // __blank__                                                \n\
-            ', lengthEncoded(variables, packet, depth), '               \n\
-        ')
-        break
+        return lengthEncoded(variables, packet, depth)
     default:
         var object = qualify('object', depth)
         var field = explode(packet)
         if (field.type === 'integer')  {
-            source = $('                                                \n\
-                ', source, '                                            \n\
-                // __blank__                                            \n\
-                ', integer(field, object + '.' + field.name), '         \n\
-                // __reference__                                        \n\
+            return $('                                                      \n\
+                ', integer(field, object + '.' + field.name), '             \n\
+                // __reference__                                            \n\
             ')
         }
         break
@@ -158,12 +147,9 @@ function subParse (source, variables, packet, depth) {
 }
 
 function parse (variables, packet, depth) {
-    var source = ''
-    // TODO Switch and this is structure, sub parse is others.
-    packet.fields.forEach(function (packet) {
-        source = subParse(source, variables, packet, depth)
-    })
-    return source
+    return joinSources(packet.fields.map(function (packet) {
+        return subParse(variables, packet, depth)
+    }))
 }
 
 function parser (packet) {
@@ -179,6 +165,7 @@ function parser (packet) {
             var end = engine.end                                            \n\
             // __blank__                                                    \n\
             ', String(variables), '                                         \n\
+            // __blank__                                                    \n\
             ', source, '                                                    \n\
             // __blank__                                                    \n\
             engine.start = start                                            \n\
