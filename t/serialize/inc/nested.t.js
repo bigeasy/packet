@@ -4,6 +4,7 @@ function prove (assert) {
     var path = require('path')
     var compiler = require('../../../compiler/require')
     var composer = require('../../../compose/serializer/inc.js')
+    var toJSON = require('../../tojson.js')
     var filename = path.resolve(__filename, '../../../generated/nested.serialize.inc.js')
 
     var serializers = composer(compiler(filename), [{
@@ -53,7 +54,7 @@ function prove (assert) {
             end: bufferLength
         }
         serializer.serialize(engine)
-        assert(engine.buffer.toJSON(), [
+        assert(toJSON(engine.buffer), [
             0x0, 0x2, 0xa, 0xa, 0x0, 0x1, 0x0, 0x2, 0x0, 0x3
         ], 'compiled')
         assert(engine.start, buffer.length, 'start moved')
