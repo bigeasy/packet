@@ -3,8 +3,6 @@ var explode = require('../explode')
 var qualify = require('../qualify')
 var $ = require('programmatic')
 
-var assert = require('assert')
-
 function integer (field, assignee) {
     var read = [], bite = field.bite, stop = field.stop
     while (bite != stop) {
@@ -120,16 +118,25 @@ function lengthEncoded (variables, packet, depth) {
 }
 
 function subParse (source, variables, packet, depth) {
-    assert(packet.type)
     switch (packet.type) {
+    case 'structure':
+        source = $('                                                    \n\
+            ', source, '                                                \n\
+            // __blank__                                                \n\
+            ', constructor(variables, packet, depth), '                 \n\
+            ', parse(variables, packet, depth), '                       \n\
+        ')
+        break
     case 'alternation':
         source = $('                                                    \n\
+            ', source, '                                                \n\
             // __blank__                                                \n\
             ', alternation(variables, packet, depth), '                 \n\
         ')
         break
     case 'lengthEncoded':
         source = $('                                                    \n\
+            ', source, '                                                \n\
             // __blank__                                                \n\
             ', lengthEncoded(variables, packet, depth), '               \n\
         ')
@@ -161,10 +168,7 @@ function parse (variables, packet, depth) {
 
 function parser (packet) {
     var variables = new Variables
-    var source = $('                                                        \n\
-        ', constructor(variables, packet, 0), '                             \n\
-        ', parse(variables, packet, 0), '                                   \n\
-    ')
+    var source = parse(variables, { fields: [ packet ] }, 0)
     return $('                                                              \n\
         parsers.' + packet.name + ' = function () {                         \n\
         }                                                                   \n\
@@ -175,7 +179,6 @@ function parser (packet) {
             var end = engine.end                                            \n\
             // __blank__                                                    \n\
             ', String(variables), '                                         \n\
-            // __blank__                                                    \n\
             ', source, '                                                    \n\
             // __blank__                                                    \n\
             engine.start = start                                            \n\
