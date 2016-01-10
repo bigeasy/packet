@@ -1,4 +1,3 @@
-var parse   = require('./tokenizer').parse
 var composers = {
     composeSerializer: require('./composers/serializers/bff'),
     composeParser: require('./composers/parsers/bff'),
