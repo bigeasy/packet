@@ -739,3 +739,11 @@ myself; I'm going to create a library that makes it easier to create performant
 parsers and serializers, but it is not going to be prematurely optimized to high
 heaven. There is going to be adoption to drive paths of optimziation. Who knows?
 Flexibility might be more important.
+
+## Redux Oops
+
+Looks like I've not made any progress on implementing best foot forward parsers.
+I've got whole parsers, but they do not check that the buffer is long enough.
+Since people are wating on Packet, I'm going to develop an API around
+incremental parsers, and best foot forward parsers will be like Hotspot is to
+Cadence.
