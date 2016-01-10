@@ -703,3 +703,39 @@ items, buffer, index, and object under construction, something along those
 lines, essentially trying to minimize the energy spent trying to figure out what
 to do next. This might become apparent to me as I continue to implement the
 parsers, sorting out how to invoke them.
+
+## Redux Breakthough
+
+Time to start iterating on the new language that uses JavaScript structure. More
+syntax bashing, much like Cadence.
+
+How to write when my capacity to write has been exhausted?
+
+Packet is an old project. I came to it years ago. This was long before the
+`Buffer` object had any way to stuff integers into buffers. It was an early
+project. I was not the same program I am today. I was loaded up with
+shibboleths, programming defensively.
+
+The many unit tests, one for each pathway in the tokenizer, that was an
+attention to detail that was obsessive. It was a poor structure. It should be an
+indication that the project has grown to big for Node.js if it is emitting too
+many unit tests. It is simply not the case that a unit test will hone in on the
+code that broke the build. Unit tests turn red. A module will be broken, but
+when the unit tests are all testing a paritcular path in the module, so many of
+them turn read, you simply pick the first one to run to debug. It is debugging
+that diagnoses the issue, not the test. The test simply exposes the issue.
+
+A test should match up to a module. It should test the entirety of an interface.
+It should the property of making an implementation of an aspect of the program
+forgettable.
+
+This particularity has infected this project, so that I've always approached it
+by creating long lists, particular lists, a great many issues, all of which
+indicates that it is a somewhat tedious project. At this point, though, I can
+create a cycle test and start working my way back through the test cases.
+
+Also, it has been decided that I'm not going to make life too difficult for
+myself; I'm going to create a library that makes it easier to create performant
+parsers and serializers, but it is not going to be prematurely optimized to high
+heaven. There is going to be adoption to drive paths of optimziation. Who knows?
+Flexibility might be more important.
