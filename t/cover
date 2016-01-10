@@ -5,10 +5,10 @@ set -e
 rm -rf coverage
 
 count=1;
-for file in t/compiler/*.t.js t/*/inc/*.t.js t/*/all/*.t.js; do
+for file in t/*/*.t.js t/*/inc/*.t.js t/*/all/*.t.js; do
   node_modules/.bin/istanbul cover \
     -x 'composers.js' \
-    -x 't/require.js' -x 'ieee754.js' \
+    -x 't/require.js' -x 't/to-json.js' \
     -x 't/**/proof.js' -x 't/**/*.t.js' $file >/dev/null 2>&1
   mv coverage/coverage.json coverage/coverage$count.json
   count=$(expr $count + 1)
