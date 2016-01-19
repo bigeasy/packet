@@ -4,6 +4,8 @@ Incremental binary parsers and serializers for Node.js.
 
 ### Diary
 
+[![Join the chat at https://gitter.im/bigeasy/packet](https://badges.gitter.im/bigeasy/packet.svg)](https://gitter.im/bigeasy/packet?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 In the middle of the final rewrite after many years of learning about Node.js.
 
 Currently working in the `compose` folder to create compiled parsers based on
