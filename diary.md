@@ -721,7 +721,7 @@ attention to detail that was obsessive. It was a poor structure. It should be an
 indication that the project has grown to big for Node.js if it is emitting too
 many unit tests. It is simply not the case that a unit test will hone in on the
 code that broke the build. Unit tests turn red. A module will be broken, but
-when the unit tests are all testing a paritcular path in the module, so many of
+when the unit tests are all testing a particular path in the module, so many of
 them turn read, you simply pick the first one to run to debug. It is debugging
 that diagnoses the issue, not the test. The test simply exposes the issue.
 
@@ -737,13 +737,13 @@ create a cycle test and start working my way back through the test cases.
 Also, it has been decided that I'm not going to make life too difficult for
 myself; I'm going to create a library that makes it easier to create performant
 parsers and serializers, but it is not going to be prematurely optimized to high
-heaven. There is going to be adoption to drive paths of optimziation. Who knows?
+heaven. There is going to be adoption to drive paths of optimization. Who knows?
 Flexibility might be more important.
 
 ## Redux Oops
 
 Looks like I've not made any progress on implementing best foot forward parsers.
 I've got whole parsers, but they do not check that the buffer is long enough.
-Since people are wating on Packet, I'm going to develop an API around
+Since people are waiting on Packet, I'm going to develop an API around
 incremental parsers, and best foot forward parsers will be like Hotspot is to
 Cadence.
