@@ -16,8 +16,8 @@ module.exports = (function () {
         }
 
         object.word =
-            buffer[start++] +
-            buffer[start++] * 0x100
+            buffer[start++] * 0x100 +
+            buffer[start++]
 
         engine.start = start
 

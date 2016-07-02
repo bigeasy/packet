@@ -18,12 +18,12 @@ function explode (field) {
         field.element = explode(field.element)
         break
     case 'integer':
-        var little = field.endianess === 'l'
+        var little = field.endianness === 'l'
         var bytes = field.bits / 8
         field = {
             name: field.name,
-            length: field.length,
-            endianness: field.endianess,
+            length: field.length || null,
+            endianness: field.endianness,
             type: 'integer',
             little: little,
             bite: little ? 0 : bytes - 1,

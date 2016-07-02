@@ -11,7 +11,7 @@ function prove (assert) {
             name: 'bite',
             type: 'integer',
             bits: 8,
-            endianess: 'b'
+            endianness: 'b'
         }]
     }], 'byte')
 }

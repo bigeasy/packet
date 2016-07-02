@@ -19,14 +19,14 @@ function terminated (object, rest) {
     return object
 }
 
-function integer (object, endianess, rest) {
+function integer (object, endianness, rest) {
     var $ = ok(/^(\d+)(.*)$/.exec(rest), 'missing bit size')
     var bits = +$[1], rest = $[2]
     ok(bits != 0, 'bits cannot be zero')
     ok(bits % 8 == 0, 'only 8-bit bytes are supported')
     object.type = 'integer'
     object.bits = bits
-    object.endianess = endianess
+    object.endianness = endianness
     if (rest.length) {
         $ = ok(/^([[z])(.*)$/.exec(rest), 'unknown suffix')
         switch ($[1]) {

@@ -23,17 +23,17 @@ module.exports = (function () {
         case 0:
 
             this.step = 1
-            this.bite = 0
+            this.bite = 1
 
         case 1:
 
-            while (this.bite != 2) {
+            while (this.bite != -1) {
                 if (start == end) {
                     engine.start = start
                     return
                 }
                 buffer[start++] = frame.object.word >>> this.bite * 8 & 0xff
-                this.bite++
+                this.bite--
             }
 
             this.step = 2

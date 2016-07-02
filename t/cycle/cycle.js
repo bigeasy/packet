@@ -1,6 +1,7 @@
 var path = require('path')
 var compiler = require('../../compiler/require')
 var transmogrify = require('../../transmogrifier')
+var util = require('util')
 var toJSON = require('../to-json')
 // TODO: Make compiler a function that takes a prefix, then compile the four.
 var composers = {
@@ -18,7 +19,6 @@ var Writer = require('../../writer')
 module.exports = function (assert) {
     return function (options) {
         var transmogrified = transmogrify(options.define)
-        console.log(options)
         var filename = path.resolve(__filename, '../../generated/' + options.name)
         var engines = {
             parser: {

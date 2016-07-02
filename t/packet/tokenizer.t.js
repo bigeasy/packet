@@ -5,19 +5,19 @@ function prove (assert) {
 
     assert(tokenize({}, 'b8'), {
         type: 'integer',
-        endianess: 'b',
+        endianness: 'b',
         bits: 8
     }, 'byte')
 
     assert(tokenize({}, 'b16'), {
         type: 'integer',
-        endianess: 'b',
+        endianness: 'b',
         bits: 16
     }, 'word')
 
     assert(tokenize({}, 'b16[10]'), {
         type: 'integer',
-        endianess: 'b',
+        endianness: 'b',
         repeat: 10,
         bits: 16 }, 'word')
 }
