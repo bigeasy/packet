@@ -1,4 +1,4 @@
-require('proof')(3, prove)
+require('proof')(4, prove)
 
 function prove (assert) {
     var cycle = require('./cycle')(assert)
@@ -28,5 +28,14 @@ function prove (assert) {
         },
         object: { integer: 0x89abcdef },
         buffer: [ 0x89, 0xab, 0xcd, 0xef ]
+    })
+
+    cycle({
+        name: 'little-endian-integer',
+        define: {
+            object: { integer: 'l32' }
+        },
+        object: { integer: 0x89abcdef },
+        buffer: [ 0xef, 0xcd, 0xab, 0x89 ]
     })
 }
