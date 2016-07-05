@@ -1,7 +1,16 @@
-require('proof')(4, prove)
+require('proof')(5, prove)
 
 function prove (assert) {
     var cycle = require('./cycle')(assert)
+
+    cycle({
+        name: 'big-endian-byte',
+        define: {
+            object: { word: 'b8' }
+        },
+        object: { word: 0xab },
+        buffer: [ 0xab ]
+    })
 
     cycle({
         name: 'little-endian-word',
