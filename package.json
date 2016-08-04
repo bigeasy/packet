@@ -12,8 +12,7 @@
     "bugs":             "https://github.com/bigeasy/packet/issues",
     "devDependencies":
     {
-                        "proof": "1.0.x",
-                        "uglify-js": "~1.3"
+                        "proof": "1.0.x"
     },
     "dependencies":
     {
