@@ -2,12 +2,37 @@ var Variables = require('../variables')
 var explode = require('../explode')
 var qualify = require('../qualify')
 var joinSources = require('../join-sources')
+var pack = require('../pack')
 var $ = require('programmatic')
 
-function integer (field, value) {
-    var bites = [], bite = field.bite, stop = field.stop, shift
+function integer (variables, field, object) {
+    if (field.packing) {
+        var offset = 0
+        var packing = []
+        variables.hoist('value')
+
+        for (var i = 0, I = field.packing.length; i < I; i++) {
+            var packed = field.packing[i]
+            var variable = object + '.' + packed.name
+            packing.push(' (' + pack(field.bits, offset, packed.bits, variable) + ')')
+            offset += packed.bits
+        }
+        return $('                                                          \n\
+            value =                                                         \n\
+                ', packing.join(' |\n'), '                                  \n\
+            __blank__                                                       \n\
+            ', word(field, 'value'), '                                      \n\
+        ')
+    } else {
+        return word(field, object + '.' + field.name)
+    }
+}
+
+// TODO How do I inject code?
+function word (field, variable) {
+    var bites = [], bite = field.bite, stop = field.stop, shift, variable
     while (bite != stop) {
-        shift = bite ? value + ' >>> ' + bite * 8 : value
+        shift = bite ? variable + ' >>> ' + bite * 8 : variable
         bites.push('buffer[start++] = ' + shift + ' & 0xff')
         bite += field.direction
     }
@@ -84,7 +109,7 @@ function lengthEncoded (variables, packet, depth) {
         ' + array + ' = ' + object + '.' + packet.name + '                  \n\
         ' + length + ' = array.length                                       \n\
         // __blank__                                                        \n\
-        ', integer(packet.length, length), '                                \n\
+        ', word(packet.length, length), '                                   \n\
         // __blank__                                                        \n\
         for (' + i + ' = 0; ' + i + ' < length; ' + i + '++) {              \n\
             ' + subObject + ' = array[' + i + ']                            \n\
@@ -108,7 +133,7 @@ function field (variables, packet, depth) {
         var object = qualify('object', depth)
         if (packet.type === 'integer')  {
             return $('                                                      \n\
-                ', integer(packet, object + '.' + packet.name), '           \n\
+                ', integer(variables, packet, object), '                    \n\
                 // __reference__                                            \n\
             ')
         }

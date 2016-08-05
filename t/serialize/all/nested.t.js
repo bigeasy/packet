@@ -15,7 +15,7 @@ function prove (assert) {
             name: 'values',
             length: {
                 type: 'integer',
-                endianess: 'b',
+                endianness: 'b',
                 bits: 16
             },
             element: {
@@ -23,12 +23,12 @@ function prove (assert) {
                 fields: [{
                     type: 'integer',
                     name: 'key',
-                    endianess: 'b',
+                    endianness: 'b',
                     bits: 16
                 }, {
                     type: 'integer',
                     name: 'value',
-                    endianess: 'b',
+                    endianness: 'b',
                     bits: 16
                 }]
             }
