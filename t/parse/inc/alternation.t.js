@@ -14,7 +14,7 @@ function prove (assert) {
             name: 'number',
             select: {
                 type: 'integer',
-                endianess: 'b',
+                endianness: 'b',
                 bits: 8
             },
             choose: [{
@@ -30,7 +30,7 @@ function prove (assert) {
                     when: { range: { from: 0x80 }  },
                     field: {
                         type: 'integer',
-                        endianess: 'b',
+                        endianness: 'b',
                         bits: 16
                     }
                 }
@@ -38,14 +38,14 @@ function prove (assert) {
                 read: {
                     field: {
                         type: 'integer',
-                        endianess: 'b',
+                        endianness: 'b',
                         bits: 8
                     }
                 },
                 write: {
                     field: {
                         type: 'integer',
-                        endianess: 'b',
+                        endianness: 'b',
                         bits: 8
                     }
                 }
