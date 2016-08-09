@@ -27,6 +27,8 @@ function constructor (variables, packet, depth) {
     variables.hoist(object)
     packet.fields.forEach(function (field) {
         switch (field.type) {
+        case 'checkpoint':
+            break
         case 'lengthEncoded':
             fields.push(field.name + ': new Array')
             break
@@ -112,8 +114,23 @@ function lengthEncoded (variables, packet, depth) {
     ')
 }
 
+function checkpoint (variables, packet, depth) {
+    var stack = [ 'object' ]
+    for (var i = 1; i < depth; i++ ) {
+        stack.push('object' + i)
+    }
+    return $('                                                                     \n\
+        if (buffer.length < ' + packet.length + ') {                        \n\
+            return this._inc(buffer, start, end, [' + stack.join(', ') + '])\n\
+        }                                                                   \n\
+    ')
+}
+
 function field (variables, packet, depth) {
     switch (packet.type) {
+    case 'checkpoint':
+        console.log('here ->', checkpoint(variables, packet, depth))
+        return checkpoint(variables, packet, depth)
     case 'structure':
         return $('                                                          \n\
             ', constructor(variables, packet, depth), '                     \n\
@@ -162,9 +179,25 @@ function parser (packet) {
     ')
 }
 
-module.exports = function (compiler, definition) {
+function bff (packet) {
+    var checkpoint, fields = [ checkpoint = { type: 'checkpoint', length: 0 } ]
+    for (var i = 0, I = packet.fields.length; i < I; i++) {
+        var field = packet.fields[i]
+        checkpoint.length += field.bytes
+        fields.push(field)
+    }
+    return fields
+}
+
+module.exports = function (compiler, definition, options) {
+    options || (options = {})
     var source = joinSources(definition.map(function (packet) {
-        return parser(explode(packet))
+        packet = explode(packet)
+        if (options.bff) {
+            console.log('here', packet)
+            packet.fields = bff(packet)
+        }
+        return parser(packet)
     }))
     source = $('                                                            \n\
         var parsers = {}                                                    \n\
