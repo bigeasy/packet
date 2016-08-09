@@ -1,4 +1,4 @@
-require('proof')(2, prove)
+require('proof')(1, prove)
 
 function prove (assert) {
     var path = require('path')
@@ -35,13 +35,9 @@ function prove (assert) {
     }])
 
     var buffer = new Buffer([ 0x0, 0x2, 0xa, 0xa, 0x0, 0x1, 0x0, 0x2, 0x0, 0x3 ])
-    var engine = {
-        buffer: buffer,
-        start: 0,
-        end: buffer.length
-    }
-    assert((new parsers.object).parse(engine), {
-        values: [ { key: 2570, value: 1 }, { key: 2, value: 3 } ]
+    assert((new parsers.object).parse(buffer, 0), {
+        start: buffer.length,
+        object: { values: [ { key: 2570, value: 1 }, { key: 2, value: 3 } ] },
+        parser: null
     }, 'compiled')
-    assert(engine.start, buffer.length, 'start moved')
 }

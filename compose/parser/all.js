@@ -156,25 +156,28 @@ function field (variables, packet, depth) {
     return source
 }
 
-function parser (packet) {
+function parser (packet, bff) {
     var variables = new Variables
+
     var source = field(variables, packet, 0)
+
+    // No need to track the end if we are a whole packet parser.
+    var signature = [ 'buffer', 'start', 'end' ]
+    if (!bff) signature.pop()
+    signature = signature.join(', ')
+
+    // Parser defintion body.
     return $('                                                              \n\
         parsers.' + packet.name + ' = function () {                         \n\
         }                                                                   \n\
         // __blank__                                                        \n\
-        parsers.' + packet.name + '.prototype.parse = function (engine) {   \n\
-            var buffer = engine.buffer                                      \n\
-            var start = engine.start                                        \n\
-            var end = engine.end                                            \n\
+        parsers.' + packet.name + '.prototype.parse = function (' + signature + ') {   \n\
             // __blank__                                                    \n\
             ', String(variables), '                                         \n\
             // __blank__                                                    \n\
             ', source, '                                                    \n\
             // __blank__                                                    \n\
-            engine.start = start                                            \n\
-            // __blank__                                                    \n\
-            return object                                                   \n\
+            return { start: start, object: object, parser: null }           \n\
         }                                                                   \n\
     ')
 }

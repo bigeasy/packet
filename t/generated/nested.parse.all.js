@@ -4,10 +4,7 @@ module.exports = (function () {
     parsers.object = function () {
     }
 
-    parsers.object.prototype.parse = function (engine) {
-        var buffer = engine.buffer
-        var start = engine.start
-        var end = engine.end
+    parsers.object.prototype.parse = function (buffer, start) {
 
         var i
         var length
@@ -39,9 +36,7 @@ module.exports = (function () {
             object.values.push(object1)
         }
 
-        engine.start = start
-
-        return object
+        return { start: start, object: object, parser: null }
     }
 
     return parsers

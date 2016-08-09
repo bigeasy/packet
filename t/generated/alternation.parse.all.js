@@ -4,10 +4,7 @@ module.exports = (function () {
     parsers.object = function () {
     }
 
-    parsers.object.prototype.parse = function (engine) {
-        var buffer = engine.buffer
-        var start = engine.start
-        var end = engine.end
+    parsers.object.prototype.parse = function (buffer, start) {
 
         var object
         var select
@@ -31,9 +28,7 @@ module.exports = (function () {
 
         }
 
-        engine.start = start
-
-        return object
+        return { start: start, object: object, parser: null }
     }
 
     return parsers
