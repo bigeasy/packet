@@ -56,19 +56,12 @@ function prove (assert) {
     var buffer = new Buffer([ 0xff, 0xff ])
     for (var i = 0; i < buffer.length; i++) {
         var parser = (new parsers.object)
-        var engine = {
-            buffer: buffer,
-            start: 0,
-            end: buffer.length - i
-        }
-        parser.parse(engine)
-        var engine = {
-            buffer: buffer,
-            start: buffer.length - i,
-            end: buffer.length
-        }
-        parser.parse(engine)
-        assert(parser.object, { number: 0xffff }, 'compiled')
-        assert(engine.start, buffer.length, 'start moved')
+        var first = parser.parse(buffer, 0, buffer.length - i)
+        assert(first.start, buffer.length - i, 'inremental start ' + i)
+        assert(parser.parse(buffer, buffer.length - i, buffer.length), {
+            start: buffer.length,
+            object: { number: 0xffff },
+            parser: null
+        }, 'complete ' + i)
     }
 }

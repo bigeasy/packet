@@ -13,10 +13,7 @@ module.exports = (function () {
         }]
     }
 
-    parsers.object.prototype.parse = function (engine) {
-        var buffer = engine.buffer
-        var start = engine.start
-        var end = engine.end
+    parsers.object.prototype.parse = function (buffer, start, end) {
 
         var frame = this.stack[this.stack.length - 1]
 
@@ -37,8 +34,7 @@ module.exports = (function () {
 
                 while (frame.bite != -1) {
                     if (start == end) {
-                        engine.start = start
-                        return
+                        return { start: start, object: null, parser: this }
                     }
                     frame.value += Math.pow(256, frame.bite) * buffer[start++]
                     frame.bite--
@@ -72,8 +68,7 @@ module.exports = (function () {
 
                 while (frame.bite != -1) {
                     if (start == end) {
-                        engine.start = start
-                        return
+                        return { start: start, object: null, parser: this }
                     }
                     frame.value += Math.pow(256, frame.bite) * buffer[start++]
                     frame.bite--
@@ -96,8 +91,7 @@ module.exports = (function () {
 
                 while (frame.bite != -1) {
                     if (start == end) {
-                        engine.start = start
-                        return
+                        return { start: start, object: null, parser: this }
                     }
                     frame.value += Math.pow(256, frame.bite) * buffer[start++]
                     frame.bite--
@@ -112,9 +106,11 @@ module.exports = (function () {
                     this.step = 2
                     continue
                 }
+                this.step = 7
+
             case 7:
 
-                engine.start = start
+                return { start: start, object: this.object, parser: null }
 
             }
 

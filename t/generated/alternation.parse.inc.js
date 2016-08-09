@@ -14,10 +14,7 @@ module.exports = (function () {
         this.cache = null
     }
 
-    parsers.object.prototype.parse = function (engine) {
-        var buffer = engine.buffer
-        var start = engine.start
-        var end = engine.end
+    parsers.object.prototype.parse = function (buffer, start, end) {
 
         var frame = this.stack[this.stack.length - 1]
 
@@ -39,8 +36,7 @@ module.exports = (function () {
 
                 while (frame.bite != -1) {
                     if (start == end) {
-                        engine.start = start
-                        return
+                        return { start: start, object: null, parser: this }
                     }
                     this.cache.push(buffer[start])
                     frame.value += Math.pow(256, frame.bite) * buffer[start++]
@@ -54,21 +50,13 @@ module.exports = (function () {
                 if (frame.select & 0x80) {
 
                     this.step = 2
-                    this.parse({
-                        buffer: this.cache,
-                        start: 0,
-                        end: this.cache.length
-                    })
+                    this.parse(this.cache, 0, this.cache.length)
                     continue
 
                 } else {
 
                     this.step = 4
-                    this.parse({
-                        buffer: this.cache,
-                        start: 0,
-                        end: this.cache.length
-                    })
+                    this.parse(this.cache, 0, this.cache.length)
                     continue
 
                 }
@@ -87,8 +75,7 @@ module.exports = (function () {
 
                 while (frame.bite != -1) {
                     if (start == end) {
-                        engine.start = start
-                        return
+                        return { start: start, object: null, parser: this }
                     }
                     frame.value += Math.pow(256, frame.bite) * buffer[start++]
                     frame.bite--
@@ -97,6 +84,7 @@ module.exports = (function () {
                 this.stack.pop()
                 this.stack[this.stack.length - 1].object.number = frame.value
                 this.step = 6
+                continue
 
             case 4:
 
@@ -112,8 +100,7 @@ module.exports = (function () {
 
                 while (frame.bite != -1) {
                     if (start == end) {
-                        engine.start = start
-                        return
+                        return { start: start, object: null, parser: this }
                     }
                     frame.value += Math.pow(256, frame.bite) * buffer[start++]
                     frame.bite--
@@ -122,10 +109,11 @@ module.exports = (function () {
                 this.stack.pop()
                 this.stack[this.stack.length - 1].object.number = frame.value
                 this.step = 6
+                continue
 
             case 6:
 
-                engine.start = start
+                return { start: start, object: this.object, parser: null }
 
             }
 

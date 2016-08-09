@@ -37,21 +37,12 @@ function prove (assert) {
     var buffer = new Buffer([ 0x0, 0x2, 0xa, 0xa, 0x0, 0x1, 0x0, 0x2, 0x0, 0x3 ])
     for (var i = 0; i < buffer.length; i++) {
         var parser = (new parsers.object)
-        var engine = {
-            buffer: buffer,
-            start: 0,
-            end: buffer.length - i
-        }
-        parser.parse(engine)
-        var engine = {
-            buffer: buffer,
-            start: buffer.length - i,
-            end: buffer.length
-        }
-        parser.parse(engine)
-        assert(parser.object, {
-            values: [ { key: 2570, value: 1 }, { key: 2, value: 3 } ]
-        }, 'compiled')
-        assert(engine.start, buffer.length, 'start moved')
+        var first = parser.parse(buffer, 0, buffer.length - i)
+        assert(first.start, buffer.length - i, 'incremental ' + i)
+        assert(parser.parse(buffer, buffer.length - i, buffer.length), {
+            start: buffer.length,
+            object: { values: [ { key: 2570, value: 1 }, { key: 2, value: 3 } ] },
+            parser: null,
+        }, 'compiled ' + i)
     }
 }

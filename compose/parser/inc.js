@@ -43,8 +43,7 @@ Generator.prototype.integer = function (field, property, cached) {
             // __blank__                                                    \n\
             while (frame.bite != ' + stop + ') {                            \n\
                 if (start == end) {                                         \n\
-                    engine.start = start                                    \n\
-                    return                                                  \n\
+                    return { start: start, object: null, parser: this }     \n\
                 }                                                           \n\
                 ' + when(cached, 'this.cache.push(buffer[start])') + '      \n\
                 frame.value += Math.pow(256, frame.bite) * buffer[start++]  \n\
@@ -110,11 +109,7 @@ Generator.prototype.alternation = function (packet, depth) {
             ', choice.condition, '                                          \n\
             // __blank__                                                    \n\
                 this.step = ' + compiled.step + '                           \n\
-                this.parse({                                                \n\
-                    buffer: this.cache,                                     \n\
-                    start: 0,                                               \n\
-                    end: this.cache.length                                  \n\
-                })                                                          \n\
+                this.parse(this.cache, 0, this.cache.length)                \n\
                 continue                                                    \n\
                 // __blank__                                                \n\
         ')
@@ -127,6 +122,7 @@ Generator.prototype.alternation = function (packet, depth) {
             ', steps, '                                                     \n\
             ', source, '                                                    \n\
                 this.step = ' + this.step + '                               \n\
+                continue                                                    \n\
             // __blank__                                                    \n\
         ')
     }, this)
@@ -173,6 +169,8 @@ Generator.prototype.lengthEncoded = function (packet, depth) {
                 this.step = ' + again + '                                   \n\
                 continue                                                    \n\
             }                                                               \n\
+            this.step = ' + this.step + '                                   \n\
+            __blank__                                                       \n\
     ')
     return {
         step: integer.step,
@@ -205,7 +203,7 @@ Generator.prototype.parser = function (packet) {
         ', source, '                                                        \n\
         case ' + this.step + ':                                             \n\
             // __blank__                                                    \n\
-            engine.start = start                                            \n\
+            return { start: start, object: this.object, parser: null }      \n\
             // __blank__                                                    \n\
         }                                                                   \n\
     ')
@@ -233,10 +231,7 @@ Generator.prototype.parser = function (packet) {
             ' + when(this.cached, 'this.cache = null') + '                  \n\
         }                                                                   \n\
         // __blank__                                                        \n\
-        parsers.' + packet.name + '.prototype.parse = function (engine) {   \n\
-            var buffer = engine.buffer                                      \n\
-            var start = engine.start                                        \n\
-            var end = engine.end                                            \n\
+        parsers.' + packet.name + '.prototype.parse = function (buffer, start, end) {   \n\
             // __blank__                                                    \n\
             var frame = this.stack[this.stack.length - 1]                   \n\
             // __blank__                                                    \n\
