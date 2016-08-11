@@ -148,10 +148,7 @@ function serializer (packet) {
             this.object = object                                            \n\
         }                                                                   \n\
         // __blank__                                                        \n\
-        serializers.' + packet.name + '.prototype.serialize = function (engine) {  \n\
-            var buffer = engine.buffer                                      \n\
-            var start = engine.start                                        \n\
-            var end = engine.end                                            \n\
+        serializers.' + packet.name + '.prototype.serialize = function (buffer, start) {  \n\
             // __blank__                                                    \n\
             var object = this.object                                        \n\
             // __blank__                                                    \n\
@@ -159,9 +156,7 @@ function serializer (packet) {
             // __blank__                                                    \n\
             ', source, '                                                    \n\
             // __blank__                                                    \n\
-            engine.start = start                                            \n\
-            // __blank__                                                    \n\
-            return object                                                   \n\
+            return { start: start, serializer: null }                       \n\
         }                                                                   \n\
     ')
 }

@@ -58,13 +58,10 @@ function prove (assert) {
     var object = {
         number: 0xffff
     }
-    var cursor = {
-        buffer: buffer,
-        start: 0,
-        end: buffer.length
-    }
     var serializer = new serializers.object(object)
-    serializer.serialize(cursor)
-    assert(toJSON(buffer), [ 0xff, 0xff ], 'compiled')
-    assert(cursor.start, buffer.length, 'start moved')
+    assert(serializer.serialize(buffer, 0), {
+        start: buffer.length,
+        serializer: null
+    }, 'start moved')
+    assert(toJSON(buffer), [ 0xff, 0xff ], 'serialized')
 }

@@ -30,13 +30,10 @@ function prove (assert) {
 
     var buffer = new Buffer(2)
     var object = { flag: 1, number: 0x1 }
-    var engine = {
-        buffer: buffer,
-        start: 0,
-        end: buffer.length
-    }
     var serializer = new serializers.object(object)
-    serializer.serialize(engine)
-    assert(toJSON(engine.buffer), [ 0x80, 0x01 ], 'compiled')
-    assert(engine.start, buffer.length, 'start moved')
+    assert(serializer.serialize(buffer, 0), {
+        start: buffer.length,
+        serializer: null
+    }, 'start moved')
+    assert(toJSON(buffer), [ 0x80, 0x01 ], 'serialized')
 }
