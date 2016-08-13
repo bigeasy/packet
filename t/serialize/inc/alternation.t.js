@@ -7,7 +7,9 @@ function prove (assert) {
     var filename = path.resolve(__filename, '../../../generated/alternation.serialize.inc.js')
     var toJSON = require('../../to-json')
 
-    var serializers = composer(compiler(filename), [{
+    var serializers = { inc: {} }
+
+    composer(compiler('serializers', filename), [{
         type: 'structure',
         name: 'object',
         fields: [{
@@ -52,7 +54,7 @@ function prove (assert) {
                 }
             }]
         }]
-    }])
+    }])(serializers)
 
     var bufferLength = 2
     for (var i = 0; i < bufferLength; i++) {
@@ -60,7 +62,7 @@ function prove (assert) {
         var object = {
             number: 0xffff
         }
-        var serializer = new serializers.object(object)
+        var serializer = new serializers.inc.object(object)
         var first = serializer.serialize(buffer, 0, bufferLength - i)
         assert(first.start, bufferLength - i, 'correct start ' + i)
         assert(serializer.serialize(buffer, bufferLength - i, bufferLength), {

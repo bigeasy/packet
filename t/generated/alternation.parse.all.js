@@ -1,10 +1,8 @@
-module.exports = (function () {
-    var parsers = {}
-
-    parsers.object = function () {
+module.exports = function (parsers) {
+    parsers.all.object = function () {
     }
 
-    parsers.object.prototype.parse = function (buffer, start) {
+    parsers.all.object.prototype.parse = function (buffer, start) {
 
         var object
         var select
@@ -30,6 +28,4 @@ module.exports = (function () {
 
         return { start: start, object: object, parser: null }
     }
-
-    return parsers
-})()
+}

@@ -1,7 +1,5 @@
-module.exports = (function () {
-    var parsers = {}
-
-    parsers.object = function () {
+module.exports = function (parsers) {
+    parsers.inc.object = function () {
         this.step = 0
         this.stack = [{
             object: this.object = {
@@ -13,7 +11,7 @@ module.exports = (function () {
         }]
     }
 
-    parsers.object.prototype.parse = function (buffer, start, end) {
+    parsers.inc.object.prototype.parse = function (buffer, start, end) {
 
         var frame = this.stack[this.stack.length - 1]
 
@@ -46,6 +44,4 @@ module.exports = (function () {
 
         }
     }
-
-    return parsers
-})()
+}

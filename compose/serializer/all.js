@@ -143,12 +143,13 @@ function field (variables, packet, depth) {
 function serializer (packet) {
     var variables = new Variables
     var source = field(variables, packet, 0)
+    var object = 'serializers.all.' + packet.name
     return $('                                                              \n\
-        serializers.' + packet.name + ' = function (object) {               \n\
+        ' + object + ' = function (object) {                                \n\
             this.object = object                                            \n\
         }                                                                   \n\
         // __blank__                                                        \n\
-        serializers.' + packet.name + '.prototype.serialize = function (buffer, start) {  \n\
+        ' + object + '.prototype.serialize = function (buffer, start) {     \n\
             // __blank__                                                    \n\
             var object = this.object                                        \n\
             // __blank__                                                    \n\
@@ -165,12 +166,5 @@ module.exports = function (compiler, definition) {
     var source = joinSources(definition.map(function (packet) {
         return serializer(explode(packet))
     }))
-    source = $('                                                            \n\
-        var serializers = {}                                                \n\
-        // __blank__                                                        \n\
-        ', source, '                                                        \n\
-        // __blank__                                                        \n\
-        return serializers                                                  \n\
-    ')
     return compiler(source)
 }

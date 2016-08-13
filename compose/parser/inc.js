@@ -217,8 +217,9 @@ Generator.prototype.parser = function (packet) {
             }                                                               \n\
         ')
     }
+    var object = 'parsers.inc.' + packet.name
     return $('                                                              \n\
-        parsers.' + packet.name + ' = function () {                         \n\
+        ' + object + ' = function () {                                      \n\
             this.step = 0                                                   \n\
             this.stack = [{                                                 \n\
                 object: this.object = {                                     \n\
@@ -231,7 +232,7 @@ Generator.prototype.parser = function (packet) {
             ' + when(this.cached, 'this.cache = null') + '                  \n\
         }                                                                   \n\
         // __blank__                                                        \n\
-        parsers.' + packet.name + '.prototype.parse = function (buffer, start, end) {   \n\
+        ' + object + '.prototype.parse = function (buffer, start, end) {    \n\
             // __blank__                                                    \n\
             var frame = this.stack[this.stack.length - 1]                   \n\
             // __blank__                                                    \n\
@@ -245,11 +246,7 @@ module.exports = function (compiler, definition) {
         return new Generator().parser(explode(packet))
     }))
     source = $('                                                            \n\
-        var parsers = {}                                                    \n\
-        // __blank__                                                        \n\
         ', source, '                                                        \n\
-        // __blank__                                                        \n\
-        return parsers                                                      \n\
     ')
     return compiler(source)
 }

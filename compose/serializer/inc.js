@@ -190,8 +190,9 @@ Generator.prototype.serializer = function (packet) {
             }                                                               \n\
         ')
     }
+    var object = 'serializers.inc.' + packet.name
     return $('                                                              \n\
-        serializers.' + packet.name + ' = function (object) {               \n\
+        ' + object + ' = function (object) {                                \n\
             this.step = 0                                                   \n\
             this.bite = 0                                                   \n\
             this.stop = 0                                                   \n\
@@ -202,7 +203,7 @@ Generator.prototype.serializer = function (packet) {
             }]                                                              \n\
         }                                                                   \n\
         // __blank__                                                        \n\
-        serializers.' + packet.name + '.prototype.serialize = function (buffer, start, end) { \n\
+        ' + object + '.prototype.serialize = function (buffer, start, end) {\n\
             var frame = this.stack[this.stack.length - 1]                   \n\
             // __blank__                                                    \n\
             ', dispatch, '                                                  \n\
@@ -216,12 +217,5 @@ module.exports = function (compiler, definition) {
     var source = joinSources(definition.map(function (packet) {
         return new Generator().serializer(explode(packet))
     }))
-    source = $('                                                            \n\
-        var serializers = {}                                                \n\
-        // __blank__                                                        \n\
-        ', source, '                                                        \n\
-        // __blank__                                                        \n\
-        return serializers                                                  \n\
-    ')
     return compiler(source)
 }

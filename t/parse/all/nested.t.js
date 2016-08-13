@@ -6,7 +6,9 @@ function prove (assert) {
     var composer = require('../../../compose/parser/all.js')
     var filename = path.resolve(__filename, '../../../generated/nested.parse.all.js')
 
-    var parsers = composer(compiler(filename), [{
+    var parsers = { all: {} }
+
+    composer(compiler('parsers', filename), [{
         type: 'structure',
         name: 'object',
         fields: [{
@@ -32,10 +34,10 @@ function prove (assert) {
                 }]
             }
         }]
-    }])
+    }])(parsers)
 
     var buffer = new Buffer([ 0x0, 0x2, 0xa, 0xa, 0x0, 0x1, 0x0, 0x2, 0x0, 0x3 ])
-    assert((new parsers.object).parse(buffer, 0), {
+    assert((new parsers.all.object).parse(buffer, 0), {
         start: buffer.length,
         object: { values: [ { key: 2570, value: 1 }, { key: 2, value: 3 } ] },
         parser: null

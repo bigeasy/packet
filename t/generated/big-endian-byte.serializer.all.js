@@ -1,11 +1,9 @@
-module.exports = (function () {
-    var serializers = {}
-
-    serializers.object = function (object) {
+module.exports = function (serializers) {
+    serializers.all.object = function (object) {
         this.object = object
     }
 
-    serializers.object.prototype.serialize = function (buffer, start) {
+    serializers.all.object.prototype.serialize = function (buffer, start) {
 
         var object = this.object
 
@@ -14,6 +12,4 @@ module.exports = (function () {
 
         return { start: start, serializer: null }
     }
-
-    return serializers
-})()
+}

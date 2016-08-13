@@ -6,7 +6,9 @@ function prove (assert) {
     var composer = require('../../../compose/parser/inc.js')
     var filename = path.resolve(__filename, '../../../generated/alternation.parse.inc.js')
 
-    var parsers = composer(compiler(filename), [{
+    var parsers = { inc: {} }
+
+    composer(compiler('parsers', filename), [{
         type: 'structure',
         name: 'object',
         fields: [{
@@ -51,11 +53,11 @@ function prove (assert) {
                 }
             }]
         }]
-    }])
+    }])(parsers)
 
     var buffer = new Buffer([ 0xff, 0xff ])
     for (var i = 0; i < buffer.length; i++) {
-        var parser = (new parsers.object)
+        var parser = (new parsers.inc.object)
         var first = parser.parse(buffer, 0, buffer.length - i)
         assert(first.start, buffer.length - i, 'inremental start ' + i)
         assert(parser.parse(buffer, buffer.length - i, buffer.length), {

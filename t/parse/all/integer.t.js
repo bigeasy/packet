@@ -6,7 +6,9 @@ function prove (assert) {
     var composer = require('../../../compose/parser/all.js')
     var filename = path.resolve(__filename, '../../../generated/integer.parse.all.js')
 
-    var parsers = composer(compiler(filename), [{
+    var parsers = { all: {} }
+
+    composer(compiler('parsers', filename), [{
         type: 'structure',
         name: 'object',
         fields: [{
@@ -15,15 +17,10 @@ function prove (assert) {
             endianness: 'b',
             bits: 16
         }]
-    }])
+    }])(parsers)
 
     var buffer = new Buffer([ 0xab, 0xcd ])
-    var engine = {
-        buffer: buffer,
-        start: 0,
-        end: buffer.length
-    }
-    assert((new parsers.object).parse(buffer, 0), {
+    assert((new parsers.all.object).parse(buffer, 0), {
         start: 2,
         object: { integer: 0xabcd },
         parser: null

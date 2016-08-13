@@ -2,7 +2,7 @@ function Writer (engines, name, object) {
     this._engines = engines
     this._name = name
     this._object = object
-    this._serializer = new (engines.serializer.inc[name])(object)
+    this._serializer = new (engines.serializers.inc[name])(object)
 }
 
 Writer.prototype.write = function (cursor) {

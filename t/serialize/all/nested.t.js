@@ -7,7 +7,9 @@ function prove (assert) {
     var filename = path.resolve(__filename, '../../../generated/nested.serialize.all.js')
     var toJSON = require('../../to-json')
 
-    var serializers = composer(compiler(filename), [{
+    var serializers = { all: {} }
+
+    composer(compiler('serializers', filename), [{
         type: 'structure',
         name: 'object',
         fields: [{
@@ -33,13 +35,13 @@ function prove (assert) {
                 }]
             }
         }]
-    }])
+    }])(serializers)
 
     var buffer = new Buffer(10)
     var object = {
         values: [ { key: 2570, value: 1 }, { key: 2, value: 3 } ]
     }
-    var serializer = new serializers.object(object)
+    var serializer = new serializers.all.object(object)
     assert(serializer.serialize(buffer, 0), {
         start: buffer.length,
         serializer: null

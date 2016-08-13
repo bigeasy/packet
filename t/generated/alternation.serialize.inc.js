@@ -1,7 +1,5 @@
-module.exports = (function () {
-    var serializers = {}
-
-    serializers.object = function (object) {
+module.exports = function (serializers) {
+    serializers.inc.object = function (object) {
         this.step = 0
         this.bite = 0
         this.stop = 0
@@ -12,7 +10,7 @@ module.exports = (function () {
         }]
     }
 
-    serializers.object.prototype.serialize = function (buffer, start, end) {
+    serializers.inc.object.prototype.serialize = function (buffer, start, end) {
         var frame = this.stack[this.stack.length - 1]
 
         SERIALIZE: for (;;) {
@@ -80,6 +78,4 @@ module.exports = (function () {
 
         return { start: start, serializer: null }
     }
-
-    return serializers
-})()
+}

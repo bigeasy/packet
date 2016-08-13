@@ -166,12 +166,14 @@ function parser (packet, bff) {
     if (!bff) signature.pop()
     signature = signature.join(', ')
 
+    var object = 'parsers.' + (bff ? 'bff' : 'all') + '.' + packet.name
+
     // Parser defintion body.
     return $('                                                              \n\
-        parsers.' + packet.name + ' = function () {                         \n\
+        ' + object + ' = function () {                                      \n\
         }                                                                   \n\
         // __blank__                                                        \n\
-        parsers.' + packet.name + '.prototype.parse = function (' + signature + ') {   \n\
+        ' + object + '.prototype.parse = function (' + signature + ') {     \n\
             // __blank__                                                    \n\
             ', String(variables), '                                         \n\
             // __blank__                                                    \n\
@@ -200,14 +202,7 @@ module.exports = function (compiler, definition, options) {
             console.log('here', packet)
             packet.fields = bff(packet)
         }
-        return parser(packet)
+        return parser(packet, options.bff)
     }))
-    source = $('                                                            \n\
-        var parsers = {}                                                    \n\
-        // __blank__                                                        \n\
-        ', source, '                                                        \n\
-        // __blank__                                                        \n\
-        return parsers                                                      \n\
-    ')
     return compiler(source)
 }

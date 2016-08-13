@@ -6,7 +6,9 @@ function prove (assert) {
     var composer = require('../../../compose/parser/all.js')
     var filename = path.resolve(__filename, '../../../generated/alternation.parse.all.js')
 
-    var parsers = composer(compiler(filename), [{
+    var parsers = { all: {} }
+
+    composer(compiler('parsers', filename), [{
         type: 'structure',
         name: 'object',
         fields: [{
@@ -51,9 +53,10 @@ function prove (assert) {
                 }
             }]
         }]
-    }])
+    }])(parsers)
+
     var buffer = new Buffer([ 0xff, 0xff ])
-    assert((new parsers.object).parse(buffer, 0), {
+    assert((new parsers.all.object).parse(buffer, 0), {
         start: buffer.length,
         object: { number: 0xffff },
         parser: null

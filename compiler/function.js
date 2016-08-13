@@ -1,5 +1,5 @@
 var $ = require('programmatic')
 
-module.exports = function (source) {
-    return new Function([], $([source]))()
+module.exports = function (collection, source) {
+    return new Function(collection, $([source]))
 }

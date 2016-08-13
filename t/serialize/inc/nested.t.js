@@ -7,7 +7,9 @@ function prove (assert) {
     var toJSON = require('../../to-json.js')
     var filename = path.resolve(__filename, '../../../generated/nested.serialize.inc.js')
 
-    var serializers = composer(compiler(filename), [{
+    var serializers = { inc: {} }
+
+    composer(compiler('serializers', filename), [{
         type: 'structure',
         name: 'object',
         fields: [{
@@ -33,7 +35,7 @@ function prove (assert) {
                 }]
             }
         }]
-    }])
+    }])(serializers)
 
     var bufferLength = 10
     for (var i = 0; i < bufferLength; i++) {
@@ -41,7 +43,7 @@ function prove (assert) {
         var object = {
             values: [ { key: 2570, value: 1 }, { key: 2, value: 3 } ]
         }
-        var serializer = new serializers.object(object)
+        var serializer = new serializers.inc.object(object)
         var first = serializer.serialize(buffer, 0, bufferLength - i)
         assert(first.start, bufferLength - i, 'correct start ' + i)
         assert(serializer.serialize(buffer, bufferLength - i, bufferLength), {

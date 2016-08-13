@@ -6,7 +6,9 @@ function prove (assert) {
     var composer = require('../../../compose/parser/all.js')
     var filename = path.resolve(__filename, '../../../generated/integer.parse.bff.js')
 
-    var parsers = composer(compiler(filename), [{
+    var parsers = { bff: {} }
+
+    composer(compiler('parsers', filename), [{
         type: 'structure',
         name: 'object',
         fields: [{
@@ -15,10 +17,10 @@ function prove (assert) {
             endianness: 'b',
             bits: 16
         }]
-    }], { bff: true })
+    }], { bff: true })(parsers)
 
     var buffer = new Buffer([ 0xab, 0xcd ])
-    assert((new parsers.object).parse(buffer, 0), {
+    assert((new parsers.bff.object).parse(buffer, 0), {
         start: 2,
         object: { integer: 0xabcd },
         parser: null

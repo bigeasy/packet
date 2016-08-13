@@ -7,7 +7,9 @@ function prove (assert) {
     var filename = path.resolve(__filename, '../../../generated/packing.serialize.all.js')
     var toJSON = require('../../to-json')
 
-    var serializers = composer(compiler(filename), [{
+    var serializers = { all: {} }
+
+    composer(compiler('serializers', filename), [{
         type: 'structure',
         name: 'object',
         fields: [{
@@ -26,11 +28,11 @@ function prove (assert) {
                 bits: 15
             }]
         }]
-    }])
+    }])(serializers)
 
     var buffer = new Buffer(2)
     var object = { flag: 1, number: 0x1 }
-    var serializer = new serializers.object(object)
+    var serializer = new serializers.all.object(object)
     assert(serializer.serialize(buffer, 0), {
         start: buffer.length,
         serializer: null

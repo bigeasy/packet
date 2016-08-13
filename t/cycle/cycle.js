@@ -20,16 +20,25 @@ module.exports = function (assert) {
     return function (options) {
         var transmogrified = transmogrify(options.define)
         var filename = path.resolve(__filename, '../../generated/' + options.name)
-        var engines = {
-            parser: {
-                inc: composers.parser.inc(compiler(filename + '.parser.inc.js'), transmogrified),
-                all: composers.parser.all(compiler(filename + '.parser.all.js'), transmogrified)
-            },
-            serializer: {
-                inc: composers.serializer.inc(compiler(filename + '.serializer.inc.js'), transmogrified),
-                all: composers.serializer.all(compiler(filename + '.serializer.all.js'), transmogrified)
-            }
-        }
+        var parsers = { all: {}, inc: {}, bff: {} }
+        var serializers = { all: {}, inc: {}, bff: {} }
+        composers.parser.inc(
+            compiler('parsers', filename + '.parser.inc.js'),
+            transmogrified
+        )(parsers)
+        composers.parser.all(
+            compiler('parsers', filename + '.parser.all.js'),
+            transmogrified
+        )(parsers)
+        composers.serializer.inc(
+            compiler('serializers', filename + '.serializer.inc.js'),
+            transmogrified
+        )(serializers)
+        composers.serializer.all(
+            compiler('serializers', filename + '.serializer.all.js'),
+            transmogrified
+        )(serializers)
+        var engines = { parsers: parsers, serializers: serializers }
         var writer = new Writer(engines, 'object', options.object)
         var cursor = Writer.cursor(new Buffer(options.buffer.length))
         cursor = writer.write(cursor)
