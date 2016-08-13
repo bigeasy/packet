@@ -4,7 +4,7 @@ set -e
 
 echo ""
 
-(proof run t/*/*.t.js t/*/inc/*.t.js t/*/all/*.t.js | tee .proof.out | proof progress) || (proof errors < .proof.out) || exit 1
+(proof run t/*/*.t.js t/*/all/*.t.js t/*/inc/*.t.js t/*/bff/*.t.js | tee .proof.out | proof progress) || (proof errors < .proof.out) || exit 1
 
 if [ "$TRAVIS" = "true" ]; then
   echo ""
