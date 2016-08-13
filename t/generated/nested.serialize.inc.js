@@ -12,14 +12,10 @@ module.exports = (function () {
         }]
     }
 
-    serializers.object.prototype.serialize = function (engine) {
-        var buffer = engine.buffer
-        var start = engine.start
-        var end = engine.end
-
+    serializers.object.prototype.serialize = function (buffer, start, end) {
         var frame = this.stack[this.stack.length - 1]
 
-        for (;;) {
+        SERIALIZE: for (;;) {
             switch (this.step) {
             case 0:
 
@@ -30,8 +26,7 @@ module.exports = (function () {
 
                 while (this.bite != -1) {
                     if (start == end) {
-                        engine.start = start
-                        return
+                        return { start: start, serializer: this }
                     }
                     buffer[start++] = frame.object.values.length >>> this.bite * 8 & 0xff
                     this.bite--
@@ -57,8 +52,7 @@ module.exports = (function () {
 
                 while (this.bite != -1) {
                     if (start == end) {
-                        engine.start = start
-                        return
+                        return { start: start, serializer: this }
                     }
                     buffer[start++] = frame.object.key >>> this.bite * 8 & 0xff
                     this.bite--
@@ -75,8 +69,7 @@ module.exports = (function () {
 
                 while (this.bite != -1) {
                     if (start == end) {
-                        engine.start = start
-                        return
+                        return { start: start, serializer: this }
                     }
                     buffer[start++] = frame.object.value >>> this.bite * 8 & 0xff
                     this.bite--
@@ -91,17 +84,15 @@ module.exports = (function () {
                     continue
                 }
                 this.step = 7
+
             case 7:
 
-                engine.start = start
+                break SERIALIZE
 
             }
-            break
         }
 
-        engine.start = start
-
-        return frame.object
+        return { start: start, serializer: null }
     }
 
     return serializers

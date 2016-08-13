@@ -1,4 +1,4 @@
-require('proof')(4, prove)
+require('proof')(6, prove)
 
 function prove (assert) {
     var path = require('path')
@@ -60,20 +60,13 @@ function prove (assert) {
         var object = {
             number: 0xffff
         }
-        var engine = {
-            buffer: buffer,
-            start: 0,
-            end: bufferLength - i
-        }
         var serializer = new serializers.object(object)
-        serializer.serialize(engine)
-        var engine = {
-            buffer: buffer,
-            start: bufferLength - i,
-            end: bufferLength
-        }
-        serializer.serialize(engine)
-        assert(toJSON(engine.buffer), [ 0xff, 0xff ], 'compiled')
-        assert(engine.start, buffer.length, 'start moved')
+        var first = serializer.serialize(buffer, 0, bufferLength - i)
+        assert(first.start, bufferLength - i, 'correct start ' + i)
+        assert(serializer.serialize(buffer, bufferLength - i, bufferLength), {
+            start: bufferLength,
+            serializer: null
+        }, 'finished ' + i)
+        assert(toJSON(buffer), [ 0xff, 0xff ], 'compiled ' + i)
     }
 }

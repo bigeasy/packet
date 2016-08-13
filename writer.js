@@ -7,8 +7,8 @@ function Writer (engines, name, object) {
 
 Writer.prototype.write = function (cursor) {
     console.log(this)
-    this._serializer.serialize(cursor)
-    cursor.consumed = cursor.start == cursor.end
+    var result = this._serializer.serialize(cursor.buffer, cursor.start, cursor.end)
+    cursor.start = result.start
     return cursor
 }
 

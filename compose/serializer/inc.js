@@ -28,8 +28,7 @@ Generator.prototype.integer = function (field, property) {
             // __blank__                                                    \n\
             while (this.bite != ' + field.stop + ') {                       \n\
                 if (start == end) {                                         \n\
-                    engine.start = start                                    \n\
-                    return                                                  \n\
+                    return { start: start, serializer: this }               \n\
                 }                                                           \n\
                 buffer[start++] = ' + property + ' >>> this.bite * 8 & 0xff \n\
                 this.bite', direction, '                                    \n\
@@ -101,6 +100,7 @@ Generator.prototype.alternation = function (packet) {
             ', steps, '                                                     \n\
             ', source, '                                                    \n\
                 this.step = ' + this.step + '                               \n\
+                continue                                                    \n\
             // __blank__                                                    \n\
         ')
     }, this)
@@ -176,17 +176,17 @@ Generator.prototype.serializer = function (packet) {
     var dispatch = $('                                                      \n\
         switch (this.step) {                                                \n\
         ', source, '                                                        \n\
+            // __blank__                                                    \n\
         case ' + this.step + ':                                             \n\
             // __blank__                                                    \n\
-            engine.start = start                                            \n\
+            break ' + (this.forever ? 'SERIALIZE' : '') + '                 \n\
             // __blank__                                                    \n\
         }                                                                   \n\
     ')
     if (this.forever) {
         dispatch = $('                                                      \n\
-            for (;;) {                                                      \n\
+            SERIALIZE: for (;;) {                                           \n\
                 ', dispatch, '                                              \n\
-                break                                                       \n\
             }                                                               \n\
         ')
     }
@@ -202,18 +202,12 @@ Generator.prototype.serializer = function (packet) {
             }]                                                              \n\
         }                                                                   \n\
         // __blank__                                                        \n\
-        serializers.' + packet.name + '.prototype.serialize = function (engine) { \n\
-            var buffer = engine.buffer                                      \n\
-            var start = engine.start                                        \n\
-            var end = engine.end                                            \n\
-            // __blank__                                                    \n\
+        serializers.' + packet.name + '.prototype.serialize = function (buffer, start, end) { \n\
             var frame = this.stack[this.stack.length - 1]                   \n\
             // __blank__                                                    \n\
             ', dispatch, '                                                  \n\
             // __blank__                                                    \n\
-            engine.start = start                                            \n\
-            // __blank__                                                    \n\
-            return frame.object                                             \n\
+            return { start: start, serializer: null }                       \n\
         }                                                                   \n\
     ')
 }

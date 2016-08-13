@@ -12,11 +12,7 @@ module.exports = (function () {
         }]
     }
 
-    serializers.object.prototype.serialize = function (engine) {
-        var buffer = engine.buffer
-        var start = engine.start
-        var end = engine.end
-
+    serializers.object.prototype.serialize = function (buffer, start, end) {
         var frame = this.stack[this.stack.length - 1]
 
         switch (this.step) {
@@ -29,23 +25,21 @@ module.exports = (function () {
 
             while (this.bite != 4) {
                 if (start == end) {
-                    engine.start = start
-                    return
+                    return { start: start, serializer: this }
                 }
                 buffer[start++] = frame.object.integer >>> this.bite * 8 & 0xff
                 this.bite++
             }
 
             this.step = 2
+
         case 2:
 
-            engine.start = start
+            break
 
         }
 
-        engine.start = start
-
-        return frame.object
+        return { start: start, serializer: null }
     }
 
     return serializers
