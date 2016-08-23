@@ -1,54 +1,57 @@
 {
-    "name":             "packet",
-    "version":          "0.0.7",
-    "author":           "Alan Gutierrez <alan@prettyrobots.com>",
-    "description":      "Pure JavaScript evented binary parsers and serializers for Node.js.",
+    "name":                 "packet",
+    "version":              "0.0.7",
+    "description":
+
+      "Pure JavaScript evented binary parsers and serializers for Node.js.",
+
     "keywords":
     [
-                        "packet", "pack", "binary", "network", "structure",
-                        "async", "asynchronous", "javascript"
+                            "packet", "pack", "binary", "network", "structure",
+                            "async", "asynchronous", "javascript"
     ],
-    "homepage":         "https://github.com/bigeasy/packet",
-    "bugs":             "https://github.com/bigeasy/packet/issues",
-    "devDependencies":
+    "author":               "Alan Gutierrez <alan@prettyrobots.com>",
+    "contributors":
+    [{
+                            "name":  "J. Ryan Stinnett",
+                            "email": "jryans@gmail.com"
+    },
     {
-                        "proof": "1.0.x"
+                            "name":  "Ben Hockey",
+                            "email": "neonstalwart@gmail.com"
+    },
+    {
+                            "name":  "Greg Ose",
+                            "email": "neonstalwart@gmail.com",
+                            "web":   "http://nullmethod.com/"
+    },
+    {
+                            "name":  "Aaron Qian",
+                            "email": "aq1018@gmail.com"
+    },
+    {
+                            "name":  "Demarius Chrite",
+                            "email": "chrite.demarius@gmail.com",
+                            "web":   "https://github.com/demarius"
+    }],
+    "homepage":             "https://github.com/bigeasy/packet",
+    "bugs":                 "https://github.com/bigeasy/packet/issues",
+    "license":              "MIT",
+    "repository":
+    {
+                            "type": "git",
+                            "url": "http://github.com/bigeasy/packet.git"
     },
     "dependencies":
     {
-                        "programmatic": "0.0.8"
+                            "programmatic":                 "0.0.x"
     },
-    "repository":
+    "devDependencies":
     {
-                        "type": "git",
-                        "url": "http://github.com/bigeasy/packet.git"
+                            "proof":                        "1.0.x"
     },
-    "contributors":
-    [{
-                        "name":   "J. Ryan Stinnett",
-                        "email":  "jryans@gmail.com"
-    },
+    "scripts":
     {
-                        "name":   "Ben Hockey",
-                        "email":  "neonstalwart@gmail.com"
-    },
-    {
-                        "name":   "Greg Ose",
-                        "email":  "neonstalwart@gmail.com",
-                        "web":    "http://nullmethod.com/"
-    },
-    {
-                        "name":   "Aaron Qian",
-                        "email":  "aq1018@gmail.com"
-    },
-    {
-                        "name":   "Demarius Chrite",
-                        "email":  "chrite.demarius@gmail.com",
-                        "web":    "https://github.com/demarius"
-    }],
-    "license":          "MIT",
-    "scripts" :
-    {
-                        "test": "proof platform win32 && proof test */*/*.t.js || t/test"
+                            "test": "proof platform win32 && proof test */*/*.t.js || t/test"
     }
 }
