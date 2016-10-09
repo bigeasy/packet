@@ -115,13 +115,27 @@ function lengthEncoded (variables, packet, depth) {
 }
 
 function checkpoint (variables, packet, depth) {
-    var stack = [ 'object' ]
-    for (var i = 1; i < depth; i++ ) {
-        stack.push('object' + i)
-    }
-    return $('                                                                     \n\
-        if (buffer.length < ' + packet.length + ') {                        \n\
-            return this._inc(buffer, start, end, [' + stack.join(', ') + '])\n\
+    var stack = ''
+        stack = 'parser.stack = [{'
+        for (var i = -1; i < depth; i++) {
+            stack = $('                                                     \n\
+                // __reference__                                            \n\
+                ', stack, '                                                 \n\
+                    object: object                                          \n\
+            ')
+        }
+        stack = $('                                                         \n\
+            // __reference__                                                \n\
+            ', stack, '                                                     \n\
+            }]                                                              \n\
+        ')
+    return $('                                                              \n\
+        if (end - start < ' + packet.length + ') {                          \n\
+            var parser = new parsers.inc.' + current.name + '               \n\
+            parser.step = 0                                                 \n\
+            ', stack , '                                                    \n\
+            parser.object = object                                          \n\
+            return { start: start, parser: parser, object: null }           \n\
         }                                                                   \n\
     ')
 }
@@ -129,7 +143,6 @@ function checkpoint (variables, packet, depth) {
 function field (variables, packet, depth) {
     switch (packet.type) {
     case 'checkpoint':
-        console.log('here ->', checkpoint(variables, packet, depth))
         return checkpoint(variables, packet, depth)
     case 'structure':
         return $('                                                          \n\
@@ -156,7 +169,12 @@ function field (variables, packet, depth) {
     return source
 }
 
+// Convert to object.
+var current = null
+
 function parser (packet, bff) {
+    current = { name: packet.name }
+
     var variables = new Variables
 
     var source = field(variables, packet, 0)
@@ -166,12 +184,22 @@ function parser (packet, bff) {
     if (!bff) signature.pop()
     signature = signature.join(', ')
 
+
     var object = 'parsers.' + (bff ? 'bff' : 'all') + '.' + packet.name
+
+    var inc = bff ? $('                                                     \n\
+        // __blank__                                                        \n\
+        parsers.bff._inc = function (buffer, start, end, stack) {           \n\
+            var parser = new parsers.inc.' + packet.name + '                \n\
+            return 1                                                        \n\
+        }                                                                   \n\
+    ') : ''
 
     // Parser defintion body.
     return $('                                                              \n\
         ' + object + ' = function () {                                      \n\
         }                                                                   \n\
+        ', inc, '                                                           \n\
         // __blank__                                                        \n\
         ' + object + '.prototype.parse = function (' + signature + ') {     \n\
             // __blank__                                                    \n\
@@ -199,7 +227,6 @@ module.exports = function (compiler, definition, options) {
     var source = joinSources(definition.map(function (packet) {
         packet = explode(packet)
         if (options.bff) {
-            console.log('here', packet)
             packet.fields = bff(packet)
         }
         return parser(packet, options.bff)
