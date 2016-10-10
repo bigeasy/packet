@@ -5,7 +5,10 @@ var joinSources = require('../join-sources')
 var pack = require('../pack')
 var $ = require('programmatic')
 
-function integer (variables, field, object) {
+function Generator () {
+}
+
+Generator.prototype.integer = function (variables, field, object) {
     if (field.packing) {
         var offset = 0
         var packing = []
@@ -21,15 +24,15 @@ function integer (variables, field, object) {
             value =                                                         \n\
                 ', packing.join(' |\n'), '                                  \n\
             __blank__                                                       \n\
-            ', word(field, 'value'), '                                      \n\
+            ', this.word(field, 'value'), '                                 \n\
         ')
     } else {
-        return word(field, object + '.' + field.name)
+        return this.word(field, object + '.' + field.name)
     }
 }
 
 // TODO How do I inject code?
-function word (field, variable) {
+Generator.prototype.word = function (field, variable) {
     var bites = [], bite = field.bite, stop = field.stop, shift, variable
     while (bite != stop) {
         shift = bite ? variable + ' >>> ' + bite * 8 : variable
@@ -39,7 +42,7 @@ function word (field, variable) {
     return bites.join('\n')
 }
 
-function alternation (variables, packet, depth) {
+Generator.prototype.alternation = function (variables, packet, depth) {
     var select = qualify('select', depth)
     variables.hoist(select)
     packet.choose.forEach(function (choice, index) {
@@ -66,7 +69,7 @@ function alternation (variables, packet, depth) {
     var choices = ''
     function slurp (choice) {
         choice.write.field.name = packet.name
-        return field(variables, choice.write.field, depth)
+        return this.field(variables, choice.write.field, depth)
     }
     packet.choose.forEach(function (choice) {
         choices = $('                                                       \n\
@@ -74,10 +77,10 @@ function alternation (variables, packet, depth) {
             ', choices, '                                                   \n\
             ', choice.condition, '                                          \n\
             // __blank__                                                    \n\
-                ', slurp(choice), '                                         \n\
+                ', slurp.call(this, choice), '                              \n\
             // __blank__                                                    \n\
         ')
-    })
+    }, this)
     var source = $('                                                        \n\
         ' + select + ' = object.' + packet.name + '                         \n\
     ')
@@ -93,7 +96,7 @@ function alternation (variables, packet, depth) {
     ')
 }
 
-function lengthEncoded (variables, packet, depth) {
+Generator.prototype.lengthEncoded = function (variables, packet, depth) {
     var source = ''
     var object = qualify('object', depth)
     var length = qualify('length', depth)
@@ -104,12 +107,12 @@ function lengthEncoded (variables, packet, depth) {
     variables.hoist(length)
     variables.hoist(array)
     variables.hoist(subObject)
-    var looped = field(variables, packet.element, depth + 1)
+    var looped = this.field(variables, packet.element, depth + 1)
     source = $('                                                            \n\
         ' + array + ' = ' + object + '.' + packet.name + '                  \n\
         ' + length + ' = array.length                                       \n\
         // __blank__                                                        \n\
-        ', word(packet.length, length), '                                   \n\
+        ', this.word(packet.length, length), '                              \n\
         // __blank__                                                        \n\
         for (' + i + ' = 0; ' + i + ' < length; ' + i + '++) {              \n\
             ' + subObject + ' = array[' + i + ']                            \n\
@@ -119,30 +122,30 @@ function lengthEncoded (variables, packet, depth) {
     return source
 }
 
-function field (variables, packet, depth) {
+Generator.prototype.field = function (variables, packet, depth) {
     switch (packet.type) {
     case 'structure':
         return joinSources(packet.fields.map(function (packet) {
-            return field(variables, packet, depth)
-        }))
+            return this.field(variables, packet, depth)
+        }.bind(this)))
     case 'alternation':
-        return alternation(variables, packet, depth)
+        return this.alternation(variables, packet, depth)
     case 'lengthEncoded':
-        return lengthEncoded(variables, packet, depth)
+        return this.lengthEncoded(variables, packet, depth)
     default:
         var object = qualify('object', depth)
         if (packet.type === 'integer')  {
             return $('                                                      \n\
-                ', integer(variables, packet, object), '                    \n\
+                ', this.integer(variables, packet, object), '               \n\
                 // __reference__                                            \n\
             ')
         }
     }
 }
 
-function serializer (packet) {
+Generator.prototype.serializer = function (packet) {
     var variables = new Variables
-    var source = field(variables, packet, 0)
+    var source = this.field(variables, packet, 0)
     var object = 'serializers.all.' + packet.name
     return $('                                                              \n\
         ' + object + ' = function (object) {                                \n\
@@ -164,7 +167,8 @@ function serializer (packet) {
 
 module.exports = function (compiler, definition) {
     var source = joinSources(definition.map(function (packet) {
-        return serializer(explode(packet))
+        var generator = new Generator
+        return generator.serializer(explode(packet))
     }))
     return compiler(source)
 }
