@@ -4,7 +4,10 @@ var qualify = require('../qualify')
 var joinSources = require('../join-sources')
 var $ = require('programmatic')
 
-function integer (field, assignee) {
+function Generator () {
+}
+
+Generator.prototype.integer = function (field, assignee) {
     var read = [], bite = field.bite, stop = field.stop
     while (bite != stop) {
         read.unshift('buffer[start++]')
@@ -22,7 +25,7 @@ function integer (field, assignee) {
             ', read, '')
 }
 
-function constructor (variables, packet, depth) {
+Generator.prototype._constructor = function (variables, packet, depth) {
     var fields = [], object = qualify('object', depth)
     variables.hoist(object)
     packet.fields.forEach(function (field) {
@@ -44,7 +47,7 @@ function constructor (variables, packet, depth) {
     ')
 }
 
-function alternation (variables, packet, depth) {
+Generator.prototype.alternation = function (variables, packet, depth) {
     var select = qualify('select', depth)
     variables.hoist(select)
     packet.select = packet.select
@@ -94,7 +97,7 @@ function alternation (variables, packet, depth) {
     ')
 }
 
-function lengthEncoded (variables, packet, depth) {
+Generator.prototype.lengthEncoded = function (variables, packet, depth) {
     var source = ''
     var length = qualify('length', depth)
     var object = qualify('object', depth)
@@ -104,7 +107,7 @@ function lengthEncoded (variables, packet, depth) {
     variables.hoist(length)
     var looped = field(variables, packet.element, depth + 1)
     return $('                                                              \n\
-        ', integer(packet.length, length), '                       \n\
+        ', integer(packet.length, length), '                                \n\
         // __blank__                                                        \n\
         for (' + i + ' = 0; ' + i + ' < ' + length + '; ' + i + '++) {      \n\
             ', looped, '                                                    \n\
@@ -114,7 +117,7 @@ function lengthEncoded (variables, packet, depth) {
     ')
 }
 
-function checkpoint (variables, packet, depth) {
+Generator.prototype.checkpoint = function (variables, packet, depth) {
     var stack = ''
         stack = 'parser.stack = [{'
         for (var i = -1; i < depth; i++) {
@@ -140,17 +143,17 @@ function checkpoint (variables, packet, depth) {
     ')
 }
 
-function field (variables, packet, depth) {
+Generator.prototype.field = function (variables, packet, depth) {
     switch (packet.type) {
     case 'checkpoint':
-        return checkpoint(variables, packet, depth)
+        return this.checkpoint(variables, packet, depth)
     case 'structure':
         return $('                                                          \n\
-            ', constructor(variables, packet, depth), '                     \n\
+            ', this._constructor(variables, packet, depth), '               \n\
             __blank__                                                       \n\
             ', joinSources(packet.fields.map(function (packet) {
-                return field(variables, packet, depth)
-            })), '                                                          \n\
+                return this.field(variables, packet, depth)
+            }.bind(this))), '                                               \n\
         ')
     case 'alternation':
         return alternation(variables, packet, depth)
@@ -160,7 +163,7 @@ function field (variables, packet, depth) {
         var object = qualify('object', depth)
         if (packet.type === 'integer')  {
             return $('                                                      \n\
-                ', integer(packet, object + '.' + packet.name), '           \n\
+                ', this.integer(packet, object + '.' + packet.name), '      \n\
                 // __reference__                                            \n\
             ')
         }
@@ -172,12 +175,12 @@ function field (variables, packet, depth) {
 // Convert to object.
 var current = null
 
-function parser (packet, bff) {
+Generator.prototype.parser = function (packet, bff) {
     current = { name: packet.name }
 
     var variables = new Variables
 
-    var source = field(variables, packet, 0)
+    var source = this.field(variables, packet, 0)
 
     // No need to track the end if we are a whole packet parser.
     var signature = [ 'buffer', 'start', 'end' ]
@@ -229,7 +232,8 @@ module.exports = function (compiler, definition, options) {
         if (options.bff) {
             packet.fields = bff(packet)
         }
-        return parser(packet, options.bff)
+        var generator = new Generator
+        return generator.parser(packet, options.bff)
     }))
     return compiler(source)
 }
