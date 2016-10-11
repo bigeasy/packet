@@ -1,4 +1,4 @@
-require('proof')(1, prove)
+require('proof')(2, prove)
 
 function prove (assert) {
     var path = require('path')
@@ -33,15 +33,17 @@ function prove (assert) {
         }]
     }])(parsers)
 
-    var buffer = new Buffer([ 0xab, 0xcd ])
-    var parser = new parsers.bff.object
-    var outcome
-    outcome = parser.parse(buffer, 0, 1)
-    outcome = outcome.parser.parse(buffer, outcome.start, 1)
-    outcome = outcome.parser.parse(buffer, 1, 2)
-    assert(outcome, {
-        start: 2,
-        object: { integer: 0xabcd },
-        parser: null
-    }, 'compiled')
+    var buffer = new Buffer([ 0xff, 0xff ])
+    for (var i = 0; i < buffer.length; i++) {
+        var parser = new parsers.bff.object
+        var outcome = parser.parse(buffer, 0, buffer.length - i)
+        if (outcome.parser != null) {
+            outcome = outcome.parser.parse(buffer, outcome.start, buffer.length)
+        }
+        assert(outcome, {
+            start: buffer.length,
+            object: { integer: 0xffff },
+            parser: null
+        }, 'complete ' + i)
+    }
 }
