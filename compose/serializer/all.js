@@ -122,8 +122,14 @@ Generator.prototype.lengthEncoded = function (variables, packet, depth) {
     return source
 }
 
+Generator.prototype.checkpoint = function (variables, packet, depth) {
+    return ''
+}
+
 Generator.prototype.field = function (variables, packet, depth) {
     switch (packet.type) {
+    case 'checkpoint':
+        return this.checkpoint(variables, packet, depth)
     case 'structure':
         return joinSources(packet.fields.map(function (packet) {
             return this.field(variables, packet, depth)
@@ -143,10 +149,10 @@ Generator.prototype.field = function (variables, packet, depth) {
     }
 }
 
-Generator.prototype.serializer = function (packet) {
+Generator.prototype.serializer = function (packet, bff) {
     var variables = new Variables
     var source = this.field(variables, packet, 0)
-    var object = 'serializers.all.' + packet.name
+    var object = 'serializers.' + (bff ? 'bff' : 'all') + '.' + packet.name
     return $('                                                              \n\
         ' + object + ' = function (object) {                                \n\
             this.object = object                                            \n\
@@ -165,10 +171,25 @@ Generator.prototype.serializer = function (packet) {
     ')
 }
 
-module.exports = function (compiler, definition) {
+function bff (packet) {
+    var checkpoint, fields = [ checkpoint = { type: 'checkpoint', length: 0 } ]
+    for (var i = 0, I = packet.fields.length; i < I; i++) {
+        var field = packet.fields[i]
+        checkpoint.length += field.bytes
+        fields.push(field)
+    }
+    return fields
+}
+
+module.exports = function (compiler, definition, options) {
+    // TODO Options is required.
+    options || (options = {})
     var source = joinSources(definition.map(function (packet) {
-        var generator = new Generator
-        return generator.serializer(explode(packet))
+        packet = explode(packet)
+        if (options.bff) {
+            packet.fields = bff(packet)
+        }
+        return new Generator().serializer(packet, options.bff)
     }))
     return compiler(source)
 }

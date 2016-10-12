@@ -232,8 +232,7 @@ module.exports = function (compiler, definition, options) {
         if (options.bff) {
             packet.fields = bff(packet)
         }
-        var generator = new Generator
-        return generator.parser(packet, options.bff)
+        return new Generator().parser(packet, options.bff)
     }))
     return compiler(source)
 }
