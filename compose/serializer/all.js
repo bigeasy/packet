@@ -123,7 +123,28 @@ Generator.prototype.lengthEncoded = function (variables, packet, depth) {
 }
 
 Generator.prototype.checkpoint = function (variables, packet, depth) {
-    return ''
+    variables.hoist('serializer')
+    var stack = 'serializer.stack = [{'
+        for (var i = -1; i < depth; i++) {
+            stack = $('                                                     \n\
+                // __reference__                                            \n\
+                ', stack, '                                                 \n\
+                    object: object                                          \n\
+            ')
+        }
+        stack = $('                                                         \n\
+            // __reference__                                                \n\
+            ', stack, '                                                     \n\
+            }]                                                              \n\
+        ')
+    return $('                                                              \n\
+        if (end - start < ' + packet.length + ') {                          \n\
+            serializer = new serializers.inc.object                         \n\
+            serializer.step = 0                                             \n\
+            ', stack, '                                                     \n\
+            return { start: start, serializer: serializer }                 \n\
+        }                                                                   \n\
+    ')
 }
 
 Generator.prototype.field = function (variables, packet, depth) {
@@ -153,12 +174,13 @@ Generator.prototype.serializer = function (packet, bff) {
     var variables = new Variables
     var source = this.field(variables, packet, 0)
     var object = 'serializers.' + (bff ? 'bff' : 'all') + '.' + packet.name
+    var signature = bff ? 'buffer, start, end' : 'buffer, start'
     return $('                                                              \n\
         ' + object + ' = function (object) {                                \n\
             this.object = object                                            \n\
         }                                                                   \n\
         // __blank__                                                        \n\
-        ' + object + '.prototype.serialize = function (buffer, start) {     \n\
+        ' + object + '.prototype.serialize = function (' + signature + ') { \n\
             // __blank__                                                    \n\
             var object = this.object                                        \n\
             // __blank__                                                    \n\

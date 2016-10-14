@@ -35,15 +35,17 @@ function prove (assert) {
     }])(serializers)
 
     var bufferLength = 2
-    for (var i = 0; i < bufferLength; i++) {
+    for (var i = 0; i <= bufferLength; i++) {
         var buffer = new Buffer(bufferLength)
         var object = {
             integer: 0xffff
         }
-        var serializer = new serializers.inc.object(object)
-        var first = serializer.serialize(buffer, 0, bufferLength - i)
-        assert(first.start, bufferLength - i, 'correct start ' + i)
-        assert(serializer.serialize(buffer, bufferLength - i, bufferLength), {
+        var serializer = new serializers.bff.object(object)
+        var outcome = serializer.serialize(buffer, 0, bufferLength - i)
+        if (outcome.serializer != null) {
+            outcome = outcome.serializer.serialize(buffer, outcome.start, bufferLength)
+        }
+        assert(outcome, {
             start: bufferLength,
             serializer: null
         }, 'finished ' + i)
