@@ -5,6 +5,7 @@ var joinSources = require('../join-sources')
 var $ = require('programmatic')
 
 function Generator () {
+    this.step = 0
 }
 
 Generator.prototype.integer = function (field, assignee) {
@@ -20,6 +21,7 @@ Generator.prototype.integer = function (field, assignee) {
     if (field.bytes == 1) {
         return assignee + ' = ' + read
     }
+    this.step += 2
     return $('                                                              \n\
         ' + assignee + ' =                                                  \n\
             ', read, '')
@@ -98,6 +100,7 @@ Generator.prototype.alternation = function (variables, packet, depth) {
 }
 
 Generator.prototype.lengthEncoded = function (variables, packet, depth) {
+    this.step += 2
     var source = ''
     var length = qualify('length', depth)
     var object = qualify('object', depth)
@@ -105,7 +108,7 @@ Generator.prototype.lengthEncoded = function (variables, packet, depth) {
     var i = qualify('i', depth)
     variables.hoist(i)
     variables.hoist(length)
-    var looped = this.field(variables, packet.element, depth + 1)
+    var looped = this.field(variables, packet.element, depth + 1, true)
     return $('                                                              \n\
         ', this.integer(packet.length, length), '                           \n\
         // __blank__                                                        \n\
@@ -117,15 +120,24 @@ Generator.prototype.lengthEncoded = function (variables, packet, depth) {
     ')
 }
 
-Generator.prototype.checkpoint = function (variables, packet, depth) {
-    var stack = ''
+Generator.prototype.checkpoint = function (variables, packet, depth, arrayed) {
+    var arrayed = arrayed ? $('                                             \n\
+        length: length,                                                     \n\
+        index: i,                                                           \n\
+    ') : ''
+    var separator = '',
+        object = 'object',
         stack = 'parser.stack = [{'
-        for (var i = -1; i < depth; i++) {
+        for (var i = -1; i < 0; i++) {
             stack = $('                                                     \n\
-                // __reference__                                            \n\
                 ', stack, '                                                 \n\
-                    object: object                                          \n\
+                ', separator, '                                             \n\
+                // __reference__                                            \n\
+                    ', arrayed, '                                           \n\
+                    object: ' + object + '                                  \n\
             ')
+            separator = '}, {'
+            object = 'object' + (i + 2)
         }
         stack = $('                                                         \n\
             // __reference__                                                \n\
@@ -135,7 +147,7 @@ Generator.prototype.checkpoint = function (variables, packet, depth) {
     return $('                                                              \n\
         if (end - start < ' + packet.length + ') {                          \n\
             var parser = new parsers.inc.' + current.name + '               \n\
-            parser.step = 0                                                 \n\
+            parser.step = ' + this.step + '                                 \n\
             ', stack , '                                                    \n\
             parser.object = object                                          \n\
             return { start: start, parser: parser, object: null }           \n\
@@ -143,16 +155,16 @@ Generator.prototype.checkpoint = function (variables, packet, depth) {
     ')
 }
 
-Generator.prototype.field = function (variables, packet, depth) {
+Generator.prototype.field = function (variables, packet, depth, arrayed) {
     switch (packet.type) {
     case 'checkpoint':
-        return this.checkpoint(variables, packet, depth)
+        return this.checkpoint(variables, packet, depth, arrayed)
     case 'structure':
         return $('                                                          \n\
             ', this._constructor(variables, packet, depth), '               \n\
             __blank__                                                       \n\
             ', joinSources(packet.fields.map(function (packet) {
-                return this.field(variables, packet, depth)
+                return this.field(variables, packet, depth, arrayed)
             }.bind(this))), '                                               \n\
         ')
     case 'alternation':
@@ -180,7 +192,7 @@ Generator.prototype.parser = function (packet, bff) {
 
     var variables = new Variables
 
-    var source = this.field(variables, packet, 0)
+    var source = this.field(variables, packet, 0, false)
 
     // No need to track the end if we are a whole packet parser.
     var signature = [ 'buffer', 'start', 'end' ]
@@ -218,8 +230,22 @@ Generator.prototype.parser = function (packet, bff) {
 function bff (packet) {
     var checkpoint, fields = [ checkpoint = { type: 'checkpoint', length: 0 } ]
     for (var i = 0, I = packet.fields.length; i < I; i++) {
-        var field = packet.fields[i]
-        checkpoint.length += field.bytes
+        var field = JSON.parse(JSON.stringify(packet.fields[i]))
+        switch (field.type) {
+        case 'lengthEncoded':
+            checkpoint.length += field.length.bytes
+            switch (field.element.type) {
+            case 'structure':
+                field.element.fields = bff(field.element)
+                break
+            default:
+                throw new Error
+            }
+            break
+        default:
+            checkpoint.length += field.bytes
+            break
+        }
         fields.push(field)
     }
     return fields
