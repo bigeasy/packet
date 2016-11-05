@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+  <title>tokenizer.js</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <meta name="viewport" content="width=device-width, target-densitydpi=160dpi, initial-scale=1.0; maximum-scale=1.0; user-scalable=0;">
+  <link rel="stylesheet" media="all" href="docco.css" />
+</head>
+<body>
+  <div id="container">
+    <div id="background"></div>
+
+      <ul id="jump_to">
+        <li>
+          <a class="large" href="javascript:void(0);">Jump To &hellip;</a>
+          <a class="small" href="javascript:void(0);">+</a>
+          <div id="jump_wrapper">
+          <div id="jump_page_wrapper">
+            <div id="jump_page">
+
+
+                <a class="source" href="function.html">
+                  function.js
+                </a>
+
+
+                <a class="source" href="require.html">
+                  require.js
+                </a>
+
+
+                <a class="source" href="explode.html">
+                  explode.js
+                </a>
+
+
+                <a class="source" href="join-sources.html">
+                  join-sources.js
+                </a>
+
+
+                <a class="source" href="pack.html">
+                  pack.js
+                </a>
+
+
+                <a class="source" href="all.html">
+                  all.js
+                </a>
+
+
+                <a class="source" href="inc.html">
+                  inc.js
+                </a>
+
+
+                <a class="source" href="qualify.html">
+                  qualify.js
+                </a>
+
+
+                <a class="source" href="all.html">
+                  all.js
+                </a>
+
+
+                <a class="source" href="inc.html">
+                  inc.js
+                </a>
+
+
+                <a class="source" href="variables.html">
+                  variables.js
+                </a>
+
+
+                <a class="source" href="index.html">
+                  index.js
+                </a>
+
+
+                <a class="source" href="offsets.html">
+                  offsets.js
+                </a>
+
+
+                <a class="source" href="pull.html">
+                  pull.js
+                </a>
+
+
+                <a class="source" href="puller.html">
+                  puller.js
+                </a>
+
+
+                <a class="source" href="push.html">
+                  push.js
+                </a>
+
+
+                <a class="source" href="stream.html">
+                  stream.js
+                </a>
+
+
+                <a class="source" href="tokenizer.html">
+                  tokenizer.js
+                </a>
+
+
+                <a class="source" href="transforms.html">
+                  transforms.js
+                </a>
+
+
+                <a class="source" href="transmogrifier.html">
+                  transmogrifier.js
+                </a>
+
+
+                <a class="source" href="writer.html">
+                  writer.js
+                </a>
+
+            </div>
+          </div>
+        </li>
+      </ul>
+
+    <ul class="sections">
+
+          <li id="title">
+              <div class="annotation">
+                  <h1>tokenizer.js</h1>
+              </div>
+          </li>
+
+
+
+        <li id="section-1">
+            <div class="annotation">
+
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-1">&#182;</a>
+              </div>
+
+            </div>
+
+            <div class="content"><div class='highlight'><pre><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">ok</span> (<span class="hljs-params">value, message</span>) </span>{
+    <span class="hljs-keyword">if</span> (!value) <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> <span class="hljs-built_in">Error</span>(message)
+    <span class="hljs-keyword">return</span> value
+}
+
+<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">fixed</span> (<span class="hljs-params">object, rest</span>) </span>{
+    <span class="hljs-keyword">var</span> $ = ok(<span class="hljs-regexp">/^(\d+)](.*)$/</span>.exec(rest), <span class="hljs-string">'invalid array size'</span>)
+    <span class="hljs-keyword">var</span> repeat = +$[<span class="hljs-number">1</span>], rest = $[<span class="hljs-number">2</span>]
+    object.repeat = repea
+    <span class="hljs-keyword">if</span> (rest.length) {
+        $ = ok(<span class="hljs-regexp">/^z(.*)$/</span>.exec(rest), <span class="hljs-string">'unknown suffix'</span>)
+        <span class="hljs-keyword">return</span> terminated(object, $[<span class="hljs-number">1</span>])
+    }
+    <span class="hljs-keyword">return</span> objec
+}
+
+<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">terminated</span> (<span class="hljs-params">object, rest</span>) </span>{
+    object.terminator = [ <span class="hljs-number">0</span> ]
+    <span class="hljs-keyword">return</span> objec
+}
+
+<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">integer</span> (<span class="hljs-params">object, endianness, rest</span>) </span>{
+    <span class="hljs-keyword">var</span> $ = ok(<span class="hljs-regexp">/^(\d+)(.*)$/</span>.exec(rest), <span class="hljs-string">'missing bit size'</span>)
+    <span class="hljs-keyword">var</span> bits = +$[<span class="hljs-number">1</span>], rest = $[<span class="hljs-number">2</span>]
+    ok(bits != <span class="hljs-number">0</span>, <span class="hljs-string">'bits cannot be zero'</span>)
+    ok(bits % <span class="hljs-number">8</span> == <span class="hljs-number">0</span>, <span class="hljs-string">'only 8-bit bytes are supported'</span>)
+    object.type = <span class="hljs-string">'integer'</span>
+    object.bits = bits
+    object.endianness = endianness
+    <span class="hljs-keyword">if</span> (rest.length) {
+        $ = ok(<span class="hljs-regexp">/^([[z])(.*)$/</span>.exec(rest), <span class="hljs-string">'unknown suffix'</span>)
+        <span class="hljs-keyword">switch</span> ($[<span class="hljs-number">1</span>]) {
+        <span class="hljs-keyword">case</span> <span class="hljs-string">'['</span>:
+            <span class="hljs-keyword">return</span> fixed(object, $[<span class="hljs-number">2</span>])
+        <span class="hljs-keyword">case</span> <span class="hljs-string">'z'</span>:
+            object.repeat = <span class="hljs-number">-1</span>
+            <span class="hljs-keyword">return</span> terminated(object, $[<span class="hljs-number">2</span>])
+        }
+    }
+    <span class="hljs-keyword">return</span> objec
+}
+
+<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">signed</span> (<span class="hljs-params">object, rest</span>) </span>{
+    object.transforms = [ <span class="hljs-string">'twosCompliment'</span> ]
+    <span class="hljs-keyword">return</span> tokenize(object, rest)
+}
+
+<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">tokenize</span> (<span class="hljs-params">object, rest</span>) </span>{
+    <span class="hljs-keyword">var</span> $ = ok(<span class="hljs-regexp">/^([-blx]|\d+|&amp;|&lt;|&gt;|=)(.*)$/</span>.exec(rest), <span class="hljs-string">'invalid pattern'</span>)
+    <span class="hljs-keyword">switch</span> ($[<span class="hljs-number">1</span>]) {
+    <span class="hljs-keyword">case</span> <span class="hljs-string">'-'</span>:
+        <span class="hljs-keyword">return</span> signed(object, $[<span class="hljs-number">2</span>])
+    <span class="hljs-keyword">case</span> <span class="hljs-string">'b'</span>:
+    <span class="hljs-keyword">case</span> <span class="hljs-string">'l'</span>:
+    <span class="hljs-keyword">case</span> <span class="hljs-string">'x'</span>:
+        <span class="hljs-keyword">return</span> integer(object, $[<span class="hljs-number">1</span>], $[<span class="hljs-number">2</span>])
+    <span class="hljs-keyword">case</span> <span class="hljs-string">'&amp;'</span>:
+    <span class="hljs-keyword">case</span> <span class="hljs-string">'&lt;'</span>:
+    <span class="hljs-keyword">case</span> <span class="hljs-string">'&gt;'</span>:
+    <span class="hljs-keyword">case</span> <span class="hljs-string">'='</span>:
+        <span class="hljs-keyword">return</span> condition(object, $[<span class="hljs-number">1</span>], $[<span class="hljs-number">2</span>])
+    <span class="hljs-keyword">default</span>:
+        <span class="hljs-keyword">return</span> range(object, +$[<span class="hljs-number">1</span>], $[<span class="hljs-number">2</span>])
+    }
+}
+
+<span class="hljs-built_in">module</span>.exports = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">object, string</span>) </span>{
+    <span class="hljs-keyword">return</span> tokenize(object, string)
+}
+
+</pre></div></div>
+
+        </li>
+
+    </ul>
+  </div>
+</body>
+</html>

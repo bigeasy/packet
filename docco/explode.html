@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+  <title>explode.js</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <meta name="viewport" content="width=device-width, target-densitydpi=160dpi, initial-scale=1.0; maximum-scale=1.0; user-scalable=0;">
+  <link rel="stylesheet" media="all" href="docco.css" />
+</head>
+<body>
+  <div id="container">
+    <div id="background"></div>
+
+      <ul id="jump_to">
+        <li>
+          <a class="large" href="javascript:void(0);">Jump To &hellip;</a>
+          <a class="small" href="javascript:void(0);">+</a>
+          <div id="jump_wrapper">
+          <div id="jump_page_wrapper">
+            <div id="jump_page">
+
+
+                <a class="source" href="function.html">
+                  function.js
+                </a>
+
+
+                <a class="source" href="require.html">
+                  require.js
+                </a>
+
+
+                <a class="source" href="explode.html">
+                  explode.js
+                </a>
+
+
+                <a class="source" href="join-sources.html">
+                  join-sources.js
+                </a>
+
+
+                <a class="source" href="pack.html">
+                  pack.js
+                </a>
+
+
+                <a class="source" href="all.html">
+                  all.js
+                </a>
+
+
+                <a class="source" href="inc.html">
+                  inc.js
+                </a>
+
+
+                <a class="source" href="qualify.html">
+                  qualify.js
+                </a>
+
+
+                <a class="source" href="all.html">
+                  all.js
+                </a>
+
+
+                <a class="source" href="inc.html">
+                  inc.js
+                </a>
+
+
+                <a class="source" href="variables.html">
+                  variables.js
+                </a>
+
+
+                <a class="source" href="index.html">
+                  index.js
+                </a>
+
+
+                <a class="source" href="offsets.html">
+                  offsets.js
+                </a>
+
+
+                <a class="source" href="pull.html">
+                  pull.js
+                </a>
+
+
+                <a class="source" href="puller.html">
+                  puller.js
+                </a>
+
+
+                <a class="source" href="push.html">
+                  push.js
+                </a>
+
+
+                <a class="source" href="stream.html">
+                  stream.js
+                </a>
+
+
+                <a class="source" href="tokenizer.html">
+                  tokenizer.js
+                </a>
+
+
+                <a class="source" href="transforms.html">
+                  transforms.js
+                </a>
+
+
+                <a class="source" href="transmogrifier.html">
+                  transmogrifier.js
+                </a>
+
+
+                <a class="source" href="writer.html">
+                  writer.js
+                </a>
+
+            </div>
+          </div>
+        </li>
+      </ul>
+
+    <ul class="sections">
+
+          <li id="title">
+              <div class="annotation">
+                  <h1>explode.js</h1>
+              </div>
+          </li>
+
+
+
+        <li id="section-1">
+            <div class="annotation">
+
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-1">&#182;</a>
+              </div>
+
+            </div>
+
+            <div class="content"><div class='highlight'><pre><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">packing</span> (<span class="hljs-params">packing</span>) </span>{
+    <span class="hljs-keyword">if</span> (packing == <span class="hljs-literal">null</span>) {
+        <span class="hljs-keyword">return</span> <span class="hljs-literal">null</span>
+    }
+    <span class="hljs-keyword">return</span> packing.map(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">field</span>) </span>{
+        <span class="hljs-keyword">var</span> little = field.endianness === <span class="hljs-string">'l'</span>
+        <span class="hljs-keyword">var</span> bytes = field.bits / <span class="hljs-number">8</span>
+        <span class="hljs-keyword">return</span> {
+            <span class="hljs-attr">name</span>: field.name,
+            <span class="hljs-attr">bits</span>: field.bits,
+            <span class="hljs-attr">endianness</span>: field.endianness
+        }
+    })
+}
+</pre></div></div>
+
+        </li>
+
+
+        <li id="section-2">
+            <div class="annotation">
+
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-2">&#182;</a>
+              </div>
+              <p>Explode a field specified in the intermediate language, filling in all the
+properties needed by a generator. Saves the hastle and clutter of repeating
+these calculations as needed.</p>
+
+            </div>
+
+            <div class="content"><div class='highlight'><pre><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">explode</span> (<span class="hljs-params">field</span>) </span>{
+    <span class="hljs-keyword">switch</span> (field.type) {
+    <span class="hljs-keyword">case</span> <span class="hljs-string">'structure'</span>:
+        field.fields = field.fields.map(explode)
+        <span class="hljs-keyword">break</span>
+    <span class="hljs-keyword">case</span> <span class="hljs-string">'alternation'</span>:
+        field.select = explode(field.select)
+        field.choose.forEach(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">option</span>) </span>{
+            option.read.field = explode(option.read.field)
+            option.write.field = explode(option.write.field)
+        })
+        <span class="hljs-keyword">break</span>
+    <span class="hljs-keyword">case</span> <span class="hljs-string">'lengthEncoded'</span>:
+        field.length = explode(field.length)
+        field.element = explode(field.element)
+        <span class="hljs-keyword">break</span>
+    <span class="hljs-keyword">case</span> <span class="hljs-string">'integer'</span>:
+        <span class="hljs-keyword">var</span> little = field.endianness === <span class="hljs-string">'l'</span>
+        <span class="hljs-keyword">var</span> bytes = field.bits / <span class="hljs-number">8</span>
+        field = {
+            <span class="hljs-attr">name</span>: field.name || <span class="hljs-literal">null</span>,
+            <span class="hljs-attr">length</span>: field.length || <span class="hljs-literal">null</span>,
+            <span class="hljs-attr">endianness</span>: field.endianness,
+            <span class="hljs-attr">type</span>: <span class="hljs-string">'integer'</span>,
+            <span class="hljs-attr">little</span>: little,
+            <span class="hljs-attr">bite</span>: little ? <span class="hljs-number">0</span> : bytes - <span class="hljs-number">1</span>,
+            <span class="hljs-attr">direction</span>: little ? <span class="hljs-number">1</span> : <span class="hljs-number">-1</span>,
+            <span class="hljs-attr">stop</span>: little ? bytes : <span class="hljs-number">-1</span>,
+            <span class="hljs-attr">bits</span>: field.bits,
+            <span class="hljs-attr">bytes</span>: bytes,
+            <span class="hljs-attr">packing</span>: packing(field.packing)
+        }
+        <span class="hljs-keyword">break</span>
+    }
+    <span class="hljs-keyword">return</span> field
+}
+
+<span class="hljs-built_in">module</span>.exports = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">field</span>) </span>{
+    <span class="hljs-keyword">return</span> explode(field)
+}
+
+</pre></div></div>
+
+        </li>
+
+    </ul>
+  </div>
+</body>
+</html>

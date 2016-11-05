@@ -1,0 +1,11 @@
+--- node_modules/docco/docco.js	2015-02-03 10:12:17.000000000 -0600
++++ _node_modules/docco/docco.js	2016-07-24 01:47:49.000000000 -0500
+@@ -124,7 +124,7 @@
+     for (i = _i = 0, _len = sections.length; _i < _len; i = ++_i) {
+       section = sections[i];
+       code = highlightjs.highlight(language.name, section.codeText).value;
+-      code = code.replace(/\s+$/, '');
++//      code = code.replace(/\s+$/, '');
+       section.codeHtml = "<div class='highlight'><pre>" + code + "</pre></div>";
+       _results.push(section.docsHtml = marked(section.docsText));
+     }

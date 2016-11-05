@@ -1,0 +1,157 @@
+@import "response";
+@import "../vendor/lesshat/build/lesshat";
+
+@logo-text: #000000;
+@body-text: lighten(#000000, 10%);
+
+@font-face {
+    font-family: 'Crystal';
+    src: url('CRYSRG__.TTF');
+}
+
+html {
+    background: darken(#ffffff, 1%);
+    font-size: 100%;
+    color: @body-text;
+}
+
+body {
+    font-family: Helvetica;
+    margin: 0 auto;
+    padding: 0 0;
+    font-size: 75%;
+}
+
+img {
+    max-width: 100%;
+}
+
+.container {
+    /* Whatever you want. They’re your oats. */
+    max-width: 70em;
+    margin: 0 auto;
+    padding: 0 0;
+}
+
+.unit.welcome {
+    .span-grid;
+    h1 {
+        font-family: "Sorts Mill Goudy",  "Helvetica", sans-serif;
+        /*font-size: 48pt;*/
+        font-size: 72pt;
+        margin-top: 0.5em;
+        margin-bottom: 0.25em;
+    }
+    h3 {
+        margin-top: 1em;
+    }
+    p {
+        font-family: "Questrial", "Helvetica", sans-serif;
+        font-size: 18pt;
+        margin-bottom: 1em;
+        margin-left: 1em;
+        margin-right: 1em;
+    }
+}
+
+.unit {
+    padding: 0 36px;
+}
+
+.unit.value-proposition {
+    .span-grid;
+    p {
+        margin: 1em 0;
+    }
+}
+
+.unit.description {
+    font-family: Helvetica, 'Mate', "Raleway", "Merriweather", "Maven Pro", "Helvetica", serif;
+    p {
+        font-size: 1.45em;
+        line-height: 1.75em;
+        margin: 1em 0;
+        /* todo: not working in chrome */
+        font-weight: 100;
+        strong {
+            font-weight: 500;
+        }
+    }
+    ul {
+        font-size: 1.45em;
+        line-height: 1.5em;
+        font-weight: 100;
+        margin: 1em 0;
+        padding-left: 2em;
+        li {
+            margin: 1em 0;
+        }
+    }
+    h2 {
+        font-family: "Sorts Mill Goudy";
+        font-size: 2em;
+        font-style: italic;
+        margin: 2em 0 1em 0;
+    }
+    h3 {
+        font-family: "Sorts Mill Goudy";
+        margin: 2em 0 1em 0;
+        font-size: 1.5em;
+    }
+    li code, p code {
+        font-family: 'Courier New';
+        font-size: 1.05em;
+        white-space: nowrap;
+        letter-spacing: -1px;
+        background: white;
+        padding: 0 0.25em;
+        border: 1px dotted #ccc;
+    }
+    pre {
+        border: 1px dotted #ccc;
+        padding: 0.5em 1em;
+    }
+}
+
+.unit.benefit {
+    padding: 1em;
+    .one-of-three;
+    h2 {
+        text-align: center;
+        font-size: 1em;
+        margin-bottom: 1em;
+    }
+}
+
+.unit.verbiage {
+    .span-grid;
+    h2 {
+        font-size: 1em;
+        margin-bottom: 1em;
+    }
+    p {
+        margin-bottom: 1em;
+    }
+}
+
+.unit.description {
+    .span-grid;
+    .highlight > pre {
+        margin: 2em 0;
+        padding: 1em;
+        font-weight: normal;
+        font-size: 1.25em;
+        font-family: 'Courier New', 'Monaco', 'Oxygen Mono', 'Crystal', 'Cutive Mono', 'Oxygen Mono', monospace;
+    }
+}
+
+.unit.sidebar {
+    .one-of-four;
+}
+
+.highlight .c1 {
+    font-style: normal;
+    color: blue;
+}
+
+/* vim: set ts=4 sw=4: */

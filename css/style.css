@@ -1,0 +1,194 @@
+/*-----------------------------------*\
+    $GRID
+  \*-----------------------------------*/
+* {
+  margin: 0;
+  padding: 0;
+  position: relative;
+  -webkit-box-sizing: border-box;
+  /* border-box is new to me, AG */
+  -moz-box-sizing: border-box;
+  /* https://pinboard.in/u:alan/t:border/t:box */
+  box-sizing: border-box;
+}
+.grid {
+  max-width: 100%;
+}
+.unit {
+  display: inline-block;
+  *display: inline;
+  *zoom: 1;
+  vertical-align: top;
+  /* Clearfix */
+  overflow: hidden;
+  *overflow: visible;
+}
+.span-grid {
+  width: 100%;
+}
+.one-of-two {
+  width: 50%;
+}
+.one-of-three {
+  width: 33.333333333%;
+}
+.two-of-three {
+  width: 66.666666666%;
+}
+.one-of-four {
+  width: 25%;
+}
+.three-of-four {
+  width: 75%;
+}
+.one-of-five {
+  width: 20%;
+}
+.two-of-five {
+  width: 40%;
+}
+.three-of-five {
+  width: 60%;
+}
+.four-of-five {
+  width: 80%;
+}
+/* vim: set ts=4 sw=4: */
+@font-face {
+  font-family: 'Crystal';
+  src: url('CRYSRG__.TTF');
+}
+html {
+  background: #fcfcfc;
+  font-size: 100%;
+  color: #1a1a1a;
+}
+body {
+  font-family: Helvetica;
+  margin: 0 auto;
+  padding: 0 0;
+  font-size: 75%;
+}
+img {
+  max-width: 100%;
+}
+.container {
+  /* Whatever you want. They’re your oats. */
+  max-width: 70em;
+  margin: 0 auto;
+  padding: 0 0;
+}
+.unit.welcome {
+  width: 100%;
+}
+.unit.welcome h1 {
+  font-family: "Sorts Mill Goudy", "Helvetica", sans-serif;
+  /*font-size: 48pt;*/
+  font-size: 72pt;
+  margin-top: 0.5em;
+  margin-bottom: 0.25em;
+}
+.unit.welcome h3 {
+  margin-top: 1em;
+}
+.unit.welcome p {
+  font-family: "Questrial", "Helvetica", sans-serif;
+  font-size: 18pt;
+  margin-bottom: 1em;
+  margin-left: 1em;
+  margin-right: 1em;
+}
+.unit {
+  padding: 0 36px;
+}
+.unit.value-proposition {
+  width: 100%;
+}
+.unit.value-proposition p {
+  margin: 1em 0;
+}
+.unit.description {
+  font-family: Helvetica, 'Mate', "Raleway", "Merriweather", "Maven Pro", "Helvetica", serif;
+}
+.unit.description p {
+  font-size: 1.45em;
+  line-height: 1.75em;
+  margin: 1em 0;
+  /* todo: not working in chrome */
+  font-weight: 100;
+}
+.unit.description p strong {
+  font-weight: 500;
+}
+.unit.description ul {
+  font-size: 1.45em;
+  line-height: 1.5em;
+  font-weight: 100;
+  margin: 1em 0;
+  padding-left: 2em;
+}
+.unit.description ul li {
+  margin: 1em 0;
+}
+.unit.description h2 {
+  font-family: "Sorts Mill Goudy";
+  font-size: 2em;
+  font-style: italic;
+  margin: 2em 0 1em 0;
+}
+.unit.description h3 {
+  font-family: "Sorts Mill Goudy";
+  margin: 2em 0 1em 0;
+  font-size: 1.5em;
+}
+.unit.description li code,
+.unit.description p code {
+  font-family: 'Courier New';
+  font-size: 1.05em;
+  white-space: nowrap;
+  letter-spacing: -1px;
+  background: white;
+  padding: 0 0.25em;
+  border: 1px dotted #ccc;
+}
+.unit.description pre {
+  border: 1px dotted #ccc;
+  padding: 0.5em 1em;
+}
+.unit.benefit {
+  padding: 1em;
+  width: 33.333333333%;
+}
+.unit.benefit h2 {
+  text-align: center;
+  font-size: 1em;
+  margin-bottom: 1em;
+}
+.unit.verbiage {
+  width: 100%;
+}
+.unit.verbiage h2 {
+  font-size: 1em;
+  margin-bottom: 1em;
+}
+.unit.verbiage p {
+  margin-bottom: 1em;
+}
+.unit.description {
+  width: 100%;
+}
+.unit.description .highlight > pre {
+  margin: 2em 0;
+  padding: 1em;
+  font-weight: normal;
+  font-size: 1.25em;
+  font-family: 'Courier New', 'Monaco', 'Oxygen Mono', 'Crystal', 'Cutive Mono', 'Oxygen Mono', monospace;
+}
+.unit.sidebar {
+  width: 25%;
+}
+.highlight .c1 {
+  font-style: normal;
+  color: blue;
+}
+/* vim: set ts=4 sw=4: */

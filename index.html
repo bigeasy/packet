@@ -1,1 +1,499 @@
-<meta http-equiv="refresh" content="0;URL=https://github.com/bigeasy/packet">
+<!DOCTYPE html>
+<html>
+<meta charset="utf-8">
+<title>Packet</title>
+<!--
+<link href='http://fonts.googleapis.com/css?family=Parisienne|Oxygen+Mono|PT+Mono|Offside|Nova+Mono|Averia+Serif+Libre|Alex+Brush|Autour+One|Share+Tech+Mono|Merriweather|Maven+Pro|Raleway' rel='stylesheet' type='text/css'>
+-->
+<!-- todo: why doesn't fork me float? -->
+<link href="https://fonts.googleapis.com/css?family=Alex+Brush|Oxygen+Mono|Offside|Raleway:400,700" rel="stylesheet" type="text/css">
+<link rel="stylesheet" type="text/css" href="css/syntax.css">
+<link rel="stylesheet" type="text/css" href="css/style.css">
+<body><a href="https://github.com/bigeasy/packet/"><img style="position: fixed; top: 0; left: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_left_gray_6d6d6d.png" alt="Fork me on GitHub"></a><div class="container">
+
+<div class="unit welcome">
+<h1>Packet</h1>
+</div>
+<!-- todo: code font is too small for body text font -->
+<div class="unit description markdown"><p>Rewrite pending.</p>
+<p>Packet simplifies the construction an maintenance of libraries that convert
+binary to JavaScript and back. The name Packet may make you think that it is
+designed solely for binary network protocols, but it is also great for reading
+and writing binary file formats.</p>
+<p><strong>Incremental</strong> &#x2014; Node packet creates incremental parsers and serializers
+that are almost as fast as the parser you&apos;d write by hand, but a lot easier to
+define and maintain.</p>
+<p><strong>Declarative</strong> &#x2014; Packet defines a binary structure using a pattern
+language inspired by Perl&apos;s <code>pack</code>. The binary patterns are used to define both
+parsers and serializers. If you have a protocol specification, or even just a C
+header file with structures that define your binary data, you can probably
+translate that directly into Packet patterns.</p>
+<p>For parsers, you associate the patterns to callbacks invoked with captured
+values when the pattern is extracted from the stream. For serializers you simply
+give the values to write along with the pattern to follow when writing them.</p>
+<p><strong>Expressive</strong> &#x2014; The pattern language can express</p>
+<ul>
+<li>signed and unsigned integers,</li>
+<li>endianess of singed and unsigned integers,</li>
+<li>floats and doubles,</li>
+<li>fixed length arrays of characters or numbers,</li>
+<li>length encoded strings of characters or numbers,</li>
+<li>zero terminated strings of characters or numbers,</li>
+<li>said strings terminated any fixed length terminator you specify,</li>
+<li>padding of said strings with any padding value you specify,</li>
+<li>signed and unsigned integers extracted from bit packed integers,</li>
+<li>conditions based on bit patterns</li>
+<li>character encodings,</li>
+<li>custom transformations,</li>
+<li>and pipelines of character encodings and custom transformations.</li>
+</ul>
+<h3 id="limitations">Limitations</h3>
+<p><strong>Parsing not searching</strong> &#x2014; Packet is not a pattern matching library. It
+does not search binary streams for patterns. Packet is used for parsing
+well-defined streams of binary data.</p>
+<p><strong>8-bit boundaries</strong> &#x2014; I&apos;m unable to think of an example in contemporary
+computing that doesn&apos;t align to an 8-bit boundary, but the world is big and I am
+small, so I plan on being surprised. I can also imagine that someone might want
+to unleash Packet on legacy data someday, from way back when a byte was whatever
+a computer manufacturer said it was.</p>
+<p>Therefore, It&apos;s worth noting that Packet parses 8-bit bytes and expects bytes to
+align to an 8-bit boundary. Packet can parse 7-bit ASCII formats like <code>tar</code>
+archives, because they are 8-bit aligned with the top bit ignored. Packet can
+also parse and serialize bit packed integers, so it does support awkward integer
+sizes, but within an 8-bit aligned integer.</p>
+<h2 id="installing">Installing</h2>
+<p>Install Packet using NPM.</p>
+<pre><code>npm install packet
+</code></pre><p>The source is available on <a href="https://github.com/bigeasy/packet">GitHub</a>.</p>
+<h2 id="parsers-and-serializers">Parsers and Serializers</h2>
+<p>Packet defines a binary format using a binary pattern language inspired by
+Perl&apos;s <code>pack</code> function. The pattern language is used in a <code>Parser</code> to define the
+parameters passed to callback when enough bytes are read from the input stream
+to satisfy the pattern. The pattern language is used in a <code>Serializer</code> to define
+how JavaScript primitives passed to the <code>serialize</code> method are written to
+stream.</p>
+<h3 id="patterns">Patterns</h3>
+<p>Patterns are a series of element declarations joined by commas.</p>
+<pre><code class="lang-javascript">parser.extract(<span class="hljs-string">&quot;length: b16, address: b32, name: b8z&quot;</span>, <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">object</span>) </span>{
+  <span class="hljs-built_in">console</span>.log(object.length, object.address, object.name);
+});
+parser.parse([ <span class="hljs-number">0x01</span>, <span class="hljs-number">0xFF</span>, <span class="hljs-number">0x01</span>, <span class="hljs-number">0x00</span>, <span class="hljs-number">0x00</span>, <span class="hljs-number">0x00</span>, <span class="hljs-number">0x01</span>, <span class="hljs-number">0x02</span>, <span class="hljs-number">0x00</span> ]);
+</code></pre>
+<p>You can also name the elements in a pattern. If named, parsers will be create an
+object to pass to callbacks, serializers will serialize an object&apos;s properties.</p>
+<pre><code class="lang-javascript">parser.extract(<span class="hljs-string">&quot;b16 =&gt; length, b32 =&gt; address, b8z =&gt; name&quot;</span>, <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">record</span>) </span>{
+  <span class="hljs-built_in">console</span>.log(record);
+});
+parser.parse([ <span class="hljs-number">0x01</span>, <span class="hljs-number">0xFF</span>, <span class="hljs-number">0x01</span>, <span class="hljs-number">0x00</span>, <span class="hljs-number">0x00</span>, <span class="hljs-number">0x00</span>, <span class="hljs-number">0x01</span>, <span class="hljs-number">0x02</span>, <span class="hljs-number">0x00</span> ]);
+</code></pre>
+<p>Unnamed elements are good for short, simple patterns. For longer patterns it is
+easier to have a parser build an object for you.</p>
+<p>The following example shows a complicated pattern, the invariable portion of an
+IP header, the first 20 bytes before options, if any.</p>
+<pre><code class="lang-javascript"><span class="hljs-comment">// Define an IP header pattern using a joined array to explode the pattern.</span>
+parser.packet(<span class="hljs-string">&apos;ip&apos;</span>, <span class="hljs-string">&apos;b8{version: b4, headerLength: b4},         \
+                     typeOfService: b8,                         \
+                     length: b16,                               \
+                     identification: b16,                       \
+                     b16{flags: b3, fragmentOffset: b13},       \
+                     timeToLive: b8,                            \
+                     protocol: b8,                              \
+                     checksum: b16,                             \
+                     sourceAddress: b32,                        \
+                     destinationAddress: b32                    \
+                    &apos;</span>);
+
+<span class="hljs-comment">// The pattern is then used to defined parser and serializer actions.</span>
+parser.extract(<span class="hljs-string">&quot;ip&quot;</span>, <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">header</span>) </span>{
+  <span class="hljs-built_in">console</span>.log(header);
+});
+parser.parse(buffer);
+</code></pre>
+<p>Both parsers and serializers can define patterns using the <code>packet</code> method. The
+<code>packet</code> method allows you to pre-compile patterns.</p>
+<pre><code class="lang-javascript"><span class="hljs-comment">// Create a parser and define a header.</span>
+<span class="hljs-keyword">var</span> parser = <span class="hljs-built_in">require</span>(<span class="hljs-string">&apos;packet&apos;</span>).createParser();
+parser.packet(<span class="hljs-string">&quot;header&quot;</span>, <span class="hljs-string">&quot;b8 =&gt; type, b16 =&gt; length, b32 =&gt; extra&quot;</span>);
+parser.packet(<span class="hljs-string">&quot;data&quot;</span>, <span class="hljs-string">&quot;b16 =&gt; sequence, b16 =&gt; crc&quot;</span>);
+
+<span class="hljs-comment">// Now you can define your serializer using your parser as a prototype. The</span>
+<span class="hljs-comment">// serializer will inherit the parser&apos;s packet definitions.</span>
+<span class="hljs-keyword">var</span> serializer = parser.createSerializer();
+</code></pre>
+<p>Parsers and serializers maintain internal state so that they can be used
+incrementally. If you&apos;re going to parse streams incrementally, you&apos;re going to
+need a parser for each stream your parsing. Same goes for serializers and
+serializing.</p>
+<p>When parsing/serializing incrementally create new parsers and serializers using
+the prototype pattern above.</p>
+<pre><code class="lang-javascript"><span class="hljs-comment">// Create a serializer and define a header.</span>
+<span class="hljs-keyword">var</span> serializer = <span class="hljs-built_in">require</span>(<span class="hljs-string">&quot;packet&quot;</span>).createSerializer();
+serializer.packet(<span class="hljs-string">&quot;header&quot;</span>, <span class="hljs-string">&quot;b8 =&gt; type, b16 =&gt; length, b32 =&gt; extra&quot;</span>);
+serializer.packet(<span class="hljs-string">&quot;data&quot;</span>, <span class="hljs-string">&quot;b16 =&gt; sequence, b16 =&gt; crc&quot;</span>);
+
+<span class="hljs-comment">// Now you can define parsers for a using the serializer as a prototype.</span>
+net.createServer(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">socket</span>) </span>{
+  <span class="hljs-keyword">var</span> parser = serializer.createParser();
+  socket.on(<span class="hljs-string">&quot;data&quot;</span>, <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">buffer</span>) </span>{
+    parser.parse(buffer);
+  });
+  parser.extract(<span class="hljs-string">&quot;header&quot;</span>, <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">header</span>) </span>{
+    <span class="hljs-built_in">console</span>.log(header);
+  });
+});
+</code></pre>
+<h3 id="parsers">Parsers</h3>
+<p>Parsers parse a buffer extracting a specified pattern. The pattern is specified
+using the <code>extract</code> method. The <code>extract</code> method accept either a pattern or the
+name a pre-compiled pattern.</p>
+<p>After the pattern has been specified, the parser will extract the data from one
+or more buffers according to the specified pattern.</p>
+<p>When the pattern specified by <code>extract</code> has been read from the series of
+buffers, it will invoke a callback with the extracted values. The <code>extract</code>
+callback has the option of calling the <code>extract</code> method specifying a subsequent
+pattern for the parser to extract. When the callback returns, the parser will
+immediately continue to parse the newly specified pattern from the series of
+buffers.</p>
+<p>The parser callback receives the values either as positioned function arguments
+or as an object. How the callback is invoked is based on the pattern and the
+<a href="http://en.wikipedia.org/wiki/Arity">arity</a> of the callback function.</p>
+<p>To receive an object in the callback, we defined named elements. When the
+pattern has at least one named element, and the callback has only a single
+argument, an object is passed to the callback containing the values using the
+element names as keys.</p>
+<p>Unnamed elements are excluded, but there&apos;s no good reason not name them. Use a
+skip pattern to skip over unwanted bytes instead.</p>
+<p>You can still get positioned arguments using a named pattern. Just provide a
+callback with more than one argument and it will be invoked with the extract
+values as parameters.</p>
+<p>A callback for a pattern without any named elements is always invoked with
+values as parameters regardless of arity.</p>
+<h3 id="serializers">Serializers</h3>
+<p>First you call <code>serialize</code> with a pattern and arguments to serialize, then you
+call <code>write</code> with a series of buffers.</p>
+<h2 id="binary-pattern-fields">Binary Pattern Fields</h2>
+<p>The binary pattern language is used to specify the fields binary structures in
+data streams, using a comma separated field pattern.</p>
+<h3 id="big-endian-byte-ordering">Big-Endian Byte Ordering</h3>
+<p>To define a big-endian byte ordering for a field, prefix the bit size with <code>b</code>.</p>
+<pre><code class="lang-yaml">mnemonic: The letter `b` stands for big-endian.
+examples:
+  -
+    pattern: world: b16
+    object:
+      word: 256
+    description: Big-endian 32 bit number.
+  -
+    pattern: byte: b8
+    object:
+      byte: 1
+    description: Endianess of a single byte is irrelevant.
+  -
+    pattern: word: l16, byte: b8
+    object:
+      word: 1
+      byte: 1
+    parsed: 0x01, 0x00, 0x01
+</code></pre>
+<p><strong>Mnemonic</strong>: The letter <code>b</code> stands for big-endian.</p>
+<pre><code class="lang-javascript"><span class="hljs-string">&quot;b16&quot;</span>             <span class="hljs-comment">// Big-endian 32 bit number.</span>
+<span class="hljs-string">&quot;b8&quot;</span>              <span class="hljs-comment">// Endianess of a single byte is irrelevant.</span>
+<span class="hljs-string">&quot;l16, b8&quot;</span>         <span class="hljs-comment">// Big-endian 16 bit integer followed by a byte.</span>
+</code></pre>
+<h3 id="little-endian-byte-ordering">Little-Endian Byte Ordering</h3>
+<p>To define a little-endian byte ordering for a field, prefix the bit size with <code>l</code>.</p>
+<p><strong>Mnemonic</strong>: The letter <code>l</code> stands for little-endian.</p>
+<pre><code class="lang-javascript"><span class="hljs-string">&quot;l32&quot;</span>             <span class="hljs-comment">// Little-endian 32 bit integer.</span>
+<span class="hljs-string">&quot;l8&quot;</span>              <span class="hljs-comment">// Endianess of a single byte is irrelevant.</span>
+<span class="hljs-string">&quot;l16, b8&quot;</span>         <span class="hljs-comment">// Little endian 16 bit integer followed by a byte.</span>
+</code></pre>
+<h3 id="skipping-bytes">Skipping Bytes</h3>
+<p>You can skip over bytes your pattern with <code>x</code>.</p>
+<p><strong>Mnemonic</strong>: The letter <code>x</code> means to cross-out, which is kind of like skipping.</p>
+<pre><code class="lang-javascript"><span class="hljs-string">&quot;b8, x16, l16&quot;</span>    <span class="hljs-comment">// A byte, two skipped bytes, and a little-endian 16 bit</span>
+                  <span class="hljs-comment">// integer.</span>
+</code></pre>
+<h3 id="signed-versus-unsigned-integers">Signed Versus Unsigned Integers</h3>
+<p>All numbers are assumed to be unsigned, unless prefixed by a negative symbol.</p>
+<p><strong>Mnemonic</strong>: The <code>-</code> symbol indicates the possibility of negative numbers.</p>
+<pre><code class="lang-javascript"><span class="hljs-string">&quot;-b32&quot;</span>            <span class="hljs-comment">// Big-endian 32 bit signed integer.</span>
+<span class="hljs-string">&quot;-l32&quot;</span>            <span class="hljs-comment">// Little-endian 32 bit signed integer.</span>
+<span class="hljs-string">&quot;b32&quot;</span>             <span class="hljs-comment">// Big-endian 32 bit unsigned integer.</span>
+</code></pre>
+<h3 id="ieee-754-floating-point-numbers">IEEE 754 Floating Point Numbers</h3>
+<p>The number type for JavaScript is the  64 bit IEEE 754 floating point. Packet
+can read write 64 bit and 32 bit IEEE 754 floating point numbers.</p>
+<p>To indicated that the type is a floating point number, use the <code>f</code> type suffix.
+This is indicated with a <code>f</code> suffix.</p>
+<p><strong>Mnemonic</strong>: The letter <code>f</code> stands for
+<em>floating-point</em>.</p>
+<pre><code class="lang-javascript"><span class="hljs-string">&quot;b64f&quot;</span>            <span class="hljs-comment">// Big-endian 64 bit IEEE 754 double floating point number.</span>
+<span class="hljs-string">&quot;l32f&quot;</span>            <span class="hljs-comment">// Little-endian 32 bit IEEE 754 single floating point number.</span>
+</code></pre>
+<p>The floating-point numbers can be stored in little-endian or big-endian byte order.</p>
+<h3 id="arrays-of-raw-bytes">Arrays of Raw Bytes</h3>
+<p>A value will be converted to a big-endian array of bytes if followed by an <code>a</code>
+suffix.</p>
+<p><strong>Mnemonic</strong>: The letter <code>a</code> stands for <em>array</em>.</p>
+<pre><code class="lang-javascript"><span class="hljs-string">&quot;l128a&quot;</span>           <span class="hljs-comment">// Unsigned little-endian 128 bit integer as big-endian array</span>
+                  <span class="hljs-comment">// of bytes.</span>
+</code></pre>
+<p>Note that big-endian means that the most significant byte is at index <code>0</code> of the
+array.</p>
+<p>This can be surprising if you&apos;re expecting the significance of the bytes will
+increase with the index of the array, but then that&apos;s what little-endian is all
+about. (Big-endian orders like Arabic numerals, while little-endian orders like
+offsets into memory.)</p>
+<p>If you&apos;d prefer a little-endian array, simply call <code>reverse</code> on the array passed
+to you.</p>
+<h3 id="arrays-of-common-types">Arrays of Common Types</h3>
+<p>It is often the case that a binary format contains an array of values. The most
+common case are arrays of bytes representing ASCII or UTF-8 strings.</p>
+<p>Arrays are specified with an subscript and a count.</p>
+<p><strong>Mnemonic</strong>: The square brackets are used as array subscripts in JavaScript,
+and used to declare array length in other C dialect languages.</p>
+<pre><code class="lang-javascript"><span class="hljs-string">&quot;b32[4]&quot;</span>          <span class="hljs-comment">// An array of four big-endian 32 bit numbers.</span>
+<span class="hljs-string">&quot;b8[16]&quot;</span>          <span class="hljs-comment">// An array of 16 bytes.</span>
+</code></pre>
+<p>The array notation produces an array of the type before the subscript.</p>
+<h3 id="zero-terminated-arrays">Zero Terminated Arrays</h3>
+<p>Zero terminated series are specified with a <code>z</code> qualifier.</p>
+<p>You can specify both termination and width together. Why would you need this?
+This occurs in underlying C structures when there is a fixed width character
+array in a structure, but the structure still contains a zero terminated string.</p>
+<p><strong>Upcoming</strong>: Chose your own terminator.</p>
+<p><strong>Mnemonic</strong>: The letter <code>z</code> stands for zero.</p>
+<pre><code class="lang-javascript"><span class="hljs-string">&quot;l16z&quot;</span>            <span class="hljs-comment">// Little-endian 16 bit numbers terminated by a zero value.</span>
+<span class="hljs-string">&quot;b8z&quot;</span>             <span class="hljs-comment">// Byte string terminated by zero.</span>
+<span class="hljs-string">&quot;b8[12]z&quot;</span>         <span class="hljs-comment">// Byte string terminated by zero in a field 12 bytes long.</span>
+</code></pre>
+<h3 id="array-padding">Array Padding</h3>
+<p>You can specify a padding value immediately after the array brackets using curly
+braces. This should be the numeric value, or character code for padding. If you
+want to zero pad, use <code>0</code>. If you want to pad with ASCII spaces use <code>32</code>.</p>
+<p><strong>Mnemonic</strong>: Curly braces are used to define array literals in C.</p>
+<pre><code class="lang-javascript"><span class="hljs-string">&quot;b16[12]{0}&quot;</span>      <span class="hljs-comment">// Array of 12 big-endian 16 bit integers, zero padded.</span>
+<span class="hljs-string">&quot;b8[12]{32}z&quot;</span>     <span class="hljs-comment">// Byte string terminated by zero in a field 12 bytes long</span>
+                  <span class="hljs-comment">// ascii space padded.</span>
+</code></pre>
+<h3 id="length-encoded-arrays">Length Encoded Arrays</h3>
+<p>Length encoded arrays are specified by joining a count type and a value type
+with a forward slash character <code>/</code>.</p>
+<p><strong>Mnemonic</strong>: Inspired by Perl&apos;s <code>pack</code>, which uses the slash to separate count
+and type.</p>
+<pre><code class="lang-javascript"><span class="hljs-string">&quot;b8/b8&quot;</span>           <span class="hljs-comment">// Length encoded byte array with a byte length.</span>
+<span class="hljs-string">&quot;l16/b8&quot;</span>          <span class="hljs-comment">// Length encoded byte array with 16 bit little-endian length.</span>
+</code></pre>
+<h3 id="bit-packed-integers">Bit Packed Integers</h3>
+<p>Integers are often divided into smaller integers through a process called bit
+packing. Bit packing is specified by following an integer specification with
+a curly brace enclosed series series of integers patterns whose total size in
+bits equals the size of the packed integer.</p>
+<p>Packed integers are always big-endian and can be either singed or unsigned.</p>
+<p><strong>Mnemonic</strong> Curly braces are used to define structures in C and bit packing is
+kind of like a structure.</p>
+<pre><code class="lang-javascript"><span class="hljs-string">&quot;b16{b3,x6,-b7}&quot;</span>  <span class="hljs-comment">// A 16 bit big-endian integer divided into a 3-bit integer,</span>
+                  <span class="hljs-comment">// 6 skipped bits, and a signed 7-bit integer.</span>
+</code></pre>
+<p>You can also name the packed fields.</p>
+<pre><code class="lang-javascript"><span class="hljs-string">&quot;b16{b3 =&gt; type, x6, -b7 =&gt; count}&quot;</span>
+</code></pre>
+<h3 id="alternate-patterns">Alternate Patterns</h3>
+<p>A common pattern in binary formats is using the value of a byte, or the high
+order bits of a byte to specify the type of data to follow. <a href="#length-encoded-arrays">Length Encoded
+Arrays</a> are one example of this practice, where a
+an integer count indicates the length of a following string or array.</p>
+<p>With an alternate pattern, <strong>Packet</strong> will extract an integer from the byte
+stream, then choose a pattern based on the value of that integer. The pattern is
+applied at the index where the integer used to choose the pattern was extracted.
+That is, the bytes used to choose the pattern are included when the pattern is
+applied. It is a peek and switch.</p>
+<p>Alternate patterns are grouped by parenthesis <code>(</code> and <code>)</code> and delimited by pipes
+<code>|</code>. Each alternative maps a match to a pattern separated by a colon <code>:</code>.</p>
+<p><strong>Mnemonic</strong> &#x2014; Parenthesis and pipes are used to indicate alternation in
+regular expressions, while colons are used to delineate switch options in C.</p>
+<pre><code class="lang-javascript"><span class="hljs-comment">// MySQL length coded binary; if the byte is less than 252, use the byte value,</span>
+<span class="hljs-comment">// otherwise the byte value indicates the length of the following word.</span>
+<span class="hljs-string">&quot;b8(0-251: b8 | 252: x8, b16 | 253: x8, b24 | 254: x8, b64)&quot;</span>
+</code></pre>
+<p>Conditions are either a value to match exactly or a range of values. <strong>Packet</strong>
+tests each condition is tested in order. <strong>Packet</strong> uses the alternation of the
+first condition to match the extracted integer is used. An alternate without a
+condition will always match. This is used to specify a default pattern.</p>
+<pre><code class="lang-javascript"><span class="hljs-comment">// Simpiler, but will also match 255 which is invalid, which is fine if you test</span>
+<span class="hljs-comment">// the value in your callback.</span>
+<span class="hljs-string">&quot;b8(252: x8, b16 | 253: x8, b24 | 254: x8, b64 | b8)&quot;</span>
+</code></pre>
+<p>The values can be expressed in binary, decimal or hexadecimal.</p>
+<h3 id="bitwise-alternate-patterns">Bitwise Alternate Patterns</h3>
+<p>You can also indicate a branch based on set bits by prefixing the value with an
+ampersand. <strong>Packet</strong> will use the value as a bit mask. If the result of a
+logical <em>and</em> with the bit mask equals the bit mask, then <strong>Packet</strong> use use
+that alternative.</p>
+<p><strong>Mnemonic</strong> The <code>&amp;</code> performs a logical and in C and is used to check to see if
+bits in a bit mask are set.</p>
+<pre><code class="lang-javascript"><span class="hljs-string">&quot;b8(&amp;0x80: b16{x1,b15} | b8)&quot;</span>   <span class="hljs-comment">// A 15-bit word if the first bit is set,</span>
+                                <span class="hljs-comment">// otherwise a byte.</span>
+</code></pre>
+<p>Bitwise conditions cannot be used in to choose a pattern for serialization. Upon
+serialization, the field value is a JavaScript number, not an stream of bytes.
+The bit flag simply does not exist.</p>
+<p>Instead, we need to perform a range check to determine which pattern. To delimit
+alternate tests for reading and writing, we use a slash in the condition.</p>
+<pre><code class="lang-javascript"><span class="hljs-comment">// A 15-bit word if the first bit is set, otherwise a byte.</span>
+<span class="hljs-string">&quot;b8(&amp;0x80/0x80-0xffff: b16{x1{1},b15} | b8)&quot;</span>
+</code></pre>
+<h3 id="multi-field-alternate-patterns">Multi-Field Alternate Patterns</h3>
+<p>Alternate patterns can define either a single field or multiple field.
+Alternate patterns can contain bit-packed patterns, but they cannot contain
+still more alternate patterns.</p>
+<pre><code class="lang-javascript"><span class="hljs-comment">// Two alternate patterns with a different number of fields.</span>
+<span class="hljs-string">&quot;b8(&amp;0x80/1: b16{b1, b15}, b16|b32{b1, b31})&quot;</span>
+</code></pre>
+<p>In the above example, the serialization test would be applied to the field value
+in the position of the <code>b1</code> field for either alternate.</p>
+<h3 id="named-alternate-patterns">Named Alternate Patterns</h3>
+<p>Names can be applied either to the entire alternation if the alternation
+produces a single field, or else to individual members of the alternate
+patterns.</p>
+<pre><code>// A single field mapped to a name.
+&quot;b8(&amp;0x80/0x80-0xffff: b16{x1{1},b15} | b8) =&gt; number&quot;
+</code></pre><p>When serializing named multi-field patterns, for each alternate, <strong>Packet</strong> will
+use the first value of the property in the alternate for the serialization
+condition. <strong>Packet</strong> reads the property from the object we&apos;re serializing. If
+the value is not null, it is tested against the serialization condition. If it
+is null, the test is skipped. We use the first alternate whose object property
+is not null and whose serialization condition matches the object property.</p>
+<pre><code class="lang-javascript"><span class="hljs-comment">// Multi-field alternates mapped to names.</span>
+<span class="hljs-string">&quot;b8(&amp;0x80/1: b16{b1 =&gt; control, b15 =&gt; type}, x16|b32{b1 =&gt; control, b31 =&gt; sequence})&quot;</span>
+</code></pre>
+<h3 id="transforms">Transforms</h3>
+<p>Often there are transformations that you need to perform on an field to get
+it to its final state. You may need to convert a byte array to string of a
+particular character encoding, for example. This is done with a transformation
+functions which are specified with a transformation pipeline.</p>
+<p>If the transformation is a fixed transformation, you can perform the
+transformation by defining a pipeline. A pipeline defines one or more
+transformations that are invoked on the value after parsing and before
+serialization. The transformations can accept scalar JavaScript parameters.</p>
+<pre><code class="lang-javascript"><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">str</span>(<span class="hljs-params">encoding, name, field, parsing, value</span>) </span>{
+    <span class="hljs-keyword">if</span> (parsing) {
+        <span class="hljs-keyword">var</span> buffer = <span class="hljs-keyword">new</span> Buffer(array.length)
+        <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> i = <span class="hljs-number">0</span>; i &amp;lt; value.length; i++) {
+            buffer[i] = value[i];
+        }
+        <span class="hljs-keyword">var</span> length = value.length
+        <span class="hljs-keyword">if</span> (field.terminator) {
+            length += field.terminator.length;
+        }
+        <span class="hljs-keyword">return</span> buffer.toString(encoding, <span class="hljs-number">0</span>, length);
+    } <span class="hljs-keyword">else</span> {
+        <span class="hljs-keyword">if</span> (field.terminator) {
+            value += field.terminator;
+        }
+        <span class="hljs-keyword">return</span> <span class="hljs-keyword">new</span> Buffer(value, encoding);
+    }
+}
+</code></pre>
+<p>Now you can use the transform in your pattern.</p>
+<pre><code class="lang-javascript"><span class="hljs-string">&quot;b8z|str(&apos;ascii&apos;)&quot;</span>      <span class="hljs-comment">// An ascii string terminated by zero.</span>
+<span class="hljs-string">&quot;b8z|str(&apos;ascii&apos;), b16&quot;</span> <span class="hljs-comment">// An ascii string terminated by zero followed by a</span>
+                        <span class="hljs-comment">// big-endian 16 bit integer.</span>
+</code></pre>
+<p>The <code>str</code> transform is defined by default. The transform names are purposely
+terse to fit with the brevity of the pattern language.</p>
+<h2 id="error-messages">Error Messages</h2>
+<p>Error messages for pattern parsing.</p>
+<ul>
+<li><strong>invalid pattern at N</strong> &#x2014; The characters starting at the specified
+index is unexpected the pattern is invalid. The invalid character may not be
+at the specified index, but shortly there after, such as unmatched braces.</li>
+<li><strong>bit field overflow at N</strong> &#x2014; The sum of the bit size of bit field
+elements is greater than the size of the containing element. The sum of the
+bit size of bit field elements must equal the size of the containing element.</li>
+<li><strong>bit field underflow at N</strong> &#x2014; The sum of the bit size of bit field
+elements is less than the size of the containing element. The sum of the bit
+size of bit field elements must equal the size of the containing element.</li>
+<li><strong>bit size must be non-zero at N</strong> &#x2014; Encountered element with a bit size of
+zero. Element size must be a non-zero value.</li>
+<li><strong>bits must be divisible by 8 at N</strong> &#x2014; Encountered element with a bit
+size that is not divisible by 8. If an element is not a bit field element, it
+must align to an 8-bit boundary.</li>
+<li><strong>floats can only be 32 or 64 bits at N</strong> &#x2014; Encountered a float element
+with an unsupported bit size. Only 32 and 64 bit floats are supported.</li>
+<li><strong>&quot;array length must be non-zero at N</strong> &#x2014; Encountered an array length
+of zero. Arrays must have a non-zero length.</li>
+</ul>
+<h2 id="change-log">Change Log</h2>
+<p>Changes for each release.</p>
+<h3 id="version-0-0-6">Version 0.0.6</h3>
+<p>Wed Jul  3 21:52:20 UTC 2013</p>
+<ul>
+<li>Implement <code>Serializer.offsetsOf</code>. #87. #85. #86. #63.</li>
+<li>Objects primary, positional arguments secondary. #84.</li>
+<li>Reset namedness of <code>Parser</code>. #83.</li>
+<li>Serialize and parsed a named length encoded array. #82.</li>
+<li>Increase test coverage.  #77. #69. #68. #67. #66.</li>
+<li>Test text to float conversion. #66.</li>
+<li>Remove <code>n</code> syntax from README. @jryans. #64.</li>
+<li>Remove detection of <code>n</code> synonym for <code>b</code>.</li>
+<li>Remove asterisk to indicate wildcard condition. #33.</li>
+<li><code>Parser.parse</code> returns bytes read. #60.</li>
+<li>Report coverage to Coveralls. #61.</li>
+<li>Rename <code>pattern</code> to <code>field</code>. #57.</li>
+<li>Massive tidy after change in enclosed objects.</li>
+</ul>
+<h3 id="version-0-0-5">Version 0.0.5</h3>
+<p>Fri Mar  1 03:05:15 UTC 2013</p>
+<ul>
+<li>Chunked serialization bug fixes. #59. #58. #55.</li>
+<li>Move supporting libraries to root directory. #44.</li>
+<li>Spell check <code>README.md</code> and remove dead features. #32. #55.</li>
+<li>Implement <code>sizeOf</code> property for serializer. #37.</li>
+<li>Fix minimum number value. #54.</li>
+</ul>
+<h3 id="version-0-0-4">Version 0.0.4</h3>
+<p>Mon Nov  6 04:50:16 UTC 2012.</p>
+<ul>
+<li>Create parsers and serializers from prototypes. #53.</li>
+<li>Parse patterns with Win32 CRLF. #51. (Greg Ose <a href="mailto:greg@nullmethod.com">greg@nullmethod.com</a>)</li>
+<li>Copy cached pattern for alternation rewriting. #50.</li>
+<li>Flatten alternation prior to serialization. #34.</li>
+<li>Add <code>.js</code> suffix to tests. #49.</li>
+<li>Convert to closure style. #40, #47, #39, #38, #27.</li>
+<li>Remove pausing from <code>Parser</code>. #46.</li>
+<li>Implement <code>reset</code> for serializer. #43.</li>
+<li>Single letter field names. #45.</li>
+<li>Remove streams from API. #41.</li>
+</ul>
+<h3 id="version-0-0-3">Version 0.0.3</h3>
+<p>Fri Aug 17 00:40:37 UTC 2012.</p>
+<ul>
+<li>Fix Packet in NPM. #12.</li>
+<li>Serialize alternate structures. #31.</li>
+<li>Test serialization of words. #20.</li>
+<li>Serializer not exported by <code>index.js</code>.</li>
+<li>Named patterns reset buffer offset. #29.</li>
+<li>Allow spaces before alternation condition. #28.</li>
+<li>Create a markdown <code>README.md</code>. #18.</li>
+<li>Build on Node 0.8 at Travis CI. #23.</li>
+<li>Fix too greedy match of bit packing pattern. #19.</li>
+<li>Skip leading whitespace in pattern. #15.</li>
+</ul>
+<h2 id="contributors">Contributors</h2>
+<ul>
+<li><a href="https://github.com/neonstalwart">Ben Hockey</a></li>
+<li><a href="https://github.com/aq1018">Aaron Qian</a></li>
+</ul>
+</div></div></body>
+<!-- todo: move into an edify plugin -->
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-20388260-3', 'bigeasy.github.io');
+ga('send', 'pageview');
+</script>
+</html>

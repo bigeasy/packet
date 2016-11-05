@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+  <title>require.js</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <meta name="viewport" content="width=device-width, target-densitydpi=160dpi, initial-scale=1.0; maximum-scale=1.0; user-scalable=0;">
+  <link rel="stylesheet" media="all" href="docco.css" />
+</head>
+<body>
+  <div id="container">
+    <div id="background"></div>
+
+      <ul id="jump_to">
+        <li>
+          <a class="large" href="javascript:void(0);">Jump To &hellip;</a>
+          <a class="small" href="javascript:void(0);">+</a>
+          <div id="jump_wrapper">
+          <div id="jump_page_wrapper">
+            <div id="jump_page">
+
+
+                <a class="source" href="function.html">
+                  function.js
+                </a>
+
+
+                <a class="source" href="require.html">
+                  require.js
+                </a>
+
+
+                <a class="source" href="explode.html">
+                  explode.js
+                </a>
+
+
+                <a class="source" href="join-sources.html">
+                  join-sources.js
+                </a>
+
+
+                <a class="source" href="pack.html">
+                  pack.js
+                </a>
+
+
+                <a class="source" href="all.html">
+                  all.js
+                </a>
+
+
+                <a class="source" href="inc.html">
+                  inc.js
+                </a>
+
+
+                <a class="source" href="qualify.html">
+                  qualify.js
+                </a>
+
+
+                <a class="source" href="all.html">
+                  all.js
+                </a>
+
+
+                <a class="source" href="inc.html">
+                  inc.js
+                </a>
+
+
+                <a class="source" href="variables.html">
+                  variables.js
+                </a>
+
+
+                <a class="source" href="index.html">
+                  index.js
+                </a>
+
+
+                <a class="source" href="offsets.html">
+                  offsets.js
+                </a>
+
+
+                <a class="source" href="pull.html">
+                  pull.js
+                </a>
+
+
+                <a class="source" href="puller.html">
+                  puller.js
+                </a>
+
+
+                <a class="source" href="push.html">
+                  push.js
+                </a>
+
+
+                <a class="source" href="stream.html">
+                  stream.js
+                </a>
+
+
+                <a class="source" href="tokenizer.html">
+                  tokenizer.js
+                </a>
+
+
+                <a class="source" href="transforms.html">
+                  transforms.js
+                </a>
+
+
+                <a class="source" href="transmogrifier.html">
+                  transmogrifier.js
+                </a>
+
+
+                <a class="source" href="writer.html">
+                  writer.js
+                </a>
+
+            </div>
+          </div>
+        </li>
+      </ul>
+
+    <ul class="sections">
+
+          <li id="title">
+              <div class="annotation">
+                  <h1>require.js</h1>
+              </div>
+          </li>
+
+
+
+        <li id="section-1">
+            <div class="annotation">
+
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-1">&#182;</a>
+              </div>
+
+            </div>
+
+            <div class="content"><div class='highlight'><pre><span class="hljs-keyword">var</span> fs = <span class="hljs-built_in">require</span>(<span class="hljs-string">'fs'</span>)
+<span class="hljs-keyword">var</span> $ = <span class="hljs-built_in">require</span>(<span class="hljs-string">'programmatic'</span>)
+
+<span class="hljs-built_in">module</span>.exports = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">collection, filename</span>) </span>{
+    <span class="hljs-keyword">return</span> <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">source</span>) </span>{
+        <span class="hljs-keyword">var</span> exported = $([<span class="hljs-string">'                                                 \n
+        module.exports = function ('</span> + collection + <span class="hljs-string">') {                    \n
+            '</span>, source, <span class="hljs-string">'                                                    \n
+        }'</span>])
+        fs.writeFileSync(filename, exported + <span class="hljs-string">'\n'</span>, <span class="hljs-string">'utf8'</span>)
+        <span class="hljs-keyword">return</span> <span class="hljs-built_in">require</span>(filename)
+    }
+}
+
+</pre></div></div>
+
+        </li>
+
+    </ul>
+  </div>
+</body>
+</html>
