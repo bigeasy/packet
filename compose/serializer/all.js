@@ -6,9 +6,11 @@ var pack = require('../pack')
 var $ = require('programmatic')
 
 function Generator () {
+    this.step = 0
 }
 
 Generator.prototype.integer = function (variables, field, object) {
+    this.step += 2
     if (field.packing) {
         var offset = 0
         var packing = []
@@ -97,6 +99,7 @@ Generator.prototype.alternation = function (variables, packet, depth) {
 }
 
 Generator.prototype.lengthEncoded = function (variables, packet, depth) {
+    this.step += 2
     var source = ''
     var object = qualify('object', depth)
     var length = qualify('length', depth)
@@ -107,7 +110,7 @@ Generator.prototype.lengthEncoded = function (variables, packet, depth) {
     variables.hoist(length)
     variables.hoist(array)
     variables.hoist(subObject)
-    var looped = this.field(variables, packet.element, depth + 1)
+    var looped = this.field(variables, packet.element, depth + 1, true)
     source = $('                                                            \n\
         ' + array + ' = ' + object + '.' + packet.name + '                  \n\
         ' + length + ' = array.length                                       \n\
@@ -122,13 +125,19 @@ Generator.prototype.lengthEncoded = function (variables, packet, depth) {
     return source
 }
 
-Generator.prototype.checkpoint = function (variables, packet, depth) {
+Generator.prototype.checkpoint = function (variables, packet, depth, arrayed) {
+    var arrayed = arrayed ? $('                                             \n\
+        length: length,                                                     \n\
+        index: i || 0,                                                      \n\
+    ') : ''
     variables.hoist('serializer')
     var stack = 'serializer.stack = [{'
-        for (var i = -1; i < depth; i++) {
+        for (var i = -1; i < 0; i++) {
             stack = $('                                                     \n\
                 // __reference__                                            \n\
                 ', stack, '                                                 \n\
+                // __reference__                                            \n\
+                    ', arrayed ,'                                           \n\
                     object: object                                          \n\
             ')
         }
@@ -140,20 +149,21 @@ Generator.prototype.checkpoint = function (variables, packet, depth) {
     return $('                                                              \n\
         if (end - start < ' + packet.length + ') {                          \n\
             serializer = new serializers.inc.object                         \n\
-            serializer.step = 0                                             \n\
+            serializer.step = ' + this.step + '                             \n\
             ', stack, '                                                     \n\
             return { start: start, serializer: serializer }                 \n\
         }                                                                   \n\
     ')
 }
 
-Generator.prototype.field = function (variables, packet, depth) {
+Generator.prototype.field = function (variables, packet, depth, arrayed) {
     switch (packet.type) {
     case 'checkpoint':
-        return this.checkpoint(variables, packet, depth)
+        console.log(packet)
+        return this.checkpoint(variables, packet, depth, packet.arrayed)
     case 'structure':
         return joinSources(packet.fields.map(function (packet) {
-            return this.field(variables, packet, depth)
+            return this.field(variables, packet, depth, arrayed)
         }.bind(this)))
     case 'alternation':
         return this.alternation(variables, packet, depth)
@@ -172,7 +182,7 @@ Generator.prototype.field = function (variables, packet, depth) {
 
 Generator.prototype.serializer = function (packet, bff) {
     var variables = new Variables
-    var source = this.field(variables, packet, 0)
+    var source = this.field(variables, packet, 0, false)
     var object = 'serializers.' + (bff ? 'bff' : 'all') + '.' + packet.name
     var signature = bff ? 'buffer, start, end' : 'buffer, start'
     return $('                                                              \n\
@@ -193,11 +203,27 @@ Generator.prototype.serializer = function (packet, bff) {
     ')
 }
 
-function bff (packet) {
+function bff (packet, arrayed) {
     var checkpoint, fields = [ checkpoint = { type: 'checkpoint', length: 0 } ]
     for (var i = 0, I = packet.fields.length; i < I; i++) {
-        var field = packet.fields[i]
-        checkpoint.length += field.bytes
+        var field = JSON.parse(JSON.stringify(packet.fields[i]))
+        switch (field.type) {
+        case 'lengthEncoded':
+            checkpoint.length += field.length.bytes
+            checkpoint.arrayed = true
+            switch (field.element.type) {
+            case 'structure':
+                field.element.fields = bff(field.element, true)
+                break
+            default:
+                throw new Error
+            }
+            break
+        default:
+            checkpoint.length += field.bytes
+            checkpoint.arrayed = !! arrayed
+            break
+        }
         fields.push(field)
     }
     return fields
