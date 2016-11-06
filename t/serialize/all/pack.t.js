@@ -2,9 +2,9 @@ require('proof')(2, prove)
 
 function prove (assert) {
     var path = require('path')
-    var compiler = require('../../../compiler/require')
-    var composer = require('../../../compose/serializer/all.js')
-    var filename = path.resolve(__filename, '../../../generated/packing.serialize.all.js')
+    var compiler = require('../../../require')
+    var composer = require('../../../serialize.all')
+    var filename = path.resolve(__filename, '../../../generated/packing.serialize.all')
     var toJSON = require('../../to-json')
 
     var serializers = { all: {} }

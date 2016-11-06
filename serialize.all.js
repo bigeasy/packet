@@ -1,8 +1,8 @@
-var Variables = require('../variables')
-var explode = require('../explode')
-var qualify = require('../qualify')
-var joinSources = require('../join-sources')
-var pack = require('../pack')
+var Variables = require('./variables')
+var explode = require('./explode')
+var qualify = require('./qualify')
+var joinSources = require('./join-sources')
+var pack = require('./pack')
 var $ = require('programmatic')
 
 function Generator () {

@@ -1,7 +1,7 @@
-var Variables = require('../variables')
-var explode = require('../explode')
-var qualify = require('../qualify')
-var joinSources = require('../join-sources')
+var Variables = require('./variables')
+var explode = require('./explode')
+var qualify = require('./qualify')
+var joinSources = require('./join-sources')
 var $ = require('programmatic')
 
 function Generator () {

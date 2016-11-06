@@ -1,8 +1,8 @@
-var Variables = require('../variables')
-var explode = require('../explode')
-var qualify = require('../qualify')
+var Variables = require('./variables')
+var explode = require('./explode')
+var qualify = require('./qualify')
 var $ = require('programmatic')
-var joinSources = require('../join-sources')
+var joinSources = require('./join-sources')
 
 function Generator () {
     this.step = 0

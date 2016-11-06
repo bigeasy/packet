@@ -2,9 +2,9 @@ require('proof')(20, prove)
 
 function prove (assert) {
     var path = require('path')
-    var compiler = require('../../../compiler/require')
-    var composer = require('../../../compose/parser/inc.js')
-    var filename = path.resolve(__filename, '../../../generated/nested.parse.inc.js')
+    var compiler = require('../../../require')
+    var composer = require('../../../parse.inc')
+    var filename = path.resolve(__filename, '../../../generated/nested.parse.inc')
 
     var parsers = { inc: {} }
 

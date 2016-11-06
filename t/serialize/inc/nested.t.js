@@ -2,10 +2,10 @@ require('proof')(30, prove)
 
 function prove (assert) {
     var path = require('path')
-    var compiler = require('../../../compiler/require')
-    var composer = require('../../../compose/serializer/inc.js')
-    var toJSON = require('../../to-json.js')
-    var filename = path.resolve(__filename, '../../../generated/nested.serialize.inc.js')
+    var compiler = require('../../../require')
+    var composer = require('../../../serialize.inc')
+    var toJSON = require('../../to-json')
+    var filename = path.resolve(__filename, '../../../generated/nested.serialize.inc')
 
     var serializers = { inc: {} }
 

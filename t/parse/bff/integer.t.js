@@ -2,12 +2,12 @@ require('proof')(2, prove)
 
 function prove (assert) {
     var path = require('path')
-    var compiler = require('../../../compiler/require')
-    var all = require('../../../compose/parser/all.js')
-    var inc = require('../../../compose/parser/inc.js')
+    var compiler = require('../../../require')
+    var all = require('../../../parse.all')
+    var inc = require('../../../parse.inc')
     var filename = {
-        bff: path.resolve(__filename, '../../../generated/integer.parse.bff.js'),
-        inc: path.resolve(__filename, '../../../generated/integer.parse.inc.js')
+        bff: path.resolve(__filename, '../../../generated/integer.parse.bff'),
+        inc: path.resolve(__filename, '../../../generated/integer.parse.inc')
     }
 
     var parsers = { bff: {}, inc: {} }

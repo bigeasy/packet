@@ -1,17 +1,17 @@
 var path = require('path')
-var compiler = require('../../compiler/require')
+var compiler = require('../../require')
 var transmogrify = require('../../transmogrifier')
 var util = require('util')
 var toJSON = require('../to-json')
 // TODO: Make compiler a function that takes a prefix, then compile the four.
 var composers = {
     parser: {
-        inc: require('../../compose/parser/inc.js'),
-        all: require('../../compose/parser/all.js')
+        inc: require('../../parse.inc.js'),
+        all: require('../../parse.all.js')
     },
     serializer: {
-        inc: require('../../compose/serializer/inc.js'),
-        all: require('../../compose/serializer/all.js')
+        inc: require('../../serialize.inc.js'),
+        all: require('../../serialize.all.js')
     }
 }
 var Writer = require('../../writer')

@@ -2,9 +2,9 @@ require('proof')(6, prove)
 
 function prove (assert) {
     var path = require('path')
-    var compiler = require('../../../compiler/require')
-    var all = require('../../../compose/serializer/all.js')
-    var inc = require('../../../compose/serializer/inc.js')
+    var compiler = require('../../../require')
+    var all = require('../../../serialize.all.js')
+    var inc = require('../../../serialize.inc.js')
     var filename = {
         bff: path.resolve(__filename, '../../../generated/integer.serialize.bff.js'),
         inc: path.resolve(__filename, '../../../generated/integer.serialize.inc.js')

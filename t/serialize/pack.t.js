@@ -1,5 +1,5 @@
 require('proof')(8, function (equal) {
-    var pack = require('../../compose/pack')
+    var pack = require('../../pack')
 
     var f = new Function('value', 'return ' + pack(16, 5, 7, 'value'))
     equal(f(0x7f).toString(2), '11111110000', 'short')
