@@ -3,4 +3,4 @@
 	url = https://github.com/bigeasy/packet.git
 [submodule "vendor/lesshat"]
 	path = vendor/lesshat
-	url = git@github.com:madebysource/lesshat.git
+	url = https://github.com/madebysource/lesshat.git
