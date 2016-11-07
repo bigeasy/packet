@@ -239,7 +239,162 @@ Generator.prototype.alternation = <span class="hljs-function"><span class="hljs-
     }
     packet.choose.forEach(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">choice</span>) </span>{
         choices = $(<span class="hljs-string">'                                                       \n
-</span></pre></div></div>
+            __reference__                                                   \n
+            '</span>, choices, <span class="hljs-string">'                                                   \n
+            '</span>, choice.condition, <span class="hljs-string">'                                          \n
+            __blank__                                                       \n
+                '</span>, slurp.call(<span class="hljs-keyword">this</span>, choice), <span class="hljs-string">'                              \n
+            __blank__                                                       \n
+        '</span>)
+    }, <span class="hljs-keyword">this</span>)
+    <span class="hljs-keyword">var</span> source = $(<span class="hljs-string">'                                                        \n
+        '</span> + select + <span class="hljs-string">' = object.'</span> + packet.name + <span class="hljs-string">'                         \n
+    '</span>)
+    choices = $(<span class="hljs-string">'                                                           \n
+        __reference__                                                       \n
+        '</span>, choices, <span class="hljs-string">'                                                       \n
+        }                                                                   \n
+    '</span>)
+    <span class="hljs-keyword">return</span> $(<span class="hljs-string">'                                                              \n
+        '</span>, source, <span class="hljs-string">'                                                        \n
+        __blank__                                                           \n
+        '</span>, choices, <span class="hljs-string">'                                                       \n
+    '</span>)
+}
+
+Generator.prototype.lengthEncoded = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">variables, packet, depth</span>) </span>{
+    <span class="hljs-keyword">this</span>.step += <span class="hljs-number">2</span>
+    <span class="hljs-keyword">var</span> source = <span class="hljs-string">''</span>
+    <span class="hljs-keyword">var</span> object = qualify(<span class="hljs-string">'object'</span>, depth)
+    <span class="hljs-keyword">var</span> length = qualify(<span class="hljs-string">'length'</span>, depth)
+    <span class="hljs-keyword">var</span> array = qualify(<span class="hljs-string">'array'</span>, depth)
+    <span class="hljs-keyword">var</span> subObject = qualify(<span class="hljs-string">'object'</span>, depth + <span class="hljs-number">1</span>)
+    <span class="hljs-keyword">var</span> i = qualify(<span class="hljs-string">'i'</span>, depth)
+    variables.hoist(i)
+    variables.hoist(length)
+    variables.hoist(array)
+    variables.hoist(subObject)
+    <span class="hljs-keyword">var</span> looped = <span class="hljs-keyword">this</span>.field(variables, packet.element, depth + <span class="hljs-number">1</span>, <span class="hljs-literal">true</span>)
+    source = $(<span class="hljs-string">'                                                            \n
+        '</span> + array + <span class="hljs-string">' = '</span> + object + <span class="hljs-string">'.'</span> + packet.name + <span class="hljs-string">'                  \n
+        '</span> + length + <span class="hljs-string">' = array.length                                       \n
+        __blank__                                                           \n
+        '</span>, <span class="hljs-keyword">this</span>.word(packet.length, length), <span class="hljs-string">'                              \n
+        __blank__                                                           \n
+        for ('</span> + i + <span class="hljs-string">' = 0; '</span> + i + <span class="hljs-string">' &lt; length; '</span> + i + <span class="hljs-string">'++) {              \n
+            '</span> + subObject + <span class="hljs-string">' = array['</span> + i + <span class="hljs-string">']                            \n
+            '</span>, looped, <span class="hljs-string">'                                                    \n
+        }                                                                   \n
+    '</span>)
+    <span class="hljs-keyword">return</span> source
+}
+
+Generator.prototype.checkpoint = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">variables, packet, depth, arrayed</span>) </span>{
+    <span class="hljs-keyword">var</span> arrayed = arrayed ? $(<span class="hljs-string">'                                             \n
+        length: length,                                                     \n
+        index: i || 0,                                                      \n
+    '</span>) : <span class="hljs-string">''</span>
+    variables.hoist(<span class="hljs-string">'serializer'</span>)
+    <span class="hljs-keyword">var</span> stack = <span class="hljs-string">'serializer.stack = [{'</span>
+        <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> i = <span class="hljs-number">-1</span>; i &lt; <span class="hljs-number">0</span>; i++) {
+            stack = $(<span class="hljs-string">'                                                     \n
+                __reference__                                               \n
+                '</span>, stack, <span class="hljs-string">'                                                 \n
+                __reference__                                               \n
+                    '</span>, arrayed ,<span class="hljs-string">'                                           \n
+                    object: object                                          \n
+            '</span>)
+        }
+        stack = $(<span class="hljs-string">'                                                         \n
+            __reference__                                                   \n
+            '</span>, stack, <span class="hljs-string">'                                                     \n
+            }]                                                              \n
+        '</span>)
+    <span class="hljs-keyword">return</span> $(<span class="hljs-string">'                                                              \n
+        if (end - start &lt; '</span> + packet.length + <span class="hljs-string">') {                          \n
+            serializer = new serializers.inc.object                         \n
+            serializer.step = '</span> + <span class="hljs-keyword">this</span>.step + <span class="hljs-string">'                             \n
+            '</span>, stack, <span class="hljs-string">'                                                     \n
+            return { start: start, serializer: serializer }                 \n
+        }                                                                   \n
+    '</span>)
+}
+
+Generator.prototype.field = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">variables, packet, depth, arrayed</span>) </span>{
+    <span class="hljs-keyword">switch</span> (packet.type) {
+    <span class="hljs-keyword">case</span> <span class="hljs-string">'checkpoint'</span>:
+        <span class="hljs-built_in">console</span>.log(packet)
+        <span class="hljs-keyword">return</span> <span class="hljs-keyword">this</span>.checkpoint(variables, packet, depth, packet.arrayed)
+    <span class="hljs-keyword">case</span> <span class="hljs-string">'structure'</span>:
+        <span class="hljs-keyword">return</span> joinSources(packet.fields.map(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">packet</span>) </span>{
+            <span class="hljs-keyword">return</span> <span class="hljs-keyword">this</span>.field(variables, packet, depth, arrayed)
+        }.bind(<span class="hljs-keyword">this</span>)))
+    <span class="hljs-keyword">case</span> <span class="hljs-string">'alternation'</span>:
+        <span class="hljs-keyword">return</span> <span class="hljs-keyword">this</span>.alternation(variables, packet, depth)
+    <span class="hljs-keyword">case</span> <span class="hljs-string">'lengthEncoded'</span>:
+        <span class="hljs-keyword">return</span> <span class="hljs-keyword">this</span>.lengthEncoded(variables, packet, depth)
+    <span class="hljs-keyword">default</span>:
+        <span class="hljs-keyword">var</span> object = qualify(<span class="hljs-string">'object'</span>, depth)
+        <span class="hljs-keyword">if</span> (packet.type === <span class="hljs-string">'integer'</span>)  {
+            <span class="hljs-keyword">return</span> $(<span class="hljs-string">'                                                      \n
+                '</span>, <span class="hljs-keyword">this</span>.integer(variables, packet, object), <span class="hljs-string">'               \n
+                __reference__                                               \n
+            '</span>)
+        }
+    }
+}
+
+Generator.prototype.serializer = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">packet, bff</span>) </span>{
+    <span class="hljs-keyword">var</span> variables = <span class="hljs-keyword">new</span> Variables
+    <span class="hljs-keyword">var</span> source = <span class="hljs-keyword">this</span>.field(variables, packet, <span class="hljs-number">0</span>, <span class="hljs-literal">false</span>)
+    <span class="hljs-keyword">var</span> object = <span class="hljs-string">'serializers.'</span> + (bff ? <span class="hljs-string">'bff'</span> : <span class="hljs-string">'all'</span>) + <span class="hljs-string">'.'</span> + packet.name
+    <span class="hljs-keyword">var</span> signature = bff ? <span class="hljs-string">'buffer, start, end'</span> : <span class="hljs-string">'buffer, start'</span>
+    <span class="hljs-keyword">return</span> $(<span class="hljs-string">'                                                              \n
+        '</span> + object + <span class="hljs-string">' = function (object) {                                \n
+            this.object = object                                            \n
+        }                                                                   \n
+        __blank__                                                           \n
+        '</span> + object + <span class="hljs-string">'.prototype.serialize = function ('</span> + signature + <span class="hljs-string">') { \n
+            __blank__                                                       \n
+            var object = this.object                                        \n
+            __blank__                                                       \n
+            '</span>, <span class="hljs-built_in">String</span>(variables), <span class="hljs-string">'                                         \n
+            __blank__                                                       \n
+            '</span>, source, <span class="hljs-string">'                                                    \n
+            __blank__                                                       \n
+            return { start: start, serializer: null }                       \n
+        }                                                                   \n
+    '</span>)
+}
+
+<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">bff</span> (<span class="hljs-params">packet, arrayed</span>) </span>{
+    <span class="hljs-keyword">var</span> checkpoint, fields = [ checkpoint = { <span class="hljs-attr">type</span>: <span class="hljs-string">'checkpoint'</span>, <span class="hljs-attr">length</span>: <span class="hljs-number">0</span> } ]
+    <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> i = <span class="hljs-number">0</span>, I = packet.fields.length; i &lt; I; i++) {
+        <span class="hljs-keyword">var</span> field = <span class="hljs-built_in">JSON</span>.parse(<span class="hljs-built_in">JSON</span>.stringify(packet.fields[i]))
+        <span class="hljs-keyword">switch</span> (field.type) {
+        <span class="hljs-keyword">case</span> <span class="hljs-string">'lengthEncoded'</span>:
+            checkpoint.length += field.length.bytes
+            checkpoint.arrayed = <span class="hljs-literal">true</span>
+            <span class="hljs-keyword">switch</span> (field.element.type) {
+            <span class="hljs-keyword">case</span> <span class="hljs-string">'structure'</span>:
+                field.element.fields = bff(field.element, <span class="hljs-literal">true</span>)
+                <span class="hljs-keyword">break</span>
+            <span class="hljs-keyword">default</span>:
+                <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> <span class="hljs-built_in">Error</span>
+            }
+            <span class="hljs-keyword">break</span>
+        <span class="hljs-keyword">default</span>:
+            checkpoint.length += field.bytes
+            checkpoint.arrayed = !! arrayed
+            <span class="hljs-keyword">break</span>
+        }
+        fields.push(field)
+    }
+    <span class="hljs-keyword">return</span> fields
+}
+
+<span class="hljs-built_in">module</span>.exports = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">compiler, definition, options</span>) </span>{
+</pre></div></div>
 
         </li>
 
@@ -249,385 +404,6 @@ Generator.prototype.alternation = <span class="hljs-function"><span class="hljs-
 
               <div class="pilwrap ">
                 <a class="pilcrow" href="#section-3">&#182;</a>
-              </div>
-              <p><strong>reference</strong>                                                \n\</p>
-
-            </div>
-
-            <div class="content"><div class='highlight'><pre>            <span class="hljs-string">', choices, '</span>                                                   \n
-            <span class="hljs-string">', choice.condition, '</span>                                          \n
-</pre></div></div>
-
-        </li>
-
-
-        <li id="section-4">
-            <div class="annotation">
-
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-4">&#182;</a>
-              </div>
-              <p><strong>blank</strong>                                                    \n\</p>
-
-            </div>
-
-            <div class="content"><div class='highlight'><pre>                <span class="hljs-string">', slurp.call(this, choice), '</span>                              \n
-</pre></div></div>
-
-        </li>
-
-
-        <li id="section-5">
-            <div class="annotation">
-
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-5">&#182;</a>
-              </div>
-              <p><strong>blank</strong>                                                    \n\</p>
-
-            </div>
-
-            <div class="content"><div class='highlight'><pre>        ')
-    }, this)
-    var source = $('                                                        \n
-        ' + select + ' = object.' + packet.name + '                         \n
-    ')
-    choices = $('                                                           \n
-</pre></div></div>
-
-        </li>
-
-
-        <li id="section-6">
-            <div class="annotation">
-
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-6">&#182;</a>
-              </div>
-              <p><strong>reference</strong>                                                    \n\</p>
-
-            </div>
-
-            <div class="content"><div class='highlight'><pre>        ', choices, '                                                       \n
-        }                                                                   \n
-    ')
-    return $('                                                              \n
-        ', source, '                                                        \n
-</pre></div></div>
-
-        </li>
-
-
-        <li id="section-7">
-            <div class="annotation">
-
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-7">&#182;</a>
-              </div>
-              <p><strong>blank</strong>                                                        \n\</p>
-
-            </div>
-
-            <div class="content"><div class='highlight'><pre>        ', choices, '                                                       \n
-    ')
-}
-
-Generator.prototype.lengthEncoded = function (variables, packet, depth) {
-    this.step += 2
-    var source = ''
-    var object = qualify('object', depth)
-    var length = qualify('length', depth)
-    var array = qualify('array', depth)
-    var subObject = qualify('object', depth + 1)
-    var i = qualify('i', depth)
-    variables.hoist(i)
-    variables.hoist(length)
-    variables.hoist(array)
-    variables.hoist(subObject)
-    var looped = this.field(variables, packet.element, depth + 1, true)
-    source = $('                                                            \n
-        ' + array + ' = ' + object + '.' + packet.name + '                  \n
-        ' + length + ' = array.length                                       \n
-</pre></div></div>
-
-        </li>
-
-
-        <li id="section-8">
-            <div class="annotation">
-
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-8">&#182;</a>
-              </div>
-              <p><strong>blank</strong>                                                        \n\</p>
-
-            </div>
-
-            <div class="content"><div class='highlight'><pre>        <span class="hljs-string">', this.word(packet.length, length), '</span>                              \n
-</pre></div></div>
-
-        </li>
-
-
-        <li id="section-9">
-            <div class="annotation">
-
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-9">&#182;</a>
-              </div>
-              <p><strong>blank</strong>                                                        \n\</p>
-
-            </div>
-
-            <div class="content"><div class='highlight'><pre>        for (' + i + ' = 0; ' + i + ' &lt; length; ' + i + '++) {              \n
-            ' + subObject + ' = array[' + i + ']                            \n
-            ', looped, '                                                    \n
-        }                                                                   \n
-    ')
-    return source
-}
-
-Generator.prototype.checkpoint = function (variables, packet, depth, arrayed) {
-    var arrayed = arrayed ? $('                                             \n
-        length: length,                                                     \n
-        index: i || 0,                                                      \n
-    ') : ''
-    variables.hoist('serializer')
-    var stack = 'serializer.stack = [{'
-        for (var i = -1; i &lt; 0; i++) {
-            stack = $('                                                     \n
-</pre></div></div>
-
-        </li>
-
-
-        <li id="section-10">
-            <div class="annotation">
-
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-10">&#182;</a>
-              </div>
-              <p><strong>reference</strong>                                            \n\</p>
-
-            </div>
-
-            <div class="content"><div class='highlight'><pre>                <span class="hljs-string">', stack, '</span>                                                 \n
-</pre></div></div>
-
-        </li>
-
-
-        <li id="section-11">
-            <div class="annotation">
-
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-11">&#182;</a>
-              </div>
-              <p><strong>reference</strong>                                            \n\</p>
-
-            </div>
-
-            <div class="content"><div class='highlight'><pre>                    ', arrayed ,'                                           \n
-                    object: object                                          \n
-            ')
-        }
-        stack = $('                                                         \n
-</pre></div></div>
-
-        </li>
-
-
-        <li id="section-12">
-            <div class="annotation">
-
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-12">&#182;</a>
-              </div>
-              <p><strong>reference</strong>                                                \n\</p>
-
-            </div>
-
-            <div class="content"><div class='highlight'><pre>            ', stack, '                                                     \n
-            }]                                                              \n
-        ')
-    return $('                                                              \n
-        if (end - start &lt; ' + packet.length + ') {                          \n
-            serializer = new serializers.inc.object                         \n
-            serializer.step = ' + this.step + '                             \n
-            ', stack, '                                                     \n
-            return { start: start, serializer: serializer }                 \n
-        }                                                                   \n
-    ')
-}
-
-Generator.prototype.field = function (variables, packet, depth, arrayed) {
-    switch (packet.type) {
-    case 'checkpoint':
-        console.log(packet)
-        return this.checkpoint(variables, packet, depth, packet.arrayed)
-    case 'structure':
-        return joinSources(packet.fields.map(function (packet) {
-            return this.field(variables, packet, depth, arrayed)
-        }.bind(this)))
-    case 'alternation':
-        return this.alternation(variables, packet, depth)
-    case 'lengthEncoded':
-        return this.lengthEncoded(variables, packet, depth)
-    default:
-        var object = qualify('object', depth)
-        if (packet.type === 'integer')  {
-            return $('                                                      \n
-                ', this.integer(variables, packet, object), '               \n
-</pre></div></div>
-
-        </li>
-
-
-        <li id="section-13">
-            <div class="annotation">
-
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-13">&#182;</a>
-              </div>
-              <p><strong>reference</strong>                                            \n\</p>
-
-            </div>
-
-            <div class="content"><div class='highlight'><pre>            ')
-        }
-    }
-}
-
-Generator.prototype.serializer = function (packet, bff) {
-    var variables = new Variables
-    var source = this.field(variables, packet, 0, false)
-    var object = 'serializers.' + (bff ? 'bff' : 'all') + '.' + packet.name
-    var signature = bff ? 'buffer, start, end' : 'buffer, start'
-    return $('                                                              \n
-        ' + object + ' = function (object) {                                \n
-            this.object = object                                            \n
-        }                                                                   \n
-</pre></div></div>
-
-        </li>
-
-
-        <li id="section-14">
-            <div class="annotation">
-
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-14">&#182;</a>
-              </div>
-              <p><strong>blank</strong>                                                        \n\</p>
-
-            </div>
-
-            <div class="content"><div class='highlight'><pre>        <span class="hljs-string">' + object + '</span>.prototype.serialize = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params"><span class="hljs-string">' + signature + '</span></span>) </span>{ \n
-</pre></div></div>
-
-        </li>
-
-
-        <li id="section-15">
-            <div class="annotation">
-
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-15">&#182;</a>
-              </div>
-              <p><strong>blank</strong>                                                    \n\</p>
-
-            </div>
-
-            <div class="content"><div class='highlight'><pre>            <span class="hljs-keyword">var</span> object = <span class="hljs-keyword">this</span>.object                                        \n
-</pre></div></div>
-
-        </li>
-
-
-        <li id="section-16">
-            <div class="annotation">
-
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-16">&#182;</a>
-              </div>
-              <p><strong>blank</strong>                                                    \n\</p>
-
-            </div>
-
-            <div class="content"><div class='highlight'><pre>            <span class="hljs-string">', String(variables), '</span>                                         \n
-</pre></div></div>
-
-        </li>
-
-
-        <li id="section-17">
-            <div class="annotation">
-
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-17">&#182;</a>
-              </div>
-              <p><strong>blank</strong>                                                    \n\</p>
-
-            </div>
-
-            <div class="content"><div class='highlight'><pre>            <span class="hljs-string">', source, '</span>                                                    \n
-</pre></div></div>
-
-        </li>
-
-
-        <li id="section-18">
-            <div class="annotation">
-
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-18">&#182;</a>
-              </div>
-              <p><strong>blank</strong>                                                    \n\</p>
-
-            </div>
-
-            <div class="content"><div class='highlight'><pre>            return { start: start, serializer: null }                       \n
-        }                                                                   \n
-    ')
-}
-
-function bff (packet, arrayed) {
-    var checkpoint, fields = [ checkpoint = { type: 'checkpoint', length: 0 } ]
-    for (var i = 0, I = packet.fields.length; i &lt; I; i++) {
-        var field = JSON.parse(JSON.stringify(packet.fields[i]))
-        switch (field.type) {
-        case 'lengthEncoded':
-            checkpoint.length += field.length.bytes
-            checkpoint.arrayed = true
-            switch (field.element.type) {
-            case 'structure':
-                field.element.fields = bff(field.element, true)
-                break
-            default:
-                throw new Error
-            }
-            break
-        default:
-            checkpoint.length += field.bytes
-            checkpoint.arrayed = !! arrayed
-            break
-        }
-        fields.push(field)
-    }
-    return fields
-}
-
-module.exports = function (compiler, definition, options) {
-</pre></div></div>
-
-        </li>
-
-
-        <li id="section-19">
-            <div class="annotation">
-
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-19">&#182;</a>
               </div>
               <p>TODO Options is required.</p>
 

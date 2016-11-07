@@ -229,7 +229,112 @@ Generator.prototype.alternation = <span class="hljs-function"><span class="hljs-
     }
     packet.choose.forEach(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">option</span>) </span>{
         choices = $(<span class="hljs-string">'                                                       \n
-</span></pre></div></div>
+            __reference__                                                   \n
+            '</span>, choices, <span class="hljs-string">'                                                   \n
+            '</span>, option.condition, <span class="hljs-string">'                                          \n
+                __blank__                                                   \n
+                '</span>, slurp.call(<span class="hljs-keyword">this</span>, option), <span class="hljs-string">'                              \n
+            __blank__                                                       \n
+        '</span>)
+    }, <span class="hljs-keyword">this</span>)
+    choices = $(<span class="hljs-string">'                                                           \n
+        __reference__                                                       \n
+        '</span>, choices, <span class="hljs-string">'                                                       \n
+        }                                                                   \n
+    '</span>)
+    <span class="hljs-keyword">return</span> $(<span class="hljs-string">'                                                              \n
+        '</span>, source, <span class="hljs-string">'                                                        \n
+        __blank__                                                           \n
+        '</span>, choices, <span class="hljs-string">'                                                       \n
+    '</span>)
+}
+
+Generator.prototype.lengthEncoded = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">variables, packet, depth</span>) </span>{
+    <span class="hljs-keyword">this</span>.step += <span class="hljs-number">2</span>
+    <span class="hljs-keyword">var</span> source = <span class="hljs-string">''</span>
+    <span class="hljs-keyword">var</span> length = qualify(<span class="hljs-string">'length'</span>, depth)
+    <span class="hljs-keyword">var</span> object = qualify(<span class="hljs-string">'object'</span>, depth)
+    <span class="hljs-keyword">var</span> subObject = qualify(<span class="hljs-string">'object'</span>, depth + <span class="hljs-number">1</span>)
+    <span class="hljs-keyword">var</span> i = qualify(<span class="hljs-string">'i'</span>, depth)
+    variables.hoist(i)
+    variables.hoist(length)
+    <span class="hljs-keyword">var</span> looped = <span class="hljs-keyword">this</span>.field(variables, packet.element, depth + <span class="hljs-number">1</span>, <span class="hljs-literal">true</span>)
+    <span class="hljs-keyword">return</span> $(<span class="hljs-string">'                                                              \n
+        '</span>, <span class="hljs-keyword">this</span>.integer(packet.length, length), <span class="hljs-string">'                           \n
+        __blank__                                                           \n
+        for ('</span> + i + <span class="hljs-string">' = 0; '</span> + i + <span class="hljs-string">' &lt; '</span> + length + <span class="hljs-string">'; '</span> + i + <span class="hljs-string">'++) {      \n
+            '</span>, looped, <span class="hljs-string">'                                                    \n
+            __blank__                                                       \n
+            '</span> + object + <span class="hljs-string">'.'</span> + packet.name + <span class="hljs-string">'.push('</span> + subObject + <span class="hljs-string">')      \n
+        }                                                                   \n
+    '</span>)
+}
+
+Generator.prototype.checkpoint = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">variables, packet, depth, arrayed</span>) </span>{
+    <span class="hljs-keyword">var</span> arrayed = arrayed ? $(<span class="hljs-string">'                                             \n
+        length: length,                                                     \n
+        index: i,                                                           \n
+    '</span>) : <span class="hljs-string">''</span>
+    <span class="hljs-keyword">var</span> separator = <span class="hljs-string">''</span>,
+        object = <span class="hljs-string">'object'</span>,
+        stack = <span class="hljs-string">'parser.stack = [{'</span>
+        <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> i = <span class="hljs-number">-1</span>; i &lt; <span class="hljs-number">0</span>; i++) {
+            stack = $(<span class="hljs-string">'                                                     \n
+                '</span>, stack, <span class="hljs-string">'                                                 \n
+                '</span>, separator, <span class="hljs-string">'                                             \n
+                __reference__                                               \n
+                    '</span>, arrayed, <span class="hljs-string">'                                           \n
+                    object: '</span> + object + <span class="hljs-string">'                                  \n
+            '</span>)
+            separator = <span class="hljs-string">'}, {'</span>
+            object = <span class="hljs-string">'object'</span> + (i + <span class="hljs-number">2</span>)
+        }
+        stack = $(<span class="hljs-string">'                                                         \n
+            __reference__                                                   \n
+            '</span>, stack, <span class="hljs-string">'                                                     \n
+            }]                                                              \n
+        '</span>)
+    <span class="hljs-keyword">return</span> $(<span class="hljs-string">'                                                              \n
+        if (end - start &lt; '</span> + packet.length + <span class="hljs-string">') {                          \n
+            var parser = new parsers.inc.'</span> + current.name + <span class="hljs-string">'               \n
+            parser.step = '</span> + <span class="hljs-keyword">this</span>.step + <span class="hljs-string">'                                 \n
+            '</span>, stack , <span class="hljs-string">'                                                    \n
+            parser.object = object                                          \n
+            return { start: start, parser: parser, object: null }           \n
+        }                                                                   \n
+    '</span>)
+}
+
+Generator.prototype.field = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">variables, packet, depth, arrayed</span>) </span>{
+    <span class="hljs-keyword">switch</span> (packet.type) {
+    <span class="hljs-keyword">case</span> <span class="hljs-string">'checkpoint'</span>:
+        <span class="hljs-keyword">return</span> <span class="hljs-keyword">this</span>.checkpoint(variables, packet, depth, arrayed)
+    <span class="hljs-keyword">case</span> <span class="hljs-string">'structure'</span>:
+        <span class="hljs-keyword">return</span> $(<span class="hljs-string">'                                                          \n
+            '</span>, <span class="hljs-keyword">this</span>._constructor(variables, packet, depth), <span class="hljs-string">'               \n
+            __blank__                                                       \n
+            '</span>, joinSources(packet.fields.map(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">packet</span>) </span>{
+                <span class="hljs-keyword">return</span> <span class="hljs-keyword">this</span>.field(variables, packet, depth, arrayed)
+            }.bind(<span class="hljs-keyword">this</span>))), <span class="hljs-string">'                                               \n
+        '</span>)
+    <span class="hljs-keyword">case</span> <span class="hljs-string">'alternation'</span>:
+        <span class="hljs-keyword">return</span> <span class="hljs-keyword">this</span>.alternation(variables, packet, depth)
+    <span class="hljs-keyword">case</span> <span class="hljs-string">'lengthEncoded'</span>:
+        <span class="hljs-keyword">return</span> <span class="hljs-keyword">this</span>.lengthEncoded(variables, packet, depth)
+    <span class="hljs-keyword">default</span>:
+        <span class="hljs-keyword">var</span> object = qualify(<span class="hljs-string">'object'</span>, depth)
+        <span class="hljs-keyword">if</span> (packet.type === <span class="hljs-string">'integer'</span>)  {
+            <span class="hljs-keyword">return</span> $(<span class="hljs-string">'                                                      \n
+                '</span>, <span class="hljs-keyword">this</span>.integer(packet, object + <span class="hljs-string">'.'</span> + packet.name), <span class="hljs-string">'      \n
+                __reference__                                               \n
+            '</span>)
+        }
+        <span class="hljs-keyword">break</span>
+    }
+    <span class="hljs-keyword">return</span> source
+}
+
+</pre></div></div>
 
         </li>
 
@@ -239,251 +344,6 @@ Generator.prototype.alternation = <span class="hljs-function"><span class="hljs-
 
               <div class="pilwrap ">
                 <a class="pilcrow" href="#section-2">&#182;</a>
-              </div>
-              <p><strong>reference</strong>                                                \n\</p>
-
-            </div>
-
-            <div class="content"><div class='highlight'><pre>            <span class="hljs-string">', choices, '</span>                                                   \n
-            <span class="hljs-string">', option.condition, '</span>                                          \n
-</pre></div></div>
-
-        </li>
-
-
-        <li id="section-3">
-            <div class="annotation">
-
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-3">&#182;</a>
-              </div>
-              <p><strong>blank</strong>                                                \n\</p>
-
-            </div>
-
-            <div class="content"><div class='highlight'><pre>                <span class="hljs-string">', slurp.call(this, option), '</span>                              \n
-</pre></div></div>
-
-        </li>
-
-
-        <li id="section-4">
-            <div class="annotation">
-
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-4">&#182;</a>
-              </div>
-              <p><strong>blank</strong>                                                    \n\</p>
-
-            </div>
-
-            <div class="content"><div class='highlight'><pre>        ')
-    }, this)
-    choices = $('                                                           \n
-</pre></div></div>
-
-        </li>
-
-
-        <li id="section-5">
-            <div class="annotation">
-
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-5">&#182;</a>
-              </div>
-              <p><strong>reference</strong>                                                    \n\</p>
-
-            </div>
-
-            <div class="content"><div class='highlight'><pre>        ', choices, '                                                       \n
-        }                                                                   \n
-    ')
-    return $('                                                              \n
-        ', source, '                                                        \n
-</pre></div></div>
-
-        </li>
-
-
-        <li id="section-6">
-            <div class="annotation">
-
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-6">&#182;</a>
-              </div>
-              <p><strong>blank</strong>                                                        \n\</p>
-
-            </div>
-
-            <div class="content"><div class='highlight'><pre>        ', choices, '                                                       \n
-    ')
-}
-
-Generator.prototype.lengthEncoded = function (variables, packet, depth) {
-    this.step += 2
-    var source = ''
-    var length = qualify('length', depth)
-    var object = qualify('object', depth)
-    var subObject = qualify('object', depth + 1)
-    var i = qualify('i', depth)
-    variables.hoist(i)
-    variables.hoist(length)
-    var looped = this.field(variables, packet.element, depth + 1, true)
-    return $('                                                              \n
-        ', this.integer(packet.length, length), '                           \n
-</pre></div></div>
-
-        </li>
-
-
-        <li id="section-7">
-            <div class="annotation">
-
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-7">&#182;</a>
-              </div>
-              <p><strong>blank</strong>                                                        \n\</p>
-
-            </div>
-
-            <div class="content"><div class='highlight'><pre>        <span class="hljs-keyword">for</span> (<span class="hljs-string">' + i + '</span> = <span class="hljs-number">0</span>; <span class="hljs-string">' + i + '</span> &lt; <span class="hljs-string">' + length + '</span>; <span class="hljs-string">' + i + '</span>++) {      \n
-            <span class="hljs-string">', looped, '</span>                                                    \n
-</pre></div></div>
-
-        </li>
-
-
-        <li id="section-8">
-            <div class="annotation">
-
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-8">&#182;</a>
-              </div>
-              <p><strong>blank</strong>                                                    \n\</p>
-
-            </div>
-
-            <div class="content"><div class='highlight'><pre>            ' + object + '.' + packet.name + '.push(' + subObject + ')      \n
-        }                                                                   \n
-    ')
-}
-
-Generator.prototype.checkpoint = function (variables, packet, depth, arrayed) {
-    var arrayed = arrayed ? $('                                             \n
-        length: length,                                                     \n
-        index: i,                                                           \n
-    ') : ''
-    var separator = '',
-        object = 'object',
-        stack = 'parser.stack = [{'
-        for (var i = -1; i &lt; 0; i++) {
-            stack = $('                                                     \n
-                ', stack, '                                                 \n
-                ', separator, '                                             \n
-</pre></div></div>
-
-        </li>
-
-
-        <li id="section-9">
-            <div class="annotation">
-
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-9">&#182;</a>
-              </div>
-              <p><strong>reference</strong>                                            \n\</p>
-
-            </div>
-
-            <div class="content"><div class='highlight'><pre>                    ', arrayed, '                                           \n
-                    object: ' + object + '                                  \n
-            ')
-            separator = '}, {'
-            object = 'object' + (i + 2)
-        }
-        stack = $('                                                         \n
-</pre></div></div>
-
-        </li>
-
-
-        <li id="section-10">
-            <div class="annotation">
-
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-10">&#182;</a>
-              </div>
-              <p><strong>reference</strong>                                                \n\</p>
-
-            </div>
-
-            <div class="content"><div class='highlight'><pre>            ', stack, '                                                     \n
-            }]                                                              \n
-        ')
-    return $('                                                              \n
-        if (end - start &lt; ' + packet.length + ') {                          \n
-            var parser = new parsers.inc.' + current.name + '               \n
-            parser.step = ' + this.step + '                                 \n
-            ', stack , '                                                    \n
-            parser.object = object                                          \n
-            return { start: start, parser: parser, object: null }           \n
-        }                                                                   \n
-    ')
-}
-
-Generator.prototype.field = function (variables, packet, depth, arrayed) {
-    switch (packet.type) {
-    case 'checkpoint':
-        return this.checkpoint(variables, packet, depth, arrayed)
-    case 'structure':
-        return $('                                                          \n
-            ', this._constructor(variables, packet, depth), '               \n
-            __blank__                                                       \n
-            ', joinSources(packet.fields.map(function (packet) {
-                return this.field(variables, packet, depth, arrayed)
-            }.bind(this))), '                                               \n
-        ')
-    case 'alternation':
-        return this.alternation(variables, packet, depth)
-    case 'lengthEncoded':
-        return this.lengthEncoded(variables, packet, depth)
-    default:
-        var object = qualify('object', depth)
-        if (packet.type === 'integer')  {
-            return $('                                                      \n
-                ', this.integer(packet, object + '.' + packet.name), '      \n
-</pre></div></div>
-
-        </li>
-
-
-        <li id="section-11">
-            <div class="annotation">
-
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-11">&#182;</a>
-              </div>
-              <p><strong>reference</strong>                                            \n\</p>
-
-            </div>
-
-            <div class="content"><div class='highlight'><pre>            ')
-        }
-        break
-    }
-    return source
-}
-
-</pre></div></div>
-
-        </li>
-
-
-        <li id="section-12">
-            <div class="annotation">
-
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-12">&#182;</a>
               </div>
               <p>Convert to object.</p>
 
@@ -503,11 +363,11 @@ Generator.prototype.parser = <span class="hljs-function"><span class="hljs-keywo
         </li>
 
 
-        <li id="section-13">
+        <li id="section-3">
             <div class="annotation">
 
               <div class="pilwrap ">
-                <a class="pilcrow" href="#section-13">&#182;</a>
+                <a class="pilcrow" href="#section-3">&#182;</a>
               </div>
               <p>No need to track the end if we are a whole packet parser.</p>
 
@@ -521,37 +381,23 @@ Generator.prototype.parser = <span class="hljs-function"><span class="hljs-keywo
     <span class="hljs-keyword">var</span> object = <span class="hljs-string">'parsers.'</span> + (bff ? <span class="hljs-string">'bff'</span> : <span class="hljs-string">'all'</span>) + <span class="hljs-string">'.'</span> + packet.name
 
     <span class="hljs-keyword">var</span> inc = bff ? $(<span class="hljs-string">'                                                     \n
-</span></pre></div></div>
-
-        </li>
-
-
-        <li id="section-14">
-            <div class="annotation">
-
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-14">&#182;</a>
-              </div>
-              <p><strong>blank</strong>                                                        \n\</p>
-
-            </div>
-
-            <div class="content"><div class='highlight'><pre>        parsers.bff._inc = function (buffer, start, end, stack) {           \n
-            var parser = new parsers.inc.' + packet.name + '                \n
+        __blank__                                                           \n
+        parsers.bff._inc = function (buffer, start, end, stack) {           \n
+            var parser = new parsers.inc.'</span> + packet.name + <span class="hljs-string">'                \n
             return 1                                                        \n
         }                                                                   \n
-    ') : ''
+    '</span>) : <span class="hljs-string">''</span>
 
 </pre></div></div>
 
         </li>
 
 
-        <li id="section-15">
+        <li id="section-4">
             <div class="annotation">
 
               <div class="pilwrap ">
-                <a class="pilcrow" href="#section-15">&#182;</a>
+                <a class="pilcrow" href="#section-4">&#182;</a>
               </div>
               <p>Parser defintion body.</p>
 
@@ -561,108 +407,52 @@ Generator.prototype.parser = <span class="hljs-function"><span class="hljs-keywo
         '</span> + object + <span class="hljs-string">' = function () {                                      \n
         }                                                                   \n
         '</span>, inc, <span class="hljs-string">'                                                           \n
-</span></pre></div></div>
-
-        </li>
-
-
-        <li id="section-16">
-            <div class="annotation">
-
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-16">&#182;</a>
-              </div>
-              <p><strong>blank</strong>                                                        \n\</p>
-
-            </div>
-
-            <div class="content"><div class='highlight'><pre>        <span class="hljs-string">' + object + '</span>.prototype.parse = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params"><span class="hljs-string">' + signature + '</span></span>) </span>{     \n
-</pre></div></div>
-
-        </li>
-
-
-        <li id="section-17">
-            <div class="annotation">
-
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-17">&#182;</a>
-              </div>
-              <p><strong>blank</strong>                                                    \n\</p>
-
-            </div>
-
-            <div class="content"><div class='highlight'><pre>            <span class="hljs-string">', String(variables), '</span>                                         \n
-</pre></div></div>
-
-        </li>
-
-
-        <li id="section-18">
-            <div class="annotation">
-
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-18">&#182;</a>
-              </div>
-              <p><strong>blank</strong>                                                    \n\</p>
-
-            </div>
-
-            <div class="content"><div class='highlight'><pre>            <span class="hljs-string">', source, '</span>                                                    \n
-</pre></div></div>
-
-        </li>
-
-
-        <li id="section-19">
-            <div class="annotation">
-
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-19">&#182;</a>
-              </div>
-              <p><strong>blank</strong>                                                    \n\</p>
-
-            </div>
-
-            <div class="content"><div class='highlight'><pre>            return { start: start, object: object, parser: null }           \n
+        __blank__                                                           \n
+        '</span> + object + <span class="hljs-string">'.prototype.parse = function ('</span> + signature + <span class="hljs-string">') {     \n
+            __blank__                                                       \n
+            '</span>, <span class="hljs-built_in">String</span>(variables), <span class="hljs-string">'                                         \n
+            __blank__                                                       \n
+            '</span>, source, <span class="hljs-string">'                                                    \n
+            __blank__                                                       \n
+            return { start: start, object: object, parser: null }           \n
         }                                                                   \n
-    ')
+    '</span>)
 }
 
-function bff (packet) {
-    var checkpoint, fields = [ checkpoint = { type: 'checkpoint', length: 0 } ]
-    for (var i = 0, I = packet.fields.length; i &lt; I; i++) {
-        var field = JSON.parse(JSON.stringify(packet.fields[i]))
-        switch (field.type) {
-        case 'lengthEncoded':
+<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">bff</span> (<span class="hljs-params">packet</span>) </span>{
+    <span class="hljs-keyword">var</span> checkpoint, fields = [ checkpoint = { <span class="hljs-attr">type</span>: <span class="hljs-string">'checkpoint'</span>, <span class="hljs-attr">length</span>: <span class="hljs-number">0</span> } ]
+    <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> i = <span class="hljs-number">0</span>, I = packet.fields.length; i &lt; I; i++) {
+        <span class="hljs-keyword">var</span> field = <span class="hljs-built_in">JSON</span>.parse(<span class="hljs-built_in">JSON</span>.stringify(packet.fields[i]))
+        <span class="hljs-keyword">switch</span> (field.type) {
+        <span class="hljs-keyword">case</span> <span class="hljs-string">'lengthEncoded'</span>:
             checkpoint.length += field.length.bytes
-            switch (field.element.type) {
-            case 'structure':
+            <span class="hljs-keyword">switch</span> (field.element.type) {
+            <span class="hljs-keyword">case</span> <span class="hljs-string">'structure'</span>:
                 field.element.fields = bff(field.element)
-                break
-            default:
-                throw new Error
+                <span class="hljs-keyword">break</span>
+            <span class="hljs-keyword">default</span>:
+                <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> <span class="hljs-built_in">Error</span>
             }
-            break
-        default:
+            <span class="hljs-keyword">break</span>
+        <span class="hljs-keyword">default</span>:
             checkpoint.length += field.bytes
-            break
+            <span class="hljs-keyword">break</span>
         }
         fields.push(field)
     }
-    return fields
+    <span class="hljs-keyword">return</span> fields
 }
 
-module.exports = function (compiler, definition, options) {
+<span class="hljs-built_in">module</span>.exports = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">compiler, definition, options</span>) </span>{
     options || (options = {})
-    var source = joinSources(definition.map(function (packet) {
+    <span class="hljs-keyword">var</span> source = joinSources(definition.map(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">packet</span>) </span>{
         packet = explode(packet)
-        if (options.bff) {
+        <span class="hljs-keyword">if</span> (options.bff) {
             packet.fields = bff(packet)
         }
-        return new Generator().parser(packet, options.bff)
+        <span class="hljs-keyword">return</span> <span class="hljs-keyword">new</span> Generator().parser(packet, options.bff)
     }))
-    return compiler(source)
+    <span class="hljs-keyword">return</span> compiler(source)
 }
 
 </pre></div></div>
