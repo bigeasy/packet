@@ -79,22 +79,22 @@ Generator.prototype.alternation = function (variables, packet, depth) {
     }
     packet.choose.forEach(function (option) {
         choices = $('                                                       \n\
-            // __reference__                                                \n\
+            __reference__                                                   \n\
             ', choices, '                                                   \n\
             ', option.condition, '                                          \n\
-                // __blank__                                                \n\
+                __blank__                                                   \n\
                 ', slurp.call(this, option), '                              \n\
-            // __blank__                                                    \n\
+            __blank__                                                       \n\
         ')
     }, this)
     choices = $('                                                           \n\
-        // __reference__                                                    \n\
+        __reference__                                                       \n\
         ', choices, '                                                       \n\
         }                                                                   \n\
     ')
     return $('                                                              \n\
         ', source, '                                                        \n\
-        // __blank__                                                        \n\
+        __blank__                                                           \n\
         ', choices, '                                                       \n\
     ')
 }
@@ -111,10 +111,10 @@ Generator.prototype.lengthEncoded = function (variables, packet, depth) {
     var looped = this.field(variables, packet.element, depth + 1, true)
     return $('                                                              \n\
         ', this.integer(packet.length, length), '                           \n\
-        // __blank__                                                        \n\
+        __blank__                                                           \n\
         for (' + i + ' = 0; ' + i + ' < ' + length + '; ' + i + '++) {      \n\
             ', looped, '                                                    \n\
-            // __blank__                                                    \n\
+            __blank__                                                       \n\
             ' + object + '.' + packet.name + '.push(' + subObject + ')      \n\
         }                                                                   \n\
     ')
@@ -132,7 +132,7 @@ Generator.prototype.checkpoint = function (variables, packet, depth, arrayed) {
             stack = $('                                                     \n\
                 ', stack, '                                                 \n\
                 ', separator, '                                             \n\
-                // __reference__                                            \n\
+                __reference__                                               \n\
                     ', arrayed, '                                           \n\
                     object: ' + object + '                                  \n\
             ')
@@ -140,7 +140,7 @@ Generator.prototype.checkpoint = function (variables, packet, depth, arrayed) {
             object = 'object' + (i + 2)
         }
         stack = $('                                                         \n\
-            // __reference__                                                \n\
+            __reference__                                                   \n\
             ', stack, '                                                     \n\
             }]                                                              \n\
         ')
@@ -176,7 +176,7 @@ Generator.prototype.field = function (variables, packet, depth, arrayed) {
         if (packet.type === 'integer')  {
             return $('                                                      \n\
                 ', this.integer(packet, object + '.' + packet.name), '      \n\
-                // __reference__                                            \n\
+                __reference__                                               \n\
             ')
         }
         break
@@ -203,7 +203,7 @@ Generator.prototype.parser = function (packet, bff) {
     var object = 'parsers.' + (bff ? 'bff' : 'all') + '.' + packet.name
 
     var inc = bff ? $('                                                     \n\
-        // __blank__                                                        \n\
+        __blank__                                                           \n\
         parsers.bff._inc = function (buffer, start, end, stack) {           \n\
             var parser = new parsers.inc.' + packet.name + '                \n\
             return 1                                                        \n\
@@ -215,13 +215,13 @@ Generator.prototype.parser = function (packet, bff) {
         ' + object + ' = function () {                                      \n\
         }                                                                   \n\
         ', inc, '                                                           \n\
-        // __blank__                                                        \n\
+        __blank__                                                           \n\
         ' + object + '.prototype.parse = function (' + signature + ') {     \n\
-            // __blank__                                                    \n\
+            __blank__                                                       \n\
             ', String(variables), '                                         \n\
-            // __blank__                                                    \n\
+            __blank__                                                       \n\
             ', source, '                                                    \n\
-            // __blank__                                                    \n\
+            __blank__                                                       \n\
             return { start: start, object: object, parser: null }           \n\
         }                                                                   \n\
     ')

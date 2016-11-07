@@ -29,18 +29,18 @@ Generator.prototype.integer = function (field, property, cached) {
     var direction = field.little ? '++' : '--'
     var source = $('                                                        \n\
         case ' + (this.step++) + ':                                         \n\
-            // __blank__                                                    \n\
+            __blank__                                                       \n\
             ' + when(cached, 'this.cache = []') + '                         \n\
             this.stack.push({                                               \n\
                 value: 0,                                                   \n\
                 bite: ' + field.bite + '                                    \n\
             })                                                              \n\
             this.step = ' + this.step + '                                   \n\
-            // __blank__                                                    \n\
+            __blank__                                                       \n\
         case ' + (this.step++) + ':                                         \n\
-            // __blank__                                                    \n\
+            __blank__                                                       \n\
             frame = this.stack[this.stack.length - 1]                       \n\
-            // __blank__                                                    \n\
+            __blank__                                                       \n\
             while (frame.bite != ' + stop + ') {                            \n\
                 if (start == end) {                                         \n\
                     return { start: start, object: null, parser: this }     \n\
@@ -49,7 +49,7 @@ Generator.prototype.integer = function (field, property, cached) {
                 frame.value += Math.pow(256, frame.bite) * buffer[start++]  \n\
                 frame.bite', direction, '                                   \n\
             }                                                               \n\
-            // __blank__                                                    \n\
+            __blank__                                                       \n\
             this.stack.pop()                                                \n\
             this.stack[this.stack.length - 1].' + property + ' = frame.value\n\
     ')
@@ -104,36 +104,36 @@ Generator.prototype.alternation = function (packet, depth) {
         choice.read.field.name = packet.name
         var compiled = this.field(choice.read.field)
         dispatch = $('                                                      \n\
-            // __reference__                                                \n\
+            __reference__                                                   \n\
             ', dispatch, '                                                  \n\
             ', choice.condition, '                                          \n\
-            // __blank__                                                    \n\
+            __blank__                                                       \n\
                 this.step = ' + compiled.step + '                           \n\
                 this.parse(this.cache, 0, this.cache.length)                \n\
                 continue                                                    \n\
-                // __blank__                                                \n\
+                __blank__                                                   \n\
         ')
         sources.push(compiled.source)
     }, this)
     var steps = ''
     sources.forEach(function (source) {
         steps = $('                                                         \n\
-            // __reference__                                                \n\
+            __reference__                                                   \n\
             ', steps, '                                                     \n\
             ', source, '                                                    \n\
                 this.step = ' + this.step + '                               \n\
                 continue                                                    \n\
-            // __blank__                                                    \n\
+            __blank__                                                       \n\
         ')
     }, this)
     source = $('                                                            \n\
-        // __reference__                                                    \n\
+        __reference__                                                       \n\
         ', source, '                                                        \n\
             frame = this.stack[this.stack.length - 1]                       \n\
-            // __blank__                                                    \n\
+            __blank__                                                       \n\
             ', dispatch, '                                                  \n\
             }                                                               \n\
-        // __blank__                                                        \n\
+        __blank__                                                           \n\
         ', steps, '                                                         \n\
     ')
     return {
@@ -148,21 +148,21 @@ Generator.prototype.lengthEncoded = function (packet, depth) {
     var integer = this.integer(packet.length, 'length')
     var again = this.step
     source = $('                                                            \n\
-        // __reference__                                                    \n\
+        __reference__                                                       \n\
         ', integer.source, '                                                \n\
-        // __blank__                                                        \n\
+        __blank__                                                           \n\
             this.stack[this.stack.length - 1].index = 0                     \n\
-        // __blank__                                                        \n\
+        __blank__                                                           \n\
         case ' + (this.step++) + ':                                         \n\
-            // __blank__                                                    \n\
+            __blank__                                                       \n\
             this.stack.push({                                               \n\
                 object: {                                                   \n\
                     ', this.construct(packet.element, 0), '                 \n\
                 }                                                           \n\
             })                                                              \n\
-            // __blank__                                                    \n\
+            __blank__                                                       \n\
         ', this.field(packet.element), '                                    \n\
-            // __blank__                                                    \n\
+            __blank__                                                       \n\
             frame = this.stack[this.stack.length - 2]                       \n\
             frame.object.' + packet.name + '.push(this.stack.pop().object)  \n\
             if (++frame.index != frame.length) {                            \n\
@@ -202,17 +202,17 @@ Generator.prototype.parser = function (packet) {
         switch (this.step) {                                                \n\
         ', source, '                                                        \n\
         case ' + this.step + ':                                             \n\
-            // __blank__                                                    \n\
+            __blank__                                                       \n\
             return { start: start, object: this.object, parser: null }      \n\
-            // __blank__                                                    \n\
+            __blank__                                                       \n\
         }                                                                   \n\
     ')
     if (this.forever) {
         dispatch = $('                                                      \n\
             for (;;) {                                                      \n\
-                // __blank__                                                \n\
+                __blank__                                                   \n\
                 ', dispatch, '                                              \n\
-                // __blank__                                                \n\
+                __blank__                                                   \n\
                 break                                                       \n\
             }                                                               \n\
         ')
@@ -231,11 +231,11 @@ Generator.prototype.parser = function (packet) {
             }]                                                              \n\
             ' + when(this.cached, 'this.cache = null') + '                  \n\
         }                                                                   \n\
-        // __blank__                                                        \n\
+        __blank__                                                           \n\
         ' + object + '.prototype.parse = function (buffer, start, end) {    \n\
-            // __blank__                                                    \n\
+            __blank__                                                       \n\
             var frame = this.stack[this.stack.length - 1]                   \n\
-            // __blank__                                                    \n\
+            __blank__                                                       \n\
             ', dispatch, '                                                  \n\
         }                                                                   \n\
     ')

@@ -75,25 +75,25 @@ Generator.prototype.alternation = function (variables, packet, depth) {
     }
     packet.choose.forEach(function (choice) {
         choices = $('                                                       \n\
-            // __reference__                                                \n\
+            __reference__                                                   \n\
             ', choices, '                                                   \n\
             ', choice.condition, '                                          \n\
-            // __blank__                                                    \n\
+            __blank__                                                       \n\
                 ', slurp.call(this, choice), '                              \n\
-            // __blank__                                                    \n\
+            __blank__                                                       \n\
         ')
     }, this)
     var source = $('                                                        \n\
         ' + select + ' = object.' + packet.name + '                         \n\
     ')
     choices = $('                                                           \n\
-        // __reference__                                                    \n\
+        __reference__                                                       \n\
         ', choices, '                                                       \n\
         }                                                                   \n\
     ')
     return $('                                                              \n\
         ', source, '                                                        \n\
-        // __blank__                                                        \n\
+        __blank__                                                           \n\
         ', choices, '                                                       \n\
     ')
 }
@@ -114,9 +114,9 @@ Generator.prototype.lengthEncoded = function (variables, packet, depth) {
     source = $('                                                            \n\
         ' + array + ' = ' + object + '.' + packet.name + '                  \n\
         ' + length + ' = array.length                                       \n\
-        // __blank__                                                        \n\
+        __blank__                                                           \n\
         ', this.word(packet.length, length), '                              \n\
-        // __blank__                                                        \n\
+        __blank__                                                           \n\
         for (' + i + ' = 0; ' + i + ' < length; ' + i + '++) {              \n\
             ' + subObject + ' = array[' + i + ']                            \n\
             ', looped, '                                                    \n\
@@ -134,15 +134,15 @@ Generator.prototype.checkpoint = function (variables, packet, depth, arrayed) {
     var stack = 'serializer.stack = [{'
         for (var i = -1; i < 0; i++) {
             stack = $('                                                     \n\
-                // __reference__                                            \n\
+                __reference__                                               \n\
                 ', stack, '                                                 \n\
-                // __reference__                                            \n\
+                __reference__                                               \n\
                     ', arrayed ,'                                           \n\
                     object: object                                          \n\
             ')
         }
         stack = $('                                                         \n\
-            // __reference__                                                \n\
+            __reference__                                                   \n\
             ', stack, '                                                     \n\
             }]                                                              \n\
         ')
@@ -174,7 +174,7 @@ Generator.prototype.field = function (variables, packet, depth, arrayed) {
         if (packet.type === 'integer')  {
             return $('                                                      \n\
                 ', this.integer(variables, packet, object), '               \n\
-                // __reference__                                            \n\
+                __reference__                                               \n\
             ')
         }
     }
@@ -189,15 +189,15 @@ Generator.prototype.serializer = function (packet, bff) {
         ' + object + ' = function (object) {                                \n\
             this.object = object                                            \n\
         }                                                                   \n\
-        // __blank__                                                        \n\
+        __blank__                                                           \n\
         ' + object + '.prototype.serialize = function (' + signature + ') { \n\
-            // __blank__                                                    \n\
+            __blank__                                                       \n\
             var object = this.object                                        \n\
-            // __blank__                                                    \n\
+            __blank__                                                       \n\
             ', String(variables), '                                         \n\
-            // __blank__                                                    \n\
+            __blank__                                                       \n\
             ', source, '                                                    \n\
-            // __blank__                                                    \n\
+            __blank__                                                       \n\
             return { start: start, serializer: null }                       \n\
         }                                                                   \n\
     ')
