@@ -77,7 +77,7 @@ css/%.css: css/%.less node_modules/.bin/lessc
 
 docco/%.html: source/%.js node_modules/.bin/docco
 	mkdir -p docco
-	node_modules/.bin/docco -o docco -c docco.css source/*.js source/compiler/*.js source/compose/*/*.js source/compose/*.js
+	node_modules/.bin/docco -o docco -c docco.css source/*.js
 	sed -i '' -e 's/[ \t]*$$//' docco/*.html
 
 index.html: index.md

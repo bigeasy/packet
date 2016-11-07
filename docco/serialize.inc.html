@@ -2,7 +2,7 @@
 
 <html>
 <head>
-  <title>inc.js</title>
+  <title>serialize.inc.js</title>
   <meta http-equiv="content-type" content="text/html; charset=UTF-8">
   <meta name="viewport" content="width=device-width, target-densitydpi=160dpi, initial-scale=1.0; maximum-scale=1.0; user-scalable=0;">
   <link rel="stylesheet" media="all" href="docco.css" />
@@ -20,58 +20,13 @@
             <div id="jump_page">
 
 
-                <a class="source" href="function.html">
-                  function.js
-                </a>
-
-
-                <a class="source" href="require.html">
-                  require.js
-                </a>
-
-
                 <a class="source" href="explode.html">
                   explode.js
                 </a>
 
 
-                <a class="source" href="join-sources.html">
-                  join-sources.js
-                </a>
-
-
-                <a class="source" href="pack.html">
-                  pack.js
-                </a>
-
-
-                <a class="source" href="all.html">
-                  all.js
-                </a>
-
-
-                <a class="source" href="inc.html">
-                  inc.js
-                </a>
-
-
-                <a class="source" href="qualify.html">
-                  qualify.js
-                </a>
-
-
-                <a class="source" href="all.html">
-                  all.js
-                </a>
-
-
-                <a class="source" href="inc.html">
-                  inc.js
-                </a>
-
-
-                <a class="source" href="variables.html">
-                  variables.js
+                <a class="source" href="function.html">
+                  function.js
                 </a>
 
 
@@ -80,8 +35,28 @@
                 </a>
 
 
+                <a class="source" href="join-sources.html">
+                  join-sources.js
+                </a>
+
+
                 <a class="source" href="offsets.html">
                   offsets.js
+                </a>
+
+
+                <a class="source" href="pack.html">
+                  pack.js
+                </a>
+
+
+                <a class="source" href="parse.all.html">
+                  parse.all.js
+                </a>
+
+
+                <a class="source" href="parse.inc.html">
+                  parse.inc.js
                 </a>
 
 
@@ -97,6 +72,26 @@
 
                 <a class="source" href="push.html">
                   push.js
+                </a>
+
+
+                <a class="source" href="qualify.html">
+                  qualify.js
+                </a>
+
+
+                <a class="source" href="require.html">
+                  require.js
+                </a>
+
+
+                <a class="source" href="serialize.all.html">
+                  serialize.all.js
+                </a>
+
+
+                <a class="source" href="serialize.inc.html">
+                  serialize.inc.js
                 </a>
 
 
@@ -120,6 +115,11 @@
                 </a>
 
 
+                <a class="source" href="variables.html">
+                  variables.js
+                </a>
+
+
                 <a class="source" href="writer.html">
                   writer.js
                 </a>
@@ -133,7 +133,7 @@
 
           <li id="title">
               <div class="annotation">
-                  <h1>inc.js</h1>
+                  <h1>serialize.inc.js</h1>
               </div>
           </li>
 
@@ -148,11 +148,11 @@
 
             </div>
 
-            <div class="content"><div class='highlight'><pre><span class="hljs-keyword">var</span> Variables = <span class="hljs-built_in">require</span>(<span class="hljs-string">'../variables'</span>)
-<span class="hljs-keyword">var</span> explode = <span class="hljs-built_in">require</span>(<span class="hljs-string">'../explode'</span>)
-<span class="hljs-keyword">var</span> qualify = <span class="hljs-built_in">require</span>(<span class="hljs-string">'../qualify'</span>)
+            <div class="content"><div class='highlight'><pre><span class="hljs-keyword">var</span> Variables = <span class="hljs-built_in">require</span>(<span class="hljs-string">'./variables'</span>)
+<span class="hljs-keyword">var</span> explode = <span class="hljs-built_in">require</span>(<span class="hljs-string">'./explode'</span>)
+<span class="hljs-keyword">var</span> qualify = <span class="hljs-built_in">require</span>(<span class="hljs-string">'./qualify'</span>)
 <span class="hljs-keyword">var</span> $ = <span class="hljs-built_in">require</span>(<span class="hljs-string">'programmatic'</span>)
-<span class="hljs-keyword">var</span> joinSources = <span class="hljs-built_in">require</span>(<span class="hljs-string">'../join-sources'</span>)
+<span class="hljs-keyword">var</span> joinSources = <span class="hljs-built_in">require</span>(<span class="hljs-string">'./join-sources'</span>)
 
 <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">Generator</span> (<span class="hljs-params"></span>) </span>{
     <span class="hljs-keyword">this</span>.step = <span class="hljs-number">0</span>
