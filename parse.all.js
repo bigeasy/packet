@@ -146,7 +146,7 @@ Generator.prototype.checkpoint = function (variables, packet, depth, arrayed) {
         ')
     return $('                                                              \n\
         if (end - start < ' + packet.length + ') {                          \n\
-            var parser = new parsers.inc.' + current.name + '               \n\
+            var parser = new parsers.inc.' + this.current.name + '          \n\
             parser.step = ' + this.step + '                                 \n\
             ', stack , '                                                    \n\
             parser.object = object                                          \n\
@@ -184,11 +184,8 @@ Generator.prototype.field = function (variables, packet, depth, arrayed) {
     return source
 }
 
-// Convert to object.
-var current = null
-
 Generator.prototype.parser = function (packet, bff) {
-    current = { name: packet.name }
+    this.current = { name: packet.name }
 
     var variables = new Variables
 
