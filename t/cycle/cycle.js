@@ -6,12 +6,12 @@ var toJSON = require('../to-json')
 // TODO: Make compiler a function that takes a prefix, then compile the four.
 var composers = {
     parser: {
-        inc: require('../../parse.inc.js'),
-        all: require('../../parse.all.js')
+        inc: require('../../parse.inc'),
+        all: require('../../parse.all')
     },
     serializer: {
-        inc: require('../../serialize.inc.js'),
-        all: require('../../serialize.all.js')
+        inc: require('../../serialize.inc'),
+        all: require('../../serialize.all')
     }
 }
 var Writer = require('../../writer')
