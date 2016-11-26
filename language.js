@@ -30,6 +30,38 @@ var definition = {
 }
 
 var parsers = {
+    frame: function (object, parsing) {
+        if (!parsing) {
+            header.mask = object.mask == null ? 0 : 1
+        }
+        _(object.header, {
+            fin: 1, rsv1: 1, rsv2: 2, rsv3: 3, opcode: 4,
+            mask: 1, length: 7
+        })
+        if (header.length == 127) {
+            _(header.length, 16)
+        } else if (header.length == 126) {
+            _(header.length, 32)
+        } else if (parsing) {
+            object.length = header.length
+        }
+        if (header.mask) {
+            _(object.mask, 16)
+        }
+    },
+    mysql: function (object) {
+        _(object.value, 8)
+        if (object.value & 0xfc) {
+            object.value = get(16)
+        }
+    },
+    nested: function (object) {
+        object.array = lengthEncoded(16, structure(function () {
+        }))
+    }
+}
+
+var parsers = {
     frame: function (object) {
         if (serializing) {
             header.mask = object.mask == null ? 0 : 1
