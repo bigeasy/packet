@@ -9,6 +9,7 @@ function Generator () {
 }
 
 Generator.prototype.integer = function (field, assignee) {
+    field = explode(field)
     var read = [], bite = field.bite, stop = field.stop
     while (bite != stop) {
         read.unshift('buffer[start++]')
@@ -27,12 +28,14 @@ Generator.prototype.integer = function (field, assignee) {
             ', read, '')
 }
 
+// TODO Create a null entry, then assign a value later on.
 Generator.prototype._constructor = function (variables, packet, depth) {
     var fields = [], object = qualify('object', depth)
     variables.hoist(object)
     packet.fields.forEach(function (field) {
         switch (field.type) {
         case 'checkpoint':
+        case 'condition':
             break
         case 'lengthEncoded':
             fields.push(field.name + ': new Array')
@@ -155,10 +158,31 @@ Generator.prototype.checkpoint = function (variables, packet, depth, arrayed) {
     ')
 }
 
+Generator.prototype._condition = function (variables, packet, depth, arrayed) {
+    var branches = '', test = 'if'
+    packet.conditions.forEach(function (condition) {
+        var block = joinSources(condition.fields.map(function (packet) {
+            return this.field(variables, explode(packet), depth, arrayed)
+        }.bind(this)))
+        test = condition.condition == null  ? '} else {' : test + ' (' + condition.condition + ') {'
+        branches = $('                                                      \n\
+            ', branches, '                                                  \n\
+            ' + test + '                                                    \n\
+                ', block, '                                                 \n\
+        ')
+    }, this)
+    return $('                                                              \n\
+        ', branches, '                                                      \n\
+        }                                                                   \n\
+    ')
+}
+
 Generator.prototype.field = function (variables, packet, depth, arrayed) {
     switch (packet.type) {
     case 'checkpoint':
         return this.checkpoint(variables, packet, depth, arrayed)
+    case 'condition':
+        return this._condition(variables, packet, depth, arrayed)
     case 'structure':
         return $('                                                          \n\
             ', this._constructor(variables, packet, depth), '               \n\
