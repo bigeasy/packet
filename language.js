@@ -29,7 +29,7 @@ var definition = {
     }
 }
 
-var parsers = {
+var packets = {
     frame: function (object, parsing) {
         if (!parsing) {
             header.mask = object.mask == null ? 0 : 1
@@ -50,18 +50,40 @@ var parsers = {
         }
     },
     mysql: function (object) {
-        _(object.value, 8)
-        if (object.value & 0xfc) {
-            object.value = get(16)
+        if (parsing) {
+            _(object.value, 8)
+            if (object.value & 0x0fc) {
+                _(object.value, 16)
+            } else if (object.value & 0xfd) {
+                _(object.value, 24)
+            } else if (object.value & 0xfe) {
+                _(object.value, 64)
+            }
+        } else {
+            if (object.value < 251) {
+                _(object.value, 8)
+            } else if (object.value > 251 && object.value < 0xffff) {
+                _(0xfc)
+                _(object.value, 16)
+            } else if (object.value >= 0xffff && object.value < 0xffffff) {
+                _(0xfd)
+                _(object.value, 24)
+            } else {
+                _(0xfe)
+                _(object.value, 64)
+            }
         }
     },
     nested: function (object) {
-        object.array = lengthEncoded(16, structure(function () {
-        }))
+        _(object.numbers, 16, [32])
+        _(object.structures, 16, [function (struct) {
+            _(struct.count, packets.mysql)
+            _(struct.string, [8], [0])
+        }])
     }
 }
 
-var parsers = {
+var packets = {
     frame: function (object) {
         if (serializing) {
             header.mask = object.mask == null ? 0 : 1
@@ -91,7 +113,5 @@ var parsers = {
         }
     },
     nested: function (object) {
-        object.array = lengthEncoded(16, structure(function () {
-        }))
     }
 }
