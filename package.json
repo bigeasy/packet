@@ -44,6 +44,7 @@
     },
     "dependencies":
     {
+                            "acorn":                        "4.0.3",
                             "programmatic":                 "0.0.x"
     },
     "devDependencies":
