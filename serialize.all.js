@@ -156,11 +156,33 @@ Generator.prototype.checkpoint = function (variables, packet, depth, arrayed) {
     ')
 }
 
+Generator.prototype._condition = function (variables, packet, depth, arrayed) {
+    var branches = '', test = 'if'
+    packet.conditions.forEach(function (condition) {
+        var block = joinSources(condition.fields.map(function (packet) {
+            return this.field(variables, explode(packet), depth, arrayed)
+        }.bind(this)))
+        test = condition.condition == null  ? '} else {' : test + ' (' + condition.condition + ') {'
+        branches = $('                                                      \n\
+            ', branches, '                                                  \n\
+            ' + test + '                                                    \n\
+                ', block, '                                                 \n\
+        ')
+    }, this)
+    return $('                                                              \n\
+        ', branches, '                                                      \n\
+        }                                                                   \n\
+    ')
+}
+
 Generator.prototype.field = function (variables, packet, depth, arrayed) {
     switch (packet.type) {
     case 'checkpoint':
         console.log(packet)
+        // TODO `variables` can be an object member.
         return this.checkpoint(variables, packet, depth, packet.arrayed)
+    case 'condition':
+        return this._condition(variables, packet, depth, packet.arrayed)
     case 'structure':
         return joinSources(packet.fields.map(function (packet) {
             return this.field(variables, packet, depth, arrayed)
