@@ -1,9 +1,6 @@
 var acorn = require('acorn')
 var assert = require('assert')
 
-var source = require('fs').readFileSync('minimal.packet.js', 'utf8')
-var parsed = acorn.parse(source)
-
 function dump (node) {
     console.log(require('util').inspect(node, { depth: Infinity }))
 }
@@ -36,19 +33,16 @@ function visitPropertyParse (node) {
     })
 }
 
-function visitPropertySerialize (node, fields) {
-    assert(node.type == 'FunctionExpression')
-    assert(node.params[0].name == 'object')
-    node.body.body.forEach(function (node) {
+function visitPropertySerialize (parameters, body, fields) {
+    body.forEach(function (node) {
         assert(node.type == 'ExpressionStatement')
         node = node.expression
-        dump(node)
         assert(node.type == 'AssignmentExpression')
 
         assert(node.left.type == 'MemberExpression')
         assert(node.left.object.name == 'object')
         assert(node.left.property.type == 'Identifier')
-        name = node.left.property.name
+        var name = node.left.property.name
 
         assert(node.right.type == 'CallExpression')
         assert(node.right.callee.name = '$_')
@@ -64,31 +58,41 @@ function visitPropertySerialize (node, fields) {
     })
 }
 
-function visitProperty (structures, node) {
-    var structure = {
-        type: 'structure',
-        name: node.key.name,
-        fields: []
-    }
-    structures.push(structure)
-    visitPropertySerialize(node.value, structure.fields)
-    dump(structures)
-}
-
-function walk (node) {
-    var structures = []
+function walk (source) {
+    var node = acorn.parse(source)
+    var structures = { parse: [], serialize: [] }
 
     assert(node.type == 'Program', 'program expected')
 
-    node = node.body[0]
-    assert(node.type == 'ExpressionStatement')
-    assert(node.expression.left.name == 'packets')
+    node.body.forEach(function (node) {
+        assert(node.type == 'ExpressionStatement')
+        assert(node.expression.left.type == 'MemberExpression')
+        assert(node.expression.left.object.name == 'packets')
+        assert(node.expression.left.property.type == 'Identifier')
+        var name = node.expression.left.property.name
 
-    node = node.expression.right
-    assert(node.type == 'ObjectExpression')
-    node.properties.forEach(function (property) {
-        visitProperty(structures, property)
+        assert(node.expression.right.type == 'FunctionExpression')
+        var parameters = node.expression.right.params.map(function (node) {
+            return node.name
+        })
+        var body = node.expression.right.body.body
+        var structure = {
+            type: 'structure',
+            name: name,
+            fields: []
+        }
+        structures.serialize.push(structure)
+        visitPropertySerialize(parameters, body, structure.fields)
+        var structure = {
+            type: 'structure',
+            name: name,
+            fields: []
+        }
+        structures.parse.push(structure)
+        visitPropertySerialize(parameters, body, structure.fields)
     })
+
+    return structures
 }
 
-walk(parsed)
+exports.walk = walk

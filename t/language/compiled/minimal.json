@@ -1,0 +1,30 @@
+{
+  "parse": [
+    {
+      "type": "structure",
+      "name": "object",
+      "fields": [
+        {
+          "name": "value",
+          "type": "integer",
+          "endianness": "b",
+          "bits": 16
+        }
+      ]
+    }
+  ],
+  "serialize": [
+    {
+      "type": "structure",
+      "name": "object",
+      "fields": [
+        {
+          "name": "value",
+          "type": "integer",
+          "endianness": "b",
+          "bits": 16
+        }
+      ]
+    }
+  ]
+}
