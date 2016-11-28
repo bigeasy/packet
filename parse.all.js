@@ -3,6 +3,7 @@ var explode = require('./explode')
 var qualify = require('./qualify')
 var joinSources = require('./join-sources')
 var $ = require('programmatic')
+var unpackAll = require('./composers/parsers/unpack')
 
 function Generator () {
     this.step = 0
@@ -10,6 +11,8 @@ function Generator () {
 
 Generator.prototype.integer = function (field, assignee) {
     field = explode(field)
+    if (field.packing != null) {
+    }
     var read = [], bite = field.bite, stop = field.stop
     while (bite != stop) {
         read.unshift('buffer[start++]')
@@ -23,9 +26,17 @@ Generator.prototype.integer = function (field, assignee) {
         return assignee + ' = ' + read
     }
     this.step += 2
-    return $('                                                              \n\
+    var parsed = $('                                                        \n\
         ' + assignee + ' =                                                  \n\
             ', read, '')
+    if (field.packing) {
+        return $('                                                          \n\
+            ', parsed, '                                                    \n\
+            __blank__                                                       \n\
+            ', unpackAll(field), '                                          \n\
+        ')
+    }
+    return parsed
 }
 
 // TODO Create a null entry, then assign a value later on.
@@ -41,10 +52,19 @@ Generator.prototype._constructor = function (variables, packet, depth) {
             fields.push(field.name + ': new Array')
             break
         default:
-            fields.push(field.name + ': null')
+            if (field.packing == null) {
+                fields.push(field.name + ': null')
+            } else {
+                field.packing.forEach(function (field) {
+                    fields.push(field.name + ': null')
+                })
+            }
             break
         }
     })
+    if (fields.length == 0) {
+        return object + ' = {}'
+    }
     return $('                                                              \n\
         ' + object + ' = {                                                  \n\
             ', fields.join(',\n'), '                                        \n\
@@ -196,10 +216,15 @@ Generator.prototype.field = function (variables, packet, depth, arrayed) {
     case 'lengthEncoded':
         return this.lengthEncoded(variables, packet, depth)
     default:
-        var object = qualify('object', depth)
+        if (packet.packing != null) {
+            variables.hoist('value')
+            var assignee = 'value'
+        } else {
+            var assignee = qualify('object', depth) + '.' + packet.name
+        }
         if (packet.type === 'integer')  {
             return $('                                                      \n\
-                ', this.integer(packet, object + '.' + packet.name), '      \n\
+                ', this.integer(packet, assignee), '                        \n\
                 __reference__                                               \n\
             ')
         }
