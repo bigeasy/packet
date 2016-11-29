@@ -1,0 +1,104 @@
+{
+  "parse": [
+    {
+      "type": "structure",
+      "name": "object",
+      "fields": [
+        {
+          "name": "flag",
+          "type": "integer",
+          "endianness": "b",
+          "bits": 8
+        },
+        {
+          "type": "condition",
+          "conditions": [
+            {
+              "test": "object.flag == 16",
+              "fields": [
+                {
+                  "name": "number",
+                  "type": "integer",
+                  "endianness": "b",
+                  "bits": 16
+                }
+              ]
+            },
+            {
+              "test": "object.flag == 24",
+              "fields": [
+                {
+                  "name": "number",
+                  "type": "integer",
+                  "endianness": "b",
+                  "bits": 24
+                }
+              ]
+            },
+            {
+              "fields": [
+                {
+                  "name": "number",
+                  "type": "integer",
+                  "endianness": "b",
+                  "bits": 32
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "serialize": [
+    {
+      "type": "structure",
+      "name": "object",
+      "fields": [
+        {
+          "name": "flag",
+          "type": "integer",
+          "endianness": "b",
+          "bits": 8
+        },
+        {
+          "type": "condition",
+          "conditions": [
+            {
+              "test": "object.flag == 16",
+              "fields": [
+                {
+                  "name": "number",
+                  "type": "integer",
+                  "endianness": "b",
+                  "bits": 16
+                }
+              ]
+            },
+            {
+              "test": "object.flag == 24",
+              "fields": [
+                {
+                  "name": "number",
+                  "type": "integer",
+                  "endianness": "b",
+                  "bits": 24
+                }
+              ]
+            },
+            {
+              "fields": [
+                {
+                  "name": "number",
+                  "type": "integer",
+                  "endianness": "b",
+                  "bits": 32
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

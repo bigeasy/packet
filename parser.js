@@ -1,5 +1,6 @@
 var acorn = require('acorn')
 var assert = require('assert')
+var escodegen = require('escodegen')
 
 function dump (node) {
     console.log(require('util').inspect(node, { depth: Infinity }))
@@ -33,29 +34,59 @@ function visitPropertyParse (node) {
     })
 }
 
+function createConditions (parameters, conditions, node) {
+    var condition = {
+        test: escodegen.generate(node.test),
+        fields: []
+    }
+    conditions.push(condition)
+    visitPropertySerialize(parameters, node.consequent.body, condition.fields)
+    if (node.alternate.type == 'IfStatement') {
+        createConditions(parameters, conditions, node.alternate)
+    } else {
+        var condition = {
+            fields: []
+        }
+        conditions.push(condition)
+        visitPropertySerialize(parameters, node.alternate.body, condition.fields)
+    }
+}
+
+// TODO It is simple enought to look and ensure that `_` is not called inside a
+// while loop, so that `_` is only called in the body of the function. It would
+// be a lot of rewriting to get it to where you could include incrementalism
+// anywhere, unrolling loops, switch statements, etc.
 function visitPropertySerialize (parameters, body, fields) {
     body.forEach(function (node) {
-        assert(node.type == 'ExpressionStatement')
-        node = node.expression
-        dump(node)
-        assert(node.type == 'CallExpression')
-        assert(node.callee.name == '_')
+        if (node.type == 'IfStatement') {
+            var conditional = {
+                type: 'condition',
+                conditions: []
+            }
+            createConditions(parameters, conditional.conditions, node)
+            fields.push(conditional)
+        } else {
+            assert(node.type == 'ExpressionStatement')
+            node = node.expression
+            assert(node.type == 'CallExpression')
+            assert(node.callee.name == '_')
 
-        var arg = node.arguments[0]
-        assert(arg.type == 'MemberExpression')
-        assert(arg.object.name == 'object')
-        assert(arg.property.type == 'Identifier')
-        var name = arg.property.name
+            var arg = node.arguments[0]
+            assert(arg.type == 'MemberExpression')
+            assert(arg.object.name == 'object')
+            assert(arg.property.type == 'Identifier')
+            var name = arg.property.name
 
-        var arg = node.arguments[1]
-        var value = arg.value
+            var arg = node.arguments[1]
+            var value = arg.value
 
-        fields.push({
-            name: name,
-            type: 'integer',
-            endianness: 'b',
-            bits: value
-        })
+            fields.push({
+                name: name,
+                type: 'integer',
+                endianness: 'b',
+                bits: value
+            })
+        }
     })
 }
 
