@@ -37,17 +37,18 @@ function visitPropertySerialize (parameters, body, fields) {
     body.forEach(function (node) {
         assert(node.type == 'ExpressionStatement')
         node = node.expression
-        assert(node.type == 'AssignmentExpression')
+        dump(node)
+        assert(node.type == 'CallExpression')
+        assert(node.callee.name == '_')
 
-        assert(node.left.type == 'MemberExpression')
-        assert(node.left.object.name == 'object')
-        assert(node.left.property.type == 'Identifier')
-        var name = node.left.property.name
+        var arg = node.arguments[0]
+        assert(arg.type == 'MemberExpression')
+        assert(arg.object.name == 'object')
+        assert(arg.property.type == 'Identifier')
+        var name = arg.property.name
 
-        assert(node.right.type == 'CallExpression')
-        assert(node.right.callee.name = '$_')
-
-        var value = node.right.arguments[0].value
+        var arg = node.arguments[1]
+        var value = arg.value
 
         fields.push({
             name: name,
