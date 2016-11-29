@@ -4,7 +4,7 @@ function prove (assert) {
     var path = require('path')
     var compiler = require('../../../require')
     var composer = require('../../../parse.inc')
-    var filename = path.resolve(__filename, '../../../generated/alternation.parse.inc')
+    var filename = path.resolve(__filename, '../../../generated/alternation.parse.inc.js')
 
     var parsers = { inc: {} }
 

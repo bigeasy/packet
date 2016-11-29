@@ -6,8 +6,8 @@ function prove (assert) {
     var all = require('../../../parse.all')
     var inc = require('../../../parse.inc')
     var filename = {
-        bff: path.resolve(__filename, '../../../generated/integer.parse.bff'),
-        inc: path.resolve(__filename, '../../../generated/integer.parse.inc')
+        bff: path.resolve(__filename, '../../../generated/integer.parse.bff.js'),
+        inc: path.resolve(__filename, '../../../generated/integer.parse.inc.js')
     }
 
     var parsers = { bff: {}, inc: {} }
