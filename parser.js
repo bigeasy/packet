@@ -72,20 +72,41 @@ function visitPropertySerialize (parameters, body, fields) {
             assert(node.callee.name == '_')
 
             var arg = node.arguments[0]
-            assert(arg.type == 'MemberExpression')
-            assert(arg.object.name == 'object')
-            assert(arg.property.type == 'Identifier')
-            var name = arg.property.name
+            console.log(arg)
+            if (arg.type == 'Identifier') {
+                assert(arg.name == 'object')
+                arg = node.arguments[1]
+                assert(arg.type == 'ObjectExpression')
+                var integer = {
+                    type: 'integer',
+                    fields: []
+                }
+                arg.properties.forEach(function (property) {
+                    assert(property.type == 'Property')
+                    integer.fields.push({
+                        type: 'integer',
+                        name: property.key.name,
+                        endianness: 'b',
+                        bits: property.value.value
+                    })
+                })
+                fields.push(integer)
+            } else {
+                assert(arg.type == 'MemberExpression')
+                assert(arg.object.name == 'object')
+                assert(arg.property.type == 'Identifier')
+                var name = arg.property.name
 
-            var arg = node.arguments[1]
-            var value = arg.value
+                var arg = node.arguments[1]
+                var value = arg.value
 
-            fields.push({
-                name: name,
-                type: 'integer',
-                endianness: 'b',
-                bits: value
-            })
+                fields.push({
+                    name: name,
+                    type: 'integer',
+                    endianness: 'b',
+                    bits: value
+                })
+            }
         }
     })
 }

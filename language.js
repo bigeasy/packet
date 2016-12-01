@@ -83,6 +83,17 @@ var packets = {
     }
 }
 
+packets.lengthEncoded = function (_, object) {
+    _(object.array, 16, [function () {
+        _('name', 'b16')
+    }])
+}
+
+packets.wsframe = function (_) {
+    _(16, { fin: 1, rsv1: 1, rsv2: 1, rsv3: 1, opcode: 4,
+            mask: 1, length: 7 })
+}
+
 var packets = {
     frame: function (object) {
         if (serializing) {
