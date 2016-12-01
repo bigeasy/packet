@@ -89,9 +89,21 @@ packets.lengthEncoded = function (_, object) {
     }])
 }
 
-packets.wsframe = function (_) {
-    _(16, { fin: 1, rsv1: 1, rsv2: 1, rsv3: 1, opcode: 4,
-            mask: 1, length: 7 })
+packets.websocket = function (_, object) {
+    _('header', function (_) {
+        _({ fin: 1, rsv1: 1, rsv2: 1, rsv3: 1, opcode: 4, mask: 1, length: 7 }))
+    })
+    var header = object.header
+    if (header.length == 127) {
+        _('length', 16)
+    } else if (header.length == 126) {
+        _('length', 32)
+    } else if (parsing) {
+        object.length = header.length
+    }
+    if (header.mask == 1) {
+        _(object.mask, 16)
+    }
 }
 
 var packets = {
