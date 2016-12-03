@@ -11,13 +11,13 @@ function Generator () {
 
 Generator.prototype.integer = function (variables, field, object) {
     this.step += 2
-    if (field.packing) {
+    if (field.fields) {
         var offset = 0
         var packing = []
         variables.hoist('value')
 
-        for (var i = 0, I = field.packing.length; i < I; i++) {
-            var packed = field.packing[i]
+        for (var i = 0, I = field.fields.length; i < I; i++) {
+            var packed = field.fields[i]
             var variable = object + '.' + packed.name
             packing.push(' (' + pack(field.bits, offset, packed.bits, variable) + ')')
             offset += packed.bits

@@ -16,7 +16,7 @@ function prove (assert) {
             type: 'integer',
             endianness: 'b',
             bits: 16,
-            packing: [{
+            fields: [{
                 type: 'integer',
                 name: 'flag',
                 endianness: 'b',

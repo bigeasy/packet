@@ -45,7 +45,7 @@ function explode (field) {
             stop: little ? bytes : -1,
             bits: field.bits,
             bytes: bytes,
-            packing: packing(field.packing)
+            fields: packing(field.fields)
         }
         break
     }

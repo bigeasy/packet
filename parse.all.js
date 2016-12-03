@@ -11,8 +11,6 @@ function Generator () {
 
 Generator.prototype.integer = function (field, assignee) {
     field = explode(field)
-    if (field.packing != null) {
-    }
     var read = [], bite = field.bite, stop = field.stop
     while (bite != stop) {
         read.unshift('buffer[start++]')
@@ -29,7 +27,7 @@ Generator.prototype.integer = function (field, assignee) {
     var parsed = $('                                                        \n\
         ' + assignee + ' =                                                  \n\
             ', read, '')
-    if (field.packing) {
+    if (field.fields) {
         return $('                                                          \n\
             ', parsed, '                                                    \n\
             __blank__                                                       \n\
@@ -52,10 +50,10 @@ Generator.prototype._constructor = function (variables, packet, depth) {
             fields.push(field.name + ': new Array')
             break
         default:
-            if (field.packing == null) {
+            if (field.type == 'structure' || field.fields == null) {
                 fields.push(field.name + ': null')
             } else {
-                field.packing.forEach(function (field) {
+                field.fields.forEach(function (field) {
                     fields.push(field.name + ': null')
                 })
             }
@@ -220,7 +218,7 @@ Generator.prototype.field = function (variables, packet, depth, arrayed) {
     case 'lengthEncoded':
         return this.lengthEncoded(variables, packet, depth)
     default:
-        if (packet.packing != null) {
+        if (packet.fields != null) {
             variables.hoist('value')
             var assignee = 'value'
         } else {
