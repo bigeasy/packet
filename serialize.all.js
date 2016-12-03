@@ -110,7 +110,9 @@ Generator.prototype.lengthEncoded = function (variables, packet, depth) {
     variables.hoist(length)
     variables.hoist(array)
     variables.hoist(subObject)
-    var looped = this.field(variables, packet.element, depth + 1, true)
+    var looped = joinSources(packet.element.fields.map(function (packet) {
+        return this.field(variables, packet, depth + 1, true)
+    }.bind(this)))
     source = $('                                                            \n\
         ' + array + ' = ' + object + '.' + packet.name + '                  \n\
         ' + length + ' = array.length                                       \n\
@@ -178,15 +180,23 @@ Generator.prototype._condition = function (variables, packet, depth, arrayed) {
 Generator.prototype.field = function (variables, packet, depth, arrayed) {
     switch (packet.type) {
     case 'checkpoint':
-        console.log(packet)
         // TODO `variables` can be an object member.
         return this.checkpoint(variables, packet, depth, packet.arrayed)
     case 'condition':
         return this._condition(variables, packet, depth, packet.arrayed)
     case 'structure':
-        return joinSources(packet.fields.map(function (packet) {
-            return this.field(variables, packet, depth, arrayed)
+        variables.hoist(qualify('object', depth + 1))
+        var assignment = qualify('object', depth + 1) + ' = ' +
+            qualify('object', depth) + '.' + packet.name
+        var source = joinSources(packet.fields.map(function (packet) {
+            return this.field(variables, packet, depth + 1, false)
         }.bind(this)))
+        return $('                                                          \n\
+            ', assignment, '                                                \n\
+            __blank__                                                       \n\
+            ', source ,'                                                    \n\
+        ')
+        break
     case 'alternation':
         return this.alternation(variables, packet, depth)
     case 'lengthEncoded':
@@ -204,7 +214,9 @@ Generator.prototype.field = function (variables, packet, depth, arrayed) {
 
 Generator.prototype.serializer = function (packet, bff) {
     var variables = new Variables
-    var source = this.field(variables, packet, 0, false)
+    var source = joinSources(packet.fields.map(function (packet) {
+        return this.field(variables, packet, 0, false)
+    }.bind(this)))
     var object = 'serializers.' + (bff ? 'bff' : 'all') + '.' + packet.name
     var signature = bff ? 'buffer, start, end' : 'buffer, start'
     return $('                                                              \n\
