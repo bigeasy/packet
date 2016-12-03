@@ -50,7 +50,7 @@
     },
     "devDependencies":
     {
-                            "proof":                        "1.0.x"
+                            "proof":                        "1.2.x"
     },
     "scripts":
     {
