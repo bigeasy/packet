@@ -131,7 +131,7 @@ Generator.prototype.lengthEncoded = function (variables, packet, depth) {
     var i = qualify('i', depth)
     variables.hoist(i)
     variables.hoist(length)
-    var looped = this.field(variables, packet.element, depth + 1, true)
+    var looped = this.field(variables, packet.element, depth, true)
     return $('                                                              \n\
         ', this.integer(packet.length, length), '                           \n\
         __blank__                                                           \n\
@@ -204,11 +204,15 @@ Generator.prototype.field = function (variables, packet, depth, arrayed) {
     case 'condition':
         return this._condition(variables, packet, depth, arrayed)
     case 'structure':
+        var constructor = this._constructor(variables, packet, depth + 1)
+        if (depth != -1 && packet.name) {
+            constructor = qualify('object', depth) + '.' + packet.name + ' = ' + constructor
+        }
         return $('                                                          \n\
-            ', this._constructor(variables, packet, depth), '               \n\
+            ', constructor, '                                               \n\
             __blank__                                                       \n\
             ', joinSources(packet.fields.map(function (packet) {
-                return this.field(variables, packet, depth, arrayed)
+                return this.field(variables, packet, depth + 1, arrayed)
             }.bind(this))), '                                               \n\
         ')
     case 'alternation':
@@ -238,7 +242,7 @@ Generator.prototype.parser = function (packet, bff) {
 
     var variables = new Variables
 
-    var source = this.field(variables, packet, 0, false)
+    var source = this.field(variables, packet, -1, false)
 
     // No need to track the end if we are a whole packet parser.
     var signature = [ 'buffer', 'start', 'end' ]
