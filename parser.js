@@ -41,14 +41,16 @@ function createConditions (context, parameters, conditions, node) {
     }
     conditions.push(condition)
     visitPropertySerialize(context, parameters, node.consequent.body, condition.fields)
-    if (node.alternate.type == 'IfStatement') {
-        createConditions(context, parameters, conditions, node.alternate)
-    } else {
-        var condition = {
-            fields: []
+    if (node.alternate != null) {
+        if (node.alternate.type == 'IfStatement') {
+            createConditions(context, parameters, conditions, node.alternate)
+        } else {
+            var condition = {
+                fields: []
+            }
+            conditions.push(condition)
+            visitPropertySerialize(context, parameters, node.alternate.body, condition.fields)
         }
-        conditions.push(condition)
-        visitPropertySerialize(context, parameters, node.alternate.body, condition.fields)
     }
 }
 
@@ -73,7 +75,7 @@ function visitPropertySerialize (context, parameters, body, fields) {
 
             var arg = node.arguments[0]
             if (arg.type == 'Identifier') {
-                assert(arg.name == 'object')
+                assert(arg.name == context)
                 arg = node.arguments[1]
                 assert(arg.type == 'ObjectExpression')
                 var integer = {
@@ -91,6 +93,7 @@ function visitPropertySerialize (context, parameters, body, fields) {
                 })
                 fields.push(integer)
             } else {
+                console.log(arg)
                 assert(arg.type == 'MemberExpression')
                 assert(arg.object.name == context)
                 assert(arg.property.type == 'Identifier')

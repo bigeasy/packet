@@ -91,7 +91,7 @@ packets.lengthEncoded = function (_, object) {
 
 packets.websocket = function (_, object) {
     _('header', function (_) {
-        _({ fin: 1, rsv1: 1, rsv2: 1, rsv3: 1, opcode: 4, mask: 1, length: 7 }))
+        _({ fin: 1, rsv1: 1, rsv2: 1, rsv3: 1, opcode: 4, mask: 1, length: 7 })
     })
     var header = object.header
     if (header.length == 127) {
