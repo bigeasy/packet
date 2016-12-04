@@ -34,21 +34,21 @@ function visitPropertyParse (node) {
     })
 }
 
-function createConditions (parameters, conditions, node) {
+function createConditions (context, parameters, conditions, node) {
     var condition = {
         test: escodegen.generate(node.test),
         fields: []
     }
     conditions.push(condition)
-    visitPropertySerialize(parameters, node.consequent.body, condition.fields)
+    visitPropertySerialize(context, parameters, node.consequent.body, condition.fields)
     if (node.alternate.type == 'IfStatement') {
-        createConditions(parameters, conditions, node.alternate)
+        createConditions(context, parameters, conditions, node.alternate)
     } else {
         var condition = {
             fields: []
         }
         conditions.push(condition)
-        visitPropertySerialize(parameters, node.alternate.body, condition.fields)
+        visitPropertySerialize(context, parameters, node.alternate.body, condition.fields)
     }
 }
 
@@ -56,14 +56,14 @@ function createConditions (parameters, conditions, node) {
 // while loop, so that `_` is only called in the body of the function. It would
 // be a lot of rewriting to get it to where you could include incrementalism
 // anywhere, unrolling loops, switch statements, etc.
-function visitPropertySerialize (parameters, body, fields) {
+function visitPropertySerialize (context, parameters, body, fields) {
     body.forEach(function (node) {
         if (node.type == 'IfStatement') {
             var conditional = {
                 type: 'condition',
                 conditions: []
             }
-            createConditions(parameters, conditional.conditions, node)
+            createConditions(context, parameters, conditional.conditions, node)
             fields.push(conditional)
         } else {
             assert(node.type == 'ExpressionStatement')
@@ -72,7 +72,6 @@ function visitPropertySerialize (parameters, body, fields) {
             assert(node.callee.name == '_')
 
             var arg = node.arguments[0]
-            console.log(arg)
             if (arg.type == 'Identifier') {
                 assert(arg.name == 'object')
                 arg = node.arguments[1]
@@ -93,19 +92,29 @@ function visitPropertySerialize (parameters, body, fields) {
                 fields.push(integer)
             } else {
                 assert(arg.type == 'MemberExpression')
-                assert(arg.object.name == 'object')
+                assert(arg.object.name == context)
                 assert(arg.property.type == 'Identifier')
                 var name = arg.property.name
 
                 var arg = node.arguments[1]
-                var value = arg.value
+                if (arg.type == 'FunctionExpression') {
+                    var structure = {
+                        name: name,
+                        type: 'structure',
+                        fields: []
+                    }
+                    visitPropertySerialize(name, parameters, arg.body.body, structure.fields)
+                    fields.push(structure)
+                } else {
+                    var value = arg.value
 
-                fields.push({
-                    name: name,
-                    type: 'integer',
-                    endianness: 'b',
-                    bits: value
-                })
+                    fields.push({
+                        name: name,
+                        type: 'integer',
+                        endianness: 'b',
+                        bits: value
+                    })
+                }
             }
         }
     })
@@ -135,14 +144,14 @@ function walk (source) {
             fields: []
         }
         structures.serialize.push(structure)
-        visitPropertySerialize(parameters, body, structure.fields)
+        visitPropertySerialize('object', parameters, body, structure.fields)
         var structure = {
             type: 'structure',
             name: name,
             fields: []
         }
         structures.parse.push(structure)
-        visitPropertySerialize(parameters, body, structure.fields)
+        visitPropertySerialize('object', parameters, body, structure.fields)
     })
 
     return structures
