@@ -33,6 +33,11 @@ function explode (field) {
         break
     case 'integer':
         var little = field.endianness === 'l'
+        if (field.bits == null && field.fields != null) {
+            field.bits = field.fields.reduce(function (sum, value) {
+                return sum + value.bits
+            }, 0)
+        }
         var bytes = field.bits / 8
         field = {
             name: field.name || null,

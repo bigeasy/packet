@@ -9,7 +9,7 @@ function Generator () {
     this.step = 0
 }
 
-Generator.prototype.integer = function (field, assignee) {
+Generator.prototype.integer = function (field, assignee, depth) {
     field = explode(field)
     var read = [], bite = field.bite, stop = field.stop
     while (bite != stop) {
@@ -31,7 +31,7 @@ Generator.prototype.integer = function (field, assignee) {
         return $('                                                          \n\
             ', parsed, '                                                    \n\
             __blank__                                                       \n\
-            ', unpackAll(field), '                                          \n\
+            ', unpackAll(qualify('object', depth), field), '                \n\
         ')
     }
     return parsed
@@ -76,7 +76,7 @@ Generator.prototype.alternation = function (variables, packet, depth) {
     packet.select = packet.select
     var rewind = packet.select.bytes
     var source = $('                                                        \n\
-        ', this.integer(packet.select, select), '                           \n\
+        ', this.integer(packet.select, select, depth), '                    \n\
         start -= ' + rewind + '                                             \n\
     ')
     packet.choose.forEach(function (option, index) {
@@ -131,7 +131,7 @@ Generator.prototype.lengthEncoded = function (variables, packet, depth) {
     variables.hoist(length)
     var looped = this.field(variables, packet.element, depth, true)
     return $('                                                              \n\
-        ', this.integer(packet.length, length), '                           \n\
+        ', this.integer(packet.length, length, depth), '                    \n\
         __blank__                                                           \n\
         for (' + i + ' = 0; ' + i + ' < ' + length + '; ' + i + '++) {      \n\
             ', looped, '                                                    \n\
@@ -227,7 +227,7 @@ Generator.prototype.field = function (variables, packet, depth, arrayed) {
         }
         if (packet.type === 'integer')  {
             return $('                                                      \n\
-                ', this.integer(packet, assignee), '                        \n\
+                ', this.integer(packet, assignee, depth), '                 \n\
                 __reference__                                               \n\
             ')
         }

@@ -7,7 +7,7 @@ function unpack (bits, offset, length) {
     return shift + ' & 0x' + mask.toString(16)
 }
 
-function unpackAll (field) {
+function unpackAll (object, field) {
     var source = ''
     var bits = field.bytes * 8
     var offset = 0
@@ -18,7 +18,7 @@ function unpackAll (field) {
         return field
     })
     return packing.map(function (field) {
-        return 'object.' +
+        return object + '.' +
                 field.name + ' = ' +
                 unpack(bits, field.offset, field.bits)
     }).join('\n')
