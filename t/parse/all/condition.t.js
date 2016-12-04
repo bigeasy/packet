@@ -19,7 +19,7 @@ function prove (assert) {
         }, {
             type: 'condition',
             conditions: [{
-                condition: 'object.flag == 16',
+                test: 'object.flag == 16',
                 fields: [{
                     type: 'integer',
                     name: 'number',

@@ -164,12 +164,13 @@ Generator.prototype._condition = function (variables, packet, depth, arrayed) {
         var block = joinSources(condition.fields.map(function (packet) {
             return this.field(variables, explode(packet), depth, arrayed)
         }.bind(this)))
-        test = condition.condition == null  ? '} else {' : test + ' (' + condition.condition + ') {'
+        test = condition.test == null  ? '} else {' : test + ' (' + condition.test + ') {'
         branches = $('                                                      \n\
             ', branches, '                                                  \n\
             ' + test + '                                                    \n\
                 ', block, '                                                 \n\
         ')
+        test = '} else if'
     }, this)
     return $('                                                              \n\
         ', branches, '                                                      \n\
