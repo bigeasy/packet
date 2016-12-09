@@ -1,3 +1,4 @@
+throw new Error
 var $ = require('programmatic')
 var signage = require('./signage')
 var composeIncrementalParser = require('./inc')

@@ -1,6 +1,6 @@
 var $ = require('programmatic')
 var signage = require('./signage')
-var unpackAll = require('./unpack')
+var unpackAll = require('./../../unpack')
 
 function parseInit (field) {
     var little = field.endianness == 'l'

@@ -3,7 +3,7 @@ var explode = require('./explode')
 var qualify = require('./qualify')
 var joinSources = require('./join-sources')
 var $ = require('programmatic')
-var unpackAll = require('./composers/parsers/unpack')
+var unpackAll = require('./unpack')
 
 function Generator () {
     this.step = 0
