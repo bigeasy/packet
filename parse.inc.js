@@ -2,6 +2,7 @@ var Variables = require('./variables')
 var explode = require('./explode')
 var qualify = require('./qualify')
 var joinSources = require('./join-sources')
+var unpackAll = require('./unpack')
 var $ = require('programmatic')
 
 function Generator () {
@@ -27,6 +28,20 @@ Generator.prototype.integer = function (field, property, cached) {
     }
     read = read.reverse().join(' + \n')
     var direction = field.little ? '++' : '--'
+    var assignment
+    if (field.fields) {
+        this.variables.hoist('object')
+        this.variables.hoist('value')
+        assignment = $('                                                    \n\
+            value = frame.value                                             \n\
+            __blank__                                                       \n\
+            ', unpackAll('this.stack[this.stack.length - 1].' + property, field), '                                \n\
+        ')
+    } else {
+        assignment = $('                                                    \n\
+            this.stack[this.stack.length - 1].' + property + ' = frame.value\n\
+        ')
+    }
     var source = $('                                                        \n\
         case ' + (this.step++) + ':                                         \n\
             __blank__                                                       \n\
@@ -51,7 +66,9 @@ Generator.prototype.integer = function (field, property, cached) {
             }                                                               \n\
             __blank__                                                       \n\
             this.stack.pop()                                                \n\
-            this.stack[this.stack.length - 1].' + property + ' = frame.value\n\
+            __blank__                                                       \n\
+            ', assignment, '                                                \n\
+            __blank__                                                       \n\
     ')
     return {
         step: step,
@@ -67,7 +84,9 @@ Generator.prototype.construct = function (packet) {
             switch (packet.type) {
             case 'integer':
             case 'alternation':
-                fields.push(packet.name + ': null')
+                if (packet.name) {
+                    fields.push(packet.name + ': null')
+                }
                 break
             case 'lengthEncoded':
                 fields.push(packet.name + ': new Array')
@@ -191,7 +210,7 @@ Generator.prototype.field = function (packet) {
     default:
         var object = 'object'
         if (packet.type === 'integer')  {
-            return this.integer(packet, object + '.' + packet.name)
+            return this.integer(packet, packet.fields ? object : object + '.' + packet.name)
         }
     }
 }
@@ -234,6 +253,7 @@ Generator.prototype.parser = function (packet) {
         __blank__                                                           \n\
         ' + object + '.prototype.parse = function (buffer, start, end) {    \n\
             __blank__                                                       \n\
+            ', String(this.variables), '                                    \n\
             var frame = this.stack[this.stack.length - 1]                   \n\
             __blank__                                                       \n\
             ', dispatch, '                                                  \n\

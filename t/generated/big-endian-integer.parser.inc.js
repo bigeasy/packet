@@ -37,7 +37,9 @@ module.exports = function (parsers) {
             }
 
             this.stack.pop()
+
             this.stack[this.stack.length - 1].object.integer = frame.value
+
         case 2:
 
             return { start: start, object: this.object, parser: null }

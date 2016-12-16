@@ -42,7 +42,9 @@ module.exports = function (parsers) {
                 }
 
                 this.stack.pop()
+
                 this.stack[this.stack.length - 1].select = frame.value
+
                 frame = this.stack[this.stack.length - 1]
 
                 if (frame.select & 0x80) {
@@ -80,7 +82,9 @@ module.exports = function (parsers) {
                 }
 
                 this.stack.pop()
+
                 this.stack[this.stack.length - 1].object.number = frame.value
+
                 this.step = 6
                 continue
 
@@ -105,7 +109,9 @@ module.exports = function (parsers) {
                 }
 
                 this.stack.pop()
+
                 this.stack[this.stack.length - 1].object.number = frame.value
+
                 this.step = 6
                 continue
 

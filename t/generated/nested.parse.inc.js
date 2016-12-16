@@ -39,7 +39,9 @@ module.exports = function (parsers) {
                 }
 
                 this.stack.pop()
+
                 this.stack[this.stack.length - 1].length = frame.value
+
 
                 this.stack[this.stack.length - 1].index = 0
 
@@ -73,7 +75,9 @@ module.exports = function (parsers) {
                 }
 
                 this.stack.pop()
+
                 this.stack[this.stack.length - 1].object.key = frame.value
+
 
             case 5:
 
@@ -96,7 +100,9 @@ module.exports = function (parsers) {
                 }
 
                 this.stack.pop()
+
                 this.stack[this.stack.length - 1].object.value = frame.value
+
 
                 frame = this.stack[this.stack.length - 2]
                 frame.object.values.push(this.stack.pop().object)
