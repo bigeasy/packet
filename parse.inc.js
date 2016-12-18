@@ -161,6 +161,72 @@ Generator.prototype.alternation = function (packet, depth) {
     }
 }
 
+Generator.prototype.condition = function (packet, depth) {
+    var step = this.step
+    this.forever = true
+    this.hoist = true
+    var choices = packet.conditions.map(function (condition, index) {
+        var test = condition.test
+        var choice = { fields: condition.fields, test: condition.test }
+        choice.condition = '} else {'
+        if (choice.test) {
+            if (index === 0) {
+                choice.condition = 'if (' + test + ') {'
+            } else {
+                choice.condition = '} else if (' + test + ') {'
+            }
+        }
+        return choice
+    })
+    var sources = [], dispatch = '', step
+    choices.forEach(function (choice) {
+        var source = ''
+        var step = this.stop
+        // TODO Make this some sort of block type.
+        choice.fields.forEach(function (packet) {
+            var got = this.field(explode(packet))
+            step = got.step
+            source = $('                                                    \n\
+                ', got.source, '                                            \n\
+            ')
+        }, this)
+        dispatch = $('                                                      \n\
+            __reference__                                                   \n\
+            ', dispatch, '                                                  \n\
+            ', choice.condition, '                                          \n\
+            __blank__                                                       \n\
+                this.step = ' + step + '                           \n\
+                continue                                                    \n\
+                __blank__                                                   \n\
+        ')
+        sources.push(source)
+    }, this)
+    var steps = ''
+    sources.forEach(function (source) {
+        steps = $('                                                         \n\
+            __reference__                                                   \n\
+            ', steps, '                                                     \n\
+            ', source, '                                                    \n\
+                this.step = ' + this.step + '                               \n\
+                continue                                                    \n\
+            __blank__                                                       \n\
+        ')
+    }, this)
+    var source = $('                                                        \n\
+        __reference__                                                       \n\
+            frame = this.stack[this.stack.length - 1]                       \n\
+            __blank__                                                       \n\
+            ', dispatch, '                                                  \n\
+            }                                                               \n\
+        __blank__                                                           \n\
+        ', steps, '                                                         \n\
+    ')
+    return {
+        step: step,
+        source: source
+    }
+}
+
 Generator.prototype.lengthEncoded = function (packet, depth) {
     var source = ''
     this.forever = true
@@ -205,6 +271,8 @@ Generator.prototype.field = function (packet) {
         }.bind(this)))
     case 'alternation':
         return this.alternation(packet)
+    case 'condition':
+        return this.condition(packet)
     case 'lengthEncoded':
         return this.lengthEncoded(packet)
     default:
@@ -236,6 +304,7 @@ Generator.prototype.parser = function (packet) {
             }                                                               \n\
         ')
     }
+    var hoist = this.hoist ? 'var object = this.object' : ''
     var object = 'parsers.inc.' + packet.name
     return $('                                                              \n\
         ' + object + ' = function () {                                      \n\
@@ -254,6 +323,7 @@ Generator.prototype.parser = function (packet) {
         ' + object + '.prototype.parse = function (buffer, start, end) {    \n\
             __blank__                                                       \n\
             ', String(this.variables), '                                    \n\
+            ', hoist, '                                                     \n\
             var frame = this.stack[this.stack.length - 1]                   \n\
             __blank__                                                       \n\
             ', dispatch, '                                                  \n\
