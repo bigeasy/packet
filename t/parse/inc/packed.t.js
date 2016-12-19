@@ -1,4 +1,4 @@
-require('proof/redux')(1, prove)
+require('proof/redux')(5, prove)
 
 function prove (assert) {
     var path = require('path')
@@ -32,9 +32,16 @@ function prove (assert) {
     }])(parsers)
 
     var buffer = new Buffer([ 0xab, 0xcd ])
-    assert((new parsers.inc.object).parse(buffer, 0), {
-        start: 2,
-        object: { first: 1, second: 2, third: 3021 },
-        parser: null
-    }, 'compiled')
+    for (var i = 0; i <= buffer.length; i++) {
+        var parser = (new parsers.inc.object)
+        var first = parser.parse(buffer, 0, buffer.length - i)
+        assert(first.start, buffer.length - i, 'incremental ' + i)
+        if (first.parser != null) {
+            assert(first.parser.parse(buffer, buffer.length - i, buffer.length), {
+                start: 2,
+                object: { first: 1, second: 2, third: 3021 },
+                parser: null
+            }, 'compiled ' + i)
+        }
+    }
 }
