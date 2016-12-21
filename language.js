@@ -89,22 +89,36 @@ packets.lengthEncoded = function (_, object) {
     }])
 }
 
-packets.websocket = function (_, object) {
-    _('header', function (_) {
-        _({ fin: 1, rsv1: 1, rsv2: 1, rsv3: 1, opcode: 4, mask: 1, length: 7 })
+var packet = function () {}
+
+packets.websocket = packet(function (packet, object) {
+    if (parsing) {
+        var peek = packet({ flag: 3, $padding: 5 }, 'flag')
+        if (peek & ~0x7f == 0) {
+            packet('id', { $flag: 1, value: 7 }, 'value')
+        } else {
+            packet('id', { $flag: 2, value: 14 }, 'value')
+        }
+    } else {
+        if (object.id < 0x7f) {
+            packet('id', 8, 0x80 & object.id)
+        } else if (object.id < 65500) {
+            packet('id', 16, 0xb000 & object.id)
+        } else if (object.id < 222) {
+        }
+    }
+    packet('.', {
+        fin: 1, rsv1: 1, rsv2: 1, rsv3: 1, opcode: 4, masked: 1, length: 7
     })
-    var header = object.header
-    if (header.length == 127) {
-        _('length', 16)
-    } else if (header.length == 126) {
-        _('length', 32)
-    } else if (parsing) {
-        object.length = header.length
+    if (object.length == 127) {
+        packet('length', 16)
+    } else if (object.length == 126) {
+        packet('length', 32)
     }
-    if (header.mask == 1) {
-        _(object.mask, 16)
+    if (object.masked == 1) {
+        packet(object.mask, 16)
     }
-}
+})
 
 var packets = {
     frame: function (object) {
