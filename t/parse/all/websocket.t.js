@@ -12,7 +12,6 @@ function prove (assert) {
 
     composer(compiler('parsers', filename), structures)(parsers)
 
-    var buffer = new Buffer([ 0xff, 0xff ])
     var buffer = new Buffer([ 241, 255, 0, 24, 0, 170 ])
     assert((new parsers.all.object).parse(buffer, 0), {
         start: buffer.length,
