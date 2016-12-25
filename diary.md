@@ -340,7 +340,7 @@ takes the `pattern` and `patternIndex` and calls `nextField()` and
 
 I'll transition the `Parser` first. Then the `Serializer`.
 
-## Tracking Source Formatting Changs
+## Tracking Source Formatting Changes
 
 Checking generated source into source control.
 
