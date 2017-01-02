@@ -70,56 +70,6 @@ Generator.prototype._constructor = function (variables, packet, depth) {
     ')
 }
 
-Generator.prototype.alternation = function (variables, packet, depth) {
-    var select = qualify('select', depth)
-    variables.hoist(select)
-    packet.select = packet.select
-    var rewind = packet.select.bytes
-    var source = $('                                                        \n\
-        ', this.integer(packet.select, select, depth), '                    \n\
-        start -= ' + rewind + '                                             \n\
-    ')
-    packet.choose.forEach(function (option, index) {
-        var when = option.read.when || {}, test
-        if (when.and != null) {
-            test = 'select & 0x' + when.and.toString(16)
-        }
-        option.condition = '} else {'
-        if (test) {
-            if (index === 0) {
-                option.condition = 'if (' + test + ') {'
-            } else {
-                option.condition = '} else if (' + test + ') {'
-            }
-        }
-    })
-    var choices = ''
-    function slurp (option) {
-        option.read.field.name = packet.name
-        return this.field(variables, option.read.field, depth)
-    }
-    packet.choose.forEach(function (option) {
-        choices = $('                                                       \n\
-            __reference__                                                   \n\
-            ', choices, '                                                   \n\
-            ', option.condition, '                                          \n\
-                __blank__                                                   \n\
-                ', slurp.call(this, option), '                              \n\
-            __blank__                                                       \n\
-        ')
-    }, this)
-    choices = $('                                                           \n\
-        __reference__                                                       \n\
-        ', choices, '                                                       \n\
-        }                                                                   \n\
-    ')
-    return $('                                                              \n\
-        ', source, '                                                        \n\
-        __blank__                                                           \n\
-        ', choices, '                                                       \n\
-    ')
-}
-
 Generator.prototype.lengthEncoded = function (variables, packet, depth) {
     this.step += 2
     var source = ''
@@ -214,8 +164,6 @@ Generator.prototype.field = function (variables, packet, depth, arrayed) {
                 return this.field(variables, packet, depth + 1, arrayed)
             }.bind(this))), '                                               \n\
         ')
-    case 'alternation':
-        return this.alternation(variables, packet, depth)
     case 'lengthEncoded':
         return this.lengthEncoded(variables, packet, depth)
     default:

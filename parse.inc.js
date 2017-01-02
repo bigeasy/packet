@@ -83,7 +83,6 @@ Generator.prototype.construct = function (packet) {
         packet.fields.forEach(function (packet) {
             switch (packet.type) {
             case 'integer':
-            case 'alternation':
                 if (packet.name) {
                     fields.push(packet.name + ': null')
                 }
@@ -97,68 +96,6 @@ Generator.prototype.construct = function (packet) {
         throw new Error('to do')
     }
     return fields.join(',\n')
-}
-
-Generator.prototype.alternation = function (packet, depth) {
-    var step = this.step
-    this.forever = true
-    var integer = this.integer(packet.select, 'select', true)
-    var source = integer.source
-    packet.choose.forEach(function (choice, index) {
-        var when = choice.read.when || {}, test
-        if (when.and != null) {
-            test = 'frame.select & 0x' + when.and.toString(16)
-        }
-        choice.condition = '} else {'
-        if (test) {
-            if (index === 0) {
-                choice.condition = 'if (' + test + ') {'
-            } else {
-                choice.condition = '} else if (' + test + ') {'
-            }
-        }
-    })
-    var sources = [], dispatch = ''
-    packet.choose.forEach(function (choice) {
-        choice.read.field.name = packet.name
-        var compiled = this.field(choice.read.field)
-        dispatch = $('                                                      \n\
-            __reference__                                                   \n\
-            ', dispatch, '                                                  \n\
-            ', choice.condition, '                                          \n\
-            __blank__                                                       \n\
-                this.step = ' + compiled.step + '                           \n\
-                this.parse(this.cache, 0, this.cache.length)                \n\
-                continue                                                    \n\
-                __blank__                                                   \n\
-        ')
-        sources.push(compiled.source)
-    }, this)
-    var steps = ''
-    sources.forEach(function (source) {
-        steps = $('                                                         \n\
-            __reference__                                                   \n\
-            ', steps, '                                                     \n\
-            ', source, '                                                    \n\
-                this.step = ' + this.step + '                               \n\
-                continue                                                    \n\
-            __blank__                                                       \n\
-        ')
-    }, this)
-    source = $('                                                            \n\
-        __reference__                                                       \n\
-        ', source, '                                                        \n\
-            frame = this.stack[this.stack.length - 1]                       \n\
-            __blank__                                                       \n\
-            ', dispatch, '                                                  \n\
-            }                                                               \n\
-        __blank__                                                           \n\
-        ', steps, '                                                         \n\
-    ')
-    return {
-        step: integer.step,
-        source: source
-    }
 }
 
 Generator.prototype.condition = function (packet, depth) {
@@ -269,8 +206,6 @@ Generator.prototype.field = function (packet) {
         return joinSources(packet.fields.map(function (packet) {
             return this.field(packet).source
         }.bind(this)))
-    case 'alternation':
-        return this.alternation(packet)
     case 'condition':
         return this.condition(packet)
     case 'lengthEncoded':

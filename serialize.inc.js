@@ -54,69 +54,6 @@ Generator.prototype.construct = function (definition) {
     return fields.join(',\n')
 }
 
-Generator.prototype.alternation = function (packet) {
-    var step = this.step++
-    this.forever = true
-    packet.choose.forEach(function (choice, index) {
-        var when = choice.write.when || {}, test
-        if (when.range != null) {
-            var range = []
-            if (when.range.from) {
-                range.push(when.range.from + ' <= frame.object.' + packet.name)
-            }
-            if (when.range.to) {
-                range.push('frame.object.' + name + ' < ' + when.range.to)
-            }
-            test = range.join(' && ')
-        }
-        choice.condition = '} else {'
-        if (test) {
-            if (index === 0) {
-                choice.condition = 'if (' + test + ') {'
-            } else {
-                choice.condition = '} else if (' + test + ') {'
-            }
-        }
-    })
-    var sources = [], dispatch = ''
-    packet.choose.forEach(function (choice) {
-        choice.write.field.name = packet.name
-        var compiled = this.field(choice.write.field)
-        dispatch = $('                                                      \n\
-            __reference__                                                   \n\
-            ', dispatch, '                                                  \n\
-            ', choice.condition, '                                          \n\
-            __blank__                                                       \n\
-                this.step = ' + compiled.step + '                           \n\
-                continue                                                    \n\
-                __blank__                                                   \n\
-        ')
-        sources.push(compiled.source)
-    }, this)
-    var steps = ''
-    sources.forEach(function (source) {
-        steps = $('                                                         \n\
-            __reference__                                                   \n\
-            ', steps, '                                                     \n\
-            ', source, '                                                    \n\
-                this.step = ' + this.step + '                               \n\
-                continue                                                    \n\
-            __blank__                                                       \n\
-        ')
-    }, this)
-    var source = $('                                                        \n\
-        case ' + step + ':                                                  \n\
-            __blank__                                                       \n\
-            frame = this.stack[this.stack.length - 1]                       \n\
-            __blank__                                                       \n\
-            ', dispatch, '                                                  \n\
-            }                                                               \n\
-        __blank__                                                           \n\
-        ', steps, '                                                         \n\
-    ')
-    return { step: step, source: source }
-}
-
 Generator.prototype.lengthEncoded = function (packet) {
     var source = ''
     this.forever = true
@@ -159,8 +96,6 @@ Generator.prototype.field = function (packet) {
                     this.step = ' + this.step + '                           \n\
             ')
         }.bind(this)))
-    case 'alternation':
-        return this.alternation(packet)
     case 'lengthEncoded':
         return this.lengthEncoded(packet)
     default:
