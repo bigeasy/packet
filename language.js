@@ -83,9 +83,16 @@ var packets = {
     }
 }
 
-packets.lengthEncoded = function (_, object) {
-    _(object.array, 16, [function () {
-        _('name', 'b16')
+packets.lengthEncoded = function (packet, object) {
+    packet(object.array, [16, function (record) {
+        if (parsing) {
+            var flag = packet({ flag: 3, _skip_: 5 }, 'flag')
+        } else {
+            if (record.key < 10) {
+            }
+        }
+        _(record.key, 16)
+        _(record.value, 32)
     }])
 }
 

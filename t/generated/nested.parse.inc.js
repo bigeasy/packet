@@ -2,17 +2,11 @@ module.exports = function (parsers) {
     parsers.inc.object = function () {
         this.step = 0
         this.stack = [{
-            object: this.object = {
-                values: new Array
-            },
-            array: null,
-            index: 0,
-            length: 0
+            object: null
         }]
     }
 
     parsers.inc.object.prototype.parse = function (buffer, start, end) {
-
         var frame = this.stack[this.stack.length - 1]
 
         for (;;) {
@@ -21,12 +15,22 @@ module.exports = function (parsers) {
             case 0:
 
                 this.stack.push({
-                    value: 0,
-                    bite: 1
+                    object: {
+                        values: new Array
+                    }
                 })
+                this.stack[this.stack.length - 2].object = this.stack[this.stack.length - 1].object
                 this.step = 1
 
             case 1:
+
+                this.stack.push({
+                    value: 0,
+                    bite: 1
+                })
+                this.step = 2
+
+            case 2:
 
                 frame = this.stack[this.stack.length - 1]
 
@@ -44,8 +48,7 @@ module.exports = function (parsers) {
 
 
                 this.stack[this.stack.length - 1].index = 0
-
-            case 2:
+            case 3:
 
                 this.stack.push({
                     object: {
@@ -53,16 +56,18 @@ module.exports = function (parsers) {
                         value: null
                     }
                 })
+                this.stack[this.stack.length - 2].undefined = this.stack[this.stack.length - 1].object
+                this.step = 4
 
-            case 3:
+            case 4:
 
                 this.stack.push({
                     value: 0,
                     bite: 1
                 })
-                this.step = 4
+                this.step = 5
 
-            case 4:
+            case 5:
 
                 frame = this.stack[this.stack.length - 1]
 
@@ -79,15 +84,15 @@ module.exports = function (parsers) {
                 this.stack[this.stack.length - 1].object.key = frame.value
 
 
-            case 5:
+            case 6:
 
                 this.stack.push({
                     value: 0,
                     bite: 1
                 })
-                this.step = 6
+                this.step = 7
 
-            case 6:
+            case 7:
 
                 frame = this.stack[this.stack.length - 1]
 
@@ -107,14 +112,14 @@ module.exports = function (parsers) {
                 frame = this.stack[this.stack.length - 2]
                 frame.object.values.push(this.stack.pop().object)
                 if (++frame.index != frame.length) {
-                    this.step = 2
+                    this.step = 3
                     continue
                 }
-                this.step = 7
+                this.step = 8
 
-            case 7:
+            case 8:
 
-                return { start: start, object: this.object, parser: null }
+                return { start: start, object: this.stack[0].object, parser: null }
 
             }
 

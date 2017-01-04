@@ -85,6 +85,10 @@ Generator.prototype.construct = function (packet) {
             case 'integer':
                 if (packet.name) {
                     fields.push(packet.name + ': null')
+                } else if (packet.fields) {
+                    packet.fields.forEach(function (packet) {
+                        fields.push(packet.name + ': null')
+                    })
                 }
                 break
             case 'lengthEncoded':
@@ -101,7 +105,7 @@ Generator.prototype.construct = function (packet) {
 Generator.prototype.condition = function (packet, depth) {
     var step = this.step
     this.forever = true
-    this.hoist = true
+    this.variables.hoist('object')
     var choices = packet.conditions.map(function (condition, index) {
         var test = condition.test
         var choice = { fields: condition.fields, test: condition.test }
@@ -132,7 +136,7 @@ Generator.prototype.condition = function (packet, depth) {
             ', dispatch, '                                                  \n\
             ', choice.condition, '                                          \n\
             __blank__                                                       \n\
-                this.step = ' + step + '                           \n\
+                this.step = ' + step + '                                    \n\
                 continue                                                    \n\
                 __blank__                                                   \n\
         ')
@@ -152,6 +156,7 @@ Generator.prototype.condition = function (packet, depth) {
     var source = $('                                                        \n\
         __reference__                                                       \n\
             frame = this.stack[this.stack.length - 1]                       \n\
+            object = this.stack[0].object                                   \n\
             __blank__                                                       \n\
             ', dispatch, '                                                  \n\
             }                                                               \n\
@@ -174,15 +179,6 @@ Generator.prototype.lengthEncoded = function (packet, depth) {
         ', integer.source, '                                                \n\
         __blank__                                                           \n\
             this.stack[this.stack.length - 1].index = 0                     \n\
-        __blank__                                                           \n\
-        case ' + (this.step++) + ':                                         \n\
-            __blank__                                                       \n\
-            this.stack.push({                                               \n\
-                object: {                                                   \n\
-                    ', this.construct(packet.element, 0), '                 \n\
-                }                                                           \n\
-            })                                                              \n\
-            __blank__                                                       \n\
         ', this.field(packet.element), '                                    \n\
             __blank__                                                       \n\
             frame = this.stack[this.stack.length - 2]                       \n\
@@ -200,12 +196,30 @@ Generator.prototype.lengthEncoded = function (packet, depth) {
     }
 }
 
-Generator.prototype.field = function (packet) {
+Generator.prototype.field = function (packet, depth, caseless) {
     switch (packet.type) {
     case 'structure':
-        return joinSources(packet.fields.map(function (packet) {
-            return this.field(packet).source
+        var push = $('                                                      \n\
+            case ' + (this.step++) + ':                                     \n\
+                __blank__                                                   \n\
+                this.stack.push({                                           \n\
+                    object: {                                               \n\
+                        ', this.construct(packet, 0), '                     \n\
+                    }                                                       \n\
+                })                                                          \n\
+                this.stack[this.stack.length - 2].' + packet.name +
+                    ' = this.stack[this.stack.length - 1].object            \n\
+                this.step = ' + this.step + '                               \n\
+                __blank__                                                   \n\
+        ')
+        var source =  joinSources(packet.fields.map(function (packet) {
+            var source = this.field(packet, 0).source
+            return source
         }.bind(this)))
+        return $('                                                                  \n\
+            ', push, '                                                              \n\
+            ', source, '                                                            \n\
+        ')
     case 'condition':
         return this.condition(packet)
     case 'lengthEncoded':
@@ -213,7 +227,7 @@ Generator.prototype.field = function (packet) {
     default:
         var object = 'object'
         if (packet.type === 'integer')  {
-            return this.integer(packet, packet.fields ? object : object + '.' + packet.name)
+            return this.integer(packet, packet.fields ? object : object + '.' + packet.name, caseless)
         }
     }
 }
@@ -225,7 +239,7 @@ Generator.prototype.parser = function (packet) {
         ', source, '                                                        \n\
         case ' + this.step + ':                                             \n\
             __blank__                                                       \n\
-            return { start: start, object: this.object, parser: null }      \n\
+            return { start: start, object: this.stack[0].object, parser: null }      \n\
             __blank__                                                       \n\
         }                                                                   \n\
     ')
@@ -239,26 +253,18 @@ Generator.prototype.parser = function (packet) {
             }                                                               \n\
         ')
     }
-    var hoist = this.hoist ? 'var object = this.object' : ''
     var object = 'parsers.inc.' + packet.name
     return $('                                                              \n\
         ' + object + ' = function () {                                      \n\
             this.step = 0                                                   \n\
             this.stack = [{                                                 \n\
-                object: this.object = {                                     \n\
-                    ', this.construct(packet), '                            \n\
-                },                                                          \n\
-                array: null,                                                \n\
-                index: 0,                                                   \n\
-                length: 0                                                   \n\
+                object: null                                                \n\
             }]                                                              \n\
             ' + when(this.cached, 'this.cache = null') + '                  \n\
         }                                                                   \n\
         __blank__                                                           \n\
         ' + object + '.prototype.parse = function (buffer, start, end) {    \n\
-            __blank__                                                       \n\
             ', String(this.variables), '                                    \n\
-            ', hoist, '                                                     \n\
             var frame = this.stack[this.stack.length - 1]                   \n\
             __blank__                                                       \n\
             ', dispatch, '                                                  \n\

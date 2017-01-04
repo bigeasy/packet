@@ -13,7 +13,7 @@ function prove (assert) {
         name: 'object',
         fields: [{
             type: 'lengthEncoded',
-            name: 'values',
+            name: 'pairs',
             length: {
                 type: 'integer',
                 endianness: 'b',
@@ -21,6 +21,7 @@ function prove (assert) {
             },
             element: {
                 type: 'structure',
+                name: 'pair',
                 fields: [{
                     type: 'integer',
                     name: 'key',
@@ -43,7 +44,7 @@ function prove (assert) {
         assert(first.start, buffer.length - i, 'incremental ' + i)
         assert(parser.parse(buffer, buffer.length - i, buffer.length), {
             start: buffer.length,
-            object: { values: [ { key: 2570, value: 1 }, { key: 2, value: 3 } ] },
+            object: { pairs: [ { key: 2570, value: 1 }, { key: 2, value: 3 } ] },
             parser: null,
         }, 'compiled ' + i)
     }

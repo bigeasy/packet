@@ -17,8 +17,10 @@ module.exports = function (parsers) {
 
         if (end - start < 2) {
             var parser = new parsers.inc.object
-            parser.step = 0
+            parser.step = 1
             parser.stack = [{
+                object: object
+            }, {
                 object: object
             }]
             parser.object = object

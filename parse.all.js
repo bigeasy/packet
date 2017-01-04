@@ -96,9 +96,12 @@ Generator.prototype.checkpoint = function (variables, packet, depth, arrayed) {
         length: length,                                                     \n\
         index: i,                                                           \n\
     ') : ''
+    console.log('>', depth)
     var separator = '',
         object = 'object',
-        stack = 'parser.stack = [{'
+        stack = 'parser.stack = [{\n\
+            object: object\n\
+        }, {'
         for (var i = -1; i < 0; i++) {
             stack = $('                                                     \n\
                 ', stack, '                                                 \n\
@@ -118,7 +121,7 @@ Generator.prototype.checkpoint = function (variables, packet, depth, arrayed) {
     return $('                                                              \n\
         if (end - start < ' + packet.length + ') {                          \n\
             var parser = new parsers.inc.' + this.current.name + '          \n\
-            parser.step = ' + this.step + '                                 \n\
+            parser.step = ' + (this.step + 1) + '                                 \n\
             ', stack , '                                                    \n\
             parser.object = object                                          \n\
             return { start: start, parser: parser, object: null }           \n\

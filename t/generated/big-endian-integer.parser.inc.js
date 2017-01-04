@@ -2,29 +2,33 @@ module.exports = function (parsers) {
     parsers.inc.object = function () {
         this.step = 0
         this.stack = [{
-            object: this.object = {
-                integer: null
-            },
-            array: null,
-            index: 0,
-            length: 0
+            object: null
         }]
     }
 
     parsers.inc.object.prototype.parse = function (buffer, start, end) {
-
         var frame = this.stack[this.stack.length - 1]
 
         switch (this.step) {
         case 0:
 
             this.stack.push({
-                value: 0,
-                bite: 3
+                object: {
+                    integer: null
+                }
             })
+            this.stack[this.stack.length - 2].object = this.stack[this.stack.length - 1].object
             this.step = 1
 
         case 1:
+
+            this.stack.push({
+                value: 0,
+                bite: 3
+            })
+            this.step = 2
+
+        case 2:
 
             frame = this.stack[this.stack.length - 1]
 
@@ -40,9 +44,9 @@ module.exports = function (parsers) {
 
             this.stack[this.stack.length - 1].object.integer = frame.value
 
-        case 2:
+        case 3:
 
-            return { start: start, object: this.object, parser: null }
+            return { start: start, object: this.stack[0].object, parser: null }
 
         }
     }
