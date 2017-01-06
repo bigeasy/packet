@@ -1,4 +1,4 @@
-packets.object = function (object) {
+exports.object = function (object) {
     _(object.flag, 8)
     if (object.flag == 16) {
         _(object.number, 16)

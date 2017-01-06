@@ -132,7 +132,7 @@ function walk (source) {
     node.body.forEach(function (node) {
         assert(node.type == 'ExpressionStatement')
         assert(node.expression.left.type == 'MemberExpression')
-        assert(node.expression.left.object.name == 'packets')
+        assert(node.expression.left.object.name == 'exports')
         assert(node.expression.left.property.type == 'Identifier')
         var name = node.expression.left.property.name
 
