@@ -71,7 +71,8 @@ function visitPropertySerialize (context, parameters, body, fields) {
             assert(node.type == 'ExpressionStatement')
             node = node.expression
             assert(node.type == 'CallExpression')
-            assert(node.callee.name == '_')
+            console.log(parameters)
+            assert(node.callee.name == parameters[0], 'unknown function call')
 
             var arg = node.arguments[0]
             if (arg.type == 'Identifier') {
@@ -156,6 +157,7 @@ function walk (source) {
             assert(node.arguments.length > 0)
             assert(node.arguments[0].type == 'FunctionExpression')
             node = node.arguments[0]
+            assert(node.params.length >= 2, 'at least two arguments')
             var parameters = node.params.map(function (node) {
                 return node.name
             })
