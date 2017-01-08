@@ -123,38 +123,58 @@ function visitPropertySerialize (context, parameters, body, fields) {
     })
 }
 
+var required = {}
+
 function walk (source) {
     var node = acorn.parse(source)
     var structures = { parse: [], serialize: [] }
 
+    // Dirty, dirty. Will change this to an object.
+
     assert(node.type == 'Program', 'program expected')
 
     node.body.forEach(function (node) {
-        assert(node.type == 'ExpressionStatement')
-        assert(node.expression.left.type == 'MemberExpression')
-        assert(node.expression.left.object.name == 'exports')
-        assert(node.expression.left.property.type == 'Identifier')
-        var name = node.expression.left.property.name
+        console.log(node)
+        if (node.type == 'VariableDeclaration') {
+            node.declarations.forEach(function (node) {
+                assert(node.init.type == 'CallExpression')
+                assert(node.init.callee.name == 'require')
+                assert(node.init.arguments[0].type == 'Literal')
+                required[node.id.name] = node.init.arguments[0].value
+            })
+        } else {
+            assert(node.type == 'ExpressionStatement')
+            assert(node.expression.left.type == 'MemberExpression')
+            assert(node.expression.left.object.name == 'exports')
+            assert(node.expression.left.property.type == 'Identifier')
+            var name = node.expression.left.property.name
 
-        assert(node.expression.right.type == 'FunctionExpression')
-        var parameters = node.expression.right.params.map(function (node) {
-            return node.name
-        })
-        var body = node.expression.right.body.body
-        var structure = {
-            type: 'structure',
-            name: name,
-            fields: []
+            node = node.expression.right
+            assert(node.type == 'CallExpression')
+            var callee = node.callee.name
+            assert(required[callee] == 'packet')
+            assert(node.arguments.length > 0)
+            assert(node.arguments[0].type == 'FunctionExpression')
+            node = node.arguments[0]
+            var parameters = node.params.map(function (node) {
+                return node.name
+            })
+            var body = node.body.body
+            var structure = {
+                type: 'structure',
+                name: name,
+                fields: []
+            }
+            structures.serialize.push(structure)
+            visitPropertySerialize('object', parameters, body, structure.fields)
+            var structure = {
+                type: 'structure',
+                name: name,
+                fields: []
+            }
+            structures.parse.push(structure)
+            visitPropertySerialize('object', parameters, body, structure.fields)
         }
-        structures.serialize.push(structure)
-        visitPropertySerialize('object', parameters, body, structure.fields)
-        var structure = {
-            type: 'structure',
-            name: name,
-            fields: []
-        }
-        structures.parse.push(structure)
-        visitPropertySerialize('object', parameters, body, structure.fields)
     })
 
     return structures

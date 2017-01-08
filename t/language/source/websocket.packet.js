@@ -1,4 +1,6 @@
-exports.object = function (object) {
+var packet = require('packet')
+
+exports.object = packet(function (object) {
     _(object.header, function (header) {
         _(header, { fin: 1, rsv1: 1, rsv2: 1, rsv3: 1, opcode: 4, mask: 1, length: 7 })
     })
@@ -10,4 +12,4 @@ exports.object = function (object) {
     if (object.header.mask == 1) {
         _(object.mask, 16)
     }
-}
+})

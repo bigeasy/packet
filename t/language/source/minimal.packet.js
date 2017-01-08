@@ -1,4 +1,5 @@
+var packet = require('packet')
 // Bargle.
-exports.object = function (object) {
+exports.object = packet(function (object) {
     _(object.value, 16)
-}
+})

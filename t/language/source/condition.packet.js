@@ -1,4 +1,6 @@
-exports.object = function (object) {
+var packet = require('packet')
+
+exports.object = packet(function (object) {
     _(object.flag, 8)
     if (object.flag == 16) {
         _(object.number, 16)
@@ -7,4 +9,4 @@ exports.object = function (object) {
     } else {
         _(object.number, 32)
     }
-}
+})
