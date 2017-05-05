@@ -1,4 +1,4 @@
-require('proof/redux')(5, prove)
+require('proof')(5, prove)
 
 function prove (assert) {
     var path = require('path')
