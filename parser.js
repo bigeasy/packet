@@ -75,9 +75,7 @@ function visitPropertySerialize (context, parameters, body, fields) {
             assert(node.callee.name == parameters[0], 'unknown function call')
 
             var arg = node.arguments[0]
-            if (arg.type == 'Identifier') {
-                assert(arg.name == context)
-                arg = node.arguments[1]
+            if (arg.type == 'ObjectExpression') {
                 assert(arg.type == 'ObjectExpression')
                 var integer = {
                     type: 'integer',
@@ -94,11 +92,9 @@ function visitPropertySerialize (context, parameters, body, fields) {
                 })
                 fields.push(integer)
             } else {
-                console.log(arg)
-                assert(arg.type == 'MemberExpression')
-                assert(arg.object.name == context)
-                assert(arg.property.type == 'Identifier')
-                var name = arg.property.name
+                assert(arg.type == 'Literal')
+                assert(typeof arg.value == 'string')
+                var name = arg.value
 
                 var arg = node.arguments[1]
                 if (arg.type == 'FunctionExpression') {
