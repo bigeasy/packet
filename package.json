@@ -44,7 +44,7 @@
     },
     "dependencies":
     {
-                            "acorn":                        "4.0.3",
+                            "acorn":                        "5.0.3",
                             "escodegen":                    "1.8.1",
                             "programmatic":                 "0.0.x"
     },
