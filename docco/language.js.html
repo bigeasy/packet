@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+  <title>language.js</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <meta name="viewport" content="width=device-width, target-densitydpi=160dpi, initial-scale=1.0; maximum-scale=1.0; user-scalable=0;">
+  <link rel="stylesheet" media="all" href="docco.css" />
+</head>
+<body>
+  <div id="container">
+    <div id="background"></div>
+
+      <ul id="jump_to">
+        <li>
+          <a class="large" href="javascript:void(0);">Jump To &hellip;</a>
+          <a class="small" href="javascript:void(0);">+</a>
+          <div id="jump_wrapper">
+          <div id="jump_page_wrapper">
+            <div id="jump_page">
+
+
+                <a class="source" href="explode.js.html">
+                  explode.js
+                </a>
+
+
+                <a class="source" href="function.js.html">
+                  function.js
+                </a>
+
+
+                <a class="source" href="index.js.html">
+                  index.js
+                </a>
+
+
+                <a class="source" href="join-sources.js.html">
+                  join-sources.js
+                </a>
+
+
+                <a class="source" href="language.js.html">
+                  language.js
+                </a>
+
+
+                <a class="source" href="offsets.js.html">
+                  offsets.js
+                </a>
+
+
+                <a class="source" href="pack.js.html">
+                  pack.js
+                </a>
+
+
+                <a class="source" href="parse.all.js.html">
+                  parse.all.js
+                </a>
+
+
+                <a class="source" href="parse.inc.js.html">
+                  parse.inc.js
+                </a>
+
+
+                <a class="source" href="parse.sketch.js.html">
+                  parse.sketch.js
+                </a>
+
+
+                <a class="source" href="parser.js.html">
+                  parser.js
+                </a>
+
+
+                <a class="source" href="pull.js.html">
+                  pull.js
+                </a>
+
+
+                <a class="source" href="puller.js.html">
+                  puller.js
+                </a>
+
+
+                <a class="source" href="push.js.html">
+                  push.js
+                </a>
+
+
+                <a class="source" href="qualify.js.html">
+                  qualify.js
+                </a>
+
+
+                <a class="source" href="require.js.html">
+                  require.js
+                </a>
+
+
+                <a class="source" href="serialize.all.js.html">
+                  serialize.all.js
+                </a>
+
+
+                <a class="source" href="serialize.inc.js.html">
+                  serialize.inc.js
+                </a>
+
+
+                <a class="source" href="stream.js.html">
+                  stream.js
+                </a>
+
+
+                <a class="source" href="tokenizer.js.html">
+                  tokenizer.js
+                </a>
+
+
+                <a class="source" href="transforms.js.html">
+                  transforms.js
+                </a>
+
+
+                <a class="source" href="transmogrifier.js.html">
+                  transmogrifier.js
+                </a>
+
+
+                <a class="source" href="unpack.js.html">
+                  unpack.js
+                </a>
+
+
+                <a class="source" href="variables.js.html">
+                  variables.js
+                </a>
+
+
+                <a class="source" href="writer.js.html">
+                  writer.js
+                </a>
+
+            </div>
+          </div>
+        </li>
+      </ul>
+
+    <ul class="sections">
+
+          <li id="title">
+              <div class="annotation">
+                  <h1>language.js</h1>
+              </div>
+          </li>
+
+
+
+        <li id="section-1">
+            <div class="annotation">
+
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-1">&#182;</a>
+              </div>
+
+            </div>
+
+            <div class="content"><div class='highlight'><pre><span class="hljs-keyword">var</span> definition = {
+    <span class="hljs-attr">frame</span>: {
+        <span class="hljs-attr">header</span>: [ <span class="hljs-number">16</span>, {
+            <span class="hljs-attr">fin</span>: <span class="hljs-number">1</span>, <span class="hljs-attr">rsv1</span>: <span class="hljs-number">1</span>, <span class="hljs-attr">rsv2</span>: <span class="hljs-number">1</span>, <span class="hljs-attr">rsv3</span>: <span class="hljs-number">1</span>, <span class="hljs-attr">opcode</span>: <span class="hljs-number">4</span>,
+            <span class="hljs-attr">mask</span>: <span class="hljs-number">1</span>, <span class="hljs-attr">length</span>: <span class="hljs-number">7</span>
+        } ],
+        <span class="hljs-attr">length</span>: [ <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">object</span>) </span>{
+            <span class="hljs-keyword">switch</span> (object.header.length) {
+                <span class="hljs-keyword">case</span> <span class="hljs-number">127</span>:
+                    <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>
+                <span class="hljs-keyword">case</span> <span class="hljs-number">126</span>:
+                    <span class="hljs-keyword">return</span> <span class="hljs-number">1</span>
+                <span class="hljs-keyword">default</span>:
+                    object.length = object.header.length
+            }
+        }, <span class="hljs-number">16</span>, <span class="hljs-number">32</span> ],
+        <span class="hljs-attr">mask</span>: [ <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">object</span>) </span>{
+            <span class="hljs-keyword">return</span> object.mask ? <span class="hljs-number">1</span> : <span class="hljs-number">0</span>
+        }, <span class="hljs-number">0</span>, <span class="hljs-number">16</span> ]
+    },
+    <span class="hljs-attr">mysql</span>: {
+        <span class="hljs-attr">value</span>: [ <span class="hljs-number">8</span>, <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">value</span>) </span>{
+            <span class="hljs-keyword">if</span> (value &lt; <span class="hljs-number">0xfb</span>) {
+                <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>
+            } <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (value &amp; <span class="hljs-number">0xfc</span>) {
+                <span class="hljs-keyword">return</span> <span class="hljs-number">1</span>
+            }
+        }, <span class="hljs-string">'b8'</span>, [ <span class="hljs-string">'x8'</span>, <span class="hljs-string">'b16'</span> ] ]
+    }
+}
+
+<span class="hljs-keyword">var</span> packets = {
+    <span class="hljs-attr">frame</span>: <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">object, parsing</span>) </span>{
+        <span class="hljs-keyword">if</span> (!parsing) {
+            header.mask = object.mask == <span class="hljs-literal">null</span> ? <span class="hljs-number">0</span> : <span class="hljs-number">1</span>
+        }
+        _(object.header, {
+            <span class="hljs-attr">fin</span>: <span class="hljs-number">1</span>, <span class="hljs-attr">rsv1</span>: <span class="hljs-number">1</span>, <span class="hljs-attr">rsv2</span>: <span class="hljs-number">2</span>, <span class="hljs-attr">rsv3</span>: <span class="hljs-number">3</span>, <span class="hljs-attr">opcode</span>: <span class="hljs-number">4</span>,
+            <span class="hljs-attr">mask</span>: <span class="hljs-number">1</span>, <span class="hljs-attr">length</span>: <span class="hljs-number">7</span>
+        })
+        <span class="hljs-keyword">if</span> (header.length == <span class="hljs-number">127</span>) {
+            _(header.length, <span class="hljs-number">16</span>)
+        } <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (header.length == <span class="hljs-number">126</span>) {
+            _(header.length, <span class="hljs-number">32</span>)
+        } <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (parsing) {
+            object.length = header.length
+        }
+        <span class="hljs-keyword">if</span> (header.mask) {
+            _(object.mask, <span class="hljs-number">16</span>)
+        }
+    },
+    <span class="hljs-attr">mysql</span>: <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">object</span>) </span>{
+        <span class="hljs-keyword">if</span> (parsing) {
+            _(object.value, <span class="hljs-number">8</span>)
+            <span class="hljs-keyword">if</span> (object.value &amp; <span class="hljs-number">0x0fc</span>) {
+                _(object.value, <span class="hljs-number">16</span>)
+            } <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (object.value &amp; <span class="hljs-number">0xfd</span>) {
+                _(object.value, <span class="hljs-number">24</span>)
+            } <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (object.value &amp; <span class="hljs-number">0xfe</span>) {
+                _(object.value, <span class="hljs-number">64</span>)
+            }
+        } <span class="hljs-keyword">else</span> {
+            <span class="hljs-keyword">if</span> (object.value &lt; <span class="hljs-number">251</span>) {
+                _(object.value, <span class="hljs-number">8</span>)
+            } <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (object.value &gt; <span class="hljs-number">251</span> &amp;&amp; object.value &lt; <span class="hljs-number">0xffff</span>) {
+                _(<span class="hljs-number">0xfc</span>)
+                _(object.value, <span class="hljs-number">16</span>)
+            } <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (object.value &gt;= <span class="hljs-number">0xffff</span> &amp;&amp; object.value &lt; <span class="hljs-number">0xffffff</span>) {
+                _(<span class="hljs-number">0xfd</span>)
+                _(object.value, <span class="hljs-number">24</span>)
+            } <span class="hljs-keyword">else</span> {
+                _(<span class="hljs-number">0xfe</span>)
+                _(object.value, <span class="hljs-number">64</span>)
+            }
+        }
+    },
+    <span class="hljs-attr">nested</span>: <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">object</span>) </span>{
+        _(object.numbers, <span class="hljs-number">16</span>, [<span class="hljs-number">32</span>])
+        _(object.structures, <span class="hljs-number">16</span>, [<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">struct</span>) </span>{
+            _(struct.count, packets.mysql)
+            _(struct.string, [<span class="hljs-number">8</span>], [<span class="hljs-number">0</span>])
+        }])
+    }
+}
+
+packets.lengthEncoded = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">packet, object</span>) </span>{
+    packet(object.array, [<span class="hljs-number">16</span>, <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">record</span>) </span>{
+        <span class="hljs-keyword">if</span> (parsing) {
+            <span class="hljs-keyword">var</span> flag = packet({ <span class="hljs-attr">flag</span>: <span class="hljs-number">3</span>, <span class="hljs-attr">_skip_</span>: <span class="hljs-number">5</span> }, <span class="hljs-string">'flag'</span>)
+        } <span class="hljs-keyword">else</span> {
+            <span class="hljs-keyword">if</span> (record.key &lt; <span class="hljs-number">10</span>) {
+            }
+        }
+        _(record.key, <span class="hljs-number">16</span>)
+        _(record.value, <span class="hljs-number">32</span>)
+    }])
+}
+
+<span class="hljs-keyword">var</span> packet = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params"></span>) </span>{}
+
+packets.websocket = packet(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">packet, object</span>) </span>{
+    <span class="hljs-keyword">if</span> (parsing) {
+        <span class="hljs-keyword">var</span> peek = packet({ <span class="hljs-attr">flag</span>: <span class="hljs-number">3</span>, <span class="hljs-attr">$padding</span>: <span class="hljs-number">5</span> }, <span class="hljs-string">'flag'</span>)
+        <span class="hljs-keyword">if</span> (peek &amp; ~<span class="hljs-number">0x7f</span> == <span class="hljs-number">0</span>) {
+            packet(<span class="hljs-string">'id'</span>, { <span class="hljs-attr">$flag</span>: <span class="hljs-number">1</span>, <span class="hljs-attr">value</span>: <span class="hljs-number">7</span> }, <span class="hljs-string">'value'</span>)
+        } <span class="hljs-keyword">else</span> {
+            packet(<span class="hljs-string">'id'</span>, { <span class="hljs-attr">$flag</span>: <span class="hljs-number">2</span>, <span class="hljs-attr">value</span>: <span class="hljs-number">14</span> }, <span class="hljs-string">'value'</span>)
+        }
+    } <span class="hljs-keyword">else</span> {
+        <span class="hljs-keyword">if</span> (object.id &lt; <span class="hljs-number">0x7f</span>) {
+            packet(<span class="hljs-string">'id'</span>, <span class="hljs-number">8</span>, <span class="hljs-number">0x80</span> &amp; object.id)
+        } <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (object.id &lt; <span class="hljs-number">65500</span>) {
+            packet(<span class="hljs-string">'id'</span>, <span class="hljs-number">16</span>, <span class="hljs-number">0xb000</span> &amp; object.id)
+        } <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (object.id &lt; <span class="hljs-number">222</span>) {
+        }
+    }
+    packet(<span class="hljs-string">'.'</span>, {
+        <span class="hljs-attr">fin</span>: <span class="hljs-number">1</span>, <span class="hljs-attr">rsv1</span>: <span class="hljs-number">1</span>, <span class="hljs-attr">rsv2</span>: <span class="hljs-number">1</span>, <span class="hljs-attr">rsv3</span>: <span class="hljs-number">1</span>, <span class="hljs-attr">opcode</span>: <span class="hljs-number">4</span>, <span class="hljs-attr">masked</span>: <span class="hljs-number">1</span>, <span class="hljs-attr">length</span>: <span class="hljs-number">7</span>
+    })
+    <span class="hljs-keyword">if</span> (object.length == <span class="hljs-number">127</span>) {
+        packet(<span class="hljs-string">'length'</span>, <span class="hljs-number">16</span>)
+    } <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (object.length == <span class="hljs-number">126</span>) {
+        packet(<span class="hljs-string">'length'</span>, <span class="hljs-number">32</span>)
+    }
+    <span class="hljs-keyword">if</span> (object.masked == <span class="hljs-number">1</span>) {
+        packet(object.mask, <span class="hljs-number">16</span>)
+    }
+})
+
+<span class="hljs-keyword">var</span> packets = {
+    <span class="hljs-attr">frame</span>: <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">object</span>) </span>{
+        <span class="hljs-keyword">if</span> (serializing) {
+            header.mask = object.mask == <span class="hljs-literal">null</span> ? <span class="hljs-number">0</span> : <span class="hljs-number">1</span>
+        }
+        header = packed(object.header, <span class="hljs-number">16</span>, {
+            <span class="hljs-attr">fin</span>: <span class="hljs-number">1</span>, <span class="hljs-attr">rsv1</span>: <span class="hljs-number">1</span>, <span class="hljs-attr">rsv2</span>: <span class="hljs-number">2</span>, <span class="hljs-attr">rsv3</span>: <span class="hljs-number">3</span>, <span class="hljs-attr">opcode</span>: <span class="hljs-number">4</span>,
+            <span class="hljs-attr">mask</span>: <span class="hljs-number">1</span>, <span class="hljs-attr">length</span>: <span class="hljs-number">7</span>
+        })
+        <span class="hljs-keyword">switch</span> (header.length) {
+        <span class="hljs-keyword">case</span> <span class="hljs-number">127</span>:
+            unsigned(header.length, <span class="hljs-number">16</span>)
+        <span class="hljs-keyword">case</span> <span class="hljs-number">126</span>:
+            unsigned(header.length, <span class="hljs-number">32</span>)
+        <span class="hljs-keyword">default</span>:
+            <span class="hljs-keyword">if</span> (parsing) {
+                object.length = header.length
+            }
+        }
+        <span class="hljs-keyword">if</span> (header.mask) {
+            unsigned(object.mask, <span class="hljs-number">16</span>)
+        }
+    },
+    <span class="hljs-attr">mysql</span>: <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">object</span>) </span>{
+        object.value = get(<span class="hljs-number">8</span>)
+        <span class="hljs-keyword">if</span> (object.value &amp; <span class="hljs-number">0xfc</span>) {
+            object.value = get(<span class="hljs-number">16</span>)
+        }
+    },
+    <span class="hljs-attr">nested</span>: <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">object</span>) </span>{
+    }
+}</pre></div></div>
+
+        </li>
+
+    </ul>
+  </div>
+</body>
+</html>

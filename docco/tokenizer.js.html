@@ -20,107 +20,127 @@
             <div id="jump_page">
 
 
-                <a class="source" href="explode.html">
+                <a class="source" href="explode.js.html">
                   explode.js
                 </a>
 
 
-                <a class="source" href="function.html">
+                <a class="source" href="function.js.html">
                   function.js
                 </a>
 
 
-                <a class="source" href="index.html">
+                <a class="source" href="index.js.html">
                   index.js
                 </a>
 
 
-                <a class="source" href="join-sources.html">
+                <a class="source" href="join-sources.js.html">
                   join-sources.js
                 </a>
 
 
-                <a class="source" href="offsets.html">
+                <a class="source" href="language.js.html">
+                  language.js
+                </a>
+
+
+                <a class="source" href="offsets.js.html">
                   offsets.js
                 </a>
 
 
-                <a class="source" href="pack.html">
+                <a class="source" href="pack.js.html">
                   pack.js
                 </a>
 
 
-                <a class="source" href="parse.all.html">
+                <a class="source" href="parse.all.js.html">
                   parse.all.js
                 </a>
 
 
-                <a class="source" href="parse.inc.html">
+                <a class="source" href="parse.inc.js.html">
                   parse.inc.js
                 </a>
 
 
-                <a class="source" href="pull.html">
+                <a class="source" href="parse.sketch.js.html">
+                  parse.sketch.js
+                </a>
+
+
+                <a class="source" href="parser.js.html">
+                  parser.js
+                </a>
+
+
+                <a class="source" href="pull.js.html">
                   pull.js
                 </a>
 
 
-                <a class="source" href="puller.html">
+                <a class="source" href="puller.js.html">
                   puller.js
                 </a>
 
 
-                <a class="source" href="push.html">
+                <a class="source" href="push.js.html">
                   push.js
                 </a>
 
 
-                <a class="source" href="qualify.html">
+                <a class="source" href="qualify.js.html">
                   qualify.js
                 </a>
 
 
-                <a class="source" href="require.html">
+                <a class="source" href="require.js.html">
                   require.js
                 </a>
 
 
-                <a class="source" href="serialize.all.html">
+                <a class="source" href="serialize.all.js.html">
                   serialize.all.js
                 </a>
 
 
-                <a class="source" href="serialize.inc.html">
+                <a class="source" href="serialize.inc.js.html">
                   serialize.inc.js
                 </a>
 
 
-                <a class="source" href="stream.html">
+                <a class="source" href="stream.js.html">
                   stream.js
                 </a>
 
 
-                <a class="source" href="tokenizer.html">
+                <a class="source" href="tokenizer.js.html">
                   tokenizer.js
                 </a>
 
 
-                <a class="source" href="transforms.html">
+                <a class="source" href="transforms.js.html">
                   transforms.js
                 </a>
 
 
-                <a class="source" href="transmogrifier.html">
+                <a class="source" href="transmogrifier.js.html">
                   transmogrifier.js
                 </a>
 
 
-                <a class="source" href="variables.html">
+                <a class="source" href="unpack.js.html">
+                  unpack.js
+                </a>
+
+
+                <a class="source" href="variables.js.html">
                   variables.js
                 </a>
 
 
-                <a class="source" href="writer.html">
+                <a class="source" href="writer.js.html">
                   writer.js
                 </a>
 
@@ -156,17 +176,17 @@
 <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">fixed</span> (<span class="hljs-params">object, rest</span>) </span>{
     <span class="hljs-keyword">var</span> $ = ok(<span class="hljs-regexp">/^(\d+)](.*)$/</span>.exec(rest), <span class="hljs-string">'invalid array size'</span>)
     <span class="hljs-keyword">var</span> repeat = +$[<span class="hljs-number">1</span>], rest = $[<span class="hljs-number">2</span>]
-    object.repeat = repea
+    object.repeat = repeat
     <span class="hljs-keyword">if</span> (rest.length) {
         $ = ok(<span class="hljs-regexp">/^z(.*)$/</span>.exec(rest), <span class="hljs-string">'unknown suffix'</span>)
         <span class="hljs-keyword">return</span> terminated(object, $[<span class="hljs-number">1</span>])
     }
-    <span class="hljs-keyword">return</span> objec
+    <span class="hljs-keyword">return</span> object
 }
 
 <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">terminated</span> (<span class="hljs-params">object, rest</span>) </span>{
     object.terminator = [ <span class="hljs-number">0</span> ]
-    <span class="hljs-keyword">return</span> objec
+    <span class="hljs-keyword">return</span> object
 }
 
 <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">integer</span> (<span class="hljs-params">object, endianness, rest</span>) </span>{
@@ -187,7 +207,7 @@
             <span class="hljs-keyword">return</span> terminated(object, $[<span class="hljs-number">2</span>])
         }
     }
-    <span class="hljs-keyword">return</span> objec
+    <span class="hljs-keyword">return</span> object
 }
 
 <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">signed</span> (<span class="hljs-params">object, rest</span>) </span>{
@@ -216,9 +236,7 @@
 
 <span class="hljs-built_in">module</span>.exports = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">object, string</span>) </span>{
     <span class="hljs-keyword">return</span> tokenize(object, string)
-}
-
-</pre></div></div>
+}</pre></div></div>
 
         </li>
 

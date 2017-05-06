@@ -20,107 +20,127 @@
             <div id="jump_page">
 
 
-                <a class="source" href="explode.html">
+                <a class="source" href="explode.js.html">
                   explode.js
                 </a>
 
 
-                <a class="source" href="function.html">
+                <a class="source" href="function.js.html">
                   function.js
                 </a>
 
 
-                <a class="source" href="index.html">
+                <a class="source" href="index.js.html">
                   index.js
                 </a>
 
 
-                <a class="source" href="join-sources.html">
+                <a class="source" href="join-sources.js.html">
                   join-sources.js
                 </a>
 
 
-                <a class="source" href="offsets.html">
+                <a class="source" href="language.js.html">
+                  language.js
+                </a>
+
+
+                <a class="source" href="offsets.js.html">
                   offsets.js
                 </a>
 
 
-                <a class="source" href="pack.html">
+                <a class="source" href="pack.js.html">
                   pack.js
                 </a>
 
 
-                <a class="source" href="parse.all.html">
+                <a class="source" href="parse.all.js.html">
                   parse.all.js
                 </a>
 
 
-                <a class="source" href="parse.inc.html">
+                <a class="source" href="parse.inc.js.html">
                   parse.inc.js
                 </a>
 
 
-                <a class="source" href="pull.html">
+                <a class="source" href="parse.sketch.js.html">
+                  parse.sketch.js
+                </a>
+
+
+                <a class="source" href="parser.js.html">
+                  parser.js
+                </a>
+
+
+                <a class="source" href="pull.js.html">
                   pull.js
                 </a>
 
 
-                <a class="source" href="puller.html">
+                <a class="source" href="puller.js.html">
                   puller.js
                 </a>
 
 
-                <a class="source" href="push.html">
+                <a class="source" href="push.js.html">
                   push.js
                 </a>
 
 
-                <a class="source" href="qualify.html">
+                <a class="source" href="qualify.js.html">
                   qualify.js
                 </a>
 
 
-                <a class="source" href="require.html">
+                <a class="source" href="require.js.html">
                   require.js
                 </a>
 
 
-                <a class="source" href="serialize.all.html">
+                <a class="source" href="serialize.all.js.html">
                   serialize.all.js
                 </a>
 
 
-                <a class="source" href="serialize.inc.html">
+                <a class="source" href="serialize.inc.js.html">
                   serialize.inc.js
                 </a>
 
 
-                <a class="source" href="stream.html">
+                <a class="source" href="stream.js.html">
                   stream.js
                 </a>
 
 
-                <a class="source" href="tokenizer.html">
+                <a class="source" href="tokenizer.js.html">
                   tokenizer.js
                 </a>
 
 
-                <a class="source" href="transforms.html">
+                <a class="source" href="transforms.js.html">
                   transforms.js
                 </a>
 
 
-                <a class="source" href="transmogrifier.html">
+                <a class="source" href="transmogrifier.js.html">
                   transmogrifier.js
                 </a>
 
 
-                <a class="source" href="variables.html">
+                <a class="source" href="unpack.js.html">
+                  unpack.js
+                </a>
+
+
+                <a class="source" href="variables.js.html">
                   variables.js
                 </a>
 
 
-                <a class="source" href="writer.html">
+                <a class="source" href="writer.js.html">
                   writer.js
                 </a>
 
@@ -200,7 +220,7 @@
     <span class="hljs-keyword">var</span> pattern = resolveAlternation(compiled.pattern, incoming)
     <span class="hljs-keyword">var</span> patternIndex = <span class="hljs-number">0</span>
     <span class="hljs-keyword">var</span> field = pattern[patternIndex]
-    <span class="hljs-keyword">var</span> offset = offset == <span class="hljs-literal">null</span> ? <span class="hljs-number">0</span> : offse
+    <span class="hljs-keyword">var</span> offset = offset == <span class="hljs-literal">null</span> ? <span class="hljs-number">0</span> : offset
     <span class="hljs-keyword">var</span> output, record
 
     <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">dump</span> (<span class="hljs-params">record</span>) </span>{
@@ -225,8 +245,7 @@
             <span class="hljs-keyword">if</span> (count) {
                 <span class="hljs-keyword">return</span> count.pattern + <span class="hljs-string">'/'</span> + scalar
             } <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (field.terminator) {
-                <span class="hljs-keyword">if</span> (field.terminator[<span class="hljs-number">0</span>]) {
-</pre></div></div>
+                <span class="hljs-keyword">if</span> (field.terminator[<span class="hljs-number">0</span>]) {</pre></div></div>
 
         </li>
 
@@ -279,19 +298,19 @@
     output = []
     <span class="hljs-keyword">while</span> (field) {
         <span class="hljs-keyword">if</span> (field.lengthEncoding) {
-            <span class="hljs-keyword">var</span> start = offse
+            <span class="hljs-keyword">var</span> start = offset
             <span class="hljs-keyword">var</span> element = pattern[++patternIndex]
             <span class="hljs-keyword">var</span> record = { <span class="hljs-attr">name</span>: element.name, <span class="hljs-attr">value</span>: [], <span class="hljs-attr">offset</span>: <span class="hljs-number">0</span> }
             output.push(record)
             <span class="hljs-keyword">var</span> value = incoming[element.name]
             offset += _element(record, <span class="hljs-string">'count'</span>)
             record.count.value = value.length
-            field = elemen
+            field = element
             record.pattern = detokenize(<span class="hljs-literal">true</span>, record.count)
             <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> i = <span class="hljs-number">0</span>, I = value.length; i &lt; I; i++) {
                 offset += _element(record, i)
             }
-            record.length = offset - star
+            record.length = offset - start
             dump(record)
         } <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (field.terminator) {
             <span class="hljs-keyword">var</span> start = offset,
@@ -306,12 +325,11 @@
                                                         <span class="hljs-attr">length</span>: field.terminator.length,
                                                         <span class="hljs-attr">hex</span>: <span class="hljs-keyword">new</span> Buffer(field.terminator).toString(<span class="hljs-string">'hex'</span>) }
             offset += field.terminator.length
-            record.length = offset - star
+            record.length = offset - start
             dump(record)
         } <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (field.arrayed) {
             <span class="hljs-keyword">var</span> start = offset,
-                    value = incoming[field.name],
-</pre></div></div>
+                    value = incoming[field.name],</pre></div></div>
 
         </li>
 
@@ -330,7 +348,7 @@
             <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> i = <span class="hljs-number">0</span>, I = field.repeat; i &lt; I; i++) {
                 offset += _element(record, i)
             }
-            record.length = offset - star
+            record.length = offset - start
             dump(record)
             output.push(record)
         } <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (field.packing) {
@@ -340,7 +358,7 @@
                                   <span class="hljs-attr">length</span>: field.bits / <span class="hljs-number">8</span> }
             <span class="hljs-keyword">var</span> bit = <span class="hljs-number">0</span>, hex = <span class="hljs-keyword">new</span> Buffer(<span class="hljs-number">1</span>)
             <span class="hljs-keyword">var</span> packing = field.packing
-            <span class="hljs-keyword">var</span> start = offse
+            <span class="hljs-keyword">var</span> start = offset
             <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> i = <span class="hljs-number">0</span>, I = packing.length; i &lt; I; i++) {
                 field = packing[i]
                 <span class="hljs-keyword">var</span> element = {
@@ -380,10 +398,8 @@
         }
         field = pattern[++patternIndex]
     }
-    <span class="hljs-keyword">return</span> outpu
-}
-
-</pre></div></div>
+    <span class="hljs-keyword">return</span> output
+}</pre></div></div>
 
         </li>
 

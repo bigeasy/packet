@@ -20,107 +20,127 @@
             <div id="jump_page">
 
 
-                <a class="source" href="explode.html">
+                <a class="source" href="explode.js.html">
                   explode.js
                 </a>
 
 
-                <a class="source" href="function.html">
+                <a class="source" href="function.js.html">
                   function.js
                 </a>
 
 
-                <a class="source" href="index.html">
+                <a class="source" href="index.js.html">
                   index.js
                 </a>
 
 
-                <a class="source" href="join-sources.html">
+                <a class="source" href="join-sources.js.html">
                   join-sources.js
                 </a>
 
 
-                <a class="source" href="offsets.html">
+                <a class="source" href="language.js.html">
+                  language.js
+                </a>
+
+
+                <a class="source" href="offsets.js.html">
                   offsets.js
                 </a>
 
 
-                <a class="source" href="pack.html">
+                <a class="source" href="pack.js.html">
                   pack.js
                 </a>
 
 
-                <a class="source" href="parse.all.html">
+                <a class="source" href="parse.all.js.html">
                   parse.all.js
                 </a>
 
 
-                <a class="source" href="parse.inc.html">
+                <a class="source" href="parse.inc.js.html">
                   parse.inc.js
                 </a>
 
 
-                <a class="source" href="pull.html">
+                <a class="source" href="parse.sketch.js.html">
+                  parse.sketch.js
+                </a>
+
+
+                <a class="source" href="parser.js.html">
+                  parser.js
+                </a>
+
+
+                <a class="source" href="pull.js.html">
                   pull.js
                 </a>
 
 
-                <a class="source" href="puller.html">
+                <a class="source" href="puller.js.html">
                   puller.js
                 </a>
 
 
-                <a class="source" href="push.html">
+                <a class="source" href="push.js.html">
                   push.js
                 </a>
 
 
-                <a class="source" href="qualify.html">
+                <a class="source" href="qualify.js.html">
                   qualify.js
                 </a>
 
 
-                <a class="source" href="require.html">
+                <a class="source" href="require.js.html">
                   require.js
                 </a>
 
 
-                <a class="source" href="serialize.all.html">
+                <a class="source" href="serialize.all.js.html">
                   serialize.all.js
                 </a>
 
 
-                <a class="source" href="serialize.inc.html">
+                <a class="source" href="serialize.inc.js.html">
                   serialize.inc.js
                 </a>
 
 
-                <a class="source" href="stream.html">
+                <a class="source" href="stream.js.html">
                   stream.js
                 </a>
 
 
-                <a class="source" href="tokenizer.html">
+                <a class="source" href="tokenizer.js.html">
                   tokenizer.js
                 </a>
 
 
-                <a class="source" href="transforms.html">
+                <a class="source" href="transforms.js.html">
                   transforms.js
                 </a>
 
 
-                <a class="source" href="transmogrifier.html">
+                <a class="source" href="transmogrifier.js.html">
                   transmogrifier.js
                 </a>
 
 
-                <a class="source" href="variables.html">
+                <a class="source" href="unpack.js.html">
+                  unpack.js
+                </a>
+
+
+                <a class="source" href="variables.js.html">
                   variables.js
                 </a>
 
 
-                <a class="source" href="writer.html">
+                <a class="source" href="writer.js.html">
                   writer.js
                 </a>
 
@@ -149,8 +169,7 @@
 
             </div>
 
-            <div class="content"><div class='highlight'><pre><span class="hljs-keyword">var</span> transforms =
-</pre></div></div>
+            <div class="content"><div class='highlight'><pre><span class="hljs-keyword">var</span> transforms =</pre></div></div>
 
         </li>
 
@@ -168,8 +187,7 @@
             <div class="content"><div class='highlight'><pre>{ <span class="hljs-attr">str</span>: <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">encoding, parsing, field, value</span>) </span>{
     <span class="hljs-keyword">var</span> i, I, ascii = <span class="hljs-regexp">/^ascii$/i</span>.test(encoding)
         <span class="hljs-keyword">if</span> (parsing) {
-            value = <span class="hljs-keyword">new</span> Buffer(value)
-</pre></div></div>
+            value = <span class="hljs-keyword">new</span> Buffer(value)</pre></div></div>
 
         </li>
 
@@ -202,8 +220,7 @@ If the top bit is set, it is not ASCII, so we zero the value.</p>
             }
             <span class="hljs-keyword">return</span> buffer
         }
-    }
-</pre></div></div>
+    }</pre></div></div>
 
         </li>
 
@@ -220,8 +237,7 @@ If the top bit is set, it is not ASCII, so we zero the value.</p>
 
             <div class="content"><div class='highlight'><pre>, <span class="hljs-attr">ascii</span>: <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">parsing, field, value</span>) </span>{
         <span class="hljs-keyword">return</span> transforms.str(<span class="hljs-string">'ascii'</span>, parsing, field, value)
-    }
-</pre></div></div>
+    }</pre></div></div>
 
         </li>
 
@@ -238,8 +254,7 @@ If the top bit is set, it is not ASCII, so we zero the value.</p>
 
             <div class="content"><div class='highlight'><pre>, <span class="hljs-attr">utf8</span>: <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">parsing, field, value</span>) </span>{
         <span class="hljs-keyword">return</span> transforms.str(<span class="hljs-string">'utf8'</span>, parsing, field, value)
-    }
-</pre></div></div>
+    }</pre></div></div>
 
         </li>
 
@@ -259,8 +274,7 @@ If the top bit is set, it is not ASCII, so we zero the value.</p>
             <span class="hljs-keyword">while</span> (value.length &lt; length) value = character + value
         }
         <span class="hljs-keyword">return</span> value
-    }
-</pre></div></div>
+    }</pre></div></div>
 
         </li>
 
@@ -277,8 +291,7 @@ If the top bit is set, it is not ASCII, so we zero the value.</p>
 
             <div class="content"><div class='highlight'><pre>, <span class="hljs-attr">atoi</span>: <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">base, parsing, field, value</span>) </span>{
         <span class="hljs-keyword">return</span> parsing ? <span class="hljs-built_in">parseInt</span>(value, base) : value.toString(base)
-    }
-</pre></div></div>
+    }</pre></div></div>
 
         </li>
 
@@ -296,9 +309,7 @@ If the top bit is set, it is not ASCII, so we zero the value.</p>
             <div class="content"><div class='highlight'><pre>, <span class="hljs-attr">atof</span>: <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">parsing, field, value</span>) </span>{
         <span class="hljs-keyword">return</span> parsing ? <span class="hljs-built_in">parseFloat</span>(value) : value.toString()
     }
-}
-
-</pre></div></div>
+}</pre></div></div>
 
         </li>
 

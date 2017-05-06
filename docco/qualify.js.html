@@ -2,7 +2,7 @@
 
 <html>
 <head>
-  <title>stream.js</title>
+  <title>qualify.js</title>
   <meta http-equiv="content-type" content="text/html; charset=UTF-8">
   <meta name="viewport" content="width=device-width, target-densitydpi=160dpi, initial-scale=1.0; maximum-scale=1.0; user-scalable=0;">
   <link rel="stylesheet" media="all" href="docco.css" />
@@ -20,107 +20,127 @@
             <div id="jump_page">
 
 
-                <a class="source" href="explode.html">
+                <a class="source" href="explode.js.html">
                   explode.js
                 </a>
 
 
-                <a class="source" href="function.html">
+                <a class="source" href="function.js.html">
                   function.js
                 </a>
 
 
-                <a class="source" href="index.html">
+                <a class="source" href="index.js.html">
                   index.js
                 </a>
 
 
-                <a class="source" href="join-sources.html">
+                <a class="source" href="join-sources.js.html">
                   join-sources.js
                 </a>
 
 
-                <a class="source" href="offsets.html">
+                <a class="source" href="language.js.html">
+                  language.js
+                </a>
+
+
+                <a class="source" href="offsets.js.html">
                   offsets.js
                 </a>
 
 
-                <a class="source" href="pack.html">
+                <a class="source" href="pack.js.html">
                   pack.js
                 </a>
 
 
-                <a class="source" href="parse.all.html">
+                <a class="source" href="parse.all.js.html">
                   parse.all.js
                 </a>
 
 
-                <a class="source" href="parse.inc.html">
+                <a class="source" href="parse.inc.js.html">
                   parse.inc.js
                 </a>
 
 
-                <a class="source" href="pull.html">
+                <a class="source" href="parse.sketch.js.html">
+                  parse.sketch.js
+                </a>
+
+
+                <a class="source" href="parser.js.html">
+                  parser.js
+                </a>
+
+
+                <a class="source" href="pull.js.html">
                   pull.js
                 </a>
 
 
-                <a class="source" href="puller.html">
+                <a class="source" href="puller.js.html">
                   puller.js
                 </a>
 
 
-                <a class="source" href="push.html">
+                <a class="source" href="push.js.html">
                   push.js
                 </a>
 
 
-                <a class="source" href="qualify.html">
+                <a class="source" href="qualify.js.html">
                   qualify.js
                 </a>
 
 
-                <a class="source" href="require.html">
+                <a class="source" href="require.js.html">
                   require.js
                 </a>
 
 
-                <a class="source" href="serialize.all.html">
+                <a class="source" href="serialize.all.js.html">
                   serialize.all.js
                 </a>
 
 
-                <a class="source" href="serialize.inc.html">
+                <a class="source" href="serialize.inc.js.html">
                   serialize.inc.js
                 </a>
 
 
-                <a class="source" href="stream.html">
+                <a class="source" href="stream.js.html">
                   stream.js
                 </a>
 
 
-                <a class="source" href="tokenizer.html">
+                <a class="source" href="tokenizer.js.html">
                   tokenizer.js
                 </a>
 
 
-                <a class="source" href="transforms.html">
+                <a class="source" href="transforms.js.html">
                   transforms.js
                 </a>
 
 
-                <a class="source" href="transmogrifier.html">
+                <a class="source" href="transmogrifier.js.html">
                   transmogrifier.js
                 </a>
 
 
-                <a class="source" href="variables.html">
+                <a class="source" href="unpack.js.html">
+                  unpack.js
+                </a>
+
+
+                <a class="source" href="variables.js.html">
                   variables.js
                 </a>
 
 
-                <a class="source" href="writer.html">
+                <a class="source" href="writer.js.html">
                   writer.js
                 </a>
 
@@ -133,7 +153,7 @@
 
           <li id="title">
               <div class="annotation">
-                  <h1>stream.js</h1>
+                  <h1>qualify.js</h1>
               </div>
           </li>
 
@@ -148,18 +168,11 @@
 
             </div>
 
-            <div class="content"><div class='highlight'><pre>streamer.on(<span class="hljs-string">'readable'</span>, <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params"></span>) </span>{
-    <span class="hljs-keyword">var</span> record
-    <span class="hljs-keyword">while</span> ((record = streamer.read()) != <span class="hljs-literal">null</span>) {
-        <span class="hljs-keyword">switch</span> (record.type) {
-        <span class="hljs-keyword">case</span> <span class="hljs-string">'header'</span>:
-            streamer.parser = parsers.body
-            <span class="hljs-keyword">break</span>
-        }
-    }
-})
+            <div class="content"><div class='highlight'><pre><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">qualify</span> (<span class="hljs-params">name, depth</span>) </span>{
+    <span class="hljs-keyword">return</span> name + (depth ? depth : <span class="hljs-string">''</span>)
+}
 
-</pre></div></div>
+<span class="hljs-built_in">module</span>.exports = qualify</pre></div></div>
 
         </li>
 

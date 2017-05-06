@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+  <title>unpack.js</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <meta name="viewport" content="width=device-width, target-densitydpi=160dpi, initial-scale=1.0; maximum-scale=1.0; user-scalable=0;">
+  <link rel="stylesheet" media="all" href="docco.css" />
+</head>
+<body>
+  <div id="container">
+    <div id="background"></div>
+
+      <ul id="jump_to">
+        <li>
+          <a class="large" href="javascript:void(0);">Jump To &hellip;</a>
+          <a class="small" href="javascript:void(0);">+</a>
+          <div id="jump_wrapper">
+          <div id="jump_page_wrapper">
+            <div id="jump_page">
+
+
+                <a class="source" href="explode.js.html">
+                  explode.js
+                </a>
+
+
+                <a class="source" href="function.js.html">
+                  function.js
+                </a>
+
+
+                <a class="source" href="index.js.html">
+                  index.js
+                </a>
+
+
+                <a class="source" href="join-sources.js.html">
+                  join-sources.js
+                </a>
+
+
+                <a class="source" href="language.js.html">
+                  language.js
+                </a>
+
+
+                <a class="source" href="offsets.js.html">
+                  offsets.js
+                </a>
+
+
+                <a class="source" href="pack.js.html">
+                  pack.js
+                </a>
+
+
+                <a class="source" href="parse.all.js.html">
+                  parse.all.js
+                </a>
+
+
+                <a class="source" href="parse.inc.js.html">
+                  parse.inc.js
+                </a>
+
+
+                <a class="source" href="parse.sketch.js.html">
+                  parse.sketch.js
+                </a>
+
+
+                <a class="source" href="parser.js.html">
+                  parser.js
+                </a>
+
+
+                <a class="source" href="pull.js.html">
+                  pull.js
+                </a>
+
+
+                <a class="source" href="puller.js.html">
+                  puller.js
+                </a>
+
+
+                <a class="source" href="push.js.html">
+                  push.js
+                </a>
+
+
+                <a class="source" href="qualify.js.html">
+                  qualify.js
+                </a>
+
+
+                <a class="source" href="require.js.html">
+                  require.js
+                </a>
+
+
+                <a class="source" href="serialize.all.js.html">
+                  serialize.all.js
+                </a>
+
+
+                <a class="source" href="serialize.inc.js.html">
+                  serialize.inc.js
+                </a>
+
+
+                <a class="source" href="stream.js.html">
+                  stream.js
+                </a>
+
+
+                <a class="source" href="tokenizer.js.html">
+                  tokenizer.js
+                </a>
+
+
+                <a class="source" href="transforms.js.html">
+                  transforms.js
+                </a>
+
+
+                <a class="source" href="transmogrifier.js.html">
+                  transmogrifier.js
+                </a>
+
+
+                <a class="source" href="unpack.js.html">
+                  unpack.js
+                </a>
+
+
+                <a class="source" href="variables.js.html">
+                  variables.js
+                </a>
+
+
+                <a class="source" href="writer.js.html">
+                  writer.js
+                </a>
+
+            </div>
+          </div>
+        </li>
+      </ul>
+
+    <ul class="sections">
+
+          <li id="title">
+              <div class="annotation">
+                  <h1>unpack.js</h1>
+              </div>
+          </li>
+
+
+
+        <li id="section-1">
+            <div class="annotation">
+
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-1">&#182;</a>
+              </div>
+
+            </div>
+
+            <div class="content"><div class='highlight'><pre><span class="hljs-keyword">var</span> unpack = <span class="hljs-built_in">require</span>(<span class="hljs-string">'./_unpack'</span>)
+
+<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">unpackAll</span> (<span class="hljs-params">object, field</span>) </span>{
+    <span class="hljs-keyword">var</span> source = <span class="hljs-string">''</span>
+    <span class="hljs-keyword">var</span> bits = field.bytes * <span class="hljs-number">8</span>
+    <span class="hljs-keyword">var</span> offset = <span class="hljs-number">0</span>
+    <span class="hljs-keyword">var</span> bit = <span class="hljs-number">0</span>
+    <span class="hljs-keyword">var</span> packing = field.fields.map(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">field</span>) </span>{
+        field.offset = bit
+        bit += field.bits
+        <span class="hljs-keyword">return</span> field
+    })
+    <span class="hljs-keyword">return</span> packing.map(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">field</span>) </span>{
+        <span class="hljs-keyword">return</span> object + <span class="hljs-string">'.'</span> +
+                field.name + <span class="hljs-string">' = '</span> +
+                unpack(bits, field.offset, field.bits)
+    }).join(<span class="hljs-string">'\n'</span>)
+}
+
+<span class="hljs-built_in">module</span>.exports = unpackAll</pre></div></div>
+
+        </li>
+
+    </ul>
+  </div>
+</body>
+</html>

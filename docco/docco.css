@@ -31,6 +31,7 @@
 }
 
 /*--------------------- Layout ----------------------------*/
+/* Adjusted. ~ @bigeasy */
 html { height: 100%; }
 body {
   font-family: "aller-light";
@@ -261,7 +262,7 @@ ul.sections > li > div {
     line-height: 18px;
   }
   p, ul, ol {
-    margin: 0 0 15px;
+    margin: 0;
   }
 
 
@@ -362,8 +363,8 @@ ul.sections > li > div {
 @media only screen and (min-width: 1025px) {
 
   body {
-    font-size: 16px;
-    line-height: 24px;
+    font-size: 14px;
+    line-height: 18px;
   }
 
   #background {

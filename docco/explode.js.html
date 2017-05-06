@@ -20,107 +20,127 @@
             <div id="jump_page">
 
 
-                <a class="source" href="explode.html">
+                <a class="source" href="explode.js.html">
                   explode.js
                 </a>
 
 
-                <a class="source" href="function.html">
+                <a class="source" href="function.js.html">
                   function.js
                 </a>
 
 
-                <a class="source" href="index.html">
+                <a class="source" href="index.js.html">
                   index.js
                 </a>
 
 
-                <a class="source" href="join-sources.html">
+                <a class="source" href="join-sources.js.html">
                   join-sources.js
                 </a>
 
 
-                <a class="source" href="offsets.html">
+                <a class="source" href="language.js.html">
+                  language.js
+                </a>
+
+
+                <a class="source" href="offsets.js.html">
                   offsets.js
                 </a>
 
 
-                <a class="source" href="pack.html">
+                <a class="source" href="pack.js.html">
                   pack.js
                 </a>
 
 
-                <a class="source" href="parse.all.html">
+                <a class="source" href="parse.all.js.html">
                   parse.all.js
                 </a>
 
 
-                <a class="source" href="parse.inc.html">
+                <a class="source" href="parse.inc.js.html">
                   parse.inc.js
                 </a>
 
 
-                <a class="source" href="pull.html">
+                <a class="source" href="parse.sketch.js.html">
+                  parse.sketch.js
+                </a>
+
+
+                <a class="source" href="parser.js.html">
+                  parser.js
+                </a>
+
+
+                <a class="source" href="pull.js.html">
                   pull.js
                 </a>
 
 
-                <a class="source" href="puller.html">
+                <a class="source" href="puller.js.html">
                   puller.js
                 </a>
 
 
-                <a class="source" href="push.html">
+                <a class="source" href="push.js.html">
                   push.js
                 </a>
 
 
-                <a class="source" href="qualify.html">
+                <a class="source" href="qualify.js.html">
                   qualify.js
                 </a>
 
 
-                <a class="source" href="require.html">
+                <a class="source" href="require.js.html">
                   require.js
                 </a>
 
 
-                <a class="source" href="serialize.all.html">
+                <a class="source" href="serialize.all.js.html">
                   serialize.all.js
                 </a>
 
 
-                <a class="source" href="serialize.inc.html">
+                <a class="source" href="serialize.inc.js.html">
                   serialize.inc.js
                 </a>
 
 
-                <a class="source" href="stream.html">
+                <a class="source" href="stream.js.html">
                   stream.js
                 </a>
 
 
-                <a class="source" href="tokenizer.html">
+                <a class="source" href="tokenizer.js.html">
                   tokenizer.js
                 </a>
 
 
-                <a class="source" href="transforms.html">
+                <a class="source" href="transforms.js.html">
                   transforms.js
                 </a>
 
 
-                <a class="source" href="transmogrifier.html">
+                <a class="source" href="transmogrifier.js.html">
                   transmogrifier.js
                 </a>
 
 
-                <a class="source" href="variables.html">
+                <a class="source" href="unpack.js.html">
+                  unpack.js
+                </a>
+
+
+                <a class="source" href="variables.js.html">
                   variables.js
                 </a>
 
 
-                <a class="source" href="writer.html">
+                <a class="source" href="writer.js.html">
                   writer.js
                 </a>
 
@@ -161,8 +181,7 @@
             <span class="hljs-attr">endianness</span>: field.endianness
         }
     })
-}
-</pre></div></div>
+}</pre></div></div>
 
         </li>
 
@@ -197,6 +216,11 @@ these calculations as needed.</p>
         <span class="hljs-keyword">break</span>
     <span class="hljs-keyword">case</span> <span class="hljs-string">'integer'</span>:
         <span class="hljs-keyword">var</span> little = field.endianness === <span class="hljs-string">'l'</span>
+        <span class="hljs-keyword">if</span> (field.bits == <span class="hljs-literal">null</span> &amp;&amp; field.fields != <span class="hljs-literal">null</span>) {
+            field.bits = field.fields.reduce(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">sum, value</span>) </span>{
+                <span class="hljs-keyword">return</span> sum + value.bits
+            }, <span class="hljs-number">0</span>)
+        }
         <span class="hljs-keyword">var</span> bytes = field.bits / <span class="hljs-number">8</span>
         field = {
             <span class="hljs-attr">name</span>: field.name || <span class="hljs-literal">null</span>,
@@ -209,7 +233,7 @@ these calculations as needed.</p>
             <span class="hljs-attr">stop</span>: little ? bytes : <span class="hljs-number">-1</span>,
             <span class="hljs-attr">bits</span>: field.bits,
             <span class="hljs-attr">bytes</span>: bytes,
-            <span class="hljs-attr">packing</span>: packing(field.packing)
+            <span class="hljs-attr">fields</span>: packing(field.fields)
         }
         <span class="hljs-keyword">break</span>
     }
@@ -218,9 +242,7 @@ these calculations as needed.</p>
 
 <span class="hljs-built_in">module</span>.exports = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">field</span>) </span>{
     <span class="hljs-keyword">return</span> explode(field)
-}
-
-</pre></div></div>
+}</pre></div></div>
 
         </li>
 

@@ -152,6 +152,7 @@ img {
   border: 1px dotted #ccc;
 }
 .unit.description pre {
+  font-size: 1.25em;
   border: 1px dotted #ccc;
   padding: 0.5em 1em;
 }

@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+  <title>parser.js</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <meta name="viewport" content="width=device-width, target-densitydpi=160dpi, initial-scale=1.0; maximum-scale=1.0; user-scalable=0;">
+  <link rel="stylesheet" media="all" href="docco.css" />
+</head>
+<body>
+  <div id="container">
+    <div id="background"></div>
+
+      <ul id="jump_to">
+        <li>
+          <a class="large" href="javascript:void(0);">Jump To &hellip;</a>
+          <a class="small" href="javascript:void(0);">+</a>
+          <div id="jump_wrapper">
+          <div id="jump_page_wrapper">
+            <div id="jump_page">
+
+
+                <a class="source" href="explode.js.html">
+                  explode.js
+                </a>
+
+
+                <a class="source" href="function.js.html">
+                  function.js
+                </a>
+
+
+                <a class="source" href="index.js.html">
+                  index.js
+                </a>
+
+
+                <a class="source" href="join-sources.js.html">
+                  join-sources.js
+                </a>
+
+
+                <a class="source" href="language.js.html">
+                  language.js
+                </a>
+
+
+                <a class="source" href="offsets.js.html">
+                  offsets.js
+                </a>
+
+
+                <a class="source" href="pack.js.html">
+                  pack.js
+                </a>
+
+
+                <a class="source" href="parse.all.js.html">
+                  parse.all.js
+                </a>
+
+
+                <a class="source" href="parse.inc.js.html">
+                  parse.inc.js
+                </a>
+
+
+                <a class="source" href="parse.sketch.js.html">
+                  parse.sketch.js
+                </a>
+
+
+                <a class="source" href="parser.js.html">
+                  parser.js
+                </a>
+
+
+                <a class="source" href="pull.js.html">
+                  pull.js
+                </a>
+
+
+                <a class="source" href="puller.js.html">
+                  puller.js
+                </a>
+
+
+                <a class="source" href="push.js.html">
+                  push.js
+                </a>
+
+
+                <a class="source" href="qualify.js.html">
+                  qualify.js
+                </a>
+
+
+                <a class="source" href="require.js.html">
+                  require.js
+                </a>
+
+
+                <a class="source" href="serialize.all.js.html">
+                  serialize.all.js
+                </a>
+
+
+                <a class="source" href="serialize.inc.js.html">
+                  serialize.inc.js
+                </a>
+
+
+                <a class="source" href="stream.js.html">
+                  stream.js
+                </a>
+
+
+                <a class="source" href="tokenizer.js.html">
+                  tokenizer.js
+                </a>
+
+
+                <a class="source" href="transforms.js.html">
+                  transforms.js
+                </a>
+
+
+                <a class="source" href="transmogrifier.js.html">
+                  transmogrifier.js
+                </a>
+
+
+                <a class="source" href="unpack.js.html">
+                  unpack.js
+                </a>
+
+
+                <a class="source" href="variables.js.html">
+                  variables.js
+                </a>
+
+
+                <a class="source" href="writer.js.html">
+                  writer.js
+                </a>
+
+            </div>
+          </div>
+        </li>
+      </ul>
+
+    <ul class="sections">
+
+          <li id="title">
+              <div class="annotation">
+                  <h1>parser.js</h1>
+              </div>
+          </li>
+
+
+
+        <li id="section-1">
+            <div class="annotation">
+
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-1">&#182;</a>
+              </div>
+
+            </div>
+
+            <div class="content"><div class='highlight'><pre><span class="hljs-keyword">var</span> acorn = <span class="hljs-built_in">require</span>(<span class="hljs-string">'acorn'</span>)
+<span class="hljs-keyword">var</span> assert = <span class="hljs-built_in">require</span>(<span class="hljs-string">'assert'</span>)
+<span class="hljs-keyword">var</span> escodegen = <span class="hljs-built_in">require</span>(<span class="hljs-string">'escodegen'</span>)
+
+<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">dump</span> (<span class="hljs-params">node</span>) </span>{
+    <span class="hljs-built_in">console</span>.log(<span class="hljs-built_in">require</span>(<span class="hljs-string">'util'</span>).inspect(node, { <span class="hljs-attr">depth</span>: <span class="hljs-literal">Infinity</span> }))
+}
+
+<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">visitPropertyParse</span> (<span class="hljs-params">node</span>) </span>{
+    assert(node.type == <span class="hljs-string">'FunctionExpression'</span>)
+    assert(node.params[<span class="hljs-number">0</span>].name == <span class="hljs-string">'object'</span>)
+    node.body.body.forEach(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">node</span>) </span>{
+        assert(node.type == <span class="hljs-string">'ExpressionStatement'</span>)
+        node = node.expression
+        assert(node.type == <span class="hljs-string">'CallExpression'</span>)
+        <span class="hljs-keyword">switch</span> (node.callee.name) {
+        <span class="hljs-keyword">case</span> <span class="hljs-string">'unsigned'</span>:
+            <span class="hljs-keyword">var</span> arg, name, value
+
+            arg = node.arguments[<span class="hljs-number">0</span>]
+            assert(arg.type == <span class="hljs-string">'MemberExpression'</span>)
+            assert(arg.object.name == <span class="hljs-string">'object'</span>)
+            assert(arg.property.type == <span class="hljs-string">'Identifier'</span>)
+            name = arg.property.name
+
+            value = node.arguments[<span class="hljs-number">1</span>].value
+            <span class="hljs-built_in">console</span>.log({
+                <span class="hljs-attr">name</span>: name,
+                <span class="hljs-attr">type</span>: <span class="hljs-string">'integer'</span>,
+                <span class="hljs-attr">endianness</span>: <span class="hljs-string">'b'</span>,
+                <span class="hljs-attr">bits</span>: value
+            })
+        }
+    })
+}
+
+<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">createConditions</span> (<span class="hljs-params">context, parameters, conditions, node</span>) </span>{
+    <span class="hljs-keyword">var</span> condition = {
+        <span class="hljs-attr">test</span>: escodegen.generate(node.test),
+        <span class="hljs-attr">fields</span>: []
+    }
+    conditions.push(condition)
+    visitPropertySerialize(context, parameters, node.consequent.body, condition.fields)
+    <span class="hljs-keyword">if</span> (node.alternate != <span class="hljs-literal">null</span>) {
+        <span class="hljs-keyword">if</span> (node.alternate.type == <span class="hljs-string">'IfStatement'</span>) {
+            createConditions(context, parameters, conditions, node.alternate)
+        } <span class="hljs-keyword">else</span> {
+            <span class="hljs-keyword">var</span> condition = {
+                <span class="hljs-attr">fields</span>: []
+            }
+            conditions.push(condition)
+            visitPropertySerialize(context, parameters, node.alternate.body, condition.fields)
+        }
+    }
+}</pre></div></div>
+
+        </li>
+
+
+        <li id="section-2">
+            <div class="annotation">
+
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-2">&#182;</a>
+              </div>
+              <p>TODO It is simple enought to look and ensure that <code>_</code> is not called inside a
+while loop, so that <code>_</code> is only called in the body of the function. It would
+be a lot of rewriting to get it to where you could include incrementalism
+anywhere, unrolling loops, switch statements, etc.</p>
+
+            </div>
+
+            <div class="content"><div class='highlight'><pre><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">visitPropertySerialize</span> (<span class="hljs-params">context, parameters, body, fields</span>) </span>{
+    body.forEach(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">node</span>) </span>{
+        <span class="hljs-keyword">if</span> (node.type == <span class="hljs-string">'IfStatement'</span>) {
+            <span class="hljs-keyword">var</span> conditional = {
+                <span class="hljs-attr">type</span>: <span class="hljs-string">'condition'</span>,
+                <span class="hljs-attr">conditions</span>: []
+            }
+            createConditions(context, parameters, conditional.conditions, node)
+            fields.push(conditional)
+        } <span class="hljs-keyword">else</span> {
+            assert(node.type == <span class="hljs-string">'ExpressionStatement'</span>)
+            node = node.expression
+            assert(node.type == <span class="hljs-string">'CallExpression'</span>)
+            <span class="hljs-built_in">console</span>.log(parameters)
+            assert(node.callee.name == parameters[<span class="hljs-number">0</span>], <span class="hljs-string">'unknown function call'</span>)
+
+            <span class="hljs-keyword">var</span> arg = node.arguments[<span class="hljs-number">0</span>]
+            <span class="hljs-keyword">if</span> (arg.type == <span class="hljs-string">'ObjectExpression'</span>) {
+                assert(arg.type == <span class="hljs-string">'ObjectExpression'</span>)
+                <span class="hljs-keyword">var</span> integer = {
+                    <span class="hljs-attr">type</span>: <span class="hljs-string">'integer'</span>,
+                    <span class="hljs-attr">fields</span>: []
+                }
+                arg.properties.forEach(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">property</span>) </span>{
+                    assert(property.type == <span class="hljs-string">'Property'</span>)
+                    integer.fields.push({
+                        <span class="hljs-attr">type</span>: <span class="hljs-string">'integer'</span>,
+                        <span class="hljs-attr">name</span>: property.key.name,
+                        <span class="hljs-attr">endianness</span>: <span class="hljs-string">'b'</span>,
+                        <span class="hljs-attr">bits</span>: property.value.value
+                    })
+                })
+                fields.push(integer)
+            } <span class="hljs-keyword">else</span> {
+                assert(arg.type == <span class="hljs-string">'Literal'</span>)
+                assert(<span class="hljs-keyword">typeof</span> arg.value == <span class="hljs-string">'string'</span>)
+                <span class="hljs-keyword">var</span> name = arg.value
+
+                <span class="hljs-keyword">var</span> arg = node.arguments[<span class="hljs-number">1</span>]
+                <span class="hljs-keyword">if</span> (arg.type == <span class="hljs-string">'FunctionExpression'</span>) {
+                    <span class="hljs-keyword">var</span> structure = {
+                        <span class="hljs-attr">name</span>: name,
+                        <span class="hljs-attr">type</span>: <span class="hljs-string">'structure'</span>,
+                        <span class="hljs-attr">fields</span>: []
+                    }
+                    visitPropertySerialize(name, parameters, arg.body.body, structure.fields)
+                    fields.push(structure)
+                } <span class="hljs-keyword">else</span> {
+                    <span class="hljs-keyword">var</span> value = arg.value
+
+                    fields.push({
+                        <span class="hljs-attr">name</span>: name,
+                        <span class="hljs-attr">type</span>: <span class="hljs-string">'integer'</span>,
+                        <span class="hljs-attr">endianness</span>: <span class="hljs-string">'b'</span>,
+                        <span class="hljs-attr">bits</span>: value
+                    })
+                }
+            }
+        }
+    })
+}
+
+<span class="hljs-keyword">var</span> required = {}
+
+<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">walk</span> (<span class="hljs-params">source</span>) </span>{
+    <span class="hljs-keyword">var</span> node = acorn.parse(source)
+    <span class="hljs-keyword">var</span> structures = { <span class="hljs-attr">parse</span>: [], <span class="hljs-attr">serialize</span>: [] }</pre></div></div>
+
+        </li>
+
+
+        <li id="section-3">
+            <div class="annotation">
+
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-3">&#182;</a>
+              </div>
+              <p>Dirty, dirty. Will change this to an object.</p>
+
+            </div>
+
+            <div class="content"><div class='highlight'><pre>
+    assert(node.type == <span class="hljs-string">'Program'</span>, <span class="hljs-string">'program expected'</span>)
+
+    node.body.forEach(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">node</span>) </span>{
+        <span class="hljs-built_in">console</span>.log(node)
+        <span class="hljs-keyword">if</span> (node.type == <span class="hljs-string">'VariableDeclaration'</span>) {
+            node.declarations.forEach(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">node</span>) </span>{
+                assert(node.init.type == <span class="hljs-string">'CallExpression'</span>)
+                assert(node.init.callee.name == <span class="hljs-string">'require'</span>)
+                assert(node.init.arguments[<span class="hljs-number">0</span>].type == <span class="hljs-string">'Literal'</span>)
+                required[node.id.name] = node.init.arguments[<span class="hljs-number">0</span>].value
+            })
+        } <span class="hljs-keyword">else</span> {
+            assert(node.type == <span class="hljs-string">'ExpressionStatement'</span>)
+            assert(node.expression.left.type == <span class="hljs-string">'MemberExpression'</span>)
+            assert(node.expression.left.object.name == <span class="hljs-string">'exports'</span>)
+            assert(node.expression.left.property.type == <span class="hljs-string">'Identifier'</span>)
+            <span class="hljs-keyword">var</span> name = node.expression.left.property.name
+
+            node = node.expression.right
+            assert(node.type == <span class="hljs-string">'CallExpression'</span>)
+            <span class="hljs-keyword">var</span> callee = node.callee.name
+            assert(required[callee] == <span class="hljs-string">'packet'</span>)
+            assert(node.arguments.length &gt; <span class="hljs-number">0</span>)
+            assert(node.arguments[<span class="hljs-number">0</span>].type == <span class="hljs-string">'FunctionExpression'</span>)
+            node = node.arguments[<span class="hljs-number">0</span>]
+            assert(node.params.length &gt;= <span class="hljs-number">2</span>, <span class="hljs-string">'at least two arguments'</span>)
+            <span class="hljs-keyword">var</span> parameters = node.params.map(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">node</span>) </span>{
+                <span class="hljs-keyword">return</span> node.name
+            })
+            <span class="hljs-keyword">var</span> body = node.body.body
+            <span class="hljs-keyword">var</span> structure = {
+                <span class="hljs-attr">type</span>: <span class="hljs-string">'structure'</span>,
+                <span class="hljs-attr">name</span>: name,
+                <span class="hljs-attr">fields</span>: []
+            }
+            structures.serialize.push(structure)
+            visitPropertySerialize(<span class="hljs-string">'object'</span>, parameters, body, structure.fields)
+            <span class="hljs-keyword">var</span> structure = {
+                <span class="hljs-attr">type</span>: <span class="hljs-string">'structure'</span>,
+                <span class="hljs-attr">name</span>: name,
+                <span class="hljs-attr">fields</span>: []
+            }
+            structures.parse.push(structure)
+            visitPropertySerialize(<span class="hljs-string">'object'</span>, parameters, body, structure.fields)
+        }
+    })
+
+    <span class="hljs-keyword">return</span> structures
+}
+
+exports.walk = walk</pre></div></div>
+
+        </li>
+
+    </ul>
+  </div>
+</body>
+</html>

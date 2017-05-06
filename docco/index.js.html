@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+  <title>index.js</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <meta name="viewport" content="width=device-width, target-densitydpi=160dpi, initial-scale=1.0; maximum-scale=1.0; user-scalable=0;">
+  <link rel="stylesheet" media="all" href="docco.css" />
+</head>
+<body>
+  <div id="container">
+    <div id="background"></div>
+
+      <ul id="jump_to">
+        <li>
+          <a class="large" href="javascript:void(0);">Jump To &hellip;</a>
+          <a class="small" href="javascript:void(0);">+</a>
+          <div id="jump_wrapper">
+          <div id="jump_page_wrapper">
+            <div id="jump_page">
+
+
+                <a class="source" href="explode.js.html">
+                  explode.js
+                </a>
+
+
+                <a class="source" href="function.js.html">
+                  function.js
+                </a>
+
+
+                <a class="source" href="index.js.html">
+                  index.js
+                </a>
+
+
+                <a class="source" href="join-sources.js.html">
+                  join-sources.js
+                </a>
+
+
+                <a class="source" href="language.js.html">
+                  language.js
+                </a>
+
+
+                <a class="source" href="offsets.js.html">
+                  offsets.js
+                </a>
+
+
+                <a class="source" href="pack.js.html">
+                  pack.js
+                </a>
+
+
+                <a class="source" href="parse.all.js.html">
+                  parse.all.js
+                </a>
+
+
+                <a class="source" href="parse.inc.js.html">
+                  parse.inc.js
+                </a>
+
+
+                <a class="source" href="parse.sketch.js.html">
+                  parse.sketch.js
+                </a>
+
+
+                <a class="source" href="parser.js.html">
+                  parser.js
+                </a>
+
+
+                <a class="source" href="pull.js.html">
+                  pull.js
+                </a>
+
+
+                <a class="source" href="puller.js.html">
+                  puller.js
+                </a>
+
+
+                <a class="source" href="push.js.html">
+                  push.js
+                </a>
+
+
+                <a class="source" href="qualify.js.html">
+                  qualify.js
+                </a>
+
+
+                <a class="source" href="require.js.html">
+                  require.js
+                </a>
+
+
+                <a class="source" href="serialize.all.js.html">
+                  serialize.all.js
+                </a>
+
+
+                <a class="source" href="serialize.inc.js.html">
+                  serialize.inc.js
+                </a>
+
+
+                <a class="source" href="stream.js.html">
+                  stream.js
+                </a>
+
+
+                <a class="source" href="tokenizer.js.html">
+                  tokenizer.js
+                </a>
+
+
+                <a class="source" href="transforms.js.html">
+                  transforms.js
+                </a>
+
+
+                <a class="source" href="transmogrifier.js.html">
+                  transmogrifier.js
+                </a>
+
+
+                <a class="source" href="unpack.js.html">
+                  unpack.js
+                </a>
+
+
+                <a class="source" href="variables.js.html">
+                  variables.js
+                </a>
+
+
+                <a class="source" href="writer.js.html">
+                  writer.js
+                </a>
+
+            </div>
+          </div>
+        </li>
+      </ul>
+
+    <ul class="sections">
+
+          <li id="title">
+              <div class="annotation">
+                  <h1>index.js</h1>
+              </div>
+          </li>
+
+
+
+        <li id="section-1">
+            <div class="annotation">
+
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-1">&#182;</a>
+              </div>
+
+            </div>
+
+            <div class="content"><div class='highlight'><pre><span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> <span class="hljs-built_in">Error</span>
+<span class="hljs-keyword">var</span> composers = {
+    <span class="hljs-attr">composeSerializer</span>: <span class="hljs-built_in">require</span>(<span class="hljs-string">'./composers/serializers/bff'</span>),
+    <span class="hljs-attr">composeParser</span>: <span class="hljs-built_in">require</span>(<span class="hljs-string">'./composers/parsers/bff'</span>),
+    <span class="hljs-attr">composeSizeOf</span>: <span class="hljs-built_in">require</span>(<span class="hljs-string">'./composers/sizeof'</span>)
+}
+
+<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">padify</span> (<span class="hljs-params">pattern</span>) </span>{
+    <span class="hljs-keyword">var</span> padded = []
+    pattern.forEach(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">field</span>) </span>{
+        <span class="hljs-keyword">if</span> (field.padding) {
+            padded.push({
+                <span class="hljs-attr">endianess</span>: <span class="hljs-string">'padding'</span>,
+                <span class="hljs-attr">padding</span>: field.padding,
+                <span class="hljs-attr">name</span>: field.name,
+                <span class="hljs-attr">bytes</span>: field.bytes,
+                <span class="hljs-attr">repeat</span>: field.repeat
+            })
+        }
+        padded.push(field)
+    })
+    <span class="hljs-keyword">return</span> padded
+}
+
+<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">rangify</span> (<span class="hljs-params">pattern</span>) </span>{
+    pattern = padify(pattern)
+
+    pattern.forEach(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">field, index</span>) </span>{
+        field.index = index
+    })
+
+    <span class="hljs-keyword">var</span> ranges = [{ <span class="hljs-attr">size</span>: <span class="hljs-number">0</span>, <span class="hljs-attr">fixed</span>: <span class="hljs-literal">true</span>, <span class="hljs-attr">pattern</span>: [] }]
+
+    pattern.forEach(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">field, index</span>) </span>{
+        ranges[ranges.length - <span class="hljs-number">1</span>].size += field.bytes * field.repeat
+        ranges[ranges.length - <span class="hljs-number">1</span>].pattern.push(field)
+        <span class="hljs-keyword">if</span> (field.lengthEncoding) {
+            ranges[ranges.length - <span class="hljs-number">1</span>].name = pattern[index + <span class="hljs-number">1</span>].name
+            ranges.push({
+                <span class="hljs-attr">lengthEncoded</span>: <span class="hljs-literal">true</span>,
+                <span class="hljs-attr">size</span>: <span class="hljs-number">0</span>,
+                <span class="hljs-attr">fixed</span>: <span class="hljs-literal">false</span>,
+                <span class="hljs-attr">pattern</span>: []
+            })
+        }
+    })
+
+    <span class="hljs-keyword">return</span> ranges
+}
+
+<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">Packetizer</span> (<span class="hljs-params">options</span>) </span>{
+    <span class="hljs-keyword">this</span>._options = options
+}
+
+<span class="hljs-keyword">var</span> fs = <span class="hljs-built_in">require</span>(<span class="hljs-string">'fs'</span>), path = <span class="hljs-built_in">require</span>(<span class="hljs-string">'path'</span>), namify = <span class="hljs-built_in">require</span>(<span class="hljs-string">'./t/name'</span>)
+
+Packetizer.prototype._load = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">prefix, pattern</span>) </span>{
+    <span class="hljs-keyword">var</span> pattern = parse(pattern)
+    <span class="hljs-keyword">var</span> name = namify(prefix, pattern)
+    <span class="hljs-keyword">return</span> <span class="hljs-built_in">require</span>(path.join(__dirname, <span class="hljs-string">'t'</span>, <span class="hljs-string">'generated'</span>, name + <span class="hljs-string">'.js'</span>))
+}
+
+Packetizer.prototype.createParser = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">pattern</span>) </span>{
+    <span class="hljs-keyword">var</span> _pattern = parse(pattern)
+    <span class="hljs-keyword">var</span> ranges = rangify(_pattern)
+    <span class="hljs-keyword">var</span> prefix = [ <span class="hljs-string">'parse.bff'</span> ]
+
+    <span class="hljs-keyword">var</span> parser = composers.composeParser(ranges)
+
+    <span class="hljs-keyword">return</span> <span class="hljs-keyword">this</span>._options.precompiler(prefix.join(<span class="hljs-string">'.'</span>), _pattern, [ <span class="hljs-string">'object'</span>, <span class="hljs-string">'callback'</span> ], parser)
+}
+
+
+Packetizer.prototype.createSerializer = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">pattern</span>) </span>{
+    <span class="hljs-keyword">var</span> _pattern = parse(pattern)
+    <span class="hljs-keyword">var</span> ranges = rangify(_pattern)
+    <span class="hljs-keyword">var</span> prefix = [ <span class="hljs-string">'serialize.bff'</span> ]
+
+    <span class="hljs-keyword">var</span> serializer = composers.composeSerializer(ranges)
+
+    <span class="hljs-keyword">return</span> <span class="hljs-keyword">this</span>._options.precompiler(prefix.join(<span class="hljs-string">'.'</span>), _pattern, [ <span class="hljs-string">'object'</span>, <span class="hljs-string">'callback'</span> ], serializer)
+}
+
+Packetizer.prototype.createSizeOf = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">pattern</span>) </span>{
+    <span class="hljs-keyword">var</span> pattern = parse(pattern)
+    <span class="hljs-keyword">var</span> ranges = rangify(pattern)
+    <span class="hljs-keyword">var</span> prefix = [ <span class="hljs-string">'sizeOf'</span> ]
+
+    <span class="hljs-keyword">var</span> sizeOf = composers.composeSizeOf(ranges)
+
+    <span class="hljs-keyword">return</span> <span class="hljs-keyword">this</span>._options.precompiler(prefix.join(<span class="hljs-string">'.'</span>), pattern, [ <span class="hljs-string">'object'</span> ], sizeOf)
+}
+
+<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">createPacketizer</span> (<span class="hljs-params">options</span>) </span>{
+    <span class="hljs-keyword">return</span> <span class="hljs-keyword">new</span> Packetizer(options || {})
+}
+
+exports.createPacketizer = createPacketizer</pre></div></div>
+
+        </li>
+
+    </ul>
+  </div>
+</body>
+</html>
