@@ -1,4 +1,4 @@
-require('proof')(1, prove)
+require('proof')(2, prove)
 
 function prove (assert) {
     var minimal = require('../language/source/minimal.packet.js')
@@ -15,4 +15,9 @@ function prove (assert) {
     serializer.write(buffer, 0, buffer.length)
 
     assert(toJSON(buffer), [ 0xaa, 0xaa ], 'serialize')
+
+    var parser = new Parser(minimal.object)
+    parser.parse(buffer, 0, buffer.length)
+
+    assert(parser.object, { value: 0xaaaa }, 'parse')
 }
