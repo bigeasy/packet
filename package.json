@@ -46,12 +46,15 @@
     {
                             "acorn":                        "5.0.3",
                             "escodegen":                    "1.8.1",
-                            "programmatic":                 "0.0.x"
+                            "programmatic":                 "0.0.x",
+                            "interrupt":                    "5.0.x",
+                            "rescue":                       "3.0.x"
     },
     "devDependencies":
     {
                             "proof":                        "3.0.x"
     },
+    "main":                 "packet.js",
     "scripts":
     {
                             "test": "proof platform win32 && proof test */*/*.t.js || t/test"
