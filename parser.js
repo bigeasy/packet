@@ -122,7 +122,7 @@ function visitPropertySerialize (context, parameters, body, fields) {
 
 var required = {}
 
-function walk (source) {
+function walk (source, packageName) {
     var node = acorn.parse(source)
     var structures = { parse: [], serialize: [] }
 
@@ -149,7 +149,7 @@ function walk (source) {
             node = node.expression.right
             assert(node.type == 'CallExpression')
             var callee = node.callee.name
-            assert(required[callee] == 'packet')
+            assert(required[callee] == packageName)
             assert(node.arguments.length > 0)
             assert(node.arguments[0].type == 'FunctionExpression')
             node = node.arguments[0]
