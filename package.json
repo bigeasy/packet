@@ -45,10 +45,12 @@
     "dependencies":
     {
                             "acorn":                        "5.0.3",
+                            "cadence":                      "1.0.x",
                             "escodegen":                    "1.8.1",
-                            "programmatic":                 "0.0.x",
                             "interrupt":                    "5.0.x",
-                            "rescue":                       "3.0.x"
+                            "programmatic":                 "0.0.x",
+                            "rescue":                       "3.0.x",
+                            "staccato":                     "3.0.1"
     },
     "devDependencies":
     {
