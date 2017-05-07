@@ -1,6 +1,6 @@
-require('proof')(2, prove)
+require('proof')(2, require('cadence')(prove))
 
-function prove (assert) {
+function prove (async, assert) {
     var minimal = require('../language/source/minimal.packet.js')
     var Parser = require('../../parser.sketch')
     var Serializer = require('../../serializer.sketch')
@@ -20,4 +20,16 @@ function prove (assert) {
     parser.parse(buffer, 0, buffer.length)
 
     assert(parser.object, { value: 0xaaaa }, 'parse')
+
+    var stream = require('stream')
+    var Puller = require('../../puller')
+    var through = new stream.PassThrough
+    var puller = new Puller(through)
+
+    async(function () {
+        puller.parse(minimal.object, async())
+        through.write(buffer)
+    }, function (object) {
+        assert(object, { value: 0xaaaa }, 'puller parse')
+    })
 }
