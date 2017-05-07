@@ -1,4 +1,4 @@
-require('proof')(2, require('cadence')(prove))
+require('proof')(3, require('cadence')(prove))
 
 function prove (async, assert) {
     var minimal = require('../language/source/minimal.packet.js')
