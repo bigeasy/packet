@@ -124,6 +124,10 @@ var required = {}
 
 function walk (source, packageName) {
     var node = acorn.parse(source)
+    astWalk(node, packageName)
+}
+
+function astWalk (node, packageName) {
     var structures = { parse: [], serialize: [] }
 
     // Dirty, dirty. Will change this to an object.
@@ -179,3 +183,4 @@ function walk (source, packageName) {
 }
 
 exports.walk = walk
+exports.astWalk = astWalk
