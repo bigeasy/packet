@@ -124,7 +124,7 @@ var required = {}
 
 function walk (source, packageName) {
     var node = acorn.parse(source)
-    astWalk(node, packageName)
+    return astWalk(node, packageName)
 }
 
 function astWalk (node, packageName) {

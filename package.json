@@ -49,6 +49,7 @@
                             "escodegen":                    "1.8.1",
                             "interrupt":                    "5.0.x",
                             "programmatic":                 "0.0.x",
+                            "recast":                       "0.12.3",
                             "rescue":                       "3.0.x",
                             "staccato":                     "3.0.1"
     },
