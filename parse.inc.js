@@ -179,7 +179,7 @@ Generator.prototype.lengthEncoded = function (packet, depth) {
         ', integer.source, '                                                \n\
         __blank__                                                           \n\
             this.stack[this.stack.length - 1].index = 0                     \n\
-        ', this.field(packet.element), '                                    \n\
+        ', this.field(packet.element, depth, true).source, '                \n\
             __blank__                                                       \n\
             frame = this.stack[this.stack.length - 2]                       \n\
             frame.object.' + packet.name + '.push(this.stack.pop().object)  \n\
@@ -196,9 +196,12 @@ Generator.prototype.lengthEncoded = function (packet, depth) {
     }
 }
 
-Generator.prototype.field = function (packet, depth, caseless) {
+Generator.prototype.field = function (packet, depth, arrayed) {
     switch (packet.type) {
     case 'structure':
+        var assignment = arrayed ? ''
+            : 'this.stack[this.stack.length - 2].object.' + packet.name +
+                    ' = this.stack[this.stack.length - 1].object'
         var push = $('                                                      \n\
             case ' + (this.step++) + ':                                     \n\
                 __blank__                                                   \n\
@@ -207,8 +210,7 @@ Generator.prototype.field = function (packet, depth, caseless) {
                         ', this.construct(packet, 0), '                     \n\
                     }                                                       \n\
                 })                                                          \n\
-                this.stack[this.stack.length - 2].object.' + packet.name +
-                    ' = this.stack[this.stack.length - 1].object            \n\
+                ', assignment ,'                                            \n\
                 this.step = ' + this.step + '                               \n\
                 __blank__                                                   \n\
         ')
@@ -228,7 +230,7 @@ Generator.prototype.field = function (packet, depth, caseless) {
     default:
         var object = 'object'
         if (packet.type === 'integer')  {
-            return this.integer(packet, packet.fields ? object : object + '.' + packet.name, caseless)
+            return this.integer(packet, packet.fields ? object : object + '.' + packet.name)
         }
     }
 }
