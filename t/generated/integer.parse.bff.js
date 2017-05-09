@@ -8,6 +8,7 @@ module.exports = function (parsers) {
     }
 
     parsers.bff.object.prototype.parse = function (buffer, start, end) {
+        this.start = start
 
         var object
 
@@ -17,14 +18,7 @@ module.exports = function (parsers) {
 
         if (end - start < 2) {
             var parser = new parsers.inc.object
-            parser.step = 1
-            parser.stack = [{
-                object: object
-            }, {
-                object: object
-            }]
-            parser.object = object
-            return { start: start, parser: parser, object: null }
+            return parser.parse(buffer, this.start, end)
         }
 
         object.integer =

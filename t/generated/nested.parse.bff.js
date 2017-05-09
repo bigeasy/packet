@@ -8,6 +8,7 @@ module.exports = function (parsers) {
     }
 
     parsers.bff.object.prototype.parse = function (buffer, start, end) {
+        this.start = start
 
         var i
         var length
@@ -20,14 +21,7 @@ module.exports = function (parsers) {
 
         if (end - start < 2) {
             var parser = new parsers.inc.object
-            parser.step = 1
-            parser.stack = [{
-                object: object
-            }, {
-                object: object
-            }]
-            parser.object = object
-            return { start: start, parser: parser, object: null }
+            return parser.parse(buffer, this.start, end)
         }
 
         length =
@@ -42,16 +36,7 @@ module.exports = function (parsers) {
 
             if (end - start < 4) {
                 var parser = new parsers.inc.object
-                parser.step = 3
-                parser.stack = [{
-                    object: object
-                }, {
-                    length: length,
-                    index: i,
-                    object: object
-                }]
-                parser.object = object
-                return { start: start, parser: parser, object: null }
+                return parser.parse(buffer, this.start, end)
             }
 
             object1.key =

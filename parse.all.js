@@ -92,39 +92,10 @@ Generator.prototype.lengthEncoded = function (variables, packet, depth) {
 }
 
 Generator.prototype.checkpoint = function (variables, packet, depth, arrayed) {
-    var arrayed = arrayed ? $('                                             \n\
-        length: length,                                                     \n\
-        index: i,                                                           \n\
-    ') : ''
-    console.log('>', depth)
-    var separator = '',
-        object = 'object',
-        stack = 'parser.stack = [{\n\
-            object: object\n\
-        }, {'
-        for (var i = -1; i < 0; i++) {
-            stack = $('                                                     \n\
-                ', stack, '                                                 \n\
-                ', separator, '                                             \n\
-                __reference__                                               \n\
-                    ', arrayed, '                                           \n\
-                    object: ' + object + '                                  \n\
-            ')
-            separator = '}, {'
-            object = 'object' + (i + 2)
-        }
-        stack = $('                                                         \n\
-            __reference__                                                   \n\
-            ', stack, '                                                     \n\
-            }]                                                              \n\
-        ')
     return $('                                                              \n\
         if (end - start < ' + packet.length + ') {                          \n\
             var parser = new parsers.inc.' + this.current.name + '          \n\
-            parser.step = ' + (this.step + 1) + '                                 \n\
-            ', stack , '                                                    \n\
-            parser.object = object                                          \n\
-            return { start: start, parser: parser, object: null }           \n\
+            return parser.parse(buffer, this.start, end)                    \n\
         }                                                                   \n\
     ')
 }
@@ -210,6 +181,8 @@ Generator.prototype.parser = function (packet, bff) {
         }                                                                   \n\
     ') : ''
 
+    var start = bff ? 'this.start = start' : ''
+
     // Parser defintion body.
     return $('                                                              \n\
         ' + object + ' = function () {                                      \n\
@@ -217,6 +190,7 @@ Generator.prototype.parser = function (packet, bff) {
         ', inc, '                                                           \n\
         __blank__                                                           \n\
         ' + object + '.prototype.parse = function (' + signature + ') {     \n\
+            ', start ,'                                                     \n\
             __blank__                                                       \n\
             ', String(variables), '                                         \n\
             __blank__                                                       \n\
