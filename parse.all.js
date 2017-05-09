@@ -9,6 +9,19 @@ function Generator () {
     this.step = 0
 }
 
+Generator.prototype.buffer = function (variables, packet, depth) {
+    var assignee = qualify('object', depth) + '.' + packet.name
+    packet = explode(packet)
+    variables.hoist('index')
+    variables.hoist('terminator')
+    return $('                                                                  \n\
+        var terminator = ' + JSON.stringify(packet.terminator) + '              \n\
+        var index = buffer.indexOf(new Buffer(terminator), start)               \n\
+        ' + assignee + ' = buffer.toString(' + JSON.stringify(packet.tranform) + ', start, index)\n\
+        start = index + terminator.length                                       \n\
+    ')
+}
+
 Generator.prototype.integer = function (field, assignee, depth) {
     field = explode(field)
     var read = [], bite = field.bite, stop = field.stop
@@ -140,6 +153,8 @@ Generator.prototype.field = function (variables, packet, depth, arrayed) {
         ')
     case 'lengthEncoded':
         return this.lengthEncoded(variables, packet, depth)
+    case 'buffer':
+        return this.buffer(variables, packet, depth)
     default:
         if (packet.fields != null) {
             variables.hoist('value')
