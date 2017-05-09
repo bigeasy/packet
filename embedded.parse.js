@@ -73,4 +73,49 @@ module.exports = function (parsers) {
 
         return { start: start, object: object, parser: null }
     }
+
+    parsers.all.device = function () {
+    }
+
+    parsers.all.device.prototype.parse = function (buffer, start) {
+
+        var i
+        var index
+        var length
+        var object
+        var object1
+        var terminator
+
+        object = {
+            attribute: new Array
+        }
+
+        length =
+            buffer[start++] * 0x1000000 +
+            buffer[start++] * 0x10000 +
+            buffer[start++] * 0x100 +
+            buffer[start++]
+
+        for (i = 0; i < length; i++) {
+            object1 = {
+                attributeId: null,
+                value: null
+            }
+
+            object1.attributeId =
+                buffer[start++] * 0x1000000 +
+                buffer[start++] * 0x10000 +
+                buffer[start++] * 0x100 +
+                buffer[start++]
+
+            var terminator = [0]
+            var index = buffer.indexOf(new Buffer(terminator), start)
+            object1.value = buffer.toString(undefined, start, index)
+            start = index + terminator.length
+
+            object.attribute.push(object1)
+        }
+
+        return { start: start, object: object, parser: null }
+    }
 }

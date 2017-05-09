@@ -12,3 +12,10 @@ exports.descriptor = packet(function (packet, object) {
     packet('productType', 32)
     packet('productNumber', 32)
 })
+
+exports.device = packet(function (packet, object) {
+    packet('attribute', 32, [function () {
+        packet('attributeId', 32)
+        packet('value', [8], [0], 'utf8')
+    }])
+})

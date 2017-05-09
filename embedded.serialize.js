@@ -66,4 +66,46 @@ module.exports = function (serializers) {
 
         return { start: start, serializer: null }
     }
+
+    serializers.all.device = function (object) {
+        this.object = object
+    }
+
+    serializers.all.device.prototype.serialize = function (buffer, start) {
+
+        var object = this.object
+
+        var array
+        var i
+        var length
+        var object1
+        var value
+
+        array = object.attribute
+        length = array.length
+
+        buffer[start++] = length >>> 24 & 0xff
+        buffer[start++] = length >>> 16 & 0xff
+        buffer[start++] = length >>> 8 & 0xff
+        buffer[start++] = length & 0xff
+
+        for (i = 0; i < length; i++) {
+            object1 = array[i]
+            buffer[start++] = object1.attributeId >>> 24 & 0xff
+            buffer[start++] = object1.attributeId >>> 16 & 0xff
+            buffer[start++] = object1.attributeId >>> 8 & 0xff
+            buffer[start++] = object1.attributeId & 0xff
+
+            value = new Buffer(object1.value, "utf8")
+            for (var i = 0, I = value.length; i < I; i++) {
+                buffer[start++] = value[i]
+            }
+            value = [0]
+            for (var i = 0, I = value.length; i < I; i++) {
+                buffer[start++] = value[i]
+            }
+        }
+
+        return { start: start, serializer: null }
+    }
 }
