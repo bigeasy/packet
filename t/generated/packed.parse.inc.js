@@ -2,7 +2,7 @@ module.exports = function (parsers) {
     parsers.inc.object = function () {
         this.step = 0
         this.stack = [{
-            object: null
+            object: { object: null }
         }]
     }
 
@@ -21,7 +21,7 @@ module.exports = function (parsers) {
                     third: null
                 }
             })
-            this.stack[this.stack.length - 2].object = this.stack[this.stack.length - 1].object
+            this.stack[this.stack.length - 2].object.object = this.stack[this.stack.length - 1].object
             this.step = 1
 
         case 1:
@@ -54,7 +54,11 @@ module.exports = function (parsers) {
 
         case 3:
 
-            return { start: start, object: this.stack[0].object, parser: null }
+            return {
+                start: start,
+                object: this.stack[0].object.object,
+                parser: null
+            }
 
         }
     }

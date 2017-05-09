@@ -207,19 +207,20 @@ Generator.prototype.field = function (packet, depth, caseless) {
                         ', this.construct(packet, 0), '                     \n\
                     }                                                       \n\
                 })                                                          \n\
-                this.stack[this.stack.length - 2].' + packet.name +
+                this.stack[this.stack.length - 2].object.' + packet.name +
                     ' = this.stack[this.stack.length - 1].object            \n\
                 this.step = ' + this.step + '                               \n\
                 __blank__                                                   \n\
         ')
         var source =  joinSources(packet.fields.map(function (packet) {
-            var source = this.field(packet, 0).source
-            return source
+            return this.field(packet, 0).source
         }.bind(this)))
-        return $('                                                                  \n\
-            ', push, '                                                              \n\
-            ', source, '                                                            \n\
-        ')
+        return {
+            source: $('                                                     \n\
+                ', push, '                                                  \n\
+                ', source, '                                                \n\
+            ')
+        }
     case 'condition':
         return this.condition(packet)
     case 'lengthEncoded':
@@ -233,13 +234,17 @@ Generator.prototype.field = function (packet, depth, caseless) {
 }
 
 Generator.prototype.parser = function (packet) {
-    var source = this.field(packet, 0)
+    var source = this.field(packet, 0).source
     var dispatch = $('                                                      \n\
         switch (this.step) {                                                \n\
         ', source, '                                                        \n\
         case ' + this.step + ':                                             \n\
             __blank__                                                       \n\
-            return { start: start, object: this.stack[0].object, parser: null }      \n\
+            return {                                                        \n\
+                start: start,                                               \n\
+                object: this.stack[0].object.object,                        \n\
+                parser: null                                                \n\
+            }                                                               \n\
             __blank__                                                       \n\
         }                                                                   \n\
     ')
@@ -258,7 +263,7 @@ Generator.prototype.parser = function (packet) {
         ' + object + ' = function () {                                      \n\
             this.step = 0                                                   \n\
             this.stack = [{                                                 \n\
-                object: null                                                \n\
+                object: { object: null }                                    \n\
             }]                                                              \n\
             ' + when(this.cached, 'this.cache = null') + '                  \n\
         }                                                                   \n\
