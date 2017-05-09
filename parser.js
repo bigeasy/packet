@@ -136,12 +136,37 @@ function visitPropertySerialize (context, parameters, body, fields) {
                 } else {
                     var value = arg.value
 
-                    fields.push({
-                        name: name,
-                        type: 'integer',
-                        endianness: 'b',
-                        bits: value
-                    })
+                    var peek = node.arguments[2]
+                    if (peek != null) {
+                        assert(peek.type == 'ArrayExpression')
+                        assert(peek.elements.length == 1)
+                        var structure = {
+                            name: name,
+                            type: 'structure',
+                            fields: []
+                        }
+                        console.log('>>>', peek.elements[0].body)
+                        visitPropertySerialize(name, parameters, peek.elements[0].body.body, structure.fields)
+                        delete structure.name
+                        fields.push({
+                            name: name,
+                            type: 'lengthEncoded',
+                            length: {
+                                name: name,
+                                type: 'integer',
+                                endianness: 'b',
+                                bits: value
+                            },
+                            element: structure
+                        })
+                    } else {
+                        fields.push({
+                            name: name,
+                            type: 'integer',
+                            endianness: 'b',
+                            bits: value
+                        })
+                    }
                 }
             }
         }
