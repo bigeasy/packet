@@ -1,0 +1,122 @@
+{
+  "parse": [
+    {
+      "type": "structure",
+      "name": "frame",
+      "fields": [
+        {
+          "name": "packet",
+          "type": "integer",
+          "endianness": "b",
+          "bits": 32
+        },
+        {
+          "name": "length",
+          "type": "integer",
+          "endianness": "b",
+          "bits": 32
+        }
+      ]
+    },
+    {
+      "type": "structure",
+      "name": "descriptor",
+      "fields": [
+        {
+          "name": "uuid",
+          "type": "buffer",
+          "terminator": [
+            0
+          ],
+          "transform": "utf8"
+        },
+        {
+          "name": "name",
+          "type": "buffer",
+          "terminator": [
+            0
+          ],
+          "transform": "utf8"
+        },
+        {
+          "name": "manufacturerNumber",
+          "type": "integer",
+          "endianness": "b",
+          "bits": 32
+        },
+        {
+          "name": "productType",
+          "type": "integer",
+          "endianness": "b",
+          "bits": 32
+        },
+        {
+          "name": "productNumber",
+          "type": "integer",
+          "endianness": "b",
+          "bits": 32
+        }
+      ]
+    }
+  ],
+  "serialize": [
+    {
+      "type": "structure",
+      "name": "frame",
+      "fields": [
+        {
+          "name": "packet",
+          "type": "integer",
+          "endianness": "b",
+          "bits": 32
+        },
+        {
+          "name": "length",
+          "type": "integer",
+          "endianness": "b",
+          "bits": 32
+        }
+      ]
+    },
+    {
+      "type": "structure",
+      "name": "descriptor",
+      "fields": [
+        {
+          "name": "uuid",
+          "type": "buffer",
+          "terminator": [
+            0
+          ],
+          "transform": "utf8"
+        },
+        {
+          "name": "name",
+          "type": "buffer",
+          "terminator": [
+            0
+          ],
+          "transform": "utf8"
+        },
+        {
+          "name": "manufacturerNumber",
+          "type": "integer",
+          "endianness": "b",
+          "bits": 32
+        },
+        {
+          "name": "productType",
+          "type": "integer",
+          "endianness": "b",
+          "bits": 32
+        },
+        {
+          "name": "productNumber",
+          "type": "integer",
+          "endianness": "b",
+          "bits": 32
+        }
+      ]
+    }
+  ]
+}
