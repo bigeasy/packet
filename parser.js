@@ -71,7 +71,6 @@ function visitPropertySerialize (context, parameters, body, fields) {
             assert(node.type == 'ExpressionStatement')
             node = node.expression
             assert(node.type == 'CallExpression')
-            console.log(parameters)
             assert(node.callee.name == parameters[0], 'unknown function call')
 
             var arg = node.arguments[0]
@@ -105,6 +104,35 @@ function visitPropertySerialize (context, parameters, body, fields) {
                     }
                     visitPropertySerialize(name, parameters, arg.body.body, structure.fields)
                     fields.push(structure)
+                } else if (arg.type == 'ArrayExpression') {
+                    if (
+                        arg.elements.length == 1 &&
+                        arg.elements[0].type == 'Literal' &&
+                        arg.elements[0].value == 8
+                    ) {
+                        var arg = node.arguments[2]
+                        assert(arg.type == 'ArrayExpression')
+                        var terminator = []
+                        for (var i = 0, I = arg.elements.length; i < I; i++) {
+                            assert(arg.elements[i].type == 'Literal')
+                            assert(typeof arg.elements[i].value == 'number')
+                            assert(arg.elements[i].value < 256)
+                            terminator.push(arg.elements[i].value)
+                        }
+                        var arg = node.arguments[3]
+                        var transform = null
+                        if (arg != null) {
+                            assert(arg.type == 'Literal')
+                            assert(typeof arg.value == 'string')
+                            transform = arg.value
+                        }
+                        fields.push({
+                            name: name,
+                            type: 'buffer',
+                            terminator: terminator.slice(),
+                            transform: transform
+                        })
+                    }
                 } else {
                     var value = arg.value
 
