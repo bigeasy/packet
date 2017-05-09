@@ -9,6 +9,23 @@ function Generator () {
     this.step = 0
 }
 
+Generator.prototype.buffer = function (variables, field, object) {
+    variables.hoist('value')
+    if (field.transform) {
+        console.log(object)
+        return $(' \n\
+            value = new Buffer(' + object + '.' + field.name + ', ' + JSON.stringify(field.transform) + ')\n\
+            for (var i = 0, I = value.length; i < I; i++) {\n\
+                buffer[start++] = value[i] \n\
+            }\n\
+            value = ' + JSON.stringify(field.terminator) + '\n\
+            for (var i = 0, I = value.length; i < I; i++) {\n\
+                buffer[start++] = value[i] \n\
+            }\n\
+        ')
+    }
+}
+
 Generator.prototype.integer = function (variables, field, object) {
     this.step += 2
     if (field.fields) {
@@ -146,6 +163,9 @@ Generator.prototype.field = function (variables, packet, depth, arrayed) {
         break
     case 'lengthEncoded':
         return this.lengthEncoded(variables, packet, depth)
+    case 'buffer':
+        var object = qualify('object', depth)
+        return this.buffer(variables, packet, object)
     default:
         var object = qualify('object', depth)
         if (packet.type === 'integer')  {
