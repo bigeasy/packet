@@ -27,7 +27,7 @@ typedef struct pkt_parser_s {
 const char* pkt_parse_zero_string (pkt_parser_t*);
 uint32_t pkt_parse_uint32 (pkt_parser_t*);
 
-void pkt_parser_initialize(pkt_parser_t*, const char*, size_t);
+void pkt_parser_initialize(pkt_parser_t*, const char*);
 
 void pkt_serializer_initialize (pkt_serializer_t*);
 void pkt_serializer_allocate (pkt_serializer_t*);

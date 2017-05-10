@@ -77,10 +77,9 @@ uint32_t pkt_parse_uint32 (pkt_parser_t* parser)
     return value;
 }
 
-void pkt_parser_initialize (pkt_parser_t* parser, const char* buffer, size_t size)
+void pkt_parser_initialize (pkt_parser_t* parser, const char* buffer)
 {
     parser->buffer = buffer;
-    parser->size = size;
 }
 
 void pkt_serialize_uint32 (pkt_serializer_t* serializer, uint32_t value)
