@@ -1,4 +1,4 @@
-var packet = require('./packet')
+var packet = require('../packet')
 
 exports.frame = packet(function (packet, object) {
     packet('packet', 32)

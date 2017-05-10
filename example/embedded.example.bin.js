@@ -1,17 +1,17 @@
 var source = require('./embedded.json')
-var compiler = require('./require')
+var compiler = require('../require')
 var Blocker = require('blocker')
 var stream = require('stream')
 var cadence = require('cadence')
 var abend = require('abend')
 
 var parsers = { all: {} }
-var composer = require('./parse.all')
-composer(compiler('parsers', './embedded.parsers.js'), source.parse)(parsers)
+var composer = require('../parse.all')
+require('./embedded.parsers')(parsers)
 
 var serializers = { all: {} }
-var composer = require('./serialize.all')
-composer(compiler('serializers', './embedded.serializers.js'), source.serialize)(serializers)
+var composer = require('../serialize.all')
+require('./embedded.serializers')(serializers)
 
 var device = {
     attributes: [{
