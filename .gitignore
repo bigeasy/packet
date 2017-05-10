@@ -3,3 +3,5 @@
 /.proof.out
 /.wiseguy
 /docs
+/c/*.o
+/c/example
