@@ -87,7 +87,7 @@ module.exports = function (parsers) {
         var terminator
 
         object = {
-            attribute: new Array
+            attributes: new Array
         }
 
         length =
@@ -113,7 +113,7 @@ module.exports = function (parsers) {
             object1.value = buffer.toString(undefined, start, index)
             start = index + terminator.length
 
-            object.attribute.push(object1)
+            object.attributes.push(object1)
         }
 
         return { start: start, object: object, parser: null }

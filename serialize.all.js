@@ -9,18 +9,24 @@ function Generator () {
     this.step = 0
 }
 
-Generator.prototype.buffer = function (variables, field, object) {
-    variables.hoist('value')
+Generator.prototype.buffer = function (variables, field, depth) {
+    var object = qualify('object', depth)
+    var value = qualify('object', depth)
+    var index = qualify('i', depth)
+    var end = qualify('I', depth)
+    variables.hoist(value)
+    variables.hoist(index)
+    variables.hoist(end)
+    variables.hoist(object)
     if (field.transform) {
-        console.log(object)
         return $(' \n\
-            value = new Buffer(' + object + '.' + field.name + ', ' + JSON.stringify(field.transform) + ')\n\
-            for (var i = 0, I = value.length; i < I; i++) {\n\
-                buffer[start++] = value[i] \n\
+            ' + value + ' = new Buffer(' + object + '.' + field.name + ', ' + JSON.stringify(field.transform) + ')\n\
+            for (var ' + index + ' = 0, ' + end + ' = ' + value + '.length; ' + index + ' < ' + end + '; ' + index + '++) {\n\
+                buffer[start++] = ' + value + '[' + index + '] \n\
             }\n\
-            value = ' + JSON.stringify(field.terminator) + '\n\
-            for (var i = 0, I = value.length; i < I; i++) {\n\
-                buffer[start++] = value[i] \n\
+            ' + value + ' = ' + JSON.stringify(field.terminator) + '\n\
+            for (var ' + index + ' = 0, ' + end + ' = ' + value + '.length; ' + index + ' < ' + end + '; ' + index + '++) {\n\
+                buffer[start++] = ' + value + '[' + index + '] \n\
             }\n\
         ')
     }
@@ -164,8 +170,7 @@ Generator.prototype.field = function (variables, packet, depth, arrayed) {
     case 'lengthEncoded':
         return this.lengthEncoded(variables, packet, depth)
     case 'buffer':
-        var object = qualify('object', depth)
-        return this.buffer(variables, packet, object)
+        return this.buffer(variables, packet, depth)
     default:
         var object = qualify('object', depth)
         if (packet.type === 'integer')  {

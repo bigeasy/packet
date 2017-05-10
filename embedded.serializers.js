@@ -29,24 +29,26 @@ module.exports = function (serializers) {
 
         var object = this.object
 
-        var value
+        var I
+        var i
+        var object
 
-        value = new Buffer(object.uuid, "utf8")
-        for (var i = 0, I = value.length; i < I; i++) {
-            buffer[start++] = value[i]
+        object = new Buffer(object.uuid, "utf8")
+        for (var i = 0, I = object.length; i < I; i++) {
+            buffer[start++] = object[i]
         }
-        value = [0]
-        for (var i = 0, I = value.length; i < I; i++) {
-            buffer[start++] = value[i]
+        object = [0]
+        for (var i = 0, I = object.length; i < I; i++) {
+            buffer[start++] = object[i]
         }
 
-        value = new Buffer(object.name, "utf8")
-        for (var i = 0, I = value.length; i < I; i++) {
-            buffer[start++] = value[i]
+        object = new Buffer(object.name, "utf8")
+        for (var i = 0, I = object.length; i < I; i++) {
+            buffer[start++] = object[i]
         }
-        value = [0]
-        for (var i = 0, I = value.length; i < I; i++) {
-            buffer[start++] = value[i]
+        object = [0]
+        for (var i = 0, I = object.length; i < I; i++) {
+            buffer[start++] = object[i]
         }
 
         buffer[start++] = object.manufacturerNumber >>> 24 & 0xff
@@ -75,13 +77,14 @@ module.exports = function (serializers) {
 
         var object = this.object
 
+        var I1
         var array
         var i
+        var i1
         var length
         var object1
-        var value
 
-        array = object.attribute
+        array = object.attributes
         length = array.length
 
         buffer[start++] = length >>> 24 & 0xff
@@ -96,13 +99,13 @@ module.exports = function (serializers) {
             buffer[start++] = object1.attributeId >>> 8 & 0xff
             buffer[start++] = object1.attributeId & 0xff
 
-            value = new Buffer(object1.value, "utf8")
-            for (var i = 0, I = value.length; i < I; i++) {
-                buffer[start++] = value[i]
+            object1 = new Buffer(object1.value, "utf8")
+            for (var i1 = 0, I1 = object1.length; i1 < I1; i1++) {
+                buffer[start++] = object1[i1]
             }
-            value = [0]
-            for (var i = 0, I = value.length; i < I; i++) {
-                buffer[start++] = value[i]
+            object1 = [0]
+            for (var i1 = 0, I1 = object1.length; i1 < I1; i1++) {
+                buffer[start++] = object1[i1]
             }
         }
 

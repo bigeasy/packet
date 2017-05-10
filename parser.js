@@ -145,7 +145,6 @@ function visitPropertySerialize (context, parameters, body, fields) {
                             type: 'structure',
                             fields: []
                         }
-                        console.log('>>>', peek.elements[0].body)
                         visitPropertySerialize(name, parameters, peek.elements[0].body.body, structure.fields)
                         delete structure.name
                         fields.push({
@@ -188,7 +187,6 @@ function astWalk (node, packageName) {
     assert(node.type == 'Program', 'program expected')
 
     node.body.forEach(function (node) {
-        console.log(node)
         if (node.type == 'VariableDeclaration') {
             node.declarations.forEach(function (node) {
                 assert(node.init.type == 'CallExpression')
