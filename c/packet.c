@@ -1,6 +1,5 @@
 #include "packet.h"
 #include <strings.h>
-#include <stdio.h>
 
 void pkt_sizeof_uint32 (pkt_serializer_t* serializer, uint32_t value)
 {
@@ -74,8 +73,6 @@ uint32_t pkt_parse_uint32 (pkt_parser_t* parser)
             (parser->buffer[1] & 0xff) * 0x10000 +
             (parser->buffer[2] & 0xff) * 0x100 +
             (parser->buffer[3]& 0xff) ;
-    printf("%x\n", value);
-    printf("%02x\n", parser->buffer[0] & 0xff);
     parser->buffer += 4;
     return value;
 }
