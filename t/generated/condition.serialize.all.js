@@ -8,8 +8,10 @@ module.exports = function (serializers) {
         var object = this.object
 
 
+
         buffer[start++] = object.flag >>> 8 & 0xff
         buffer[start++] = object.flag & 0xff
+
 
         if (object.flag == 16) {
             buffer[start++] = object.number >>> 8 & 0xff

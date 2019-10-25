@@ -2,7 +2,7 @@ var Variables = require('./variables')
 var explode = require('./explode')
 var qualify = require('./qualify')
 var joinSources = require('./join-sources')
-var $ = require('programmatic')
+var $= require('programmatic')
 var unpackAll = require('./unpack')
 
 function Generator () {
@@ -14,12 +14,12 @@ Generator.prototype.buffer = function (variables, packet, depth) {
     packet = explode(packet)
     variables.hoist('index')
     variables.hoist('terminator')
-    return $('                                                                  \n\
-        var terminator = ' + JSON.stringify(packet.terminator) + '              \n\
-        var index = buffer.indexOf(new Buffer(terminator), start)               \n\
-        ' + assignee + ' = buffer.toString(' + JSON.stringify(packet.tranform) + ', start, index)\n\
-        start = index + terminator.length                                       \n\
-    ')
+    return $(`
+        var terminator = ${JSON.stringify(packet.terminator)}
+        var index = buffer.indexOf(new Buffer(terminator), start)
+        ${assignee} = buffer.toString(${JSON.stringify(packet.tranform)}, start, index)
+        start = index + terminator.length
+    `)
 }
 
 Generator.prototype.integer = function (field, assignee, depth) {
@@ -32,20 +32,21 @@ Generator.prototype.integer = function (field, assignee, depth) {
         }
         bite += field.direction
     }
-    read = read.reverse().join(' + \n')
+    read = read.reverse().join(' +\n')
     if (field.bytes == 1) {
         return assignee + ' = ' + read
     }
     this.step += 2
-    var parsed = $('                                                        \n\
-        ' + assignee + ' =                                                  \n\
-            ', read, '')
+    var parsed = $(`
+        ${assignee} =
+            `, read, `
+    `)
     if (field.fields) {
-        return $('                                                          \n\
-            ', parsed, '                                                    \n\
-            __blank__                                                       \n\
-            ', unpackAll(qualify('object', depth), field), '                \n\
-        ')
+        return $(`
+            `, parsed, `
+
+            `, unpackAll(qualify('object', depth), field), `
+        `)
     }
     return parsed
 }
@@ -76,11 +77,11 @@ Generator.prototype._constructor = function (variables, packet, depth) {
     if (fields.length == 0) {
         return object + ' = {}'
     }
-    return $('                                                              \n\
-        ' + object + ' = {                                                  \n\
-            ', fields.join(',\n'), '                                        \n\
-        }                                                                   \n\
-    ')
+    return $(`
+        ${object} = {
+            `, fields.join(',\n'), `
+        }
+    `)
 }
 
 Generator.prototype.lengthEncoded = function (variables, packet, depth) {
@@ -93,24 +94,24 @@ Generator.prototype.lengthEncoded = function (variables, packet, depth) {
     variables.hoist(i)
     variables.hoist(length)
     var looped = this.field(variables, packet.element, depth, true)
-    return $('                                                              \n\
-        ', this.integer(packet.length, length, depth), '                    \n\
-        __blank__                                                           \n\
-        for (' + i + ' = 0; ' + i + ' < ' + length + '; ' + i + '++) {      \n\
-            ', looped, '                                                    \n\
-            __blank__                                                       \n\
-            ' + object + '.' + packet.name + '.push(' + subObject + ')      \n\
-        }                                                                   \n\
-    ')
+    return $(`
+        `, this.integer(packet.length, length, depth), `
+
+        for (${i} = 0; ${i} < ${length}; ${i}++) {
+            `, looped, `
+
+            ${object}.${packet.name}.push(${subObject})
+        }
+    `)
 }
 
 Generator.prototype.checkpoint = function (variables, packet, depth, arrayed) {
-    return $('                                                              \n\
-        if (end - start < ' + packet.length + ') {                          \n\
-            var parser = new parsers.inc.' + this.current.name + '          \n\
-            return parser.parse(buffer, this.start, end)                    \n\
-        }                                                                   \n\
-    ')
+    return $(`
+        if (end - start < ${packet.length}) {
+            var parser = new parsers.inc.${this.current.name}
+            return parser.parse(buffer, this.start, end)
+        }
+    `)
 }
 
 Generator.prototype._condition = function (variables, packet, depth, arrayed) {
@@ -120,17 +121,17 @@ Generator.prototype._condition = function (variables, packet, depth, arrayed) {
             return this.field(variables, explode(packet), depth, arrayed)
         }.bind(this)))
         test = condition.test == null  ? '} else {' : test + ' (' + condition.test + ') {'
-        branches = $('                                                      \n\
-            ', branches, '                                                  \n\
-            ' + test + '                                                    \n\
-                ', block, '                                                 \n\
-        ')
+        branches = $(`
+            `, branches, `
+            ${test}
+                `, block, `
+        `)
         test = '} else if'
     }, this)
-    return $('                                                              \n\
-        ', branches, '                                                      \n\
-        }                                                                   \n\
-    ')
+    return $(`
+        `, branches, `
+        }
+    `)
 }
 
 Generator.prototype.field = function (variables, packet, depth, arrayed) {
@@ -144,13 +145,13 @@ Generator.prototype.field = function (variables, packet, depth, arrayed) {
         if (depth != -1 && packet.name) {
             constructor = qualify('object', depth) + '.' + packet.name + ' = ' + constructor
         }
-        return $('                                                          \n\
-            ', constructor, '                                               \n\
-            __blank__                                                       \n\
-            ', joinSources(packet.fields.map(function (packet) {
+        return $(`
+            `, constructor, `
+
+            `, joinSources(packet.fields.map(function (packet) {
                 return this.field(variables, packet, depth + 1, arrayed)
-            }.bind(this))), '                                               \n\
-        ')
+            }.bind(this))), `
+        `)
     case 'lengthEncoded':
         return this.lengthEncoded(variables, packet, depth)
     case 'buffer':
@@ -163,10 +164,9 @@ Generator.prototype.field = function (variables, packet, depth, arrayed) {
             var assignee = qualify('object', depth) + '.' + packet.name
         }
         if (packet.type === 'integer')  {
-            return $('                                                      \n\
-                ', this.integer(packet, assignee, depth), '                 \n\
-                __reference__                                               \n\
-            ')
+            return $(`
+                `, this.integer(packet, assignee, depth), `
+            `)
         }
         break
     }
@@ -188,32 +188,33 @@ Generator.prototype.parser = function (packet, bff) {
 
     var object = 'parsers.' + (bff ? 'bff' : 'all') + '.' + packet.name
 
-    var inc = bff ? $('                                                     \n\
-        __blank__                                                           \n\
-        parsers.bff._inc = function (buffer, start, end, stack) {           \n\
-            var parser = new parsers.inc.' + packet.name + '                \n\
-            return 1                                                        \n\
-        }                                                                   \n\
-    ') : ''
+    var inc = bff ? $(`
+
+        parsers.bff._inc = function (buffer, start, end, stack) {
+            var parser = new parsers.inc.${packet.name}
+            return 1
+        }
+    `) : ''
 
     var start = bff ? 'this.start = start' : ''
 
     // Parser defintion body.
-    return $('                                                              \n\
-        ' + object + ' = function () {                                      \n\
-        }                                                                   \n\
-        ', inc, '                                                           \n\
-        __blank__                                                           \n\
-        ' + object + '.prototype.parse = function (' + signature + ') {     \n\
-            ', start ,'                                                     \n\
-            __blank__                                                       \n\
-            ', String(variables), '                                         \n\
-            __blank__                                                       \n\
-            ', source, '                                                    \n\
-            __blank__                                                       \n\
-            return { start: start, object: object, parser: null }           \n\
-        }                                                                   \n\
-    ')
+    return $(`
+        ${object} = function () {
+        }
+
+        `, inc, `
+
+        ${object}.prototype.parse = function (${signature}) {
+            `, start ,`
+
+            `, String(variables), `
+
+            `, source, `
+
+            return { start: start, object: object, parser: null }
+        }
+    `)
 }
 
 function bff (packet) {

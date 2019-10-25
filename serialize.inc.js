@@ -18,23 +18,23 @@ Generator.prototype.integer = function (field, property) {
     }
     bites = bites.join('\n')
     var direction = field.little ? '++' : '--'
-    var source = $('                                                        \n\
-        case ' + (this.step++) + ':                                         \n\
-            __blank__                                                       \n\
-            this.step = ' + this.step + '                                   \n\
-            this.bite = ' + field.bite + '                                  \n\
-            __blank__                                                       \n\
-        case ' + (this.step++) + ':                                         \n\
-            __blank__                                                       \n\
-            while (this.bite != ' + field.stop + ') {                       \n\
-                if (start == end) {                                         \n\
-                    return { start: start, serializer: this }               \n\
-                }                                                           \n\
-                buffer[start++] = ' + property + ' >>> this.bite * 8 & 0xff \n\
-                this.bite', direction, '                                    \n\
-            }                                                               \n\
-            __blank__                                                       \n\
-    ')
+    var source = $(`
+        case ${this.step++}:
+
+            this.step = ${this.step}
+            this.bite = ${field.bite}
+
+        case ${this.step++}:
+
+            while (this.bite != ${field.stop}) {
+                if (start == end) {
+                    return { start: start, serializer: this }
+                }
+                buffer[start++] = ${property} >>> this.bite * 8 & 0xff
+                this.bite${direction}
+            }
+
+    `)
     return { step: step, source: source }
 }
 
@@ -59,29 +59,28 @@ Generator.prototype.lengthEncoded = function (packet) {
     this.forever = true
     var step = this.step
     var again = this.step + 2
-    source = $('                                                            \n\
-        __reference__                                                       \n\
-        ', this.integer(packet.length, 'frame.object.' + packet.name + '.length').source, '\n\
-            __blank__                                                       \n\
-            this.step = ' + again + '                                       \n\
-        __blank__                                                           \n\
-        case ' + (this.step++) + ':                                         \n\
-            __blank__                                                       \n\
-            this.stack.push(frame = {                                       \n\
-                object: frame.object.' + packet.name + '[frame.index],      \n\
-                index: 0                                                    \n\
-            })                                                              \n\
-            this.step = ' + this.step + '                                   \n\
-            __blank__                                                       \n\
-        ', this.field(packet.element), '                                    \n\
-            __blank__                                                       \n\
-            this.stack.pop()                                                \n\
-            frame = this.stack[this.stack.length - 1]                       \n\
-            if (++frame.index != frame.object.' + packet.name + '.length) { \n\
-                this.step = ' + again + '                                   \n\
-                continue                                                    \n\
-            }                                                               \n\
-    ')
+    source = $(`
+        `, this.integer(packet.length, 'frame.object.' + packet.name + '.length').source, `
+
+            this.step = ${again}
+
+        case ${this.step++}:
+
+            this.stack.push(frame = {
+                object: frame.object.${packet.name}[frame.index],
+                index: 0
+            })
+            this.step = ${this.step}
+
+        `, this.field(packet.element), `
+
+            this.stack.pop()
+            frame = this.stack[this.stack.length - 1]
+            if (++frame.index != frame.object.${packet.name}.length) {
+                this.step = ${again}
+                continue
+            }
+    `)
     return { step: step, source: source }
 }
 
@@ -90,11 +89,10 @@ Generator.prototype.field = function (packet) {
     case 'structure':
         return joinSources(packet.fields.map(function (packet) {
             var source = this.field(packet).source
-            return $('                                                      \n\
-                __reference__                                               \n\
-                ', source, '                                                \n\
-                    this.step = ' + this.step + '                           \n\
-            ')
+            return $(`
+                `, source, `
+                    this.step = ${this.step}
+            `)
         }.bind(this)))
     case 'lengthEncoded':
         return this.lengthEncoded(packet)
@@ -108,44 +106,44 @@ Generator.prototype.field = function (packet) {
 
 Generator.prototype.serializer = function (packet) {
     var source = this.field(packet)
-    var dispatch = $('                                                      \n\
-        switch (this.step) {                                                \n\
-        ', source, '                                                        \n\
-            __blank__                                                       \n\
-        case ' + this.step + ':                                             \n\
-            __blank__                                                       \n\
-            break ' + (this.forever ? 'SERIALIZE' : '') + '                 \n\
-            __blank__                                                       \n\
-        }                                                                   \n\
-    ')
+    var dispatch = $(`
+        switch (this.step) {
+        `, source, `
+
+        case ${this.step}:
+
+            break${this.forever ? ' SERIALIZE' : ''}
+
+        }
+    `)
     if (this.forever) {
-        dispatch = $('                                                      \n\
-            SERIALIZE: for (;;) {                                           \n\
-                ', dispatch, '                                              \n\
-            }                                                               \n\
-        ')
+        dispatch = $(`
+            SERIALIZE: for (;;) {
+                `, dispatch, `
+            }
+        `)
     }
     var object = 'serializers.inc.' + packet.name
-    return $('                                                              \n\
-        ' + object + ' = function (object) {                                \n\
-            this.step = 0                                                   \n\
-            this.bite = 0                                                   \n\
-            this.stop = 0                                                   \n\
-            this.stack = [{                                                 \n\
-                object: object,                                             \n\
-                index: 0,                                                   \n\
-                length: 0                                                   \n\
-            }]                                                              \n\
-        }                                                                   \n\
-        __blank__                                                           \n\
-        ' + object + '.prototype.serialize = function (buffer, start, end) {\n\
-            var frame = this.stack[this.stack.length - 1]                   \n\
-            __blank__                                                       \n\
-            ', dispatch, '                                                  \n\
-            __blank__                                                       \n\
-            return { start: start, serializer: null }                       \n\
-        }                                                                   \n\
-    ')
+    return $(`
+        ${object} = function (object) {
+            this.step = 0
+            this.bite = 0
+            this.stop = 0
+            this.stack = [{
+                object: object,
+                index: 0,
+                length: 0
+            }]
+        }
+
+        ${object}.prototype.serialize = function (buffer, start, end) {
+            var frame = this.stack[this.stack.length - 1]
+
+            `, dispatch, `
+
+            return { start: start, serializer: null }
+        }
+    `)
 }
 
 module.exports = function (compiler, definition) {

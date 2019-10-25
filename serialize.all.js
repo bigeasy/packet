@@ -19,16 +19,16 @@ Generator.prototype.buffer = function (variables, field, depth) {
     variables.hoist(end)
     variables.hoist(object)
     if (field.transform) {
-        return $(' \n\
-            ' + value + ' = new Buffer(' + object + '.' + field.name + ', ' + JSON.stringify(field.transform) + ')\n\
-            for (var ' + index + ' = 0, ' + end + ' = ' + value + '.length; ' + index + ' < ' + end + '; ' + index + '++) {\n\
-                buffer[start++] = ' + value + '[' + index + '] \n\
-            }\n\
-            ' + value + ' = ' + JSON.stringify(field.terminator) + '\n\
-            for (var ' + index + ' = 0, ' + end + ' = ' + value + '.length; ' + index + ' < ' + end + '; ' + index + '++) {\n\
-                buffer[start++] = ' + value + '[' + index + '] \n\
-            }\n\
-        ')
+        return $(`
+            ${value} = new Buffer(${object}.${field.name}, ${JSON.stringify(field.transform)})
+            for (var ${index} = 0, ${end} = ${value}.length; ${index} < ${end}; ${index}++) {
+                buffer[start++] = ${value}[${index}]
+            }
+            ${value} = ${JSON.stringify(field.terminator)}
+            for (var ${index} = 0, ${end} = ${value}.length; ${index} < ${end}; ${index}++) {
+                buffer[start++] = ${value}[${index}]
+            }
+        `)
     }
 }
 
@@ -45,12 +45,12 @@ Generator.prototype.integer = function (variables, field, object) {
             packing.push(' (' + pack(field.bits, offset, packed.bits, variable) + ')')
             offset += packed.bits
         }
-        return $('                                                          \n\
-            value =                                                         \n\
-                ', packing.join(' |\n'), '                                  \n\
-            __blank__                                                       \n\
-            ', this.word(field, 'value'), '                                 \n\
-        ')
+        return $(`
+            value =
+                `, packing.join(' |\n'), `
+
+            `, this.word(field, 'value'), `
+        `)
     } else {
         return this.word(field, object + '.' + field.name)
     }
@@ -82,49 +82,46 @@ Generator.prototype.lengthEncoded = function (variables, packet, depth) {
     var looped = joinSources(packet.element.fields.map(function (packet) {
         return this.field(variables, packet, depth + 1, true)
     }.bind(this)))
-    source = $('                                                            \n\
-        ' + array + ' = ' + object + '.' + packet.name + '                  \n\
-        ' + length + ' = array.length                                       \n\
-        __blank__                                                           \n\
-        ', this.word(packet.length, length), '                              \n\
-        __blank__                                                           \n\
-        for (' + i + ' = 0; ' + i + ' < length; ' + i + '++) {              \n\
-            ' + subObject + ' = array[' + i + ']                            \n\
-            ', looped, '                                                    \n\
-        }                                                                   \n\
-    ')
+    source = $(`
+        ${array} = ${object}.${packet.name}
+        ${length} = array.length
+
+        `, this.word(packet.length, length), `
+
+        for (${i} = 0; ${i} < length; ${i}++) {
+            ${subObject} = array[${i}]
+            `, looped, `
+        }
+    `)
     return source
 }
 
 Generator.prototype.checkpoint = function (variables, packet, depth, arrayed) {
-    var arrayed = arrayed ? $('                                             \n\
-        length: length,                                                     \n\
-        index: i || 0,                                                      \n\
-    ') : ''
+    var arrayed = arrayed ? $(`
+        length: length,
+        index: i || 0,
+    `) : ''
     variables.hoist('serializer')
     var stack = 'serializer.stack = [{'
-        for (var i = -1; i < 0; i++) {
-            stack = $('                                                     \n\
-                __reference__                                               \n\
-                ', stack, '                                                 \n\
-                __reference__                                               \n\
-                    ', arrayed ,'                                           \n\
-                    object: object                                          \n\
-            ')
+    for (var i = -1; i < 0; i++) {
+        stack = $(`
+            `, stack, `
+                `, arrayed ,`
+                object: object
+        `)
+    }
+    stack = $(`
+        `, stack, `
+        }]
+    `)
+    return $(`
+        if (end - start < ${packet.length}) {
+            serializer = new serializers.inc.object
+            serializer.step = ${this.step}
+            `, stack, `
+            return { start: start, serializer: serializer }
         }
-        stack = $('                                                         \n\
-            __reference__                                                   \n\
-            ', stack, '                                                     \n\
-            }]                                                              \n\
-        ')
-    return $('                                                              \n\
-        if (end - start < ' + packet.length + ') {                          \n\
-            serializer = new serializers.inc.object                         \n\
-            serializer.step = ' + this.step + '                             \n\
-            ', stack, '                                                     \n\
-            return { start: start, serializer: serializer }                 \n\
-        }                                                                   \n\
-    ')
+    `)
 }
 
 Generator.prototype._condition = function (variables, packet, depth, arrayed) {
@@ -134,17 +131,17 @@ Generator.prototype._condition = function (variables, packet, depth, arrayed) {
             return this.field(variables, explode(packet), depth, arrayed)
         }.bind(this)))
         test = condition.test == null  ? '} else {' : test + ' (' + condition.test + ') {'
-        branches = $('                                                      \n\
-            ', branches, '                                                  \n\
-            ' + test + '                                                    \n\
-                ', block, '                                                 \n\
-        ')
+        branches = $(`
+            `, branches, `
+            ${test}
+                `, block, `
+        `)
         test = '} else if'
     }, this)
-    return $('                                                              \n\
-        ', branches, '                                                      \n\
-        }                                                                   \n\
-    ')
+    return $(`
+        `, branches, `
+        }
+    `)
 }
 
 Generator.prototype.field = function (variables, packet, depth, arrayed) {
@@ -161,11 +158,11 @@ Generator.prototype.field = function (variables, packet, depth, arrayed) {
         var source = joinSources(packet.fields.map(function (packet) {
             return this.field(variables, packet, depth + 1, false)
         }.bind(this)))
-        return $('                                                          \n\
-            ', assignment, '                                                \n\
-            __blank__                                                       \n\
-            ', source ,'                                                    \n\
-        ')
+        return $(`
+            `, assignment, `
+
+            `, source, `
+        `)
         break
     case 'lengthEncoded':
         return this.lengthEncoded(variables, packet, depth)
@@ -174,10 +171,9 @@ Generator.prototype.field = function (variables, packet, depth, arrayed) {
     default:
         var object = qualify('object', depth)
         if (packet.type === 'integer')  {
-            return $('                                                      \n\
-                ', this.integer(variables, packet, object), '               \n\
-                __reference__                                               \n\
-            ')
+            return $(`
+                `, this.integer(variables, packet, object), `
+            `)
         }
     }
 }
@@ -189,22 +185,22 @@ Generator.prototype.serializer = function (packet, bff) {
     }.bind(this)))
     var object = 'serializers.' + (bff ? 'bff' : 'all') + '.' + packet.name
     var signature = bff ? 'buffer, start, end' : 'buffer, start'
-    return $('                                                              \n\
-        ' + object + ' = function (object) {                                \n\
-            this.object = object                                            \n\
-        }                                                                   \n\
-        __blank__                                                           \n\
-        ' + object + '.prototype.serialize = function (' + signature + ') { \n\
-            __blank__                                                       \n\
-            var object = this.object                                        \n\
-            __blank__                                                       \n\
-            ', String(variables), '                                         \n\
-            __blank__                                                       \n\
-            ', source, '                                                    \n\
-            __blank__                                                       \n\
-            return { start: start, serializer: null }                       \n\
-        }                                                                   \n\
-    ')
+    return $(`
+        ${object} = function (object) {
+            this.object = object
+        }
+
+        ${object}.prototype.serialize = function (${signature}) {
+
+            var object = this.object
+
+            `, String(variables), `
+
+            `, source, `
+
+            return { start: start, serializer: null }
+        }
+    `)
 }
 
 function bff (packet, arrayed) {

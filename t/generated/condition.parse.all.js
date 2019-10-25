@@ -2,7 +2,10 @@ module.exports = function (parsers) {
     parsers.all.object = function () {
     }
 
+
+
     parsers.all.object.prototype.parse = function (buffer, start) {
+
 
         var object
 
@@ -13,6 +16,7 @@ module.exports = function (parsers) {
         object.flag =
             buffer[start++] * 0x100 +
             buffer[start++]
+
 
         if (object.flag == 16) {
             object.number =

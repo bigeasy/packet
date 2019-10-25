@@ -15,28 +15,28 @@ function prove (async, assert) {
 
     var exported = null
 
-    var source = $('                                                        \n\
-        (function () {                                                      \n\
-            var parsers = { all: {} }                                       \n\
-            require(\'../generated/integer.parse.all\')(parsers)            \n\
-            return parsers.all.object                                       \n\
-        })()                                                                \n\
-    ')
+    var source = $(`
+        (function () {
+            var parsers = { all: {} }
+            require(\'../generated/integer.parse.all\')(parsers)
+            return parsers.all.object
+        })()
+    `)
 
-    var _ast = recast.parse($([source]))
+    var _ast = recast.parse(source)
 
     composer(function (source) {
-        exported = $(['                                                     \n\
-        (function () {                                                      \n\
-            var parsers = { all: {} }                                       \n\
-            __blank__                                                       \n\
-            ', source, '                                                    \n\
-            __blank__                                                       \n\
-            return function () {                                            \n\
-                new parser.all.object()                                     \n\
-            }                                                               \n\
-        })()                                                                \n\
-        '])
+        exported = $(`
+        (function () {
+            var parsers = { all: {} }
+
+            `, source, `
+
+            return function () {
+                new parser.all.object()
+            }
+        })()
+        `)
     }, structures.parse)
     var exported = recast.print(_ast).code
 

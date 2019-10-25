@@ -4,9 +4,11 @@ module.exports = function (parsers) {
         this.stack = [{
             object: { object: null }
         }]
+
     }
 
     parsers.inc.object.prototype.parse = function (buffer, start, end) {
+
         var frame = this.stack[this.stack.length - 1]
 
         switch (this.step) {
@@ -22,6 +24,7 @@ module.exports = function (parsers) {
 
         case 1:
 
+
             this.stack.push({
                 value: 0,
                 bite: 3
@@ -36,6 +39,7 @@ module.exports = function (parsers) {
                 if (start == end) {
                     return { start: start, object: null, parser: this }
                 }
+
                 frame.value += Math.pow(256, frame.bite) * buffer[start++]
                 frame.bite--
             }

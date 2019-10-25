@@ -4,6 +4,7 @@ module.exports = function (parsers) {
         this.stack = [{
             object: { object: null }
         }]
+
     }
 
     parsers.inc.object.prototype.parse = function (buffer, start, end) {
@@ -25,6 +26,7 @@ module.exports = function (parsers) {
 
             case 1:
 
+
                 this.stack.push({
                     value: 0,
                     bite: 1
@@ -39,6 +41,7 @@ module.exports = function (parsers) {
                     if (start == end) {
                         return { start: start, object: null, parser: this }
                     }
+
                     frame.value += Math.pow(256, frame.bite) * buffer[start++]
                     frame.bite--
                 }
@@ -48,22 +51,25 @@ module.exports = function (parsers) {
                 this.stack[this.stack.length - 1].object.flag = frame.value
 
 
-                frame = this.stack[this.stack.length - 1]
-                object = this.stack[0].object
+            frame = this.stack[this.stack.length - 1]
+            object = this.stack[0].object
 
-                if (object.flag == 16) {
 
-                    this.step = 3
-                    continue
+            if (object.flag == 16) {
 
-                } else {
+                this.step = 3
+                continue
 
-                    this.step = 5
-                    continue
+            } else {
 
-                }
+                this.step = 5
+                continue
+
+            }
+
 
             case 3:
+
 
                 this.stack.push({
                     value: 0,
@@ -79,6 +85,7 @@ module.exports = function (parsers) {
                     if (start == end) {
                         return { start: start, object: null, parser: this }
                     }
+
                     frame.value += Math.pow(256, frame.bite) * buffer[start++]
                     frame.bite--
                 }
@@ -91,6 +98,7 @@ module.exports = function (parsers) {
                 continue
 
             case 5:
+
 
                 this.stack.push({
                     value: 0,
@@ -106,6 +114,7 @@ module.exports = function (parsers) {
                     if (start == end) {
                         return { start: start, object: null, parser: this }
                     }
+
                     frame.value += Math.pow(256, frame.bite) * buffer[start++]
                     frame.bite--
                 }

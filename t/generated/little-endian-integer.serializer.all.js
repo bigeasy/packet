@@ -8,6 +8,7 @@ module.exports = function (serializers) {
         var object = this.object
 
 
+
         buffer[start++] = object.integer & 0xff
         buffer[start++] = object.integer >>> 8 & 0xff
         buffer[start++] = object.integer >>> 16 & 0xff

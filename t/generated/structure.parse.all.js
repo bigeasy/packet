@@ -2,7 +2,10 @@ module.exports = function (parsers) {
     parsers.all.object = function () {
     }
 
+
+
     parsers.all.object.prototype.parse = function (buffer, start) {
+
 
         var object
         var object1

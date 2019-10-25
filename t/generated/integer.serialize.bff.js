@@ -13,6 +13,7 @@ module.exports = function (serializers) {
             serializer = new serializers.inc.object
             serializer.step = 0
             serializer.stack = [{
+
                 object: object
             }]
             return { start: start, serializer: serializer }

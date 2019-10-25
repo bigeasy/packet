@@ -10,8 +10,8 @@ module.exports = function (serializers) {
         var value
 
         value =
-            (object.flag << 15 & 0x8000) |
-            (object.number & 0x7fff)
+             (object.flag << 15 & 0x8000) |
+             (object.number & 0x7fff)
 
         buffer[start++] = value >>> 8 & 0xff
         buffer[start++] = value & 0xff

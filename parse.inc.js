@@ -32,44 +32,44 @@ Generator.prototype.integer = function (field, property, cached) {
     if (field.fields) {
         this.variables.hoist('object')
         this.variables.hoist('value')
-        assignment = $('                                                    \n\
-            value = frame.value                                             \n\
-            __blank__                                                       \n\
-            ', unpackAll('this.stack[this.stack.length - 1].' + property, field), '                                \n\
-        ')
+        assignment = $(`
+            value = frame.value
+
+            `, unpackAll('this.stack[this.stack.length - 1].' + property, field), `
+        `)
     } else {
-        assignment = $('                                                    \n\
-            this.stack[this.stack.length - 1].' + property + ' = frame.value\n\
-        ')
+        assignment = $(`
+            this.stack[this.stack.length - 1].${property} = frame.value
+        `)
     }
-    var source = $('                                                        \n\
-        case ' + (this.step++) + ':                                         \n\
-            __blank__                                                       \n\
-            ' + when(cached, 'this.cache = []') + '                         \n\
-            this.stack.push({                                               \n\
-                value: 0,                                                   \n\
-                bite: ' + field.bite + '                                    \n\
-            })                                                              \n\
-            this.step = ' + this.step + '                                   \n\
-            __blank__                                                       \n\
-        case ' + (this.step++) + ':                                         \n\
-            __blank__                                                       \n\
-            frame = this.stack[this.stack.length - 1]                       \n\
-            __blank__                                                       \n\
-            while (frame.bite != ' + stop + ') {                            \n\
-                if (start == end) {                                         \n\
-                    return { start: start, object: null, parser: this }     \n\
-                }                                                           \n\
-                ' + when(cached, 'this.cache.push(buffer[start])') + '      \n\
-                frame.value += Math.pow(256, frame.bite) * buffer[start++]  \n\
-                frame.bite', direction, '                                   \n\
-            }                                                               \n\
-            __blank__                                                       \n\
-            this.stack.pop()                                                \n\
-            __blank__                                                       \n\
-            ', assignment, '                                                \n\
-            __blank__                                                       \n\
-    ')
+    var source = $(`
+        case ${this.step++}:
+
+            ${when(cached, 'this.cache = []')}
+            this.stack.push({
+                value: 0,
+                bite: ${field.bite}
+            })
+            this.step = ${this.step}
+
+        case ${this.step++}:
+
+            frame = this.stack[this.stack.length - 1]
+
+            while (frame.bite != ${stop}) {
+                if (start == end) {
+                    return { start: start, object: null, parser: this }
+                }
+                ${when(cached, 'this.cache.push(buffer[start])')}
+                frame.value += Math.pow(256, frame.bite) * buffer[start++]
+                frame.bite${direction}
+            }
+
+            this.stack.pop()
+
+            `, assignment, `
+
+    `)
     return {
         step: step,
         source: source
@@ -127,42 +127,39 @@ Generator.prototype.condition = function (packet, depth) {
         choice.fields.forEach(function (packet) {
             var got = this.field(explode(packet))
             step = got.step
-            source = $('                                                    \n\
-                ', got.source, '                                            \n\
-            ')
+            source = $(`
+                `, got.source, `
+            `)
         }, this)
-        dispatch = $('                                                      \n\
-            __reference__                                                   \n\
-            ', dispatch, '                                                  \n\
-            ', choice.condition, '                                          \n\
-            __blank__                                                       \n\
-                this.step = ' + step + '                                    \n\
-                continue                                                    \n\
-                __blank__                                                   \n\
-        ')
+        dispatch = $(`
+            `, dispatch, `
+            `, choice.condition, `
+
+                this.step = ${step}
+                continue
+
+        `)
         sources.push(source)
     }, this)
     var steps = ''
     sources.forEach(function (source) {
-        steps = $('                                                         \n\
-            __reference__                                                   \n\
-            ', steps, '                                                     \n\
-            ', source, '                                                    \n\
-                this.step = ' + this.step + '                               \n\
-                continue                                                    \n\
-            __blank__                                                       \n\
-        ')
+        steps = $(`
+            `, steps, `
+            `, source, `
+                this.step = ${this.step}
+                continue
+
+        `)
     }, this)
-    var source = $('                                                        \n\
-        __reference__                                                       \n\
-            frame = this.stack[this.stack.length - 1]                       \n\
-            object = this.stack[0].object                                   \n\
-            __blank__                                                       \n\
-            ', dispatch, '                                                  \n\
-            }                                                               \n\
-        __blank__                                                           \n\
-        ', steps, '                                                         \n\
-    ')
+    var source = $(`
+            frame = this.stack[this.stack.length - 1]
+            object = this.stack[0].object
+
+            `, dispatch, `
+            }
+
+        `, steps, `
+    `)
     return {
         step: step,
         source: source
@@ -174,22 +171,21 @@ Generator.prototype.lengthEncoded = function (packet, depth) {
     this.forever = true
     var integer = this.integer(packet.length, 'length')
     var again = this.step
-    source = $('                                                            \n\
-        __reference__                                                       \n\
-        ', integer.source, '                                                \n\
-        __blank__                                                           \n\
-            this.stack[this.stack.length - 1].index = 0                     \n\
-        ', this.field(packet.element, depth, true).source, '                \n\
-            __blank__                                                       \n\
-            frame = this.stack[this.stack.length - 2]                       \n\
-            frame.object.' + packet.name + '.push(this.stack.pop().object)  \n\
-            if (++frame.index != frame.length) {                            \n\
-                this.step = ' + again + '                                   \n\
-                continue                                                    \n\
-            }                                                               \n\
-            this.step = ' + this.step + '                                   \n\
-            __blank__                                                       \n\
-    ')
+    source = $(`
+        `, integer.source, `
+
+            this.stack[this.stack.length - 1].index = 0
+        `, this.field(packet.element, depth, true).source, `
+
+            frame = this.stack[this.stack.length - 2]
+            frame.object.${packet.name}.push(this.stack.pop().object)
+            if (++frame.index != frame.length) {
+                this.step = ${again}
+                continue
+            }
+            this.step = ${this.step}
+
+    `)
     return {
         step: integer.step,
         source: source
@@ -202,26 +198,26 @@ Generator.prototype.field = function (packet, depth, arrayed) {
         var assignment = arrayed ? ''
             : 'this.stack[this.stack.length - 2].object.' + packet.name +
                     ' = this.stack[this.stack.length - 1].object'
-        var push = $('                                                      \n\
-            case ' + (this.step++) + ':                                     \n\
-                __blank__                                                   \n\
-                this.stack.push({                                           \n\
-                    object: {                                               \n\
-                        ', this.construct(packet, 0), '                     \n\
-                    }                                                       \n\
-                })                                                          \n\
-                ', assignment ,'                                            \n\
-                this.step = ' + this.step + '                               \n\
-                __blank__                                                   \n\
-        ')
+        var push = $(`
+            case ${this.step++}:
+
+                this.stack.push({
+                    object: {
+                        `, this.construct(packet, 0), `
+                    }
+                })
+                `, assignment, `
+                this.step = ${this.step}
+
+        `)
         var source =  joinSources(packet.fields.map(function (packet) {
             return this.field(packet, 0).source
         }.bind(this)))
         return {
-            source: $('                                                     \n\
-                ', push, '                                                  \n\
-                ', source, '                                                \n\
-            ')
+            source: $(`
+                `, push, `
+                `, source, `
+            `)
         }
     case 'condition':
         return this.condition(packet)
@@ -237,54 +233,54 @@ Generator.prototype.field = function (packet, depth, arrayed) {
 
 Generator.prototype.parser = function (packet) {
     var source = this.field(packet, 0).source
-    var dispatch = $('                                                      \n\
-        switch (this.step) {                                                \n\
-        ', source, '                                                        \n\
-        case ' + this.step + ':                                             \n\
-            __blank__                                                       \n\
-            return {                                                        \n\
-                start: start,                                               \n\
-                object: this.stack[0].object.object,                        \n\
-                parser: null                                                \n\
-            }                                                               \n\
-            __blank__                                                       \n\
-        }                                                                   \n\
-    ')
+    var dispatch = $(`
+        switch (this.step) {
+        `, source, `
+        case ${this.step}:
+
+            return {
+                start: start,
+                object: this.stack[0].object.object,
+                parser: null
+            }
+
+        }
+    `)
     if (this.forever) {
-        dispatch = $('                                                      \n\
-            for (;;) {                                                      \n\
-                __blank__                                                   \n\
-                ', dispatch, '                                              \n\
-                __blank__                                                   \n\
-                break                                                       \n\
-            }                                                               \n\
-        ')
+        dispatch = $(`
+            for (;;) {
+
+                `, dispatch, `
+
+                break
+            }
+        `)
     }
     var object = 'parsers.inc.' + packet.name
-    return $('                                                              \n\
-        ' + object + ' = function () {                                      \n\
-            this.step = 0                                                   \n\
-            this.stack = [{                                                 \n\
-                object: { object: null }                                    \n\
-            }]                                                              \n\
-            ' + when(this.cached, 'this.cache = null') + '                  \n\
-        }                                                                   \n\
-        __blank__                                                           \n\
-        ' + object + '.prototype.parse = function (buffer, start, end) {    \n\
-            ', String(this.variables), '                                    \n\
-            var frame = this.stack[this.stack.length - 1]                   \n\
-            __blank__                                                       \n\
-            ', dispatch, '                                                  \n\
-        }                                                                   \n\
-    ')
+    return $(`
+        ${object} = function () {
+            this.step = 0
+            this.stack = [{
+                object: { object: null }
+            }]
+            ${when(this.cached, 'this.cache = null')}
+        }
+
+        ${object}.prototype.parse = function (buffer, start, end) {
+            `, String(this.variables), `
+            var frame = this.stack[this.stack.length - 1]
+
+            `, dispatch, `
+        }
+    `)
 }
 
 module.exports = function (compiler, definition) {
     var source = joinSources(definition.map(function (packet) {
         return new Generator().parser(explode(packet))
     }))
-    source = $('                                                            \n\
-        ', source, '                                                        \n\
-    ')
+    source = $(`
+        `, source, `
+    `)
     return compiler(source)
 }

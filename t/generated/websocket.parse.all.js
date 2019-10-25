@@ -2,7 +2,10 @@ module.exports = function (parsers) {
     parsers.all.object = function () {
     }
 
+
+
     parsers.all.object.prototype.parse = function (buffer, start) {
+
 
         var object
         var object1
@@ -34,6 +37,7 @@ module.exports = function (parsers) {
         object1.mask = value >>> 7 & 0x1
         object1.length = value & 0x7f
 
+
         if (object.header.length == 127) {
             object.length =
                 buffer[start++] * 0x100 +
@@ -45,6 +49,7 @@ module.exports = function (parsers) {
                 buffer[start++] * 0x100 +
                 buffer[start++]
         }
+
 
         if (object.header.mask == 1) {
             object.mask =

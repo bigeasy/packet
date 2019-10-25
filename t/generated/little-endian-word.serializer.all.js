@@ -8,6 +8,7 @@ module.exports = function (serializers) {
         var object = this.object
 
 
+
         buffer[start++] = object.word & 0xff
         buffer[start++] = object.word >>> 8 & 0xff
 

@@ -2,6 +2,7 @@ module.exports = function (parsers) {
     parsers.bff.object = function () {
     }
 
+
     parsers.bff._inc = function (buffer, start, end, stack) {
         var parser = new parsers.inc.object
         return 1

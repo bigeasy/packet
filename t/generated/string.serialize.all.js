@@ -7,15 +7,17 @@ module.exports = function (serializers) {
 
         var object = this.object
 
-        var value
+        var I
+        var i
+        var object
 
-        value = new Buffer(object.string, "utf8")
-        for (var i = 0, I = value.length; i < I; i++) {
-            buffer[start++] = value[i]
+        object = new Buffer(object.string, "utf8")
+        for (var i = 0, I = object.length; i < I; i++) {
+            buffer[start++] = object[i]
         }
-        value = [0]
-        for (var i = 0, I = value.length; i < I; i++) {
-            buffer[start++] = value[i]
+        object = [0]
+        for (var i = 0, I = object.length; i < I; i++) {
+            buffer[start++] = object[i]
         }
 
         return { start: start, serializer: null }
