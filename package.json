@@ -40,7 +40,7 @@
     "repository":
     {
                             "type": "git",
-                            "url": "http://github.com/bigeasy/packet.git"
+                            "url": "bigeasy/packet"
     },
     "dependencies":
     {
