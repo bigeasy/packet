@@ -1,0 +1,35 @@
+name: Node CI
+
+on: [push]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [12.x]
+
+    steps:
+    - uses: actions/checkout@v1
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v1
+      with:
+        node-version: ${{ matrix.node-version }}
+    - name: npm install
+      run: npm install --no-package-lock
+    - name: npm ls
+      run: npm ls
+    - name: npm install nyc, prove, codecov
+      run:  npm install -g nyc prove codecov
+    - name: npm test
+      run: nyc npm test
+      env:
+        CI: true
+    - name: generate codecov report
+      run: nyc report --reporter=text-lcov > coverage.lcov
+    - name: ship coverage to codecov
+      run: codecov --branch=${GITHUB_REF##*/}
+      env:
+        CODECOV_TOKEN: ${{secrets.CODECOV_TOKEN}}
