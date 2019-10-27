@@ -1,4 +1,23 @@
-[![Build Status](https://travis-ci.org/bigeasy/packet.svg?branch=master)](https://travis-ci.org/bigeasy/packet) [![Coverage Status](https://coveralls.io/repos/bigeasy/packet/badge.svg?branch=master&service=github)](https://coveralls.io/github/bigeasy/packet?branch=master) [![Stories in Ready](https://badge.waffle.io/bigeasy/packet.png?label=ready&title=Ready)](https://waffle.io/bigeasy/packet)
+[![Actions Status](https://github.com/bigeasy/packet/workflows/Node%20CI/badge.svg)](https://github.com/bigeasy/packet/actions)
+[![codecov](https://codecov.io/gh/bigeasy/packet/branch/master/graph/badge.svg)](https://codecov.io/gh/bigeasy/packet)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+A comparator function builder.
+
+| What          | Where                                         |
+| --- | --- |
+| Discussion    | https://github.com/bigeasy/packet/issues/1    |
+| Documentation | https://bigeasy.github.io/packet              |
+| Source        | https://github.com/bigeasy/packet             |
+| Issues        | https://github.com/bigeasy/packet/issues      |
+| CI            | https://travis-ci.org/bigeasy/packet          |
+| Coverage:     | https://codecov.io/gh/bigeasy/packet          |
+| License:      | MIT                                           |
+
+
+```
+npm install packet
+```
 
 Incremental binary parsers and serializers for Node.js.
 
