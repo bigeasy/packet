@@ -44,12 +44,9 @@
     },
     "dependencies":
     {
-                            "acorn":                        "5.0.3",
                             "cadence":                      "1.0.x",
-                            "escodegen":                    "1.8.1",
                             "interrupt":                    "5.0.x",
                             "programmatic":                 "^2.0.0-alpha.0",
-                            "recast":                       "0.12.3",
                             "rescue":                       "3.0.x",
                             "staccato":                     "3.0.1"
     },
