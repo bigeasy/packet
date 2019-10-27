@@ -52,11 +52,11 @@
     },
     "devDependencies":
     {
-                            "proof":                        "3.0.x"
+                            "proof":                        "8.0.0-alpha.8"
     },
     "main":                 "packet.js",
     "scripts":
     {
-                            "test": "proof platform win32 && proof test */*/*.t.js || t/test"
+                            "test": "proof t/*/*.t.js t/*/all/*.t.js t/*/inc/*.t.js t/*/bff/*.t.js"
     }
 }
