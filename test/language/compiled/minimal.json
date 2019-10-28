@@ -1,30 +1,30 @@
 {
-  "parse": [
-    {
+  "parse": {
+    "packet": {
       "type": "structure",
-      "name": "object",
       "fields": [
         {
           "name": "value",
           "type": "integer",
-          "endianness": "b",
-          "bits": 16
+          "endianness": "big",
+          "bits": 16,
+          "compliment": false
         }
       ]
     }
-  ],
-  "serialize": [
-    {
+  },
+  "serialize": {
+    "packet": {
       "type": "structure",
-      "name": "object",
       "fields": [
         {
           "name": "value",
           "type": "integer",
-          "endianness": "b",
-          "bits": 16
+          "endianness": "big",
+          "bits": 16,
+          "compliment": false
         }
       ]
     }
-  ]
+  }
 }
