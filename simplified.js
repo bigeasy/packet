@@ -118,14 +118,6 @@ function parse (packet, depth, extra = {}) {
     switch (typeof packet) {
     case 'object': {
             if (Object.keys(packet).length == 2 && packet.$parse && packet.$serialize) {
-                const segments = []
-                for (const segment of packet.$parse) {
-                    const bits = segment[0]
-                    const value = segment[1].toString()
-                    const done = segment[2].toString()
-                    segments.push({ bits, value, done })
-                }
-                return { type: 'compressed', segments }
             } else if (depth == 0) {
                 const fields = []
                 for (const field in packet) {
@@ -148,29 +140,35 @@ function parse (packet, depth, extra = {}) {
     return definition
 }
 
-function serialize (packet, depth, extra = {}) {
+function map (packet, depth, extra = {}) {
     const definition = { parse: null, serialize: null }
     switch (typeof packet) {
     case 'object': {
             if (Object.keys(packet).length == 2 && packet.$parse && packet.$serialize) {
-                const segments = []
+                const parse = []
+                for (const segment of packet.$parse) {
+                    const bits = segment[0]
+                    const value = segment[1].toString()
+                    const done = segment[2].toString()
+                    parse.push({ bits, value, done })
+                }
+                const serialize = []
                 for (const segment of packet.$serialize) {
                     const bits = segment[0]
                     const value = segment[1].toString()
                     const advance = segment[2].toString()
                     const done = segment[3].toString()
-                    segments.push({ bits, value, advance, done })
+                    serialize.push({ bits, value, advance, done })
                 }
-                return { type: 'compressed', segments }
-            } else {
+                return { type: 'compressed', parse, serialize }
+            } else if (depth == 0) {
                 const fields = []
                 for (const field in packet) {
                     fields.push(parse(packet[field], 1, { name: field }))
                 }
-                return {
-                    type: 'structure',
-                    fields
-                }
+                return { ...extra, type: 'structure', fields }
+            } else {
+                return Packed(packet, depth + 1)
             }
         }
         break
@@ -183,10 +181,9 @@ function serialize (packet, depth, extra = {}) {
 }
 
 module.exports = function (packets) {
-    const definitions = { parse: {}, serialize: {} }
+    const definitions = {}
     for (const packet in packets) {
-        definitions.parse[packet] = parse(packets[packet], 0)
-        definitions.serialize[packet] = serialize(packets[packet], 0)
+        definitions[packet] = map(packets[packet], 0)
     }
     return definitions
 }
