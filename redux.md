@@ -1,3 +1,19 @@
+## Tue Oct 29 02:29:23 CDT 2019
+
+Packet is designed to run on Node.js because the syntax bashing was implemented
+in Node.js with Google V8. There may be some aspects of the language that depend
+on Google V8, specifically the representation of JavaScript snippets which
+depends on the implementation of `Function.prototype.toString()`. It is probably
+possible to shim this for other JavaScript engines.
+
+To the best of my knowledge, the remainder of the language is based on
+JavaScript as it is specified. If you find yourself starting a port to another
+JavaScript engine, please share your build set up, I'd like to follow along.
+
+The rule for JavaScript code snippets shall be: if the function fits in one line
+of code, then we will inline it, if not then we will declare the function and
+call it, hopefully the JIT compiler will inline it.
+
 ## Sun Oct 27 20:38:43 CDT 2019
 
 This is a library I sketched out many years ago, but I never got around to
