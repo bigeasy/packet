@@ -113,38 +113,15 @@ function Packed (def, rest = {}) {
     return { ...rest, type: 'packed', bits, fields }
 }
 
-function parse (packet, depth, extra = {}) {
+function map (definitions, packet, depth, extra = {}) {
     const definition = { parse: null, serialize: null }
     switch (typeof packet) {
     case 'object': {
-            if (Object.keys(packet).length == 2 && packet.$parse && packet.$serialize) {
-            } else if (depth == 0) {
-                const fields = []
-                for (const field in packet) {
-                    fields.push(parse(packet[field], 1, { name: field }))
+            if (Array.isArray(packet)) {
+                if (packet.length == 1 && typeof packet[0] == 'string') {
+                    return { ...extra, ...definitions[packet[0]] }
                 }
-                return {
-                    type: 'structure',
-                    fields
-                }
-            } else {
-                return Packed(packet)
-            }
-        }
-        break
-    case 'number': {
-            return integer(packet, false, extra)
-        }
-        break
-    }
-    return definition
-}
-
-function map (packet, depth, extra = {}) {
-    const definition = { parse: null, serialize: null }
-    switch (typeof packet) {
-    case 'object': {
-            if (Object.keys(packet).length == 2 && packet.$parse && packet.$serialize) {
+            } else if (Object.keys(packet).length == 2 && packet.$parse && packet.$serialize) {
                 const parse = []
                 for (const segment of packet.$parse) {
                     const bits = segment[0]
@@ -164,7 +141,7 @@ function map (packet, depth, extra = {}) {
             } else if (depth == 0) {
                 const fields = []
                 for (const field in packet) {
-                    fields.push(parse(packet[field], 1, { name: field }))
+                    fields.push(map(definitions, packet[field], 1, { name: field }))
                 }
                 return { ...extra, type: 'structure', fields }
             } else {
@@ -183,7 +160,7 @@ function map (packet, depth, extra = {}) {
 module.exports = function (packets) {
     const definitions = {}
     for (const packet in packets) {
-        definitions[packet] = map(packets[packet], 0)
+        definitions[packet] = map(definitions, packets[packet], 0)
     }
     return definitions
 }
