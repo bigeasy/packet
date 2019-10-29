@@ -1,3 +1,11 @@
+## Tue Oct 29 05:09:00 CDT 2019
+
+ES6 block scope varaibles (aka `let`) are a boon to parser and serializer
+generalization. No more hoisting `var`s and you can declare the variables you
+need in a block and not have to worry about collsions. Generated code looks
+cleaner (prehaps slightly more generated) and the generation code is going to be
+much cleaner.
+
 ## Tue Oct 29 02:29:23 CDT 2019
 
 Packet is designed to run on Node.js because the syntax bashing was implemented

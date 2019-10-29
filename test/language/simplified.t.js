@@ -10,10 +10,10 @@ require('proof')(1, async (okay) => {
     await test('minimal', { packet: { value: 16 } })
 
     const encode = [
-        8, value => (value % 128) & (value > 128 ? 0x80 : 0x0), value => Math.floor(value / 128), value => value != 0
+        8, value => (value % 128) & (value > 128 ? 0x80 : 0x0), value => Math.floor(value / 128), value => value == 0
     ]
 
-    console.log(require('util').inspect(simplified({
+    const intermediate = simplified({
         /*
         integer: {
             parse: [ 8n, [
@@ -84,5 +84,17 @@ require('proof')(1, async (okay) => {
             },
             remainingLength: [ 'integer' ]
         }
-    }), { depth: null }))
+    })
+
+    console.log(require('util').inspect(intermediate, { depth: null }))
+
+    const compiler = require('../../require')
+    const composer = require('../../serialize.all')
+    const filename = path.resolve(__filename, '../../generated/mqtt.serialize.all.js')
+
+    const serializers = { all: {} }
+
+    intermediate.packet.fields[0].bits = 8
+
+    composer(compiler('serializers', filename), [{ type: 'structure', name: 'object', ...intermediate.packet }])
 })

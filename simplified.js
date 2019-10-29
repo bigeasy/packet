@@ -28,7 +28,7 @@ function integer (value, packed, extra = {}) {
     }
 }
 
-function Packed (def, rest = {}) {
+function packed (def, rest = {}) {
     const fields = []
     let bits = 0
     for (const field in def) {
@@ -76,7 +76,7 @@ function Packed (def, rest = {}) {
                                                 })
                                             } else {
                                                 const packed2 = []
-                                                when.push(Packed(def1, { value }))
+                                                when.push(packed(def1, { value }))
                                                 console.log(when)
                                             }
                                         }
@@ -86,18 +86,17 @@ function Packed (def, rest = {}) {
                             fields.push({
                                 type: 'switch',
                                 value: def[field][0].toString(),
+                                name: field,
                                 when: when
                             })
                         }
                         break
                     case 'number': {
-                            const extra = {}
+                            const extra = { name: field }
                             if (Array.isArray(def[field][1])) {
                                 extra.indexOf = def[field][1]
                             }
                             const definition = integer(def[field][0], true, extra)
-                            console.log('>>>>', integer(def[field][0], true, extra))
-                            console.log(bits, definition, definition.bits)
                             bits += definition.bits
                             fields.push(definition)
                         }
@@ -110,7 +109,7 @@ function Packed (def, rest = {}) {
             break
         }
     }
-    return { ...rest, type: 'packed', bits, fields }
+    return { ...rest, type: 'integer', bits, fields }
 }
 
 function map (definitions, packet, depth, extra = {}) {
@@ -145,7 +144,7 @@ function map (definitions, packet, depth, extra = {}) {
                 }
                 return { ...extra, type: 'structure', fields }
             } else {
-                return Packed(packet, depth + 1)
+                return packed(packet, depth + 1)
             }
         }
         break

@@ -5,11 +5,7 @@ function packing (packing) {
     return packing.map(function (field) {
         var little = field.endianness === 'l'
         var bytes = field.bits / 8
-        return {
-            name: field.name,
-            bits: field.bits,
-            endianness: field.endianness
-        }
+        return { ...field, little, bytes }
     })
 }
 // Explode a field specified in the intermediate language, filling in all the
