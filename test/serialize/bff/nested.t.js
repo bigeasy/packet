@@ -1,6 +1,6 @@
 require('proof')(22, prove)
 
-function prove (assert) {
+function prove (okay) {
     var path = require('path')
     var compiler = require('../../../require')
     var all = require('../../../serialize.all.js')
@@ -20,7 +20,7 @@ function prove (assert) {
             name: 'values',
             length: {
                 type: 'integer',
-                endianness: 'b',
+                endianness: 'big',
                 bits: 16
             },
             element: {
@@ -28,12 +28,12 @@ function prove (assert) {
                 fields: [{
                     type: 'integer',
                     name: 'key',
-                    endianness: 'b',
+                    endianness: 'big',
                     bits: 16
                 }, {
                     type: 'integer',
                     name: 'value',
-                    endianness: 'b',
+                    endianness: 'big',
                     bits: 16
                 }]
             }
@@ -43,21 +43,9 @@ function prove (assert) {
     inc(compiler('serializers', filename.inc), definition)(serializers)
     all(compiler('serializers', filename.bff), definition, { bff: true })(serializers)
 
-    var expected = [ 0x0, 0x2, 0xa, 0xa, 0x0, 0x1, 0x0, 0x2, 0x0, 0x3 ]
-    for (var i = 0; i <= expected.length; i++) {
-        var buffer = new Buffer(expected.length)
-        var object = {
-            values: [ { key: 2570, value: 1 }, { key: 2, value: 3 } ]
-        }
-        var serializer = new serializers.bff.object(object)
-        var outcome = serializer.serialize(buffer, 0, buffer.length - i)
-        if (outcome.serializer != null) {
-            outcome = outcome.serializer.serialize(buffer, outcome.start, buffer.length)
-        }
-        assert(outcome, {
-            start: buffer.length,
-            serializer: null
-        }, 'finished ' + i)
-        assert(toJSON(buffer), expected, 'compiled ' + i)
-    }
+    const generalized = require('../generalized')
+
+    generalized(okay, serializers.bff.object, {
+        values: [ { key: 2570, value: 1 }, { key: 2, value: 3 } ]
+    }, [ 0x0, 0x2, 0xa, 0xa, 0x0, 0x1, 0x0, 0x2, 0x0, 0x3 ])
 }

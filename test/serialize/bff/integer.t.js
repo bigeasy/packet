@@ -1,6 +1,6 @@
 require('proof')(6, prove)
 
-function prove (assert) {
+function prove (okay) {
     var path = require('path')
     var compiler = require('../../../require')
     var all = require('../../../serialize.all.js')
@@ -9,9 +9,10 @@ function prove (assert) {
         bff: path.resolve(__filename, '../../../generated/integer.serialize.bff.js'),
         inc: path.resolve(__filename, '../../../generated/integer.serialize.inc.js')
     }
-    var toJSON = require('../../to-json')
 
     var serializers = { bff: {}, inc: {} }
+
+    const generalized = require('../generalized')
 
     all(compiler('serializers', filename.bff), [{
         type: 'structure',
@@ -19,7 +20,7 @@ function prove (assert) {
         fields: [{
             name: 'integer',
             type: 'integer',
-            endianness: 'b',
+            endianness: 'big',
             bits: 16
         }]
     }], { bff: true })(serializers)
@@ -29,26 +30,10 @@ function prove (assert) {
         fields: [{
             name: 'integer',
             type: 'integer',
-            endianness: 'b',
+            endianness: 'big',
             bits: 16
         }]
     }])(serializers)
 
-    var bufferLength = 2
-    for (var i = 0; i <= bufferLength; i++) {
-        var buffer = new Buffer(bufferLength)
-        var object = {
-            integer: 0xffff
-        }
-        var serializer = new serializers.bff.object(object)
-        var outcome = serializer.serialize(buffer, 0, bufferLength - i)
-        if (outcome.serializer != null) {
-            outcome = outcome.serializer.serialize(buffer, outcome.start, bufferLength)
-        }
-        assert(outcome, {
-            start: bufferLength,
-            serializer: null
-        }, 'finished ' + i)
-        assert(toJSON(buffer), [ 0xff, 0xff ], 'compiled ' + i)
-    }
+    generalized(okay, serializers.bff.object, { integer: 0xffff }, [ 0xff, 0xff ])
 }

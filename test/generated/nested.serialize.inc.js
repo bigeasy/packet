@@ -1,95 +1,79 @@
 module.exports = function (serializers) {
-    serializers.inc.object = function (object) {
-        this.step = 0
-        this.bite = 0
-        this.stop = 0
-        this.stack = [{
-            object: object,
-            index: 0,
-            length: 0
-        }]
-    }
+    serializers.inc.object = function (object, $step, $i) {
+        let $bite, $stop, $_
 
-    serializers.inc.object.prototype.serialize = function (buffer, start, end) {
-        var frame = this.stack[this.stack.length - 1]
+        return function serialize ($buffer, $start, $end) {
+            SERIALIZE: for (;;) {
+                switch ($step) {
+                case 0:
 
-        SERIALIZE: for (;;) {
-            switch (this.step) {
-            case 0:
+                    $step = 1
+                    $bite = 1
+                    $_ = object.values.length
 
-                this.step = 1
-                this.bite = 1
+                case 1:
 
-            case 1:
-
-                while (this.bite != -1) {
-                    if (start == end) {
-                        return { start: start, serializer: this }
+                    while ($bite != -1) {
+                        if ($start == $end) {
+                            return { start: $start, serialize }
+                        }
+                        $buffer[$start++] = $_ >>> $bite * 8 & 0xff
+                        $bite--
                     }
-                    buffer[start++] = frame.object.values.length >>> this.bite * 8 & 0xff
-                    this.bite--
-                }
 
+                    $i.push(0)
 
-                this.step = 2
+                case 2:
 
-            case 2:
+                    $step = 3
+                    $bite = 1
+                    $_ = object.values[$i[0]].key
 
-                this.stack.push(frame = {
-                    object: frame.object.values[frame.index],
-                    index: 0
-                })
-                this.step = 3
+                case 3:
 
-            case 3:
-
-                this.step = 4
-                this.bite = 1
-
-            case 4:
-
-                while (this.bite != -1) {
-                    if (start == end) {
-                        return { start: start, serializer: this }
+                    while ($bite != -1) {
+                        if ($start == $end) {
+                            return { start: $start, serialize }
+                        }
+                        $buffer[$start++] = $_ >>> $bite * 8 & 0xff
+                        $bite--
                     }
-                    buffer[start++] = frame.object.key >>> this.bite * 8 & 0xff
-                    this.bite--
-                }
 
-                this.step = 5
 
-            case 5:
+                case 4:
 
-                this.step = 6
-                this.bite = 1
+                    $step = 5
+                    $bite = 1
+                    $_ = object.values[$i[0]].value
 
-            case 6:
+                case 5:
 
-                while (this.bite != -1) {
-                    if (start == end) {
-                        return { start: start, serializer: this }
+                    while ($bite != -1) {
+                        if ($start == $end) {
+                            return { start: $start, serialize }
+                        }
+                        $buffer[$start++] = $_ >>> $bite * 8 & 0xff
+                        $bite--
                     }
-                    buffer[start++] = frame.object.value >>> this.bite * 8 & 0xff
-                    this.bite--
+
+
+                    if (++$i[0] != object.values.length) {
+                        $step = 2
+                        continue SERIALIZE
+                    }
+
+                    $i.pop()
+
+                    $step = 6
+
+                case 6:
+
+                    break SERIALIZE
+
                 }
-
-                this.step = 7
-
-                this.stack.pop()
-                frame = this.stack[this.stack.length - 1]
-                if (++frame.index != frame.object.values.length) {
-                    this.step = 2
-                    continue
-                }
-                this.step = 7
-
-            case 7:
-
-                break SERIALIZE
-
             }
-        }
 
-        return { start: start, serializer: null }
+            return { start: $start, serialize: null }
+        }
     }
 }

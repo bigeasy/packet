@@ -1,27 +1,21 @@
 module.exports = function (serializers) {
     serializers.bff.object = function (object) {
-        this.object = object
-    }
+        return function ($buffer, $start, $end) {
+            let $_
 
-    serializers.bff.object.prototype.serialize = function (buffer, start, end) {
+            if ($end - $start < 2) {
+                return {
+                    start: $start,
+                    serialize: serializers.inc.object(object, 0, [])
+                }
+            }
 
-        var object = this.object
+            $_ = object.integer
 
-        var serializer
+            $buffer[$start++] = $_ >>> 8 & 0xff
+            $buffer[$start++] = $_ & 0xff
 
-        if (end - start < 2) {
-            serializer = new serializers.inc.object
-            serializer.step = 0
-            serializer.stack = [{
-
-                object: object
-            }]
-            return { start: start, serializer: serializer }
+            return { start: $start, serialize: null }
         }
-
-        buffer[start++] = object.integer >>> 8 & 0xff
-        buffer[start++] = object.integer & 0xff
-
-        return { start: start, serializer: null }
     }
 }
