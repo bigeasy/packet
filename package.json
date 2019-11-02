@@ -44,7 +44,7 @@
     },
     "dependencies":
     {
-                            "programmatic":                 "^2.0.0-alpha.0"
+                            "programmatic":                 "^2.0.0-alpha.4"
     },
     "devDependencies":
     {
