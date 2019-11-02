@@ -157,9 +157,9 @@ function map (definitions, packet, depth, extra = {}) {
 }
 
 module.exports = function (packets) {
-    const definitions = {}
+    const definitions = []
     for (const packet in packets) {
-        definitions[packet] = map(definitions, packets[packet], 0)
+        definitions.push({ ...(map(definitions, packets[packet], 0)), name: packet })
     }
     return definitions
 }

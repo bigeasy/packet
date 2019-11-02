@@ -1,16 +1,13 @@
 module.exports = function (serializers) {
     serializers.all.object = function (object) {
-        this.object = object
-    }
+        return function ($buffer, $start, $end) {
+            let $_
 
-    serializers.all.object.prototype.serialize = function (buffer, start) {
+            $_ = object.word
 
-        var object = this.object
+            $buffer[$start++] = $_ & 0xff
 
-
-
-        buffer[start++] = object.word & 0xff
-
-        return { start: start, serializer: null }
+            return { start: $start, serialize: null }
+        }
     }
 }

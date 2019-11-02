@@ -1,42 +1,35 @@
 module.exports = function (serializers) {
-    serializers.inc.object = function (object) {
-        this.step = 0
-        this.bite = 0
-        this.stop = 0
-        this.stack = [{
-            object: object,
-            index: 0,
-            length: 0
-        }]
-    }
+    serializers.inc.object = function (object, $step = 0, $i = []) {
+        let $bite, $stop, $_
 
-    serializers.inc.object.prototype.serialize = function (buffer, start, end) {
-        var frame = this.stack[this.stack.length - 1]
+        return function serialize ($buffer, $start, $end) {
+            switch ($step) {
+            case 0:
 
-        switch (this.step) {
-        case 0:
+                $step = 1
+                $bite = 0
+                $_ = object.word
 
-            this.step = 1
-            this.bite = 0
+            case 1:
 
-        case 1:
-
-            while (this.bite != -1) {
-                if (start == end) {
-                    return { start: start, serializer: this }
+                while ($bite != -1) {
+                    if ($start == $end) {
+                        return { start: $start, serialize }
+                    }
+                    $buffer[$start++] = $_ >>> $bite * 8 & 0xff
+                    $bite--
                 }
-                buffer[start++] = frame.object.word >>> this.bite * 8 & 0xff
-                this.bite--
+
+
+                $step = 2
+
+            case 2:
+
+                break
+
             }
 
-            this.step = 2
-
-        case 2:
-
-            break
-
+            return { start: $start, serialize: null }
         }
-
-        return { start: start, serializer: null }
     }
 }

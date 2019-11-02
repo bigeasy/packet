@@ -53,6 +53,6 @@
     "main":                 "packet.js",
     "scripts":
     {
-                            "test": "proof test/*/*.t.js test/*/all/*.t.js test/*/inc/*.t.js test/*/bff/*.t.js"
+                            "test": "proof test/*/*.t.js"
     }
 }

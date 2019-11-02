@@ -1,14 +1,13 @@
-{
-  "packet": {
-    "type": "structure",
-    "fields": [
-      {
-        "name": "value",
-        "type": "integer",
-        "endianness": "big",
-        "bits": 16,
-        "compliment": false
-      }
-    ]
-  }
-}
+[{
+  "name": "packet",
+  "type": "structure",
+  "fields": [
+    {
+      "name": "value",
+      "type": "integer",
+      "endianness": "big",
+      "bits": 16,
+      "compliment": false
+    }
+  ]
+}]

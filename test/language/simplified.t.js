@@ -94,7 +94,9 @@ require('proof')(1, async (okay) => {
 
     const serializers = { all: {} }
 
-    intermediate.packet.fields[0].bits = 8
+    intermediate[1].fields[0].bits = 8
 
-    composer(compiler('serializers', filename), [{ type: 'structure', name: 'object', ...intermediate.packet }])
+    console.log(intermediate)
+
+//    composer(compiler('serializers', filename), [{ type: 'structure', name: 'object', ...intermediate.packet }])
 })

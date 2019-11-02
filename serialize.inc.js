@@ -2,30 +2,25 @@ var Variables = require('./variables')
 var explode = require('./explode')
 var qualify = require('./qualify')
 var $ = require('programmatic')
-var joinSources = require('./join-sources')
+var join = require('./join-sources')
 
-class Generator {
-    constructor () {
-        this.step = 0
-        this._lets = []
-        this._i = -1
-    }
+function generate (packet) {
+    let step = 0, _lets = [], _i = -1, forever = false, indexed = false
 
-    integer (path, field) {
+    function integer (path, field) {
         const endianness = field.endianness || 'big'
         const bytes = field.bits / 8
         const direction = endianness[0] == 'l' ? '++' : '--'
-        let step = this.step
         let bite = endianness[0] == 'l' ? 0 : bytes - 1
         let stop = endianness[0] == 'l' ? bytes : -1
         const source = $(`
-            case ${this.step++}:
+            case ${step++}:
 
-                $step = ${this.step}
+                $step = ${step}
                 $bite = ${bite}
                 $_ = ${path.join('.')}
 
-            case ${this.step++}:
+            case ${step++}:
 
                 while ($bite != ${stop}) {
                     if ($start == $end) {
@@ -36,99 +31,91 @@ class Generator {
                 }
 
         `)
-        return { step: step, source: source }
+        return source
     }
 
-    lengthEncoded (path, packet) {
-        this._i++
+    function lengthEncoded (path, packet) {
+        _i++
         var source = ''
-        this.forever = true
-        this.indexed = true
-        var step = this.step
-        var again = this.step + 2
-        this._lets.push(packet.name)
+        forever = true
+        indexed = true
+        var again = step + 2
+        _lets.push(packet.name)
         source = $(`
-            `, this.integer(path.concat(packet.name, 'length'), packet.length, 'frame.object.' + packet.name + '.length').source, `
+            `, integer(path.concat(packet.name, 'length'), packet.length, 'frame.object.' + packet.name + '.length'), `
                 $i.push(0)
 
-            `, this.field(path.concat(`${packet.name}[$i[${this._i}]]`), packet.element), `
+            `, field(path.concat(`${packet.name}[$i[${_i}]]`), packet.element), `
 
-                if (++$i[${this._i}] != ${path.concat(packet.name).join('.')}.length) {
+                if (++$i[${_i}] != ${path.concat(packet.name).join('.')}.length) {
                     $step = ${again}
                     continue SERIALIZE
                 }
 
                 $i.pop()
         `)
-        this._i--
-        return { step: step, source: source }
+        _i--
+        return source
     }
 
-    field (path, packet) {
+    function field (path, packet) {
         switch (packet.type) {
         case 'structure':
-            return joinSources(packet.fields.map(function (field) {
-                const source = this.field(packet.name ? path.concat(packet.name) : path, field).source
+            return join(packet.fields.map(f => {
+                const source = field(packet.name ? path.concat(packet.name) : path, f)
                 return $(`
                     `, source, `
                 `)
-            }.bind(this)))
+            }))
         case 'lengthEncoded':
-            return this.lengthEncoded(path, packet)
-        default:
-            if (packet.type === 'integer')  {
-                return this.integer(path.concat(packet.name), packet)
-            }
+            return lengthEncoded(path, packet)
+        case 'integer':
+            return integer(path.concat(packet.name), packet)
         }
     }
 
-    serializer (packet) {
-        const path = [ packet.name ]
-        const source = this.field([], packet)
-        let dispatch = $(`
-            switch ($step) {
-            `, source, `
+    const path = [ packet.name ]
+    const source = field([], packet)
+    let dispatch = $(`
+        switch ($step) {
+        `, source, `
 
-                $step = ${this.step}
+            $step = ${step}
 
-            case ${this.step}:
+        case ${step}:
 
-                break${this.forever ? ' SERIALIZE' : ''}
+            break${forever ? ' SERIALIZE' : ''}
 
-            }
-        `)
-        if (this.forever) {
-            dispatch = $(`
-                SERIALIZE: for (;;) {
-                    `, dispatch, `
-                }
-            `)
         }
-        const object = 'serializers.inc.' + packet.name
-        let lets = null && this._lets.length > 0 ? $(`
-            let ${this._lets.join(', ')}
-
-        `) : null
-        const generated = $(`
-            ${object} = function (${packet.name}, $step, $i) {
-                let $bite, $stop, $_
-
-                `, lets, `
-                return function serialize ($buffer, $start, $end) {
-                    `, dispatch, `
-
-                    return { start: $start, serialize: null }
-                }
+    `)
+    if (forever) {
+        dispatch = $(`
+            SERIALIZE: for (;;) {
+                `, dispatch, `
             }
         `)
-        console.log(generated)
-        return generated
     }
+    const object = 'serializers.inc.' + packet.name
+    let lets = null && _lets.length > 0 ? $(`
+        let ${_lets.join(', ')}
+
+    `) : null
+    const generated = $(`
+        ${object} = function (${packet.name}, $step = 0, $i = []) {
+            let $bite, $stop, $_
+
+            `, lets, `
+            return function serialize ($buffer, $start, $end) {
+                `, dispatch, `
+
+                return { start: $start, serialize: null }
+            }
+        }
+    `)
+    return generated
 }
 
 module.exports = function (compiler, definition) {
-    var source = joinSources(definition.map(function (packet) {
-        return new Generator().serializer(packet)
-    }))
+    var source = join(definition.map(packet => generate(packet)))
     return compiler(source)
 }

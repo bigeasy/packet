@@ -1,21 +1,22 @@
-require('proof')(5, prove)
+require('proof')(0, prove)
 
-function prove (assert) {
-    var cycle = require('./cycle')(assert)
+function prove (okay) {
+    var cycle = require('./cycle')(okay)
 
     cycle({
         name: 'big-endian-byte',
         define: {
-            object: { word: 'b8' }
+            object: { word: 8 }
         },
         object: { word: 0xab },
         buffer: [ 0xab ]
     })
 
+    /*
     cycle({
         name: 'little-endian-word',
         define: {
-            object: { word: 'l16' }
+            object: { word: ~16 }
         },
         object: { word: 0xabcd },
         buffer: [ 0xcd, 0xab ]
@@ -24,7 +25,7 @@ function prove (assert) {
     cycle({
         name: 'big-endian-word',
         define: {
-            object: { word: 'b16' }
+            object: { word: 16 }
         },
         object: { word: 0xabcd },
         buffer: [ 0xab, 0xcd ]
@@ -33,7 +34,7 @@ function prove (assert) {
     cycle({
         name: 'big-endian-integer',
         define: {
-            object: { integer: 'b32' }
+            object: { integer: 32 }
         },
         object: { integer: 0x89abcdef },
         buffer: [ 0x89, 0xab, 0xcd, 0xef ]
@@ -42,9 +43,10 @@ function prove (assert) {
     cycle({
         name: 'little-endian-integer',
         define: {
-            object: { integer: 'l32' }
+            object: { integer: ~32 }
         },
         object: { integer: 0x89abcdef },
         buffer: [ 0xef, 0xcd, 0xab, 0x89 ]
     })
+        */
 }

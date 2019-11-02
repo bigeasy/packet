@@ -1,20 +1,11 @@
-module.exports = function (parsers) {
-    parsers.all.object = function () {
-    }
-
-
-
-    parsers.all.object.prototype.parse = function (buffer, start) {
-
-
-        var object
-
-        object = {
-            word: null
+module.exports = function (parse) {
+    parse.all.object = function ($buffer, $start) {
+        const object = {
+            word: 0
         }
 
-        object.word = buffer[start++]
+        object.word = $buffer[$start++]
 
-        return { start: start, object: object, parser: null }
+        return object
     }
 }

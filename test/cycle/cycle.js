@@ -3,6 +3,9 @@ var compiler = require('../../require')
 var transmogrify = require('../../transmogrifier')
 var util = require('util')
 var toJSON = require('../to-json')
+
+const simplified = require('../../simplified')
+
 // TODO: Make compiler a function that takes a prefix, then compile the four.
 var composers = {
     parser: {
@@ -12,36 +15,99 @@ var composers = {
     serializer: {
         inc: require('../../serialize.inc'),
         all: require('../../serialize.all')
-    }
+    },
+    sizeOf: require('../../sizeof')
 }
-var Writer = require('../../writer')
 
-module.exports = function (assert) {
+module.exports = function (okay) {
     return function (options) {
-        var transmogrified = transmogrify(options.define)
-        var filename = path.resolve(__filename, '../../generated/' + options.name)
-        var parsers = { all: {}, inc: {}, bff: {} }
-        var serializers = { all: {}, inc: {}, bff: {} }
+        const intermediate = simplified(options.define)
+        const filename = path.resolve(__filename, '../../generated/' + options.name)
+        const packet = {
+            parse: { all: {}, inc: {}, bff: {} },
+            serialize: { all: {}, inc: {}, bff: {} },
+            sizeOf: {}
+        }
         composers.parser.inc(
-            compiler('parsers', filename + '.parser.inc.js'),
-            transmogrified
-        )(parsers)
+            compiler('parse', filename + '.parser.inc.js'),
+            intermediate
+        )(packet.parse)
         composers.parser.all(
-            compiler('parsers', filename + '.parser.all.js'),
-            transmogrified
-        )(parsers)
+            compiler('parse', filename + '.parser.all.js'),
+            intermediate
+        )(packet.parse)
         composers.serializer.inc(
             compiler('serializers', filename + '.serializer.inc.js'),
-            transmogrified
-        )(serializers)
+            intermediate
+        )(packet.serialize)
         composers.serializer.all(
             compiler('serializers', filename + '.serializer.all.js'),
-            transmogrified
-        )(serializers)
-        var engines = { parsers: parsers, serializers: serializers }
-        var writer = new Writer(engines, 'object', options.object)
-        var cursor = Writer.cursor(new Buffer(options.buffer.length))
-        cursor = writer.write(cursor)
-        assert(toJSON(cursor.buffer), options.buffer, options.name + ' whole')
+            intermediate
+        )(packet.serialize)
+        composers.sizeOf(
+            compiler('sizeOf', filename + '.sizeof.js'),
+            intermediate
+        )(packet.sizeOf)
+
+        const sizeOf = packet.sizeOf.object(options.object)
+
+        const expected = Buffer.alloc(sizeOf)
+
+        const serialize = packet.serialize.all.object(options.object)
+        const cursor = serialize(expected, 0, expected.length)
+        okay.inc(2 + (sizeOf * 2) + 2)
+        okay(cursor, {
+            start: expected.length,
+            serialize: null
+        }, 'whole serialize')
+
+        try {
+            const object = packet.parse.all.object(expected, 0)
+            okay(object, options.object, 'whole parse')
+        } catch (error) {
+            console.log(packet.parse.all.object.toString())
+            throw error
+        }
+
+        try {
+            for (let i = 0; i <= expected.length; i++) {
+                const buffer = Buffer.alloc(sizeOf)
+                let serialize = packet.serialize.inc.object(options.object), start
+                {
+                    ({ start, serialize } = serialize(buffer, 0, buffer.length - i))
+                }
+                if (serialize != null) {
+                    ({ start, serialize } = serialize(buffer, start, buffer.length))
+                }
+                okay({ start, serialize, buffer: buffer.toJSON().data }, {
+                    start: buffer.length,
+                    serialize: null,
+                    buffer: expected.toJSON().data
+                }, `incremental serialize ${i}`)
+            }
+        } catch (error) {
+            console.log(packet.serialize.inc.object.toString())
+            throw error
+        }
+
+        try {
+            for (let i = 0; i <= expected.length; i++) {
+                let parse = packet.parse.inc.object(options.object), start, object
+                {
+                    ({ start, object, parse } = parse(expected, 0, expected.length - i))
+                }
+                if (parse != null) {
+                    ({ start, object, parse } = parse(expected, start, expected.length))
+                }
+                okay({ start, parse, object }, {
+                    start: expected.length,
+                    parse: null,
+                    object: options.object
+                }, `incremental parse ${i}`)
+            }
+        } catch (error) {
+            console.log(packet.parse.inc.object.toString())
+            throw error
+        }
     }
 }
