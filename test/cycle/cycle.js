@@ -44,6 +44,15 @@ module.exports = function (okay) {
             compiler('serializers', filename + '.serializer.all.js'),
             intermediate
         )(packet.serialize)
+        composers.serializer.inc(
+            compiler('serializers', filename + '.serializer.inc.js'),
+            intermediate
+        )(packet.serialize)
+        composers.serializer.all(
+            compiler('serializers', filename + '.serializer.bff.js'),
+            intermediate,
+            { bff: true }
+        )(packet.serialize)
         composers.sizeOf(
             compiler('sizeOf', filename + '.sizeof.js'),
             intermediate
@@ -55,7 +64,7 @@ module.exports = function (okay) {
 
         const serialize = packet.serialize.all.object(options.object)
         const cursor = serialize(expected, 0, expected.length)
-        okay.inc(2 + (sizeOf * 2) + 2)
+        okay.inc(2 + (sizeOf * 3) + 3)
         okay(cursor, {
             start: expected.length,
             serialize: null
@@ -107,6 +116,27 @@ module.exports = function (okay) {
             }
         } catch (error) {
             console.log(packet.parse.inc.object.toString())
+            throw error
+        }
+
+        try {
+            for (let i = 0; i <= expected.length; i++) {
+                const buffer = Buffer.alloc(sizeOf)
+                let serialize = packet.serialize.bff.object(options.object), start
+                {
+                    ({ start, serialize } = serialize(buffer, 0, buffer.length - i))
+                }
+                if (serialize != null) {
+                    ({ start, serialize } = serialize(buffer, start, buffer.length))
+                }
+                okay({ start, serialize, buffer: buffer.toJSON().data }, {
+                    start: buffer.length,
+                    serialize: null,
+                    buffer: expected.toJSON().data
+                }, `best-foot-forward serialize ${i}`)
+            }
+        } catch (error) {
+            console.log(packet.serialize.bff.object.toString())
             throw error
         }
     }
