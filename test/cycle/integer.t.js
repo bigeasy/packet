@@ -4,7 +4,7 @@ function prove (okay) {
     var cycle = require('./cycle')(okay)
 
     cycle({
-        name: 'big-endian-byte',
+        name: 'byte',
         define: {
             object: { word: 8 }
         },
