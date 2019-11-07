@@ -1,6 +1,6 @@
 var explode = require('./explode')
 var qualify = require('./qualify')
-var join = require('./join-sources')
+var join = require('./join')
 var unpackAll = require('./unpack')
 var $ = require('programmatic')
 

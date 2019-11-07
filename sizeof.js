@@ -1,6 +1,6 @@
 const $ = require('programmatic')
 
-const join = require('./join-sources')
+const join = require('./join')
 
 function generate (packet) {
     function field (packet, field) {

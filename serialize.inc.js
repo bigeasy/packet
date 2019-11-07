@@ -2,7 +2,7 @@ var Variables = require('./variables')
 var explode = require('./explode')
 var qualify = require('./qualify')
 var $ = require('programmatic')
-var join = require('./join-sources')
+var join = require('./join')
 
 function generate (packet) {
     let step = 0, _lets = [], _i = -1, forever = false, indexed = false

@@ -1,6 +1,6 @@
 var explode = require('./explode')
 var qualify = require('./qualify')
-var joinSources = require('./join-sources')
+var join = require('./join')
 var pack = require('./pack')
 var $ = require('programmatic')
 
@@ -128,7 +128,7 @@ Generator.prototype.lengthEncoded = function (packet, parent) {
     const index = this.indices.push()
     this._lengthEncoded = true
     var source = ''
-    const looped = joinSources(packet.element.fields.map(field => {
+    const looped = join(packet.element.fields.map(field => {
         return this.field(field, packet)
     }))
     source = $(`
@@ -161,7 +161,7 @@ Generator.prototype.checkpoint = function (packet, arrayed) {
 Generator.prototype._condition = function (packet, arrayed) {
     var branches = '', test = 'if'
     packet.conditions.forEach(function (condition) {
-        var block = joinSources(condition.fields.map(packet => {
+        var block = join(condition.fields.map(packet => {
             return this.field(packet, arrayed)
         }))
         test = condition.test == null  ? '} else {' : test + ' (' + condition.test + ') {'
@@ -222,7 +222,7 @@ Generator.prototype.field = function (packet, parent) {
     case 'condition':
         return this._condition(packet, packet.arrayed)
     case 'structure':
-        var source = joinSources(packet.fields.map(field => {
+        var source = join(packet.fields.map(field => {
             return this.field(field, parent)
         }))
         return $(`
@@ -244,7 +244,7 @@ Generator.prototype.field = function (packet, parent) {
 
 Generator.prototype.serializer = function (packet, bff) {
     this.root = packet.name
-    const source = joinSources(packet.fields.map(field => {
+    const source = join(packet.fields.map(field => {
         return this.field(field, packet)
     }))
     return $(`
@@ -289,7 +289,7 @@ function bff (path, packet, arrayed) {
 module.exports = function (compiler, definition, options) {
     // TODO Options is required.
     options || (options = {})
-    var source = joinSources(definition.map(function (packet) {
+    var source = join(definition.map(function (packet) {
         packet = explode(packet)
         if (options.bff) {
             packet.fields = bff([], packet)
