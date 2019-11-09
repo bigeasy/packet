@@ -3,6 +3,7 @@ module.exports = function (sizeOf) {
         let $_ = 0
 
 
+
         $_ += 1
 
         return $_

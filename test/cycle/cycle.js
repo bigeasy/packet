@@ -24,35 +24,36 @@ module.exports = function (okay) {
         const intermediate = simplified(options.define)
         const filename = path.resolve(__filename, '../../generated/' + options.name)
         const packet = {
-            parse: { all: {}, inc: {}, bff: {} },
-            serialize: { all: {}, inc: {}, bff: {} },
+            parsers: { all: {}, inc: {}, bff: {} },
+            serializers: { all: {}, inc: {}, bff: {} },
             sizeOf: {}
         }
         composers.parser.inc(
-            compiler('parse', filename + '.parser.inc.js'),
+            compiler('parsers', filename + '.parser.inc.js'),
             intermediate
-        )(packet.parse)
+        )(packet.parsers)
         composers.parser.all(
-            compiler('parse', filename + '.parser.all.js'),
+            compiler('parsers', filename + '.parser.all.js'),
             intermediate
-        )(packet.parse)
+        )(packet.parsers)
+        composers.parser.all(
+            compiler('parsers', filename + '.parser.bff.js'),
+            intermediate,
+            { bff: true }
+        )(packet.parsers)
         composers.serializer.inc(
             compiler('serializers', filename + '.serializer.inc.js'),
             intermediate
-        )(packet.serialize)
+        )(packet.serializers)
         composers.serializer.all(
             compiler('serializers', filename + '.serializer.all.js'),
             intermediate
-        )(packet.serialize)
-        composers.serializer.inc(
-            compiler('serializers', filename + '.serializer.inc.js'),
-            intermediate
-        )(packet.serialize)
+        )(packet.serializers)
         composers.serializer.all(
             compiler('serializers', filename + '.serializer.bff.js'),
             intermediate,
             { bff: true }
-        )(packet.serialize)
+        )(packet.serializers)
         composers.sizeOf(
             compiler('sizeOf', filename + '.sizeof.js'),
             intermediate
@@ -62,26 +63,26 @@ module.exports = function (okay) {
 
         const expected = Buffer.alloc(sizeOf)
 
-        const serialize = packet.serialize.all.object(options.object)
+        const serialize = packet.serializers.all.object(options.object)
         const cursor = serialize(expected, 0, expected.length)
-        okay.inc(2 + (sizeOf * 3) + 3)
+        okay.inc(2 + (sizeOf * 4) + 4)
         okay(cursor, {
             start: expected.length,
             serialize: null
         }, 'whole serialize')
 
         try {
-            const object = packet.parse.all.object(expected, 0)
+            const object = packet.parsers.all.object(expected, 0)
             okay(object, options.object, 'whole parse')
         } catch (error) {
-            console.log(packet.parse.all.object.toString())
+            console.log(packet.parsers.all.object.toString())
             throw error
         }
 
         try {
             for (let i = 0; i <= expected.length; i++) {
                 const buffer = Buffer.alloc(sizeOf)
-                let serialize = packet.serialize.inc.object(options.object), start
+                let serialize = packet.serializers.inc.object(options.object), start
                 {
                     ({ start, serialize } = serialize(buffer, 0, buffer.length - i))
                 }
@@ -95,13 +96,13 @@ module.exports = function (okay) {
                 }, `incremental serialize ${i}`)
             }
         } catch (error) {
-            console.log(packet.serialize.inc.object.toString())
+            console.log(packet.serializers.inc.object.toString())
             throw error
         }
 
         try {
             for (let i = 0; i <= expected.length; i++) {
-                let parse = packet.parse.inc.object(options.object), start, object
+                let parse = packet.parsers.inc.object(options.object), start, object
                 {
                     ({ start, object, parse } = parse(expected, 0, expected.length - i))
                 }
@@ -115,14 +116,14 @@ module.exports = function (okay) {
                 }, `incremental parse ${i}`)
             }
         } catch (error) {
-            console.log(packet.parse.inc.object.toString())
+            console.log(packet.parsers.inc.object.toString())
             throw error
         }
 
         try {
             for (let i = 0; i <= expected.length; i++) {
                 const buffer = Buffer.alloc(sizeOf)
-                let serialize = packet.serialize.bff.object(options.object), start
+                let serialize = packet.serializers.bff.object(options.object), start
                 {
                     ({ start, serialize } = serialize(buffer, 0, buffer.length - i))
                 }
@@ -136,7 +137,27 @@ module.exports = function (okay) {
                 }, `best-foot-forward serialize ${i}`)
             }
         } catch (error) {
-            console.log(packet.serialize.bff.object.toString())
+            console.log(packet.serializers.bff.object.toString())
+            throw error
+        }
+
+        try {
+            for (let i = 0; i <= expected.length; i++) {
+                let parse = packet.parsers.bff.object(options.object), start, object
+                {
+                    ({ start, object, parse } = parse(expected, 0, expected.length - i))
+                }
+                if (parse != null) {
+                    ({ start, object, parse } = parse(expected, start, expected.length))
+                }
+                okay({ start, parse, object }, {
+                    start: expected.length,
+                    parse: null,
+                    object: options.object
+                }, `best-foot-forward parse ${i}`)
+            }
+        } catch (error) {
+            console.log(packet.parsers.bff.object.toString())
             throw error
         }
     }

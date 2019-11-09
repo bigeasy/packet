@@ -156,7 +156,7 @@ function generate (packet) {
                 }
             `)
         }
-        var object = `parse.inc.${packet.name}`
+        var object = `parsers.inc.${packet.name}`
         return $(`
             ${object} = function (${packet.name} = null, $step = 0, $i = []) {
                 return function parse ($buffer, $start, $end) {

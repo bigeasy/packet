@@ -4,6 +4,8 @@ module.exports = function (serializers) {
 
         return function serialize ($buffer, $start, $end) {
             switch ($step) {
+
+
             case 0:
 
                 $step = 1

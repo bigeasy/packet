@@ -1,5 +1,5 @@
-module.exports = function (parse) {
-    parse.all.object = function ($buffer, $start) {
+module.exports = function (parsers) {
+    parsers.all.object = function ($buffer, $start) {
         const object = {
             word: 0
         }

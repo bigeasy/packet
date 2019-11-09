@@ -1,5 +1,5 @@
-module.exports = function (parse) {
-    parse.inc.object = function (object = null, $step = 0, $i = []) {
+module.exports = function (parsers) {
+    parsers.inc.object = function (object = null, $step = 0, $i = []) {
         return function parse ($buffer, $start, $end) {
             switch ($step) {
             case 0:

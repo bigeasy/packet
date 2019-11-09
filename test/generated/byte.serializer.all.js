@@ -3,6 +3,13 @@ module.exports = function (serializers) {
         return function ($buffer, $start, $end) {
             let $_
 
+            if ($end - $start < 1) {
+                return {
+                    start: $start,
+                    serialize: serializers.inc.object(object, 0, [])
+                }
+            }
+
             $_ = object.word
 
             $buffer[$start++] = $_ & 0xff

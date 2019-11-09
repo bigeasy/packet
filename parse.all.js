@@ -6,6 +6,8 @@ var $= require('programmatic')
 var unpackAll = require('./unpack')
 
 function map (packet, bff) {
+    let step = 0
+
     function integer (field, assignee, depth) {
         field = explode(field)
         var read = [], bite = field.bite, stop = field.stop
@@ -20,7 +22,7 @@ function map (packet, bff) {
         if (field.bytes == 1) {
             return assignee + ' = ' + read
         }
-        this.step += 2
+        step += 2
         var parsed = $(`
             ${assignee} =
                 `, read, `
@@ -71,7 +73,7 @@ function map (packet, bff) {
     }
 
     function lengthEncoded (variables, packet, depth) {
-        this.step += 2
+        step += 2
         var source = ''
         var length = qualify('length', depth)
         var object = qualify('object', depth)
@@ -94,7 +96,7 @@ function map (packet, bff) {
     function field (packet, depth, arrayed) {
         switch (packet.type) {
         case 'checkpoint':
-            return this.checkpoint(packet, depth, arrayed)
+            return checkpoint(packet, depth, arrayed)
         case 'structure':
             let constructor = null
             if (depth != -1 && packet.name) {
@@ -125,10 +127,10 @@ function map (packet, bff) {
         return source
     }
 
-    function checkpoint (packet, depth, arrayed) {
+    function checkpoint (_packet, depth, arrayed) {
         return $(`
-            if (end - start < ${packet.length}) {
-                return parse.inc.${this.current.name}(${root}, ${step})($buffer, $start, $end)
+            if ($end - $start < ${_packet.length}) {
+                return parsers.inc.${packet.name}(${packet.name}, ${step})($buffer, $start, $end)
             }
         `)
     }
@@ -142,19 +144,27 @@ function map (packet, bff) {
     if (!bff) signature.pop()
 
 
-    var entry = 'parse.' + (bff ? 'bff' : 'all') + '.' + packet.name
+    var entry = 'parsers.' + (bff ? 'bff' : 'all') + '.' + packet.name
 
-    const start = bff ? 'this.start = start' : null
+    if (bff) {
+        return $(`
+            ${entry} = function () {
+                return function parse ($buffer, $start, $end) {
+                    `, source, `
 
-    // Parser defintion body.
-    const definition = $(`
+                    return { start: $start, object: object, parse: null }
+                }
+            }
+        `)
+    }
+
+    return $(`
         ${entry} = function (${signature.join(', ')}) {
             `, source, `
 
             return ${packet.name}
         }
     `)
-    return definition
 }
 
 function bff (packet) {
