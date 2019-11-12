@@ -1,13 +1,13 @@
-var path = require('path')
-var compiler = require('../../require')
-var transmogrify = require('../../transmogrifier')
-var util = require('util')
-var toJSON = require('../to-json')
+const path = require('path')
+const compiler = require('../../require')
+const transmogrify = require('../../transmogrifier')
+const util = require('util')
+const toJSON = require('../to-json')
 
 const simplified = require('../../simplified')
 
 // TODO: Make compiler a function that takes a prefix, then compile the four.
-var composers = {
+const composers = {
     parser: {
         inc: require('../../parse.inc'),
         all: require('../../parse.all')
