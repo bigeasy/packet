@@ -1,9 +1,7 @@
 require('proof')(0, prove)
 
 function prove (okay) {
-    var cycle = require('./cycle')(okay)
-
-    cycle({
+    require('./cycle')(okay)({
         name: 'byte',
         define: {
             object: { word: 8 }
