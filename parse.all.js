@@ -135,8 +135,6 @@ function map (packet, bff) {
         `)
     }
 
-    let current = { name: packet.name }
-
     const source = field(packet)
 
     // No need to track the end if we are a whole packet parser.
