@@ -1,8 +1,5 @@
-var Variables = require('./variables')
-var explode = require('./explode')
-var qualify = require('./qualify')
-var $ = require('programmatic')
-var join = require('./join')
+const $ = require('programmatic')
+const join = require('./join')
 
 function generate (packet) {
     let step = 0, _lets = [], _i = -1, forever = false, indexed = false
@@ -116,6 +113,5 @@ function generate (packet) {
 }
 
 module.exports = function (compiler, definition) {
-    var source = join(definition.map(packet => generate(packet)))
-    return compiler(source)
+    return compiler(join(definition.map(packet => generate(packet))))
 }

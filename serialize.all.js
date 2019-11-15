@@ -1,8 +1,7 @@
-var explode = require('./explode')
-var qualify = require('./qualify')
-var join = require('./join')
-var pack = require('./pack')
-var $ = require('programmatic')
+const explode = require('./explode')
+const join = require('./join')
+const pack = require('./pack')
+const $ = require('programmatic')
 
 const Indices = require('./indices')
 
@@ -28,62 +27,62 @@ Generator.prototype.buffer = function (field) {
 }
 
 Generator.prototype._pack = function (field, object, stuff = 'let value') {
-        const preface = []
-        const packing = []
-        let offset = 0
-        for (let i = 0, I = field.fields.length; i < I; i++) {
-            const packed = field.fields[i]
-            switch (packed.type) {
-            case 'integer': {
-                    let variable = object + '.' + packed.name
-                    if (packed.indexOf) {
-                        this.constants.other = packed.indexOf
-                        variable = `other.indexOf[${object}.${packed.name}]`
-                    }
-                    packing.push(' (' + pack(field.bits, offset, packed.bits, variable) + ')')
-                    offset += packed.bits
+    const preface = []
+    const packing = []
+    let offset = 0
+    for (let i = 0, I = field.fields.length; i < I; i++) {
+        const packed = field.fields[i]
+        switch (packed.type) {
+        case 'integer': {
+                let variable = object + '.' + packed.name
+                if (packed.indexOf) {
+                    this.constants.other = packed.indexOf
+                    variable = `other.indexOf[${object}.${packed.name}]`
                 }
-                break
-            case 'switch': {
-                    const cases = []
-                    for (const when of packed.when) {
-                        if ('literal' in when) {
-                            cases.push($(`
-                                case ${JSON.stringify(when.value)}:
-                                    ${packed.name} = ${JSON.stringify(when.literal)}
-                                    break
-                            `))
-                        } else {
-                            cases.push($(`
-                                case ${JSON.stringify(when.value)}:
-                                    `, this._pack(when, object, 'flags'), `
-                                    break
-                            `))
-                        }
-                    }
-                    preface.push($(`
-                        let ${packed.name}
-                        switch ((${packed.value})(object)) {
-                        `, cases.join('\n'), `
-                        }
-                    `))
-                    packing.push(` (${pack(4, offset, packed.bits, packed.name)})`)
-                }
-                break
+                packing.push(' (' + pack(field.bits, offset, packed.bits, variable) + ')')
+                offset += packed.bits
             }
+            break
+        case 'switch': {
+                const cases = []
+                for (const when of packed.when) {
+                    if ('literal' in when) {
+                        cases.push($(`
+                            case ${JSON.stringify(when.value)}:
+                                ${packed.name} = ${JSON.stringify(when.literal)}
+                                break
+                        `))
+                    } else {
+                        cases.push($(`
+                            case ${JSON.stringify(when.value)}:
+                                `, this._pack(when, object, 'flags'), `
+                                break
+                        `))
+                    }
+                }
+                preface.push($(`
+                    let ${packed.name}
+                    switch ((${packed.value})(object)) {
+                    `, cases.join('\n'), `
+                    }
+                `))
+                packing.push(` (${pack(4, offset, packed.bits, packed.name)})`)
+            }
+            break
         }
-        if (preface.length) {
-            return $(`
-                `, preface.join('\n'), `
-
-                ${stuff} =
-                    `, packing.join(' |\n'), `
-            `)
-        }
+    }
+    if (preface.length) {
         return $(`
+            `, preface.join('\n'), `
+
             ${stuff} =
                 `, packing.join(' |\n'), `
         `)
+    }
+    return $(`
+        ${stuff} =
+            `, packing.join(' |\n'), `
+    `)
 }
 
 Generator.prototype.integer = function (packet, field) {
@@ -294,8 +293,7 @@ module.exports = function (compiler, definition, options) {
         if (options.bff) {
             packet.fields = bff([], packet)
         }
-        const generated = new Generator().serializer(packet, options.bff)
-        return generated
+        return new Generator().serializer(packet, options.bff)
     }))
     return compiler(source)
 }

@@ -1,16 +1,14 @@
-var Variables = require('./variables')
-var explode = require('./explode')
-var qualify = require('./qualify')
-var join = require('./join')
-var $= require('programmatic')
-var unpackAll = require('./unpack')
+const explode = require('./explode')
+const join = require('./join')
+const $ = require('programmatic')
+const unpackAll = require('./unpack')
 
 function map (packet, bff) {
     let step = 0
 
     function integer (field, assignee, depth) {
-        field = explode(field)
-        var read = [], bite = field.bite, stop = field.stop
+        const read = [], stop = field.stop
+        let bite = field.bite
         while (bite != stop) {
             read.unshift('$buffer[$start++]')
             if (bite) {
@@ -18,14 +16,13 @@ function map (packet, bff) {
             }
             bite += field.direction
         }
-        read = read.reverse().join(' +\n')
         if (field.bytes == 1) {
-            return assignee + ' = ' + read
+            return `${assignee}  = ${read.join('')}`
         }
         step += 2
-        var parsed = $(`
+        const parsed = $(`
             ${assignee} =
-                `, read, `
+                `, read.reverse().join(' +\n'), `
         `)
         if (field.fields) {
             return $(`
@@ -114,12 +111,8 @@ function map (packet, bff) {
         case 'buffer':
             return this.buffer(packet, depth)
         default:
-            if (packet.fields != null) {
-                var assignee = 'value'
-            } else {
-                var assignee = qualify('object', depth) + '.' + packet.name
-            }
-            if (packet.type === 'integer')  {
+            const assignee = packet.fields != null ? 'value' : `object.${packet.name}`
+            if (packet.type === 'integer') {
                 return integer(packet, assignee, depth)
             }
             break
@@ -142,7 +135,7 @@ function map (packet, bff) {
     if (!bff) signature.pop()
 
 
-    var entry = 'parsers.' + (bff ? 'bff' : 'all') + '.' + packet.name
+    const entry = `parsers.${bff ? 'bff' : 'all'}.${packet.name}`
 
     if (bff) {
         return $(`
@@ -166,9 +159,9 @@ function map (packet, bff) {
 }
 
 function bff (packet) {
-    var checkpoint, fields = [ checkpoint = { type: 'checkpoint', length: 0 } ]
-    for (var i = 0, I = packet.fields.length; i < I; i++) {
-        var field = JSON.parse(JSON.stringify(packet.fields[i]))
+    const checkpoint = { type: 'checkpoint', length: 0 }, fields = [ checkpoint ]
+    for (let i = 0, I = packet.fields.length; i < I; i++) {
+        const field = packet.fields[i]
         switch (field.type) {
         case 'lengthEncoded':
             checkpoint.length += field.length.bytes
@@ -191,7 +184,7 @@ function bff (packet) {
 
 module.exports = function (compiler, definition, options) {
     options || (options = {})
-    var source = join(definition.map(function (packet) {
+    const source = join(definition.map(function (packet) {
         packet = explode(packet)
         if (options.bff) {
             packet.fields = bff(packet)

@@ -1,8 +1,6 @@
-var explode = require('./explode')
-var qualify = require('./qualify')
-var join = require('./join')
-var unpackAll = require('./unpack')
-var $ = require('programmatic')
+const join = require('./join')
+const unpackAll = require('./unpack')
+const $ = require('programmatic')
 
 function generate (packet) {
     let step = 0
@@ -108,7 +106,7 @@ function generate (packet) {
     function field (path, packet, depth, arrayed) {
         switch (packet.type) {
         case 'structure':
-            var push = $(`
+            const push = $(`
                 case ${step++}:
 
                     ${path.concat(packet.name).join('.')} = {
@@ -117,7 +115,7 @@ function generate (packet) {
                     $step = ${step}
 
             `)
-            var source =  join(packet.fields.map(function (f) {
+            const source =  join(packet.fields.map(function (f) {
                 return field(path.concat(packet.name), f)
             }.bind(this)))
             return $(`
@@ -133,37 +131,37 @@ function generate (packet) {
         }
     }
 
-        var source = field([], packet, 0)
-        var dispatch = $(`
-            switch ($step) {
-            `, source, `
-                return {
-                    start: $start,
-                    object: ${packet.name},
-                    parse: null
-                }
-
+    const source = field([], packet, 0)
+    const dispatch = $(`
+        switch ($step) {
+        `, source, `
+            return {
+                start: $start,
+                object: ${packet.name},
+                parse: null
             }
-        `)
 
-        if (this.forever) {
-            dispatch = $(`
-                PARSE: for (;;) {
-
-                    `, dispatch, `
-
-                    break
-                }
-            `)
         }
-        var object = `parsers.inc.${packet.name}`
-        return $(`
-            ${object} = function (${packet.name} = null, $step = 0, $i = []) {
-                return function parse ($buffer, $start, $end) {
-                    `, dispatch, `
-                }
+    `)
+
+    if (this.forever) {
+        dispatch = $(`
+            PARSE: for (;;) {
+
+                `, dispatch, `
+
+                break
             }
         `)
+    }
+    const object = `parsers.inc.${packet.name}`
+    return $(`
+        ${object} = function (${packet.name} = null, $step = 0, $i = []) {
+            return function parse ($buffer, $start, $end) {
+                `, dispatch, `
+            }
+        }
+    `)
 }
 
 module.exports = function (compiler, definition) {
