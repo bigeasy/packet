@@ -4,12 +4,16 @@ const $ = require('programmatic')
 
 function generate (packet) {
     let step = 0
+    const variables = []
 
     function read (field) {
     }
 
     function integer (property, field) {
         const bytes = field.bits / 8
+
+        variables.push('$_', '$bite')
+
         if (bytes == 1) {
             return $(`
                 case ${step++}:
@@ -42,7 +46,7 @@ function generate (packet) {
                     if ($start == $end) {
                         return { start: $start, object: null, parse }
                     }
-                    $_ += $buffer[$start++] << ($bite * 8)
+                    $_ += $buffer[$start++] << $bite * 8 >>> 0
                     $bite${direction}
                 }
 
@@ -135,12 +139,7 @@ function generate (packet) {
     const dispatch = $(`
         switch ($step) {
         `, source, `
-            return {
-                start: $start,
-                object: ${packet.name},
-                parse: null
-            }
-
+            return { start: $start, object: ${packet.name}, parse: null }
         }
     `)
 
@@ -154,9 +153,13 @@ function generate (packet) {
             }
         `)
     }
+    const lets = variables.length != 0 ? $(`
+        let ${variables.filter((item, index) => variables.indexOf(item) == index).join(', ')}
+    `) : null
     const object = `parsers.inc.${packet.name}`
     return $(`
         ${object} = function (${packet.name} = null, $step = 0, $i = []) {
+            `, lets, `
             return function parse ($buffer, $start, $end) {
                 `, dispatch, `
             }
