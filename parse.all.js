@@ -1,4 +1,3 @@
-const explode = require('./explode')
 const join = require('./join')
 const $ = require('programmatic')
 const unpackAll = require('./unpack')
@@ -7,16 +6,19 @@ function map (packet, bff) {
     let step = 0
 
     function integer (field, assignee, depth) {
-        const read = [], stop = field.stop
-        let bite = field.bite
+        const bytes = field.bits / 8
+        const stop = field.endianness == 'little' ? bytes : -1
+        let bite = field.endianness == 'little' ? 0 : bytes - 1
+        const direction = field.endianness == 'little' ? 1 : -1
+        const read = []
         while (bite != stop) {
             read.unshift('$buffer[$start++]')
             if (bite) {
                 read[0] += ' * 0x' + Math.pow(256, bite).toString(16)
             }
-            bite += field.direction
+            bite += direction
         }
-        if (field.bytes == 1) {
+        if (bytes == 1) {
             return `${assignee}  = ${read.join('')}`
         }
         step += 2
@@ -185,7 +187,6 @@ function bff (packet) {
 module.exports = function (compiler, definition, options) {
     options || (options = {})
     const source = join(definition.map(function (packet) {
-        packet = explode(packet)
         if (options.bff) {
             packet.fields = bff(packet)
         }
