@@ -1,4 +1,3 @@
-const explode = require('./explode')
 const join = require('./join')
 const pack = require('./pack')
 const $ = require('programmatic')
@@ -289,7 +288,6 @@ module.exports = function (compiler, definition, options) {
     // TODO Options is required.
     options || (options = {})
     var source = join(definition.map(function (packet) {
-        packet = explode(packet)
         if (options.bff) {
             packet.fields = bff([], packet)
         }
