@@ -106,15 +106,13 @@ Generator.prototype.integer = function (packet, field) {
 
 // TODO How do I inject code?
 Generator.prototype.word = function (field, variable) {
-    const shifts = []
-    const endianness = field.endianness == null || field.endianness[0] == 'b' ? 'big' : 'little'
     const bytes = field.bits / 8
-    const direction = endianness == 'little' ? 1 : -1
-    let stop = endianness == 'little' ? bytes : -1
-    let bite = endianness == 'little' ? 0 : bytes - 1
-    let shift
+    let bite = field.endianness == 'little' ? 0 : bytes - 1
+    const stop = field.endianness == 'little' ? bytes : -1
+    const direction = field.endianness == 'little' ? 1 : -1
+    const shifts = []
     while (bite != stop) {
-        shift = bite ? variable + ' >>> ' + bite * 8 : variable
+        const shift = bite ? variable + ' >>> ' + bite * 8 : variable
         shifts.push(`$buffer[$start++] = ${shift} & 0xff`)
         bite += direction
     }

@@ -7,24 +7,24 @@ function map (packet, bff) {
 
     function integer (field, assignee, depth) {
         const bytes = field.bits / 8
-        const stop = field.endianness == 'little' ? bytes : -1
         let bite = field.endianness == 'little' ? 0 : bytes - 1
+        const stop = field.endianness == 'little' ? bytes : -1
         const direction = field.endianness == 'little' ? 1 : -1
-        const read = []
+        const reads = []
         while (bite != stop) {
-            read.unshift('$buffer[$start++]')
+            reads.unshift('$buffer[$start++]')
             if (bite) {
-                read[0] += ' * 0x' + Math.pow(256, bite).toString(16)
+                reads[0] += ' * 0x' + Math.pow(256, bite).toString(16)
             }
             bite += direction
         }
         if (bytes == 1) {
-            return `${assignee}  = ${read.join('')}`
+            return `${assignee}  = ${reads.join('')}`
         }
         step += 2
         const parsed = $(`
             ${assignee} =
-                `, read.reverse().join(' +\n'), `
+                `, reads.reverse().join(' +\n'), `
         `)
         if (field.fields) {
             return $(`
