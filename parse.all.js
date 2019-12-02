@@ -176,7 +176,7 @@ function bff (packet) {
             }
             break
         default:
-            checkpoint.length += field.bytes
+            checkpoint.length += field.bits / 8
             break
         }
         fields.push(field)
@@ -186,7 +186,7 @@ function bff (packet) {
 
 module.exports = function (compiler, definition, options) {
     options || (options = {})
-    const source = join(definition.map(function (packet) {
+    const source = join(JSON.parse(JSON.stringify(definition)).map(function (packet) {
         if (options.bff) {
             packet.fields = bff(packet)
         }

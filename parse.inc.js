@@ -168,5 +168,5 @@ function generate (packet) {
 }
 
 module.exports = function (compiler, definition) {
-    return compiler(join(definition.map(packet => generate(packet))))
+    return compiler(join(JSON.parse(JSON.stringify(definition)).map(packet => generate(packet))))
 }

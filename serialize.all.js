@@ -170,6 +170,7 @@ class Generator {
     }
 
     checkpoint (packet, arrayed) {
+            console.log(packet.length)
         const indices = this.indices.stack.length == 0 ? '[]' : `[ ${this.indices.stack.join(', ')} ]`
         return $(`
             if ($end - $start < ${packet.length}) {
@@ -284,10 +285,9 @@ class Generator {
     }
 }
 
-module.exports = function (compiler, definition, options) {
-    // TODO Options is required.
-    options || (options = {})
-    var source = join(definition.map(function (packet) {
+// TODO Options is required.
+module.exports = function (compiler, definition, options = {}) {
+    var source = join(JSON.parse(JSON.stringify(definition)).map(function (packet) {
         if (options.bff) {
             packet.fields = bff([], packet)
         }

@@ -3,14 +3,7 @@ module.exports = function (serializers) {
         return function ($buffer, $start, $end) {
             let $_
 
-            if ($end - $start < NaN) {
-                return {
-                    start: $start,
-                    serialize: serializers.inc.object(object, 0, [])
-                }
-            }
-
-            if ($end - $start < null) {
+            if ($end - $start < 4) {
                 return {
                     start: $start,
                     serialize: serializers.inc.object(object, 0, [])
