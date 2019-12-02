@@ -1,0 +1,13 @@
+[{
+  "name": "packet",
+  "type": "structure",
+  "fields": [
+    {
+      "name": "value",
+      "type": "integer",
+      "endianness": "little",
+      "bits": 16,
+      "compliment": false
+    }
+  ]
+}]

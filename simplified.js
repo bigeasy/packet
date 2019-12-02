@@ -1,7 +1,8 @@
 const assert = require('assert')
 
 function integer (value, packed, extra = {}) {
-    if (!packed && value % 8 == 1) {
+    console.log('called', value, value % 8)
+    if (!packed && Math.abs(value % 8) == 1) {
         if (value < 0) {
             return {
                 ...extra,
