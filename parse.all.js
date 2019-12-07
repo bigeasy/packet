@@ -184,8 +184,7 @@ function bff (packet) {
     return fields
 }
 
-module.exports = function (compiler, definition, options) {
-    options || (options = {})
+module.exports = function (compiler, definition, options = {}) {
     const source = join(JSON.parse(JSON.stringify(definition)).map(function (packet) {
         if (options.bff) {
             packet.fields = bff(packet)

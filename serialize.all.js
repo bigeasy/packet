@@ -285,7 +285,6 @@ class Generator {
     }
 }
 
-// TODO Options is required.
 module.exports = function (compiler, definition, options = {}) {
     var source = join(JSON.parse(JSON.stringify(definition)).map(function (packet) {
         if (options.bff) {
