@@ -5,7 +5,7 @@ module.exports = function (parsers) {
                 word: 0
             }
 
-            if ($end - $start < NaN) {
+            if ($end - $start < 1) {
                 return parsers.inc.object(object, 0)($buffer, $start, $end)
             }
 

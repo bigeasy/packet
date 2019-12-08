@@ -1,6 +1,5 @@
 const path = require('path')
 const compiler = require('../../require')
-const transmogrify = require('../../transmogrifier')
 const util = require('util')
 const toJSON = require('../to-json')
 
