@@ -30,14 +30,12 @@ function bff (path, packet, arrayed) {
     return fields
 }
 
-class Generator {
-    constructor () {
-        this.step = 0
-        this.constants = {}
-        this.indices = new Indices
-    }
+function generate (packet, bff) {
+    let step = 0
+    const constants = {}
+    const indices = new Indices
 
-    buffer (field) {
+    function buffer (field) {
         if (field.transform) {
             return $(`
                 ${value} = new Buffer(${object}.${field.name}, ${JSON.stringify(field.transform)})
@@ -52,7 +50,7 @@ class Generator {
         }
     }
 
-    _pack (field, object, stuff = 'let value') {
+    function _pack (field, object, stuff = 'let value') {
         const preface = []
         const packing = []
         let offset = 0
@@ -62,7 +60,7 @@ class Generator {
             case 'integer': {
                     let variable = object + '.' + packed.name
                     if (packed.indexOf) {
-                        this.constants.other = packed.indexOf
+                        constants.other = packed.indexOf
                         variable = `other.indexOf[${object}.${packed.name}]`
                     }
                     packing.push(' (' + pack(field.bits, offset, packed.bits, variable) + ')')
@@ -81,7 +79,7 @@ class Generator {
                         } else {
                             cases.push($(`
                                 case ${JSON.stringify(when.value)}:
-                                    `, this._pack(when, object, 'flags'), `
+                                    `, _pack(when, object, 'flags'), `
                                     break
                             `))
                         }
@@ -111,28 +109,28 @@ class Generator {
         `)
     }
 
-    integer (packet, field) {
-        this.step += 2
+    function integer (packet, field) {
+        step += 2
         if (field.fields) {
-            const pack = this._pack(field, '$_')
+            const pack = _pack(field, '$_')
             return $(`
                 {
                     `, pack, `
 
-                    `, this.word(field, 'value'), `
+                    `, word(field, 'value'), `
                 }
             `)
         } else {
             return $(`
                 $_ = ${packet.type == 'lengthEncoded' ? '$element' : packet.name}.${field.name}
 
-                `, this.word(field, '$_'), `
+                `, word(field, '$_'), `
             `)
         }
     }
 
     // TODO How do I inject code?
-    word (field, variable) {
+    function word (field, variable) {
         const bytes = field.bits / 8
         let bite = field.endianness == 'little' ? 0 : bytes - 1
         const stop = field.endianness == 'little' ? bytes : -1
@@ -146,18 +144,18 @@ class Generator {
         return shifts.join('\n')
     }
 
-    lengthEncoded (packet, parent) {
-        this.step += 2
-        const index = this.indices.push()
-        this._lengthEncoded = true
+    function lengthEncoded (packet, parent) {
+        step += 2
+        const index = indices.push()
+        _lengthEncoded = true
         var source = ''
         const looped = join(packet.element.fields.map(field => {
-            return this.field(field, packet)
+            return field(field, packet)
         }))
         source = $(`
             let $array = object.${packet.name}
 
-            `, this.word(packet.length, '$array.length'), `
+            `, word(packet.length, '$array.length'), `
 
             for (let ${index} = 0; ${index} < $array.length; ${index}++) {
                 let $element = $array[${index}]
@@ -165,28 +163,27 @@ class Generator {
                 `, looped, `
             }
         `)
-        this.indices.pop()
+        indices.pop()
         return source
     }
 
-    checkpoint (packet, arrayed) {
-            console.log(packet.length)
-        const indices = this.indices.stack.length == 0 ? '[]' : `[ ${this.indices.stack.join(', ')} ]`
+    function checkpoint (packet, arrayed) {
+        const i = indices.stack.length == 0 ? '[]' : `[ ${indices.stack.join(', ')} ]`
         return $(`
             if ($end - $start < ${packet.length}) {
                 return {
                     start: $start,
-                    serialize: serializers.inc.object(${this.root}, ${this.step}, ${indices})
+                    serialize: serializers.inc.object(${root}, ${step}, ${i})
                 }
             }
         `)
     }
 
-    _condition (packet, arrayed) {
+    function _condition (packet, arrayed) {
         var branches = '', test = 'if'
         packet.conditions.forEach(function (condition) {
             var block = join(condition.fields.map(packet => {
-                return this.field(packet, arrayed)
+                return field(packet, arrayed)
             }))
             test = condition.test == null  ? '} else {' : test + ' (' + condition.test + ') {'
             branches = $(`
@@ -202,11 +199,11 @@ class Generator {
         `)
     }
 
-    field (packet, parent) {
+    function field (packet, parent) {
         switch (packet.type) {
         case 'checkpoint':
             // TODO `variables` can be an object member.
-            return this.checkpoint(packet, packet.arrayed)
+            return checkpoint(packet, packet.arrayed)
         case 'compressed':
             const compression = []
             let first = true
@@ -218,7 +215,7 @@ class Generator {
                         bits = (${serialize.value})(value)
                         value = (${serialize.advance})(value)
 
-                        `, this.word(serialize, 'bits'), `
+                        `, word(serialize, 'bits'), `
 
                         if ((${serialize.done})(value)) {
                             break
@@ -230,7 +227,7 @@ class Generator {
                         bits = (${serialize.value})(value)
                         value = (${serialize.advance})(value)
 
-                        `, this.word(serialize, 'bits'), `
+                        `, word(serialize, 'bits'), `
                     `))
                 }
             }
@@ -244,10 +241,10 @@ class Generator {
             `)
             break
         case 'condition':
-            return this._condition(packet, packet.arrayed)
+            return _condition(packet, packet.arrayed)
         case 'structure':
             var source = join(packet.fields.map(field => {
-                return this.field(field, parent)
+                return field(field, parent)
             }))
             return $(`
                 {
@@ -258,31 +255,29 @@ class Generator {
             `)
             break
         case 'lengthEncoded':
-            return this.lengthEncoded(packet, parent)
+            return lengthEncoded(packet, parent)
         case 'buffer':
-            return this.buffer(packet)
+            return buffer(packet)
         case 'integer':
-            return this.integer(parent, packet)
+            return integer(parent, packet)
         }
     }
 
-    serializer (packet, bff) {
-        this.root = packet.name
-        const source = join(packet.fields.map(field => {
-            return this.field(field, packet)
-        }))
-        return $(`
-            serializers.${bff ? 'bff' : 'all'}.${packet.name} = function (${packet.name}) {
-                return function ($buffer, $start, $end) {
-                    let $_
+    const root = packet.name
+    const source = join(packet.fields.map(f => {
+        return field(f, packet)
+    }))
+    return $(`
+        serializers.${bff ? 'bff' : 'all'}.${packet.name} = function (${packet.name}) {
+            return function ($buffer, $start, $end) {
+                let $_
 
-                    `, source, `
+                `, source, `
 
-                    return { start: $start, serialize: null }
-                }
+                return { start: $start, serialize: null }
             }
-        `)
-    }
+        }
+    `)
 }
 
 module.exports = function (compiler, definition, options = {}) {
@@ -290,7 +285,7 @@ module.exports = function (compiler, definition, options = {}) {
         if (options.bff) {
             packet.fields = bff([], packet)
         }
-        return new Generator().serializer(packet, options.bff)
+        return generate(packet, options.bff)
     }))
     return compiler(source)
 }
