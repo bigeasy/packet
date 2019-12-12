@@ -5,9 +5,10 @@ const $ = require('programmatic')
 const Indices = require('./indices')
 
 function bff (path, packet, arrayed) {
-    var checkpoint, fields = [ checkpoint = { type: 'checkpoint', length: 0 } ]
-    for (var i = 0, I = packet.fields.length; i < I; i++) {
-        var field = JSON.parse(JSON.stringify(packet.fields[i]))
+    let checkpoint
+    const fields = [ checkpoint = { type: 'checkpoint', length: 0 } ]
+    for (let i = 0, I = packet.fields.length; i < I; i++) {
+        const field = JSON.parse(JSON.stringify(packet.fields[i]))
         switch (field.type) {
         case 'lengthEncoded':
             checkpoint.length += field.length.bits / 8
@@ -148,11 +149,10 @@ function generate (packet, bff) {
         step += 2
         const index = indices.push()
         _lengthEncoded = true
-        var source = ''
         const looped = join(packet.element.fields.map(field => {
             return field(field, packet)
         }))
-        source = $(`
+        const source = $(`
             let $array = object.${packet.name}
 
             `, word(packet.length, '$array.length'), `
@@ -180,9 +180,9 @@ function generate (packet, bff) {
     }
 
     function _condition (packet, arrayed) {
-        var branches = '', test = 'if'
+        let branches = '', test = 'if'
         packet.conditions.forEach(function (condition) {
-            var block = join(condition.fields.map(packet => {
+            const block = join(condition.fields.map(packet => {
                 return field(packet, arrayed)
             }))
             test = condition.test == null  ? '} else {' : test + ' (' + condition.test + ') {'
@@ -243,7 +243,7 @@ function generate (packet, bff) {
         case 'condition':
             return _condition(packet, packet.arrayed)
         case 'structure':
-            var source = join(packet.fields.map(field => {
+            const source = join(packet.fields.map(field => {
                 return field(field, parent)
             }))
             return $(`
@@ -281,7 +281,7 @@ function generate (packet, bff) {
 }
 
 module.exports = function (compiler, definition, options = {}) {
-    var source = join(JSON.parse(JSON.stringify(definition)).map(function (packet) {
+    const source = join(JSON.parse(JSON.stringify(definition)).map(function (packet) {
         if (options.bff) {
             packet.fields = bff([], packet)
         }
