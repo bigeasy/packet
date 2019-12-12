@@ -1,9 +1,9 @@
 ## Tue Oct 29 05:09:00 CDT 2019
 
-ES6 block scope varaibles (aka `let`) are a boon to parser and serializer
+ES6 block scope variables (aka `let`) are a boon to parser and serializer
 generalization. No more hoisting `var`s and you can declare the variables you
-need in a block and not have to worry about collsions. Generated code looks
-cleaner (prehaps slightly more generated) and the generation code is going to be
+need in a block and not have to worry about collisions. Generated code looks
+cleaner (perhaps slightly more generated) and the generation code is going to be
 much cleaner.
 
 ## Tue Oct 29 02:29:23 CDT 2019
@@ -25,14 +25,14 @@ call it, hopefully the JIT compiler will inline it.
 ## Sun Oct 27 20:38:43 CDT 2019
 
 This is a library I sketched out many years ago, but I never got around to
-completing it. For those of you who where enamoured of the orgininal language,
+completing it. For those of you who where enamoured of the original language,
 you'll find that I've departed from it significantly. I've returned to this
 project with JavaScript ES6 and I'm syntax bashing a new parser definition
-langauge taking advantage of contemporary features to get more sigils to play
+language taking advantage of contemporary features to get more sigils to play
 with. Everything is expressed through syntax bashing JavaScript, no more parsing
 strings to determine properties of fields.
 
-New langauge...
+New language...
 
 ```javascript
 define({
