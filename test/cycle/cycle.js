@@ -60,15 +60,26 @@ module.exports = function (okay) {
 
         const sizeOf = packet.sizeOf.object(options.object)
 
+        if (options.stopAt == 'serializer.all') {
+            console.log('sizeOf', size0f)
+        }
+
         const expected = Buffer.alloc(sizeOf)
 
         const serialize = packet.serializers.all.object(options.object)
         const cursor = serialize(expected, 0, expected.length)
-        okay.inc(2 + (sizeOf * 4) + 4)
+        okay.inc(1)
         okay(cursor, {
             start: expected.length,
             serialize: null
         }, 'whole serialize')
+
+        if (options.stopAt == 'parse.all') {
+            console.log('parse.all', expected.toJSON())
+            return
+        }
+
+        okay.inc(1)
 
         try {
             const object = packet.parsers.all.object(expected, 0)
@@ -77,6 +88,12 @@ module.exports = function (okay) {
             console.log(packet.parsers.all.object.toString())
             throw error
         }
+
+        if (options.stopAt == 'serialize.incremental') {
+            return
+        }
+
+        okay.inc(sizeOf + 1)
 
         try {
             for (let i = 0; i <= expected.length; i++) {
@@ -99,6 +116,12 @@ module.exports = function (okay) {
             throw error
         }
 
+        if (options.stopAt == 'parse.incremental') {
+            return
+        }
+
+        okay.inc(sizeOf + 1)
+
         try {
             for (let i = 0; i <= expected.length; i++) {
                 let parse = packet.parsers.inc.object(options.object), start, object
@@ -118,6 +141,12 @@ module.exports = function (okay) {
             console.log(packet.parsers.inc.object.toString())
             throw error
         }
+
+        if (options.stopAt == 'serialize.bff') {
+            return
+        }
+
+        okay.inc(sizeOf + 1)
 
         try {
             for (let i = 0; i <= expected.length; i++) {
@@ -139,6 +168,12 @@ module.exports = function (okay) {
             console.log(packet.serializers.bff.object.toString())
             throw error
         }
+
+        if (options.stopAt == 'parse.bff') {
+            return
+        }
+
+        okay.inc(sizeOf + 1)
 
         try {
             for (let i = 0; i <= expected.length; i++) {
