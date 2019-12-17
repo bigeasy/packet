@@ -1,7 +1,6 @@
 const assert = require('assert')
 
 function integer (value, packed, extra = {}) {
-    console.log('called', value, value % 8)
     if (!packed && Math.abs(value % 8) == 1) {
         if (value < 0) {
             return {
@@ -93,6 +92,12 @@ function packed (def, rest = {}) {
                         }
                         break
                     case 'number': {
+                            // Two things here for now, a translation and length
+                            // encoded arrays. For length encoded arrays, we
+                            // assume either a simple type, like an integer, or
+                            // a structure. For translations we exect there to
+                            // be more than one value, otherwise what's the
+                            // point? Ah, no, we're packed here.
                             const extra = { name: field }
                             if (Array.isArray(def[field][1])) {
                                 extra.indexOf = def[field][1]
@@ -120,6 +125,21 @@ function map (definitions, packet, depth, extra = {}) {
             if (Array.isArray(packet)) {
                 if (packet.length == 1 && typeof packet[0] == 'string') {
                     return { ...extra, ...definitions[packet[0]] }
+                } else if (packet.length == 2) {
+                    switch (typeof packet[0]) {
+                    case 'number': {
+                            assert(Array.isArray(packet[1]))
+                            const length = integer(packet[0], false, {})
+                            return {
+                                ...extra,
+                                type: 'lengthEncoded',
+                                length,
+                                // TODO Length encode a structure.
+                                element: integer(packet[1][0], false, {})
+                            }
+                        }
+                        break
+                    }
                 }
             } else if (Object.keys(packet).length == 2 && packet.$parse && packet.$serialize) {
                 const parse = []

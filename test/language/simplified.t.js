@@ -1,4 +1,4 @@
-require('proof')(2, async (okay) => {
+require('proof')(3, async (okay) => {
     const simplified = require('../../simplified')
     const path = require('path')
     const fs = require('fs').promises
@@ -9,6 +9,7 @@ require('proof')(2, async (okay) => {
     }
     await test('minimal', { packet: { value: 16 } })
     await test('little-endian', { packet: { value: ~16 } })
+    await test('length-encoded', { packet: { value: [ 16, [ 16 ] ] } })
 
     const encode = [
         8, value => (value % 128) & (value > 128 ? 0x80 : 0x0), value => Math.floor(value / 128), value => value == 0
@@ -87,7 +88,7 @@ require('proof')(2, async (okay) => {
         }
     })
 
-    console.log(require('util').inspect(intermediate, { depth: null }))
+    //console.log(require('util').inspect(intermediate, { depth: null }))
 
     const compiler = require('../../require')
     const composer = require('../../serialize.all')
@@ -97,7 +98,7 @@ require('proof')(2, async (okay) => {
 
     intermediate[1].fields[0].bits = 8
 
-    console.log(intermediate)
+    //console.log(intermediate)
 
 //    composer(compiler('serializers', filename), [{ type: 'structure', name: 'object', ...intermediate.packet }])
 })

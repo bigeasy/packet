@@ -1,0 +1,22 @@
+[{
+  "name": "packet",
+  "type": "structure",
+  "fields": [
+    {
+      "name": "value",
+      "type": "lengthEncoded",
+      "length": {
+        "type": "integer",
+        "endianness": "big",
+        "bits": 16,
+        "compliment": false
+      },
+      "element": {
+        "type": "integer",
+        "endianness": "big",
+        "bits": 16,
+        "compliment": false
+      }
+    }
+  ]
+}]
