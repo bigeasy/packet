@@ -27,6 +27,18 @@ module.exports = function (okay) {
             serializers: { all: {}, inc: {}, bff: {} },
             sizeOf: {}
         }
+        composers.sizeOf(
+            compiler('sizeOf', filename + '.sizeof.js'),
+            intermediate
+        )(packet.sizeOf)
+
+        const sizeOf = packet.sizeOf.object(options.object)
+
+        if (options.stopAt == 'serializer.all') {
+            console.log('sizeOf', sizeOf)
+            return
+        }
+
         composers.parser.inc(
             compiler('parsers', filename + '.parser.inc.js'),
             intermediate
@@ -53,16 +65,6 @@ module.exports = function (okay) {
             intermediate,
             { bff: true }
         )(packet.serializers)
-        composers.sizeOf(
-            compiler('sizeOf', filename + '.sizeof.js'),
-            intermediate
-        )(packet.sizeOf)
-
-        const sizeOf = packet.sizeOf.object(options.object)
-
-        if (options.stopAt == 'serializer.all') {
-            console.log('sizeOf', size0f)
-        }
 
         const expected = Buffer.alloc(sizeOf)
 

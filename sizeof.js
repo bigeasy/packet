@@ -7,6 +7,11 @@ function generate (packet) {
         switch (field.type) {
         case 'integer':
             return `$_ += ${field.bits / 8}`
+        case 'lengthEncoded':
+            return $(`
+                $_ += ${field.length.bits / 8}
+                $_ += ${field.element.bits / 8} * ${packet.name}.${field.name}.length
+            `)
         }
     }
 
