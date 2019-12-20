@@ -34,8 +34,27 @@ module.exports = function (okay) {
 
         const sizeOf = packet.sizeOf.object(options.object)
 
-        if (options.stopAt == 'serializer.all') {
+        if (options.stopAt == 'sizeOf') {
             console.log('sizeOf', sizeOf)
+            return
+        }
+        composers.serializer.all(
+            compiler('serializers', filename + '.serializer.all.js'),
+            intermediate
+        )(packet.serializers)
+
+        const expected = Buffer.alloc(sizeOf)
+
+        const serialize = packet.serializers.all.object(options.object)
+        const cursor = serialize(expected, 0, expected.length)
+        okay.inc(1)
+        okay(cursor, {
+            start: expected.length,
+            serialize: null
+        }, 'whole serialize')
+
+        if (options.stopAt == 'serialize.all') {
+            console.log('serialize.all', expected.toJSON().data.map(b => b.toString(16)))
             return
         }
 
@@ -57,29 +76,10 @@ module.exports = function (okay) {
             intermediate
         )(packet.serializers)
         composers.serializer.all(
-            compiler('serializers', filename + '.serializer.all.js'),
-            intermediate
-        )(packet.serializers)
-        composers.serializer.all(
             compiler('serializers', filename + '.serializer.bff.js'),
             intermediate,
             { bff: true }
         )(packet.serializers)
-
-        const expected = Buffer.alloc(sizeOf)
-
-        const serialize = packet.serializers.all.object(options.object)
-        const cursor = serialize(expected, 0, expected.length)
-        okay.inc(1)
-        okay(cursor, {
-            start: expected.length,
-            serialize: null
-        }, 'whole serialize')
-
-        if (options.stopAt == 'parse.all') {
-            console.log('parse.all', expected.toJSON())
-            return
-        }
 
         okay.inc(1)
 

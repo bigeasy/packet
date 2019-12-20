@@ -33,6 +33,7 @@ function bff (path, packet, arrayed) {
 
 function generate (packet, bff) {
     let step = 0
+    let isLengthEncoded = false
     const constants = {}
     const indices = new Indices
 
@@ -147,19 +148,14 @@ function generate (packet, bff) {
 
     function lengthEncoded (packet, parent) {
         step += 2
-        const index = indices.push()
-        _lengthEncoded = true
-        const looped = join(packet.element.fields.map(field => {
-            return field(field, packet)
-        }))
+        isLengthEncoded = true
+        const index = '$i[0]'
+        const length = word(packet.length, `${parent.name}.${packet.name}.length`)
+        const looped = word(packet.element, `${parent.name}.${packet.name}[${index}]`)
         const source = $(`
-            let $array = object.${packet.name}
+            `, length, `
 
-            `, word(packet.length, '$array.length'), `
-
-            for (let ${index} = 0; ${index} < $array.length; ${index}++) {
-                let $element = $array[${index}]
-
+            for (${index} = 0; ${index} < ${parent.name}.${packet.name}.length; ${index}++) {
                 `, looped, `
             }
         `)
@@ -267,10 +263,14 @@ function generate (packet, bff) {
     const source = join(packet.fields.map(f => {
         return field(f, packet)
     }))
+    var variables = [ '$_' ]
+    if (isLengthEncoded) {
+        variables.push('$i = []')
+    }
     return $(`
         serializers.${bff ? 'bff' : 'all'}.${packet.name} = function (${packet.name}) {
             return function ($buffer, $start, $end) {
-                let $_
+                let ${variables.join(', ')}
 
                 `, source, `
 
