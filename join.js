@@ -1,10 +1,10 @@
-var $ = require('programmatic')
+const $ = require('programmatic')
 
 // Join an array of code blocks into a single chunk separated by blank lines.
 
 module.exports = function (blocks) {
-    var block = blocks[0]
-    for (var i = 1, I = blocks.length; i < I; i++) {
+    let block = blocks[0]
+    for (let i = 1, I = blocks.length; i < I; i++) {
         block = $(`
             `, block, `
 
