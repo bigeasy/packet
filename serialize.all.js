@@ -34,6 +34,7 @@ function bff (path, packet, arrayed) {
 function generate (packet, bff) {
     let step = 0
     let isLengthEncoded = false
+    let index = -1
     const constants = {}
     const indices = new Indices
 
@@ -149,17 +150,17 @@ function generate (packet, bff) {
     function lengthEncoded (packet, parent) {
         step += 2
         isLengthEncoded = true
-        const index = '$i[0]'
+        const i = `$i[${++index}]`
         const length = word(packet.length, `${parent.name}.${packet.name}.length`)
-        const looped = word(packet.element, `${parent.name}.${packet.name}[${index}]`)
+        const looped = word(packet.element, `${parent.name}.${packet.name}[${i}]`)
         const source = $(`
             `, length, `
 
-            for (${index} = 0; ${index} < ${parent.name}.${packet.name}.length; ${index}++) {
+            for (${i} = 0; ${i} < ${parent.name}.${packet.name}.length; ${i}++) {
                 `, looped, `
             }
         `)
-        indices.pop()
+        index--
         return source
     }
 
