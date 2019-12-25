@@ -19,7 +19,7 @@ function map (packet, bff) {
             bite += direction
         }
         if (bytes == 1) {
-            return `${assignee}  = ${reads.join('')}`
+            return `${assignee} = ${reads.join('')}`
         }
         step += 2
         const parsed = $(`

@@ -9,7 +9,7 @@ module.exports = function (parsers) {
                 return parsers.inc.object(object, 0)($buffer, $start, $end)
             }
 
-            object.word  = $buffer[$start++]
+            object.word = $buffer[$start++]
 
             return { start: $start, object: object, parse: null }
         }
