@@ -3,9 +3,11 @@ const $ = require('programmatic')
 const unpackAll = require('./unpack')
 
 function map (packet, bff) {
+    let isLengthEncoded = false
+    let index = -1
     let step = 0
 
-    function integer (field, assignee, depth) {
+    function integer (field, assignee) {
         const bytes = field.bits / 8
         let bite = field.endianness == 'little' ? 0 : bytes - 1
         const stop = field.endianness == 'little' ? bytes : -1
@@ -37,7 +39,7 @@ function map (packet, bff) {
     }
 
     // TODO Create a null entry, then assign a value later on.
-    function vivifier (packet, depth) {
+    function vivifier (asignee, packet) {
         const fields = []
         packet.fields.forEach(function (field) {
             switch (field.type) {
@@ -65,61 +67,51 @@ function map (packet, bff) {
             return object + ' = {}'
         }
         return $(`
-            {
+            const ${asignee} = {
                 `, fields.join(',\n'), `
             }
         `)
     }
 
-    function lengthEncoded (variables, packet, depth) {
+    function lengthEncoded (object, property) {
+        isLengthEncoded = true
         step += 2
-        var source = ''
-        var length = qualify('length', depth)
-        var object = qualify('object', depth)
-        var subObject = qualify('object', depth + 1)
-        var i = qualify('i', depth)
-        variables.hoist(i)
-        variables.hoist(length)
-        var looped = this.field(variables, packet.element, depth, true)
+        index++
+        const i = `$i[${index}]`
+        const I = `$I[${index}]`
         return $(`
-            `, this.integer(packet.length, length, depth), `
+            `, integer(property.length, I), `
 
-            for (${i} = 0; ${i} < ${length}; ${i}++) {
-                `, looped, `
-
-                ${object}.${packet.name}.push(${subObject})
+            for (${i} = 0; ${i} < ${I}; ${i}++) {
+                `, integer(property.element, `${object.name}.${property.name}[${i}]`) ,`
             }
         `)
+        index--
     }
 
-    function field (packet, depth, arrayed) {
-        switch (packet.type) {
+    function dispatch (property, object) {
+        switch (property.type) {
         case 'checkpoint':
-            return checkpoint(packet, depth, arrayed)
+            return checkpoint(property)
         case 'structure':
-            let constructor = null
-            if (depth != -1 && packet.name) {
-                constructor = `const ${packet.name} = ${vivifier(packet)}`
-            }
             return $(`
-                `, constructor, `
+                `, vivifier(property.name, property), `
 
-                `, join(packet.fields.map(function (packet) {
-                    return field(packet, arrayed)
+                `, join(property.fields.map(function (field) {
+                    return dispatch(field, property)
                 }.bind(this))), `
             `)
         case 'lengthEncoded':
-            return this.lengthEncoded(packet, depth)
+            return lengthEncoded(object, property)
         case 'buffer':
             return this.buffer(packet, depth)
         default:
-            const assignee = packet.fields != null ? 'value' : `object.${packet.name}`
-            if (packet.type === 'integer') {
-                return integer(packet, assignee, depth)
+            const assignee = property.fields != null ? 'value' : `object.${property.name}`
+            if (property.type === 'integer') {
+                return integer(property, assignee)
             }
             break
         }
-        return source
     }
 
     function checkpoint (_packet, depth, arrayed) {
@@ -130,7 +122,7 @@ function map (packet, bff) {
         `)
     }
 
-    const source = field(packet)
+    const source = dispatch(packet)
 
     // No need to track the end if we are a whole packet parser.
     const signature = [ '$buffer', '$start', '$end' ]
@@ -151,8 +143,12 @@ function map (packet, bff) {
         `)
     }
 
+    const variables = isLengthEncoded ? 'let $i = [], $I = []' : null
+
     return $(`
         ${entry} = function (${signature.join(', ')}) {
+            `, variables, `
+
             `, source, `
 
             return ${packet.name}

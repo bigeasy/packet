@@ -58,12 +58,27 @@ module.exports = function (okay) {
             return
         }
 
-        composers.parser.inc(
-            compiler('parsers', filename + '.parser.inc.js'),
-            intermediate
-        )(packet.parsers)
         composers.parser.all(
             compiler('parsers', filename + '.parser.all.js'),
+            intermediate
+        )(packet.parsers)
+
+        okay.inc(1)
+
+        try {
+            const object = packet.parsers.all.object(expected, 0)
+            okay(object, options.object, 'whole parse')
+        } catch (error) {
+            console.log(packet.parsers.all.object.toString())
+            throw error
+        }
+
+        if (options.stopAt == 'parse.all') {
+            return
+        }
+
+        composers.parser.inc(
+            compiler('parsers', filename + '.parser.inc.js'),
             intermediate
         )(packet.parsers)
         composers.parser.all(
@@ -80,20 +95,6 @@ module.exports = function (okay) {
             intermediate,
             { bff: true }
         )(packet.serializers)
-
-        okay.inc(1)
-
-        try {
-            const object = packet.parsers.all.object(expected, 0)
-            okay(object, options.object, 'whole parse')
-        } catch (error) {
-            console.log(packet.parsers.all.object.toString())
-            throw error
-        }
-
-        if (options.stopAt == 'serialize.incremental') {
-            return
-        }
 
         okay.inc(sizeOf + 1)
 
