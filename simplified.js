@@ -177,10 +177,28 @@ function map (definitions, packet, depth, extra = {}) {
     return definition
 }
 
+function visit (packet, f) {
+    f(packet)
+    switch (packet.type) {
+    case 'structure':
+        for (const field of packet.fields) {
+            visit(field, f)
+        }
+        break
+    }
+}
+
 module.exports = function (packets) {
     const definitions = []
     for (const packet in packets) {
         definitions.push({ ...(map(definitions, packets[packet], 0)), name: packet })
+    }
+    for (const definition of definitions) {
+        visit(definition, (packet) => {
+            if (packet.type == 'lengthEncoded') {
+                definition.lengthEncoded = true
+            }
+        })
     }
     return definitions
 }

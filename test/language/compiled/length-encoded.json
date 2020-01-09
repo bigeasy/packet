@@ -1,6 +1,7 @@
 [{
   "name": "packet",
   "type": "structure",
+  "lengthEncoded": true,
   "fields": [
     {
       "name": "value",
