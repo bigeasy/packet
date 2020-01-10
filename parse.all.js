@@ -3,7 +3,7 @@ const $ = require('programmatic')
 const unpackAll = require('./unpack')
 
 function map (packet, bff) {
-    let isLengthEncoded = false
+    let isLengthEncoded = packet.lengthEncoded
     let index = -1
     let step = 0
 
@@ -74,7 +74,6 @@ function map (packet, bff) {
     }
 
     function lengthEncoded (object, property) {
-        isLengthEncoded = true
         step += 2
         index++
         const i = `$i[${index}]`

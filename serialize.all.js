@@ -2,8 +2,6 @@ const join = require('./join')
 const pack = require('./pack')
 const $ = require('programmatic')
 
-const Indices = require('./indices')
-
 function bff (path, packet, arrayed) {
     let checkpoint
     const fields = [ checkpoint = { type: 'checkpoint', length: 0 } ]
@@ -33,10 +31,9 @@ function bff (path, packet, arrayed) {
 
 function generate (packet, bff) {
     let step = 0
-    let isLengthEncoded = false
+    let isLengthEncoded = packet.lengthEncoded
     let index = -1
     const constants = {}
-    const indices = new Indices
 
     function buffer (field) {
         if (field.transform) {
@@ -149,7 +146,6 @@ function generate (packet, bff) {
 
     function lengthEncoded (packet, parent) {
         step += 2
-        isLengthEncoded = true
         const i = `$i[${++index}]`
         const length = word(packet.length, `${parent.name}.${packet.name}.length`)
         const looped = word(packet.element, `${parent.name}.${packet.name}[${i}]`)
@@ -165,7 +161,7 @@ function generate (packet, bff) {
     }
 
     function checkpoint (packet, arrayed) {
-        const i = indices.stack.length == 0 ? '[]' : `[ ${indices.stack.join(', ')} ]`
+        const i = isLengthEncoded ? '$i' : '[]'
         return $(`
             if ($end - $start < ${packet.length}) {
                 return {
