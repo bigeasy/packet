@@ -2,7 +2,7 @@ const $ = require('programmatic')
 const join = require('./join')
 
 function generate (packet) {
-    let step = 0, _lets = [], index = -1, forever = false, indexed = false
+    let step = 0, _lets = [], index = -1, isLengthEncoded = packet.lengthEncoded, indexed = false
 
     function integer (path, field) {
         const endianness = field.endianness || 'big'
@@ -36,7 +36,6 @@ function generate (packet) {
         const i = `$i[${index}]`
         const I = `$I[${index}]`
         let source = ''
-        forever = true
         indexed = true
         const again = step + 2
         _lets.push(packet.name)
@@ -82,11 +81,11 @@ function generate (packet) {
 
         case ${step}:
 
-            break${forever ? ' SERIALIZE' : ''}
+            break${isLengthEncoded ? ' SERIALIZE' : ''}
 
         }
     `)
-    if (forever) {
+    if (isLengthEncoded) {
         dispatch = $(`
             SERIALIZE: for (;;) {
                 `, dispatch, `
