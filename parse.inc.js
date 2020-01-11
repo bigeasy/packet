@@ -9,7 +9,7 @@ function generate (packet) {
     function read (field) {
     }
 
-    function integer (property, field) {
+    function integer (path, field) {
         const bytes = field.bits / 8
 
         variables.push('$_', '$bite')
@@ -26,7 +26,7 @@ function generate (packet) {
                         return { start: $start, object: null, parse }
                     }
 
-                    ${property} = $buffer[$start++]
+                    ${path.join('.')} = $buffer[$start++]
 
             `)
         }
@@ -50,7 +50,7 @@ function generate (packet) {
                     $bite${direction}
                 }
 
-                ${property} = $_
+                ${path.join('.')} = $_
 
         `)
     }
@@ -113,14 +113,14 @@ function generate (packet) {
             const push = $(`
                 case ${step++}:
 
-                    ${path.concat(packet.name).join('.')} = {
+                    ${path.join('.')} = {
                         `, vivify(packet, 0), `
                     }
                     $step = ${step}
 
             `)
             const source =  join(packet.fields.map(function (f) {
-                return field(path.concat(packet.name), f)
+                return field(f.name ? path.concat(f.name) : path, f)
             }.bind(this)))
             return $(`
                 `, push, `
@@ -131,11 +131,11 @@ function generate (packet) {
         case 'lengthEncoded':
             return this.lengthEncoded(packet)
         case 'integer':
-            return integer(path.concat(packet.name).join('.'), packet)
+            return integer(path, packet)
         }
     }
 
-    const source = field([], packet, 0)
+    const source = field([ packet.name ], packet, 0)
     const dispatch = $(`
         switch ($step) {
         `, source, `
