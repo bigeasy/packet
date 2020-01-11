@@ -2,7 +2,7 @@ const $ = require('programmatic')
 const join = require('./join')
 
 function generate (packet) {
-    let step = 0, _lets = [], _i = -1, forever = false, indexed = false
+    let step = 0, _lets = [], index = -1, forever = false, indexed = false
 
     function integer (path, field) {
         const endianness = field.endianness || 'big'
@@ -32,26 +32,28 @@ function generate (packet) {
     }
 
     function lengthEncoded (path, packet) {
-        _i++
-        var source = ''
+        index++
+        const i = `$i[${index}]`
+        const I = `$I[${index}]`
+        let source = ''
         forever = true
         indexed = true
-        var again = step + 2
+        const again = step + 2
         _lets.push(packet.name)
         source = $(`
-            `, integer(path.concat(packet.name, 'length'), packet.length, 'frame.object.' + packet.name + '.length'), `
+            `, integer(path.concat('length'), packet.length), `
                 $i.push(0)
 
-            `, field(path.concat(`${packet.name}[$i[${_i}]]`), packet.element), `
+            `, field([ `${path.join('.')}[${i}]` ], packet.element), `
 
-                if (++$i[${_i}] != ${path.concat(packet.name).join('.')}.length) {
+                if (++${i} != ${path.concat('length').join('.')}) {
                     $step = ${again}
                     continue SERIALIZE
                 }
 
                 $i.pop()
         `)
-        _i--
+        index--
         return source
     }
 
@@ -59,7 +61,7 @@ function generate (packet) {
         switch (packet.type) {
         case 'structure':
             return join(packet.fields.map(f => {
-                const source = field(packet.name ? path.concat(packet.name) : path, f)
+                const source = field(f.name ? path.concat(f.name) : path, f)
                 return $(`
                     `, source, `
                 `)
@@ -67,12 +69,11 @@ function generate (packet) {
         case 'lengthEncoded':
             return lengthEncoded(path, packet)
         case 'integer':
-            return integer(path.concat(packet.name), packet)
+            return integer(path, packet)
         }
     }
 
-    const path = [ packet.name ]
-    const source = field([], packet)
+    const source = field([ packet.name ], packet)
     let dispatch = $(`
         switch ($step) {
         `, source, `
