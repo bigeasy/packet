@@ -1,3 +1,53 @@
+## Sun Jan 12 16:04:33 CST 2020
+
+The differentiation between lookup and nested structures was going to be that a
+lookup has multiple values and a nested structure has a single variable. Why
+would you lookup when it always maps to a single variable?
+
+As I write, I realize that we could have conditionals always be started with a
+function and that could indicate a conditional.
+
+```javascript
+{
+    packet: {
+        header: {
+            type: 4,
+            name: [ $ => $.header.type, [ 'connect', 'connack' ] ],
+            flags: [ $ => $.header.name, {
+                connect: [ 4, 0x0 ],
+                connack: [ 4, 0x0 ]
+            } ]
+        }
+    }
+}
+```
+
+Or maybe even...
+
+```javascript
+{
+    packet: {
+        header: {
+            type: 4,
+            name: [ $ => $.header.type, [{
+                name: 'connect',
+                value: [ 4, 0x0 ]
+            }, {
+                name: 'connect',
+                value: [ 4, 0x0 ]
+            }] ]
+        }
+    }
+}
+```
+
+Or both. This way we don't have to document meanings based on variations of
+length.
+
+Can't quite fathom how to convert conditionals to C. If I parse things and find
+that it is always lookup and never calculation, then the `$.header.type` can be
+converted into a package lookup.
+
 ## Tue Oct 29 05:09:00 CDT 2019
 
 ES6 block scope variables (aka `let`) are a boon to parser and serializer
