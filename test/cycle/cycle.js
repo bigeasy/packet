@@ -109,26 +109,12 @@ module.exports = function (okay) {
             return
         }
 
+        okay.inc(sizeOf + 1)
+
         composers.parser.inc(
             compiler('parsers', filename + '.parser.inc.js'),
             intermediate
         )(packet.parsers)
-        composers.parser.all(
-            compiler('parsers', filename + '.parser.bff.js'),
-            intermediate,
-            { bff: true }
-        )(packet.parsers)
-        composers.serializer.all(
-            compiler('serializers', filename + '.serializer.bff.js'),
-            intermediate,
-            { bff: true }
-        )(packet.serializers)
-
-        if (options.stopAt == 'parse.incremental') {
-            return
-        }
-
-        okay.inc(sizeOf + 1)
 
         try {
             for (let i = 0; i <= expected.length; i++) {
@@ -149,6 +135,21 @@ module.exports = function (okay) {
             console.log(packet.parsers.inc.object.toString())
             throw error
         }
+
+        if (options.stopAt == 'parse.inc') {
+            return
+        }
+
+        composers.parser.all(
+            compiler('parsers', filename + '.parser.bff.js'),
+            intermediate,
+            { bff: true }
+        )(packet.parsers)
+        composers.serializer.all(
+            compiler('serializers', filename + '.serializer.bff.js'),
+            intermediate,
+            { bff: true }
+        )(packet.serializers)
 
         if (options.stopAt == 'serialize.bff') {
             return

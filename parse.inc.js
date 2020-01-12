@@ -3,7 +3,7 @@ const unpackAll = require('./unpack')
 const $ = require('programmatic')
 
 function generate (packet) {
-    let step = 0
+    let step = 0, index = -1
     const variables = []
 
     function read (field) {
@@ -81,30 +81,26 @@ function generate (packet) {
         return fields.join(',\n')
     }
 
-    function lengthEncoded (packet, depth) {
-        var source = ''
-        this.forever = true
-        var integer = this.integer(packet.length, 'length')
-        var again = this.step
-        source = $(`
-            `, integer.source, `
+    function lengthEncoded (path, packet) {
+        index++
+        const i = `$i[${index}]`
+        const I = `$I[${index}]`
+        // var integer = integer(packet.length, 'length')
+        // Invoked here to set `again`.
+        const length = integer([ I ], packet.length)
+        const again = step
+        const source = $(`
+            `, length, `
+                ${i} = 0
 
-                this.stack[this.stack.length - 1].index = 0
-            `, this.field(packet.element, depth, true).source, `
-
-                frame = this.stack[this.stack.length - 2]
-                frame.object.${packet.name}.push(this.stack.pop().object)
-                if (++frame.index != frame.length) {
-                    this.step = ${again}
+            `, field([ `${path.join('.')}[${i}]` ], packet.element), `
+                if (++${i} != ${I}) {
+                    $step = ${again}
                     continue
                 }
-                this.step = ${this.step}
-
         `)
-        return {
-            step: integer.step,
-            source: source
-        }
+        index--
+        return source
     }
 
     function field (path, packet, depth, arrayed) {
@@ -129,37 +125,38 @@ function generate (packet) {
         case 'condition':
             return this.condition(packet)
         case 'lengthEncoded':
-            return this.lengthEncoded(packet)
+            return lengthEncoded(path, packet)
         case 'integer':
             return integer(path, packet)
         }
     }
 
     const source = field([ packet.name ], packet, 0)
-    const dispatch = $(`
+    let dispatch = $(`
         switch ($step) {
         `, source, `
             return { start: $start, object: ${packet.name}, parse: null }
         }
     `)
 
-    if (this.forever) {
+    const lets = [ '$_', '$bite' ]
+    const signature = [ `${packet.name} = {}`, '$step = 0' ]
+    if (packet.lengthEncoded) {
+        signature.push('$i = []', '$I = []')
         dispatch = $(`
-            PARSE: for (;;) {
-
+            for (;;) {
                 `, dispatch, `
-
                 break
             }
         `)
     }
-    const lets = variables.length != 0 ? $(`
-        let ${variables.filter((item, index) => variables.indexOf(item) == index).join(', ')}
-    `) : null
+
+    // TODO Vivify through a funciton so that `object = vivify()`.
+    // TOOO Write directly to object, I think, get rid of `$_`?
     const object = `parsers.inc.${packet.name}`
     return $(`
-        ${object} = function (${packet.name} = null, $step = 0, $i = []) {
-            `, lets, `
+        ${object} = function (${signature.join(', ')}) {
+            let ${lets.join(', ')}
             return function parse ($buffer, $start, $end) {
                 `, dispatch, `
             }
