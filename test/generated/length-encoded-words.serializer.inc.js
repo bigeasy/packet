@@ -3,7 +3,7 @@ module.exports = function (serializers) {
         let $bite, $stop, $_
 
         return function serialize ($buffer, $start, $end) {
-            SERIALIZE: for (;;) {
+            for (;;) {
                 switch ($step) {
                 case 0:
 
@@ -42,7 +42,7 @@ module.exports = function (serializers) {
 
                     if (++$i[0] != object.array.length) {
                         $step = 2
-                        continue SERIALIZE
+                        continue
                     }
 
                     $i.pop()
@@ -51,9 +51,11 @@ module.exports = function (serializers) {
 
                 case 4:
 
-                    break SERIALIZE
+                    break
 
                 }
+
+                break
             }
 
             return { start: $start, serialize: null }

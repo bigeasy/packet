@@ -46,7 +46,7 @@ function generate (packet) {
 
                 if (++${i} != ${path.concat('length').join('.')}) {
                     $step = ${again}
-                    continue SERIALIZE
+                    continue
                 }
 
                 $i.pop()
@@ -80,14 +80,16 @@ function generate (packet) {
 
         case ${step}:
 
-            break${isLengthEncoded ? ' SERIALIZE' : ''}
+            break
 
         }
     `)
     if (isLengthEncoded) {
         dispatch = $(`
-            SERIALIZE: for (;;) {
+            for (;;) {
                 `, dispatch, `
+
+                break
             }
         `)
     }
