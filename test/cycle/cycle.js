@@ -139,21 +139,11 @@ module.exports = function (okay) {
         if (options.stopAt == 'parse.inc') {
             return
         }
-
-        composers.parser.all(
-            compiler('parsers', filename + '.parser.bff.js'),
-            intermediate,
-            { bff: true }
-        )(packet.parsers)
         composers.serializer.all(
             compiler('serializers', filename + '.serializer.bff.js'),
             intermediate,
             { bff: true }
         )(packet.serializers)
-
-        if (options.stopAt == 'serialize.bff') {
-            return
-        }
 
         okay.inc(sizeOf + 1)
 
@@ -178,9 +168,15 @@ module.exports = function (okay) {
             throw error
         }
 
-        if (options.stopAt == 'parse.bff') {
+        if (options.stopAt == 'serialize.bff') {
             return
         }
+
+        composers.parser.all(
+            compiler('parsers', filename + '.parser.bff.js'),
+            intermediate,
+            { bff: true }
+        )(packet.parsers)
 
         okay.inc(sizeOf + 1)
 

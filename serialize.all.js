@@ -4,24 +4,23 @@ const $ = require('programmatic')
 
 function bff (path, packet, arrayed) {
     let checkpoint
-    const fields = [ checkpoint = { type: 'checkpoint', length: 0 } ]
+    const fields = [ checkpoint = { type: 'checkpoint', lengths: [ 0 ] } ]
     for (let i = 0, I = packet.fields.length; i < I; i++) {
         const field = JSON.parse(JSON.stringify(packet.fields[i]))
         switch (field.type) {
         case 'lengthEncoded':
-            checkpoint.length += field.length.bits / 8
+            checkpoint.lengths[0] += field.length.bits / 8
             switch (field.element.type) {
             case 'structure':
                 field.element.fields = bff(path.concat(packet.name), field.element, true)
                 break
             default:
-                throw new Error
+                checkpoint.lengths.push(`${field.element.bits / 8} * ${path.concat(field.name).join('.')}.length`)
             }
             break
         default:
             checkpoint.path = path.concat(packet.name)
-            checkpoint.length += field.bits / 8
-            checkpoint.arrayed = !! arrayed
+            checkpoint.lengths[0] += field.bits / 8
             break
         }
         fields.push(field)
@@ -163,7 +162,7 @@ function generate (packet, bff) {
     function checkpoint (packet, arrayed) {
         const i = isLengthEncoded ? '$i' : '[]'
         return $(`
-            if ($end - $start < ${packet.length}) {
+            if ($end - $start < ${packet.lengths.join(' + ')}) {
                 return {
                     start: $start,
                     serialize: serializers.inc.object(${root}, ${step}, ${i})
@@ -280,7 +279,7 @@ function generate (packet, bff) {
 module.exports = function (compiler, definition, options = {}) {
     const source = join(JSON.parse(JSON.stringify(definition)).map(function (packet) {
         if (options.bff) {
-            packet.fields = bff([], packet)
+            packet.fields = bff([ packet.name ], packet)
         }
         return generate(packet, options.bff)
     }))
