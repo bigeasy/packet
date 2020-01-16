@@ -115,7 +115,7 @@ function map (packet, bff) {
 
     function checkpoint (_packet, depth, arrayed) {
         return $(`
-            if ($end - $start < ${_packet.length}) {
+            if ($end - $start < ${_packet.lengths.join(' + ')}) {
                 return parsers.inc.${packet.name}(${packet.name}, ${step})($buffer, $start, $end)
             }
         `)
@@ -156,12 +156,12 @@ function map (packet, bff) {
 }
 
 function bff (packet) {
-    const checkpoint = { type: 'checkpoint', length: 0 }, fields = [ checkpoint ]
+    const checkpoint = { type: 'checkpoint', lengths: [ 0 ] }, fields = [ checkpoint ]
     for (let i = 0, I = packet.fields.length; i < I; i++) {
         const field = packet.fields[i]
         switch (field.type) {
         case 'lengthEncoded':
-            checkpoint.length += field.length.bytes
+            checkpoint.lengths[0] += field.length.bytes
             switch (field.element.type) {
             case 'structure':
                 field.element.fields = bff(field.element)
@@ -171,7 +171,7 @@ function bff (packet) {
             }
             break
         default:
-            checkpoint.length += field.bits / 8
+            checkpoint.lengths[0] += field.bits / 8
             break
         }
         fields.push(field)
