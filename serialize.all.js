@@ -30,7 +30,6 @@ function bff (path, packet, arrayed) {
 
 function generate (packet, bff) {
     let step = 0
-    let isLengthEncoded = packet.lengthEncoded
     let index = -1
     const constants = {}
 
@@ -160,7 +159,7 @@ function generate (packet, bff) {
     }
 
     function checkpoint (checkpoint) {
-        const i = isLengthEncoded ? '$i' : '[]'
+        const i = packet.lengthEncoded ? '$i' : '[]'
         return $(`
             if ($end - $start < ${checkpoint.lengths.join(' + ')}) {
                 return {
@@ -260,7 +259,7 @@ function generate (packet, bff) {
         return field(f, packet)
     }))
     var variables = [ '$_' ]
-    if (isLengthEncoded) {
+    if (packet.lengthEncoded) {
         variables.push('$i = []')
     }
     return $(`

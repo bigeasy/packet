@@ -1,9 +1,8 @@
 const join = require('./join')
-const $ = require('programmatic')
 const unpackAll = require('./unpack')
+const $ = require('programmatic')
 
 function map (packet, bff) {
-    let isLengthEncoded = packet.lengthEncoded
     let index = -1
     let step = 0
 
@@ -142,7 +141,7 @@ function map (packet, bff) {
         `)
     }
 
-    const variables = isLengthEncoded ? 'let $i = [], $I = []' : null
+    const variables = packet.lengthEncoded ? 'let $i = [], $I = []' : null
 
     return $(`
         ${entry} = function (${signature.join(', ')}) {
