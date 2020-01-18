@@ -4,7 +4,7 @@ const $ = require('programmatic')
 
 function map (packet, bff) {
     let index = -1
-    let step = 0
+    let step = 1
 
     function integer (field, assignee) {
         const bytes = field.bits / 8

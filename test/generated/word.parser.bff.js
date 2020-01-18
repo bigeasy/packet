@@ -6,7 +6,7 @@ module.exports = function (parsers) {
             }
 
             if ($end - $start < 4) {
-                return parsers.inc.object(object, 0)($buffer, $start, $end)
+                return parsers.inc.object(object, 1)($buffer, $start, $end)
             }
 
             object.word =
