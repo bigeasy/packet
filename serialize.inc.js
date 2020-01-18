@@ -2,7 +2,7 @@ const $ = require('programmatic')
 const join = require('./join')
 
 function generate (packet) {
-    let step = 0, _lets = [], index = -1, isLengthEncoded = packet.lengthEncoded
+    let step = 0, index = -1, isLengthEncoded = packet.lengthEncoded
 
     function integer (path, field) {
         const endianness = field.endianness || 'big'
@@ -45,7 +45,6 @@ function generate (packet) {
         const I = `$I[${index}]`
         index--
         const again = step
-        _lets.push(packet.name)
         return $(`
             `, field([ `${path.join('.')}[${i}]` ], packet.element), `
 
@@ -99,10 +98,6 @@ function generate (packet) {
         `)
     }
     const object = 'serializers.inc.' + packet.name
-    let lets = null && _lets.length > 0 ? $(`
-        let ${_lets.join(', ')}
-
-    `) : null
     const generated = $(`
         ${object} = function (${packet.name}, $step = 0, $i = []) {
             let $bite, $stop, $_
