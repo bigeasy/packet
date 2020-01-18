@@ -113,9 +113,9 @@ function map (packet, bff) {
         }
     }
 
-    function checkpoint (_packet, depth, arrayed) {
+    function checkpoint (checkpoint, depth, arrayed) {
         return $(`
-            if ($end - $start < ${_packet.lengths.join(' + ')}) {
+            if ($end - $start < ${checkpoint.lengths.join(' + ')}) {
                 return parsers.inc.${packet.name}(${packet.name}, ${step})($buffer, $start, $end)
             }
         `)

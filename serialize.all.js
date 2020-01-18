@@ -159,10 +159,10 @@ function generate (packet, bff) {
         return source
     }
 
-    function checkpoint (packet, arrayed) {
+    function checkpoint (checkpoint) {
         const i = isLengthEncoded ? '$i' : '[]'
         return $(`
-            if ($end - $start < ${packet.lengths.join(' + ')}) {
+            if ($end - $start < ${checkpoint.lengths.join(' + ')}) {
                 return {
                     start: $start,
                     serialize: serializers.inc.object(${root}, ${step}, ${i})
