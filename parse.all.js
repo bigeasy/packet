@@ -166,11 +166,11 @@ function bff (path, packet) {
     for (let i = 0, I = packet.fields.length; i < I; i++) {
         const field = packet.fields[i]
         switch (field.type) {
+        case 'lengthEncoding':
+            checkpoint.lengths[0] += field.length.bits / 8
+            break
         case 'lengthEncoded':
             index++
-            checkpoint.lengths[0] += field.length.bits / 8
-            // Maybe split this up in the language definition?
-            fields.push({ ...field, type: 'lengthEncoding' })
             fields.push(checkpoint = { type: 'checkpoint', lengths: [] })
             switch (field.element.type) {
             case 'structure':
@@ -195,10 +195,9 @@ const bogus = require('./bogus')
 
 module.exports = function (compiler, definition, options = {}) {
     const source = join(JSON.parse(JSON.stringify(definition)).map(function (packet) {
+        packet = bogus(packet)
         if (options.bff) {
             packet.fields = bff([ packet.name ], packet)
-        } else {
-            packet = bogus(packet)
         }
         return map(packet, options.bff)
     }))
