@@ -6,6 +6,7 @@ function integer (value, packed, extra = {}) {
             return {
                 ...extra,
                 type: 'integer',
+                fixed: true,
                 bits: ~value,
                 endianness: 'little',
                 compliment: false
@@ -14,6 +15,7 @@ function integer (value, packed, extra = {}) {
         return {
             ...extra,
             type: 'integer',
+            fixed: true,
             bits: ~-value,
             endianness: 'little',
             compliment: true
@@ -22,6 +24,7 @@ function integer (value, packed, extra = {}) {
     return {
         ...extra,
         type: 'integer',
+        fixed: true,
         bits: Math.abs(value),
         endianness: 'big',
         compliment: value < 0
@@ -128,18 +131,37 @@ function map (definitions, packet, depth, extra = {}) {
                 } else if (packet.length == 2) {
                     switch (typeof packet[0]) {
                     case 'number': {
+                            const fields = []
                             assert(Array.isArray(packet[1]))
                             const length = integer(packet[0], false, {})
-                            return [{
+                            fields.push({
                                 ...extra,
                                 type: 'lengthEncoding',
+                                fixed: true,
+                                bits: length.bits,
                                 length
-                            }, {
-                                ...extra,
-                                type: 'lengthEncoded',
-                                // TODO Length encode a structure.
-                                element: integer(packet[1][0], false, {})
-                            }]
+                            })
+                            if (typeof packet[1][0] == 'number') {
+                                const element = integer(packet[1][0], false, {})
+                                fields.push({
+                                    ...extra,
+                                    type: 'lengthEncoded',
+                                    fixed: false,
+                                    bits: 0,
+                                    element: element
+                                })
+                            } else {
+                                const struct = map(definitions, packet[1][0], false, {}).shift()
+                                fields.push({
+                                    ...extra,
+                                    type: 'lengthEncoded',
+                                    bits: struct.bits,
+                                    fixed: false,
+                                    // TODO Length encode a structure.
+                                    element: struct
+                                })
+                            }
+                            return fields
                         }
                         break
                     }
@@ -166,7 +188,11 @@ function map (definitions, packet, depth, extra = {}) {
                 for (const field in packet) {
                     fields.push.apply(fields, map(definitions, packet[field], 1, { name: field }))
                 }
-                return [ { ...extra, type: 'structure', fields } ]
+                const fixed = fields.reduce((fixed, field) => {
+                    return fixed && field.type != 'lengthEncoded'
+                }, true)
+                const bits = fields.reduce((sum, field) => sum + field.bits, 0)
+                return [ { ...extra, fixed, bits, type: 'structure', fields } ]
             } else {
                 return [ packed(packet, depth + 1) ]
             }
