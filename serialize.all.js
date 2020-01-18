@@ -8,8 +8,10 @@ function bff (path, packet, arrayed) {
     for (let i = 0, I = packet.fields.length; i < I; i++) {
         const field = JSON.parse(JSON.stringify(packet.fields[i]))
         switch (field.type) {
-        case 'lengthEncoded':
+        case 'lengthEncoding':
             checkpoint.lengths[0] += field.length.bits / 8
+            break
+        case 'lengthEncoded':
             switch (field.element.type) {
             case 'structure':
                 field.element.fields = bff(path.concat(packet.name), field.element, true)
@@ -143,14 +145,14 @@ function generate (packet, bff) {
         return shifts.join('\n')
     }
 
+    function lengthEncoding (packet, parent) {
+        return word(packet.length, `${parent.name}.${packet.name}.length`)
+    }
+
     function lengthEncoded (packet, parent) {
-        step += 2
         const i = `$i[${++index}]`
-        const length = word(packet.length, `${parent.name}.${packet.name}.length`)
         const looped = word(packet.element, `${parent.name}.${packet.name}[${i}]`)
         const source = $(`
-            `, length, `
-
             for (${i} = 0; ${i} < ${parent.name}.${packet.name}.length; ${i}++) {
                 `, looped, `
             }
@@ -246,6 +248,8 @@ function generate (packet, bff) {
                 }
             `)
             break
+        case 'lengthEncoding':
+            return lengthEncoding(packet, parent)
         case 'lengthEncoded':
             return lengthEncoded(packet, parent)
         case 'buffer':
@@ -276,8 +280,11 @@ function generate (packet, bff) {
     `)
 }
 
+const bogus = require('./bogus')
+
 module.exports = function (compiler, definition, options = {}) {
     const source = join(JSON.parse(JSON.stringify(definition)).map(function (packet) {
+        packet = bogus(packet)
         if (options.bff) {
             packet.fields = bff([ packet.name ], packet)
         }

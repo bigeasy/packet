@@ -31,17 +31,22 @@ function generate (packet) {
         return source
     }
 
-    function lengthEncoded (path, packet) {
+    function lengthEncoding (path, packet) {
         index++
-        const i = `$i[${index}]`
-        const I = `$I[${index}]`
-        let source = ''
-        const again = step + 2
-        _lets.push(packet.name)
-        source = $(`
+        return $(`
             `, integer(path.concat('length'), packet.length), `
                 $i.push(0)
+        `)
 
+    }
+
+    function lengthEncoded (path, packet) {
+        const i = `$i[${index}]`
+        const I = `$I[${index}]`
+        index--
+        const again = step
+        _lets.push(packet.name)
+        return $(`
             `, field([ `${path.join('.')}[${i}]` ], packet.element), `
 
                 if (++${i} != ${path.concat('length').join('.')}) {
@@ -51,8 +56,6 @@ function generate (packet) {
 
                 $i.pop()
         `)
-        index--
-        return source
     }
 
     function field (path, packet) {
@@ -64,6 +67,8 @@ function generate (packet) {
                     `, source, `
                 `)
             }))
+        case 'lengthEncoding':
+            return lengthEncoding(path, packet)
         case 'lengthEncoded':
             return lengthEncoded(path, packet)
         case 'integer':
@@ -113,6 +118,8 @@ function generate (packet) {
     return generated
 }
 
+const bogus = require('./bogus')
+
 module.exports = function (compiler, definition) {
-    return compiler(join(JSON.parse(JSON.stringify(definition)).map(packet => generate(packet))))
+    return compiler(join(JSON.parse(JSON.stringify(definition)).map(packet => generate(bogus(packet)))))
 }
