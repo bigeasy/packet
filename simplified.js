@@ -124,19 +124,22 @@ function map (definitions, packet, depth, extra = {}) {
     case 'object': {
             if (Array.isArray(packet)) {
                 if (packet.length == 1 && typeof packet[0] == 'string') {
-                    return { ...extra, ...definitions[packet[0]] }
+                    return [{ ...extra, ...definitions[packet[0]] }]
                 } else if (packet.length == 2) {
                     switch (typeof packet[0]) {
                     case 'number': {
                             assert(Array.isArray(packet[1]))
                             const length = integer(packet[0], false, {})
-                            return {
+                            return [{
+                                ...extra,
+                                type: 'lengthEncoding',
+                                length
+                            }, {
                                 ...extra,
                                 type: 'lengthEncoded',
-                                length,
                                 // TODO Length encode a structure.
                                 element: integer(packet[1][0], false, {})
-                            }
+                            }]
                         }
                         break
                     }
@@ -157,24 +160,24 @@ function map (definitions, packet, depth, extra = {}) {
                     const done = segment[3].toString()
                     serialize.push({ bits, value, advance, done })
                 }
-                return { type: 'compressed', parse, serialize }
+                return [ { type: 'compressed', parse, serialize } ]
             } else if (depth == 0) {
                 const fields = []
                 for (const field in packet) {
-                    fields.push(map(definitions, packet[field], 1, { name: field }))
+                    fields.push.apply(fields, map(definitions, packet[field], 1, { name: field }))
                 }
-                return { ...extra, type: 'structure', fields }
+                return [ { ...extra, type: 'structure', fields } ]
             } else {
-                return packed(packet, depth + 1)
+                return [ packed(packet, depth + 1) ]
             }
         }
         break
     case 'number': {
-            return integer(packet, false, extra)
+            return [ integer(packet, false, extra) ]
         }
         break
     }
-    return definition
+    return [ definition ]
 }
 
 function visit (packet, f) {
@@ -191,7 +194,7 @@ function visit (packet, f) {
 module.exports = function (packets) {
     const definitions = []
     for (const packet in packets) {
-        definitions.push({ ...(map(definitions, packets[packet], 0)), name: packet })
+        definitions.push.apply(definitions, map(definitions, packets[packet], 0, { name: packet }))
     }
     for (const definition of definitions) {
         visit(definition, (packet) => {

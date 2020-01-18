@@ -3,6 +3,7 @@ module.exports = function (sizeOf) {
         let $_ = 0
 
         $_ += 2
+
         $_ += 2 * object.array.length
 
         return $_

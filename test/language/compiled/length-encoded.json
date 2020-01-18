@@ -5,13 +5,16 @@
   "fields": [
     {
       "name": "value",
-      "type": "lengthEncoded",
+      "type": "lengthEncoding",
       "length": {
         "type": "integer",
         "endianness": "big",
         "bits": 16,
         "compliment": false
-      },
+      }
+    }, {
+      "name": "value",
+      "type": "lengthEncoded",
       "element": {
         "type": "integer",
         "endianness": "big",
