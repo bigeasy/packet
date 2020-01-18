@@ -102,7 +102,6 @@ function generate (packet) {
         ${object} = function (${packet.name}, $step = 0, $i = []) {
             let $bite, $stop, $_
 
-            `, lets, `
             return function serialize ($buffer, $start, $end) {
                 `, dispatch, `
 
