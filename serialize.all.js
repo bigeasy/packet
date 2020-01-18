@@ -16,6 +16,7 @@ function bff (path, packet, arrayed) {
                 break
             default:
                 checkpoint.lengths.push(`${field.element.bits / 8} * ${path.concat(field.name).join('.')}.length`)
+                break
             }
             break
         default:

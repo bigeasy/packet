@@ -44,6 +44,7 @@ function map (packet, bff) {
             switch (field.type) {
             case 'checkpoint':
             case 'condition':
+            case 'lengthEncoding':
                 break
             case 'lengthEncoded':
                 fields.push(field.name + ': new Array')
@@ -72,19 +73,24 @@ function map (packet, bff) {
         `)
     }
 
-    function lengthEncoded (object, property) {
-        step += 2
+    function lengthEncoding (object, field) {
         index++
+        return $(`
+            $i[${index}] = 0
+            `, integer(field.length, `$I[${index}]`), `
+        `)
+    }
+
+    function lengthEncoded (object, field) {
+        step += 2
         const i = `$i[${index}]`
         const I = `$I[${index}]`
+        index--
         return $(`
-            `, integer(property.length, I), `
-
-            for (${i} = 0; ${i} < ${I}; ${i}++) {
-                `, integer(property.element, `${object.name}.${property.name}[${i}]`) ,`
+            for (; ${i} < ${I}; ${i}++) {
+                `, integer(field.element, `${object.name}.${field.name}[${i}]`) ,`
             }
         `)
-        index--
     }
 
     function dispatch (property, object) {
@@ -99,6 +105,8 @@ function map (packet, bff) {
                     return dispatch(field, property)
                 }.bind(this))), `
             `)
+        case 'lengthEncoding':
+            return lengthEncoding(object, property)
         case 'lengthEncoded':
             return lengthEncoded(object, property)
         case 'buffer':
@@ -113,26 +121,26 @@ function map (packet, bff) {
     }
 
     function checkpoint (checkpoint, depth, arrayed) {
+        const signature = [ packet.name, step ]
+        if (packet.lengthEncoded) {
+            signature.push('$i', '$I')
+        }
         return $(`
             if ($end - $start < ${checkpoint.lengths.join(' + ')}) {
-                return parsers.inc.${packet.name}(${packet.name}, ${step})($buffer, $start, $end)
+                return parsers.inc.${packet.name}(${signature.join(', ')})($buffer, $start, $end)
             }
         `)
     }
 
     const source = dispatch(packet)
-
-    // No need to track the end if we are a whole packet parser.
-    const signature = [ '$buffer', '$start', '$end' ]
-    if (!bff) signature.pop()
-
-
-    const entry = `parsers.${bff ? 'bff' : 'all'}.${packet.name}`
+    const variables = packet.lengthEncoded ? 'let $i = [], $I = []' : null
 
     if (bff) {
         return $(`
-            ${entry} = function () {
+            parsers.bff.${packet.name} = function () {
                 return function parse ($buffer, $start, $end) {
+                    `, variables, `
+
                     `, source, `
 
                     return { start: $start, object: object, parse: null }
@@ -141,10 +149,8 @@ function map (packet, bff) {
         `)
     }
 
-    const variables = packet.lengthEncoded ? 'let $i = [], $I = []' : null
-
     return $(`
-        ${entry} = function (${signature.join(', ')}) {
+        parsers.all.${packet.name} = function ($buffer, $start) {
             `, variables, `
 
             `, source, `
@@ -154,20 +160,27 @@ function map (packet, bff) {
     `)
 }
 
-function bff (packet) {
-    const checkpoint = { type: 'checkpoint', lengths: [ 0 ] }, fields = [ checkpoint ]
+let index = -1
+function bff (path, packet) {
+    let checkpoint = { type: 'checkpoint', lengths: [ 0 ] }, fields = [ checkpoint ]
     for (let i = 0, I = packet.fields.length; i < I; i++) {
         const field = packet.fields[i]
         switch (field.type) {
         case 'lengthEncoded':
-            checkpoint.lengths[0] += field.length.bytes
+            index++
+            checkpoint.lengths[0] += field.length.bits / 8
+            // Maybe split this up in the language definition?
+            fields.push({ ...field, type: 'lengthEncoding' })
+            fields.push(checkpoint = { type: 'checkpoint', lengths: [] })
             switch (field.element.type) {
             case 'structure':
                 field.element.fields = bff(field.element)
                 break
             default:
-                throw new Error
+                checkpoint.lengths.push(`${field.element.bits / 8} * $I[${index}]`)
+                break
             }
+            index--
             break
         default:
             checkpoint.lengths[0] += field.bits / 8
@@ -178,10 +191,27 @@ function bff (packet) {
     return fields
 }
 
+// TODO Split encoding and encoded in the language.
+function bogus (path, packet) {
+    let fields = []
+    for (let i = 0, I = packet.fields.length; i < I; i++) {
+        const field = packet.fields[i]
+        switch (field.type) {
+        case 'lengthEncoded':
+            fields.push({ ...field, type: 'lengthEncoding' })
+            break
+        }
+        fields.push(field)
+    }
+    return fields
+}
+
 module.exports = function (compiler, definition, options = {}) {
     const source = join(JSON.parse(JSON.stringify(definition)).map(function (packet) {
         if (options.bff) {
-            packet.fields = bff(packet)
+            packet.fields = bff([ packet.name ], packet)
+        } else {
+            packet.fields = bogus([ packet.name ], packet)
         }
         return map(packet, options.bff)
     }))
