@@ -34,8 +34,8 @@ module.exports = function (okay) {
 
         const sizeOf = packet.sizeOf.object(options.object)
 
-        if (options.stopAt == 'sizeOf') {
-            console.log('sizeOf', sizeOf)
+        if (options.stopAt == 'sizeof') {
+            console.log('sizeof', sizeOf)
             return
         }
         composers.serializer.all(
