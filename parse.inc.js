@@ -171,8 +171,6 @@ function generate (packet) {
     `)
 }
 
-const bogus = require('./bogus')
-
 module.exports = function (compiler, definition) {
-    return compiler(join(JSON.parse(JSON.stringify(definition)).map(packet => generate(bogus(packet)))))
+    return compiler(join(JSON.parse(JSON.stringify(definition)).map(packet => generate(packet))))
 }

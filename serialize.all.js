@@ -280,11 +280,8 @@ function generate (packet, bff) {
     `)
 }
 
-const bogus = require('./bogus')
-
 module.exports = function (compiler, definition, options = {}) {
     const source = join(JSON.parse(JSON.stringify(definition)).map(function (packet) {
-        packet = bogus(packet)
         if (options.bff) {
             packet.fields = bff([ packet.name ], packet)
         }
