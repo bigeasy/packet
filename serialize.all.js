@@ -34,7 +34,20 @@ function bff (path, packet, arrayed) {
 function generate (packet, bff) {
     let step = 0
     let index = -1
-    const constants = {}
+
+    function word (field, variable) {
+        const bytes = field.bits / 8
+        let bite = field.endianness == 'little' ? 0 : bytes - 1
+        const stop = field.endianness == 'little' ? bytes : -1
+        const direction = field.endianness == 'little' ? 1 : -1
+        const shifts = []
+        while (bite != stop) {
+            const shift = bite ? variable + ' >>> ' + bite * 8 : variable
+            shifts.push(`$buffer[$start++] = ${shift} & 0xff`)
+            bite += direction
+        }
+        return shifts.join('\n')
+    }
 
     function integer (path, field) {
         step += 2
@@ -56,29 +69,17 @@ function generate (packet, bff) {
         }
     }
 
-    function word (field, variable) {
-        const bytes = field.bits / 8
-        let bite = field.endianness == 'little' ? 0 : bytes - 1
-        const stop = field.endianness == 'little' ? bytes : -1
-        const direction = field.endianness == 'little' ? 1 : -1
-        const shifts = []
-        while (bite != stop) {
-            const shift = bite ? variable + ' >>> ' + bite * 8 : variable
-            shifts.push(`$buffer[$start++] = ${shift} & 0xff`)
-            bite += direction
-        }
-        return shifts.join('\n')
+    function lengthEncoding (path, field) {
+        step += 2
+        return word(field, `${path}.${field.name}.length`)
     }
 
-    function lengthEncoding (packet, path) {
-        return word(packet, `${path}.${packet.name}.length`)
-    }
-
-    function lengthEncoded (packet, path) {
+    function lengthEncoded (path, field) {
+        step += 2
         const i = `$i[${++index}]`
-        const looped = word(packet.element, `${path}.${packet.name}[${i}]`)
+        const looped = word(field.element, `${path}.${field.name}[${i}]`)
         const source = $(`
-            for (${i} = 0; ${i} < ${path}.${packet.name}.length; ${i}++) {
+            for (${i} = 0; ${i} < ${path}.${field.name}.length; ${i}++) {
                 `, looped, `
             }
         `)
@@ -92,20 +93,19 @@ function generate (packet, bff) {
             if ($end - $start < ${checkpoint.lengths.join(' + ')}) {
                 return {
                     start: $start,
-                    serialize: serializers.inc.object(${root}, ${step}, ${i})
+                    serialize: serializers.inc.object(${packet.name}, ${step}, ${i})
                 }
             }
         `)
     }
 
-    function field (packet, path) {
+    function dispatch (path, packet) {
         switch (packet.type) {
         case 'checkpoint':
-            // TODO `variables` can be an object member.
-            return checkpoint(packet, packet.arrayed)
+            return checkpoint(packet)
         case 'structure':
             const source = join(packet.fields.map(field => {
-                return field(field, path.concat(packet.name))
+                return dispatch(path.concat(packet.name), field)
             }))
             return $(`
                 {
@@ -116,9 +116,9 @@ function generate (packet, bff) {
             `)
             break
         case 'lengthEncoding':
-            return lengthEncoding(packet, path)
+            return lengthEncoding(path, packet)
         case 'lengthEncoded':
-            return lengthEncoded(packet, path)
+            return lengthEncoded(path, packet)
         case 'buffer':
             return buffer(packet)
         case 'integer':
@@ -126,18 +126,17 @@ function generate (packet, bff) {
         }
     }
 
-    const root = packet.name
     const source = join(packet.fields.map(f => {
-        return field(f, [ packet.name ])
+        return dispatch([ packet.name ], f)
     }))
-    var variables = [ '$_' ]
+    const lets = [ '$_' ]
     if (packet.lengthEncoded) {
-        variables.push('$i = []')
+        lets.push('$i = []')
     }
     return $(`
         serializers.${bff ? 'bff' : 'all'}.${packet.name} = function (${packet.name}) {
             return function ($buffer, $start, $end) {
-                let ${variables.join(', ')}
+                let ${lets.join(', ')}
 
                 `, source, `
 
