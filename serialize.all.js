@@ -110,7 +110,7 @@ function generate (packet, bff) {
         `)
     }
 
-    function integer (packet, field) {
+    function integer (path, field) {
         step += 2
         if (field.fields) {
             const pack = _pack(field, '$_')
@@ -123,7 +123,7 @@ function generate (packet, bff) {
             `)
         } else {
             return $(`
-                $_ = ${packet.type == 'lengthEncoded' ? '$element' : packet.name}.${field.name}
+                $_ = ${path}.${field.name}
 
                 `, word(field, '$_'), `
             `)
@@ -145,15 +145,15 @@ function generate (packet, bff) {
         return shifts.join('\n')
     }
 
-    function lengthEncoding (packet, parent) {
-        return word(packet, `${parent.name}.${packet.name}.length`)
+    function lengthEncoding (packet, path) {
+        return word(packet, `${path}.${packet.name}.length`)
     }
 
-    function lengthEncoded (packet, parent) {
+    function lengthEncoded (packet, path) {
         const i = `$i[${++index}]`
-        const looped = word(packet.element, `${parent.name}.${packet.name}[${i}]`)
+        const looped = word(packet.element, `${path}.${packet.name}[${i}]`)
         const source = $(`
-            for (${i} = 0; ${i} < ${parent.name}.${packet.name}.length; ${i}++) {
+            for (${i} = 0; ${i} < ${path}.${packet.name}.length; ${i}++) {
                 `, looped, `
             }
         `)
@@ -193,7 +193,7 @@ function generate (packet, bff) {
         `)
     }
 
-    function field (packet, parent) {
+    function field (packet, path) {
         switch (packet.type) {
         case 'checkpoint':
             // TODO `variables` can be an object member.
@@ -238,7 +238,7 @@ function generate (packet, bff) {
             return _condition(packet, packet.arrayed)
         case 'structure':
             const source = join(packet.fields.map(field => {
-                return field(field, parent)
+                return field(field, path.concat(packet.name))
             }))
             return $(`
                 {
@@ -249,19 +249,19 @@ function generate (packet, bff) {
             `)
             break
         case 'lengthEncoding':
-            return lengthEncoding(packet, parent)
+            return lengthEncoding(packet, path)
         case 'lengthEncoded':
-            return lengthEncoded(packet, parent)
+            return lengthEncoded(packet, path)
         case 'buffer':
             return buffer(packet)
         case 'integer':
-            return integer(parent, packet)
+            return integer(path, packet)
         }
     }
 
     const root = packet.name
     const source = join(packet.fields.map(f => {
-        return field(f, packet)
+        return field(f, [ packet.name ])
     }))
     var variables = [ '$_' ]
     if (packet.lengthEncoded) {
