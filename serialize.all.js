@@ -77,7 +77,6 @@ function generate (packet, bff) {
             ...field.element,
             name: `${field.name}[${i}]`
         })
-        console.log(looped)
         const source = $(`
             for (${i} = 0; ${i} < ${path}.${field.name}.length; ${i}++) {
                 `, looped, `
@@ -122,7 +121,6 @@ function generate (packet, bff) {
         case 'buffer':
             return buffer(packet)
         case 'integer':
-            console.log(path)
             return integer(path, packet)
         }
     }

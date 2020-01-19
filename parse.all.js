@@ -6,29 +6,6 @@ function map (packet, bff) {
     let index = -1
     let step = 1
 
-    function integer (field, assignee) {
-        const bytes = field.bits / 8
-        let bite = field.endianness == 'little' ? 0 : bytes - 1
-        const stop = field.endianness == 'little' ? bytes : -1
-        const direction = field.endianness == 'little' ? 1 : -1
-        const reads = []
-        while (bite != stop) {
-            reads.unshift('$buffer[$start++]')
-            if (bite) {
-                reads[0] += ' * 0x' + Math.pow(256, bite).toString(16)
-            }
-            bite += direction
-        }
-        if (bytes == 1) {
-            return `${assignee} = ${reads.join('')}`
-        }
-        step += 2
-        return $(`
-            ${assignee} =
-                `, reads.reverse().join(' +\n'), `
-        `)
-    }
-
     // TODO Create a null entry, then assign a value later on.
     function vivifier (asignee, packet) {
         const fields = []
@@ -61,6 +38,29 @@ function map (packet, bff) {
             const ${asignee} = {
                 `, fields.join(',\n'), `
             }
+        `)
+    }
+
+    function integer (field, assignee) {
+        const bytes = field.bits / 8
+        let bite = field.endianness == 'little' ? 0 : bytes - 1
+        const stop = field.endianness == 'little' ? bytes : -1
+        const direction = field.endianness == 'little' ? 1 : -1
+        const reads = []
+        while (bite != stop) {
+            reads.unshift('$buffer[$start++]')
+            if (bite) {
+                reads[0] += ' * 0x' + Math.pow(256, bite).toString(16)
+            }
+            bite += direction
+        }
+        if (bytes == 1) {
+            return `${assignee} = ${reads.join('')}`
+        }
+        step += 2
+        return $(`
+            ${assignee} =
+                `, reads.reverse().join(' +\n'), `
         `)
     }
 
