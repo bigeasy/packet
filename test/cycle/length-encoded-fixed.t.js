@@ -2,7 +2,7 @@ require('proof')(0, prove)
 
 function prove (okay) {
     require('./cycle')(okay)({
-        name: 'length-encoded-words',
+        name: 'length-encoded-fixed',
         define: {
             object: { array: [ 16, [{ first: 16, second: 16 }] ]  }
         },
