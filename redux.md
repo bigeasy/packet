@@ -1,3 +1,68 @@
+## Sun Jan 19 04:21:24 CST 2020
+
+```javascript
+{
+    packet: {
+        mysqlInteger: {
+            $parse: {
+                $sip: 8n,
+                $return: [
+                    $sip => $sip < 251, '$sip'
+                    $sip => $sip == 0xfc, 16n
+                    $sip => $sip == 0xfd, 24n
+                    $sip => $sip == 0xfe, 64n
+                ]
+            },
+            // Oops, not putting down the flag.
+            $serialize: [
+                $_ => $_ < 251n, 8n
+                $_ => $_ >= 251n && $_ < 2n ^ 16, 16n
+                $_ => $_ >= 2n ^ 16 && $_ < 2n ^ 24, 24n,
+                64n
+            ]
+        },
+        utf8: {
+            $parse: {
+                $sip: 8,
+                $return: [
+                    $sip => $sip & 0x80 == 0, '$sip'
+                    $sip => $sip & 0xe0 == 0xc0, {
+                        $sip: '$sip',
+                        $first: 8
+                        $return: $_ => $_.$sip & 0xe0 << 8 + $_.$first & 0xc0
+                    }
+                ]
+            },
+            $serialize: [
+                $_ => $_ < 0x80, 8,
+                $_ => $_ >= 0x80 && < 0x800, [
+                    16, $_ => ($_ >>> 6 & 0x1f | 0xc0 << 8) & ($_ & 0x3f)
+                ]
+            ]
+        },
+        string: [ 'mysqlInteger', [ 'utf8' ] ] // sensible chuckle
+    }
+}
+```
+
+And with that, minification of the definitions is not allowed. It would destroy
+the information in the functions. Not sure what this means for anyone using
+something like Webpack. Not sure I care. Seems like you ought to be able to sort
+out your own tools and not minify a particular file, still be able to source it
+somehow.
+
+Whew. UTF-8 is a beast. Yes, we have to have separate parse and serialize. Yes,
+we have to have some way of referencing parsers stored as functions. Yike, how
+are you going to do best-foot-forward parsers with this mess?
+
+With some rules, we could parse the function bodies and convert the logic to
+different languages.
+
+This is the point where I look at future of this project and decide it is a
+project for a later date. Will probably push through to length-encoded nested
+structures and some sort of conditional, but this hill on the horizon, well, it
+looks better on the horizon than under foot.
+
 ## Sun Jan 12 16:04:33 CST 2020
 
 The differentiation between lookup and nested structures was going to be that a
