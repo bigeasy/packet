@@ -34,7 +34,7 @@ function generate (packet) {
     function lengthEncoding (path, packet) {
         index++
         return $(`
-            `, integer(path.concat('length'), packet.length), `
+            `, integer(path.concat('length'), packet), `
                 $i.push(0)
         `)
 

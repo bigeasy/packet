@@ -9,7 +9,7 @@ function generate (packet) {
             return `$_ += ${field.bits / 8}`
         case 'lengthEncoding':
             return $(`
-                $_ += ${field.length.bits / 8}
+                $_ += ${field.bits / 8}
             `)
         case 'lengthEncoded':
             return $(`

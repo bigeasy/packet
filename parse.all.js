@@ -77,7 +77,7 @@ function map (packet, bff) {
         index++
         return $(`
             $i[${index}] = 0
-            `, integer(field.length, `$I[${index}]`), `
+            `, integer(field, `$I[${index}]`), `
         `)
     }
 
@@ -167,7 +167,7 @@ function bff (path, packet) {
         const field = packet.fields[i]
         switch (field.type) {
         case 'lengthEncoding':
-            checkpoint.lengths[0] += field.length.bits / 8
+            checkpoint.lengths[0] += field.bits / 8
             break
         case 'lengthEncoded':
             index++

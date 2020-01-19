@@ -11,13 +11,8 @@ require('proof')(1, okay => {
             type: 'lengthEncoding',
             fixed: true,
             bits: 16,
-            length: {
-                type: 'integer',
-                fixed: true,
-                bits: 16,
-                endianness: 'big',
-                compliment: false
-            }
+            endianness: 'big',
+            compliment: false
         }, {
             name: 'value',
             type: 'lengthEncoded',

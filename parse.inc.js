@@ -86,7 +86,7 @@ function generate (packet) {
         const i = `$i[${index}]`
         const I = `$I[${index}]`
         return $(`
-            `, integer([ I ], field.length), `
+            `, integer([ I ], field), `
                 ${i} = 0
         `)
     }

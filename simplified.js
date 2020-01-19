@@ -135,11 +135,9 @@ function map (definitions, packet, depth, extra = {}) {
                             assert(Array.isArray(packet[1]))
                             const length = integer(packet[0], false, {})
                             fields.push({
-                                ...extra,
+                                ...length,
                                 type: 'lengthEncoding',
-                                fixed: true,
-                                bits: length.bits,
-                                length
+                                ...extra
                             })
                             if (typeof packet[1][0] == 'number') {
                                 const element = integer(packet[1][0], false, {})

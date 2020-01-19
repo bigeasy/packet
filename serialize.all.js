@@ -9,7 +9,7 @@ function bff (path, packet, arrayed) {
         const field = JSON.parse(JSON.stringify(packet.fields[i]))
         switch (field.type) {
         case 'lengthEncoding':
-            checkpoint.lengths[0] += field.length.bits / 8
+            checkpoint.lengths[0] += field.bits / 8
             break
         case 'lengthEncoded':
             switch (field.element.type) {
@@ -146,7 +146,7 @@ function generate (packet, bff) {
     }
 
     function lengthEncoding (packet, parent) {
-        return word(packet.length, `${parent.name}.${packet.name}.length`)
+        return word(packet, `${parent.name}.${packet.name}.length`)
     }
 
     function lengthEncoded (packet, parent) {
