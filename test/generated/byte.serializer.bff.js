@@ -1,8 +1,6 @@
 module.exports = function (serializers) {
     serializers.bff.object = function (object) {
         return function ($buffer, $start, $end) {
-            let $_
-
             if ($end - $start < 1) {
                 return {
                     start: $start,
@@ -10,9 +8,7 @@ module.exports = function (serializers) {
                 }
             }
 
-            $_ = object.word
-
-            $buffer[$start++] = $_ & 0xff
+            $buffer[$start++] = object.word & 0xff
 
             return { start: $start, serialize: null }
         }

@@ -1,7 +1,7 @@
 module.exports = function (serializers) {
     serializers.bff.object = function (object) {
         return function ($buffer, $start, $end) {
-            let $_, $i = []
+            let $i = []
 
             if ($end - $start < 2 + 2 * object.array.length) {
                 return {

@@ -1,7 +1,7 @@
 module.exports = function (serializers) {
     serializers.all.object = function (object) {
         return function ($buffer, $start, $end) {
-            let $_, $i = []
+            let $i = []
 
             $buffer[$start++] = object.array.length >>> 8 & 0xff
             $buffer[$start++] = object.array.length & 0xff

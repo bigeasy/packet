@@ -61,11 +61,7 @@ function generate (packet, bff) {
                 }
             `)
         } else {
-            return $(`
-                $_ = ${path}.${field.name}
-
-                `, word(field, '$_'), `
-            `)
+            return word(field, `${path.join('.')}.${field.name}`)
         }
     }
 
@@ -77,7 +73,11 @@ function generate (packet, bff) {
     function lengthEncoded (path, field) {
         step += 2
         const i = `$i[${++index}]`
-        const looped = word(field.element, `${path}.${field.name}[${i}]`)
+        const looped = dispatch(path, {
+            ...field.element,
+            name: `${field.name}[${i}]`
+        })
+        console.log(looped)
         const source = $(`
             for (${i} = 0; ${i} < ${path}.${field.name}.length; ${i}++) {
                 `, looped, `
@@ -122,6 +122,7 @@ function generate (packet, bff) {
         case 'buffer':
             return buffer(packet)
         case 'integer':
+            console.log(path)
             return integer(path, packet)
         }
     }
@@ -129,14 +130,11 @@ function generate (packet, bff) {
     const source = join(packet.fields.map(f => {
         return dispatch([ packet.name ], f)
     }))
-    const lets = [ '$_' ]
-    if (packet.lengthEncoded) {
-        lets.push('$i = []')
-    }
+    const lets = packet.lengthEncoded ? 'let $i = []' : null
     return $(`
         serializers.${bff ? 'bff' : 'all'}.${packet.name} = function (${packet.name}) {
             return function ($buffer, $start, $end) {
-                let ${lets.join(', ')}
+                `, lets, `
 
                 `, source, `
 
