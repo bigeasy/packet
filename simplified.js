@@ -155,7 +155,7 @@ function map (definitions, packet, depth, extra = {}) {
                                 fields.push({
                                     ...extra,
                                     type: 'lengthEncoded',
-                                    bits: struct.bits,
+                                    bits: 0,
                                     fixed: false,
                                     // TODO Length encode a structure.
                                     element: struct

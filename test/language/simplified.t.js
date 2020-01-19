@@ -1,4 +1,4 @@
-require('proof')(4, async (okay) => {
+require('proof')(1, async (okay) => {
     const simplified = require('../../simplified')
     const path = require('path')
     const fs = require('fs').promises
@@ -8,9 +8,6 @@ require('proof')(4, async (okay) => {
         okay(actual, expected, name)
     }
     await test('minimal', { packet: { value: 16 } })
-    await test('little-endian', { packet: { value: ~16 } })
-    await test('length-encoded', { packet: { value: [ 16, [ 16 ] ] } })
-    await test('length-encoded-fixed', { packet: { value: [ 16, [{ first: 16, second: 16 }] ] } })
 
     const encode = [
         8, value => (value % 128) & (value > 128 ? 0x80 : 0x0), value => Math.floor(value / 128), value => value == 0
