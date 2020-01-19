@@ -72,6 +72,21 @@ The rule for JavaScript code snippets shall be: if the function fits in one line
 of code, then we will inline it, if not then we will declare the function and
 call it, hopefully the JIT compiler will inline it.
 
+## Mon Oct 28 09:36:37 CDT 2019
+
+Parsing seven things.
+
+ * MQTT ~
+ * DNS ~
+ * MySQL ~
+ * tar ~
+ * Cap'n Proto ~
+ * Minecraft ~
+
+What is the last one? WebSockets, but I'm not really interested in that. Leaving
+it open and maybe it is WebSockets and maybe by then it is a doodle, but look
+for something that has some really ugly properties.
+
 ## Sun Oct 27 20:38:43 CDT 2019
 
 This is a library I sketched out many years ago, but I never got around to
