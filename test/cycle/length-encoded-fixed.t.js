@@ -6,7 +6,7 @@ function prove (okay) {
         define: {
             object: { array: [ 16, [{ first: 16, second: 16 }] ]  }
         },
-        object: { array: [{ first: 0x1234, second: 0x4567 }, { first: 0x890a, second: 0xcdef }] },
-        stopAt: 'sizeof'
+        object: { array: [{ first: 0x1234, second: 0x4567 }, { first: 0x89a0, second: 0xcdef }] },
+        stopAt: 'serialize.all'
     })
 }

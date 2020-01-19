@@ -104,7 +104,7 @@ function generate (packet, bff) {
         case 'checkpoint':
             return checkpoint(packet)
         case 'structure':
-            const source = join(packet.fields.map(field => {
+            return join(packet.fields.map(field => {
                 return dispatch(path.concat(packet.name), field)
             }))
             return $(`
