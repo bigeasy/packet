@@ -36,21 +36,6 @@ function generate (packet, bff) {
     let index = -1
     const constants = {}
 
-    function buffer (field) {
-        if (field.transform) {
-            return $(`
-                ${value} = new Buffer(${object}.${field.name}, ${JSON.stringify(field.transform)})
-                for (var ${index} = 0, ${end} = ${value}.length; ${index} < ${end}; ${index}++) {
-                    $buffer[start++] = ${value}[${index}]
-                }
-                ${value} = ${JSON.stringify(field.terminator)}
-                for (var ${index} = 0, ${end} = ${value}.length; ${index} < ${end}; ${index}++) {
-                    $buffer[start++] = ${value}[${index}]
-                }
-            `)
-        }
-    }
-
     function integer (path, field) {
         step += 2
         if (field.fields) {
@@ -71,7 +56,6 @@ function generate (packet, bff) {
         }
     }
 
-    // TODO How do I inject code?
     function word (field, variable) {
         const bytes = field.bits / 8
         let bite = field.endianness == 'little' ? 0 : bytes - 1
@@ -119,44 +103,6 @@ function generate (packet, bff) {
         case 'checkpoint':
             // TODO `variables` can be an object member.
             return checkpoint(packet, packet.arrayed)
-        case 'compressed':
-            const compression = []
-            let first = true
-            for (let i = 0, I = packet.serialize.length; i < I; i++) {
-                const serialize = packet.serialize[i]
-                if (i < I - 1) {
-                    compression.push($(`
-
-                        bits = (${serialize.value})(value)
-                        value = (${serialize.advance})(value)
-
-                        `, word(serialize, 'bits'), `
-
-                        if ((${serialize.done})(value)) {
-                            break
-                        }
-                    `))
-                } else {
-                    compression.push($(`
-
-                        bits = (${serialize.value})(value)
-                        value = (${serialize.advance})(value)
-
-                        `, word(serialize, 'bits'), `
-                    `))
-                }
-            }
-            return $(`
-                do {
-                    value = object.${packet.name}
-
-                    let bits
-                    `, compression.join('\n'), `
-                } while(false)
-            `)
-            break
-        case 'condition':
-            return _condition(packet, packet.arrayed)
         case 'structure':
             const source = join(packet.fields.map(field => {
                 return field(field, path.concat(packet.name))
