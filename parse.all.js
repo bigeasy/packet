@@ -35,7 +35,7 @@ function map (packet, bff) {
             return object + ' = {}'
         }
         return $(`
-            const ${asignee} = {
+            ${asignee} = {
                 `, fields.join(',\n'), `
             }
         `)
@@ -64,7 +64,7 @@ function map (packet, bff) {
         `)
     }
 
-    function lengthEncoding (object, field) {
+    function lengthEncoding (field) {
         index++
         return $(`
             $i[${index}] = 0
@@ -72,42 +72,43 @@ function map (packet, bff) {
         `)
     }
 
-    function lengthEncoded (object, field) {
+    function lengthEncoded (path, field) {
         step += 2
         const i = `$i[${index}]`
         const I = `$I[${index}]`
         index--
+        const looped = dispatch(path, {
+            ...field.element,
+            name: `${field.name}[${i}]`
+        })
         return $(`
             for (; ${i} < ${I}; ${i}++) {
-                `, integer(field.element, `${object.name}.${field.name}[${i}]`) ,`
+                `, looped, `
             }
         `)
     }
 
-    function dispatch (property, object) {
-        switch (property.type) {
+    function dispatch (path, field) {
+        switch (field.type) {
         case 'checkpoint':
-            return checkpoint(property)
-        case 'structure':
-            return $(`
-                `, vivifier(property.name, property), `
+            return checkpoint(field)
+        case 'structure': {
+                const descent = path.concat(field.name)
+                const asignee = path.length == 0 ? `const ${descent[0]}` : descent.join('.')
+                return $(`
+                    `, vivifier(asignee, field), `
 
-                `, join(property.fields.map(function (field) {
-                    return dispatch(field, property)
-                }.bind(this))), `
-            `)
-        case 'lengthEncoding':
-            return lengthEncoding(object, property)
-        case 'lengthEncoded':
-            return lengthEncoded(object, property)
-        case 'buffer':
-            return this.buffer(packet, depth)
-        default:
-            const assignee = property.fields != null ? 'value' : `object.${property.name}`
-            if (property.type === 'integer') {
-                return integer(property, assignee)
+                    `, join(field.fields.map(function (field) {
+                        return dispatch(descent, field)
+                    }.bind(this))), `
+                `)
             }
-            break
+        case 'lengthEncoding':
+            return lengthEncoding(field)
+        case 'lengthEncoded':
+            return lengthEncoded(path, field)
+        default:
+            return integer(field, path.concat(field.name).join('.'))
         }
     }
 
@@ -123,7 +124,7 @@ function map (packet, bff) {
         `)
     }
 
-    const source = dispatch(packet)
+    const source = dispatch([], packet)
     const variables = packet.lengthEncoded ? 'let $i = [], $I = []' : null
 
     if (bff) {
