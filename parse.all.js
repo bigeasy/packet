@@ -23,18 +23,10 @@ function map (packet, bff) {
             return `${assignee} = ${reads.join('')}`
         }
         step += 2
-        const parsed = $(`
+        return $(`
             ${assignee} =
                 `, reads.reverse().join(' +\n'), `
         `)
-        if (field.fields) {
-            return $(`
-                `, parsed, `
-
-                `, unpackAll(qualify('object', depth), field), `
-            `)
-        }
-        return parsed
     }
 
     // TODO Create a null entry, then assign a value later on.
@@ -43,7 +35,6 @@ function map (packet, bff) {
         packet.fields.forEach(function (field) {
             switch (field.type) {
             case 'checkpoint':
-            case 'condition':
             case 'lengthEncoding':
                 break
             case 'lengthEncoded':
