@@ -14,7 +14,11 @@ function bff (path, packet, arrayed) {
         case 'lengthEncoded':
             switch (field.element.type) {
             case 'structure':
-                field.element.fields = bff(path.concat(packet.name), field.element, true)
+                if (field.element.fixed) {
+                    checkpoint.lengths.push(`${field.element.bits / 8} * ${path.concat(field.name).join('.')}.length`)
+                } else {
+                    field.element.fields = bff(path.concat(packet.name), field.element, true)
+                }
                 break
             default:
                 checkpoint.lengths.push(`${field.element.bits / 8} * ${path.concat(field.name).join('.')}.length`)
