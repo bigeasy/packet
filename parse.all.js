@@ -166,7 +166,11 @@ function bff (path, packet) {
             fields.push(checkpoint = { type: 'checkpoint', lengths: [] })
             switch (field.element.type) {
             case 'structure':
-                field.element.fields = bff(field.element)
+                if (field.element.fixed = true) {
+                    checkpoint.lengths.push(`${field.element.bits / 8} * $I[${index}]`)
+                } else {
+                    field.element.fields = bff(field.element)
+                }
                 break
             default:
                 checkpoint.lengths.push(`${field.element.bits / 8} * $I[${index}]`)
