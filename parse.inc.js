@@ -4,16 +4,9 @@ const $ = require('programmatic')
 
 function generate (packet) {
     let step = 0, index = -1
-    const variables = []
-
-    function read (field) {
-    }
 
     function integer (path, field) {
         const bytes = field.bits / 8
-
-        variables.push('$_', '$bite')
-
         if (bytes == 1) {
             return $(`
                 case ${step++}:
@@ -98,7 +91,7 @@ function generate (packet) {
         // Invoked here to set `again`.
         const again = step
         const source = $(`
-            `, field([ `${path.join('.')}[${i}]` ], packet.element), `
+            `, dispatch([ `${path.join('.')}[${i}]` ], packet.element), `
                 if (++${i} != ${I}) {
                     $step = ${again}
                     continue
@@ -108,7 +101,7 @@ function generate (packet) {
         return source
     }
 
-    function field (path, packet, depth, arrayed) {
+    function dispatch (path, packet, depth, arrayed) {
         switch (packet.type) {
         case 'structure':
             const push = $(`
@@ -121,14 +114,12 @@ function generate (packet) {
 
             `)
             const source =  join(packet.fields.map(function (f) {
-                return field(f.name ? path.concat(f.name) : path, f)
+                return dispatch(f.name ? path.concat(f.name) : path, f)
             }.bind(this)))
             return $(`
                 `, push, `
                 `, source, `
             `)
-        case 'condition':
-            return this.condition(packet)
         case 'lengthEncoding':
             return lengthEncoding(path, packet)
         case 'lengthEncoded':
@@ -138,10 +129,9 @@ function generate (packet) {
         }
     }
 
-    const source = field([ packet.name ], packet, 0)
-    let dispatch = $(`
+    let source = $(`
         switch ($step) {
-        `, source, `
+        `, dispatch([ packet.name ], packet, 0), `
             return { start: $start, object: ${packet.name}, parse: null }
         }
     `)
@@ -150,9 +140,9 @@ function generate (packet) {
     const signature = [ `${packet.name} = {}`, '$step = 0' ]
     if (packet.lengthEncoded) {
         signature.push('$i = []', '$I = []')
-        dispatch = $(`
+        source = $(`
             for (;;) {
-                `, dispatch, `
+                `, source, `
                 break
             }
         `)
@@ -165,7 +155,7 @@ function generate (packet) {
         ${object} = function (${signature.join(', ')}) {
             let ${lets.join(', ')}
             return function parse ($buffer, $start, $end) {
-                `, dispatch, `
+                `, source, `
             }
         }
     `)
