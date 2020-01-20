@@ -2,7 +2,7 @@ const $ = require('programmatic')
 const join = require('./join')
 
 function generate (packet) {
-    let step = 0, index = -1, isLengthEncoded = packet.lengthEncoded
+    let step = 0, index = -1
 
     function integer (path, field) {
         const endianness = field.endianness || 'big'
@@ -46,7 +46,7 @@ function generate (packet) {
         index--
         const again = step
         return $(`
-            `, field([ `${path.join('.')}[${i}]` ], packet.element), `
+            `, dispatch([ `${path.join('.')}[${i}]` ], packet.element), `
 
                 if (++${i} != ${path.concat('length').join('.')}) {
                     $step = ${again}
@@ -57,11 +57,11 @@ function generate (packet) {
         `)
     }
 
-    function field (path, packet) {
+    function dispatch (path, packet) {
         switch (packet.type) {
         case 'structure':
-            return join(packet.fields.map(f => {
-                const source = field(f.name ? path.concat(f.name) : path, f)
+            return join(packet.fields.map(field => {
+                const source = dispatch(field.name ? path.concat(field.name) : path, field)
                 return $(`
                     `, source, `
                 `)
@@ -75,10 +75,9 @@ function generate (packet) {
         }
     }
 
-    const source = field([ packet.name ], packet)
-    let dispatch = $(`
+    let source = $(`
         switch ($step) {
-        `, source, `
+        `, dispatch([ packet.name ], packet), `
 
             $step = ${step}
 
@@ -88,10 +87,10 @@ function generate (packet) {
 
         }
     `)
-    if (isLengthEncoded) {
-        dispatch = $(`
+    if (packet.lengthEncoded) {
+        source = $(`
             for (;;) {
-                `, dispatch, `
+                `, source, `
 
                 break
             }
@@ -103,7 +102,7 @@ function generate (packet) {
             let $bite, $stop, $_
 
             return function serialize ($buffer, $start, $end) {
-                `, dispatch, `
+                `, source, `
 
                 return { start: $start, serialize: null }
             }
