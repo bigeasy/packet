@@ -13,6 +13,12 @@ That was the general order of things and would allow me to run through and
 delete the rest of the legacy which I'm still keeping around because there may
 be some things I need to swipe.
 
+Remember that his is much easier becuase of `let`. You're considering how to use
+the namespace of the function wiht sigils. You have rules about nested names.
+
+Remember to optimize last. Someone might be able to write a parser by hand that
+is faster than Packet at first, but you'll catch up over time.
+
 ## Sun Jan 19 04:21:24 CST 2020
 
 ```javascript
