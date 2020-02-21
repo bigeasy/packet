@@ -1,3 +1,18 @@
+## Thu Feb 20 23:42:09 CST 2020
+
+Going to page this project into memory and attempt to leave a roadmap in this
+diary entry as I do.
+
+ * Length-encoded arrays containing length-encoded arrays.
+ * Conditionals.
+ * Packed integers.
+ * Two's compliment.
+ * Checkums.
+
+That was the general order of things and would allow me to run through and
+delete the rest of the legacy which I'm still keeping around because there may
+be some things I need to swipe.
+
 ## Sun Jan 19 04:21:24 CST 2020
 
 ```javascript
