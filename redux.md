@@ -19,6 +19,10 @@ the namespace of the function wiht sigils. You have rules about nested names.
 Remember to optimize last. Someone might be able to write a parser by hand that
 is faster than Packet at first, but you'll catch up over time.
 
+The last thing you where thinking is that you wanted to normalize the descent
+logic across all the different generators. Some of them have a different concept
+for their `dispatch` function.
+
 ## Sun Jan 19 04:21:24 CST 2020
 
 ```javascript
