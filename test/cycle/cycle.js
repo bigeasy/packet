@@ -36,6 +36,8 @@ module.exports = function (okay) {
 
         if (options.stopAt == 'sizeof') {
             console.log('sizeof', sizeOf)
+            okay.inc(1)
+            okay(true)
             return
         }
         composers.serializer.all(
