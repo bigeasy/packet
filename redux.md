@@ -23,6 +23,14 @@ The last thing you where thinking is that you wanted to normalize the descent
 logic across all the different generators. Some of them have a different concept
 for their `dispatch` function.
 
+Also, I know there is confusion about how to do `$sip` and the like, so we need
+a special sigil for internals like `_$` as a prefix, which makes for a simple
+rule that only causes problems on rare occasions.
+
+Note that at the outset, I'm not going to worry about namespaces in whole
+parsers and use the constructed object as the namespace. A place where
+performance may be inproved in the future by using local variables.
+
 ## Sun Jan 19 04:21:24 CST 2020
 
 ```javascript
@@ -39,6 +47,7 @@ for their `dispatch` function.
                 ]
             },
             // Oops, not putting down the flag.
+            // TODO ^^^ What?
             $serialize: [
                 $_ => $_ < 251n, 8n
                 $_ => $_ >= 251n && $_ < 2n ^ 16, 16n
