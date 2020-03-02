@@ -152,8 +152,8 @@ function map (packet, bff) {
     `)
 }
 
-let index = -1
 function bff (path, packet) {
+    let index = -1
     let checkpoint = { type: 'checkpoint', lengths: [ 0 ] }, fields = [ checkpoint ]
     for (let i = 0, I = packet.fields.length; i < I; i++) {
         const field = packet.fields[i]
