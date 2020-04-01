@@ -76,11 +76,11 @@ function map (packet, bff) {
         step += 2
         const i = `$i[${index}]`
         const I = `$I[${index}]`
-        index--
         const looped = dispatch(path, {
             ...field.element,
             name: `${field.name}[${i}]`
         })
+        index--
         return $(`
             for (; ${i} < ${I}; ${i}++) {
                 `, looped, `
