@@ -71,7 +71,7 @@ function generate (packet, bff) {
 
     function lengthEncoding (path, field) {
         step += 2
-        return word(field, `${path}.${field.name}.length`)
+        return word(field, `${path.join('.')}.${field.name}.length`)
     }
 
     function lengthEncoded (path, field) {
@@ -82,7 +82,7 @@ function generate (packet, bff) {
             name: `${field.name}[${i}]`
         })
         const source = $(`
-            for (${i} = 0; ${i} < ${path}.${field.name}.length; ${i}++) {
+            for (${i} = 0; ${i} < ${path.join('.')}.${field.name}.length; ${i}++) {
                 `, looped, `
             }
         `)
