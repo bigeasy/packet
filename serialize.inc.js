@@ -43,9 +43,8 @@ function generate (packet) {
     function lengthEncoded (path, packet) {
         const i = `$i[${index}]`
         const I = `$I[${index}]`
-        index--
         const again = step
-        return $(`
+        const source = $(`
             `, dispatch([ `${path.join('.')}[${i}]` ], packet.element), `
 
                 if (++${i} != ${path.concat('length').join('.')}) {
@@ -55,6 +54,8 @@ function generate (packet) {
 
                 $i.pop()
         `)
+        index--
+        return source
     }
 
     function dispatch (path, packet) {
