@@ -143,6 +143,7 @@ module.exports = function (okay) {
         }
         composers.serializer.all(
             compiler('serializers', filename + '.serializer.bff.js'),
+            // () => require(filename + '.serializer.bff.js'),
             intermediate,
             { bff: true }
         )(packet.serializers)

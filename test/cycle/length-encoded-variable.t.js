@@ -7,6 +7,6 @@ function prove (okay) {
             object: { array: [ 16, [{ first: [ 16, [ 16 ] ] }] ] }
         },
         object: { array: [{ first:  [ 0x1234, 0x4567 ] }] },
-        stopAt: 'parse.inc'
+        stopAt: 'serialize.bff'
     })
 }

@@ -2,9 +2,9 @@ const join = require('./join')
 const pack = require('./pack')
 const $ = require('programmatic')
 
-function bff (path, packet, arrayed) {
+function bff (path, packet, index = 0, rewind = 0) {
     let checkpoint
-    const fields = [ checkpoint = { type: 'checkpoint', lengths: [ 0 ] } ]
+    const fields = [ checkpoint = { type: 'checkpoint', lengths: [ 0 ], rewind } ]
     for (let i = 0, I = packet.fields.length; i < I; i++) {
         const field = JSON.parse(JSON.stringify(packet.fields[i]))
         switch (field.type) {
@@ -17,7 +17,7 @@ function bff (path, packet, arrayed) {
                 if (field.element.fixed) {
                     checkpoint.lengths.push(`${field.element.bits / 8} * ${path.concat(field.name).join('.')}.length`)
                 } else {
-                    field.element.fields = bff(path.concat(packet.name), field.element, true)
+                    field.element.fields = bff(path.concat(`${field.name}[$i[${index}]]`), field.element, index + 1, 2)
                 }
                 break
             default:
@@ -96,7 +96,7 @@ function generate (packet, bff) {
             if ($end - $start < ${checkpoint.lengths.join(' + ')}) {
                 return {
                     start: $start,
-                    serialize: serializers.inc.object(${packet.name}, ${step}, ${i})
+                    serialize: serializers.inc.object(${packet.name}, ${step - checkpoint.rewind}, ${i})
                 }
             }
         `)
