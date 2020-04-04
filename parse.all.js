@@ -73,7 +73,7 @@ function map (packet, bff) {
     }
 
     function lengthEncoded (path, field) {
-        step += 2
+        step += 1
         const i = `$i[${index}]`
         const I = `$I[${index}]`
         const looped = dispatch(path, {
@@ -152,9 +152,8 @@ function map (packet, bff) {
     `)
 }
 
-function bff (path, packet) {
-    let index = -1
-    let checkpoint = { type: 'checkpoint', lengths: [ 0 ] }, fields = [ checkpoint ]
+function bff (path, packet, index = 0, rewind = 0) {
+    let checkpoint = { type: 'checkpoint', lengths: [ 0 ], rewind }, fields = [ checkpoint ]
     for (let i = 0, I = packet.fields.length; i < I; i++) {
         const field = packet.fields[i]
         switch (field.type) {
@@ -162,14 +161,13 @@ function bff (path, packet) {
             checkpoint.lengths[0] += field.bits / 8
             break
         case 'lengthEncoded':
-            index++
-            fields.push(checkpoint = { type: 'checkpoint', lengths: [] })
+            fields.push(checkpoint = { type: 'checkpoint', lengths: [ 0 ], rewind: 0 })
             switch (field.element.type) {
             case 'structure':
-                if (field.element.fixed = true) {
+                if (field.element.fixed) {
                     checkpoint.lengths.push(`${field.element.bits / 8} * $I[${index}]`)
                 } else {
-                    field.element.fields = bff(field.element)
+                    field.element.fields = bff(path.concat(`${field.name}[$i[${index}]]`), field.element, index + 1, 2)
                 }
                 break
             default:
@@ -184,7 +182,14 @@ function bff (path, packet) {
         }
         fields.push(field)
     }
-    return fields
+    fields.forEach(field => {
+        if (field.type == 'checkpoint' && field.lengths[0] == 0) {
+            field.lengths.shift()
+        }
+    })
+    return fields.filter(field => {
+        return field.type != 'checkpoint' || field.lengths.length != 0
+    })
 }
 
 module.exports = function (compiler, definition, options = {}) {
