@@ -40,10 +40,10 @@ performance may be inproved in the future by using local variables.
             $parse: {
                 $sip: 8n,
                 $return: [
-                    $sip => $sip < 251, '$sip'
-                    $sip => $sip == 0xfc, 16n
-                    $sip => $sip == 0xfd, 24n
-                    $sip => $sip == 0xfe, 64n
+                    $sip => $sip < 251, $sip => $sip,
+                    $sip => $sip == 0xfc, 16n,
+                    $sip => $sip == 0xfd, 24n,
+                    $sip => $sip == 0xfe, 64n,
                 ]
             },
             // Oops, not putting down the flag.
@@ -59,11 +59,11 @@ performance may be inproved in the future by using local variables.
             $parse: {
                 $sip: 8,
                 $return: [
-                    $sip => $sip & 0x80 == 0, '$sip'
+                    $sip => $sip & 0x80 == 0, $sip => $sip,
                     $sip => $sip & 0xe0 == 0xc0, {
-                        $sip: '$sip',
+                        $sip: $sip => $sip,
                         $first: 8
-                        $return: $_ => $_.$sip & 0xe0 << 8 + $_.$first & 0xc0
+                        $return: ($sip, $first) => $sip & 0xe0 << 8 + $first & 0xc0
                     }
                 ]
             },
@@ -245,7 +245,9 @@ define({
     // 4-byte IEEE floating point, a C float.
     float: 0.4,
     // 8-byte IEEE floating point, a C double.
-    double: 0.8
+    double: 0.8,
+    // Literals.
+    literal: [ 0xfc ]
 })
 ```
 
