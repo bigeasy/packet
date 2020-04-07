@@ -124,11 +124,13 @@ function packed (def, rest = {}) {
 function map (definitions, packet, depth, extra = {}) {
     const definition = { parse: null, serialize: null }
     switch (typeof packet) {
+    case 'string': {
+            return [{ ...extra, ...definitions[packet] }]
+        }
+        break
     case 'object': {
             if (Array.isArray(packet)) {
-                if (packet.length == 1 && typeof packet[0] == 'string') {
-                    return [{ ...extra, ...definitions[packet[0]] }]
-                } else if (packet.length == 2) {
+                if (packet.length == 2) {
                     switch (typeof packet[0]) {
                     case 'number': {
                             const fields = []

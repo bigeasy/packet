@@ -82,7 +82,7 @@ require('proof')(1, async (okay) => {
                     auth: [ 4, 0x0 ]
                 } ]
             },
-            remainingLength: [ 'integer' ]
+            remainingLength: 'integer'
         }
     })
 
