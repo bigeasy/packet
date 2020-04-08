@@ -165,6 +165,26 @@ function map (definitions, packet, depth, extra = {}) {
                         }
                         break
                     }
+                } else if (packet.filter(item => typeof item == 'string').length != 0) {
+                    const fields = []
+                    for (const part of packet) {
+                        if (typeof part == 'string') {
+                            assert(part.length % 2 == 0)
+                            const value = []
+                            for (let i = 0; i < part.length; i += 2) {
+                                value.push(parseInt(part.substring(i, i + 2), 16))
+                            }
+                            fields.push({
+                                type: 'literal',
+                                fixed: true,
+                                bits: part.length * 4,
+                                value: value
+                            })
+                        } else {
+                            fields.push.apply(fields, map(definitions, part, depth, extra))
+                        }
+                    }
+                    return fields
                 }
             } else if (Object.keys(packet).length == 2 && packet.$parse && packet.$serialize) {
                 const parse = []
