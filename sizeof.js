@@ -11,6 +11,7 @@ function generate (packet) {
 
     function dispatch (path, field) {
         switch (field.type) {
+        case 'literal':
         case 'integer':
             return `$_ += ${field.bits / 8}`
         case 'lengthEncoding':
