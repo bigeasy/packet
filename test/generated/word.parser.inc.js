@@ -1,6 +1,6 @@
 module.exports = function (parsers) {
     parsers.inc.object = function (object = {}, $step = 0) {
-        let $_, $bite
+        let $_, $byte
         return function parse ($buffer, $start, $end) {
             switch ($step) {
             case 0:
@@ -14,16 +14,16 @@ module.exports = function (parsers) {
 
                 $_ = 0
                 $step = 2
-                $bite = 3
+                $byte = 3
 
             case 2:
 
-                while ($bite != -1) {
+                while ($byte != -1) {
                     if ($start == $end) {
                         return { start: $start, object: null, parse }
                     }
-                    $_ += $buffer[$start++] << $bite * 8 >>> 0
-                    $bite--
+                    $_ += $buffer[$start++] << $byte * 8 >>> 0
+                    $byte--
                 }
 
                 object.word = $_

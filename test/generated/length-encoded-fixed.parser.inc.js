@@ -1,6 +1,6 @@
 module.exports = function (parsers) {
     parsers.inc.object = function (object = {}, $step = 0, $i = [], $I = []) {
-        let $_, $bite
+        let $_, $byte
         return function parse ($buffer, $start, $end) {
             for (;;) {
                 switch ($step) {
@@ -15,16 +15,16 @@ module.exports = function (parsers) {
 
                     $_ = 0
                     $step = 2
-                    $bite = 1
+                    $byte = 1
 
                 case 2:
 
-                    while ($bite != -1) {
+                    while ($byte != -1) {
                         if ($start == $end) {
                             return { start: $start, object: null, parse }
                         }
-                        $_ += $buffer[$start++] << $bite * 8 >>> 0
-                        $bite--
+                        $_ += $buffer[$start++] << $byte * 8 >>> 0
+                        $byte--
                     }
 
                     $I[0] = $_
@@ -43,16 +43,16 @@ module.exports = function (parsers) {
 
                     $_ = 0
                     $step = 5
-                    $bite = 1
+                    $byte = 1
 
                 case 5:
 
-                    while ($bite != -1) {
+                    while ($byte != -1) {
                         if ($start == $end) {
                             return { start: $start, object: null, parse }
                         }
-                        $_ += $buffer[$start++] << $bite * 8 >>> 0
-                        $bite--
+                        $_ += $buffer[$start++] << $byte * 8 >>> 0
+                        $byte--
                     }
 
                     object.array[$i[0]].first = $_
@@ -62,16 +62,16 @@ module.exports = function (parsers) {
 
                     $_ = 0
                     $step = 7
-                    $bite = 1
+                    $byte = 1
 
                 case 7:
 
-                    while ($bite != -1) {
+                    while ($byte != -1) {
                         if ($start == $end) {
                             return { start: $start, object: null, parse }
                         }
-                        $_ += $buffer[$start++] << $bite * 8 >>> 0
-                        $bite--
+                        $_ += $buffer[$start++] << $byte * 8 >>> 0
+                        $byte--
                     }
 
                     object.array[$i[0]].second = $_

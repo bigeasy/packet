@@ -1,6 +1,6 @@
 module.exports = function (parsers) {
     parsers.inc.object = function (object = {}, $step = 0) {
-        let $_, $bite
+        let $_, $byte
         return function parse ($buffer, $start, $end) {
             switch ($step) {
             case 0:
@@ -17,9 +17,9 @@ module.exports = function (parsers) {
 
             case 2:
 
-                $bite = Math.min($end - $start, $_)
-                $_ -= $bite
-                $start += $bite
+                $byte = Math.min($end - $start, $_)
+                $_ -= $byte
+                $start += $byte
 
                 if ($_ != 0) {
                     return { start: $start, object: null, parse }
@@ -29,16 +29,16 @@ module.exports = function (parsers) {
 
                 $_ = 0
                 $step = 4
-                $bite = 1
+                $byte = 1
 
             case 4:
 
-                while ($bite != -1) {
+                while ($byte != -1) {
                     if ($start == $end) {
                         return { start: $start, object: null, parse }
                     }
-                    $_ += $buffer[$start++] << $bite * 8 >>> 0
-                    $bite--
+                    $_ += $buffer[$start++] << $byte * 8 >>> 0
+                    $byte--
                 }
 
                 object.padded = $_
@@ -51,9 +51,9 @@ module.exports = function (parsers) {
 
             case 6:
 
-                $bite = Math.min($end - $start, $_)
-                $_ -= $bite
-                $start += $bite
+                $byte = Math.min($end - $start, $_)
+                $_ -= $byte
+                $start += $byte
 
                 if ($_ != 0) {
                     return { start: $start, object: null, parse }

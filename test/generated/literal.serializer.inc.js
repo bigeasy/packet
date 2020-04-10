@@ -1,55 +1,55 @@
 module.exports = function (serializers) {
     serializers.inc.object = function (object, $step = 0, $i = []) {
-        let $bite, $stop, $_
+        let $byte, $stop, $_
 
         return function serialize ($buffer, $start, $end) {
             switch ($step) {
             case 0:
 
                 $step = 1
-                $bite = 0
+                $byte = 0
                 $_ = [15,173,237]
 
             case 1:
 
-                while ($bite != 3) {
+                while ($byte != 3) {
                     if ($start == $end) {
                         return { start: $start, serialize }
                     }
-                    $buffer[$start++] = $_[$bite++]
+                    $buffer[$start++] = $_[$byte++]
                 }
 
 
             case 2:
 
                 $step = 3
-                $bite = 1
+                $byte = 1
                 $_ = object.padded
 
             case 3:
 
-                while ($bite != -1) {
+                while ($byte != -1) {
                     if ($start == $end) {
                         return { start: $start, serialize }
                     }
-                    $buffer[$start++] = $_ >>> $bite * 8 & 0xff
-                    $bite--
+                    $buffer[$start++] = $_ >>> $byte * 8 & 0xff
+                    $byte--
                 }
 
 
             case 4:
 
                 $step = 5
-                $bite = 0
+                $byte = 0
                 $_ = [250,202,222]
 
             case 5:
 
-                while ($bite != 3) {
+                while ($byte != 3) {
                     if ($start == $end) {
                         return { start: $start, serialize }
                     }
-                    $buffer[$start++] = $_[$bite++]
+                    $buffer[$start++] = $_[$byte++]
                 }
 
 

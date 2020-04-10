@@ -1,6 +1,6 @@
 module.exports = function (parsers) {
     parsers.inc.object = function (object = {}, $step = 0) {
-        let $_, $bite
+        let $_, $byte
         return function parse ($buffer, $start, $end) {
             switch ($step) {
             case 0:

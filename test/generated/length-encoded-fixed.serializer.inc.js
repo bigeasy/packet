@@ -1,6 +1,6 @@
 module.exports = function (serializers) {
     serializers.inc.object = function (object, $step = 0, $i = []) {
-        let $bite, $stop, $_
+        let $byte, $stop, $_
 
         return function serialize ($buffer, $start, $end) {
             for (;;) {
@@ -8,17 +8,17 @@ module.exports = function (serializers) {
                 case 0:
 
                     $step = 1
-                    $bite = 1
+                    $byte = 1
                     $_ = object.array.length
 
                 case 1:
 
-                    while ($bite != -1) {
+                    while ($byte != -1) {
                         if ($start == $end) {
                             return { start: $start, serialize }
                         }
-                        $buffer[$start++] = $_ >>> $bite * 8 & 0xff
-                        $bite--
+                        $buffer[$start++] = $_ >>> $byte * 8 & 0xff
+                        $byte--
                     }
 
                     $i.push(0)
@@ -26,34 +26,34 @@ module.exports = function (serializers) {
                 case 2:
 
                     $step = 3
-                    $bite = 1
+                    $byte = 1
                     $_ = object.array[$i[0]].first
 
                 case 3:
 
-                    while ($bite != -1) {
+                    while ($byte != -1) {
                         if ($start == $end) {
                             return { start: $start, serialize }
                         }
-                        $buffer[$start++] = $_ >>> $bite * 8 & 0xff
-                        $bite--
+                        $buffer[$start++] = $_ >>> $byte * 8 & 0xff
+                        $byte--
                     }
 
 
                 case 4:
 
                     $step = 5
-                    $bite = 1
+                    $byte = 1
                     $_ = object.array[$i[0]].second
 
                 case 5:
 
-                    while ($bite != -1) {
+                    while ($byte != -1) {
                         if ($start == $end) {
                             return { start: $start, serialize }
                         }
-                        $buffer[$start++] = $_ >>> $bite * 8 & 0xff
-                        $bite--
+                        $buffer[$start++] = $_ >>> $byte * 8 & 0xff
+                        $byte--
                     }
 
 

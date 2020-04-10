@@ -14,17 +14,17 @@ function generate (packet) {
             case ${step++}:
 
                 $step = ${step}
-                $bite = ${bite}
+                $byte = ${bite}
                 $_ = ${path.join('.')}
 
             case ${step++}:
 
-                while ($bite != ${stop}) {
+                while ($byte != ${stop}) {
                     if ($start == $end) {
                         return { start: $start, serialize }
                     }
-                    $buffer[$start++] = $_ >>> $bite * 8 & 0xff
-                    $bite${direction}
+                    $buffer[$start++] = $_ >>> $byte * 8 & 0xff
+                    $byte${direction}
                 }
 
         `)
@@ -67,16 +67,16 @@ function generate (packet) {
             case ${step++}:
 
                 $step = ${step}
-                $bite = 0
+                $byte = 0
                 $_ = ${JSON.stringify(bytes)}
 
             case ${step++}:
 
-                while ($bite != ${packet.value.length / 2}) {
+                while ($byte != ${packet.value.length / 2}) {
                     if ($start == $end) {
                         return { start: $start, serialize }
                     }
-                    $buffer[$start++] = $_[$bite++]
+                    $buffer[$start++] = $_[$byte++]
                 }
 
         `)
@@ -126,7 +126,7 @@ function generate (packet) {
     const object = 'serializers.inc.' + packet.name
     const generated = $(`
         ${object} = function (${packet.name}, $step = 0, $i = []) {
-            let $bite, $stop, $_
+            let $byte, $stop, $_
 
             return function serialize ($buffer, $start, $end) {
                 `, source, `
