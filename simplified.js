@@ -170,10 +170,6 @@ function map (definitions, packet, depth, extra = {}) {
                     for (const part of packet) {
                         if (typeof part == 'string') {
                             assert(part.length % 2 == 0)
-                            const value = []
-                            for (let i = 0; i < part.length; i += 2) {
-                                value.push(parseInt(part.substring(i, i + 2), 16))
-                            }
                             fields.push({
                                 type: 'literal',
                                 fixed: true,

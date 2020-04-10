@@ -58,6 +58,30 @@ function generate (packet) {
         return source
     }
 
+    function literal (packet) {
+        const bytes = []
+        for (let i = 0, I = packet.value.length; i < I; i += 2) {
+            bytes.push(parseInt(packet.value.substring(i, i + 2), 16))
+        }
+        return $(`
+            case ${step++}:
+
+                $step = ${step}
+                $bite = 0
+                $_ = ${JSON.stringify(bytes)}
+
+            case ${step++}:
+
+                while ($bite != ${packet.value.length / 2}) {
+                    if ($start == $end) {
+                        return { start: $start, serialize }
+                    }
+                    $buffer[$start++] = $_[$bite++]
+                }
+
+        `)
+    }
+
     function dispatch (path, packet) {
         switch (packet.type) {
         case 'structure':
@@ -71,6 +95,8 @@ function generate (packet) {
             return lengthEncoding(path, packet)
         case 'lengthEncoded':
             return lengthEncoded(path, packet)
+        case 'literal':
+            return literal(packet)
         case 'integer':
             return integer(path, packet)
         }
