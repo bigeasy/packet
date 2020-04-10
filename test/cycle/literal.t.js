@@ -9,6 +9,6 @@ function prove (okay) {
             }
         },
         object: { padded: 0xabcd },
-        stopAt: 'serialize.inc'
+        stopAt: 'parse.inc'
     })
 }

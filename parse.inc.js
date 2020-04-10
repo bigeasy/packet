@@ -54,6 +54,8 @@ function generate (packet) {
         if (packet.type == 'structure') {
             packet.fields.forEach(function (packet) {
                 switch (packet.type) {
+                case 'literal':
+                    break
                 case 'integer':
                     if (packet.name) {
                         fields.push(packet.name + ': 0')
@@ -101,6 +103,25 @@ function generate (packet) {
         return source
     }
 
+    function literal (packet) {
+        return $(`
+            case ${step++}:
+
+                $_ = ${packet.value.length / 2}
+                $step = ${step}
+
+            case ${step++}:
+
+                $bite = Math.min($end - $start, $_)
+                $_ -= $bite
+                $start += $bite
+
+                if ($_ != 0) {
+                    return { start: $start, object: null, parse }
+                }
+        `)
+    }
+
     function dispatch (path, packet, depth, arrayed) {
         switch (packet.type) {
         case 'structure':
@@ -126,6 +147,8 @@ function generate (packet) {
             return lengthEncoded(path, packet)
         case 'integer':
             return integer(path, packet)
+        case 'literal':
+            return literal(packet)
         }
     }
 
