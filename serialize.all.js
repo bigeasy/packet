@@ -126,6 +126,13 @@ function generate (packet, bff) {
             return buffer(packet)
         case 'integer':
             return integer(path, packet)
+        case 'literal':
+            console.log(path, packet)
+            return $(`
+                $buffer.write(${JSON.stringify(packet.value)}, $start, $start + ${packet.value.length / 2}, 'hex')
+                $start += ${packet.value.length / 2}
+            `)
+            throw new Error
         }
     }
 

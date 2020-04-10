@@ -178,7 +178,7 @@ function map (definitions, packet, depth, extra = {}) {
                                 type: 'literal',
                                 fixed: true,
                                 bits: part.length * 4,
-                                value: value
+                                value: part
                             })
                         } else {
                             fields.push.apply(fields, map(definitions, part, depth, extra))

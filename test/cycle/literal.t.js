@@ -2,13 +2,13 @@ require('proof')(0, prove)
 
 function prove (okay) {
     require('./cycle')(okay)({
-        name: 'word',
+        name: 'literal',
         define: {
             object: {
-                padded: [ '0faded', 16, 'deface' ]
+                padded: [ '0faded', 16, 'facade' ]
             }
         },
         object: { padded: 0xabcd, word: 0xabcd },
-        stopAt: 'sizeof'
+        stopAt: 'serialize.all'
     })
 }

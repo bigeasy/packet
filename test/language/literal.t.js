@@ -9,7 +9,7 @@ require('proof')(1, okay => {
             type: 'literal',
             fixed: true,
             bits: 24,
-            value: [ 0x0f, 0xad, 0xed ]
+            value: '0faded'
         }, {
             name: 'value',
             type: 'integer',
@@ -21,7 +21,7 @@ require('proof')(1, okay => {
             type: 'literal',
             fixed: true,
             bits: 24,
-            value: [ 0xfa, 0xca, 0xde ]
+            value: 'facade'
         }]
     }], 'literal')
 })
