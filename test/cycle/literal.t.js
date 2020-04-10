@@ -8,7 +8,6 @@ function prove (okay) {
                 padded: [ '0faded', 16, 'facade' ]
             }
         },
-        object: { padded: 0xabcd },
-        stopAt: 'parse.inc'
+        object: { padded: 0xabcd }
     })
 }
