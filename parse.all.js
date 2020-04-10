@@ -20,6 +20,8 @@ function map (packet, bff) {
             case 'integer':
                 fields.push(`${field.name}: 0`)
                 break
+            case 'literal':
+                break
             default:
                 if (field.type == 'structure' || field.fields == null) {
                     fields.push(field.name + ': null')
@@ -107,6 +109,10 @@ function map (packet, bff) {
             return lengthEncoding(field)
         case 'lengthEncoded':
             return lengthEncoded(path, field)
+        case 'literal':
+            return $(`
+                $start += ${field.value.length / 2}
+            `)
         default:
             return integer(field, path.concat(field.name).join('.'))
         }

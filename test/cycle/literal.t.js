@@ -8,7 +8,7 @@ function prove (okay) {
                 padded: [ '0faded', 16, 'facade' ]
             }
         },
-        object: { padded: 0xabcd, word: 0xabcd },
-        stopAt: 'serialize.all'
+        object: { padded: 0xabcd },
+        stopAt: 'parse.all'
     })
 }
