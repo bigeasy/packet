@@ -14,7 +14,7 @@ require('proof')(1, okay => {
         }
     }), [{
         name: 'packet',
-        fixed: true, // wrong
+        fixed: false,
         bits: 0,
         type: 'structure',
         fields: [{

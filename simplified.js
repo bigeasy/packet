@@ -209,6 +209,8 @@ function map (definitions, packet, depth, extra = {}) {
                             const sip = map(definitions, parse.shift(), false, {})
                             return { sip, conditions }
                         } ()
+                        // TODO Is fixed if all the alternations are the same
+                        // length.
                         fields.push({
                             type: 'conditional',
                             bits: 0,
@@ -236,12 +238,13 @@ function map (definitions, packet, depth, extra = {}) {
                 }
                 return [ { type: 'compressed', parse, serialize } ]
             } else if (depth == 0) {
+                // TODO It's not depth == 0, more like start of structure.
                 const fields = []
                 for (const field in packet) {
                     fields.push.apply(fields, map(definitions, packet[field], 1, { name: field }))
                 }
                 const fixed = fields.reduce((fixed, field) => {
-                    return fixed && field.type != 'lengthEncoded'
+                    return fixed && field.fixed
                 }, true)
                 const bits = fields.reduce((sum, field) => sum + field.bits, 0)
                 return [ { ...extra, fixed, bits, type: 'structure', fields } ]
