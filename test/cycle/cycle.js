@@ -18,8 +18,8 @@ const composers = {
     sizeOf: require('../../sizeof')
 }
 
-module.exports = function (okay) {
-    return function (options) {
+module.exports = function (okay, options) {
+    for (const actual of options.objects) {
         const intermediate = simplified(options.define)
         const filename = path.resolve(__filename, '../../generated/' + options.name)
         const packet = {
@@ -32,7 +32,7 @@ module.exports = function (okay) {
             intermediate
         )(packet.sizeOf)
 
-        const sizeOf = packet.sizeOf.object(options.object)
+        const sizeOf = packet.sizeOf.object(actual)
 
         if (options.stopAt == 'sizeof') {
             console.log('sizeof', sizeOf)
@@ -47,7 +47,7 @@ module.exports = function (okay) {
 
         const expected = Buffer.alloc(sizeOf)
 
-        const serialize = packet.serializers.all.object(options.object)
+        const serialize = packet.serializers.all.object(actual)
         const cursor = serialize(expected, 0, expected.length)
         okay.inc(1)
         okay(cursor, {
@@ -68,8 +68,7 @@ module.exports = function (okay) {
         okay.inc(1)
 
         try {
-            const object = packet.parsers.all.object(expected, 0)
-            okay(object, options.object, 'whole parse')
+            okay(packet.parsers.all.object(expected, 0), actual, 'whole parse')
         } catch (error) {
             console.log(packet.parsers.all.object.toString())
             throw error
@@ -89,7 +88,7 @@ module.exports = function (okay) {
         try {
             for (let i = 0; i <= expected.length; i++) {
                 const buffer = Buffer.alloc(sizeOf)
-                let serialize = packet.serializers.inc.object(options.object), start
+                let serialize = packet.serializers.inc.object(actual), start
                 {
                     ({ start, serialize } = serialize(buffer, 0, buffer.length - i))
                 }
@@ -120,7 +119,7 @@ module.exports = function (okay) {
 
         try {
             for (let i = 0; i <= expected.length; i++) {
-                let parse = packet.parsers.inc.object(options.object), start, object
+                let parse = packet.parsers.inc.object(actual), start, object
                 {
                     ({ start, object, parse } = parse(expected, 0, expected.length - i))
                 }
@@ -130,7 +129,7 @@ module.exports = function (okay) {
                 okay({ start, parse, object }, {
                     start: expected.length,
                     parse: null,
-                    object: options.object
+                    object: actual
                 }, `incremental parse ${i}`)
             }
         } catch (error) {
@@ -153,7 +152,7 @@ module.exports = function (okay) {
         try {
             for (let i = 0; i <= expected.length; i++) {
                 const buffer = Buffer.alloc(sizeOf)
-                let serialize = packet.serializers.bff.object(options.object), start
+                let serialize = packet.serializers.bff.object(actual), start
                 {
                     ({ start, serialize } = serialize(buffer, 0, buffer.length - i))
                 }
@@ -185,7 +184,7 @@ module.exports = function (okay) {
 
         try {
             for (let i = 0; i <= expected.length; i++) {
-                let parse = packet.parsers.bff.object(options.object), start, object
+                let parse = packet.parsers.bff.object(actual), start, object
                 {
                     ({ start, object, parse } = parse(expected, 0, expected.length - i))
                 }
@@ -195,7 +194,7 @@ module.exports = function (okay) {
                 okay({ start, parse, object }, {
                     start: expected.length,
                     parse: null,
-                    object: options.object
+                    object: actual
                 }, `best-foot-forward parse ${i}`)
             }
         } catch (error) {

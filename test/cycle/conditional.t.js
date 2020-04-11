@@ -1,7 +1,7 @@
 require('proof')(0, prove)
 
 function prove (okay) {
-    require('./cycle')(okay)({
+    require('./cycle')(okay, {
         name: 'mysql',
         define: {
             object: {
@@ -16,7 +16,7 @@ function prove (okay) {
                 ]]]]
             }
         },
-        object: { value: 250 },
+        objects: [{ value: 250 }],
         stopAt: 'sizeof'
     })
 }
