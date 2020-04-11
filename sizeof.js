@@ -1,5 +1,6 @@
 const $ = require('programmatic')
 
+const snuggle = require('./snuggle')
 const join = require('./join')
 
 function generate (packet) {
@@ -26,13 +27,7 @@ function generate (packet) {
                     `)
                     block.push(ifed)
                 }
-                const snuggled = block.map((when, i) => {
-                    if (i == 0) {
-                        return when
-                    }
-                    return when.replace(/^\n/, '')
-                }).join(' ')
-                return snuggled
+                return snuggle(block)
             }
         case 'literal':
         case 'integer':
