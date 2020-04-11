@@ -38,7 +38,7 @@ module.exports = function (okay, options) {
             console.log('sizeof', sizeOf)
             okay.inc(1)
             okay(true)
-            return
+            continue
         }
         composers.serializer.all(
             compiler('serializers', filename + '.serializer.all.js'),
@@ -57,7 +57,7 @@ module.exports = function (okay, options) {
 
         if (options.stopAt == 'serialize.all') {
             console.log('serialize.all', expected.toJSON().data.map(b => b.toString(16)))
-            return
+            continue
         }
 
         composers.parser.all(
@@ -75,7 +75,7 @@ module.exports = function (okay, options) {
         }
 
         if (options.stopAt == 'parse.all') {
-            return
+            continue
         }
 
         composers.serializer.inc(
@@ -107,7 +107,7 @@ module.exports = function (okay, options) {
         }
 
         if (options.stopAt == 'serialize.inc') {
-            return
+            continue
         }
 
         okay.inc(sizeOf + 1)
@@ -138,7 +138,7 @@ module.exports = function (okay, options) {
         }
 
         if (options.stopAt == 'parse.inc') {
-            return
+            continue
         }
         composers.serializer.all(
             compiler('serializers', filename + '.serializer.bff.js'),
@@ -171,7 +171,7 @@ module.exports = function (okay, options) {
         }
 
         if (options.stopAt == 'serialize.bff') {
-            return
+            continue
         }
 
         composers.parser.all(
