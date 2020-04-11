@@ -1,4 +1,5 @@
 const assert = require('assert')
+const coalesce = require('extant')
 
 function integer (value, packed, extra = {}) {
     if (!packed && Math.abs(value % 8) == 1) {
@@ -130,42 +131,7 @@ function map (definitions, packet, depth, extra = {}) {
         break
     case 'object': {
             if (Array.isArray(packet)) {
-                if (packet.length == 2) {
-                    switch (typeof packet[0]) {
-                    case 'number': {
-                            const fields = []
-                            assert(Array.isArray(packet[1]))
-                            const length = integer(packet[0], false, {})
-                            fields.push({
-                                ...length,
-                                type: 'lengthEncoding',
-                                ...extra
-                            })
-                            if (typeof packet[1][0] == 'number') {
-                                const element = integer(packet[1][0], false, {})
-                                fields.push({
-                                    ...extra,
-                                    type: 'lengthEncoded',
-                                    fixed: false,
-                                    bits: 0,
-                                    element: element
-                                })
-                            } else {
-                                const struct = map(definitions, packet[1][0], false, {}).shift()
-                                fields.push({
-                                    ...extra,
-                                    type: 'lengthEncoded',
-                                    bits: 0,
-                                    fixed: false,
-                                    // TODO Length encode a structure.
-                                    element: struct
-                                })
-                            }
-                            return fields
-                        }
-                        break
-                    }
-                } else if (packet.filter(item => typeof item == 'string').length != 0) {
+                if (packet.filter(item => typeof item == 'string').length != 0) {
                     const fields = []
                     for (const part of packet) {
                         if (typeof part == 'string') {
@@ -181,6 +147,76 @@ function map (definitions, packet, depth, extra = {}) {
                         }
                     }
                     return fields
+                } else if (packet.length == 2) {
+                    if (typeof packet[0] == 'number') {
+                        const fields = []
+                        assert(Array.isArray(packet[1]))
+                        const length = integer(packet[0], false, {})
+                        fields.push({
+                            ...length,
+                            type: 'lengthEncoding',
+                            ...extra
+                        })
+                        if (typeof packet[1][0] == 'number') {
+                            const element = integer(packet[1][0], false, {})
+                            fields.push({
+                                ...extra,
+                                type: 'lengthEncoded',
+                                fixed: false,
+                                bits: 0,
+                                element: element
+                            })
+                        } else {
+                            const struct = map(definitions, packet[1][0], false, {}).shift()
+                            fields.push({
+                                ...extra,
+                                type: 'lengthEncoded',
+                                bits: 0,
+                                fixed: false,
+                                // TODO Length encode a structure.
+                                element: struct
+                            })
+                        }
+                        return fields
+                    } else if (
+                        Array.isArray(packet[0]) &&
+                        Array.isArray(packet[1]) &&
+                        Array.isArray(packet[0][0]) &&
+                        typeof packet[0][0][0] == 'function'
+                    ) {
+                        const fields = []
+                        const serialize = function () {
+                            const conditions = []
+                            for (const serialize of packet[0]) {
+                                const [ test, packet ] = serialize
+                                conditions.push({
+                                    test: test.toString(),
+                                    fields: map(definitions, packet, false, {})
+                                })
+                            }
+                            return { conditions }
+                        } ()
+                        const parse = function () {
+                            const [ ...parse ] = packet[1]
+                            const conditions = []
+                            for (const serialize of parse.pop()) {
+                                const [ test, packet ] = serialize
+                                conditions.push({
+                                    test: test.toString(),
+                                    fields: map(definitions, packet, false, {})
+                                })
+                            }
+                            const sip = map(definitions, parse.shift(), false, {})
+                            return { sip, conditions }
+                        } ()
+                        fields.push({
+                            type: 'conditional',
+                            bits: 0,
+                            fixed: false,
+                            serialize, parse, ...extra
+                        })
+                        return fields
+                    }
                 }
             } else if (Object.keys(packet).length == 2 && packet.$parse && packet.$serialize) {
                 const parse = []
@@ -217,7 +253,12 @@ function map (definitions, packet, depth, extra = {}) {
     case 'number': {
             return [ integer(packet, false, extra) ]
         }
-        break
+    case 'function': {
+            return [{
+                type: 'function',
+                source: packet.toString()
+            }]
+        }
     }
     return [ definition ]
 }

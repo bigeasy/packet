@@ -32,7 +32,6 @@ require('proof')(1, async (okay) => {
                 value => value
             ]]
         }
-        */
         integer: {
             $parse: [[
                 8, value => value & 0x7f, value => value & 0x80
@@ -45,6 +44,7 @@ require('proof')(1, async (okay) => {
             ]],
             $serialize: [ encode, encode, encode, encode ]
         },
+        */
         packet: {
             header: {
                 type: [ 4, [
@@ -94,7 +94,7 @@ require('proof')(1, async (okay) => {
 
     const serializers = { all: {} }
 
-    intermediate[1].fields[0].bits = 8
+    // intermediate[1].fields[0].bits = 8
 
     //console.log(intermediate)
 

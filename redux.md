@@ -74,6 +74,30 @@ performance may be inproved in the future by using local variables.
                 ]
             ]
         },
+        utf8: [[
+            (utf8) => utf8 < 0x80, 8
+        ], [
+            (utf8) => utf8 >= 0x80 && < 0x800, [
+                16, utf8 => (utf8 >>> 6 & 0x1f | 0xc0 << 8) & (utf8 & 0x3f)
+            ]
+        ]], [{
+            sip: 8,
+            utf8: [[
+                sip => sip & 0x80 == 0, sip => sip
+            ], [
+                sip => sip & 0xe0 == 0xc0, {
+                    sip: sip => sip,
+                    first: 8,
+                    utf8: (sip, first) => sip & 0xe0 << 8 + first & 0xc0
+                }
+            ]]
+        }, [ 8, [[
+            first => first & 0x80 == 0, first => first
+        ], [
+            first => first & 0xe0 == 0xc0, [ 8, [[
+                (first, second) => first & 0xe0 << 8 + second & 0xc0
+            ]]]
+        ]]],
         string: [ 'mysqlInteger', [ 'utf8' ] ] // sensible chuckle
     }
 }
