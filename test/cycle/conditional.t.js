@@ -16,7 +16,7 @@ function prove (okay) {
                 ]]]]
             }
         },
-        objects: [{ value: 250 }],
+        objects: [{ value: 250 }, { value: 251 }],
         stopAt: 'sizeof'
     })
 }
