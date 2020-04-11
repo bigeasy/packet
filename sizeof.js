@@ -9,8 +9,31 @@ function generate (packet) {
         return join(field.fields.map(dispatch.bind(null, path)))
     }
 
+    // TODO Fold constants, you're doing `$_ += 1; $_ += 2` which won't fold.
     function dispatch (path, field) {
         switch (field.type) {
+        case 'conditional': {
+                const block = []
+                for (let i = 0, I = field.serialize.conditions.length; i < I; i++) {
+                    const condition = field.serialize.conditions[i]
+                    const source = join(condition.fields.map(dispatch.bind(null, path.concat(field.name))))
+                    const keyword = typeof condition.text == 'boolean' ? 'else'
+                                                                       : i == 0 ? 'if' : 'else if'
+                    const ifed = $(`
+                        ${keyword} ((${condition.test})(${path.concat(field.name).join('.')}, ${packet.name})) {
+                            `, source, `
+                        }
+                    `)
+                    block.push(ifed)
+                }
+                const snuggled = block.map((when, i) => {
+                    if (i == 0) {
+                        return when
+                    }
+                    return when.replace(/^\n/, '')
+                }).join(' ')
+                return snuggled
+            }
         case 'literal':
         case 'integer':
             return `$_ += ${field.bits / 8}`
