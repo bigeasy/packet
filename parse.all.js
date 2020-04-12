@@ -1,10 +1,12 @@
 const join = require('./join')
+const snuggle = require('./snuggle')
 const unpackAll = require('./unpack')
 const $ = require('programmatic')
 
 function map (packet, bff) {
     let index = -1
     let step = 1
+    let _conditional = false
 
     // TODO Create a null entry, then assign a value later on.
     function vivifier (asignee, packet) {
@@ -90,6 +92,33 @@ function map (packet, bff) {
         `)
     }
 
+    function conditional (path, conditional) {
+        const block = []
+        _conditional = true
+        const sip = join(conditional.parse.sip.map(field => {
+            return dispatch([], { name: '$sip[0]', ...field })
+        }))
+        for (let i = 0, I = conditional.parse.conditions.length; i < I; i++) {
+            const condition = conditional.parse.conditions[i]
+            const source = join(condition.fields.map(field => {
+                return dispatch(path, { ...field, name: conditional.name })
+            }))
+            const keyword = typeof condition.source == 'boolean' ? 'else'
+                                                               : i == 0 ? 'if' : 'else if'
+            const ifed = $(`
+                ${keyword} ((${condition.source})($sip[0], ${packet.name})) {
+                    `, source, `
+                }
+            `)
+            block.push(ifed)
+        }
+        return $(`
+            `, sip, `
+
+            `, snuggle(block), `
+        `)
+    }
+
     function dispatch (path, field) {
         switch (field.type) {
         case 'checkpoint':
@@ -105,10 +134,14 @@ function map (packet, bff) {
                     }.bind(this))), `
                 `)
             }
+        case 'conditional':
+            return conditional(path, field)
         case 'lengthEncoding':
             return lengthEncoding(field)
         case 'lengthEncoded':
             return lengthEncoded(path, field)
+        case 'function':
+            return `${path.concat(field.name).join('.')} = (${field.source})($sip[0])`
         case 'literal':
             return $(`
                 $start += ${field.value.length / 2}
@@ -131,13 +164,19 @@ function map (packet, bff) {
     }
 
     const source = dispatch([], packet)
-    const variables = packet.lengthEncoded ? 'let $i = [], $I = []' : null
+    const variables = []
+    if (packet.lengthEncoded) {
+        variables.push('$i = []', '$I = []')
+    }
+    if (_conditional) {
+        variables.push('$sip = []')
+    }
 
     if (bff) {
         return $(`
             parsers.bff.${packet.name} = function () {
                 return function parse ($buffer, $start, $end) {
-                    `, variables, `
+                    `, variables.length ? `let ${variables.join(', ')}` : null, `
 
                     `, source, `
 
@@ -149,7 +188,7 @@ function map (packet, bff) {
 
     return $(`
         parsers.all.${packet.name} = function ($buffer, $start) {
-            `, variables, `
+            `, variables.length ? `let ${variables.join(', ')}` : null, `
 
             `, source, `
 

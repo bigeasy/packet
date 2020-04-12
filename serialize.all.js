@@ -114,10 +114,10 @@ function generate (packet, bff) {
             const source = join(condition.fields.map(field => {
                 return dispatch(path, { ...field, name: conditional.name })
             }))
-            const keyword = typeof condition.test == 'boolean' ? 'else'
+            const keyword = typeof condition.source == 'boolean' ? 'else'
                                                                : i == 0 ? 'if' : 'else if'
             const ifed = $(`
-                ${keyword} ((${condition.test})(${path.concat(conditional.name).join('.')}, ${packet.name})) {
+                ${keyword} ((${condition.source})(${path.concat(conditional.name).join('.')}, ${packet.name})) {
                     `, source, `
                 }
             `)
