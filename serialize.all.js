@@ -1,4 +1,5 @@
 const join = require('./join')
+const snuggle = require('./snuggle')
 const pack = require('./pack')
 const $ = require('programmatic')
 
@@ -77,6 +78,10 @@ function generate (packet, bff) {
     function lengthEncoded (path, field) {
         step += 2
         const i = `$i[${++index}]`
+        // TODO Here and in conditional we see that we know the name, but we
+        // don't know really understand the contents of the packet, so we ought
+        // to create the path with `concat` rather than have the packet
+        // generation code create the full path with the packet name.
         const looped = dispatch(path, {
             ...field.element,
             name: `${field.name}[${i}]`
@@ -102,6 +107,25 @@ function generate (packet, bff) {
         `)
     }
 
+    function conditional (path, conditional) {
+        const block = []
+        for (let i = 0, I = conditional.serialize.conditions.length; i < I; i++) {
+            const condition = conditional.serialize.conditions[i]
+            const source = join(condition.fields.map(field => {
+                return dispatch(path, { ...field, name: conditional.name })
+            }))
+            const keyword = typeof condition.test == 'boolean' ? 'else'
+                                                               : i == 0 ? 'if' : 'else if'
+            const ifed = $(`
+                ${keyword} ((${condition.test})(${path.concat(conditional.name).join('.')}, ${packet.name})) {
+                    `, source, `
+                }
+            `)
+            block.push(ifed)
+        }
+        return snuggle(block)
+    }
+
     function dispatch (path, packet) {
         switch (packet.type) {
         case 'checkpoint':
@@ -118,6 +142,8 @@ function generate (packet, bff) {
                 }
             `)
             break
+        case 'conditional':
+            return conditional(path, packet)
         case 'lengthEncoding':
             return lengthEncoding(path, packet)
         case 'lengthEncoded':
@@ -131,6 +157,7 @@ function generate (packet, bff) {
                 $buffer.write(${JSON.stringify(packet.value)}, $start, $start + ${packet.value.length / 2}, 'hex')
                 $start += ${packet.value.length / 2}
             `)
+        default:
             throw new Error
         }
     }
