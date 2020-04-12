@@ -190,7 +190,8 @@ function map (definitions, packet, depth, extra = {}) {
                             for (const serialize of packet[0]) {
                                 const [ test, packet ] = serialize
                                 conditions.push({
-                                    test: test.toString(),
+                                    source: test.toString(),
+                                    airty: test.length,
                                     fields: map(definitions, packet, false, {})
                                 })
                             }
@@ -202,7 +203,8 @@ function map (definitions, packet, depth, extra = {}) {
                             for (const serialize of parse.pop()) {
                                 const [ test, packet ] = serialize
                                 conditions.push({
-                                    test: test.toString(),
+                                    source: test.toString(),
+                                    airty: 1,
                                     fields: map(definitions, packet, false, {})
                                 })
                             }
@@ -259,7 +261,8 @@ function map (definitions, packet, depth, extra = {}) {
     case 'function': {
             return [{
                 type: 'function',
-                source: packet.toString()
+                source: packet.toString(),
+                airty: packet.length
             }]
         }
     }

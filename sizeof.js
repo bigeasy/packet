@@ -18,10 +18,10 @@ function generate (packet) {
                 for (let i = 0, I = field.serialize.conditions.length; i < I; i++) {
                     const condition = field.serialize.conditions[i]
                     const source = join(condition.fields.map(dispatch.bind(null, path.concat(field.name))))
-                    const keyword = typeof condition.test == 'boolean' ? 'else'
+                    const keyword = typeof condition.source == 'boolean' ? 'else'
                                                                        : i == 0 ? 'if' : 'else if'
                     const ifed = $(`
-                        ${keyword} ((${condition.test})(${path.concat(field.name).join('.')}, ${packet.name})) {
+                        ${keyword} ((${condition.source})(${path.concat(field.name).join('.')}, ${packet.name})) {
                             `, source, `
                         }
                     `)

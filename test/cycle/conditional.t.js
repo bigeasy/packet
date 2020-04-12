@@ -17,6 +17,6 @@ function prove (okay) {
             }
         },
         objects: [{ value: 250 }, { value: 251 }],
-        stopAt: 'serialize.all'
+        stopAt: 'sizeof'
     })
 }

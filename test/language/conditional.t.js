@@ -24,7 +24,8 @@ require('proof')(1, okay => {
             bits: 0,
             serialize: {
                 conditions: [{
-                    test: 'value => value < 251',
+                    source: 'value => value < 251',
+                    airty: 1,
                     fields: [{
                         type: 'integer',
                         fixed: true,
@@ -33,7 +34,8 @@ require('proof')(1, okay => {
                         compliment: false
                     }]
                 }, {
-                    test: 'value => value >= 251',
+                    source: 'value => value >= 251',
+                    airty: 1,
                     fields: [{
                         type: 'literal',
                         fixed: true,
@@ -57,13 +59,16 @@ require('proof')(1, okay => {
                     compliment: false
                 }],
                 conditions: [{
-                    test: 'sip => sip < 251',
+                    source: 'sip => sip < 251',
+                    airty: 1,
                     fields: [{
                         type: 'function',
-                        source: 'sip => sip'
+                        source: 'sip => sip',
+                        airty: 1
                     }]
                 }, {
-                    test: 'sip => sip == 0xfc',
+                    source: 'sip => sip == 0xfc',
+                    airty: 1,
                     fields: [{
                         type: 'integer',
                         fixed: true,
