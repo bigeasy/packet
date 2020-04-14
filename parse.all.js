@@ -176,7 +176,7 @@ function map (packet, bff) {
         return $(`
             parsers.bff.${packet.name} = function () {
                 return function parse ($buffer, $start, $end) {
-                    `, variables.length ? `let ${variables.join(', ')}` : null, `
+                    `, variables.length ? `let ${variables.join(', ')}` : null, -1, `
 
                     `, source, `
 
@@ -188,7 +188,7 @@ function map (packet, bff) {
 
     return $(`
         parsers.all.${packet.name} = function ($buffer, $start) {
-            `, variables.length ? `let ${variables.join(', ')}` : null, `
+            `, variables.length ? `let ${variables.join(', ')}` : null, -1, `
 
             `, source, `
 

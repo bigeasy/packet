@@ -169,7 +169,7 @@ function generate (packet, bff) {
     return $(`
         serializers.${bff ? 'bff' : 'all'}.${packet.name} = function (${packet.name}) {
             return function ($buffer, $start, $end) {
-                `, lets, `
+                `, lets, -1, `
 
                 `, source, `
 
