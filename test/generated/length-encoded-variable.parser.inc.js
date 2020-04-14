@@ -84,6 +84,9 @@ module.exports = function (parsers) {
                         $step = 3
                         continue
                     }
+
+                case 8:
+
                     return { start: $start, object: object, parse: null }
                 }
                 break

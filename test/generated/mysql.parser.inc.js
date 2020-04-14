@@ -1,5 +1,5 @@
 module.exports = function (parsers) {
-    parsers.inc.object = function (object = {}, $step = 0, $i = [], $I = []) {
+    parsers.inc.object = function (object = {}, $step = 0, $i = [], $I = [], $sip = []) {
         let $_, $byte
         return function parse ($buffer, $start, $end) {
             for (;;) {
@@ -7,37 +7,47 @@ module.exports = function (parsers) {
                 case 0:
 
                     object = {
-                        array: new Array
+
                     }
                     $step = 1
 
                 case 1:
 
-                    $_ = 0
                     $step = 2
-                    $byte = 1
 
                 case 2:
 
-                    while ($byte != -1) {
-                        if ($start == $end) {
-                            return { start: $start, object: null, parse }
-                        }
-                        $_ += $buffer[$start++] << $byte * 8 >>> 0
-                        $byte--
+                    if ($start == $end) {
+                        return { start: $start, object: null, parse }
                     }
 
-                    $I[0] = $_
+                    $sip[0] = $buffer[$start++]
 
-                    $i[0] = 0
 
                 case 3:
 
-                    $_ = 0
-                    $step = 4
-                    $byte = 1
+                    if ((sip => sip < 251)($sip[0], object.value, object)) {
+                        $step = 4
+                        continue
+                    } else if ((sip => sip == 0xfc)($sip[0], object.value, object)) {
+                        $step = 5
+                        continue
+                    }
 
                 case 4:
+
+                    object.value = (sip => sip)($sip[0])
+
+                    $step = 7
+                    continue
+
+                case 5:
+
+                    $_ = 0
+                    $step = 6
+                    $byte = 1
+
+                case 6:
 
                     while ($byte != -1) {
                         if ($start == $end) {
@@ -47,14 +57,11 @@ module.exports = function (parsers) {
                         $byte--
                     }
 
-                    object.array[$i[0]] = $_
+                    object.value = $_
 
-                    if (++$i[0] != $I[0]) {
-                        $step = 3
-                        continue
-                    }
 
-                case 5:
+
+                case 7:
 
                     return { start: $start, object: object, parse: null }
                 }

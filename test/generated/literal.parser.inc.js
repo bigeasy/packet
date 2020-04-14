@@ -58,6 +58,9 @@ module.exports = function (parsers) {
                 if ($_ != 0) {
                     return { start: $start, object: null, parse }
                 }
+
+            case 7:
+
                 return { start: $start, object: object, parse: null }
             }
         }

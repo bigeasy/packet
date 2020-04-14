@@ -28,6 +28,9 @@ module.exports = function (parsers) {
 
                 object.word = $_
 
+
+            case 3:
+
                 return { start: $start, object: object, parse: null }
             }
         }

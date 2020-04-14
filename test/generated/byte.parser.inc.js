@@ -22,6 +22,9 @@ module.exports = function (parsers) {
 
                 object.word = $buffer[$start++]
 
+
+            case 3:
+
                 return { start: $start, object: object, parse: null }
             }
         }

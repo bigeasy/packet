@@ -1,9 +1,10 @@
 const join = require('./join')
+const snuggle = require('./snuggle')
 const unpackAll = require('./unpack')
 const $ = require('programmatic')
 
 function generate (packet) {
-    let step = 0, index = -1
+    let step = 0, index = -1, _conditional = false
 
     function integer (path, field) {
         const bytes = field.bits / 8
@@ -122,6 +123,55 @@ function generate (packet) {
         `)
     }
 
+    function conditional (path, conditional) {
+        _conditional = true
+        const { parse } = conditional
+        const sip = join(parse.sip.map(field => {
+            return dispatch([ '$sip[0]' ], field)
+        }))
+        const start = step++
+        const steps = []
+        for (const condition of parse.conditions) {
+            steps.push({
+                number: step,
+                source: join(condition.fields.map(field => {
+                    return dispatch(path, field)
+                }))
+            })
+        }
+        const ladder = []
+        for (let i = 0, I = parse.conditions.length; i < I; i++) {
+            const condition = parse.conditions[i]
+            const keyword = typeof condition.source == 'boolean' ? 'else'
+                                                               : i == 0 ? 'if' : 'else if'
+            ladder.push($(`
+                ${keyword} ((${condition.source})($sip[0], ${path.join('.')}, ${packet.name})) {
+                    $step = ${steps[i].number}
+                    continue
+                }
+            `))
+        }
+        const done = $(`
+            $step = ${step}
+            continue
+        `)
+        return $(`
+            `, sip, `
+
+            case ${start}:
+
+                `, snuggle(ladder), `
+
+            `, join(steps.map((step, i) => {
+                return $(`
+                    `, step.source, `
+
+                        `, steps.length - 1 != i ? done : null, `
+                `)
+            })), `
+        `)
+    }
+
     function dispatch (path, packet, depth, arrayed) {
         switch (packet.type) {
         case 'structure':
@@ -141,12 +191,20 @@ function generate (packet) {
                 `, push, `
                 `, source, `
             `)
+        case 'conditional':
+            return conditional(path, packet)
         case 'lengthEncoding':
             return lengthEncoding(path, packet)
         case 'lengthEncoded':
             return lengthEncoded(path, packet)
         case 'integer':
             return integer(path, packet)
+        case 'function':
+            return $(`
+                case ${step++}:
+
+                    ${path.join('.')} = (${packet.source})($sip[0])
+            `)
         case 'literal':
             return literal(packet)
         }
@@ -155,14 +213,20 @@ function generate (packet) {
     let source = $(`
         switch ($step) {
         `, dispatch([ packet.name ], packet, 0), `
+
+        case ${step}:
+
             return { start: $start, object: ${packet.name}, parse: null }
         }
     `)
 
     const lets = [ '$_', '$byte' ]
     const signature = [ `${packet.name} = {}`, '$step = 0' ]
-    if (packet.lengthEncoded) {
+    if (packet.lengthEncoded || _conditional) {
         signature.push('$i = []', '$I = []')
+        if (_conditional) {
+            signature.push('$sip = []')
+        }
         source = $(`
             for (;;) {
                 `, source, `
