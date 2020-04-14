@@ -1,8 +1,9 @@
 const $ = require('programmatic')
 const join = require('./join')
+const snuggle = require('./snuggle')
 
 function generate (packet) {
-    let step = 0, index = -1
+    let step = 0, index = -1, _conditional = false
 
     function integer (path, field) {
         const endianness = field.endianness || 'big'
@@ -82,6 +83,50 @@ function generate (packet) {
         `)
     }
 
+    function conditional (path, conditional) {
+        _conditional = true
+        const start = step++
+        const steps = []
+        for (const condition of conditional.serialize.conditions) {
+            steps.push({
+                step: step,
+                source: join(condition.fields.map(field => {
+                    return dispatch(field.name ? path.concat(field.name) : path, field)
+                }))
+            })
+        }
+        const ladder = []
+        for (let i = 0, I = conditional.serialize.conditions.length; i < I; i++) {
+            const condition = conditional.serialize.conditions[i]
+            const keyword = typeof condition.source == 'boolean' ? 'else'
+                                                               : i == 0 ? 'if' : 'else if'
+            ladder.push($(`
+                ${keyword} ((${condition.source})(${path.join('.')}, ${packet.name})) {
+                    $step = ${steps[i].step}
+                    continue
+                }
+            `))
+        }
+        const done = $(`
+            $step = ${step}
+            continue
+        `)
+        // TODO Instead of choping the literal source, prevent adding the
+        // trailing line, maybe. Or maybe this is best.
+        return $(`
+            case ${start}:
+
+                `, snuggle(ladder), `
+
+            `, join(steps.map((step, i) => {
+                return $(`
+                    `, step.source, `
+                        `, -1, steps.length - 1 != i ? done : null, `
+                `)
+            })), `
+        `)
+    }
+
     function dispatch (path, packet) {
         switch (packet.type) {
         case 'structure':
@@ -91,6 +136,8 @@ function generate (packet) {
                     `, source, `
                 `)
             }))
+        case 'conditional':
+            return conditional(path, packet)
         case 'lengthEncoding':
             return lengthEncoding(path, packet)
         case 'lengthEncoded':
@@ -114,7 +161,7 @@ function generate (packet) {
 
         }
     `)
-    if (packet.lengthEncoded) {
+    if (packet.lengthEncoded || _conditional) {
         source = $(`
             for (;;) {
                 `, source, `

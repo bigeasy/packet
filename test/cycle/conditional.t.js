@@ -17,6 +17,6 @@ function prove (okay) {
             }
         },
         objects: [{ value: 250 }, { value: 251 }],
-        stopAt: 'parse.all'
+        stopAt: 'serialize.inc'
     })
 }
