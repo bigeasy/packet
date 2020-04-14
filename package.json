@@ -45,7 +45,7 @@
     "dependencies":
     {
                             "extant":                       "^1.0.17",
-                            "programmatic":                 "^2.0.0-alpha.6"
+                            "programmatic":                 "2.0.0-alpha.6"
     },
     "devDependencies":
     {
