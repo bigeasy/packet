@@ -128,7 +128,7 @@ function generate (packet, bff) {
         case 'checkpoint':
             return checkpoint(field)
         case 'structure':
-            return join(field.fields.map(field => dispatch(path + `.${field.name}`, field)))
+            return join(field.fields.map(field => dispatch(path + field.dotted, field)))
         case 'conditional':
             return conditional(path, field)
         case 'lengthEncoding':
