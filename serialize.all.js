@@ -40,14 +40,14 @@ function generate (packet, bff) {
     let step = 0
     let index = -1
 
-    function word (field, variable) {
+    function word (asignee, field) {
         const bytes = field.bits / 8
         let bite = field.endianness == 'little' ? 0 : bytes - 1
         const stop = field.endianness == 'little' ? bytes : -1
         const direction = field.endianness == 'little' ? 1 : -1
         const shifts = []
         while (bite != stop) {
-            const shift = bite ? variable + ' >>> ' + bite * 8 : variable
+            const shift = bite ? asignee + ' >>> ' + bite * 8 : asignee
             shifts.push(`$buffer[$start++] = ${shift} & 0xff`)
             bite += direction
         }
@@ -66,13 +66,13 @@ function generate (packet, bff) {
                 }
             `)
         } else {
-            return word(field, `${path.join('.')}.${field.name}`)
+            return word(path, field)
         }
     }
 
     function lengthEncoding (path, field) {
         step += 2
-        return word(field, `${path.join('.')}.${field.name}.length`)
+        return word(path + '.length', field)
     }
 
     function lengthEncoded (path, field) {
@@ -82,12 +82,9 @@ function generate (packet, bff) {
         // don't know really understand the contents of the packet, so we ought
         // to create the path with `concat` rather than have the packet
         // generation code create the full path with the packet name.
-        const looped = dispatch(path, {
-            ...field.element,
-            name: `${field.name}[${i}]`
-        })
+        const looped = dispatch(path + `[${i}]`, field.element)
         const source = $(`
-            for (${i} = 0; ${i} < ${path.join('.')}.${field.name}.length; ${i}++) {
+            for (${i} = 0; ${i} < ${path}.length; ${i}++) {
                 `, looped, `
             }
         `)
@@ -117,7 +114,7 @@ function generate (packet, bff) {
             const keyword = typeof condition.source == 'boolean' ? 'else'
                                                                : i == 0 ? 'if' : 'else if'
             const ifed = $(`
-                ${keyword} ((${condition.source})(${path.concat(conditional.name).join('.')}, ${packet.name})) {
+                ${keyword} ((${condition.source})(${path}, ${packet.name})) {
                     `, source, `
                 }
             `)
@@ -126,45 +123,36 @@ function generate (packet, bff) {
         return snuggle(block)
     }
 
-    function dispatch (path, packet) {
-        switch (packet.type) {
+    function dispatch (path, field) {
+        switch (field.type) {
         case 'checkpoint':
-            return checkpoint(packet)
+            return checkpoint(field)
         case 'structure':
-            return join(packet.fields.map(field => {
-                return dispatch(path.concat(packet.name), field)
-            }))
-            return $(`
-                {
-                    let ${packet.name} = object.${packet.name}
-
-                    `, source, `
-                }
-            `)
-            break
+            return join(field.fields.map(field => dispatch(path + `.${field.name}`, field)))
         case 'conditional':
-            return conditional(path, packet)
+            return conditional(path, field)
         case 'lengthEncoding':
-            return lengthEncoding(path, packet)
+            return lengthEncoding(path, field)
         case 'lengthEncoded':
-            return lengthEncoded(path, packet)
+            return lengthEncoded(path, field)
         case 'buffer':
-            return buffer(packet)
+            return buffer(field)
         case 'integer':
-            return integer(path, packet)
+            return integer(path, field)
         case 'literal':
             return $(`
-                $buffer.write(${JSON.stringify(packet.value)}, $start, $start + ${packet.value.length / 2}, 'hex')
-                $start += ${packet.value.length / 2}
+                $buffer.write(${JSON.stringify(field.value)}, $start, $start + ${field.value.length / 2}, 'hex')
+                $start += ${field.value.length / 2}
             `)
         default:
             throw new Error
         }
     }
 
-    const source = join(packet.fields.map(f => {
-        return dispatch([ packet.name ], f)
+    let source = join(packet.fields.map(field => {
+        return dispatch(`${packet.name}${field.name ? `.${field.name}` : ''}`, field)
     }))
+    // console.log(dispatch(packet.name, packet))
     const lets = packet.lengthEncoded ? 'let $i = []' : null
     return $(`
         serializers.${bff ? 'bff' : 'all'}.${packet.name} = function (${packet.name}) {
