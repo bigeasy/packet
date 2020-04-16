@@ -12,6 +12,7 @@ require('proof')(1, okay => {
             value: '0faded'
         }, {
             name: 'value',
+            dotted: '.value',
             type: 'integer',
             fixed: true,
             bits: 16,

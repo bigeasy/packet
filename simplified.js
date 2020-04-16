@@ -242,8 +242,10 @@ function map (definitions, packet, depth, extra = {}) {
             } else if (depth == 0) {
                 // TODO It's not depth == 0, more like start of structure.
                 const fields = []
-                for (const field in packet) {
-                    fields.push.apply(fields, map(definitions, packet[field], 1, { name: field }))
+                for (const name in packet) {
+                    fields.push.apply(fields, map(definitions, packet[name], 1, {
+                        name, dotted: `.${name}`
+                    }))
                 }
                 const fixed = fields.reduce((fixed, field) => {
                     return fixed && field.fixed

@@ -6,6 +6,7 @@
   "fields": [
     {
       "name": "value",
+      "dotted": ".value",
       "type": "integer",
       "endianness": "big",
       "fixed": true,

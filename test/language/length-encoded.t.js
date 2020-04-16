@@ -8,6 +8,7 @@ require('proof')(1, okay => {
         lengthEncoded: true,
         fields: [{
             name: 'value',
+            dotted: '.value',
             type: 'lengthEncoding',
             fixed: true,
             bits: 16,
@@ -15,6 +16,7 @@ require('proof')(1, okay => {
             compliment: false
         }, {
             name: 'value',
+            dotted: '.value',
             type: 'lengthEncoded',
             fixed: false,
             bits: 0,
