@@ -20,7 +20,7 @@ function generate (packet) {
                         return { start: $start, object: null, parse }
                     }
 
-                    ${path.join('.')} = $buffer[$start++]
+                    ${path} = $buffer[$start++]
 
             `)
         }
@@ -44,7 +44,7 @@ function generate (packet) {
                     $byte${direction}
                 }
 
-                ${path.join('.')} = $_
+                ${path} = $_
 
         `)
     }
@@ -94,7 +94,7 @@ function generate (packet) {
         // Invoked here to set `again`.
         const again = step
         const source = $(`
-            `, dispatch([ `${path.join('.')}[${i}]` ], packet.element), `
+            `, dispatch([ `${path}[${i}]` ], packet.element), `
                 if (++${i} != ${I}) {
                     $step = ${again}
                     continue
@@ -127,16 +127,14 @@ function generate (packet) {
         _conditional = true
         const { parse } = conditional
         const sip = join(parse.sip.map(field => {
-            return dispatch([ '$sip[0]' ], field)
+            return dispatch('$sip[0]', field)
         }))
         const start = step++
         const steps = []
         for (const condition of parse.conditions) {
             steps.push({
                 number: step,
-                source: join(condition.fields.map(field => {
-                    return dispatch(path, field)
-                }))
+                source: join(condition.fields.map(field => dispatch(path, field)))
             })
         }
         const ladder = []
@@ -145,7 +143,7 @@ function generate (packet) {
             const keyword = typeof condition.source == 'boolean' ? 'else'
                                                                : i == 0 ? 'if' : 'else if'
             ladder.push($(`
-                ${keyword} ((${condition.source})($sip[0], ${path.join('.')}, ${packet.name})) {
+                ${keyword} ((${condition.source})($sip[0], ${path}, ${packet.name})) {
                     $step = ${steps[i].number}
                     continue
                 }
@@ -178,15 +176,13 @@ function generate (packet) {
             const push = $(`
                 case ${step++}:
 
-                    ${path.join('.')} = {
+                    ${path} = {
                         `, vivify(packet, 0), `
                     }
                     $step = ${step}
 
             `)
-            const source =  join(packet.fields.map(function (f) {
-                return dispatch(f.name ? path.concat(f.name) : path, f)
-            }.bind(this)))
+            const source =  join(packet.fields.map(field => dispatch(path + field.dotted, field)))
             return $(`
                 `, push, `
                 `, source, `
@@ -203,7 +199,7 @@ function generate (packet) {
             return $(`
                 case ${step++}:
 
-                    ${path.join('.')} = (${packet.source})($sip[0])
+                    ${path} = (${packet.source})($sip[0])
             `)
         case 'literal':
             return literal(packet)

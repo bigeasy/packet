@@ -16,7 +16,7 @@ function generate (packet) {
 
                 $step = ${step}
                 $byte = ${bite}
-                $_ = ${path.join('.')}
+                $_ = ${path}
 
             case ${step++}:
 
@@ -35,7 +35,7 @@ function generate (packet) {
     function lengthEncoding (path, packet) {
         index++
         return $(`
-            `, integer(path.concat('length'), packet), `
+            `, integer(path + '.length', packet), `
                 $i.push(0)
         `)
 
@@ -46,9 +46,9 @@ function generate (packet) {
         const I = `$I[${index}]`
         const again = step
         const source = $(`
-            `, dispatch([ `${path.join('.')}[${i}]` ], packet.element), `
+            `, dispatch([ `${path}[${i}]` ], packet.element), `
 
-                if (++${i} != ${path.concat('length').join('.')}) {
+                if (++${i} != ${path + '.length'}) {
                     $step = ${again}
                     continue
                 }
@@ -90,9 +90,7 @@ function generate (packet) {
         for (const condition of conditional.serialize.conditions) {
             steps.push({
                 step: step,
-                source: join(condition.fields.map(field => {
-                    return dispatch(field.name ? path.concat(field.name) : path, field)
-                }))
+                source: join(condition.fields.map(field => dispatch(path, field)))
             })
         }
         const ladder = []
@@ -101,7 +99,7 @@ function generate (packet) {
             const keyword = typeof condition.source == 'boolean' ? 'else'
                                                                : i == 0 ? 'if' : 'else if'
             ladder.push($(`
-                ${keyword} ((${condition.source})(${path.join('.')}, ${packet.name})) {
+                ${keyword} ((${condition.source})(${path}, ${packet.name})) {
                     $step = ${steps[i].step}
                     continue
                 }
@@ -131,7 +129,7 @@ function generate (packet) {
         switch (packet.type) {
         case 'structure':
             return join(packet.fields.map(field => {
-                const source = dispatch(field.name ? path.concat(field.name) : path, field)
+                const source = dispatch(path + field.dotted, field)
                 return $(`
                     `, source, `
                 `)
@@ -151,7 +149,7 @@ function generate (packet) {
 
     let source = $(`
         switch ($step) {
-        `, dispatch([ packet.name ], packet), `
+        `, dispatch(packet.name, packet), `
 
             $step = ${step}
 
