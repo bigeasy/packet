@@ -4,7 +4,7 @@ const unpackAll = require('./unpack')
 const $ = require('programmatic')
 
 function map (packet, bff) {
-    let index = -1
+    let $i = -1, $sip = -1
     let step = 1
     let _conditional = false
 
@@ -69,19 +69,19 @@ function map (packet, bff) {
     }
 
     function lengthEncoding (field) {
-        index++
+        $i++
         return $(`
-            $i[${index}] = 0
-            `, integer(`$I[${index}]`, field), `
+            $i[${$i}] = 0
+            `, integer(`$I[${$i}]`, field), `
         `)
     }
 
     function lengthEncoded (path, field) {
         step += 1
-        const i = `$i[${index}]`
-        const I = `$I[${index}]`
+        const i = `$i[${$i}]`
+        const I = `$I[${$i}]`
         const looped = dispatch(path + `[${i}]`, field.element)
-        index--
+        $i--
         return $(`
             for (; ${i} < ${I}; ${i}++) {
                 `, looped, `
@@ -90,9 +90,10 @@ function map (packet, bff) {
     }
 
     function conditional (path, conditional) {
+        $sip++
         const block = []
         _conditional = true
-        const sip = join(conditional.parse.sip.map(field => dispatch('$sip[0]', field)))
+        const sip = join(conditional.parse.sip.map(field => dispatch(`$sip[${$sip}]`, field)))
         for (let i = 0, I = conditional.parse.conditions.length; i < I; i++) {
             const condition = conditional.parse.conditions[i]
             const source = join(condition.fields.map(field => {
@@ -101,12 +102,13 @@ function map (packet, bff) {
             const keyword = typeof condition.source == 'boolean' ? 'else'
                                                                : i == 0 ? 'if' : 'else if'
             const ifed = $(`
-                ${keyword} ((${condition.source})($sip[0], ${packet.name})) {
+                ${keyword} ((${condition.source})($sip[${$sip}], ${packet.name})) {
                     `, source, `
                 }
             `)
             block.push(ifed)
         }
+        $sip--
         return $(`
             `, sip, `
 
@@ -132,7 +134,7 @@ function map (packet, bff) {
         case 'lengthEncoded':
             return lengthEncoded(path, field)
         case 'function':
-            return `${path} = (${field.source})($sip[0])`
+            return `${path} = (${field.source})($sip[${$sip}])`
         case 'literal':
             return $(`
                 $start += ${field.value.length / 2}
@@ -210,7 +212,6 @@ function bff (path, packet, index = 0, rewind = 0) {
                 checkpoint.lengths.push(`${field.element.bits / 8} * $I[${index}]`)
                 break
             }
-            index--
             break
         default:
             checkpoint.lengths[0] += field.bits / 8

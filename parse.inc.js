@@ -4,7 +4,7 @@ const unpackAll = require('./unpack')
 const $ = require('programmatic')
 
 function generate (packet) {
-    let step = 0, index = -1, _conditional = false
+    let step = 0, $i = -1, $sip = -1, _conditional = false
 
     function integer (path, field) {
         const bytes = field.bits / 8
@@ -78,9 +78,9 @@ function generate (packet) {
     }
 
     function lengthEncoding (path, field) {
-        index++
-        const i = `$i[${index}]`
-        const I = `$I[${index}]`
+        $i++
+        const i = `$i[${$i}]`
+        const I = `$I[${$i}]`
         return $(`
             `, integer([ I ], field), `
                 ${i} = 0
@@ -88,8 +88,8 @@ function generate (packet) {
     }
 
     function lengthEncoded (path, packet) {
-        const i = `$i[${index}]`
-        const I = `$I[${index}]`
+        const i = `$i[${$i}]`
+        const I = `$I[${$i}]`
         // var integer = integer(packet.length, 'length')
         // Invoked here to set `again`.
         const again = step
@@ -100,7 +100,7 @@ function generate (packet) {
                     continue
                 }
         `)
-        index--
+        $i--
         return source
     }
 
@@ -125,9 +125,10 @@ function generate (packet) {
 
     function conditional (path, conditional) {
         _conditional = true
+        $sip++
         const { parse } = conditional
         const sip = join(parse.sip.map(field => {
-            return dispatch('$sip[0]', field)
+            return dispatch(`$sip[${$sip}]`, field)
         }))
         const start = step++
         const steps = []
@@ -143,7 +144,7 @@ function generate (packet) {
             const keyword = typeof condition.source == 'boolean' ? 'else'
                                                                : i == 0 ? 'if' : 'else if'
             ladder.push($(`
-                ${keyword} ((${condition.source})($sip[0], ${path}, ${packet.name})) {
+                ${keyword} ((${condition.source})($sip[${$sip}], ${path}, ${packet.name})) {
                     $step = ${steps[i].number}
                     continue
                 }
@@ -153,6 +154,7 @@ function generate (packet) {
             $step = ${step}
             continue
         `)
+        $sip--
         return $(`
             `, sip, `
 
