@@ -205,7 +205,7 @@ function bff (path, packet, index = 0, rewind = 0) {
                 if (field.element.fixed) {
                     checkpoint.lengths.push(`${field.element.bits / 8} * $I[${index}]`)
                 } else {
-                    field.element.fields = bff(path.concat(`${field.name}[$i[${index}]]`), field.element, index + 1, 2)
+                    field.element.fields = bff(path + `${field.dotted}[$i[${index}]]`, field.element, index + 1, 2)
                 }
                 break
             default:
@@ -232,7 +232,7 @@ function bff (path, packet, index = 0, rewind = 0) {
 module.exports = function (compiler, definition, options = {}) {
     const source = join(JSON.parse(JSON.stringify(definition)).map(function (packet) {
         if (options.bff) {
-            packet.fields = bff([ packet.name ], packet)
+            packet.fields = bff(packet.name, packet)
         }
         return map(packet, options.bff)
     }))
