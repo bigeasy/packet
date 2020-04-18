@@ -3,11 +3,10 @@ const snuggle = require('./snuggle')
 const pack = require('./pack')
 const $ = require('programmatic')
 
-function bff (path, packet, index = 0, rewind = 0) {
+function bff (path, fields, index = 0, rewind = 0) {
     let checkpoint
-    const fields = [ checkpoint = { type: 'checkpoint', lengths: [ 0 ], rewind } ]
-    for (let i = 0, I = packet.fields.length; i < I; i++) {
-        const field = JSON.parse(JSON.stringify(packet.fields[i]))
+    const checked = [ checkpoint = { type: 'checkpoint', lengths: [ 0 ], rewind } ]
+    for (const field of fields) {
         switch (field.type) {
         case 'lengthEncoding':
             checkpoint.lengths[0] += field.bits / 8
@@ -18,7 +17,7 @@ function bff (path, packet, index = 0, rewind = 0) {
                 if (field.element.fixed) {
                     checkpoint.lengths.push(`${field.element.bits / 8} * ${path + field.dotted}.length`)
                 } else {
-                    field.element.fields = bff(path + `${field.dotted}[$i[${index}]]`, field.element, index + 1, 2)
+                    field.element.fields = bff(path + `${field.dotted}[$i[${index}]]`, field.element.fields, index + 1, 2)
                 }
                 break
             default:
@@ -27,13 +26,12 @@ function bff (path, packet, index = 0, rewind = 0) {
             }
             break
         default:
-            checkpoint.path = path.concat(packet.name)
             checkpoint.lengths[0] += field.bits / 8
             break
         }
-        fields.push(field)
+        checked.push(field)
     }
-    return fields
+    return checked
 }
 
 function generate (packet, bff) {
@@ -170,7 +168,7 @@ function generate (packet, bff) {
 module.exports = function (compiler, definition, options = {}) {
     const source = join(JSON.parse(JSON.stringify(definition)).map(function (packet) {
         if (options.bff) {
-            packet.fields = bff(packet.name, packet)
+            packet.fields = bff(packet.name, packet.fields)
         }
         return generate(packet, options.bff)
     }))
