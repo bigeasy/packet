@@ -45,7 +45,7 @@ function map (packet, bff) {
         `)
     }
 
-    function integer (field, assignee) {
+    function integer (assignee, field) {
         const bytes = field.bits / 8
         let bite = field.endianness == 'little' ? 0 : bytes - 1
         const stop = field.endianness == 'little' ? bytes : -1
@@ -72,7 +72,7 @@ function map (packet, bff) {
         index++
         return $(`
             $i[${index}] = 0
-            `, integer(field, `$I[${index}]`), `
+            `, integer(`$I[${index}]`, field), `
         `)
     }
 
@@ -80,10 +80,7 @@ function map (packet, bff) {
         step += 1
         const i = `$i[${index}]`
         const I = `$I[${index}]`
-        const looped = dispatch(path, {
-            ...field.element,
-            name: `${field.name}[${i}]`
-        })
+        const looped = dispatch(path + `[${i}]`, field.element)
         index--
         return $(`
             for (; ${i} < ${I}; ${i}++) {
@@ -95,13 +92,11 @@ function map (packet, bff) {
     function conditional (path, conditional) {
         const block = []
         _conditional = true
-        const sip = join(conditional.parse.sip.map(field => {
-            return dispatch([], { name: '$sip[0]', ...field })
-        }))
+        const sip = join(conditional.parse.sip.map(field => dispatch('$sip[0]', field)))
         for (let i = 0, I = conditional.parse.conditions.length; i < I; i++) {
             const condition = conditional.parse.conditions[i]
             const source = join(condition.fields.map(field => {
-                return dispatch(path, { ...field, name: conditional.name })
+                return dispatch(path, field)
             }))
             const keyword = typeof condition.source == 'boolean' ? 'else'
                                                                : i == 0 ? 'if' : 'else if'
@@ -119,19 +114,15 @@ function map (packet, bff) {
         `)
     }
 
-    function dispatch (path, field) {
+    function dispatch (path, field, root = false) {
         switch (field.type) {
         case 'checkpoint':
             return checkpoint(field)
         case 'structure': {
-                const descent = path.concat(field.name)
-                const asignee = path.length == 0 ? `const ${descent[0]}` : descent.join('.')
                 return $(`
-                    `, vivifier(asignee, field), `
+                    `, vivifier(root ? `const ${path}` : path, field), `
 
-                    `, join(field.fields.map(function (field) {
-                        return dispatch(descent, field)
-                    }.bind(this))), `
+                    `, join(field.fields.map(field => dispatch(path + field.dotted, field))), `
                 `)
             }
         case 'conditional':
@@ -141,13 +132,13 @@ function map (packet, bff) {
         case 'lengthEncoded':
             return lengthEncoded(path, field)
         case 'function':
-            return `${path.concat(field.name).join('.')} = (${field.source})($sip[0])`
+            return `${path} = (${field.source})($sip[0])`
         case 'literal':
             return $(`
                 $start += ${field.value.length / 2}
             `)
         default:
-            return integer(field, path.concat(field.name).join('.'))
+            return integer(path, field)
         }
     }
 
@@ -163,7 +154,7 @@ function map (packet, bff) {
         `)
     }
 
-    const source = dispatch([], packet)
+    const source = dispatch(packet.name, packet, true)
     const variables = []
     if (packet.lengthEncoded) {
         variables.push('$i = []', '$I = []')
