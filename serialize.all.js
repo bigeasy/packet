@@ -8,6 +8,11 @@ function bff (path, fields, index = 0, rewind = 0) {
     const checked = [ checkpoint = { type: 'checkpoint', lengths: [ 0 ], rewind } ]
     for (const field of fields) {
         switch (field.type) {
+        case 'conditional':
+            for (const condition of field.serialize.conditions) {
+                condition.fields = bff(path, condition.fields, index, rewind)
+            }
+            break
         case 'lengthEncoding':
             checkpoint.lengths[0] += field.bits / 8
             break
@@ -104,6 +109,7 @@ function generate (packet, bff) {
 
     function conditional (path, conditional) {
         const block = []
+        step++
         for (let i = 0, I = conditional.serialize.conditions.length; i < I; i++) {
             const condition = conditional.serialize.conditions[i]
             const source = join(condition.fields.map(field => {
