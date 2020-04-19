@@ -127,9 +127,7 @@ function generate (packet) {
         _conditional = true
         $sip++
         const { parse } = conditional
-        const sip = join(parse.sip.map(field => {
-            return dispatch(`$sip[${$sip}]`, field)
-        }))
+        const sip = join(parse.sip.map(field => dispatch(`$sip[${$sip}]`, field)))
         const start = step++
         const steps = []
         for (const condition of parse.conditions) {

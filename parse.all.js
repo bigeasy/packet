@@ -58,10 +58,10 @@ function map (packet, bff) {
             }
             bite += direction
         }
+        step += 2
         if (bytes == 1) {
             return `${assignee} = ${reads.join('')}`
         }
-        step += 2
         return $(`
             ${assignee} =
                 `, reads.reverse().join(' +\n'), `
@@ -94,6 +94,7 @@ function map (packet, bff) {
         const block = []
         _conditional = true
         const sip = join(conditional.parse.sip.map(field => dispatch(`$sip[${$sip}]`, field)))
+        step++
         for (let i = 0, I = conditional.parse.conditions.length; i < I; i++) {
             const condition = conditional.parse.conditions[i]
             const source = join(condition.fields.map(field => {
@@ -134,6 +135,7 @@ function map (packet, bff) {
         case 'lengthEncoded':
             return lengthEncoded(path, field)
         case 'function':
+            step++
             return `${path} = (${field.source})($sip[${$sip}])`
         case 'literal':
             return $(`
@@ -146,8 +148,14 @@ function map (packet, bff) {
 
     function checkpoint (checkpoint, depth, arrayed) {
         const signature = [ packet.name, step ]
+        if (checkpoint.lengths.length == 0) {
+            return null
+        }
         if (packet.lengthEncoded) {
             signature.push('$i', '$I')
+        }
+        if (_conditional) {
+            signature.push('$sip')
         }
         return $(`
             if ($end - $start < ${checkpoint.lengths.join(' + ')}) {
@@ -190,22 +198,29 @@ function map (packet, bff) {
     `)
 }
 
-function bff (path, packet, index = 0, rewind = 0) {
-    let checkpoint = { type: 'checkpoint', lengths: [ 0 ], rewind }, fields = [ checkpoint ]
-    for (let i = 0, I = packet.fields.length; i < I; i++) {
-        const field = packet.fields[i]
+function bff (path, fields, index = 0, rewind = 0) {
+    let checkpoint = { type: 'checkpoint', lengths: [ 0 ], rewind }, checked = [ checkpoint ]
+    for (const field of fields) {
         switch (field.type) {
+        case 'function':
+            break
+        case 'conditional':
+            field.parse.sip = bff(path, field.parse.sip, index, rewind)
+            for (const condition of field.parse.conditions) {
+                condition.fields = bff(path, condition.fields, index, rewind)
+            }
+            break
         case 'lengthEncoding':
             checkpoint.lengths[0] += field.bits / 8
             break
         case 'lengthEncoded':
-            fields.push(checkpoint = { type: 'checkpoint', lengths: [ 0 ], rewind: 0 })
+            checked.push(checkpoint = { type: 'checkpoint', lengths: [ 0 ], rewind: 0 })
             switch (field.element.type) {
             case 'structure':
                 if (field.element.fixed) {
                     checkpoint.lengths.push(`${field.element.bits / 8} * $I[${index}]`)
                 } else {
-                    field.element.fields = bff(path + `${field.dotted}[$i[${index}]]`, field.element, index + 1, 2)
+                    field.element.fields = bff(path + `${field.dotted}[$i[${index}]]`, field.element.fields, index + 1, 2)
                 }
                 break
             default:
@@ -217,14 +232,14 @@ function bff (path, packet, index = 0, rewind = 0) {
             checkpoint.lengths[0] += field.bits / 8
             break
         }
-        fields.push(field)
+        checked.push(field)
     }
-    fields.forEach(field => {
+    checked.forEach(field => {
         if (field.type == 'checkpoint' && field.lengths[0] == 0) {
             field.lengths.shift()
         }
     })
-    return fields.filter(field => {
+    return checked.filter(field => {
         return field.type != 'checkpoint' || field.lengths.length != 0
     })
 }
@@ -232,7 +247,7 @@ function bff (path, packet, index = 0, rewind = 0) {
 module.exports = function (compiler, definition, options = {}) {
     const source = join(JSON.parse(JSON.stringify(definition)).map(function (packet) {
         if (options.bff) {
-            packet.fields = bff(packet.name, packet)
+            packet.fields = bff(packet.name, packet.fields)
         }
         return map(packet, options.bff)
     }))
