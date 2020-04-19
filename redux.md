@@ -3,11 +3,13 @@
 Going to page this project into memory and attempt to leave a roadmap in this
 diary entry as I do.
 
- * Length-encoded arrays containing length-encoded arrays.
- * Conditionals.
- * Packed integers.
- * Two's compliment.
- * Checkums.
+- [x] Length-encoded arrays containing length-encoded arrays.
+- [x] Conditionals.
+- [ ] Packed integers.
+- [ ] Two's compliment.
+- [ ] Checkums.
+- [ ] Terminated arrays.
+- [ ] Fixed arrays.
 
 That was the general order of things and would allow me to run through and
 delete the rest of the legacy which I'm still keeping around because there may
