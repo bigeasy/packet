@@ -73,11 +73,6 @@ function generate (packet, bff) {
         }
     }
 
-    function lengthEncoding (path, field) {
-        step += 2
-        return word(path + '.length', field)
-    }
-
     function lengthEncoded (path, field) {
         step += 2
         const i = `$i[${++index}]`
@@ -95,16 +90,9 @@ function generate (packet, bff) {
         return source
     }
 
-    function checkpoint (checkpoint) {
-        const i = packet.lengthEncoded ? '$i' : '[]'
-        return $(`
-            if ($end - $start < ${checkpoint.lengths.join(' + ')}) {
-                return {
-                    start: $start,
-                    serialize: serializers.inc.object(${packet.name}, ${step - checkpoint.rewind}, ${i})
-                }
-            }
-        `)
+    function lengthEncoding (path, field) {
+        step += 2
+        return word(path + '.length', field)
     }
 
     function conditional (path, conditional) {
@@ -112,9 +100,7 @@ function generate (packet, bff) {
         step++
         for (let i = 0, I = conditional.serialize.conditions.length; i < I; i++) {
             const condition = conditional.serialize.conditions[i]
-            const source = join(condition.fields.map(field => {
-                return dispatch(path, { ...field, name: conditional.name })
-            }))
+            const source = join(condition.fields.map(field => dispatch(path, field)))
             const keyword = typeof condition.source == 'boolean' ? 'else'
                                                                : i == 0 ? 'if' : 'else if'
             const ifed = $(`
@@ -127,12 +113,24 @@ function generate (packet, bff) {
         return snuggle(block)
     }
 
+    function checkpoint (checkpoint) {
+        const i = packet.lengthEncoded ? '$i' : '[]'
+        return $(`
+            if ($end - $start < ${checkpoint.lengths.join(' + ')}) {
+                return {
+                    start: $start,
+                    serialize: serializers.inc.object(${packet.name}, ${step - checkpoint.rewind}, ${i})
+                }
+            }
+        `)
+    }
+
     function dispatch (path, field) {
         switch (field.type) {
-        case 'checkpoint':
-            return checkpoint(field)
         case 'structure':
             return join(field.fields.map(field => dispatch(path + field.dotted, field)))
+        case 'checkpoint':
+            return checkpoint(field)
         case 'conditional':
             return conditional(path, field)
         case 'lengthEncoding':
@@ -153,10 +151,7 @@ function generate (packet, bff) {
         }
     }
 
-    let source = join(packet.fields.map(field => {
-        return dispatch(`${packet.name}${field.name ? `.${field.name}` : ''}`, field)
-    }))
-    // console.log(dispatch(packet.name, packet))
+    let source = dispatch(packet.name, packet)
     const lets = packet.lengthEncoded ? 'let $i = []' : null
     return $(`
         serializers.${bff ? 'bff' : 'all'}.${packet.name} = function (${packet.name}) {

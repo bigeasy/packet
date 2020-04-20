@@ -3,6 +3,52 @@ const snuggle = require('./snuggle')
 const unpackAll = require('./unpack')
 const $ = require('programmatic')
 
+function bff (path, fields, index = 0, rewind = 0) {
+    let checkpoint = { type: 'checkpoint', lengths: [ 0 ], rewind }, checked = [ checkpoint ]
+    for (const field of fields) {
+        switch (field.type) {
+        case 'function':
+            break
+        case 'conditional':
+            field.parse.sip = bff(path, field.parse.sip, index, rewind)
+            for (const condition of field.parse.conditions) {
+                condition.fields = bff(path, condition.fields, index, rewind)
+            }
+            break
+        case 'lengthEncoding':
+            checkpoint.lengths[0] += field.bits / 8
+            break
+        case 'lengthEncoded':
+            checked.push(checkpoint = { type: 'checkpoint', lengths: [ 0 ], rewind: 0 })
+            switch (field.element.type) {
+            case 'structure':
+                if (field.element.fixed) {
+                    checkpoint.lengths.push(`${field.element.bits / 8} * $I[${index}]`)
+                } else {
+                    field.element.fields = bff(path + `${field.dotted}[$i[${index}]]`, field.element.fields, index + 1, 2)
+                }
+                break
+            default:
+                checkpoint.lengths.push(`${field.element.bits / 8} * $I[${index}]`)
+                break
+            }
+            break
+        default:
+            checkpoint.lengths[0] += field.bits / 8
+            break
+        }
+        checked.push(field)
+    }
+    checked.forEach(field => {
+        if (field.type == 'checkpoint' && field.lengths[0] == 0) {
+            field.lengths.shift()
+        }
+    })
+    return checked.filter(field => {
+        return field.type != 'checkpoint' || field.lengths.length != 0
+    })
+}
+
 function map (packet, bff) {
     let $i = -1, $sip = -1
     let step = 1
@@ -68,14 +114,6 @@ function map (packet, bff) {
         `)
     }
 
-    function lengthEncoding (field) {
-        $i++
-        return $(`
-            $i[${$i}] = 0
-            `, integer(`$I[${$i}]`, field), `
-        `)
-    }
-
     function lengthEncoded (path, field) {
         step += 1
         const i = `$i[${$i}]`
@@ -89,6 +127,14 @@ function map (packet, bff) {
         `)
     }
 
+    function lengthEncoding (field) {
+        $i++
+        return $(`
+            $i[${$i}] = 0
+            `, integer(`$I[${$i}]`, field), `
+        `)
+    }
+
     function conditional (path, conditional) {
         $sip++
         const block = []
@@ -97,9 +143,7 @@ function map (packet, bff) {
         step++
         for (let i = 0, I = conditional.parse.conditions.length; i < I; i++) {
             const condition = conditional.parse.conditions[i]
-            const source = join(condition.fields.map(field => {
-                return dispatch(path, field)
-            }))
+            const source = join(condition.fields.map(field => dispatch(path, field)))
             const keyword = typeof condition.source == 'boolean' ? 'else'
                                                                : i == 0 ? 'if' : 'else if'
             const ifed = $(`
@@ -115,35 +159,6 @@ function map (packet, bff) {
 
             `, snuggle(block), `
         `)
-    }
-
-    function dispatch (path, field, root = false) {
-        switch (field.type) {
-        case 'checkpoint':
-            return checkpoint(field)
-        case 'structure': {
-                return $(`
-                    `, vivifier(root ? `const ${path}` : path, field), `
-
-                    `, join(field.fields.map(field => dispatch(path + field.dotted, field))), `
-                `)
-            }
-        case 'conditional':
-            return conditional(path, field)
-        case 'lengthEncoding':
-            return lengthEncoding(field)
-        case 'lengthEncoded':
-            return lengthEncoded(path, field)
-        case 'function':
-            step++
-            return `${path} = (${field.source})($sip[${$sip}])`
-        case 'literal':
-            return $(`
-                $start += ${field.value.length / 2}
-            `)
-        default:
-            return integer(path, field)
-        }
     }
 
     function checkpoint (checkpoint, depth, arrayed) {
@@ -162,6 +177,35 @@ function map (packet, bff) {
                 return parsers.inc.${packet.name}(${signature.join(', ')})($buffer, $start, $end)
             }
         `)
+    }
+
+    function dispatch (path, field, root = false) {
+        switch (field.type) {
+        case 'structure': {
+                return $(`
+                    `, vivifier(root ? `const ${path}` : path, field), `
+
+                    `, join(field.fields.map(field => dispatch(path + field.dotted, field))), `
+                `)
+            }
+        case 'checkpoint':
+            return checkpoint(field)
+        case 'conditional':
+            return conditional(path, field)
+        case 'lengthEncoding':
+            return lengthEncoding(field)
+        case 'lengthEncoded':
+            return lengthEncoded(path, field)
+        case 'function':
+            step++
+            return `${path} = (${field.source})($sip[${$sip}])`
+        case 'literal':
+            return $(`
+                $start += ${field.value.length / 2}
+            `)
+        default:
+            return integer(path, field)
+        }
     }
 
     const source = dispatch(packet.name, packet, true)
@@ -196,52 +240,6 @@ function map (packet, bff) {
             return ${packet.name}
         }
     `)
-}
-
-function bff (path, fields, index = 0, rewind = 0) {
-    let checkpoint = { type: 'checkpoint', lengths: [ 0 ], rewind }, checked = [ checkpoint ]
-    for (const field of fields) {
-        switch (field.type) {
-        case 'function':
-            break
-        case 'conditional':
-            field.parse.sip = bff(path, field.parse.sip, index, rewind)
-            for (const condition of field.parse.conditions) {
-                condition.fields = bff(path, condition.fields, index, rewind)
-            }
-            break
-        case 'lengthEncoding':
-            checkpoint.lengths[0] += field.bits / 8
-            break
-        case 'lengthEncoded':
-            checked.push(checkpoint = { type: 'checkpoint', lengths: [ 0 ], rewind: 0 })
-            switch (field.element.type) {
-            case 'structure':
-                if (field.element.fixed) {
-                    checkpoint.lengths.push(`${field.element.bits / 8} * $I[${index}]`)
-                } else {
-                    field.element.fields = bff(path + `${field.dotted}[$i[${index}]]`, field.element.fields, index + 1, 2)
-                }
-                break
-            default:
-                checkpoint.lengths.push(`${field.element.bits / 8} * $I[${index}]`)
-                break
-            }
-            break
-        default:
-            checkpoint.lengths[0] += field.bits / 8
-            break
-        }
-        checked.push(field)
-    }
-    checked.forEach(field => {
-        if (field.type == 'checkpoint' && field.lengths[0] == 0) {
-            field.lengths.shift()
-        }
-    })
-    return checked.filter(field => {
-        return field.type != 'checkpoint' || field.lengths.length != 0
-    })
 }
 
 module.exports = function (compiler, definition, options = {}) {

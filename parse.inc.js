@@ -6,6 +6,34 @@ const $ = require('programmatic')
 function generate (packet) {
     let step = 0, $i = -1, $sip = -1, _conditional = false
 
+    function vivify (packet) {
+        const fields = []
+        // TODO Not always a structure, sometimes it is an object.
+        if (packet.type == 'structure') {
+            packet.fields.forEach(function (packet) {
+                switch (packet.type) {
+                case 'literal':
+                    break
+                case 'integer':
+                    if (packet.name) {
+                        fields.push(packet.name + ': 0')
+                    } else if (packet.fields) {
+                        packet.fields.forEach(function (packet) {
+                            fields.push(packet.name + ': null')
+                        })
+                    }
+                    break
+                case 'lengthEncoded':
+                    fields.push(packet.name + ': new Array')
+                    break
+                }
+            }, this)
+        } else {
+            throw new Error('to do')
+        }
+        return fields.join(',\n')
+    }
+
     function integer (path, field) {
         const bytes = field.bits / 8
         if (bytes == 1) {
@@ -49,41 +77,22 @@ function generate (packet) {
         `)
     }
 
-    function vivify (packet) {
-        const fields = []
-        // TODO Not always a structure, sometimes it is an object.
-        if (packet.type == 'structure') {
-            packet.fields.forEach(function (packet) {
-                switch (packet.type) {
-                case 'literal':
-                    break
-                case 'integer':
-                    if (packet.name) {
-                        fields.push(packet.name + ': 0')
-                    } else if (packet.fields) {
-                        packet.fields.forEach(function (packet) {
-                            fields.push(packet.name + ': null')
-                        })
-                    }
-                    break
-                case 'lengthEncoded':
-                    fields.push(packet.name + ': new Array')
-                    break
-                }
-            }, this)
-        } else {
-            throw new Error('to do')
-        }
-        return fields.join(',\n')
-    }
-
-    function lengthEncoding (path, field) {
-        $i++
-        const i = `$i[${$i}]`
-        const I = `$I[${$i}]`
+    function literal (packet) {
         return $(`
-            `, integer([ I ], field), `
-                ${i} = 0
+            case ${step++}:
+
+                $_ = ${packet.value.length / 2}
+                $step = ${step}
+
+            case ${step++}:
+
+                $byte = Math.min($end - $start, $_)
+                $_ -= $byte
+                $start += $byte
+
+                if ($_ != 0) {
+                    return { start: $start, object: null, parse }
+                }
         `)
     }
 
@@ -104,22 +113,13 @@ function generate (packet) {
         return source
     }
 
-    function literal (packet) {
+    function lengthEncoding (path, field) {
+        $i++
+        const i = `$i[${$i}]`
+        const I = `$I[${$i}]`
         return $(`
-            case ${step++}:
-
-                $_ = ${packet.value.length / 2}
-                $step = ${step}
-
-            case ${step++}:
-
-                $byte = Math.min($end - $start, $_)
-                $_ -= $byte
-                $start += $byte
-
-                if ($_ != 0) {
-                    return { start: $start, object: null, parse }
-                }
+            `, integer([ I ], field), `
+                ${i} = 0
         `)
     }
 
@@ -208,7 +208,7 @@ function generate (packet) {
 
     let source = $(`
         switch ($step) {
-        `, dispatch([ packet.name ], packet, 0), `
+        `, dispatch(packet.name, packet, 0), `
 
         case ${step}:
 

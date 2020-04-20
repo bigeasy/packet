@@ -32,33 +32,6 @@ function generate (packet) {
         return source
     }
 
-    function lengthEncoding (path, packet) {
-        index++
-        return $(`
-            `, integer(path + '.length', packet), `
-                $i.push(0)
-        `)
-
-    }
-
-    function lengthEncoded (path, packet) {
-        const i = `$i[${index}]`
-        const I = `$I[${index}]`
-        const again = step
-        const source = $(`
-            `, dispatch([ `${path}[${i}]` ], packet.element), `
-
-                if (++${i} != ${path + '.length'}) {
-                    $step = ${again}
-                    continue
-                }
-
-                $i.pop()
-        `)
-        index--
-        return source
-    }
-
     function literal (packet) {
         const bytes = []
         for (let i = 0, I = packet.value.length; i < I; i += 2) {
@@ -81,6 +54,33 @@ function generate (packet) {
                 }
 
         `)
+    }
+
+    function lengthEncoded (path, packet) {
+        const i = `$i[${index}]`
+        const I = `$I[${index}]`
+        const again = step
+        const source = $(`
+            `, dispatch([ `${path}[${i}]` ], packet.element), `
+
+                if (++${i} != ${path + '.length'}) {
+                    $step = ${again}
+                    continue
+                }
+
+                $i.pop()
+        `)
+        index--
+        return source
+    }
+
+    function lengthEncoding (path, packet) {
+        index++
+        return $(`
+            `, integer(path + '.length', packet), `
+                $i.push(0)
+        `)
+
     }
 
     function conditional (path, conditional) {
