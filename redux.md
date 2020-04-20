@@ -262,12 +262,19 @@ define({
     // Fixed with array of bytes, ASCII space padded.
     fixedSpaced: [[ 8 ], [ 16 ], 0x20 ],
     // Bit-packed 16-bit integer, note that bit-fields are always big-endian.
-    flags: [ 16, {
+    flags: {
         temperature: -4,     // two's compliment signed
         height: 8
         running: 1
         resv: 3
-    } ],
+    },
+    // We can make the entire field little-endian by explicitly specifying.
+    flags: [{
+        temperature: -4,     // two's compliment signed
+        height: 8
+        running: 1
+        resv: 3
+    }, ~16 ],
     // 4-byte IEEE floating point, a C float.
     float: 0.4,
     // 8-byte IEEE floating point, a C double.

@@ -32,39 +32,48 @@ function integer (value, packed, extra = {}) {
     }
 }
 
-function packed (def, rest = {}) {
+function packed (definitions, name, rest = {}) {
     const fields = []
     let bits = 0
-    for (const field in def) {
-        switch (typeof def[field]) {
+    for (const field in definitions) {
+        switch (typeof definitions[field]) {
+        case 'string': {
+                bits += definitions[field].length * 4
+                fields.push({
+                    type: 'literal',
+                    fixed: true,
+                    bits: definitions[field].length * 4
+                })
+            }
+            break
         case 'number': {
-                const definition = integer(def[field], true, { name: field })
+                const definition = integer(definitions[field], true, { name: field, dotted: `.${field}` })
                 bits += definition.bits
                 fields.push(definition)
             }
             break
         case 'object': {
-                if (Array.isArray(def[field])) {
+                if (Array.isArray(definitions[field])) {
                     const when = []
-                    switch (typeof def[field][0]) {
+                    switch (typeof definitions[field][0]) {
                     case 'object': {
-                            if (Array.isArray(def[field][1])) {
-                                console.log('yup',def)
-                                console.log(def)
+                            if (Array.isArray(definitions[field][1])) {
+                                console.log('yup',definitions)
+                                console.log(definitions)
                             } else {
                                 console.log('nope')
                             }
                         }
                         break
                     case 'function': {
-                            switch (typeof def[field][1]) {
+                            switch (typeof definitions[field][1]) {
                             case 'object':
-                                if (Array.isArray(def[field][1])) {
-                                } else if (def[field][1] == null) {
+                                if (Array.isArray(definitions[field][1])) {
+                                } else if (definitions[field][1] == null) {
                                 } else {
                                     let bits2 = -1
-                                    for (const value in def[field][1]) {
-                                        const def1 = def[field][1][value]
+                                    for (const value in definitions[field][1]) {
+                                        const def1 = definitions[field][1][value]
                                         switch (typeof def1) {
                                         case 'object':
                                             if (Array.isArray(def1)) {
@@ -80,7 +89,7 @@ function packed (def, rest = {}) {
                                                 })
                                             } else {
                                                 const packed2 = []
-                                                when.push(packed(def1, { value }))
+                                                when.push(packed(def1, field, { value }))
                                                 console.log(when)
                                             }
                                         }
@@ -89,7 +98,7 @@ function packed (def, rest = {}) {
                             }
                             fields.push({
                                 type: 'switch',
-                                value: def[field][0].toString(),
+                                value: definitions[field][0].toString(),
                                 name: field,
                                 when: when
                             })
@@ -103,23 +112,31 @@ function packed (def, rest = {}) {
                             // be more than one value, otherwise what's the
                             // point? Ah, no, we're packed here.
                             const extra = { name: field }
-                            if (Array.isArray(def[field][1])) {
-                                extra.indexOf = def[field][1]
+                            if (Array.isArray(definitions[field][1])) {
+                                extra.indexOf = definitions[field][1]
                             }
-                            const definition = integer(def[field][0], true, extra)
+                            const definition = integer(definitions[field][0], true, extra)
                             bits += definition.bits
                             fields.push(definition)
                         }
                         break
                     }
                 } else {
-                    console.log('xxx', def)
+                    console.log('xxx', definitions)
                 }
             }
             break
         }
     }
-    return { ...rest, type: 'integer', bits, fields }
+    return {
+        ...rest,
+        name,
+        dotted: `.${name}`,
+        type: 'integer',
+        fixed: true,
+        bits,
+        fields
+    }
 }
 
 function map (definitions, packet, depth, extra = {}) {
@@ -253,7 +270,7 @@ function map (definitions, packet, depth, extra = {}) {
                 const bits = fields.reduce((sum, field) => sum + field.bits, 0)
                 return [ { ...extra, fixed, bits, type: 'structure', fields } ]
             } else {
-                return [ packed(packet, depth + 1) ]
+                return [ packed(packet, extra.name, depth + 1) ]
             }
         }
         break
