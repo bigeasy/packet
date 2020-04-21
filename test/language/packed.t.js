@@ -23,7 +23,8 @@ require('proof')(1, okay => {
             fields: [{
                 type: 'literal',
                 bits: 16,
-                fixed: true
+                fixed: true,
+                value: 'deaf'
             }, {
                 name: 'one',
                 dotted: '.one',

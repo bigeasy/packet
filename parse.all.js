@@ -1,6 +1,6 @@
 const join = require('./join')
 const snuggle = require('./snuggle')
-const unpackAll = require('./unpack')
+const unpack = require('./unpack')
 const $ = require('programmatic')
 
 function bff (path, fields, index = 0, rewind = 0) {
@@ -50,12 +50,22 @@ function bff (path, fields, index = 0, rewind = 0) {
 }
 
 function map (packet, bff) {
-    let $i = -1, $sip = -1
-    let step = 1
-    let _conditional = false
+    let $i = -1, $sip = -1, step = 1, _conditional = false, _packed = false
+
+    function vivify (fields) {
+        const properties = []
+        for (const field of fields) {
+            switch (field.type) {
+            case 'integer':
+                properties.push(`${field.name}: 0`)
+                break
+            }
+        }
+        return properties.join(',\n')
+    }
 
     // TODO Create a null entry, then assign a value later on.
-    function vivifier (asignee, packet) {
+    function vivifier (assignee, packet) {
         const fields = []
         packet.fields.forEach(function (field) {
             switch (field.type) {
@@ -66,7 +76,15 @@ function map (packet, bff) {
                 fields.push(field.name + ': new Array')
                 break
             case 'integer':
-                fields.push(`${field.name}: 0`)
+                if (field.fields) {
+                    fields.push($(`
+                        ${field.name}: {
+                            `, vivify(field.fields), `
+                        }
+                    `))
+                } else {
+                    fields.push(`${field.name}: 0`)
+                }
                 break
             case 'literal':
                 break
@@ -82,16 +100,17 @@ function map (packet, bff) {
             }
         })
         if (fields.length == 0) {
-            return object + ' = {}'
+            return assignee + ' = {}'
         }
         return $(`
-            ${asignee} = {
+            ${assignee} = {
                 `, fields.join(',\n'), `
             }
         `)
     }
 
     function integer (assignee, field) {
+        const variable = field.fields ? '$_' : assignee
         const bytes = field.bits / 8
         let bite = field.endianness == 'little' ? 0 : bytes - 1
         const stop = field.endianness == 'little' ? bytes : -1
@@ -105,13 +124,21 @@ function map (packet, bff) {
             bite += direction
         }
         step += 2
-        if (bytes == 1) {
-            return `${assignee} = ${reads.join('')}`
+        const parse = bytes == 1 ? `${variable} = ${reads.join('')}`
+                                 : $(`
+                                        ${variable} =
+                                            `, reads.reverse().join(' +\n'), `
+                                    `)
+        if (field.fields) {
+            _packed = true
+            return $(`
+                `, parse, `
+
+                `, unpack(assignee, field, '$_'), `
+            `)
         }
-        return $(`
-            ${assignee} =
-                `, reads.reverse().join(' +\n'), `
-        `)
+
+        return parse
     }
 
     function lengthEncoded (path, field) {
@@ -215,6 +242,9 @@ function map (packet, bff) {
     }
     if (_conditional) {
         variables.push('$sip = []')
+    }
+    if (_packed) {
+        variables.push('$_')
     }
 
     if (bff) {

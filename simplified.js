@@ -42,7 +42,8 @@ function packed (definitions, name, rest = {}) {
                 fields.push({
                     type: 'literal',
                     fixed: true,
-                    bits: definitions[field].length * 4
+                    bits: definitions[field].length * 4,
+                    value: definitions[field]
                 })
             }
             break

@@ -1,6 +1,6 @@
 const join = require('./join')
 const snuggle = require('./snuggle')
-const pack = require('./pack')
+const pack = require('./pack.swipe')
 const $ = require('programmatic')
 
 function bff (path, fields, index = 0, rewind = 0) {
@@ -40,8 +40,7 @@ function bff (path, fields, index = 0, rewind = 0) {
 }
 
 function generate (packet, bff) {
-    let step = 0
-    let index = -1
+    let step = 0, index = -1, _packed = false
 
     function word (asignee, field) {
         const bytes = field.bits / 8
@@ -60,13 +59,12 @@ function generate (packet, bff) {
     function integer (path, field) {
         step += 2
         if (field.fields) {
-            const pack = _pack(field, '$_')
+            _packed = true
+            const packing = pack(field, path, '$_')
             return $(`
-                {
-                    `, pack, `
+                `, packing, `
 
-                    `, word(field, 'value'), `
-                }
+                `, word('$_', field), `
             `)
         } else {
             return word(path, field)
@@ -152,11 +150,17 @@ function generate (packet, bff) {
     }
 
     let source = dispatch(packet.name, packet)
-    const lets = packet.lengthEncoded ? 'let $i = []' : null
+    const lets = []
+    if (packet.lengthEncoded) {
+        lets.push('$i = []')
+    }
+    if (_packed) {
+        lets.push('$_')
+    }
     return $(`
         serializers.${bff ? 'bff' : 'all'}.${packet.name} = function (${packet.name}) {
             return function ($buffer, $start, $end) {
-                `, lets, -1, `
+                `, lets.length != 0 ? `let ${lets.join(', ')}` : null, -1, `
 
                 `, source, `
 

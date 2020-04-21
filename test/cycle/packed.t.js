@@ -13,7 +13,7 @@ function prove (okay) {
                 }
             }
         },
-        objects: [{ header: { one: 1, two: 5 } }],
-        stopAt: 'sizeof'
+        objects: [{ header: { one: 1, two: 5, three: 1 } }],
+        stopAt: 'parse.all'
     })
 }

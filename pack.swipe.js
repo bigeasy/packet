@@ -1,20 +1,38 @@
+const $ = require('programmatic')
+
+function fiddle (bits, offset, size, value) {
+    let mask = 0xffffffff, shift
+    mask = mask >>> 32 - bits
+    mask = mask >>> bits - size
+    shift = bits - offset - size
+    mask = mask << shift >>> 0
+    const source = shift
+               ? value + ' << ' + shift + ' & 0x' + mask.toString(16)
+               : value + ' & 0x' + mask.toString(16)
+    return !offset && bits == 32 ? '(' + source + ') >>> 0' : source
+}
+
 // A recent implementation of packing, but one that is now untested and stale.
 // Removing from the `serialize.all` generator for visibility.
-module.exports = function _pack (field, object, stuff = 'let value') {
+module.exports = function _pack (packet, object, stuff = 'let value') {
     const preface = []
     const packing = []
     let offset = 0
-    for (let i = 0, I = field.fields.length; i < I; i++) {
-        const packed = field.fields[i]
-        switch (packed.type) {
+    for (const field of packet.fields) {
+        switch (field.type) {
         case 'integer': {
-                let variable = object + '.' + packed.name
-                if (packed.indexOf) {
+                let variable = object + field.dotted
+                if (field.indexOf) {
                     constants.other = packed.indexOf
                     variable = `other.indexOf[${object}.${packed.name}]`
                 }
-                packing.push(' (' + pack(field.bits, offset, packed.bits, variable) + ')')
-                offset += packed.bits
+                packing.push(' (' + fiddle(packet.bits, offset, field.bits, variable) + ')')
+                offset += field.bits
+            }
+            break
+        case 'literal': {
+                packing.push(` (${fiddle(packet.bits, offset, field.bits, `0x${field.value}`)})`)
+                offset += field.bits
             }
             break
         case 'switch': {
