@@ -2,6 +2,7 @@ const join = require('./join')
 const snuggle = require('./snuggle')
 const unpack = require('./unpack')
 const $ = require('programmatic')
+const vivify = require('./vivify')
 
 function bff (path, fields, index = 0, rewind = 0) {
     let checkpoint = { type: 'checkpoint', lengths: [ 0 ], rewind }, checked = [ checkpoint ]
@@ -51,63 +52,6 @@ function bff (path, fields, index = 0, rewind = 0) {
 
 function map (packet, bff) {
     let $i = -1, $sip = -1, step = 1, _conditional = false, _packed = false
-
-    function vivify (fields) {
-        const properties = []
-        for (const field of fields) {
-            switch (field.type) {
-            case 'integer':
-                properties.push(`${field.name}: 0`)
-                break
-            }
-        }
-        return properties.join(',\n')
-    }
-
-    // TODO Create a null entry, then assign a value later on.
-    function vivifier (assignee, packet) {
-        const fields = []
-        packet.fields.forEach(function (field) {
-            switch (field.type) {
-            case 'checkpoint':
-            case 'lengthEncoding':
-                break
-            case 'lengthEncoded':
-                fields.push(field.name + ': new Array')
-                break
-            case 'integer':
-                if (field.fields) {
-                    fields.push($(`
-                        ${field.name}: {
-                            `, vivify(field.fields), `
-                        }
-                    `))
-                } else {
-                    fields.push(`${field.name}: 0`)
-                }
-                break
-            case 'literal':
-                break
-            default:
-                if (field.type == 'structure' || field.fields == null) {
-                    fields.push(field.name + ': null')
-                } else {
-                    field.fields.forEach(function (field) {
-                        fields.push(field.name + ': null')
-                    })
-                }
-                break
-            }
-        })
-        if (fields.length == 0) {
-            return assignee + ' = {}'
-        }
-        return $(`
-            ${assignee} = {
-                `, fields.join(',\n'), `
-            }
-        `)
-    }
 
     function integer (assignee, field) {
         const variable = field.fields ? '$_' : assignee
@@ -210,7 +154,9 @@ function map (packet, bff) {
         switch (field.type) {
         case 'structure': {
                 return $(`
-                    `, vivifier(root ? `const ${path}` : path, field), `
+                    ${root ? `const ${path}` : path} = {
+                        `, vivify(field.fields), `
+                    }
 
                     `, join(field.fields.map(field => dispatch(path + field.dotted, field))), `
                 `)

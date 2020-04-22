@@ -4,7 +4,7 @@ module.exports = function (parsers) {
             let $i = [], $I = []
 
             const object = {
-                array: new Array
+                array: []
             }
 
             if ($end - $start < 2) {
@@ -18,7 +18,7 @@ module.exports = function (parsers) {
 
             for (; $i[0] < $I[0]; $i[0]++) {
                 object.array[$i[0]] = {
-                    first: new Array
+                    first: []
                 }
 
                 if ($end - $start < 2) {

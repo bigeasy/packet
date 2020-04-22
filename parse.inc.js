@@ -2,45 +2,11 @@ const join = require('./join')
 const snuggle = require('./snuggle')
 const unpack = require('./unpack')
 const $ = require('programmatic')
+const vivify = require('./vivify')
 
 function generate (packet) {
     let step = 0, $i = -1, $sip = -1, _conditional = false
 
-    function vivify (packet) {
-        const fields = []
-        // TODO Not always a structure, sometimes it is an object.
-        if (packet.type == 'structure') {
-            packet.fields.forEach(function (packet) {
-                switch (packet.type) {
-                case 'literal':
-                    break
-                case 'integer':
-                    if (packet.fields) {
-                        const packed = []
-                        packet.fields.forEach(function (packet) {
-                            if (packet.type == 'integer') {
-                                packed.push(packet.name + ': 0')
-                            }
-                        })
-                        fields.push($(`
-                            ${packet.name}: {
-                                `, packed.join(',\n'), `
-                            }
-                        `))
-                    } else if (packet.name) {
-                        fields.push(packet.name + ': 0')
-                    }
-                    break
-                case 'lengthEncoded':
-                    fields.push(packet.name + ': new Array')
-                    break
-                }
-            }, this)
-        } else {
-            throw new Error('to do')
-        }
-        return fields.join(',\n')
-    }
 
     function integer (path, field) {
         const bytes = field.bits / 8
@@ -186,7 +152,7 @@ function generate (packet) {
                 case ${step++}:
 
                     ${path} = {
-                        `, vivify(packet, 0), `
+                        `, vivify(packet.fields), `
                     }
                     $step = ${step}
 

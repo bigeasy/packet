@@ -4,7 +4,7 @@ module.exports = function (parsers) {
             let $i = [], $I = []
 
             const object = {
-                array: new Array
+                array: []
             }
 
             if ($end - $start < 2) {

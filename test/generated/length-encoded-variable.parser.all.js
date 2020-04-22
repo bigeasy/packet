@@ -3,7 +3,7 @@ module.exports = function (parsers) {
         let $i = [], $I = []
 
         const object = {
-            array: new Array
+            array: []
         }
 
         $i[0] = 0
@@ -13,7 +13,7 @@ module.exports = function (parsers) {
 
         for (; $i[0] < $I[0]; $i[0]++) {
             object.array[$i[0]] = {
-                first: new Array
+                first: []
             }
 
             $i[1] = 0

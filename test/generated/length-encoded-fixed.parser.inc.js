@@ -7,7 +7,7 @@ module.exports = function (parsers) {
                 case 0:
 
                     object = {
-                        array: new Array
+                        array: []
                     }
                     $step = 1
 

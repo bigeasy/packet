@@ -3,7 +3,7 @@ module.exports = function (parsers) {
         let $i = [], $I = []
 
         const object = {
-            array: new Array
+            array: []
         }
 
         $i[0] = 0
