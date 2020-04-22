@@ -1,6 +1,7 @@
 const $ = require('programmatic')
 const join = require('./join')
 const snuggle = require('./snuggle')
+const pack = require('./pack.swipe')
 
 function generate (packet) {
     let step = 0, index = -1, _conditional = false
@@ -11,12 +12,13 @@ function generate (packet) {
         const direction = endianness[0] == 'l' ? '++' : '--'
         let bite = endianness[0] == 'l' ? 0 : bytes - 1
         let stop = endianness[0] == 'l' ? bytes : -1
+        const assign = field.fields ? pack(field, path, '$_') : `$_ = ${path}`
         const source = $(`
             case ${step++}:
 
                 $step = ${step}
                 $byte = ${bite}
-                $_ = ${path}
+                `, assign, `
 
             case ${step++}:
 

@@ -1,6 +1,6 @@
 const join = require('./join')
 const snuggle = require('./snuggle')
-const unpackAll = require('./unpack')
+const unpack = require('./unpack')
 const $ = require('programmatic')
 
 function generate (packet) {
@@ -15,12 +15,20 @@ function generate (packet) {
                 case 'literal':
                     break
                 case 'integer':
-                    if (packet.name) {
-                        fields.push(packet.name + ': 0')
-                    } else if (packet.fields) {
+                    if (packet.fields) {
+                        const packed = []
                         packet.fields.forEach(function (packet) {
-                            fields.push(packet.name + ': null')
+                            if (packet.type == 'integer') {
+                                packed.push(packet.name + ': 0')
+                            }
                         })
+                        fields.push($(`
+                            ${packet.name}: {
+                                `, packed.join(',\n'), `
+                            }
+                        `))
+                    } else if (packet.name) {
+                        fields.push(packet.name + ': 0')
                     }
                     break
                 case 'lengthEncoded':
@@ -55,6 +63,7 @@ function generate (packet) {
         const start = field.endianess == 'big' ? 0 : bytes - 1
         const stop = field.endianess == 'big' ? bytes - 1 : -1
         const direction = field.little ? '++' : '--'
+        const assign = field.fields ? unpack(path, field, '$_') : `${path} = $_`
         return $(`
             case ${step++}:
 
@@ -72,7 +81,7 @@ function generate (packet) {
                     $byte${direction}
                 }
 
-                ${path} = $_
+                `, assign, `
 
         `)
     }
