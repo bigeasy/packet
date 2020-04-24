@@ -1,11 +1,4 @@
-function fiddle (bits, offset, length, assignee) {
-    var mask = 0xffffffff, shift
-    mask = mask >>> (32 - bits)
-    mask = mask >>> (bits - length)
-    shift = bits - offset - length
-    shift = shift ? `${assignee} >>> ` + shift : assignee
-    return shift + ' & 0x' + mask.toString(16)
-}
+const fiddle = require('./_unpack')
 
 function unpack (path, field, assignee) {
     let bits = field.bits, offset = 0, bit = 0
