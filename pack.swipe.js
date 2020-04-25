@@ -1,6 +1,6 @@
 const $ = require('programmatic')
 
-const fiddle = require('./pack')
+const fiddle = require('./fiddle/pack')
 
 // A recent implementation of packing, but one that is now untested and stale.
 // Removing from the `serialize.all` generator for visibility.

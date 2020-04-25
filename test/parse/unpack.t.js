@@ -1,5 +1,5 @@
 require('proof')(2, function (equal) {
-    var unpack = require('../../_unpack') // satisfy coverage
+    var unpack = require('../../fiddle/unpack') // satisfy coverage
     var f = new Function('value', 'return ' + unpack(16, 4, 8, 'value'))
     equal(f(0x0aa0).toString(16), 'aa', 'unpack')
     console.log(unpack(16, 4, 8))

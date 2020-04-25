@@ -1,4 +1,4 @@
-const fiddle = require('./_unpack')
+const fiddle = require('./fiddle/unpack')
 
 function unpack (path, field, assignee) {
     let bits = field.bits, offset = 0, bit = 0
