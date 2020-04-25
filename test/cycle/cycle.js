@@ -1,7 +1,6 @@
 const path = require('path')
 const compiler = require('../../require')
 const util = require('util')
-const toJSON = require('../to-json')
 
 const simplified = require('../../simplified')
 
