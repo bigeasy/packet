@@ -8,7 +8,7 @@ require('proof')(8, function (equal) {
             ' ? (0x' + mask.toString(16) + ' - ' + name + ' + 1) * -1 : ' + name
     }
 
-    var f = new Function('value', 'return ' + signage('value', 16, 3))
+    const f = new Function('value', 'return ' + signage('value', 16, 3))
     console.log(signage('value', 16, 3))
     equal(f(0x7), -1, '-1')
     equal(f(0x6), -2, '-2')
