@@ -1,7 +1,7 @@
 const $ = require('programmatic')
 const join = require('./join')
 const snuggle = require('./snuggle')
-const pack = require('./pack.swipe')
+const pack = require('./pack')
 
 function generate (packet) {
     let step = 0, index = -1, _conditional = false

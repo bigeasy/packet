@@ -1,6 +1,6 @@
 const join = require('./join')
 const snuggle = require('./snuggle')
-const pack = require('./pack.swipe')
+const pack = require('./pack')
 const $ = require('programmatic')
 
 function bff (path, fields, index = 0, rewind = 0) {
