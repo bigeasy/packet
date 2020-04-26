@@ -238,7 +238,7 @@ define({
     integer: 64n,
     // 32-bit integer, little-endian for parsing C structs. The tilde sigil is
     // squiggly and we're squiggling the bits around.
-    littenEndian: ~32,
+    littleEndian: ~32,
     // 16-bit two's compliment signed integer.
     signed: -16,
     // 16-bit two's compliment signed integer, little-endian.
@@ -247,6 +247,7 @@ define({
     longSignedLittleEndian: -~64n,
     // 16-bit length encoded array of 16-bit integers.
     lengthEncoded: [ 16, [ 16 ]],
+    // TODO Maybe just: [ [ 16 ], 0x0, 0x0 ]
     // Zero terminated array of 16-bit integers, terminator is 16-bit.
     zeroTerminated: [[ 16 ], 0x0 ],
     // Zero terminated array of 16-bit integers, terminator is 8-bit.
