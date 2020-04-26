@@ -6,6 +6,8 @@ const join = require('./join')
 function generate (packet) {
     const lets = { '$_ = 0': true }
 
+    let $i = -1
+
     function structure (path, field) {
         return join(field.fields.map(dispatch.bind(null, path)))
     }
@@ -17,11 +19,11 @@ function generate (packet) {
                 const block = []
                 for (let i = 0, I = field.serialize.conditions.length; i < I; i++) {
                     const condition = field.serialize.conditions[i]
-                    const source = join(condition.fields.map(dispatch.bind(null, path.concat(field.name))))
+                    const source = join(condition.fields.map(dispatch.bind(null, path + field.dotted)))
                     const keyword = typeof condition.source == 'boolean' ? 'else'
                                                                        : i == 0 ? 'if' : 'else if'
                     const ifed = $(`
-                        ${keyword} ((${condition.source})(${path.concat(field.name).join('.')}, ${packet.name})) {
+                        ${keyword} ((${condition.source})(${path + field.dotted}, ${packet.name})) {
                             `, source, `
                         }
                     `)
@@ -39,21 +41,24 @@ function generate (packet) {
         case 'lengthEncoded':
             if (field.element.fixed) {
                 return $(`
-                    $_ += ${field.element.bits / 8} * ${path.join('.')}.${field.name}.length
+                    $_ += ${field.element.bits / 8} * ${path + field.dotted}.length
                 `)
             } else {
                 lets['$i = []'] = true
-                const i = `$i[${path.length - 1}]`
-                return $(`
-                    for (${i} = 0; ${i} < ${path.join('.')}.${field.name}.length; ${i}++) {
-                        `, structure(path.concat(`${field.name}[${i}]`), field.element), `
+                $i++
+                const i = `$i[${$i}]`
+                const source = $(`
+                    for (${i} = 0; ${i} < ${path + field.dotted}.length; ${i}++) {
+                        `, structure(path + `${field.dotted}[${i}]`, field.element), `
                     }
                 `)
+                $i--
+                return source
             }
         }
     }
 
-    const source = structure([ packet.name ], packet)
+    const source = structure(packet.name, packet)
 
     return  $(`
         sizeOf.${packet.name} = function (${packet.name}) {
