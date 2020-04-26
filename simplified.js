@@ -32,7 +32,7 @@ function integer (value, packed, extra = {}) {
     }
 }
 
-function packed (definitions, name, rest = {}) {
+function packed (definitions, extra = {}) {
     const fields = []
     let bits = 0
     for (const field in definitions) {
@@ -129,15 +129,7 @@ function packed (definitions, name, rest = {}) {
             break
         }
     }
-    return {
-        ...rest,
-        name,
-        dotted: `.${name}`,
-        type: 'integer',
-        fixed: true,
-        bits,
-        fields
-    }
+    return { ...integer(bits, false, extra), fields }
 }
 
 function map (definitions, packet, depth, extra = {}) {
@@ -285,7 +277,7 @@ function map (definitions, packet, depth, extra = {}) {
                 const bits = fields.reduce((sum, field) => sum + field.bits, 0)
                 return [ { ...extra, fixed, bits, type: 'structure', fields } ]
             } else {
-                return [ packed(packet, extra.name, depth + 1) ]
+                return [ packed(packet, extra) ]
             }
         }
         break

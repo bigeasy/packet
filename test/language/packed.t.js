@@ -17,6 +17,8 @@ require('proof')(1, okay => {
         fields: [{
             type: 'integer',
             fixed: true,
+            endianness: 'big',
+            compliment: false,
             bits: 32,
             name: 'header',
             dotted: '.header',
