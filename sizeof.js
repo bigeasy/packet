@@ -55,6 +55,16 @@ function generate (packet) {
                 $i--
                 return source
             }
+        case 'terminated': {
+                if (field.fields.filter(field => !field.fixed).length == 0) {
+                    const bits = field.fields.reduce((sum, field) => sum + field.bits, 0)
+                    return $(`
+                        $_ += ${bits / 8} * ${path + field.dotted}.length + ${field.terminator.length}
+                    `)
+                } else {
+                }
+            }
+            break
         }
     }
 
