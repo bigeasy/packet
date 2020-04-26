@@ -281,7 +281,9 @@ define({
     // 8-byte IEEE floating point, a C double.
     double: 0.8,
     // Literals.
-    literal: [ 0xfc ]
+    literal: [ 'fc' ],
+    // Skip 30, fill with ASCII spaces?
+    skip: [ '20', 30 ]
 })
 ```
 
