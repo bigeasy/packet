@@ -1,6 +1,7 @@
 const join = require('./join')
 const snuggle = require('./snuggle')
 const unpack = require('./unpack')
+const unsign = require('./fiddle/unsign')
 const $ = require('programmatic')
 const vivify = require('./vivify')
 
@@ -29,7 +30,9 @@ function generate (packet) {
         const start = field.endianess == 'big' ? 0 : bytes - 1
         const stop = field.endianess == 'big' ? bytes - 1 : -1
         const direction = field.little ? '++' : '--'
-        const assign = field.fields ? unpack(path, field, '$_') : `${path} = $_`
+        const assign = field.fields ? unpack(path, field, '$_')
+                     : field.compliment ? `${path} = ${unsign('$_', field.bits)}`
+                     : `${path} = $_`
         return $(`
             case ${step++}:
 

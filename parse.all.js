@@ -1,6 +1,7 @@
 const join = require('./join')
 const snuggle = require('./snuggle')
 const unpack = require('./unpack')
+const unsign = require('./fiddle/unsign')
 const $ = require('programmatic')
 const vivify = require('./vivify')
 
@@ -51,10 +52,10 @@ function bff (path, fields, index = 0, rewind = 0) {
 }
 
 function map (packet, bff) {
-    let $i = -1, $sip = -1, step = 1, _conditional = false, _packed = false
+    let $i = -1, $sip = -1, step = 1, _conditional = false, _temporary = false
 
     function integer (assignee, field) {
-        const variable = field.fields ? '$_' : assignee
+        const variable = field.fields || field.compliment ? '$_' : assignee
         const bytes = field.bits / 8
         let bite = field.endianness == 'little' ? 0 : bytes - 1
         const stop = field.endianness == 'little' ? bytes : -1
@@ -74,11 +75,19 @@ function map (packet, bff) {
                                             `, reads.reverse().join(' +\n'), `
                                     `)
         if (field.fields) {
-            _packed = true
+            _temporary = true
             return $(`
                 `, parse, `
 
                 `, unpack(assignee, field, '$_'), `
+            `)
+        }
+
+        if (field.compliment) {
+            _temporary = true
+            return $(`
+                `, parse, `
+                ${assignee} = ${unsign(variable, field.bits)}
             `)
         }
 
@@ -189,7 +198,7 @@ function map (packet, bff) {
     if (_conditional) {
         variables.push('$sip = []')
     }
-    if (_packed) {
+    if (_temporary) {
         variables.push('$_')
     }
 

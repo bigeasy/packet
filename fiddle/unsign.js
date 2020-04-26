@@ -1,4 +1,4 @@
-function unsign (name, width, bits) {
+function unsign (name, bits) {
     let mask = 0xffffffff, test = 1
     mask = mask >>> (32 - bits)
     test = test << bits - 1 >>> 0
