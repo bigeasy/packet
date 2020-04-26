@@ -165,6 +165,20 @@ function map (definitions, packet, depth, extra = {}) {
                         }
                     }
                     return fields
+                } else if (typeof packet[packet.length - 1] == 'number') {
+                    const fields = []
+                    const terminator = []
+                    for (let i = 1, I = packet.length; i < I; i++) {
+                        terminator.push(packet[i])
+                    }
+                    return [{
+                        ...extra,
+                        type: 'terminated',
+                        bits: 0,
+                        fixed: false,
+                        terminator: terminator,
+                        fields: map(definitions, packet[0][0], depth, {})
+                    }]
                 } else if (packet.length == 2) {
                     if (typeof packet[0] == 'number') {
                         const fields = []
@@ -309,6 +323,9 @@ module.exports = function (packets) {
         visit(definition, (packet) => {
             if (packet.type == 'lengthEncoded') {
                 definition.lengthEncoded = true
+            }
+            if (packet.type == 'terminated') {
+                definition.arrayed = true
             }
         })
     }

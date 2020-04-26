@@ -5,6 +5,8 @@ require('proof')(1, okay => {
             value: [[[
                 value => value < 251, 8
             ], [
+                // TODO Why isn't this `[ 'fc', [ 16 ] ]`? That way we can pad
+                // anything?
                 value => value >= 251, [ 'fc', 16 ]
             ]], [ 8, [
                 sip => sip < 251, sip => sip
