@@ -9,9 +9,9 @@ function generate (packet) {
     function integer (path, field) {
         const endianness = field.endianness || 'big'
         const bytes = field.bits / 8
-        const direction = endianness[0] == 'l' ? '++' : '--'
-        let bite = endianness[0] == 'l' ? 0 : bytes - 1
-        let stop = endianness[0] == 'l' ? bytes : -1
+        const direction = field.endianness == 'big' ? '--' : '++'
+        let bite = field.endianness == 'big' ? bytes - 1 : 0
+        let stop = field.endianness == 'big' ? -1 : bytes
         const assign = field.fields ? pack(field, path, '$_') : `$_ = ${path}`
         const source = $(`
             case ${step++}:

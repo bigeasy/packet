@@ -44,9 +44,9 @@ function generate (packet, bff) {
 
     function word (asignee, field) {
         const bytes = field.bits / 8
-        let bite = field.endianness == 'little' ? 0 : bytes - 1
-        const stop = field.endianness == 'little' ? bytes : -1
-        const direction = field.endianness == 'little' ? 1 : -1
+        let bite = field.endianness == 'big' ? bytes - 1 : 0
+        const stop = field.endianness == 'big' ? -1 : bytes
+        const direction = field.endianness == 'big' ? -1 : 1
         const shifts = []
         while (bite != stop) {
             const shift = bite ? asignee + ' >>> ' + bite * 8 : asignee

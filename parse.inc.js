@@ -27,9 +27,9 @@ function generate (packet) {
 
             `)
         }
-        const start = field.endianess == 'big' ? 0 : bytes - 1
-        const stop = field.endianess == 'big' ? bytes - 1 : -1
-        const direction = field.little ? '++' : '--'
+        const start = field.endianness == 'big' ? bytes - 1 : 0
+        const stop = field.endianness == 'big' ? -1 : bytes
+        const direction = field.endianness == 'big' ?  '--' : '++'
         const assign = field.fields ? unpack(path, field, '$_')
                      : field.compliment ? `${path} = ${unsign('$_', field.bits)}`
                      : `${path} = $_`
