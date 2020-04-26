@@ -1,4 +1,6 @@
 const fiddle = require('./fiddle/unpack')
+const unsign = require('./fiddle/unsign')
+const $ = require('programmatic')
 
 function unpack (path, field, assignee) {
     let bits = field.bits, offset = 0, bit = 0
@@ -7,8 +9,18 @@ function unpack (path, field, assignee) {
         bit += field.bits
         return field
     })
+    // TODO Faster with an if statement rather than a reassignment (see
+    // generated code) or with a temporary variable.
     return packing.filter(field => field.type == 'integer').map(function (field) {
-        return `${path}${field.dotted} = ${fiddle(bits, field.offset, field.bits, assignee)}`
+        const assign = `${path}${field.dotted} = ${fiddle(bits, field.offset, field.bits, assignee)}`
+        if (field.compliment) {
+            return $(`
+                `, assign, `
+                ${path}${field.dotted} =
+                    `, unsign(path + field.dotted, field.bits), `
+            `)
+        }
+        return assign
     }).join('\n')
 }
 

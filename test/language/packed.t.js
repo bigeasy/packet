@@ -5,7 +5,7 @@ require('proof')(1, okay => {
             header: {
                 literal: 'deaf',
                 one: 1,
-                two: 3,
+                two: -3,
                 three: 12
             }
         }
@@ -40,7 +40,7 @@ require('proof')(1, okay => {
                 bits: 3,
                 fixed: true,
                 endianness: 'big',
-                compliment: false
+                compliment: true
             }, {
                 name: 'three',
                 dotted: '.three',

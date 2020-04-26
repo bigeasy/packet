@@ -23,6 +23,8 @@ module.exports = function (parsers) {
 
             object.header.one = $_ >>> 15 & 0x1
             object.header.two = $_ >>> 12 & 0x7
+            object.header.two =
+                object.header.two & 0x4 ? (0x7 - object.header.two  + 1) * -1 : object.header.two
             object.header.three = $_ & 0xfff
 
             return { start: $start, object: object, parse: null }

@@ -8,11 +8,11 @@ function prove (okay) {
                 header: {
                     literal: 'deaf',
                     one: 1,
-                    two: 3,
+                    two: -3,
                     three: 12
                 }
             }
         },
-        objects: [{ header: { one: 1, two: 5, three: 1 } }]
+        objects: [{ header: { one: 1, two: -4, three: 1 } }]
     })
 }
