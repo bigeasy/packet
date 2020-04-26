@@ -6,11 +6,11 @@ require('proof')(1, okay => {
                 value => value < 251, 8
             ], [
                 value => value >= 251, [ 'fc', 16 ]
-            ]], [ 8, [[
+            ]], [ 8, [
                 sip => sip < 251, sip => sip
             ], [
                 sip => sip == 0xfc, 16
-            ]]]]
+            ]]]
         }
     }), [{
         name: 'packet',

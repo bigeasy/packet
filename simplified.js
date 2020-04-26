@@ -217,8 +217,9 @@ function map (definitions, packet, depth, extra = {}) {
                         } ()
                         const parse = function () {
                             const [ ...parse ] = packet[1]
+                            const sip = map(definitions, parse.shift(), false, {})
                             const conditions = []
-                            for (const serialize of parse.pop()) {
+                            for (const serialize of parse) {
                                 const [ test, packet ] = serialize
                                 conditions.push({
                                     source: test.toString(),
@@ -226,7 +227,6 @@ function map (definitions, packet, depth, extra = {}) {
                                     fields: map(definitions, packet, false, {})
                                 })
                             }
-                            const sip = map(definitions, parse.shift(), false, {})
                             return { sip, conditions }
                         } ()
                         // TODO Is fixed if all the alternations are the same
