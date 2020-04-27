@@ -27,7 +27,7 @@ function bff (path, fields, index = 0, rewind = 0) {
                 if (field.element.fixed) {
                     checkpoint.lengths.push(`${field.element.bits / 8} * $I[${index}]`)
                 } else {
-                    field.element.fields = bff(path + `${field.dotted}[$i[${index}]]`, field.element.fields, index + 1, 2)
+                    field.element.fields = bff(path + `${field.dotted}[$i[${index}]]`, field.element.fields, index + 1)
                 }
                 break
             default:

@@ -22,7 +22,7 @@ function bff (path, fields, index = 0, rewind = 0) {
                 if (field.element.fixed) {
                     checkpoint.lengths.push(`${field.element.bits / 8} * ${path + field.dotted}.length`)
                 } else {
-                    field.element.fields = bff(path + `${field.dotted}[$i[${index}]]`, field.element.fields, index + 1, 2)
+                    field.element.fields = bff(path + `${field.dotted}[$i[${index}]]`, field.element.fields, index + 1)
                 }
                 break
             default:
@@ -72,7 +72,6 @@ function generate (packet, bff) {
     }
 
     function lengthEncoded (path, field) {
-        step += 2
         const i = `$i[${++index}]`
         // TODO Here and in conditional we see that we know the name, but we
         // don't know really understand the contents of the packet, so we ought
