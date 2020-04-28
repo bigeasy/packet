@@ -6,7 +6,7 @@ const $ = require('programmatic')
 const vivify = require('./vivify')
 
 function generate (packet) {
-    let step = 0, $i = -1, $sip = -1, _conditional = false
+    let step = 0, $i = -1, $sip = -1, _conditional = false, _terminated = false
 
 
     function integer (path, field) {
@@ -101,6 +101,81 @@ function generate (packet) {
         `)
     }
 
+    // We will have a special case for bite arrays where we can use index of to
+    // find the terminator, when the termiantor is zero or `\n\n` or the like,
+    // because we can use `indexOf` to find the boundary. Maybe byte arrays
+    // should always be returned as `Buffer`s?
+
+    // We will have a another special case for word arrays where the terminated
+    // word because we can jump right ito them.
+
+    // Seems like in the past I would read the terminator into an array and if
+    // it didn't match, I'd feed the array to the parser, this would handle long
+    // weird terminators.
+    function terminated (path, field) {
+        $i++
+        const i = `$i[${$i}]`
+        _terminated = true
+        const init = step
+        let sip = ++step
+        const redo = step
+        const begin = step += field.terminator.length
+        const looped = join(field.fields.map(field => dispatch(`${path}[${i}]`, field)))
+        const stop = step
+        const literal = field.terminator.map(bite => `0x${bite.toString(16)}`)
+        const terminator = join(field.terminator.map((bite, index) => {
+            if (index != field.terminator.length - 1) {
+                return $(`
+                    case ${sip++}:
+
+                        if ($start == $end) {
+                            return { start: $start, parse }
+                        }
+
+                        if ($buffer[$start] != 0x${bite.toString(16)}) {
+                            $step = ${begin}
+                            continue
+                        }
+                        $start++
+
+                        $step = ${sip}
+                `)
+            } else {
+                return $(`
+                    case ${sip++}:
+
+                        if ($start == $end) {
+                            return { start: $start, parse }
+                        }
+
+                        if ($buffer[$start] != 0x${bite.toString(16)}) {
+                            $step = ${begin}
+                            parse([ ${literal.slice(0, index).join(', ')} ], 0, index)
+                            continue
+                        }
+                        $start++
+
+                        $step = ${step}
+                        continue
+                `)
+            }
+        }))
+        const source = $(`
+            case ${init}:
+
+                ${i} = 0
+                $step = ${init + 1}
+
+            `, terminator, `
+            `, looped, `
+                ${i}++
+                $step = ${redo}
+                continue
+        `)
+        $i--
+        return source
+    }
+
     function conditional (path, conditional) {
         _conditional = true
         $sip++
@@ -167,6 +242,8 @@ function generate (packet) {
             `)
         case 'conditional':
             return conditional(path, packet)
+        case 'terminated':
+            return terminated(path, packet)
         case 'lengthEncoding':
             return lengthEncoding(path, packet)
         case 'lengthEncoded':
@@ -196,7 +273,7 @@ function generate (packet) {
 
     const lets = [ '$_', '$byte' ]
     const signature = [ `${packet.name} = {}`, '$step = 0' ]
-    if (packet.lengthEncoded || _conditional) {
+    if (packet.lengthEncoded || _conditional || _terminated) {
         signature.push('$i = []', '$I = []')
         if (_conditional) {
             signature.push('$sip = []')

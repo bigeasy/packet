@@ -92,6 +92,26 @@ function generate (packet, bff) {
         return word(path + '.length', field)
     }
 
+    function terminated (path, field) {
+        step += 2
+        index++
+        const i = `$i[${++index}]`
+        const looped = join(field.fields.map(field => dispatch(path + `[${i}]`, field)))
+        const terminator = []
+        for (const bite of field.terminator) {
+            terminator.push(`$buffer[$start++] = 0x${bite.toString(16)}`)
+        }
+        const source = $(`
+            for (${i} = 0; ${i} < ${path}.length; ${i}++) {
+                `, looped, `
+            }
+
+            `, terminator.join('\n'), `
+        `)
+        index--
+        return source
+    }
+
     function conditional (path, conditional) {
         const block = []
         step++
@@ -130,6 +150,8 @@ function generate (packet, bff) {
             return checkpoint(field)
         case 'conditional':
             return conditional(path, field)
+        case 'terminated':
+            return terminated(path, field)
         case 'lengthEncoding':
             return lengthEncoding(path, field)
         case 'lengthEncoded':
@@ -150,7 +172,7 @@ function generate (packet, bff) {
 
     let source = dispatch(packet.name, packet)
     const lets = []
-    if (packet.lengthEncoded) {
+    if (packet.lengthEncoded || packet.arrayed) {
         lets.push('$i = []')
     }
     if (_packed) {

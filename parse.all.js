@@ -115,6 +115,48 @@ function map (packet, bff) {
         `)
     }
 
+    function terminated (path, field) {
+        $i++
+        const i = `$i[${$i}]`
+        const looped = join(field.fields.map(field => dispatch(path + `[${i}]`, field)))
+        // TODO We really do not want to go beyond the end of the buffer in a
+        // whole parser and loop forever, so we still need the checkpoints. The
+        // same goes for length encoded. We don't want a malformed packet to
+        // cause an enormous loop. Checkpoints for loops only?
+        //
+        // TODO When the type is integer and the same size as the terminator
+        // lets create an integer sentry.
+        //
+        // TODO No, it's simple really. We don't need checked whole serializers,
+        // but all parsers should be checked somehow. You don't have to worry
+        // about running forever, because you can limit the file size, buffer
+        // size. Perhaps we have upper limits on arrays, sure. Add that to the
+        // langauge somehow, but we shouldn't have unchecked parsers. We use the
+        // `bff` logic and return an error if it doesn't fit.
+        const terminator = field.terminator.map((bite, index) => {
+            if (index == 0) {
+                return `$buffer[$start] == 0x${bite.toString(16)}`
+            } else {
+                return `$buffer[$start + ${index}] == 0x${bite.toString(16)}`
+            }
+        })
+        const source = $(`
+            ${i} = 0
+            for (;;) {
+                if (
+                    `, terminator.join(' &&\n'), `
+                ) {
+                    $start += ${terminator.length}
+                    break
+                }
+                `, looped, `
+                ${i}++
+            }
+        `)
+        $i--
+        return source
+    }
+
     function conditional (path, conditional) {
         $sip++
         const block = []
@@ -174,6 +216,8 @@ function map (packet, bff) {
             return checkpoint(field)
         case 'conditional':
             return conditional(path, field)
+        case 'terminated':
+            return terminated(path, field)
         case 'lengthEncoding':
             return lengthEncoding(field)
         case 'lengthEncoded':
@@ -192,7 +236,7 @@ function map (packet, bff) {
 
     const source = dispatch(packet.name, packet, true)
     const variables = []
-    if (packet.lengthEncoded) {
+    if (packet.lengthEncoded || packet.arrayed) {
         variables.push('$i = []', '$I = []')
     }
     if (_conditional) {

@@ -4,7 +4,7 @@ const snuggle = require('./snuggle')
 const pack = require('./pack')
 
 function generate (packet) {
-    let step = 0, index = -1, _conditional = false
+    let step = 0, index = -1, _conditional = false, _terminated = false
 
     function integer (path, field) {
         const endianness = field.endianness || 'big'
@@ -56,16 +56,19 @@ function generate (packet) {
                 }
 
         `)
+        // TODO Remove that line?
     }
 
+    // TODO Rename $byte back to $bite. It screws up ViMs syntax highlight.
+    // TODO I don't need to push and pop $i.
     function lengthEncoded (path, packet) {
         const i = `$i[${index}]`
         const I = `$I[${index}]`
         const again = step
         const source = $(`
-            `, dispatch([ `${path}[${i}]` ], packet.element), `
+            `, dispatch(`${path}[${i}]`, packet.element), `
 
-                if (++${i} != ${path + '.length'}) {
+                if (++${i} != ${path}.length) {
                     $step = ${again}
                     continue
                 }
@@ -83,6 +86,47 @@ function generate (packet) {
                 $i.push(0)
         `)
 
+    }
+
+    function terminated (path, field) {
+        _terminated = true
+        index++
+        const init = step
+        const again = ++step
+        const i = `$i[${index}]`
+        const looped = join(field.fields.map(field => dispatch(`${path}[${i}]`, field)))
+        const done = step
+        const terminator = join(field.terminator.map(bite => {
+            return $(`
+                case ${step++}:
+
+                    if ($start == $end) {
+                        return { start: $start, serialize }
+                    }
+
+                    $buffer[$start++] = 0x${bite.toString(16)}
+
+                    $step = ${step}
+            `)
+        }))
+        const source = $(`
+            case ${init}:
+
+                ${i} = 0
+                $step = ${again}
+
+            `, looped, `
+                if (++${i} != ${path}.length) {
+                    $step = ${again}
+                    continue
+                }
+
+                $step = ${done}
+
+            `, terminator, `
+        `)
+        index--
+        return source
     }
 
     function conditional (path, conditional) {
@@ -138,6 +182,8 @@ function generate (packet) {
             }))
         case 'conditional':
             return conditional(path, packet)
+        case 'terminated':
+            return terminated(path, packet)
         case 'lengthEncoding':
             return lengthEncoding(path, packet)
         case 'lengthEncoded':
@@ -145,6 +191,8 @@ function generate (packet) {
         case 'literal':
             return literal(packet)
         case 'integer':
+            // TODO This will not include the final step, we keep it off for the
+            // looping constructs.
             return integer(path, packet)
         }
     }
@@ -161,7 +209,7 @@ function generate (packet) {
 
         }
     `)
-    if (packet.lengthEncoded || _conditional) {
+    if (packet.lengthEncoded || _conditional || _terminated) {
         source = $(`
             for (;;) {
                 `, source, `

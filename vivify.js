@@ -8,6 +8,7 @@ function vivify (fields) {
         case 'checkpoint':
         case 'lengthEncoding':
             break
+        case 'terminated':
         case 'lengthEncoded':
             properties.push(field.name + ': []')
             break
