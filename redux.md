@@ -1,3 +1,9 @@
+## Wed Apr 29 08:34:26 CDT 2020
+
+At some point I'm going to have to determine if there is a requirement to have a
+user namespace outside of the field names, like for temporary variables. As it
+stands, all variables are prefixed with `$`.
+
 ## Thu Feb 20 23:42:09 CST 2020
 
 Going to page this project into memory and attempt to leave a roadmap in this

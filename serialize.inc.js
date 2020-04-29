@@ -17,17 +17,17 @@ function generate (packet) {
             case ${step++}:
 
                 $step = ${step}
-                $byte = ${bite}
+                $bite = ${bite}
                 `, assign, `
 
             case ${step++}:
 
-                while ($byte != ${stop}) {
+                while ($bite != ${stop}) {
                     if ($start == $end) {
                         return { start: $start, serialize }
                     }
-                    $buffer[$start++] = $_ >>> $byte * 8 & 0xff
-                    $byte${direction}
+                    $buffer[$start++] = $_ >>> $bite * 8 & 0xff
+                    $bite${direction}
                 }
 
         `)
@@ -43,23 +43,22 @@ function generate (packet) {
             case ${step++}:
 
                 $step = ${step}
-                $byte = 0
+                $bite = 0
                 $_ = ${JSON.stringify(bytes)}
 
             case ${step++}:
 
-                while ($byte != ${packet.value.length / 2}) {
+                while ($bite != ${packet.value.length / 2}) {
                     if ($start == $end) {
                         return { start: $start, serialize }
                     }
-                    $buffer[$start++] = $_[$byte++]
+                    $buffer[$start++] = $_[$bite++]
                 }
 
         `)
         // TODO Remove that line?
     }
 
-    // TODO Rename $byte back to $bite. It screws up ViMs syntax highlight.
     // TODO I don't need to push and pop $i.
     function lengthEncoded (path, packet) {
         const i = `$i[${index}]`
@@ -221,7 +220,7 @@ function generate (packet) {
     const object = 'serializers.inc.' + packet.name
     const generated = $(`
         ${object} = function (${packet.name}, $step = 0, $i = []) {
-            let $byte, $stop, $_
+            let $bite, $stop, $_
 
             return function serialize ($buffer, $start, $end) {
                 `, source, `

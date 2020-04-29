@@ -1,6 +1,6 @@
 module.exports = function (serializers) {
     serializers.inc.object = function (object, $step = 0, $i = []) {
-        let $byte, $stop, $_
+        let $bite, $stop, $_
 
         return function serialize ($buffer, $start, $end) {
             for (;;) {
@@ -13,17 +13,17 @@ module.exports = function (serializers) {
                 case 1:
 
                     $step = 2
-                    $byte = 1
+                    $bite = 1
                     $_ = object.array[$i[0]]
 
                 case 2:
 
-                    while ($byte != -1) {
+                    while ($bite != -1) {
                         if ($start == $end) {
                             return { start: $start, serialize }
                         }
-                        $buffer[$start++] = $_ >>> $byte * 8 & 0xff
-                        $byte--
+                        $buffer[$start++] = $_ >>> $bite * 8 & 0xff
+                        $bite--
                     }
 
                     if (++$i[0] != object.array.length) {

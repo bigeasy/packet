@@ -1,23 +1,23 @@
 module.exports = function (serializers) {
     serializers.inc.object = function (object, $step = 0, $i = []) {
-        let $byte, $stop, $_
+        let $bite, $stop, $_
 
         return function serialize ($buffer, $start, $end) {
             switch ($step) {
             case 0:
 
                 $step = 1
-                $byte = 0
+                $bite = 0
                 $_ = object.word
 
             case 1:
 
-                while ($byte != -1) {
+                while ($bite != -1) {
                     if ($start == $end) {
                         return { start: $start, serialize }
                     }
-                    $buffer[$start++] = $_ >>> $byte * 8 & 0xff
-                    $byte--
+                    $buffer[$start++] = $_ >>> $bite * 8 & 0xff
+                    $bite--
                 }
 
 

@@ -38,16 +38,16 @@ function generate (packet) {
 
                 $_ = 0
                 $step = ${step}
-                $byte = ${start}
+                $bite = ${start}
 
             case ${step++}:
 
-                while ($byte != ${stop}) {
+                while ($bite != ${stop}) {
                     if ($start == $end) {
                         return { start: $start, object: null, parse }
                     }
-                    $_ += $buffer[$start++] << $byte * 8 >>> 0
-                    $byte${direction}
+                    $_ += $buffer[$start++] << $bite * 8 >>> 0
+                    $bite${direction}
                 }
 
                 `, assign, `
@@ -64,9 +64,9 @@ function generate (packet) {
 
             case ${step++}:
 
-                $byte = Math.min($end - $start, $_)
-                $_ -= $byte
-                $start += $byte
+                $bite = Math.min($end - $start, $_)
+                $_ -= $bite
+                $start += $bite
 
                 if ($_ != 0) {
                     return { start: $start, object: null, parse }
@@ -271,7 +271,7 @@ function generate (packet) {
         }
     `)
 
-    const lets = [ '$_', '$byte' ]
+    const lets = [ '$_', '$bite' ]
     const signature = [ `${packet.name} = {}`, '$step = 0' ]
     if (packet.lengthEncoded || _conditional || _terminated) {
         signature.push('$i = []', '$I = []')

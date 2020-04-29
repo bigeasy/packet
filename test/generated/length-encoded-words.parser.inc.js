@@ -1,6 +1,6 @@
 module.exports = function (parsers) {
     parsers.inc.object = function (object = {}, $step = 0, $i = [], $I = []) {
-        let $_, $byte
+        let $_, $bite
         return function parse ($buffer, $start, $end) {
             for (;;) {
                 switch ($step) {
@@ -15,16 +15,16 @@ module.exports = function (parsers) {
 
                     $_ = 0
                     $step = 2
-                    $byte = 1
+                    $bite = 1
 
                 case 2:
 
-                    while ($byte != -1) {
+                    while ($bite != -1) {
                         if ($start == $end) {
                             return { start: $start, object: null, parse }
                         }
-                        $_ += $buffer[$start++] << $byte * 8 >>> 0
-                        $byte--
+                        $_ += $buffer[$start++] << $bite * 8 >>> 0
+                        $bite--
                     }
 
                     $I[0] = $_
@@ -35,16 +35,16 @@ module.exports = function (parsers) {
 
                     $_ = 0
                     $step = 4
-                    $byte = 1
+                    $bite = 1
 
                 case 4:
 
-                    while ($byte != -1) {
+                    while ($bite != -1) {
                         if ($start == $end) {
                             return { start: $start, object: null, parse }
                         }
-                        $_ += $buffer[$start++] << $byte * 8 >>> 0
-                        $byte--
+                        $_ += $buffer[$start++] << $bite * 8 >>> 0
+                        $bite--
                     }
 
                     object.array[$i[0]] = $_
