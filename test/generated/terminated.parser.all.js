@@ -1,6 +1,6 @@
 module.exports = function (parsers) {
     parsers.all.object = function ($buffer, $start) {
-        let $i = [], $I = []
+        let $i = []
 
         const object = {
             array: []

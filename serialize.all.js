@@ -40,7 +40,9 @@ function bff (path, fields, index = 0, rewind = 0) {
 }
 
 function generate (packet, bff) {
-    let step = 0, index = -1, _packed = false
+    let $step = 0, $i = -1
+
+    const variables = { packet: true, step: true }
 
     function word (asignee, field) {
         const bytes = field.bits / 8
@@ -57,9 +59,9 @@ function generate (packet, bff) {
     }
 
     function integer (path, field) {
-        step += 2
+        $step += 2
         if (field.fields) {
-            _packed = true
+            variables.register = true
             const packing = pack(field, path, '$_')
             return $(`
                 `, packing, `
@@ -72,7 +74,8 @@ function generate (packet, bff) {
     }
 
     function lengthEncoded (path, field) {
-        const i = `$i[${++index}]`
+        variables.i = true
+        const i = `$i[${++$i}]`
         // TODO Here and in conditional we see that we know the name, but we
         // don't know really understand the contents of the packet, so we ought
         // to create the path with `concat` rather than have the packet
@@ -83,19 +86,20 @@ function generate (packet, bff) {
                 `, looped, `
             }
         `)
-        index--
+        $i--
         return source
     }
 
     function lengthEncoding (path, field) {
-        step += 2
+        $step += 2
         return word(path + '.length', field)
     }
 
     function terminated (path, field) {
-        step += 2
-        index++
-        const i = `$i[${++index}]`
+        variables.i = true
+        $step += 2
+        $i++
+        const i = `$i[${++$i}]`
         const looped = join(field.fields.map(field => dispatch(path + `[${i}]`, field)))
         const terminator = []
         for (const bite of field.terminator) {
@@ -108,13 +112,13 @@ function generate (packet, bff) {
 
             `, terminator.join('\n'), `
         `)
-        index--
+        $i--
         return source
     }
 
     function conditional (path, conditional) {
         const block = []
-        step++
+        $step++
         for (let i = 0, I = conditional.serialize.conditions.length; i < I; i++) {
             const condition = conditional.serialize.conditions[i]
             const source = join(condition.fields.map(field => dispatch(path, field)))
@@ -136,7 +140,7 @@ function generate (packet, bff) {
             if ($end - $start < ${checkpoint.lengths.join(' + ')}) {
                 return {
                     start: $start,
-                    serialize: serializers.inc.object(${packet.name}, ${step - checkpoint.rewind}, ${i})
+                    serialize: serializers.inc.object(${packet.name}, ${$step - checkpoint.rewind}, ${i})
                 }
             }
         `)
@@ -170,14 +174,15 @@ function generate (packet, bff) {
         }
     }
 
-    let source = dispatch(packet.name, packet)
-    const lets = []
-    if (packet.lengthEncoded || packet.arrayed) {
-        lets.push('$i = []')
+    const source = dispatch(packet.name, packet)
+    const declarations = {
+        register: '$_',
+        i: '$i = []',
+        sip: '$sip = []'
     }
-    if (_packed) {
-        lets.push('$_')
-    }
+    const lets = Object.keys(declarations)
+                            .filter(key => variables[key])
+                            .map(key => declarations[key])
     return $(`
         serializers.${bff ? 'bff' : 'all'}.${packet.name} = function (${packet.name}) {
             return function ($buffer, $start, $end) {

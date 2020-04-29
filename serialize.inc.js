@@ -4,7 +4,9 @@ const snuggle = require('./snuggle')
 const pack = require('./pack')
 
 function generate (packet) {
-    let step = 0, index = -1, _conditional = false, _terminated = false
+    let $step = 0, $i = -1, surround = false
+
+    const variables = { packet: true, step: true }
 
     function integer (path, field) {
         const endianness = field.endianness || 'big'
@@ -14,13 +16,13 @@ function generate (packet) {
         let stop = field.endianness == 'big' ? -1 : bytes
         const assign = field.fields ? pack(field, path, '$_') : `$_ = ${path}`
         const source = $(`
-            case ${step++}:
+            case ${$step++}:
 
-                $step = ${step}
+                $step = ${$step}
                 $bite = ${bite}
                 `, assign, `
 
-            case ${step++}:
+            case ${$step++}:
 
                 while ($bite != ${stop}) {
                     if ($start == $end) {
@@ -40,13 +42,13 @@ function generate (packet) {
             bytes.push(parseInt(packet.value.substring(i, i + 2), 16))
         }
         return $(`
-            case ${step++}:
+            case ${$step++}:
 
-                $step = ${step}
+                $step = ${$step}
                 $bite = 0
                 $_ = ${JSON.stringify(bytes)}
 
-            case ${step++}:
+            case ${$step++}:
 
                 while ($bite != ${packet.value.length / 2}) {
                     if ($start == $end) {
@@ -61,9 +63,11 @@ function generate (packet) {
 
     // TODO I don't need to push and pop $i.
     function lengthEncoded (path, packet) {
-        const i = `$i[${index}]`
-        const I = `$I[${index}]`
-        const again = step
+        variables.i = true
+        variables.I = true
+        const i = `$i[${$i}]`
+        const I = `$I[${$i}]`
+        const again = $step
         const source = $(`
             `, dispatch(`${path}[${i}]`, packet.element), `
 
@@ -74,12 +78,12 @@ function generate (packet) {
 
                 $i.pop()
         `)
-        index--
+        $i--
         return source
     }
 
     function lengthEncoding (path, packet) {
-        index++
+        $i++
         return $(`
             `, integer(path + '.length', packet), `
                 $i.push(0)
@@ -88,16 +92,16 @@ function generate (packet) {
     }
 
     function terminated (path, field) {
-        _terminated = true
-        index++
-        const init = step
-        const again = ++step
-        const i = `$i[${index}]`
+        variables.i = true
+        $i++
+        const init = $step
+        const again = ++$step
+        const i = `$i[${$i}]`
         const looped = join(field.fields.map(field => dispatch(`${path}[${i}]`, field)))
-        const done = step
+        const done = $step
         const terminator = join(field.terminator.map(bite => {
             return $(`
-                case ${step++}:
+                case ${$step++}:
 
                     if ($start == $end) {
                         return { start: $start, serialize }
@@ -105,7 +109,7 @@ function generate (packet) {
 
                     $buffer[$start++] = 0x${bite.toString(16)}
 
-                    $step = ${step}
+                    $step = ${$step}
             `)
         }))
         const source = $(`
@@ -124,17 +128,17 @@ function generate (packet) {
 
             `, terminator, `
         `)
-        index--
+        $i--
         return source
     }
 
     function conditional (path, conditional) {
-        _conditional = true
-        const start = step++
+        surround = true
+        const start = $step++
         const steps = []
         for (const condition of conditional.serialize.conditions) {
             steps.push({
-                step: step,
+                step: $step,
                 source: join(condition.fields.map(field => dispatch(path, field)))
             })
         }
@@ -151,7 +155,7 @@ function generate (packet) {
             `))
         }
         const done = $(`
-            $step = ${step}
+            $step = ${$step}
             continue
         `)
         // TODO Instead of choping the literal source, prevent adding the
@@ -200,15 +204,15 @@ function generate (packet) {
         switch ($step) {
         `, dispatch(packet.name, packet), `
 
-            $step = ${step}
+            $step = ${$step}
 
-        case ${step}:
+        case ${$step}:
 
             break
 
         }
     `)
-    if (packet.lengthEncoded || _conditional || _terminated) {
+    if (variables.i || surround) {
         source = $(`
             for (;;) {
                 `, source, `
@@ -217,9 +221,20 @@ function generate (packet) {
             }
         `)
     }
+
+    const signatories = {
+        packet: `${packet.name}`,
+        step: '$step = 0',
+        i: '$i = []',
+        I: '$I = []'
+    }
+    const signature = Object.keys(signatories)
+                            .filter(key => variables[key])
+                            .map(key => signatories[key])
+
     const object = 'serializers.inc.' + packet.name
     const generated = $(`
-        ${object} = function (${packet.name}, $step = 0, $i = []) {
+        ${object} = function (${signature.join(', ')}) {
             let $bite, $stop, $_
 
             return function serialize ($buffer, $start, $end) {

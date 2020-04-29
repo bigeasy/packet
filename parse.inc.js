@@ -6,18 +6,19 @@ const $ = require('programmatic')
 const vivify = require('./vivify')
 
 function generate (packet) {
-    let step = 0, $i = -1, $sip = -1, _conditional = false, _terminated = false
+    let $step = 0, $i = -1, $sip = -1, _conditional = false, _terminated = false
 
+    const lets = { packet: true, step: true }
 
     function integer (path, field) {
         const bytes = field.bits / 8
         if (bytes == 1) {
             return $(`
-                case ${step++}:
+                case ${$step++}:
 
-                    $step = ${step}
+                    $step = ${$step}
 
-                case ${step++}:
+                case ${$step++}:
 
                     if ($start == $end) {
                         return { start: $start, object: null, parse }
@@ -34,13 +35,13 @@ function generate (packet) {
                      : field.compliment ? `${path} = ${unsign('$_', field.bits)}`
                      : `${path} = $_`
         return $(`
-            case ${step++}:
+            case ${$step++}:
 
                 $_ = 0
-                $step = ${step}
+                $step = ${$step}
                 $bite = ${start}
 
-            case ${step++}:
+            case ${$step++}:
 
                 while ($bite != ${stop}) {
                     if ($start == $end) {
@@ -57,12 +58,12 @@ function generate (packet) {
 
     function literal (packet) {
         return $(`
-            case ${step++}:
+            case ${$step++}:
 
                 $_ = ${packet.value.length / 2}
-                $step = ${step}
+                $step = ${$step}
 
-            case ${step++}:
+            case ${$step++}:
 
                 $bite = Math.min($end - $start, $_)
                 $_ -= $bite
@@ -75,11 +76,13 @@ function generate (packet) {
     }
 
     function lengthEncoded (path, packet) {
+        lets.i = true
+        lets.I = true
         const i = `$i[${$i}]`
         const I = `$I[${$i}]`
         // var integer = integer(packet.length, 'length')
         // Invoked here to set `again`.
-        const again = step
+        const again = $step
         const source = $(`
             `, dispatch([ `${path}[${i}]` ], packet.element), `
                 if (++${i} != ${I}) {
@@ -113,15 +116,16 @@ function generate (packet) {
     // it didn't match, I'd feed the array to the parser, this would handle long
     // weird terminators.
     function terminated (path, field) {
+        lets.i = true
         $i++
         const i = `$i[${$i}]`
         _terminated = true
-        const init = step
-        let sip = ++step
-        const redo = step
-        const begin = step += field.terminator.length
+        const init = $step
+        let sip = ++$step
+        const redo = $step
+        const begin = $step += field.terminator.length
         const looped = join(field.fields.map(field => dispatch(`${path}[${i}]`, field)))
-        const stop = step
+        const stop = $step
         const literal = field.terminator.map(bite => `0x${bite.toString(16)}`)
         const terminator = join(field.terminator.map((bite, index) => {
             if (index != field.terminator.length - 1) {
@@ -155,7 +159,7 @@ function generate (packet) {
                         }
                         $start++
 
-                        $step = ${step}
+                        $step = ${$step}
                         continue
                 `)
             }
@@ -177,15 +181,15 @@ function generate (packet) {
     }
 
     function conditional (path, conditional) {
-        _conditional = true
+        lets.sip = true
         $sip++
         const { parse } = conditional
         const sip = join(parse.sip.map(field => dispatch(`$sip[${$sip}]`, field)))
-        const start = step++
+        const start = $step++
         const steps = []
         for (const condition of parse.conditions) {
             steps.push({
-                number: step,
+                number: $step,
                 source: join(condition.fields.map(field => dispatch(path, field)))
             })
         }
@@ -202,7 +206,7 @@ function generate (packet) {
             `))
         }
         const done = $(`
-            $step = ${step}
+            $step = ${$step}
             continue
         `)
         $sip--
@@ -227,12 +231,12 @@ function generate (packet) {
         switch (packet.type) {
         case 'structure':
             const push = $(`
-                case ${step++}:
+                case ${$step++}:
 
                     ${path} = {
                         `, vivify(packet.fields), `
                     }
-                    $step = ${step}
+                    $step = ${$step}
 
             `)
             const source =  join(packet.fields.map(field => dispatch(path + field.dotted, field)))
@@ -252,7 +256,7 @@ function generate (packet) {
             return integer(path, packet)
         case 'function':
             return $(`
-                case ${step++}:
+                case ${$step++}:
 
                     ${path} = (${packet.source})($sip[0])
             `)
@@ -265,19 +269,23 @@ function generate (packet) {
         switch ($step) {
         `, dispatch(packet.name, packet, 0), `
 
-        case ${step}:
+        case ${$step}:
 
             return { start: $start, object: ${packet.name}, parse: null }
         }
     `)
 
-    const lets = [ '$_', '$bite' ]
-    const signature = [ `${packet.name} = {}`, '$step = 0' ]
-    if (packet.lengthEncoded || _conditional || _terminated) {
-        signature.push('$i = []', '$I = []')
-        if (_conditional) {
-            signature.push('$sip = []')
-        }
+    const signatories = {
+        packet: `${packet.name} = {}`,
+        step: '$step = 0',
+        i: '$i = []',
+        I: '$I = []',
+        sip: '$sip = []'
+    }
+    const signature = Object.keys(signatories)
+                            .filter(key => lets[key])
+                            .map(key => signatories[key])
+    if (lets.i || lets.sip) {
         source = $(`
             for (;;) {
                 `, source, `
@@ -291,7 +299,7 @@ function generate (packet) {
     const object = `parsers.inc.${packet.name}`
     return $(`
         ${object} = function (${signature.join(', ')}) {
-            let ${lets.join(', ')}
+            let $_, $bite
             return function parse ($buffer, $start, $end) {
                 `, source, `
             }

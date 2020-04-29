@@ -1,5 +1,5 @@
 module.exports = function (serializers) {
-    serializers.inc.object = function (object, $step = 0, $i = []) {
+    serializers.inc.object = function (object, $step = 0, $i = [], $I = []) {
         let $bite, $stop, $_
 
         return function serialize ($buffer, $start, $end) {

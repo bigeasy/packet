@@ -5,54 +5,62 @@ const unsign = require('./fiddle/unsign')
 const $ = require('programmatic')
 const vivify = require('./vivify')
 
-function bff (path, fields, index = 0, rewind = 0) {
-    let checkpoint = { type: 'checkpoint', lengths: [ 0 ], rewind }, checked = [ checkpoint ]
-    for (const field of fields) {
-        switch (field.type) {
-        case 'function':
-            break
-        case 'conditional':
-            field.parse.sip = bff(path, field.parse.sip, index, rewind)
-            for (const condition of field.parse.conditions) {
-                condition.fields = bff(path, condition.fields, index, rewind)
-            }
-            break
-        case 'lengthEncoding':
-            checkpoint.lengths[0] += field.bits / 8
-            break
-        case 'lengthEncoded':
-            checked.push(checkpoint = { type: 'checkpoint', lengths: [ 0 ], rewind: 0 })
-            switch (field.element.type) {
-            case 'structure':
-                if (field.element.fixed) {
-                    checkpoint.lengths.push(`${field.element.bits / 8} * $I[${index}]`)
-                } else {
-                    field.element.fields = bff(path + `${field.dotted}[$i[${index}]]`, field.element.fields, index + 1)
+function map (packet, bff) {
+    let $i = -1, $sip = -1, $step = 1
+
+    const variables = { packet: true, step: true }
+
+    function checkpoints (path, fields, index = 0, rewind = 0) {
+        let checkpoint = { type: 'checkpoint', lengths: [ 0 ], rewind }, checked = [ checkpoint ]
+        for (const field of fields) {
+            switch (field.type) {
+            case 'function':
+                break
+            case 'conditional':
+                variables.sip = true
+                field.parse.sip = checkpoints(path, field.parse.sip, index, rewind)
+                for (const condition of field.parse.conditions) {
+                    condition.fields = checkpoints(path, condition.fields, index, rewind)
                 }
                 break
+            case 'lengthEncoding':
+                checkpoint.lengths[0] += field.bits / 8
+                break
+            case 'lengthEncoded':
+                variables.i = true
+                variables.I = true
+                checked.push(checkpoint = { type: 'checkpoint', lengths: [ 0 ], rewind: 0 })
+                switch (field.element.type) {
+                case 'structure':
+                    if (field.element.fixed) {
+                        checkpoint.lengths.push(`${field.element.bits / 8} * $I[${index}]`)
+                    } else {
+                        field.element.fields = checkpoints(path + `${field.dotted}[$i[${index}]]`, field.element.fields, index + 1)
+                    }
+                    break
+                default:
+                    checkpoint.lengths.push(`${field.element.bits / 8} * $I[${index}]`)
+                    break
+                }
+                break
+            case 'terminated':
+                variables.i = true
+                break
             default:
-                checkpoint.lengths.push(`${field.element.bits / 8} * $I[${index}]`)
+                checkpoint.lengths[0] += field.bits / 8
                 break
             }
-            break
-        default:
-            checkpoint.lengths[0] += field.bits / 8
-            break
+            checked.push(field)
         }
-        checked.push(field)
+        checked.forEach(field => {
+            if (field.type == 'checkpoint' && field.lengths[0] == 0) {
+                field.lengths.shift()
+            }
+        })
+        return checked.filter(field => {
+            return field.type != 'checkpoint' || field.lengths.length != 0
+        })
     }
-    checked.forEach(field => {
-        if (field.type == 'checkpoint' && field.lengths[0] == 0) {
-            field.lengths.shift()
-        }
-    })
-    return checked.filter(field => {
-        return field.type != 'checkpoint' || field.lengths.length != 0
-    })
-}
-
-function map (packet, bff) {
-    let $i = -1, $sip = -1, step = 1, _conditional = false, _temporary = false
 
     function integer (assignee, field) {
         const variable = field.fields || field.compliment ? '$_' : assignee
@@ -68,14 +76,14 @@ function map (packet, bff) {
             }
             bite += direction
         }
-        step += 2
+        $step += 2
         const parse = bytes == 1 ? `${variable} = ${reads.join('')}`
                                  : $(`
                                         ${variable} =
                                             `, reads.reverse().join(' +\n'), `
                                     `)
         if (field.fields) {
-            _temporary = true
+            variables.register = true
             return $(`
                 `, parse, `
 
@@ -84,7 +92,7 @@ function map (packet, bff) {
         }
 
         if (field.compliment) {
-            _temporary = true
+            variables.register = true
             return $(`
                 `, parse, `
                 ${assignee} = ${unsign(variable, field.bits)}
@@ -95,7 +103,9 @@ function map (packet, bff) {
     }
 
     function lengthEncoded (path, field) {
-        step += 1
+        variables.i = true
+        variables.I = true
+        $step += 1
         const i = `$i[${$i}]`
         const I = `$I[${$i}]`
         const looped = dispatch(path + `[${i}]`, field.element)
@@ -116,6 +126,7 @@ function map (packet, bff) {
     }
 
     function terminated (path, field) {
+        variables.i = true
         $i++
         const i = `$i[${$i}]`
         const looped = join(field.fields.map(field => dispatch(path + `[${i}]`, field)))
@@ -160,9 +171,9 @@ function map (packet, bff) {
     function conditional (path, conditional) {
         $sip++
         const block = []
-        _conditional = true
+        variables.sip = true
         const sip = join(conditional.parse.sip.map(field => dispatch(`$sip[${$sip}]`, field)))
-        step++
+        $step++
         for (let i = 0, I = conditional.parse.conditions.length; i < I; i++) {
             const condition = conditional.parse.conditions[i]
             const source = join(condition.fields.map(field => dispatch(path, field)))
@@ -184,16 +195,19 @@ function map (packet, bff) {
     }
 
     function checkpoint (checkpoint, depth, arrayed) {
-        const signature = [ packet.name, step ]
         if (checkpoint.lengths.length == 0) {
             return null
         }
-        if (packet.lengthEncoded) {
-            signature.push('$i', '$I')
+        const signatories = {
+            packet: packet.name,
+            step: $step,
+            i: '$i',
+            I: '$I',
+            sip: '$sip'
         }
-        if (_conditional) {
-            signature.push('$sip')
-        }
+        const signature = Object.keys(signatories)
+                                .filter(key => variables[key])
+                                .map(key => signatories[key])
         return $(`
             if ($end - $start < ${checkpoint.lengths.join(' + ')}) {
                 return parsers.inc.${packet.name}(${signature.join(', ')})($buffer, $start, $end)
@@ -223,7 +237,7 @@ function map (packet, bff) {
         case 'lengthEncoded':
             return lengthEncoded(path, field)
         case 'function':
-            step++
+            $step++
             return `${path} = (${field.source})($sip[${$sip}])`
         case 'literal':
             return $(`
@@ -234,23 +248,25 @@ function map (packet, bff) {
         }
     }
 
-    const source = dispatch(packet.name, packet, true)
-    const variables = []
-    if (packet.lengthEncoded || packet.arrayed) {
-        variables.push('$i = []', '$I = []')
-    }
-    if (_conditional) {
-        variables.push('$sip = []')
-    }
-    if (_temporary) {
-        variables.push('$_')
+    if (bff) {
+        packet.fields = checkpoints(packet.name, packet.fields)
     }
 
+    const source = dispatch(packet.name, packet, true)
+    const declarations = {
+        register: '$_',
+        i: '$i = []',
+        I: '$I = []',
+        sip: '$sip = []'
+    }
+    const lets = Object.keys(declarations)
+                            .filter(key => variables[key])
+                            .map(key => declarations[key])
     if (bff) {
         return $(`
             parsers.bff.${packet.name} = function () {
                 return function parse ($buffer, $start, $end) {
-                    `, variables.length ? `let ${variables.join(', ')}` : null, -1, `
+                    `, lets.length ? `let ${lets.join(', ')}` : null, -1, `
 
                     `, source, `
 
@@ -262,7 +278,7 @@ function map (packet, bff) {
 
     return $(`
         parsers.all.${packet.name} = function ($buffer, $start) {
-            `, variables.length ? `let ${variables.join(', ')}` : null, -1, `
+            `, lets.length ? `let ${lets.join(', ')}` : null, -1, `
 
             `, source, `
 
@@ -272,11 +288,5 @@ function map (packet, bff) {
 }
 
 module.exports = function (compiler, definition, options = {}) {
-    const source = join(JSON.parse(JSON.stringify(definition)).map(function (packet) {
-        if (options.bff) {
-            packet.fields = bff(packet.name, packet.fields)
-        }
-        return map(packet, options.bff)
-    }))
-    return compiler(source)
+    return compiler(join(JSON.parse(JSON.stringify(definition)).map(packet => map(packet, options.bff))))
 }
