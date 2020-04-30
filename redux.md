@@ -1,3 +1,18 @@
+## Thu Apr 30 01:08:34 CDT 2020 ~ todo
+
+Terminated arrays peek for a terminator, but if the array is an array of words
+and the terminator is the same length as element being read, we can read read
+the terminator as a word and break when the word equals the word value of
+terminator.
+
+Furthermore, if the array is an array of bytes, we can use `Buffer.indexOf` to
+look for the terminator.
+
+Implies that we ought to return `Buffer` when the value is an array of bytes.
+
+Note that I'm not in favor of fixups in code at the moment, the user and
+pre-process before serialization and post-process after parse.
+
 ## Wed Apr 29 08:34:26 CDT 2020
 
 At some point I'm going to have to determine if there is a requirement to have a
