@@ -8,6 +8,14 @@ function bff (path, fields, index = 0, rewind = 0) {
     const checked = [ checkpoint = { type: 'checkpoint', lengths: [ 0 ], rewind } ]
     for (const field of fields) {
         switch (field.type) {
+        case 'terminated':
+            if (field.fields.filter(field => ! field.fixed).length == 0) {
+                checkpoint.lengths[0] += field.terminator.length
+                const bits = field.fields.reduce((sum, field) => sum + field.bits, 0)
+                checkpoint.lengths.push(`${bits / 8} * ${path + field.dotted}.length`)
+            } else {
+            }
+            break
         case 'conditional':
             for (const condition of field.serialize.conditions) {
                 condition.fields = bff(path, condition.fields, index, rewind)

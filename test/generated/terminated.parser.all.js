@@ -15,6 +15,7 @@ module.exports = function (parsers) {
                 $start += 2
                 break
             }
+
             object.array[$i[0]] =
                 $buffer[$start++] * 0x100 +
                 $buffer[$start++]

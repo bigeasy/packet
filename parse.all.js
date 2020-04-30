@@ -10,6 +10,8 @@ function map (packet, bff) {
 
     const variables = { packet: true, step: true }
 
+    // TODO You can certianly do something to make this prettier.
+    // TODO Start by prepending the path I think?
     function checkpoints (path, fields, index = 0, rewind = 0) {
         let checkpoint = { type: 'checkpoint', lengths: [ 0 ], rewind }, checked = [ checkpoint ]
         for (const field of fields) {
@@ -44,7 +46,11 @@ function map (packet, bff) {
                 }
                 break
             case 'terminated':
+                // TODO I have notes on termination improvements in the Redux
+                // diary.
                 variables.i = true
+                field.fields = checkpoints(path + `${field.dotted}[$i[${index}]]`, field.fields, index + 1)
+                checked.push(checkpoint = { type: 'checkpoint', lengths: [ 0 ], rewind: 0 })
                 break
             default:
                 checkpoint.lengths[0] += field.bits / 8
@@ -127,9 +133,14 @@ function map (packet, bff) {
 
     function terminated (path, field) {
         variables.i = true
+        $step++
+        const check = bff ? checkpoint({
+            lengths: [ field.terminator.length ], rewind: 0
+        }) : null
         $i++
         const i = `$i[${$i}]`
         const looped = join(field.fields.map(field => dispatch(path + `[${i}]`, field)))
+        $step += field.terminator.length
         // TODO We really do not want to go beyond the end of the buffer in a
         // whole parser and loop forever, so we still need the checkpoints. The
         // same goes for length encoded. We don't want a malformed packet to
@@ -154,12 +165,15 @@ function map (packet, bff) {
         const source = $(`
             ${i} = 0
             for (;;) {
+                `, check, -1, `
+
                 if (
                     `, terminator.join(' &&\n'), `
                 ) {
                     $start += ${terminator.length}
                     break
                 }
+
                 `, looped, `
                 ${i}++
             }

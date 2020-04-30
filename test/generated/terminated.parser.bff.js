@@ -1,0 +1,37 @@
+module.exports = function (parsers) {
+    parsers.bff.object = function () {
+        return function parse ($buffer, $start, $end) {
+            let $i = []
+
+            const object = {
+                array: []
+            }
+
+            $i[0] = 0
+            for (;;) {
+                if ($end - $start < 2) {
+                    return parsers.inc.object(object, 2, $i)($buffer, $start, $end)
+                }
+
+                if (
+                    $buffer[$start] == 0x0 &&
+                    $buffer[$start + 1] == 0x0
+                ) {
+                    $start += 2
+                    break
+                }
+
+                if ($end - $start < 2) {
+                    return parsers.inc.object(object, 2, $i)($buffer, $start, $end)
+                }
+
+                object.array[$i[0]] =
+                    $buffer[$start++] * 0x100 +
+                    $buffer[$start++]
+                $i[0]++
+            }
+
+            return { start: $start, object: object, parse: null }
+        }
+    }
+}
