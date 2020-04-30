@@ -294,8 +294,6 @@ function generate (packet) {
         `)
     }
 
-    // TODO Vivify through a funciton so that `object = vivify()`.
-    // TOOO Write directly to object, I think, get rid of `$_`?
     const object = `parsers.inc.${packet.name}`
     return $(`
         ${object} = function (${signature.join(', ')}) {

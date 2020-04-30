@@ -64,9 +64,7 @@ function generate (packet) {
     // TODO I don't need to push and pop $i.
     function lengthEncoded (path, packet) {
         variables.i = true
-        variables.I = true
         const i = `$i[${$i}]`
-        const I = `$I[${$i}]`
         const again = $step
         const source = $(`
             `, dispatch(`${path}[${i}]`, packet.element), `
@@ -75,8 +73,6 @@ function generate (packet) {
                     $step = ${again}
                     continue
                 }
-
-                $i.pop()
         `)
         $i--
         return source
@@ -86,7 +82,7 @@ function generate (packet) {
         $i++
         return $(`
             `, integer(path + '.length', packet), `
-                $i.push(0)
+                $i[${$i}] = 0
         `)
 
     }
@@ -225,8 +221,7 @@ function generate (packet) {
     const signatories = {
         packet: `${packet.name}`,
         step: '$step = 0',
-        i: '$i = []',
-        I: '$I = []'
+        i: '$i = []'
     }
     const signature = Object.keys(signatories)
                             .filter(key => variables[key])

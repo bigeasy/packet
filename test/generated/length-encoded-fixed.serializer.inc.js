@@ -1,5 +1,5 @@
 module.exports = function (serializers) {
-    serializers.inc.object = function (object, $step = 0, $i = [], $I = []) {
+    serializers.inc.object = function (object, $step = 0, $i = []) {
         let $bite, $stop, $_
 
         return function serialize ($buffer, $start, $end) {
@@ -21,7 +21,7 @@ module.exports = function (serializers) {
                         $bite--
                     }
 
-                    $i.push(0)
+                    $i[0] = 0
 
                 case 2:
 
@@ -61,8 +61,6 @@ module.exports = function (serializers) {
                         $step = 2
                         continue
                     }
-
-                    $i.pop()
 
                     $step = 6
 
