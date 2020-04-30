@@ -4,6 +4,7 @@ const unpack = require('./unpack')
 const unsign = require('./fiddle/unsign')
 const $ = require('programmatic')
 const vivify = require('./vivify')
+const ARRAYED = [ 'lengthEncoding', 'terminated' ]
 
 function map (packet, bff) {
     let $i = -1, $sip = -1, $step = 1
@@ -133,12 +134,13 @@ function map (packet, bff) {
 
     function terminated (path, field) {
         variables.i = true
-        $step++
+        $i++
+        const i = `$i[${$i}]`
+        $step += 1
         const check = bff ? checkpoint({
             lengths: [ field.terminator.length ], rewind: 0
         }) : null
-        $i++
-        const i = `$i[${$i}]`
+        $step += field.terminator.length
         const looped = join(field.fields.map(field => dispatch(path + `[${i}]`, field)))
         $step += field.terminator.length
         // TODO We really do not want to go beyond the end of the buffer in a
@@ -162,6 +164,7 @@ function map (packet, bff) {
                 return `$buffer[$start + ${index}] == 0x${bite.toString(16)}`
             }
         })
+        const vivify = ~ARRAYED.indexOf(field.fields[0].type) ? `${path}[${i}] = []` : null
         const source = $(`
             ${i} = 0
             for (;;) {
@@ -173,6 +176,8 @@ function map (packet, bff) {
                     $start += ${terminator.length}
                     break
                 }
+
+                `, vivify, -1, `
 
                 `, looped, `
                 ${i}++

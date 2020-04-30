@@ -4,6 +4,7 @@ const unpack = require('./unpack')
 const unsign = require('./fiddle/unsign')
 const $ = require('programmatic')
 const vivify = require('./vivify')
+const ARRAYED = [ 'lengthEncoding', 'terminated' ]
 
 function generate (packet) {
     let $step = 0, $i = -1, $sip = -1, _conditional = false, _terminated = false
@@ -125,7 +126,6 @@ function generate (packet) {
         const redo = $step
         const begin = $step += field.terminator.length
         const looped = join(field.fields.map(field => dispatch(`${path}[${i}]`, field)))
-        const stop = $step
         const literal = field.terminator.map(bite => `0x${bite.toString(16)}`)
         const terminator = join(field.terminator.map((bite, index) => {
             if (index != field.terminator.length - 1) {
@@ -154,12 +154,12 @@ function generate (packet) {
 
                         if ($buffer[$start] != 0x${bite.toString(16)}) {
                             $step = ${begin}
-                            parse([ ${literal.slice(0, index).join(', ')} ], 0, index)
+                            parse([ ${literal.slice(0, index).join(', ')} ], 0, ${index})
                             continue
                         }
                         $start++
 
-                        $step = ${$step}
+                        $step = ${$step + 1}
                         continue
                 `)
             }
@@ -168,10 +168,14 @@ function generate (packet) {
             case ${init}:
 
                 ${i} = 0
+                `, path[path.length - 1] == ']' ? `${path} = []` : null, `
                 $step = ${init + 1}
 
             `, terminator, `
             `, looped, `
+
+            case ${$step++}:
+
                 ${i}++
                 $step = ${redo}
                 continue

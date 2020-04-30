@@ -43,15 +43,50 @@ module.exports = function (parsers) {
                     }
                     $start++
 
-                    $step = 7
+                    $step = 11
                     continue
                 case 4:
 
-                    $_ = 0
+                    $i[1] = 0
+                    object.array[$i[0]] = []
                     $step = 5
-                    $bite = 1
 
                 case 5:
+
+                    if ($start == $end) {
+                        return { start: $start, parse }
+                    }
+
+                    if ($buffer[$start] != 0x0) {
+                        $step = 7
+                        continue
+                    }
+                    $start++
+
+                    $step = 6
+
+                case 6:
+
+                    if ($start == $end) {
+                        return { start: $start, parse }
+                    }
+
+                    if ($buffer[$start] != 0x0) {
+                        $step = 7
+                        parse([ 0x0 ], 0, 1)
+                        continue
+                    }
+                    $start++
+
+                    $step = 10
+                    continue
+                case 7:
+
+                    $_ = 0
+                    $step = 8
+                    $bite = 1
+
+                case 8:
 
                     while ($bite != -1) {
                         if ($start == $end) {
@@ -61,16 +96,22 @@ module.exports = function (parsers) {
                         $bite--
                     }
 
-                    object.array[$i[0]] = $_
+                    object.array[$i[0]][$i[1]] = $_
 
 
-                case 6:
+                case 9:
+
+                    $i[1]++
+                    $step = 5
+                    continue
+
+                case 10:
 
                     $i[0]++
                     $step = 2
                     continue
 
-                case 7:
+                case 11:
 
                     return { start: $start, object: object, parse: null }
                 }

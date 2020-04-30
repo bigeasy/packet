@@ -4,13 +4,11 @@ const snuggle = require('./snuggle')
 const join = require('./join')
 
 function generate (packet) {
-    const lets = { '$_ = 0': true }
+    const variables = {
+        register: true
+    }
 
     let $i = -1
-
-    function structure (path, field) {
-        return join(field.fields.map(dispatch.bind(null, path)))
-    }
 
     // TODO Fold constants, you're doing `$_ += 1; $_ += 2` which won't fold.
     function dispatch (path, field) {
@@ -19,11 +17,11 @@ function generate (packet) {
                 const block = []
                 for (let i = 0, I = field.serialize.conditions.length; i < I; i++) {
                     const condition = field.serialize.conditions[i]
-                    const source = join(condition.fields.map(dispatch.bind(null, path + field.dotted)))
+                    const source = join(condition.fields.map(dispatch.bind(null, path)))
                     const keyword = typeof condition.source == 'boolean' ? 'else'
                                                                        : i == 0 ? 'if' : 'else if'
                     const ifed = $(`
-                        ${keyword} ((${condition.source})(${path + field.dotted}, ${packet.name})) {
+                        ${keyword} ((${condition.source})(${path}, ${packet.name})) {
                             `, source, `
                         }
                     `)
@@ -41,15 +39,15 @@ function generate (packet) {
         case 'lengthEncoded':
             if (field.element.fixed) {
                 return $(`
-                    $_ += ${field.element.bits / 8} * ${path + field.dotted}.length
+                    $_ += ${field.element.bits / 8} * ${path}.length
                 `)
             } else {
-                lets['$i = []'] = true
+                variables.i = true
                 $i++
                 const i = `$i[${$i}]`
                 const source = $(`
-                    for (${i} = 0; ${i} < ${path + field.dotted}.length; ${i}++) {
-                        `, structure(path + `${field.dotted}[${i}]`, field.element), `
+                    for (${i} = 0; ${i} < ${path}.length; ${i}++) {
+                        `, dispatch(path + `[${i}]`, field.element), `
                     }
                 `)
                 $i--
@@ -59,20 +57,41 @@ function generate (packet) {
                 if (field.fields.filter(field => !field.fixed).length == 0) {
                     const bits = field.fields.reduce((sum, field) => sum + field.bits, 0)
                     return $(`
-                        $_ += ${bits / 8} * ${path + field.dotted}.length + ${field.terminator.length}
+                        $_ += ${bits / 8} * ${path}.length + ${field.terminator.length}
                     `)
-                } else {
                 }
+                variables.i = true
+                $i++
+                const i = `$i[${$i}]`
+                const source = $(`
+                    for (${i} = 0; ${i} < ${path}.length; ${i}++) {
+                        `, join(field.fields.map(field => dispatch(path + `[${i}]`, field))), `
+                    }
+                    $_ += ${field.terminator.length}
+                `)
+                $i--
+                return source
+            }
+            break
+        case 'structure': {
+                return join(field.fields.map(field => dispatch(path + field.dotted, field)))
             }
             break
         }
     }
 
-    const source = structure(packet.name, packet)
+    const source = dispatch(packet.name, packet)
+    const declarations = {
+        register: '$_ = 0',
+        i: '$i = []'
+    }
+    const lets = Object.keys(declarations)
+                            .filter(key => variables[key])
+                            .map(key => declarations[key])
 
     return  $(`
         sizeOf.${packet.name} = function (${packet.name}) {
-            let ${Object.keys(lets).join(', ')}
+            let ${lets.join(', ')}
 
             `, source, `
 
