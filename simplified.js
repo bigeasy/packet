@@ -285,23 +285,6 @@ function map (definitions, packet, depth, extra = {}) {
                         throw new Error
                     }
                 }
-            } else if (Object.keys(packet).length == 2 && packet.$parse && packet.$serialize) {
-                const parse = []
-                for (const segment of packet.$parse) {
-                    const bits = segment[0]
-                    const value = segment[1].toString()
-                    const done = segment[2].toString()
-                    parse.push({ bits, value, done })
-                }
-                const serialize = []
-                for (const segment of packet.$serialize) {
-                    const bits = segment[0]
-                    const value = segment[1].toString()
-                    const advance = segment[2].toString()
-                    const done = segment[3].toString()
-                    serialize.push({ bits, value, advance, done })
-                }
-                return [ { type: 'compressed', parse, serialize } ]
             } else if (depth == 0) {
                 // TODO It's not depth == 0, more like start of structure.
                 const fields = []
