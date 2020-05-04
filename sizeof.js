@@ -74,6 +74,9 @@ function generate (packet) {
             }
             break
         case 'structure': {
+                if (field.fixed) {
+                    return `$_ = ${field.bits / 8}`
+                }
                 return join(field.fields.map(field => dispatch(path + field.dotted, field)))
             }
             break
