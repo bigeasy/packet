@@ -26,11 +26,16 @@ diary entry as I do.
 
 - [x] Length-encoded arrays containing length-encoded arrays.
 - [x] Conditionals.
-- [ ] Packed integers.
-- [ ] Two's compliment.
+- [ ] Conditional packing.
+- [ ] Nested conditionals.
+- [x] Packed integers.
+- [x] Two's compliment.
 - [ ] Checkums.
-- [ ] Terminated arrays.
+- [x] Terminated arrays.
 - [ ] Fixed arrays.
+- [ ] Terminated fixed arrays.
+- [ ] BigInt.
+- [ ] Floating point.
 
 That was the general order of things and would allow me to run through and
 delete the rest of the legacy which I'm still keeping around because there may
@@ -303,8 +308,22 @@ define({
     double: 0.8,
     // Literals.
     literal: [ 'fc' ],
-    // Skip 30, fill with ASCII spaces?
-    skip: [ '20', 30 ]
+    // Skip 30, fill with ASCII spaces? No different from literal.
+    skip: [ '20', 30 ],
+    // Otherwise. Strings incidate a padding.
+    literal: [ 'fc', [ 16 ] ],
+    skip: [ '20', 30, [ 16 ], '20', 3 ],
+    // Would want to import encoding and decoding functions.
+    fixup: [ value => encode(value), [
+        [ [ 8 ], 0x0 ]
+    ], value => decode(value) ],
+    skipAndFixup: [
+        '00', 16, [
+            [ value => encode(value), [
+                [ [ 8 ], 0x0 ]
+            ], value => decode(value) ]
+        ]
+i   ]
 })
 ```
 

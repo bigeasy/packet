@@ -140,7 +140,14 @@ function map (definitions, packet, depth, extra = {}) {
         }
         break
     case 'object': {
+            // Please resist the urge to refactor based on, oh look, I'm
+            // performing this test twice. A single if/else ladder will be
+            // easier to return to for maintainence and expansion.
+            // Outer array.
             if (Array.isArray(packet)) {
+                // Seems that we could still have an object for integer with
+                // padding before and after, we could make literals wrappers.
+                // [ 'ac', 16 ] or [ 'ac', [ 'utf8' ] ]
                 if (packet.filter(item => typeof item == 'string').length != 0) {
                     const fields = []
                     for (const part of packet) {
@@ -157,6 +164,7 @@ function map (definitions, packet, depth, extra = {}) {
                         }
                     }
                     return fields
+                // Terminated arrays.
                 } else if (typeof packet[packet.length - 1] == 'number') {
                     const fields = []
                     const terminator = []
@@ -170,6 +178,35 @@ function map (definitions, packet, depth, extra = {}) {
                         fixed: false,
                         terminator: terminator,
                         fields: map(definitions, packet[0][0], depth, {})
+                    }]
+                // Fixed length arrays.
+                } else if (
+                    Array.isArray(packet[packet.length - 2]) &&
+                    Array.isArray(packet[packet.length - 1]) &&
+                    typeof packet[packet.length - 2][0] == 'number'
+                ) {
+                    const pad = []
+                    while (typeof packet[0] == 'number')  {
+                        pad.push(packet.shift())
+                    }
+                    if (pad.length == 0) {
+                        pad.push(0x0)
+                    }
+                    const fields = [].concat.apply([], packet[1].map(field => map(definitions, field, false, {})))
+                    const fixed = fields.filter(field => ! field.fixed).length == 0
+                    const bits = fixed
+                               ? fields.reduce((bits, field) => bits + field.bits, 0)
+                               : 0
+                    return [{
+                        type: 'array',
+                        length: packet[0],
+                        ...extra,
+                        pad,
+                        fixed,
+                        align: 'left',
+                        length: packet[0][0],
+                        bits: bits * packet[0][0],
+                        fields
                     }]
                 } else if (packet.length == 2) {
                     if (typeof packet[0] == 'number') {
@@ -244,6 +281,8 @@ function map (definitions, packet, depth, extra = {}) {
                             serialize, parse, ...extra
                         })
                         return fields
+                    } else {
+                        throw new Error
                     }
                 }
             } else if (Object.keys(packet).length == 2 && packet.$parse && packet.$serialize) {
@@ -316,7 +355,7 @@ module.exports = function (packets) {
             if (packet.type == 'lengthEncoded') {
                 definition.lengthEncoded = true
             }
-            if (packet.type == 'terminated') {
+            if (packet.type == 'terminated' || packet.type == 'array') {
                 definition.arrayed = true
             }
         })
