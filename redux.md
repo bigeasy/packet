@@ -311,14 +311,14 @@ define({
     // Skip 30, fill with ASCII spaces? No different from literal.
     skip: [ '20', 30 ],
     // Otherwise. Strings incidate a padding.
-    literal: [ 'fc', [ 16 ] ],
-    skip: [ '20', 30, [ 16 ], '20', 3 ],
+    literal: [ 'fc', 16 ],
+    skip: [[ '20', 30 ], 16, [ '20', 3 ]],
     // Would want to import encoding and decoding functions.
     fixup: [ value => encode(value), [
         [ [ 8 ], 0x0 ]
     ], value => decode(value) ],
     skipAndFixup: [
-        '00', 16, [
+        [ '00', 16 ], [
             [ value => encode(value), [
                 [ [ 8 ], 0x0 ]
             ], value => decode(value) ]
