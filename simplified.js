@@ -208,82 +208,86 @@ function map (definitions, packet, depth, extra = {}) {
                         bits: bits * packet[0][0],
                         fields
                     }]
-                } else if (packet.length == 2) {
-                    if (typeof packet[0] == 'number') {
-                        const fields = []
-                        assert(Array.isArray(packet[1]))
-                        const length = integer(packet[0], false, {})
+                // Length-encoded arrays.
+                } else if (
+                    packet.length == 2 &&
+                    typeof packet[0] == 'number'
+                ) {
+                    const fields = []
+                    assert(Array.isArray(packet[1]))
+                    const length = integer(packet[0], false, {})
+                    fields.push({
+                        ...length,
+                        type: 'lengthEncoding',
+                        ...extra
+                    })
+                    if (typeof packet[1][0] == 'number') {
+                        const element = integer(packet[1][0], false, {})
                         fields.push({
-                            ...length,
-                            type: 'lengthEncoding',
-                            ...extra
+                            ...extra,
+                            type: 'lengthEncoded',
+                            fixed: false,
+                            bits: 0,
+                            element: element
                         })
-                        if (typeof packet[1][0] == 'number') {
-                            const element = integer(packet[1][0], false, {})
-                            fields.push({
-                                ...extra,
-                                type: 'lengthEncoded',
-                                fixed: false,
-                                bits: 0,
-                                element: element
-                            })
-                        } else {
-                            const struct = map(definitions, packet[1][0], false, {}).shift()
-                            fields.push({
-                                ...extra,
-                                type: 'lengthEncoded',
-                                bits: 0,
-                                fixed: false,
-                                // TODO Length encode a structure.
-                                element: struct
-                            })
-                        }
-                        return fields
-                    } else if (
-                        Array.isArray(packet[0]) &&
-                        Array.isArray(packet[1]) &&
-                        Array.isArray(packet[0][0]) &&
-                        typeof packet[0][0][0] == 'function'
-                    ) {
-                        const fields = []
-                        const serialize = function () {
-                            const conditions = []
-                            for (const serialize of packet[0]) {
-                                const [ test, packet ] = serialize
-                                conditions.push({
-                                    source: test.toString(),
-                                    airty: test.length,
-                                    fields: map(definitions, packet, false, {})
-                                })
-                            }
-                            return { conditions }
-                        } ()
-                        const parse = function () {
-                            const [ ...parse ] = packet[1]
-                            const sip = map(definitions, parse.shift(), false, {})
-                            const conditions = []
-                            for (const serialize of parse) {
-                                const [ test, packet ] = serialize
-                                conditions.push({
-                                    source: test.toString(),
-                                    airty: 1,
-                                    fields: map(definitions, packet, false, {})
-                                })
-                            }
-                            return { sip, conditions }
-                        } ()
-                        // TODO Is fixed if all the alternations are the same
-                        // length.
+                    } else {
+                        const struct = map(definitions, packet[1][0], false, {}).shift()
                         fields.push({
-                            type: 'conditional',
+                            ...extra,
+                            type: 'lengthEncoded',
                             bits: 0,
                             fixed: false,
-                            serialize, parse, ...extra
+                            // TODO Length encode a structure.
+                            element: struct
                         })
-                        return fields
-                    } else {
-                        throw new Error
                     }
+                    return fields
+                // Conditionals.
+                } else if (
+                    packet.length == 2 &&
+                    Array.isArray(packet[0]) &&
+                    Array.isArray(packet[1]) &&
+                    Array.isArray(packet[0][0]) &&
+                    typeof packet[0][0][0] == 'function'
+                ) {
+                    const fields = []
+                    const serialize = function () {
+                        const conditions = []
+                        for (const serialize of packet[0]) {
+                            const [ test, packet ] = serialize
+                            conditions.push({
+                                source: test.toString(),
+                                airty: test.length,
+                                fields: map(definitions, packet, false, {})
+                            })
+                        }
+                        return { conditions }
+                    } ()
+                    const parse = function () {
+                        const [ ...parse ] = packet[1]
+                        const sip = map(definitions, parse.shift(), false, {})
+                        const conditions = []
+                        for (const serialize of parse) {
+                            const [ test, packet ] = serialize
+                            conditions.push({
+                                source: test.toString(),
+                                airty: 1,
+                                fields: map(definitions, packet, false, {})
+                            })
+                        }
+                        return { sip, conditions }
+                    } ()
+                    // TODO Is fixed if all the alternations are the same
+                    // length.
+                    fields.push({
+                        type: 'conditional',
+                        bits: 0,
+                        fixed: false,
+                        serialize, parse, ...extra
+                    })
+                    return fields
+                } else {
+                    throw new Error
                 }
             } else if (depth == 0) {
                 // TODO It's not depth == 0, more like start of structure.
