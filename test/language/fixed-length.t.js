@@ -19,6 +19,7 @@ require('proof')(1, okay => {
             bits: 64,
             fields: [{
                 type: 'integer',
+                dotted: '',
                 fixed: true,
                 bits: 16,
                 endianness: 'big',

@@ -7,22 +7,27 @@ require('proof')(1, okay => {
         type: 'structure',
         fields: [{
             type: 'literal',
+            name: '',
+            dotted: '',
             fixed: true,
-            bits: 24,
-            value: '0faded'
-        }, {
-            name: 'value',
-            dotted: '.value',
-            type: 'integer',
-            fixed: true,
-            bits: 16,
-            endianness: 'big',
-            compliment: false
-        }, {
-            type: 'literal',
-            fixed: true,
-            bits: 24,
-            value: 'facade'
+            before: {
+                value: '0faded',
+                repeat: 1
+            },
+            field: {
+                name: 'value',
+                dotted: '.value',
+                type: 'integer',
+                fixed: true,
+                bits: 16,
+                endianness: 'big',
+                compliment: false
+            },
+            after: {
+                value: 'facade',
+                repeat: 1
+            },
+            bits: 64
         }]
     }], 'literal')
 })

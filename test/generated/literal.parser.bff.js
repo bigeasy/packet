@@ -2,7 +2,6 @@ module.exports = function (parsers) {
     parsers.bff.object = function () {
         return function parse ($buffer, $start, $end) {
             const object = {
-                padded: 0
             }
 
             if ($end - $start < 8) {

@@ -31,7 +31,7 @@ module.exports = function (serializers) {
                         $bite--
                     }
 
-                    $step = 7
+                    $step = 9
                     continue
 
                 case 3:
@@ -66,9 +66,25 @@ module.exports = function (serializers) {
                         $bite--
                     }
 
-                    $step = 7
 
                 case 7:
+
+                    $step = 8
+                    $bite = 0
+                    $_ = []
+
+                case 8:
+
+                    while ($bite != 0) {
+                        if ($start == $end) {
+                            return { start: $start, serialize }
+                        }
+                        $buffer[$start++] = $_[$bite++]
+                    }
+
+                    $step = 9
+
+                case 9:
 
                     break
 

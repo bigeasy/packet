@@ -17,6 +17,7 @@ require('proof')(2, okay => {
             terminator: [ 0, 0 ],
             fields: [{
                 type: 'integer',
+                dotted: '',
                 fixed: true,
                 bits: 16,
                 endianness: 'big',
@@ -46,6 +47,7 @@ require('proof')(2, okay => {
                 terminator: [ 0, 0 ],
                 fields: [{
                     type: 'integer',
+                    dotted: '',
                     fixed: true,
                     bits: 16,
                     endianness: 'big',

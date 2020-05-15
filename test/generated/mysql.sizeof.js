@@ -5,9 +5,7 @@ module.exports = function (sizeOf) {
         if ((value => value < 251)(object.value, object)) {
             $_ += 1
         } else if ((value => value >= 251)(object.value, object)) {
-            $_ += 1
-
-            $_ += 2
+            $_ += 3
         }
 
         return $_

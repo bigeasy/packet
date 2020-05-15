@@ -57,22 +57,34 @@ function generate (packet) {
         `)
     }
 
-    function literal (packet) {
+    function literal (path, field) {
+        function write (literal) {
+            if (literal.repeat == 0) {
+                return null
+            }
+            return $(`
+                case ${$step++}:
+
+                    $_ = ${literal.value.length / 2}
+                    $step = ${$step}
+
+                case ${$step++}:
+
+                    $bite = Math.min($end - $start, $_)
+                    $_ -= $bite
+                    $start += $bite
+
+                    if ($_ != 0) {
+                        return { start: $start, object: null, parse }
+                    }
+            `)
+        }
         return $(`
-            case ${$step++}:
+            `, write(field.before, 1), `
 
-                $_ = ${packet.value.length / 2}
-                $step = ${$step}
+            `, dispatch(path + field.field.dotted, field.field), `
 
-            case ${$step++}:
-
-                $bite = Math.min($end - $start, $_)
-                $_ -= $bite
-                $start += $bite
-
-                if ($_ != 0) {
-                    return { start: $start, object: null, parse }
-                }
+            `, write(field.after, -1), `
         `)
     }
 
@@ -265,7 +277,7 @@ function generate (packet) {
                     ${path} = (${packet.source})($sip[0])
             `)
         case 'literal':
-            return literal(packet)
+            return literal(path, packet)
         }
     }
 

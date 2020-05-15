@@ -1,34 +1,45 @@
 const assert = require('assert')
 const coalesce = require('extant')
 
+// TODO It always needs to be an array of fields because we need to be able to
+// insert checkpoints, even for ostensible fixed fields like literal.
+
+// TODO Note that if a child of a literal starts with fixed, this is only the
+// length encoding, it can be merged into the checkpoint before the literal.
+// This can be done by adding and `arrayed` property to everything that loops
+// and merging any initial fields are are unarrayed.
+
 function integer (value, packed, extra = {}) {
     if (!packed && Math.abs(value % 8) == 1) {
         if (value < 0) {
             return {
-                ...extra,
                 type: 'integer',
+                dotted: '',
                 fixed: true,
                 bits: ~value,
                 endianness: 'little',
-                compliment: false
+                compliment: false,
+                ...extra
             }
         }
         return {
-            ...extra,
             type: 'integer',
+            dotted: '',
             fixed: true,
             bits: ~-value,
             endianness: 'little',
-            compliment: true
+            compliment: true,
+            ...extra
         }
     }
     return {
-        ...extra,
         type: 'integer',
+        dotted: '',
         fixed: true,
         bits: Math.abs(value),
         endianness: 'big',
-        compliment: value < 0
+        compliment: value < 0,
+        ...extra
     }
 }
 
@@ -149,21 +160,33 @@ function map (definitions, packet, depth, extra = {}) {
                 // padding before and after, we could make literals wrappers.
                 // [ 'ac', 16 ] or [ 'ac', [ 'utf8' ] ]
                 if (packet.filter(item => typeof item == 'string').length != 0) {
-                    const fields = []
-                    for (const part of packet) {
-                        if (typeof part == 'string') {
-                            assert(part.length % 2 == 0)
-                            fields.push({
-                                type: 'literal',
-                                fixed: true,
-                                bits: part.length * 4,
-                                value: part
-                            })
-                        } else {
-                            fields.push.apply(fields, map(definitions, part, depth, extra))
-                        }
+                    const before = { repeat: 0, value: '' }, after = { repeat: 0, value: '' }
+                    packet = packet.slice(0)
+                    if (typeof packet[0] == 'string') {
+                        before.repeat = 1
+                        before.value = packet.shift()
                     }
-                    return fields
+                    if (typeof packet[packet.length - 1] == 'string') {
+                        after.repeat = 1
+                        after.value = packet.pop()
+                    }
+                    // TODO Use `field` as a common child then do bits
+                    // recursively. Aren't we going by fixed anyway?
+                    const field = map(definitions, packet[0], depth, extra).shift()
+                    const bits = field.fixed
+                               ? field.bits + before.repeat * before.value.length * 4
+                                            + after.repeat * after.value.length * 4
+                               : 0
+                    return [{
+                        type: 'literal',
+                        name: '',
+                        dotted: '',
+                        fixed: field.fixed,
+                        bits: bits,
+                        before: before,
+                        field: field,
+                        after: after
+                    }]
                 // Terminated arrays.
                 } else if (typeof packet[packet.length - 1] == 'number') {
                     const fields = []

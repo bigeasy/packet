@@ -36,27 +36,36 @@ function generate (packet) {
         return source
     }
 
-    function literal (packet) {
-        const bytes = []
-        for (let i = 0, I = packet.value.length; i < I; i += 2) {
-            bytes.push(parseInt(packet.value.substring(i, i + 2), 16))
+    function literal (path, field) {
+        function write (literal) {
+            const bytes = []
+            for (let i = 0, I = literal.value.length; i < I; i += 2) {
+                bytes.push(parseInt(literal.value.substring(i, i + 2), 16))
+            }
+            return $(`
+                case ${$step++}:
+
+                    $step = ${$step}
+                    $bite = 0
+                    $_ = ${JSON.stringify(bytes)}
+
+                case ${$step++}:
+
+                    while ($bite != ${literal.value.length / 2}) {
+                        if ($start == $end) {
+                            return { start: $start, serialize }
+                        }
+                        $buffer[$start++] = $_[$bite++]
+                    }
+
+            `)
         }
         return $(`
-            case ${$step++}:
+            `, write(field.before), 1, `
 
-                $step = ${$step}
-                $bite = 0
-                $_ = ${JSON.stringify(bytes)}
+            `, dispatch(path + field.field.dotted, field.field), `
 
-            case ${$step++}:
-
-                while ($bite != ${packet.value.length / 2}) {
-                    if ($start == $end) {
-                        return { start: $start, serialize }
-                    }
-                    $buffer[$start++] = $_[$bite++]
-                }
-
+            `, write(field.after), -1, `
         `)
         // TODO Remove that line?
     }
@@ -188,7 +197,7 @@ function generate (packet) {
         case 'lengthEncoded':
             return lengthEncoded(path, packet)
         case 'literal':
-            return literal(packet)
+            return literal(path, packet)
         case 'integer':
             // TODO This will not include the final step, we keep it off for the
             // looping constructs.

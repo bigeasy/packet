@@ -22,6 +22,7 @@ require('proof')(1, okay => {
             bits: 0,
             element: {
                 type: 'integer',
+                dotted: '',
                 bits: 16,
                 fixed: true,
                 endianness: 'big',

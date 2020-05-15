@@ -8,6 +8,11 @@ function bff (path, fields, index = 0, rewind = 0) {
     const checked = [ checkpoint = { type: 'checkpoint', lengths: [ 0 ], rewind } ]
     for (const field of fields) {
         switch (field.type) {
+        case 'literal':
+            if (field.fixed) {
+                checkpoint.lengths[0] += field.bits / 8
+            }
+            break
         case 'terminated':
             if (field.fields.filter(field => ! field.fixed).length == 0) {
                 checkpoint.lengths[0] += field.terminator.length
@@ -79,6 +84,35 @@ function generate (packet, bff) {
         } else {
             return word(path, field)
         }
+    }
+
+    function literal (path, field) {
+        function write (literal) {
+            switch (literal.repeat) {
+            case 0:
+                return null
+            case 1:
+                return $(`
+                    $buffer.write(${JSON.stringify(literal.value)}, $start, $start + ${literal.value.length / 2}, 'hex')
+                    $start += ${literal.value.length / 2}
+                `)
+            default:
+                const i = `$i${$i + 1}]`, I = `$I${$i + 1}]`
+                return $(`
+                    for (${i} = 0; ${i} < ${literal.repeat}; i++) {
+                        $buffer.write(${JSON.stringify(literal.value)}, $start, $start + ${literal.value.length / 2}, 'hex')
+                        $start += ${literal.value.length / 2}
+                    }
+                `)
+            }
+        }
+        return $(`
+            `, write(field.before), 1, `
+
+            `, dispatch(path + field.field.dotted, field.field), `
+
+            `, write(field.after), -1, `
+        `)
     }
 
     function lengthEncoded (path, field) {
@@ -173,10 +207,7 @@ function generate (packet, bff) {
         case 'integer':
             return integer(path, field)
         case 'literal':
-            return $(`
-                $buffer.write(${JSON.stringify(field.value)}, $start, $start + ${field.value.length / 2}, 'hex')
-                $start += ${field.value.length / 2}
-            `)
+            return literal(path, field)
         default:
             throw new Error
         }

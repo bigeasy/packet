@@ -109,6 +109,24 @@ function map (packet, bff) {
         return parse
     }
 
+    function literal (path, field) {
+        function write (literal) {
+            if (literal.repeat == 0) {
+                return null
+            }
+            return $(`
+                $start += ${literal.value.length / 2 * literal.repeat}
+            `)
+        }
+        return $(`
+            `, write(field.before), 1, `
+
+            `, dispatch(path + field.field.dotted, field.field), `
+
+            `, write(field.after), -1, `
+        `)
+    }
+
     function lengthEncoded (path, field) {
         variables.i = true
         variables.I = true
@@ -259,9 +277,7 @@ function map (packet, bff) {
             $step++
             return `${path} = (${field.source})($sip[${$sip}])`
         case 'literal':
-            return $(`
-                $start += ${field.value.length / 2}
-            `)
+            return literal(path, field)
         default:
             return integer(path, field)
         }

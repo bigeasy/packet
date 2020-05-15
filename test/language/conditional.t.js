@@ -31,6 +31,7 @@ require('proof')(1, okay => {
                     airty: 1,
                     fields: [{
                         type: 'integer',
+                        dotted: '',
                         fixed: true,
                         bits: 8,
                         endianness: 'big',
@@ -41,21 +42,27 @@ require('proof')(1, okay => {
                     airty: 1,
                     fields: [{
                         type: 'literal',
+                        name: '',
+                        dotted: '',
                         fixed: true,
-                        bits: 8,
-                        value: 'fc'
-                    }, {
-                        type: 'integer',
-                        fixed: true,
-                        bits: 16,
-                        endianness: 'big',
-                        compliment: false
+                        bits: 24,
+                        before: { repeat: 1, value: 'fc' },
+                        after: { repeat: 0, value: '' },
+                        field: {
+                            type: 'integer',
+                            dotted: '',
+                            fixed: true,
+                            bits: 16,
+                            endianness: 'big',
+                            compliment: false
+                        }
                     }]
                 }]
             },
             parse: {
                 sip: [{
                     type: 'integer',
+                    dotted: '',
                     fixed: true,
                     bits: 8,
                     endianness: 'big',
@@ -74,6 +81,7 @@ require('proof')(1, okay => {
                     airty: 1,
                     fields: [{
                         type: 'integer',
+                        dotted: '',
                         fixed: true,
                         bits: 16,
                         endianness: 'big',
