@@ -1,4 +1,5 @@
 const join = require('./join')
+const map = require('./map')
 const snuggle = require('./snuggle')
 const unpack = require('./unpack')
 const unsign = require('./fiddle/unsign')
@@ -6,7 +7,7 @@ const $ = require('programmatic')
 const vivify = require('./vivify')
 const ARRAYED = [ 'lengthEncoding', 'terminated' ]
 
-function map (packet, bff) {
+function generate (packet, bff) {
     let $i = -1, $sip = -1, $step = 1
 
     const variables = { packet: true, step: true }
@@ -121,7 +122,7 @@ function map (packet, bff) {
         return $(`
             `, write(field.before), 1, `
 
-            `, dispatch(path + field.field.dotted, field.field), `
+            `, map(dispatch, path, field.fields), `
 
             `, write(field.after), -1, `
         `)
@@ -323,5 +324,5 @@ function map (packet, bff) {
 }
 
 module.exports = function (compiler, definition, options = {}) {
-    return compiler(join(JSON.parse(JSON.stringify(definition)).map(packet => map(packet, options.bff))))
+    return compiler(join(JSON.parse(JSON.stringify(definition)).map(packet => generate(packet, options.bff))))
 }

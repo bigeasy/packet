@@ -1,5 +1,6 @@
 const $ = require('programmatic')
 const join = require('./join')
+const map = require('./map')
 const snuggle = require('./snuggle')
 const pack = require('./pack')
 
@@ -63,7 +64,7 @@ function generate (packet) {
         return $(`
             `, write(field.before), 1, `
 
-            `, dispatch(path + field.field.dotted, field.field), `
+            `, map(dispatch, path, field.fields), `
 
             `, write(field.after), -1, `
         `)

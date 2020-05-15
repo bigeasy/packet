@@ -172,19 +172,19 @@ function map (definitions, packet, depth, extra = {}) {
                     }
                     // TODO Use `field` as a common child then do bits
                     // recursively. Aren't we going by fixed anyway?
-                    const field = map(definitions, packet[0], depth, extra).shift()
-                    const bits = field.fixed
-                               ? field.bits + before.repeat * before.value.length * 4
-                                            + after.repeat * after.value.length * 4
+                    const fields = map(definitions, packet[0], depth, extra)
+                    const bits = fields[0].fixed
+                               ? fields[0].bits + before.repeat * before.value.length * 4
+                                                + after.repeat * after.value.length * 4
                                : 0
                     return [{
                         type: 'literal',
                         name: '',
                         dotted: '',
-                        fixed: field.fixed,
+                        fixed: fields[0].fixed,
                         bits: bits,
                         before: before,
-                        field: field,
+                        fields: fields,
                         after: after
                     }]
                 // Terminated arrays.

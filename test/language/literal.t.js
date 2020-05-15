@@ -14,7 +14,7 @@ require('proof')(1, okay => {
                 value: '0faded',
                 repeat: 1
             },
-            field: {
+            fields: [{
                 name: 'value',
                 dotted: '.value',
                 type: 'integer',
@@ -22,7 +22,7 @@ require('proof')(1, okay => {
                 bits: 16,
                 endianness: 'big',
                 compliment: false
-            },
+            }],
             after: {
                 value: 'facade',
                 repeat: 1

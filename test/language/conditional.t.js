@@ -48,14 +48,14 @@ require('proof')(1, okay => {
                         bits: 24,
                         before: { repeat: 1, value: 'fc' },
                         after: { repeat: 0, value: '' },
-                        field: {
+                        fields: [{
                             type: 'integer',
                             dotted: '',
                             fixed: true,
                             bits: 16,
                             endianness: 'big',
                             compliment: false
-                        }
+                        }]
                     }]
                 }]
             },
