@@ -6,6 +6,6 @@ function prove (okay) {
         define: {
             object: { array: [ 16, [{ first: [ 16, [ 16 ] ] }] ] }
         },
-        objects: [{ array: [{ first:  [ 0x1234, 0x4567 ] }] }]
+        objects: [{ array: [{ first:  [ 0x1234, 0x4567 ] }, { first: [ 1, 2 ] }] }]
     })
 }

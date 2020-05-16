@@ -77,7 +77,7 @@ function generate (packet) {
         const i = `$i[${$i}]`
         const again = $step
         const source = $(`
-            `, dispatch(`${path}[${i}]`, packet.element), `
+            `, map(dispatch, `${path}[${i}]`, packet.fields), `
 
                 if (++${i} != ${path}.length) {
                     $step = ${again}

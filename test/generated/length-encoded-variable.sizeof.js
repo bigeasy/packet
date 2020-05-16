@@ -7,7 +7,9 @@ module.exports = function (sizeOf) {
         for ($i[0] = 0; $i[0] < object.array.length; $i[0]++) {
             $_ += 2
 
-            $_ += 2 * object.array[$i[0]].first.length
+            for ($i[1] = 0; $i[1] < object.array[$i[0]].first.length; $i[1]++) {
+                $_ += 2
+            }
         }
 
         return $_

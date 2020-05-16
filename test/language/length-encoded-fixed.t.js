@@ -5,6 +5,7 @@ require('proof')(1, okay => {
         fixed: false,
         bits: 16,
         type: 'structure',
+        dotted: '',
         lengthEncoded: true,
         fields: [{
             name: 'value',
@@ -20,8 +21,9 @@ require('proof')(1, okay => {
             type: 'lengthEncoded',
             fixed: false,
             bits: 0,
-            element: {
+            fields: [{
                 type: 'structure',
+                dotted: '',
                 bits: 32,
                 fixed: true,
                 fields: [{
@@ -41,7 +43,7 @@ require('proof')(1, okay => {
                     endianness: 'big',
                     compliment: false
                 }]
-            }
+            }]
         }]
     }], 'length-encoded-fixed')
 })

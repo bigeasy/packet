@@ -7,6 +7,7 @@ require('proof')(2, okay => {
         fixed: false,
         bits: 0,
         type: 'structure',
+        dotted: '',
         arrayed: true,
         fields: [{
             name: 'value',
@@ -32,6 +33,7 @@ require('proof')(2, okay => {
         fixed: false,
         bits: 0,
         type: 'structure',
+        dotted: '',
         arrayed: true,
         fields: [{
             name: 'value',

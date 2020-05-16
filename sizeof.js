@@ -37,7 +37,7 @@ function generate (packet) {
                 $_ += ${field.bits / 8}
             `)
         case 'lengthEncoded':
-            if (field.element.fixed) {
+            if (field.fixed) {
                 return $(`
                     $_ += ${field.element.bits / 8} * ${path}.length
                 `)
@@ -47,7 +47,7 @@ function generate (packet) {
                 const i = `$i[${$i}]`
                 const source = $(`
                     for (${i} = 0; ${i} < ${path}.length; ${i}++) {
-                        `, dispatch(path + `[${i}]`, field.element), `
+                        `, join(field.fields.map(field => dispatch(path + `[${i}]`, field))), `
                     }
                 `)
                 $i--
@@ -75,7 +75,7 @@ function generate (packet) {
             break
         case 'structure': {
                 if (field.fixed) {
-                    return `$_ = ${field.bits / 8}`
+                    return `$_ += ${field.bits / 8}`
                 }
                 return join(field.fields.map(field => dispatch(path + field.dotted, field)))
             }

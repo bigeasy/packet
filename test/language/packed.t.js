@@ -14,6 +14,7 @@ require('proof')(1, okay => {
         fixed: true,
         bits: 32,
         type: 'structure',
+        dotted: '',
         fields: [{
             type: 'integer',
             fixed: true,

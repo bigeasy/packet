@@ -5,6 +5,7 @@ require('proof')(1, okay => {
         fixed: false,
         bits: 16,
         type: 'structure',
+        dotted: '',
         lengthEncoded: true,
         fields: [{
             name: 'value',
@@ -20,14 +21,14 @@ require('proof')(1, okay => {
             type: 'lengthEncoded',
             fixed: false,
             bits: 0,
-            element: {
+            fields: [{
                 type: 'integer',
                 dotted: '',
                 bits: 16,
                 fixed: true,
                 endianness: 'big',
                 compliment: false
-            }
+            }]
         }]
     }], 'length-encoded')
 })

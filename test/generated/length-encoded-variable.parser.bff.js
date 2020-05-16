@@ -30,11 +30,11 @@ module.exports = function (parsers) {
                     $buffer[$start++] * 0x100 +
                     $buffer[$start++]
 
-                if ($end - $start < 2 * $I[1]) {
-                    return parsers.inc.object(object, 6, $i, $I)($buffer, $start, $end)
-                }
-
                 for (; $i[1] < $I[1]; $i[1]++) {
+                    if ($end - $start < 2) {
+                        return parsers.inc.object(object, 6, $i, $I)($buffer, $start, $end)
+                    }
+
                     object.array[$i[0]].first[$i[1]] =
                         $buffer[$start++] * 0x100 +
                         $buffer[$start++]

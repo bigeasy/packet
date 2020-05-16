@@ -16,11 +16,11 @@ module.exports = function (parsers) {
                 $buffer[$start++] * 0x100 +
                 $buffer[$start++]
 
-            if ($end - $start < 2 * $I[0]) {
-                return parsers.inc.object(object, 3, $i, $I)($buffer, $start, $end)
-            }
-
             for (; $i[0] < $I[0]; $i[0]++) {
+                if ($end - $start < 2) {
+                    return parsers.inc.object(object, 3, $i, $I)($buffer, $start, $end)
+                }
+
                 object.array[$i[0]] =
                     $buffer[$start++] * 0x100 +
                     $buffer[$start++]

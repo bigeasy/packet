@@ -31,17 +31,17 @@ function bff (path, fields, index = 0, rewind = 0) {
             checkpoint.lengths[0] += field.bits / 8
             break
         case 'lengthEncoded':
-            switch (field.element.type) {
-            case 'structure':
-                if (field.element.fixed) {
-                    checkpoint.lengths.push(`${field.element.bits / 8} * ${path + field.dotted}.length`)
-                } else {
-                    field.element.fields = bff(path + `${field.dotted}[$i[${index}]]`, field.element.fields, index + 1)
-                }
-                break
-            default:
+            if (field.fixed) {
                 checkpoint.lengths.push(`${field.element.bits / 8} * ${path + field.dotted}.length`)
-                break
+            }  else {
+                field.fields = bff(path + `${field.dotted}[$i[${index}]]`, field.fields, index + 1)
+            }
+            break
+        case 'structure':
+            if (field.fixed) {
+                checkpoint.lengths.push(`${field.bits / 8} * ${path + field.dotted}.length`)
+            }  else {
+                field.fields = bff(path + `${field.dotted}[$i[${index}]]`, field.fields, index + 1)
             }
             break
         default:
@@ -50,7 +50,14 @@ function bff (path, fields, index = 0, rewind = 0) {
         }
         checked.push(field)
     }
-    return checked
+    checked.forEach(field => {
+        if (field.type == 'checkpoint' && field.lengths[0] == 0) {
+            field.lengths.shift()
+        }
+    })
+    return checked.filter(field => {
+        return field.type != 'checkpoint' || field.lengths.length != 0
+    })
 }
 
 function generate (packet, bff) {
@@ -123,7 +130,7 @@ function generate (packet, bff) {
         // don't know really understand the contents of the packet, so we ought
         // to create the path with `concat` rather than have the packet
         // generation code create the full path with the packet name.
-        const looped = dispatch(path + `[${i}]`, field.element)
+        const looped = map(dispatch, path + `[${i}]`, field.fields)
         const source = $(`
             for (${i} = 0; ${i} < ${path}.length; ${i}++) {
                 `, looped, `

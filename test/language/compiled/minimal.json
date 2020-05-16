@@ -1,6 +1,7 @@
 [{
   "name": "packet",
   "type": "structure",
+  "dotted": "",
   "fixed": true,
   "bits": 16,
   "fields": [

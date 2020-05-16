@@ -5,6 +5,7 @@ require('proof')(1, okay => {
         fixed: true,
         bits: 64,
         type: 'structure',
+        dotted: '',
         fields: [{
             type: 'literal',
             name: '',

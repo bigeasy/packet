@@ -1,13 +1,6 @@
 module.exports = function (serializers) {
     serializers.bff.object = function (object) {
         return function ($buffer, $start, $end) {
-            if ($end - $start < 0) {
-                return {
-                    start: $start,
-                    serialize: serializers.inc.object(object, 0, [])
-                }
-            }
-
             if ((value => value < 251)(object.value, object)) {
                 if ($end - $start < 1) {
                     return {

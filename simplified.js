@@ -238,30 +238,26 @@ function map (definitions, packet, depth, extra = {}) {
                 ) {
                     const fields = []
                     assert(Array.isArray(packet[1]))
-                    const length = integer(packet[0], false, {})
-                    fields.push({
-                        ...length,
-                        type: 'lengthEncoding',
-                        ...extra
-                    })
+                    fields.push(integer(packet[0], false, {
+                        ...extra,
+                        type: 'lengthEncoding'
+                    }))
                     if (typeof packet[1][0] == 'number') {
-                        const element = integer(packet[1][0], false, {})
                         fields.push({
                             ...extra,
                             type: 'lengthEncoded',
                             fixed: false,
                             bits: 0,
-                            element: element
+                            fields: [ integer(packet[1][0], false, {}) ]
                         })
                     } else {
-                        const struct = map(definitions, packet[1][0], false, {}).shift()
                         fields.push({
                             ...extra,
                             type: 'lengthEncoded',
                             bits: 0,
                             fixed: false,
                             // TODO Length encode a structure.
-                            element: struct
+                            fields: [ map(definitions, packet[1][0], false, {}).shift() ]
                         })
                     }
                     return fields
@@ -324,7 +320,14 @@ function map (definitions, packet, depth, extra = {}) {
                     return fixed && field.fixed
                 }, true)
                 const bits = fields.reduce((sum, field) => sum + field.bits, 0)
-                return [ { ...extra, fixed, bits, type: 'structure', fields } ]
+                return [{
+                    dotted: '',
+                    fixed,
+                    bits,
+                    type: 'structure',
+                    fields,
+                    ...extra
+                }]
             } else {
                 return [ packed(packet, extra) ]
             }

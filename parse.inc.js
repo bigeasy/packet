@@ -98,7 +98,7 @@ function generate (packet) {
         // Invoked here to set `again`.
         const again = $step
         const source = $(`
-            `, dispatch([ `${path}[${i}]` ], packet.element), `
+            `, map(dispatch,`${path}[${i}]`, packet.fields), `
                 if (++${i} != ${I}) {
                     $step = ${again}
                     continue

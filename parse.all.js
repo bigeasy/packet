@@ -8,7 +8,7 @@ const vivify = require('./vivify')
 const ARRAYED = [ 'lengthEncoding', 'terminated' ]
 
 function generate (packet, bff) {
-    let $i = -1, $sip = -1, $step = 1
+    let $i = -1, $sip = -1, $step = 0
 
     const variables = { packet: true, step: true }
 
@@ -34,17 +34,10 @@ function generate (packet, bff) {
                 variables.i = true
                 variables.I = true
                 checked.push(checkpoint = { type: 'checkpoint', lengths: [ 0 ], rewind: 0 })
-                switch (field.element.type) {
-                case 'structure':
-                    if (field.element.fixed) {
-                        checkpoint.lengths.push(`${field.element.bits / 8} * $I[${index}]`)
-                    } else {
-                        field.element.fields = checkpoints(path + `${field.dotted}[$i[${index}]]`, field.element.fields, index + 1)
-                    }
-                    break
-                default:
+                if (field.fixed) {
                     checkpoint.lengths.push(`${field.element.bits / 8} * $I[${index}]`)
-                    break
+                } else {
+                    field.fields = checkpoints(path + `${field.dotted}[$i[${index}]]`, field.fields, index + 1)
                 }
                 break
             case 'terminated':
@@ -53,6 +46,9 @@ function generate (packet, bff) {
                 variables.i = true
                 field.fields = checkpoints(path + `${field.dotted}[$i[${index}]]`, field.fields, index + 1)
                 checked.push(checkpoint = { type: 'checkpoint', lengths: [ 0 ], rewind: 0 })
+                break
+            case 'structure':
+                field.fields = checkpoints(path + field.dotted, field.fields, index)
                 break
             default:
                 checkpoint.lengths[0] += field.bits / 8
@@ -131,10 +127,9 @@ function generate (packet, bff) {
     function lengthEncoded (path, field) {
         variables.i = true
         variables.I = true
-        $step += 1
         const i = `$i[${$i}]`
         const I = `$I[${$i}]`
-        const looped = dispatch(path + `[${i}]`, field.element)
+        const looped = map(dispatch, path + `[${i}]`, field.fields)
         $i--
         return $(`
             for (; ${i} < ${I}; ${i}++) {
@@ -256,6 +251,7 @@ function generate (packet, bff) {
     function dispatch (path, field, root = false) {
         switch (field.type) {
         case 'structure': {
+                $step++
                 return $(`
                     ${root ? `const ${path}` : path} = {
                         `, vivify(field.fields), `
