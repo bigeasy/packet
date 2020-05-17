@@ -4,6 +4,7 @@ const snuggle = require('./snuggle')
 const unpack = require('./unpack')
 const unsign = require('./fiddle/unsign')
 const $ = require('programmatic')
+const corporeal = require('./corporeal')
 const vivify = require('./vivify')
 const ARRAYED = [ 'lengthEncoding', 'terminated' ]
 
@@ -15,7 +16,12 @@ function generate (packet, bff) {
     // TODO You can certianly do something to make this prettier.
     // TODO Start by prepending the path I think?
     function checkpoints (path, fields, index = 0, rewind = 0) {
-        let checkpoint = { type: 'checkpoint', lengths: [ 0 ], rewind }, checked = [ checkpoint ]
+        let checkpoint = {
+            type: 'checkpoint',
+            ethereal: true,
+            lengths: [ 0 ],
+            rewind
+        }, checked = [ checkpoint ]
         for (const field of fields) {
             switch (field.type) {
             case 'function':
@@ -133,6 +139,8 @@ function generate (packet, bff) {
         $i--
         return $(`
             for (; ${i} < ${I}; ${i}++) {
+                `, vivify.array(`${path}[${i}]`, field),`
+
                 `, looped, `
             }
         `)
@@ -154,6 +162,7 @@ function generate (packet, bff) {
         const check = bff ? checkpoint({
             lengths: [ field.terminator.length ], rewind: 0
         }) : null
+        $step += 1
         $step += field.terminator.length
         const looped = join(field.fields.map(field => dispatch(path + `[${i}]`, field)))
         $step += field.terminator.length
@@ -178,7 +187,6 @@ function generate (packet, bff) {
                 return `$buffer[$start + ${index}] == 0x${bite.toString(16)}`
             }
         })
-        const vivify = ~ARRAYED.indexOf(field.fields[0].type) ? `${path}[${i}] = []` : null
         const source = $(`
             ${i} = 0
             for (;;) {
@@ -191,7 +199,7 @@ function generate (packet, bff) {
                     break
                 }
 
-                `, vivify, -1, `
+                `, vivify.array(path + `[${i}]`, field), -1, `
 
                 `, looped, `
                 ${i}++
@@ -252,13 +260,7 @@ function generate (packet, bff) {
         switch (field.type) {
         case 'structure': {
                 $step++
-                return $(`
-                    ${root ? `const ${path}` : path} = {
-                        `, vivify(field.fields), `
-                    }
-
-                    `, join(field.fields.map(field => dispatch(path + field.dotted, field))), `
-                `)
+                return map(dispatch, path, field.fields)
             }
         case 'checkpoint':
             return checkpoint(field)
@@ -300,6 +302,8 @@ function generate (packet, bff) {
                 return function parse ($buffer, $start, $end) {
                     `, lets.length ? `let ${lets.join(', ')}` : null, -1, `
 
+                    `, vivify.structure(`const ${packet.name}`, packet), `
+
                     `, source, `
 
                     return { start: $start, object: object, parse: null }
@@ -311,6 +315,8 @@ function generate (packet, bff) {
     return $(`
         parsers.all.${packet.name} = function ($buffer, $start) {
             `, lets.length ? `let ${lets.join(', ')}` : null, -1, `
+
+            `, vivify.structure(`const ${packet.name}`, packet), `
 
             `, source, `
 

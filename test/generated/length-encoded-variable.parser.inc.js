@@ -9,6 +9,7 @@ module.exports = function (parsers) {
                     object = {
                         array: []
                     }
+
                     $step = 1
 
                 case 1:
@@ -36,7 +37,6 @@ module.exports = function (parsers) {
                     object.array[$i[0]] = {
                         first: []
                     }
-                    $step = 4
 
                 case 4:
 
@@ -60,11 +60,14 @@ module.exports = function (parsers) {
 
                 case 6:
 
-                    $_ = 0
-                    $step = 7
-                    $bite = 1
 
                 case 7:
+
+                    $_ = 0
+                    $step = 8
+                    $bite = 1
+
+                case 8:
 
                     while ($bite != -1) {
                         if ($start == $end) {
@@ -85,7 +88,7 @@ module.exports = function (parsers) {
                         continue
                     }
 
-                case 8:
+                case 9:
 
                     return { start: $start, object: object, parse: null }
                 }

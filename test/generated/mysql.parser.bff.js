@@ -4,7 +4,7 @@ module.exports = function (parsers) {
             let $sip = []
 
             const object = {
-                value: null
+                value: 0
             }
 
             if ($end - $start < 1) {

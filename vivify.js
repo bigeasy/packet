@@ -1,43 +1,74 @@
 const $ = require('programmatic')
 
-function vivify (fields) {
-    const properties = []
-    for (const field of fields) {
-        switch (field.type) {
-        case 'literal':
-        case 'checkpoint':
-        case 'lengthEncoding':
-            break
-        case 'terminated':
-        case 'lengthEncoded':
-            properties.push(field.name + ': []')
-            break
-        case 'integer':
-            if (field.fields) {
-                properties.push($(`
-                    ${field.name}: {
-                        `, vivify(field.fields), `
-                    }
-                `))
-            } else {
-                properties.push(`${field.name}: 0`)
-            }
-            break
-        default:
-            if (field.type == 'structure' || field.fields == null) {
-                properties.push(field.name + ': null')
-            } else {
-                field.fields.forEach(function (field) {
-                    properties.push(field.name + ': null')
-                })
-            }
-            break
+
+
+function property_ (field) {
+    function corporeal (field) {
+        if (field.ethereal && field.fields) {
+            return field.fields.map(field => corporeal(field))
+                               .filter(field => !! field).shift()
         }
+        return field
     }
+    const property = corporeal(field)
+    switch (property.type) {
+    case 'terminated':
+    case 'lengthEncoded':
+        return `${property.name}: []`
+    // TODO Ensure that conditional resolves to same type in all cases or else
+    // assign `null` and vivify later. (Ugh.)
+    case 'conditional':
+    case 'integer':
+        if (property.fields) {
+            return structure(property.name, property, ': ')
+        } else {
+            return `${property.name}: 0`
+        }
+    case 'structure':
+        return structure(property.name, property, ': ')
+    }
+    return null
+}
+
+function structure (path, structure, assignment = ' = ') {
+    const properties = structure.fields.map(property_).filter(field => !! field)
     if (properties.length == 0) {
         return null
     }
-    return properties.join(',\n')
+    return $(`
+        ${path}${assignment}{
+            `, properties.join(',\n'), `
+        }
+    `)
 }
 
-module.exports = vivify
+function array (path, array) {
+    function corporeal (fields) {
+        for (const field of fields) {
+            if (field.ethereal) {
+                if ('fields' in field) {
+                    const found = corporeal(field.fields)
+                    if (found != null) {
+                        return found
+                    }
+                }
+            } else {
+                return field
+            }
+        }
+        return null
+    }
+    const assignation = corporeal(array.fields)
+    switch (assignation.type) {
+    case 'structure':
+        return structure(path, assignation)
+    case 'lengthEncoding':
+    case 'terminated':
+        return `${path} = []`
+    default:
+        return null
+    }
+}
+
+exports.structure = structure
+exports.array = array

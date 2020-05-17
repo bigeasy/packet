@@ -181,6 +181,7 @@ function map (definitions, packet, depth, extra = {}) {
                         type: 'literal',
                         name: '',
                         dotted: '',
+                        ethereal: true,
                         fixed: fields[0].fixed,
                         bits: bits,
                         before: before,
@@ -240,7 +241,8 @@ function map (definitions, packet, depth, extra = {}) {
                     assert(Array.isArray(packet[1]))
                     fields.push(integer(packet[0], false, {
                         ...extra,
-                        type: 'lengthEncoding'
+                        type: 'lengthEncoding',
+                        ethereal: true
                     }))
                     if (typeof packet[1][0] == 'number') {
                         fields.push({

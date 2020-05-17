@@ -8,6 +8,7 @@ require('proof')(1, okay => {
         dotted: '',
         fields: [{
             type: 'literal',
+            ethereal: true,
             name: '',
             dotted: '',
             fixed: true,

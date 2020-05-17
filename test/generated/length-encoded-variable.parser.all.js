@@ -22,6 +22,7 @@ module.exports = function (parsers) {
                 $buffer[$start++]
 
             for (; $i[1] < $I[1]; $i[1]++) {
+
                 object.array[$i[0]].first[$i[1]] =
                     $buffer[$start++] * 0x100 +
                     $buffer[$start++]

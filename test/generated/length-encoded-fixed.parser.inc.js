@@ -9,6 +9,7 @@ module.exports = function (parsers) {
                     object = {
                         array: []
                     }
+
                     $step = 1
 
                 case 1:
@@ -37,7 +38,6 @@ module.exports = function (parsers) {
                         first: 0,
                         second: 0
                     }
-                    $step = 4
 
                 case 4:
 

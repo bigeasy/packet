@@ -1,6 +1,7 @@
 module.exports = function (parsers) {
     parsers.all.object = function ($buffer, $start) {
         const object = {
+            padded: 0
         }
 
         $start += 3

@@ -8,6 +8,7 @@ module.exports = function (parsers) {
                 object = {
                     word: 0
                 }
+
                 $step = 1
 
             case 1:

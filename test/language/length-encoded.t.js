@@ -11,6 +11,7 @@ require('proof')(1, okay => {
             name: 'value',
             dotted: '.value',
             type: 'lengthEncoding',
+            ethereal: true,
             fixed: true,
             bits: 16,
             endianness: 'big',

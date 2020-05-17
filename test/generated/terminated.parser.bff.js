@@ -22,7 +22,7 @@ module.exports = function (parsers) {
                 }
 
                 if ($end - $start < 2) {
-                    return parsers.inc.object(object, 4, $i)($buffer, $start, $end)
+                    return parsers.inc.object(object, 5, $i)($buffer, $start, $end)
                 }
 
                 object.array[$i[0]] =

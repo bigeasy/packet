@@ -43,6 +43,7 @@ require('proof')(1, okay => {
                     airty: 1,
                     fields: [{
                         type: 'literal',
+                        ethereal: true,
                         name: '',
                         dotted: '',
                         fixed: true,

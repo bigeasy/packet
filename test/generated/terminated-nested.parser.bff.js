@@ -26,7 +26,7 @@ module.exports = function (parsers) {
                 $i[1] = 0
                 for (;;) {
                     if ($end - $start < 2) {
-                        return parsers.inc.object(object, 5, $i)($buffer, $start, $end)
+                        return parsers.inc.object(object, 6, $i)($buffer, $start, $end)
                     }
 
                     if (
@@ -38,7 +38,7 @@ module.exports = function (parsers) {
                     }
 
                     if ($end - $start < 2) {
-                        return parsers.inc.object(object, 7, $i)($buffer, $start, $end)
+                        return parsers.inc.object(object, 9, $i)($buffer, $start, $end)
                     }
 
                     object.array[$i[0]][$i[1]] =

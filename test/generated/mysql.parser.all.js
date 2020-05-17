@@ -3,7 +3,7 @@ module.exports = function (parsers) {
         let $sip = []
 
         const object = {
-            value: null
+            value: 0
         }
 
         $sip[0] = $buffer[$start++]

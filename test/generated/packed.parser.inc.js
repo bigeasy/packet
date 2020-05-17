@@ -12,6 +12,7 @@ module.exports = function (parsers) {
                         three: 0
                     }
                 }
+
                 $step = 1
 
             case 1:

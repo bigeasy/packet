@@ -98,6 +98,10 @@ function generate (packet) {
         // Invoked here to set `again`.
         const again = $step
         const source = $(`
+            case ${$step++}:
+
+                `, vivify.array(`${path}[${i}]`, packet), `
+
             `, map(dispatch,`${path}[${i}]`, packet.fields), `
                 if (++${i} != ${I}) {
                     $step = ${again}
@@ -138,6 +142,7 @@ function generate (packet) {
         let sip = ++$step
         const redo = $step
         const begin = $step += field.terminator.length
+        $step++
         const looped = join(field.fields.map(field => dispatch(`${path}[${i}]`, field)))
         const literal = field.terminator.map(bite => `0x${bite.toString(16)}`)
         const terminator = join(field.terminator.map((bite, index) => {
@@ -181,10 +186,13 @@ function generate (packet) {
             case ${init}:
 
                 ${i} = 0
-                `, path[path.length - 1] == ']' ? `${path} = []` : null, `
-                $step = ${init + 1}
 
             `, terminator, `
+
+            case ${begin}:
+
+                `, vivify.array(`${path}[${i}]`, field), `
+
             `, looped, `
 
             case ${$step++}:
@@ -247,20 +255,7 @@ function generate (packet) {
     function dispatch (path, packet, depth, arrayed) {
         switch (packet.type) {
         case 'structure':
-            const push = $(`
-                case ${$step++}:
-
-                    ${path} = {
-                        `, vivify(packet.fields), `
-                    }
-                    $step = ${$step}
-
-            `)
-            const source =  join(packet.fields.map(field => dispatch(path + field.dotted, field)))
-            return $(`
-                `, push, `
-                `, source, `
-            `)
+            return map(dispatch, path, packet.fields)
         case 'conditional':
             return conditional(path, packet)
         case 'terminated':
@@ -284,6 +279,12 @@ function generate (packet) {
 
     let source = $(`
         switch ($step) {
+        case ${$step++}:
+
+            `, vivify.structure(packet.name, packet), `
+
+            $step = ${$step}
+
         `, dispatch(packet.name, packet, 0), `
 
         case ${$step}:

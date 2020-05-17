@@ -31,6 +31,7 @@ module.exports = function (parsers) {
                     $buffer[$start++]
 
                 for (; $i[1] < $I[1]; $i[1]++) {
+
                     if ($end - $start < 2) {
                         return parsers.inc.object(object, 6, $i, $I)($buffer, $start, $end)
                     }
