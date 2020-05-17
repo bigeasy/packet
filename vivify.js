@@ -62,7 +62,7 @@ function array (path, array) {
     switch (assignation.type) {
     case 'structure':
         return structure(path, assignation)
-    case 'lengthEncoding':
+    case 'lengthEncoded':
     case 'terminated':
         return `${path} = []`
     default:

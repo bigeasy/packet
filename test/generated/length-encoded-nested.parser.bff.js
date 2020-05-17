@@ -17,9 +17,7 @@ module.exports = function (parsers) {
                 $buffer[$start++]
 
             for (; $i[0] < $I[0]; $i[0]++) {
-                object.array[$i[0]] = {
-                    first: []
-                }
+                object.array[$i[0]] = []
 
                 if ($end - $start < 2) {
                     return parsers.inc.object(object, 4, $i, $I)($buffer, $start, $end)
@@ -36,7 +34,7 @@ module.exports = function (parsers) {
                         return parsers.inc.object(object, 7, $i, $I)($buffer, $start, $end)
                     }
 
-                    object.array[$i[0]].first[$i[1]] =
+                    object.array[$i[0]][$i[1]] =
                         $buffer[$start++] * 0x100 +
                         $buffer[$start++]
                 }

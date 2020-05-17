@@ -244,24 +244,15 @@ function map (definitions, packet, depth, extra = {}) {
                         type: 'lengthEncoding',
                         ethereal: true
                     }))
-                    if (typeof packet[1][0] == 'number') {
-                        fields.push({
-                            ...extra,
-                            type: 'lengthEncoded',
-                            fixed: false,
-                            bits: 0,
-                            fields: [ integer(packet[1][0], false, {}) ]
-                        })
-                    } else {
-                        fields.push({
-                            ...extra,
-                            type: 'lengthEncoded',
-                            bits: 0,
-                            fixed: false,
-                            // TODO Length encode a structure.
-                            fields: [ map(definitions, packet[1][0], false, {}).shift() ]
-                        })
-                    }
+                    fields.push({
+                        type: 'lengthEncoded',
+                        dotted: '',
+                        bits: 0,
+                        fixed: false,
+                        // TODO Length encode a structure.
+                        fields: map(definitions, packet[1][0], false, {}),
+                        ...extra
+                    })
                     return fields
                 // Conditionals.
                 } else if (

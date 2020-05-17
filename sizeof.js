@@ -104,6 +104,7 @@ function generate (packet) {
 }
 
 module.exports = function (compiler, packets) {
+    console.log(require('util').inspect(packets[0], { depth: null }))
     const sources = packets.map(packet => generate(packet))
     return compiler(join(sources))
 }

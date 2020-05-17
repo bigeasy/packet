@@ -9,18 +9,17 @@ const vivify = require('./vivify')
 const ARRAYED = [ 'lengthEncoding', 'terminated' ]
 
 function generate (packet, bff) {
-    let $i = -1, $sip = -1, $step = 0
+    let $i = -1, $sip = -1, $step = 1
 
     const variables = { packet: true, step: true }
 
     // TODO You can certianly do something to make this prettier.
     // TODO Start by prepending the path I think?
-    function checkpoints (path, fields, index = 0, rewind = 0) {
+    function checkpoints (path, fields, index = 0) {
         let checkpoint = {
             type: 'checkpoint',
             ethereal: true,
-            lengths: [ 0 ],
-            rewind
+            lengths: [ 0 ]
         }, checked = [ checkpoint ]
         for (const field of fields) {
             switch (field.type) {
@@ -28,9 +27,9 @@ function generate (packet, bff) {
                 break
             case 'conditional':
                 variables.sip = true
-                field.parse.sip = checkpoints(path, field.parse.sip, index, rewind)
+                field.parse.sip = checkpoints(path, field.parse.sip, index)
                 for (const condition of field.parse.conditions) {
-                    condition.fields = checkpoints(path, condition.fields, index, rewind)
+                    condition.fields = checkpoints(path, condition.fields, index)
                 }
                 break
             case 'lengthEncoding':
@@ -39,7 +38,7 @@ function generate (packet, bff) {
             case 'lengthEncoded':
                 variables.i = true
                 variables.I = true
-                checked.push(checkpoint = { type: 'checkpoint', lengths: [ 0 ], rewind: 0 })
+                checked.push(checkpoint = { type: 'checkpoint', lengths: [ 0 ] })
                 if (field.fixed) {
                     checkpoint.lengths.push(`${field.element.bits / 8} * $I[${index}]`)
                 } else {
@@ -51,7 +50,7 @@ function generate (packet, bff) {
                 // diary.
                 variables.i = true
                 field.fields = checkpoints(path + `${field.dotted}[$i[${index}]]`, field.fields, index + 1)
-                checked.push(checkpoint = { type: 'checkpoint', lengths: [ 0 ], rewind: 0 })
+                checked.push(checkpoint = { type: 'checkpoint', lengths: [ 0 ] })
                 break
             case 'structure':
                 field.fields = checkpoints(path + field.dotted, field.fields, index)
@@ -135,11 +134,12 @@ function generate (packet, bff) {
         variables.I = true
         const i = `$i[${$i}]`
         const I = `$I[${$i}]`
-        const looped = map(dispatch, path + `[${i}]`, field.fields)
+        $step++
+        const looped = map(dispatch, `${path}[${i}]`, field.fields)
         $i--
         return $(`
             for (; ${i} < ${I}; ${i}++) {
-                `, vivify.array(`${path}[${i}]`, field),`
+                `, vivify.array(`${path}[${i}]`, field), `
 
                 `, looped, `
             }
@@ -159,9 +159,7 @@ function generate (packet, bff) {
         $i++
         const i = `$i[${$i}]`
         $step += 1
-        const check = bff ? checkpoint({
-            lengths: [ field.terminator.length ], rewind: 0
-        }) : null
+        const check = bff ? checkpoint({ lengths: [ field.terminator.length ] }) : null
         $step += 1
         $step += field.terminator.length
         const looped = join(field.fields.map(field => dispatch(path + `[${i}]`, field)))
@@ -259,7 +257,6 @@ function generate (packet, bff) {
     function dispatch (path, field, root = false) {
         switch (field.type) {
         case 'structure': {
-                $step++
                 return map(dispatch, path, field.fields)
             }
         case 'checkpoint':

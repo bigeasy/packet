@@ -19,7 +19,7 @@ module.exports = function (parsers) {
             for (; $i[0] < $I[0]; $i[0]++) {
 
                 if ($end - $start < 2) {
-                    return parsers.inc.object(object, 3, $i, $I)($buffer, $start, $end)
+                    return parsers.inc.object(object, 4, $i, $I)($buffer, $start, $end)
                 }
 
                 object.array[$i[0]] =
