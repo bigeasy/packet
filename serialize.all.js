@@ -148,7 +148,6 @@ function generate (packet, bff) {
     function terminated (path, field) {
         variables.i = true
         $step += 2
-        $i++
         const i = `$i[${++$i}]`
         const looped = join(field.fields.map(field => dispatch(path + `[${i}]`, field)))
         const terminator = []

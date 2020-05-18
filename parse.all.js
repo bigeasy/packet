@@ -147,17 +147,15 @@ function generate (packet, bff) {
     }
 
     function lengthEncoding (field) {
-        $i++
         return $(`
-            $i[${$i}] = 0
+            $i[${++$i}] = 0
             `, integer(`$I[${$i}]`, field), `
         `)
     }
 
     function terminated (path, field) {
         variables.i = true
-        $i++
-        const i = `$i[${$i}]`
+        const i = `$i[${++$i}]`
         $step += 1
         const check = bff ? checkpoint({ lengths: [ field.terminator.length ] }) : null
         $step += 1
