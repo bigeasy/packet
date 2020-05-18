@@ -1,7 +1,7 @@
 require('proof')(1, okay => {
     const simplified = require('../../simplified')
     okay(simplified({ packet: {
-        value: [ 0xaa, 0xaa, [ 4 ], [ 16 ] ] }
+        value: [ [ 4 ], [ 16 ], 0x0d, 0x0a ] }
     }), [{
         name: 'packet',
         fixed: true,
@@ -12,10 +12,10 @@ require('proof')(1, okay => {
         fields: [{
             name: 'value',
             dotted: '.value',
-            type: 'array',
+            type: 'fixed',
             length: 4,
             align: 'left',
-            pad: [ 0xaa, 0xaa ],
+            pad: [ 0xd, 0xa ],
             fixed: true,
             bits: 64,
             fields: [{

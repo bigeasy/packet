@@ -145,6 +145,35 @@ function generate (packet, bff) {
         return word(path + '.length', field)
     }
 
+    function fixed (path, field) {
+        variables.i = true
+        $step += 2
+        const i = `$i[${++$i}]`
+        const looped = map(dispatch, `${path}[${i}]`, field.fields)
+        const pad = field.pad.length == 0 ? null : $(`
+            for (;;) {
+                `, join(field.pad.map((bite, index) => {
+                    return $(`
+                        if (${i} == ${field.length}) {
+                            break
+                        }
+                        $buffer[$start++] = 0x${bite.toString(16)}
+                        ${i}++
+                    `)
+                })), `
+            }
+        `)
+        const source = $(`
+            for (${i} = 0; ${i} < ${path}.length; ${i}++) {
+                `, looped, `
+            }
+
+            `, pad, -1, `
+        `)
+        $i--
+        return source
+    }
+
     function terminated (path, field) {
         variables.i = true
         $step += 2
@@ -203,6 +232,8 @@ function generate (packet, bff) {
             return checkpoint(field)
         case 'conditional':
             return conditional(path, field)
+        case 'fixed':
+            return fixed(path, field)
         case 'terminated':
             return terminated(path, field)
         case 'lengthEncoding':

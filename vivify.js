@@ -12,6 +12,7 @@ function property_ (field) {
     }
     const property = corporeal(field)
     switch (property.type) {
+    case 'fixed':
     case 'terminated':
     case 'lengthEncoded':
         return `${property.name}: []`

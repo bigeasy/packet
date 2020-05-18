@@ -252,12 +252,128 @@ function generate (packet) {
         `)
     }
 
+    // We will have a special case for bite arrays where we can use index of to
+    // find the terminator, when the termiantor is zero or `\n\n` or the like,
+    // because we can use `indexOf` to find the boundary. Maybe byte arrays
+    // should always be returned as `Buffer`s?
+
+    // We will have a another special case for word arrays where the terminated
+    // word because we can jump right ito them.
+
+    // Seems like in the past I would read the terminator into an array and if
+    // it didn't match, I'd feed the array to the parser, this would handle long
+    // weird terminators.
+    function fixed (path, field) {
+        lets.i = true
+        $i++
+        const i = `$i[${$i}]`
+        _terminated = true
+        const init = $step
+        let sip = ++$step
+        const redo = $step
+        const begin = $step += field.pad.length
+        $step++
+        const looped = join(field.fields.map(field => dispatch(`${path}[${i}]`, field)))
+        const literal = field.pad.map(bite => `0x${bite.toString(16)}`)
+        // TODO Seems like there ought to be some rules. I'm only going to
+        // support multi-character string terminators, really. If you have an
+        // terminated array of variable structures that could also be fixed,
+        // that's a horrible format.
+        const fit = Math.ceil(field.pad.length / (field.bits / 8))
+        const remaining
+            = field.fixed ? $(`
+                if (${field.length} - ${i} < ${field.pad.length}) {
+                    $step = ${$step + 1}
+                    continue
+                }
+            `) : null
+        const terminator = join(field.pad.map((bite, index) => {
+            if (index != field.pad.length - 1) {
+                return $(`
+                    case ${sip++}:
+
+                        `, remaining, 1, `
+
+                        if ($start == $end) {
+                            return { start: $start, parse }
+                        }
+
+                        if ($buffer[$start] != 0x${bite.toString(16)}) {
+                            $step = ${begin}
+                            continue
+                        }
+                        $start++
+
+                        $step = ${sip}
+                `)
+            } else {
+                return $(`
+                    case ${sip++}:
+
+                        if ($start == $end) {
+                            return { start: $start, parse }
+                        }
+
+                        if ($buffer[$start] != 0x${bite.toString(16)}) {
+                            $step = ${begin}
+                            parse([ ${literal.slice(0, index).join(', ')} ], 0, ${index})
+                            continue
+                        }
+                        $start++
+
+                        $step = ${$step + 1}
+                        continue
+                `)
+            }
+        }))
+        const source = $(`
+            case ${init}:
+
+                ${i} = 0
+
+            `, terminator, `
+
+            case ${begin}:
+
+                `, vivify.array(`${path}[${i}]`, field), `
+
+            `, looped, `
+
+            case ${$step++}:
+
+                ${i}++
+                $step = ${redo}
+                continue
+
+            case ${$step++}:
+
+                $_ = (${field.length} - ${i}) * ${field.bits / field.length / 8} - ${field.pad.length}
+                $step = ${$step}
+
+            case ${$step++}:
+
+                $bite = Math.min($end - $start, $_)
+                $_ -= $bite
+                $start += $bite
+
+                if ($_ != 0) {
+                    return { start: $start, object: null, parse }
+                }
+
+                $step = ${$step}
+        `)
+        $i--
+        return source
+    }
+
     function dispatch (path, packet, depth, arrayed) {
         switch (packet.type) {
         case 'structure':
             return map(dispatch, path, packet.fields)
         case 'conditional':
             return conditional(path, packet)
+        case 'fixed':
+            return fixed(path, packet)
         case 'terminated':
             return terminated(path, packet)
         case 'lengthEncoding':

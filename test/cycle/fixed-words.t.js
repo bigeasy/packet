@@ -2,11 +2,11 @@ require('proof')(0, prove)
 
 function prove (okay) {
     require('./cycle')(okay, {
-        name: 'array',
+        name: 'fixed',
         define: {
-            object: { array: [ 0xaa, 0xaa, [ 4 ], [ 16 ] ]  }
+            object: { array: [ [ 16 ], [ 8 ], 0xd, 0xa ]  }
         },
-        objects: [{ array: [ 0x0012, 0x4567, 0x890a ] }],
-        stopAt: 'sizeof'
+        objects: [{ array: Buffer.from('hello, world').toJSON().data }],
+        stopAt: 'parse.bff'
     })
 }
