@@ -138,6 +138,57 @@ function generate (packet) {
         return source
     }
 
+    function fixed (path, field) {
+        variables.i = true
+        $i++
+        const init = $step
+        const again = ++$step
+        const i = `$i[${$i}]`
+        const looped = join(field.fields.map(field => dispatch(`${path}[${i}]`, field)))
+        const done = $step
+        const pad = join(field.pad.map(bite => {
+            return $(`
+                case ${$step++}:
+
+                    if ($start == $end) {
+                        return { start: $start, serialize }
+                    }
+
+                    if (${i}++ == ${field.length}) {
+                        $step = ${done + field.pad.length}
+                        continue
+                    }
+
+                    $buffer[$start++] = 0x${bite.toString(16)}
+
+                    $step = ${$step}
+            `)
+        }))
+        const source = $(`
+            case ${init}:
+
+                ${i} = 0
+                $step = ${again}
+
+            `, looped, `
+                if (++${i} != ${path}.length) {
+                    $step = ${again}
+                    continue
+                }
+
+                $step = ${done}
+
+            `, pad, `
+
+                if (${i} != ${field.length}) {
+                    $step = ${done}
+                    continue
+                }
+        `)
+        $i--
+        return source
+    }
+
     function conditional (path, conditional) {
         surround = true
         const start = $step++
@@ -191,6 +242,8 @@ function generate (packet) {
             }))
         case 'conditional':
             return conditional(path, packet)
+        case 'fixed':
+            return fixed(path, packet)
         case 'terminated':
             return terminated(path, packet)
         case 'lengthEncoding':

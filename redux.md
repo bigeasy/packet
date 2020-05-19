@@ -273,21 +273,20 @@ define({
     longSignedLittleEndian: -~64n,
     // 16-bit length encoded array of 16-bit integers.
     lengthEncoded: [ 16, [ 16 ]],
-    // TODO Maybe just: [ [ 16 ], 0x0, 0x0 ]
     // Zero terminated array of 16-bit integers, terminator is 16-bit.
     zeroTerminated: [[ 16 ], 0x0 ],
     // Zero terminated array of 16-bit integers, terminator is 8-bit.
-    zeroTerminatedByByte: [[ 16 ], [ 8, 0x0 ] ]
+    zeroTerminatedByByte: [[ 16 ], 0x0 ]
     // Carrage-return, newline terminated array of bytes.
     crlfTerminated: [[ 8 ], 0x0d, 0x0a ],
     // Fixed with array of bytes.
     fixed: [[ 8 ], [ 16 ]],
-    // Fixed with array of bytes, left aligned.
-    fixedLeft: [[ 8 ], [ -16 ]],
-    // Fixed with array of bytes, zero padded.
+    // Fixed with array of bytes, zero padded. (Essentially zero terminated.)
     fixedZeroed: [[ 8 ], [ 16 ], 0x0 ],
     // Fixed with array of bytes, ASCII space padded.
     fixedSpaced: [[ 8 ], [ 16 ], 0x20 ],
+    // CR-LF fillled. Wonder if such a thing exists in the wild?
+    fixedCRLF: [[ 8 ], [ 16 ], 0x0d, 0x0a ],
     // Bit-packed 16-bit integer, note that bit-fields are always big-endian.
     flags: {
         temperature: -4,     // two's compliment signed

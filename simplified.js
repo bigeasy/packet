@@ -189,7 +189,10 @@ function map (definitions, packet, depth, extra = {}) {
                         after: after
                     }]
                 // Terminated arrays.
-                } else if (typeof packet[packet.length - 1] == 'number') {
+                } else if (
+                    Array.isArray(packet[0]) &&
+                    typeof packet[packet[1]] == 'number'
+                ) {
                     const fields = []
                     const terminator = []
                     for (let i = 1, I = packet.length; i < I; i++) {
@@ -205,24 +208,22 @@ function map (definitions, packet, depth, extra = {}) {
                     }]
                 // Fixed length arrays.
                 } else if (
-                    Array.isArray(packet[packet.length - 2]) &&
-                    Array.isArray(packet[packet.length - 1]) &&
-                    typeof packet[packet.length - 2][0] == 'number'
+                    Array.isArray(packet[0]) &&
+                    typeof packet[0][0] == 'number' &&
+                    Array.isArray(packet[1])
                 ) {
                     const pad = []
-                    while (typeof packet[0] == 'number')  {
-                        pad.push(packet.shift())
+                    const slice = packet.slice(2)
+                    while (typeof slice[0] == 'number')  {
+                        pad.push(slice.shift())
                     }
-                    if (pad.length == 0) {
-                        pad.push(0x0)
-                    }
-                    const fields = [].concat.apply([], packet[1].map(field => map(definitions, field, false, {})))
+                    const fields = map(definitions, packet[1][0], false, {})
                     const fixed = fields.filter(field => ! field.fixed).length == 0
                     const bits = fixed
                                ? fields.reduce((bits, field) => bits + field.bits, 0)
                                : 0
                     return [{
-                        type: 'array',
+                        type: 'fixed',
                         length: packet[0],
                         ...extra,
                         pad,
@@ -358,10 +359,11 @@ module.exports = function (packets) {
     }
     for (const definition of definitions) {
         visit(definition, (packet) => {
+            // TODO Try to sort this out in the generators.
             if (packet.type == 'lengthEncoded') {
                 definition.lengthEncoded = true
             }
-            if (packet.type == 'terminated' || packet.type == 'array') {
+            if (packet.type == 'terminated' || packet.type == 'fixed') {
                 definition.arrayed = true
             }
         })
