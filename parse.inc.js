@@ -5,7 +5,6 @@ const unpack = require('./unpack')
 const unsign = require('./fiddle/unsign')
 const $ = require('programmatic')
 const vivify = require('./vivify')
-const ARRAYED = [ 'lengthEncoding', 'terminated' ]
 
 function generate (packet) {
     let $step = 0, $i = -1, $sip = -1, _conditional = false, _terminated = false

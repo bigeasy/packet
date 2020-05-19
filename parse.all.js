@@ -6,7 +6,6 @@ const unsign = require('./fiddle/unsign')
 const $ = require('programmatic')
 const corporeal = require('./corporeal')
 const vivify = require('./vivify')
-const ARRAYED = [ 'lengthEncoding', 'terminated' ]
 
 function generate (packet, bff) {
     let $i = -1, $sip = -1, $step = 1
