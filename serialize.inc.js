@@ -271,6 +271,7 @@ function generate (packet) {
 
         }
     `)
+
     if (variables.i || surround) {
         source = $(`
             for (;;) {

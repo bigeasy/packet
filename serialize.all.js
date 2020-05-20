@@ -4,7 +4,7 @@ const snuggle = require('./snuggle')
 const pack = require('./pack')
 const $ = require('programmatic')
 
-function bff (path, fields, index = 0, rewind = 0) {
+function checkpoints (path, fields, index = 0, rewind = 0) {
     let checkpoint
     const checked = [ checkpoint = { type: 'checkpoint', lengths: [ 0 ], rewind } ]
     for (const field of fields) {
@@ -24,7 +24,7 @@ function bff (path, fields, index = 0, rewind = 0) {
             break
         case 'conditional':
             for (const condition of field.serialize.conditions) {
-                condition.fields = bff(path, condition.fields, index, rewind)
+                condition.fields = checkpoints(path, condition.fields, index, rewind)
             }
             break
         case 'lengthEncoding':
@@ -34,14 +34,14 @@ function bff (path, fields, index = 0, rewind = 0) {
             if (field.fixed) {
                 checkpoint.lengths.push(`${field.element.bits / 8} * ${path + field.dotted}.length`)
             }  else {
-                field.fields = bff(path + `${field.dotted}[$i[${index}]]`, field.fields, index + 1)
+                field.fields = checkpoints(path + `${field.dotted}[$i[${index}]]`, field.fields, index + 1)
             }
             break
         case 'structure':
             if (field.fixed) {
                 checkpoint.lengths.push(`${field.bits / 8} * ${path + field.dotted}.length`)
             }  else {
-                field.fields = bff(path + `${field.dotted}[$i[${index}]]`, field.fields, index + 1)
+                field.fields = checkpoints(path + `${field.dotted}[$i[${index}]]`, field.fields, index + 1)
             }
             break
         default:
@@ -145,6 +145,26 @@ function generate (packet, bff) {
         return word(path + '.length', field)
     }
 
+    function terminated (path, field) {
+        variables.i = true
+        $step += 2
+        const i = `$i[${++$i}]`
+        const looped = join(field.fields.map(field => dispatch(path + `[${i}]`, field)))
+        const terminator = []
+        for (const bite of field.terminator) {
+            terminator.push(`$buffer[$start++] = 0x${bite.toString(16)}`)
+        }
+        const source = $(`
+            for (${i} = 0; ${i} < ${path}.length; ${i}++) {
+                `, looped, `
+            }
+
+            `, terminator.join('\n'), `
+        `)
+        $i--
+        return source
+    }
+
     function fixed (path, field) {
         variables.i = true
         $step += 2
@@ -169,26 +189,6 @@ function generate (packet, bff) {
             }
 
             `, pad, -1, `
-        `)
-        $i--
-        return source
-    }
-
-    function terminated (path, field) {
-        variables.i = true
-        $step += 2
-        const i = `$i[${++$i}]`
-        const looped = join(field.fields.map(field => dispatch(path + `[${i}]`, field)))
-        const terminator = []
-        for (const bite of field.terminator) {
-            terminator.push(`$buffer[$start++] = 0x${bite.toString(16)}`)
-        }
-        const source = $(`
-            for (${i} = 0; ${i} < ${path}.length; ${i}++) {
-                `, looped, `
-            }
-
-            `, terminator.join('\n'), `
         `)
         $i--
         return source
@@ -276,7 +276,7 @@ function generate (packet, bff) {
 module.exports = function (compiler, definition, options = {}) {
     const source = join(JSON.parse(JSON.stringify(definition)).map(function (packet) {
         if (options.bff) {
-            packet.fields = bff(packet.name, packet.fields)
+            packet.fields = checkpoints(packet.name, packet.fields)
         }
         return generate(packet, options.bff)
     }))
