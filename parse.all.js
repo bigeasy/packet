@@ -166,6 +166,10 @@ function generate (packet, bff) {
         // same goes for length encoded. We don't want a malformed packet to
         // cause an enormous loop. Checkpoints for loops only?
         //
+        // TODO The above is for documentation. You can have the essence of a
+        // serializer, but you should always use a best-foot-forward parser to
+        // guard against evil coming in from the outside.
+        //
         // TODO When the type is integer and the same size as the terminator
         // lets create an integer sentry.
         //
@@ -213,20 +217,6 @@ function generate (packet, bff) {
         $step += field.pad.length
         const looped = join(field.fields.map(field => dispatch(path + `[${i}]`, field)))
         $step += field.pad.length
-        // TODO We really do not want to go beyond the end of the buffer in a
-        // whole parser and loop forever, so we still need the checkpoints. The
-        // same goes for length encoded. We don't want a malformed packet to
-        // cause an enormous loop. Checkpoints for loops only?
-        //
-        // TODO When the type is integer and the same size as the terminator
-        // lets create an integer sentry.
-        //
-        // TODO No, it's simple really. We don't need checked whole serializers,
-        // but all parsers should be checked somehow. You don't have to worry
-        // about running forever, because you can limit the file size, buffer
-        // size. Perhaps we have upper limits on arrays, sure. Add that to the
-        // langauge somehow, but we shouldn't have unchecked parsers. We use the
-        // `bff` logic and return an error if it doesn't fit.
         const terminator = field.pad.map((bite, index) => {
             if (index == 0) {
                 return `$buffer[$start] == 0x${bite.toString(16)}`
