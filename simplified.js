@@ -156,6 +156,7 @@ function map (definitions, packet, depth, extra = {}) {
             // easier to return to for maintainence and expansion.
             // Outer array.
             if (Array.isArray(packet)) {
+                console.log(packet)
                 // Seems that we could still have an object for integer with
                 // padding before and after, we could make literals wrappers.
                 // [ 'ac', 16 ] or [ 'ac', [ 'utf8' ] ]
@@ -191,7 +192,7 @@ function map (definitions, packet, depth, extra = {}) {
                 // Terminated arrays.
                 } else if (
                     Array.isArray(packet[0]) &&
-                    typeof packet[packet[1]] == 'number'
+                    typeof packet[1] == 'number'
                 ) {
                     const fields = []
                     const terminator = []
