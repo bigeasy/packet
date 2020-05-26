@@ -2,7 +2,7 @@ require('proof')(0, prove)
 
 function prove (okay) {
     require('./cycle')(okay, {
-        name: 'fixed',
+        name: 'padded',
         define: {
             object: { array: [ [ 16 ], [ 8 ], 0xd, 0xa ]  }
         },
