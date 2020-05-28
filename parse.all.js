@@ -212,7 +212,9 @@ function generate (packet, bff) {
         variables.i = true
         const i = `$i[${++$i}]`
         $step += 1
-        const check = bff ? checkpoint({ lengths: [ field.pad.length ] }) : null
+        const check = bff && field.pad.length != 0
+                    ? checkpoint({ lengths: [ field.pad.length ] })
+                    : null
         $step += 1
         $step += field.pad.length
         const looped = join(field.fields.map(field => dispatch(path + `[${i}]`, field)))
@@ -224,27 +226,42 @@ function generate (packet, bff) {
                 return `$buffer[$start + ${index}] == 0x${bite.toString(16)}`
             }
         })
+        const terminate = terminator.length != 0
+                        ? $(`
+                            if (
+                                `, terminator.join(' &&\n'), `
+                            ) {
+                                $start += ${terminator.length}
+                                break
+                            }
+                        `)
+                        : null
         const source = $(`
             ${i} = 0
             for (;;) {
                 `, check, -1, `
 
-                if (
-                    `, terminator.join(' &&\n'), `
-                ) {
-                    $start += ${terminator.length}
-                    break
-                }
+                `, terminate, -1, `
 
                 `, vivify.array(path + `[${i}]`, field), -1, `
 
                 `, looped, `
                 ${i}++
+
+                if (${i} == ${field.length}) {
+                    break
+                }
             }
 
-            $start += (${field.length} - ${i}) * ${field.bits / field.length / 8} - ${field.pad.length}
         `)
         $i--
+        if (terminator.length) {
+            return $(`
+                `, source, `
+
+                $start += (${field.length} - ${i}) * ${field.bits / field.length / 8} - ${field.pad.length}
+            `)
+        }
         return source
     }
 

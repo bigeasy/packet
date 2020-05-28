@@ -64,6 +64,7 @@ function generate (packet, bff) {
     let $step = 0, $i = -1
 
     const variables = { packet: true, step: true }
+    const constants = { assert: false }
 
     function word (asignee, field) {
         const bytes = field.bits / 8
@@ -115,9 +116,9 @@ function generate (packet, bff) {
             }
         }
         return $(`
-            `, write(field.before), 1, `
+            `, write(field.before), -1, `
 
-            `, map(dispatch, path, field.fields), 1, `
+            `, map(dispatch, path, field.fields), -1, `
 
             `, write(field.after), -1, `
         `)
@@ -183,7 +184,12 @@ function generate (packet, bff) {
                 })), `
             }
         `)
+        const assertion = (constants.assert = field.pad.length == 0)
+                        ? `assert.equal(${path}.length, ${field.length})`
+                        : null
         const source = $(`
+            `, assertion, -1, `
+
             for (${i} = 0; ${i} < ${path}.length; ${i}++) {
                 `, looped, `
             }
@@ -255,14 +261,20 @@ function generate (packet, bff) {
     const declarations = {
         register: '$_',
         i: '$i = []',
-        sip: '$sip = []'
+        sip: '$sip = []',
+        assert: `assert = require('assert')`
     }
+    const consts = Object.keys(declarations)
+                         .filter(key => constants[key])
+                         .map(key => declarations[key])
     const lets = Object.keys(declarations)
                             .filter(key => variables[key])
                             .map(key => declarations[key])
     return $(`
         serializers.${bff ? 'bff' : 'all'}.${packet.name} = function (${packet.name}) {
             return function ($buffer, $start, $end) {
+                `, consts.length != 0 ? `const ${consts.join(', ')}` : null, -1, `
+
                 `, lets.length != 0 ? `let ${lets.join(', ')}` : null, -1, `
 
                 `, source, `

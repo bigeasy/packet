@@ -70,6 +70,12 @@ module.exports = function (parsers) {
                 case 7:
 
                     $i[0]++
+
+                    if ($i[0] == 16) {
+                        $step = 8
+                        continue
+                    }
+
                     $step = 2
                     continue
 

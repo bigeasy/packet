@@ -286,7 +286,7 @@ function generate (packet) {
                     continue
                 }
             `) : null
-        const terminator = join(field.pad.map((bite, index) => {
+        const terminator = field.pad.length ? join(field.pad.map((bite, index) => {
             if (index != field.pad.length - 1) {
                 return $(`
                     case ${sip++}:
@@ -324,13 +324,13 @@ function generate (packet) {
                         continue
                 `)
             }
-        }))
+        })) : null
         const source = $(`
             case ${init}:
 
                 ${i} = 0
 
-            `, terminator, `
+            `, terminator, -1, `
 
             case ${begin}:
 
@@ -341,6 +341,12 @@ function generate (packet) {
             case ${$step++}:
 
                 ${i}++
+
+                if (${i} == ${field.length}) {
+                    $step = ${$step}
+                    continue
+                }
+
                 $step = ${redo}
                 continue
 

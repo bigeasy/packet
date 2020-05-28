@@ -18,67 +18,44 @@ module.exports = function (parsers) {
 
                 case 2:
 
-                    if (16 - $i[0] < 2) {
-                        $step = 8
-                        continue
-                    }
-
-                    if ($start == $end) {
-                        return { start: $start, parse }
-                    }
-
-                    if ($buffer[$start] != 0xd) {
-                        $step = 4
-                        continue
-                    }
-                    $start++
-
-                    $step = 3
 
                 case 3:
 
-                    if ($start == $end) {
-                        return { start: $start, parse }
-                    }
-
-                    if ($buffer[$start] != 0xa) {
-                        $step = 4
-                        parse([ 0xd ], 0, 1)
-                        continue
-                    }
-                    $start++
-
-                    $step = 8
-                    continue
+                    $_ = 0
+                    $step = 4
+                    $bite = 1
 
                 case 4:
+
+                    while ($bite != -1) {
+                        if ($start == $end) {
+                            return { start: $start, object: null, parse }
+                        }
+                        $_ += $buffer[$start++] << $bite * 8 >>> 0
+                        $bite--
+                    }
+
+                    object.array[$i[0]] = $_
 
 
                 case 5:
 
-                    $step = 6
+                    $i[0]++
 
-                case 6:
-
-                    if ($start == $end) {
-                        return { start: $start, object: null, parse }
+                    if ($i[0] == 4) {
+                        $step = 6
+                        continue
                     }
 
-                    object.array[$i[0]] = $buffer[$start++]
-
-
-                case 7:
-
-                    $i[0]++
                     $step = 2
                     continue
 
-                case 8:
+                case 6:
 
-                    $_ = (16 - $i[0]) * 1 - 2
-                    $step = 9
+                    $_ = (4 - $i[0]) * 2 - 0
+                    $step = 7
 
-                case 9:
+                case 7:
 
                     $bite = Math.min($end - $start, $_)
                     $_ -= $bite
@@ -88,9 +65,9 @@ module.exports = function (parsers) {
                         return { start: $start, object: null, parse }
                     }
 
-                    $step = 10
+                    $step = 8
 
-                case 10:
+                case 8:
 
                     return { start: $start, object: object, parse: null }
                 }

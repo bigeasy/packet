@@ -6,7 +6,6 @@ function prove (okay) {
         define: {
             object: { array: [ [ 16 ], [ 8 ], 0xd, 0xa ]  }
         },
-        objects: [{ array: Buffer.from('hello, world').toJSON().data }],
-        stopAt: 'parse.bff'
+        objects: [{ array: Buffer.from('hello, world').toJSON().data }]
     })
 }

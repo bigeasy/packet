@@ -8,6 +8,7 @@ function generate (packet) {
     let $step = 0, $i = -1, surround = false
 
     const variables = { packet: true, step: true }
+    const constants = { assert: false }
 
     function integer (path, field) {
         const endianness = field.endianness || 'big'
@@ -164,11 +165,15 @@ function generate (packet) {
                     $step = ${$step}
             `)
         }))
+        const assertion = (constants.assert = field.pad.length == 0)
+                        ? `assert.equal(${path}.length, ${field.length})`
+                        : null
         const source = $(`
             case ${init}:
 
                 ${i} = 0
                 $step = ${again}
+                `, assertion, -1, `
 
             `, looped, `
                 if (++${i} != ${path}.length) {
@@ -287,14 +292,21 @@ function generate (packet) {
         step: '$step = 0',
         i: '$i = []'
     }
+    const declarations = {
+        assert: `assert = require('assert')`
+    }
     const signature = Object.keys(signatories)
                             .filter(key => variables[key])
                             .map(key => signatories[key])
-
+    const consts = Object.keys(declarations)
+                         .filter(key => constants[key])
+                         .map(key => declarations[key])
     const object = 'serializers.inc.' + packet.name
     const generated = $(`
         ${object} = function (${signature.join(', ')}) {
             let $bite, $stop, $_
+
+            `, consts.length != 0 ? `const ${consts.join(', ')}` : null, -1, `
 
             return function serialize ($buffer, $start, $end) {
                 `, source, `
