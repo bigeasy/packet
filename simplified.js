@@ -43,7 +43,7 @@ function integer (value, packed, extra = {}) {
     }
 }
 
-function packed (definitions, extra = {}) {
+function packed (definitions, size, extra = {}) {
     const fields = []
     let bits = 0
     for (const field in definitions) {
@@ -101,7 +101,7 @@ function packed (definitions, extra = {}) {
                                                 })
                                             } else {
                                                 const packed2 = []
-                                                when.push(packed(def1, field, { value }))
+                                                when.push(packed(def1, 4, field, { value }))
                                                 console.log(when)
                                             }
                                         }
@@ -140,7 +140,10 @@ function packed (definitions, extra = {}) {
             break
         }
     }
-    return { ...integer(bits, false, extra), fields }
+    console.log(bits, size)
+    const complete = { ...integer(size, false, extra), fields }
+    assert.equal(bits, complete.bits, 'packed integer does not match size')
+    return complete
 }
 
 function map (definitions, packet, depth, extra = {}) {
@@ -208,6 +211,13 @@ function map (definitions, packet, depth, extra = {}) {
                         fields: fields,
                         after: after
                     }]
+                // Packed integers.
+                } else if (
+                    typeof packet[0] == 'object' &&
+                    ! Array.isArray(packet[0]) &&
+                    typeof packet[1] == 'number'
+                ) {
+                    return [ packed(packet[0], packet[1], extra) ]
                 // Terminated arrays.
                 } else if (
                     Array.isArray(packet[0]) &&

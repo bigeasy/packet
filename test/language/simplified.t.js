@@ -13,6 +13,7 @@ require('proof')(1, async (okay) => {
         8, value => (value % 128) & (value > 128 ? 0x80 : 0x0), value => Math.floor(value / 128), value => value == 0
     ]
 
+    return
     const intermediate = simplified({
         /*
         integer: {
@@ -45,8 +46,10 @@ require('proof')(1, async (okay) => {
             $serialize: [ encode, encode, encode, encode ]
         },
         */
+        // TODO Literals for packed integers, need to specify size. Ah, so
+        // instead of repeat, we need to have bits be the second argument.
         packet: {
-            header: {
+            header: [{
                 type: [ 4, [
                     'connect',
                     'connack',
@@ -81,7 +84,7 @@ require('proof')(1, async (okay) => {
                     disconnect: [ 4, 0x0 ],
                     auth: [ 4, 0x0 ]
                 } ]
-            },
+            }, 8 ],
             remainingLength: 'integer'
         }
     })

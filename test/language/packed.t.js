@@ -2,12 +2,12 @@ require('proof')(1, okay => {
     const simplified = require('../../simplified')
     okay(simplified({
         packet: {
-            header: {
+            header: [{
                 literal: 'deaf',
                 one: 1,
                 two: -3,
                 three: 12
-            }
+            }, 32 ]
         }
     }), [{
         name: 'packet',
@@ -54,5 +54,5 @@ require('proof')(1, okay => {
                 compliment: false
             }]
         }]
-    }], 'literal')
+    }], 'packed')
 })
