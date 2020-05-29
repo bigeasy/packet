@@ -65,7 +65,7 @@ function generate (packet) {
             return $(`
                 case ${$step++}:
 
-                    $_ = ${literal.value.length / 2}
+                    $_ = ${literal.value.length / 2 * literal.repeat}
                     $step = ${$step}
 
                 case ${$step++}:

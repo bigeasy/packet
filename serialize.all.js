@@ -95,6 +95,8 @@ function generate (packet, bff) {
         }
     }
 
+    // TODO You need to test incrementing step correctly when contained variable
+    // is variable length and not fixed. Not yet implemented.
     function literal (path, field) {
         function write (literal) {
             switch (literal.repeat) {
@@ -106,9 +108,9 @@ function generate (packet, bff) {
                     $start += ${literal.value.length / 2}
                 `)
             default:
-                const i = `$i${$i + 1}]`, I = `$I${$i + 1}]`
+                variables.i = true
                 return $(`
-                    for (${i} = 0; ${i} < ${literal.repeat}; i++) {
+                    for ($i[${$i + 1}] = 0; $i[${$i + 1}] < ${literal.repeat}; $i[${$i + 1}]++) {
                         $buffer.write(${JSON.stringify(literal.value)}, $start, $start + ${literal.value.length / 2}, 'hex')
                         $start += ${literal.value.length / 2}
                     }

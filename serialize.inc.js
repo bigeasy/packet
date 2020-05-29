@@ -44,32 +44,54 @@ function generate (packet) {
             for (let i = 0, I = literal.value.length; i < I; i += 2) {
                 bytes.push(parseInt(literal.value.substring(i, i + 2), 16))
             }
-            return $(`
-                case ${$step++}:
+            switch (literal.repeat) {
+            case 0:
+                return null
+            case 1:
+                return $(`
+                    case ${$step++}:
 
-                    $step = ${$step}
-                    $bite = 0
-                    $_ = ${JSON.stringify(bytes)}
+                        $step = ${$step}
+                        $bite = 0
+                        $_ = ${JSON.stringify(bytes)}
 
-                case ${$step++}:
+                    case ${$step++}:
 
-                    while ($bite != ${literal.value.length / 2}) {
-                        if ($start == $end) {
-                            return { start: $start, serialize }
+                        while ($bite != ${literal.value.length / 2}) {
+                            if ($start == $end) {
+                                return { start: $start, serialize }
+                            }
+                            $buffer[$start++] = $_[$bite++]
                         }
-                        $buffer[$start++] = $_[$bite++]
-                    }
 
-            `)
+                `)
+            case 2: {
+                    variables.i = true
+                    const redo = $step
+                    return $(`
+                        case ${$step++}:
+
+                            $i[${$i + 1}] = 0
+
+                        `, write({ ...literal, repeat: 1 }), `
+
+                        case ${$step++}:
+
+                            if (++$i[${$i + 1}] < ${literal.repeat}) {
+                                $step = ${redo + 1}
+                                continue
+                            }
+                    `)
+                }
+            }
         }
         return $(`
-            `, write(field.before), 1, `
+            `, write(field.before), -1, `
 
             `, map(dispatch, path, field.fields), `
 
             `, write(field.after), -1, `
         `)
-        // TODO Remove that line?
     }
 
     // TODO I don't need to push and pop $i.
