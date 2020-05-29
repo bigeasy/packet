@@ -156,20 +156,39 @@ function map (definitions, packet, depth, extra = {}) {
             // easier to return to for maintainence and expansion.
             // Outer array.
             if (Array.isArray(packet)) {
-                console.log(packet)
                 // Seems that we could still have an object for integer with
                 // padding before and after, we could make literals wrappers.
                 // [ 'ac', 16 ] or [ 'ac', [ 'utf8' ] ]
-                if (packet.filter(item => typeof item == 'string').length != 0) {
+                if (
+                    packet.filter(item => typeof item == 'string').length != 0 ||
+                    (Array.isArray(packet[0]) && typeof packet[0][0] == 'string') ||
+                    (
+                        Array.isArray(packet[packet.length - 1]) &&
+                        typeof packet[packet.length - 1][0] == 'string'
+                    )
+                ) {
                     const before = { repeat: 0, value: '' }, after = { repeat: 0, value: '' }
                     packet = packet.slice(0)
                     if (typeof packet[0] == 'string') {
                         before.repeat = 1
                         before.value = packet.shift()
+                    } else if (
+                        Array.isArray(packet[0]) &&
+                        typeof packet[0][0] == 'string'
+                    ) {
+                        before.repeat = packet[0][1]
+                        before.value = packet[0][0]
+                        packet.shift()
                     }
                     if (typeof packet[packet.length - 1] == 'string') {
                         after.repeat = 1
                         after.value = packet.pop()
+                    } else if (
+                        Array.isArray(packet[packet.length - 1]) &&
+                        typeof packet[packet.length - 1][0] == 'string'
+                    ) {
+                        after.repeat = packet[packet.length - 1][1]
+                        after.value = packet[packet.length - 1][0]
                     }
                     // TODO Use `field` as a common child then do bits
                     // recursively. Aren't we going by fixed anyway?
