@@ -18,7 +18,8 @@ const composers = {
 }
 
 module.exports = function (okay, options) {
-    for (const actual of options.objects) {
+    options.objects.forEach(function (actual, index) {
+        const name = `${options.name}${options.objects.length == 1 ? '' : ` ${index + 1}`}`
         const intermediate = simplified(options.define)
         const filename = path.resolve(__filename, '../../generated/' + options.name)
         const packet = {
@@ -36,8 +37,8 @@ module.exports = function (okay, options) {
         if (options.stopAt == 'sizeof') {
             console.log('sizeof', sizeOf)
             okay.inc(1)
-            okay(true)
-            continue
+            okay(true, `${optoins.name} sizeof`)
+            return
         }
         composers.serializer.all(
             compiler('serializers', filename + '.serializer.all.js'),
@@ -52,11 +53,11 @@ module.exports = function (okay, options) {
         okay(cursor, {
             start: expected.length,
             serialize: null
-        }, 'whole serialize')
+        }, `${name} whole serialize`)
 
         if (options.stopAt == 'serialize.all') {
             console.log('serialize.all', expected.toJSON().data.map(b => b.toString(16)))
-            continue
+            return
         }
 
         composers.parser.all(
@@ -67,14 +68,14 @@ module.exports = function (okay, options) {
         okay.inc(1)
 
         try {
-            okay(packet.parsers.all.object(expected, 0), actual, 'whole parse')
+            okay(packet.parsers.all.object(expected, 0), actual, `${name} whole parse`)
         } catch (error) {
             console.log(packet.parsers.all.object.toString())
             throw error
         }
 
         if (options.stopAt == 'parse.all') {
-            continue
+            return
         }
 
         composers.serializer.inc(
@@ -98,7 +99,7 @@ module.exports = function (okay, options) {
                     start: buffer.length,
                     serialize: null,
                     buffer: expected.toJSON().data
-                }, `incremental serialize ${i}`)
+                }, `${name} incremental serialize ${i}`)
             }
         } catch (error) {
             console.log(packet.serializers.inc.object.toString())
@@ -106,7 +107,7 @@ module.exports = function (okay, options) {
         }
 
         if (options.stopAt == 'serialize.inc') {
-            continue
+            return
         }
 
         okay.inc(sizeOf + 1)
@@ -129,7 +130,7 @@ module.exports = function (okay, options) {
                     start: expected.length,
                     parse: null,
                     object: actual
-                }, `incremental parse ${i}`)
+                }, `${name} incremental parse ${i}`)
             }
         } catch (error) {
             console.log(packet.parsers.inc.object.toString())
@@ -137,7 +138,7 @@ module.exports = function (okay, options) {
         }
 
         if (options.stopAt == 'parse.inc') {
-            continue
+            return
         }
         composers.serializer.all(
             compiler('serializers', filename + '.serializer.bff.js'),
@@ -162,7 +163,7 @@ module.exports = function (okay, options) {
                     start: buffer.length,
                     serialize: null,
                     buffer: expected.toJSON().data
-                }, `best-foot-forward serialize ${i}`)
+                }, `${name} best-foot-forward serialize ${i}`)
             }
         } catch (error) {
             console.log(packet.serializers.bff.object.toString())
@@ -170,7 +171,7 @@ module.exports = function (okay, options) {
         }
 
         if (options.stopAt == 'serialize.bff') {
-            continue
+            return
         }
 
         composers.parser.all(
@@ -194,11 +195,11 @@ module.exports = function (okay, options) {
                     start: expected.length,
                     parse: null,
                     object: actual
-                }, `best-foot-forward parse ${i}`)
+                }, `${name} best-foot-forward parse ${i}`)
             }
         } catch (error) {
             console.log(packet.parsers.bff.object.toString())
             throw error
         }
-    }
+    })
 }
