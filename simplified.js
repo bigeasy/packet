@@ -140,7 +140,6 @@ function packed (definitions, size, extra = {}) {
             break
         }
     }
-    console.log(bits, size)
     const complete = { ...integer(size, false, extra), fields }
     assert.equal(bits, complete.bits, 'packed integer does not match size')
     return complete
@@ -287,9 +286,8 @@ function map (definitions, packet, depth, extra = {}) {
                     return fields
                 // Conditionals.
                 } else if (
-                    packet.length == 2 &&
+                    (packet.length == 2 || packet.length == 1) &&
                     Array.isArray(packet[0]) &&
-                    Array.isArray(packet[1]) &&
                     Array.isArray(packet[0][0]) &&
                     typeof packet[0][0][0] == 'function'
                 ) {
@@ -300,21 +298,23 @@ function map (definitions, packet, depth, extra = {}) {
                             const [ test, packet ] = serialize
                             conditions.push({
                                 source: test.toString(),
-                                airty: test.length,
+                                arity: test.length,
                                 fields: map(definitions, packet, false, {})
                             })
                         }
                         return { conditions }
                     } ()
                     const parse = function () {
-                        const [ ...parse ] = packet[1]
-                        const sip = map(definitions, parse.shift(), false, {})
+                        const parse = packet[1].slice()
+                        const sip = typeof parse[0] == 'number'
+                                  ? map(definitions, parse.shift(), false, {})
+                                  : null
                         const conditions = []
                         for (const serialize of parse) {
                             const [ test, packet ] = serialize
                             conditions.push({
                                 source: test.toString(),
-                                airty: 1,
+                                arity: 1,
                                 fields: map(definitions, packet, false, {})
                             })
                         }
@@ -364,7 +364,7 @@ function map (definitions, packet, depth, extra = {}) {
             return [{
                 type: 'function',
                 source: packet.toString(),
-                airty: packet.length
+                arity: packet.length
             }]
         }
     }

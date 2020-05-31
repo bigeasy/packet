@@ -25,8 +25,10 @@ function generate (packet, bff) {
             case 'function':
                 break
             case 'conditional':
-                variables.sip = true
-                field.parse.sip = checkpoints(path, field.parse.sip, index)
+                if (field.parse.sip != null) {
+                    variables.sip = true
+                    field.parse.sip = checkpoints(path, field.parse.sip, index)
+                }
                 for (const condition of field.parse.conditions) {
                     condition.fields = checkpoints(path, condition.fields, index)
                 }
@@ -266,10 +268,18 @@ function generate (packet, bff) {
     }
 
     function conditional (path, conditional) {
-        $sip++
         const block = []
-        variables.sip = true
-        const sip = join(conditional.parse.sip.map(field => dispatch(`$sip[${$sip}]`, field)))
+        const signature = []
+        const sip = function () {
+            if (conditional.parse.sip == null) {
+                return null
+            }
+            variables.sip = true
+            $sip++
+            signature.push(`$sip[${$sip}]`)
+            return join(conditional.parse.sip.map(field => dispatch(`$sip[${$sip}]`, field)))
+        } ()
+        signature.push(packet.name)
         $step++
         for (let i = 0, I = conditional.parse.conditions.length; i < I; i++) {
             const condition = conditional.parse.conditions[i]
@@ -277,15 +287,17 @@ function generate (packet, bff) {
             const keyword = typeof condition.source == 'boolean' ? 'else'
                                                                : i == 0 ? 'if' : 'else if'
             const ifed = $(`
-                ${keyword} ((${condition.source})($sip[${$sip}], ${packet.name})) {
+                ${keyword} ((${condition.source})(${signature.join(', ')})) {
                     `, source, `
                 }
             `)
             block.push(ifed)
         }
-        $sip--
+        if (conditional.parse.sip != null) {
+            $sip--
+        }
         return $(`
-            `, sip, `
+            `, sip, -1, `
 
             `, snuggle(block), `
         `)

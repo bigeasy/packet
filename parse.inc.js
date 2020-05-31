@@ -7,7 +7,7 @@ const $ = require('programmatic')
 const vivify = require('./vivify')
 
 function generate (packet) {
-    let $step = 0, $i = -1, $sip = -1, _conditional = false, _terminated = false
+    let $step = 0, $i = -1, $sip = -1, iterate = false, _terminated = false
 
     const lets = { packet: true, step: true }
 
@@ -205,10 +205,19 @@ function generate (packet) {
     }
 
     function conditional (path, conditional) {
-        lets.sip = true
-        $sip++
         const { parse } = conditional
-        const sip = join(parse.sip.map(field => dispatch(`$sip[${$sip}]`, field)))
+        iterate = true
+        const signature = []
+        const sip = function () {
+            if (conditional.parse.sip == null) {
+                return null
+            }
+            lets.sip = true
+            $sip++
+            signature.push(`$sip[${$sip}]`)
+            return join(parse.sip.map(field => dispatch(`$sip[${$sip}]`, field)))
+        } ()
+        signature.push(packet.name)
         const start = $step++
         const steps = []
         for (const condition of parse.conditions) {
@@ -223,7 +232,7 @@ function generate (packet) {
             const keyword = typeof condition.source == 'boolean' ? 'else'
                                                                : i == 0 ? 'if' : 'else if'
             ladder.push($(`
-                ${keyword} ((${condition.source})($sip[${$sip}], ${path}, ${packet.name})) {
+                ${keyword} ((${condition.source})(${signature.join(', ')})) {
                     $step = ${steps[i].number}
                     continue
                 }
@@ -233,7 +242,9 @@ function generate (packet) {
             $step = ${$step}
             continue
         `)
-        $sip--
+        if (conditional.parse.sip != null) {
+            $sip--
+        }
         return $(`
             `, sip, `
 
@@ -424,7 +435,7 @@ function generate (packet) {
     const signature = Object.keys(signatories)
                             .filter(key => lets[key])
                             .map(key => signatories[key])
-    if (lets.i || lets.sip) {
+    if (iterate || lets.i || lets.sip) {
         source = $(`
             for (;;) {
                 `, source, `

@@ -1,18 +1,21 @@
-require('proof')(1, okay => {
+require('proof')(2, okay => {
     const simplified = require('../../simplified')
     okay(simplified({
         packet: {
-            value: [[[
-                value => value < 251, 8
-            ], [
-                // TODO Why isn't this `[ 'fc', [ 16 ] ]`? That way we can pad
-                // anything?
-                value => value >= 251, [ 'fc', 16 ]
-            ]], [ 8, [
-                sip => sip < 251, sip => sip
-            ], [
-                sip => sip == 0xfc, 16
-            ]]]
+            value: [
+                [[
+                    value => value < 251, 8
+                ], [
+                    // TODO Why isn't this `[ 'fc', [ 16 ] ]`? That way we can pad
+                    // anything?
+                    value => value >= 251, [ 'fc', 16 ]
+                ]],
+                [ 8, [
+                    sip => sip < 251, sip => sip
+                ], [
+                    sip => sip == 0xfc, 16
+                ]]
+            ]
         }
     }), [{
         name: 'packet',
@@ -29,7 +32,7 @@ require('proof')(1, okay => {
             serialize: {
                 conditions: [{
                     source: 'value => value < 251',
-                    airty: 1,
+                    arity: 1,
                     fields: [{
                         type: 'integer',
                         dotted: '',
@@ -40,7 +43,7 @@ require('proof')(1, okay => {
                     }]
                 }, {
                     source: 'value => value >= 251',
-                    airty: 1,
+                    arity: 1,
                     fields: [{
                         type: 'literal',
                         ethereal: true,
@@ -72,15 +75,15 @@ require('proof')(1, okay => {
                 }],
                 conditions: [{
                     source: 'sip => sip < 251',
-                    airty: 1,
+                    arity: 1,
                     fields: [{
                         type: 'function',
                         source: 'sip => sip',
-                        airty: 1
+                        arity: 1
                     }]
                 }, {
                     source: 'sip => sip == 0xfc',
-                    airty: 1,
+                    arity: 1,
                     fields: [{
                         type: 'integer',
                         dotted: '',
@@ -93,4 +96,108 @@ require('proof')(1, okay => {
             }
         }]
     }], 'mysql-integer')
+    okay(simplified({
+        packet: {
+            type: 8,
+            value: [
+                [[
+                    $ => $.type == 0, 16
+                ], [
+                    $ => $.type == 1, 32
+                ]],
+                [[
+                    $ => $.type == 0, 16
+                ], [
+                    $ => $.type == 1, 32
+                ]]
+            ]
+        }
+    }), [{
+        dotted: '',
+        fixed: false,
+        bits: 8,
+        type: 'structure',
+        name: 'packet',
+        fields: [{
+            type: 'integer',
+            dotted: '.type',
+            fixed: true,
+            bits: 8,
+            endianness: 'big',
+            compliment: false,
+            name: 'type'
+        }, {
+            type: 'conditional',
+            bits: 0,
+            fixed: false,
+            name: 'value',
+            dotted: '.value',
+            serialize: {
+                conditions: [{
+                    source: '$ => $.type == 0',
+                    arity: 1,
+                    fields: [{
+                        type: 'integer',
+                        dotted: '',
+                        fixed: true,
+                        bits: 16,
+                        endianness: 'big',
+                        compliment: false
+                    }]
+                }, {
+                    source: '$ => $.type == 1',
+                    arity: 1,
+                    fields: [{
+                        type: 'integer',
+                        dotted: '',
+                        fixed: true,
+                        bits: 32,
+                        endianness: 'big',
+                        compliment: false
+                    }]
+                }]
+            },
+            parse: {
+                sip: null,
+                conditions: [{
+                    source: '$ => $.type == 0',
+                    arity: 1,
+                    fields: [{
+                        type: 'integer',
+                        dotted: '',
+                        fixed: true,
+                        bits: 16,
+                        endianness: 'big',
+                        compliment: false
+                    }]
+                }, {
+                    source: '$ => $.type == 1',
+                    arity: 1,
+                    fields: [{
+                        type: 'integer',
+                        dotted: '',
+                        fixed: true,
+                        bits: 32,
+                        endianness: 'big',
+                        compliment: false
+                    }]
+                }]
+            }
+        }]
+    }], 'sipless')
+    return
+    console.log(require('util').inspect(simplified({
+        packet: {
+            header: [{
+                type: 1,
+                value: [
+                    [[
+                        $.type == 0, [{ a: 3, b: 4 }, 7 ]
+                    ], [
+                        $.type == 1, 7
+                    ]]
+                ]
+            }, 8 ]
+        }
+    }, { depth: null })))
 })

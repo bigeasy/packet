@@ -1,5 +1,5 @@
 module.exports = function (parsers) {
-    parsers.inc.object = function (object = {}, $step = 0, $sip = []) {
+    parsers.inc.object = function (object = {}, $step = 0) {
         let $_, $bite
         return function parse ($buffer, $start, $end) {
             for (;;) {
@@ -7,6 +7,7 @@ module.exports = function (parsers) {
                 case 0:
 
                     object = {
+                        type: 0,
                         value: 0
                     }
 
@@ -22,33 +23,49 @@ module.exports = function (parsers) {
                         return { start: $start, object: null, parse }
                     }
 
-                    $sip[0] = $buffer[$start++]
+                    object.type = $buffer[$start++]
+
 
 
                 case 3:
 
-                    if ((sip => sip < 251)($sip[0], object)) {
+                    if (($ => $.type == 0)(object)) {
                         $step = 4
                         continue
-                    } else if ((sip => sip == 0xfc)($sip[0], object)) {
-                        $step = 5
+                    } else if (($ => $.type == 1)(object)) {
+                        $step = 6
                         continue
                     }
 
                 case 4:
 
-                    object.value = (sip => sip)($sip[0])
-
-                    $step = 7
-                    continue
+                    $_ = 0
+                    $step = 5
+                    $bite = 1
 
                 case 5:
 
-                    $_ = 0
-                    $step = 6
-                    $bite = 1
+                    while ($bite != -1) {
+                        if ($start == $end) {
+                            return { start: $start, object: null, parse }
+                        }
+                        $_ += $buffer[$start++] << $bite * 8 >>> 0
+                        $bite--
+                    }
+
+                    object.value = $_
+
+
+                    $step = 8
+                    continue
 
                 case 6:
+
+                    $_ = 0
+                    $step = 7
+                    $bite = 3
+
+                case 7:
 
                     while ($bite != -1) {
                         if ($start == $end) {
@@ -62,7 +79,7 @@ module.exports = function (parsers) {
 
 
 
-                case 7:
+                case 8:
 
                     return { start: $start, object: object, parse: null }
                 }
