@@ -1,4 +1,4 @@
-require('proof')(2, okay => {
+require('proof')(3, okay => {
     const simplified = require('../../simplified')
     okay(simplified({
         packet: {
@@ -30,6 +30,7 @@ require('proof')(2, okay => {
             fixed: false,
             bits: 0,
             serialize: {
+                split: true,
                 conditions: [{
                     source: 'value => value < 251',
                     arity: 1,
@@ -133,6 +134,7 @@ require('proof')(2, okay => {
             name: 'value',
             dotted: '.value',
             serialize: {
+                split: true,
                 conditions: [{
                     source: '$ => $.type == 0',
                     arity: 1,
@@ -185,19 +187,87 @@ require('proof')(2, okay => {
             }
         }]
     }], 'sipless')
-    return
-    console.log(require('util').inspect(simplified({
+    okay(simplified({
         packet: {
-            header: [{
-                type: 1,
-                value: [
-                    [[
-                        $.type == 0, [{ a: 3, b: 4 }, 7 ]
-                    ], [
-                        $.type == 1, 7
-                    ]]
-                ]
-            }, 8 ]
+            type: 8,
+            value: [[
+                $ => $.type == 0, 16
+            ], [
+                $ => $.type == 1, 32
+            ]]
         }
-    }, { depth: null })))
+    }), [{
+        dotted: '',
+        fixed: false,
+        bits: 8,
+        type: 'structure',
+        name: 'packet',
+        fields: [{
+            type: 'integer',
+            dotted: '.type',
+            fixed: true,
+            bits: 8,
+            endianness: 'big',
+            compliment: false,
+            name: 'type'
+        }, {
+            type: 'conditional',
+            bits: 0,
+            fixed: false,
+            name: 'value',
+            dotted: '.value',
+            serialize: {
+                split: false,
+                conditions: [{
+                    source: '$ => $.type == 0',
+                    arity: 1,
+                    fields: [{
+                        type: 'integer',
+                        dotted: '',
+                        fixed: true,
+                        bits: 16,
+                        endianness: 'big',
+                        compliment: false
+                    }]
+                }, {
+                    source: '$ => $.type == 1',
+                    arity: 1,
+                    fields: [{
+                        type: 'integer',
+                        dotted: '',
+                        fixed: true,
+                        bits: 32,
+                        endianness: 'big',
+                        compliment: false
+                    }]
+                }]
+            },
+            parse: {
+                sip: null,
+                conditions: [{
+                    source: '$ => $.type == 0',
+                    arity: 1,
+                    fields: [{
+                        type: 'integer',
+                        dotted: '',
+                        fixed: true,
+                        bits: 16,
+                        endianness: 'big',
+                        compliment: false
+                    }]
+                }, {
+                    source: '$ => $.type == 1',
+                    arity: 1,
+                    fields: [{
+                        type: 'integer',
+                        dotted: '',
+                        fixed: true,
+                        bits: 32,
+                        endianness: 'big',
+                        compliment: false
+                    }]
+                }]
+            }
+        }]
+    }], 'bi-directional')
 })

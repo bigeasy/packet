@@ -284,7 +284,7 @@ function map (definitions, packet, depth, extra = {}) {
                         ...extra
                     })
                     return fields
-                // Conditionals.
+                // Split conditionals.
                 } else if (
                     (packet.length == 2 || packet.length == 1) &&
                     Array.isArray(packet[0]) &&
@@ -302,7 +302,7 @@ function map (definitions, packet, depth, extra = {}) {
                                 fields: map(definitions, packet, false, {})
                             })
                         }
-                        return { conditions }
+                        return { split: true, conditions }
                     } ()
                     const parse = function () {
                         const parse = packet[1].slice()
@@ -329,8 +329,56 @@ function map (definitions, packet, depth, extra = {}) {
                         serialize, parse, ...extra
                     })
                     return fields
+                // Bi-directional conditionals.
+                } else if (
+                    packet.length > 1 &&
+                    packet.slice(0, packet.length - 1).filter(element => {
+                        return Array.isArray(element) &&
+                               element.length == 2 &&
+                               typeof element[0] == 'function'
+                    }).length == packet.length - 1 &&
+                    (
+                        Array.isArray(packet[packet.length - 1]) &&
+                        (
+                            packet[packet.length - 1].length == 1 ||
+                            (
+                                packet[packet.length - 1].length == 2 &&
+                                typeof packet[packet.length - 1][0] == 'function'
+                            )
+                        )
+                    )
+                ) {
+                    const fields = []
+                    const conditions = []
+                    for (const condition of packet) {
+                        if (condition.length == 1) {
+                            condition.unshift(() => true)
+                        }
+                        const [ test, field ] = condition
+                        conditions.push({
+                            source: test.toString(),
+                            arity: 1,
+                            fields: map(definitions, field, false, {})
+                        })
+                    }
+                    return [{
+                        type: 'conditional',
+                        bits: 0,
+                        fixed: false,
+                        serialize: {
+                            split: false,
+                            conditions: conditions
+                        },
+                        parse: {
+                            sip: null,
+                            conditions: JSON.parse(JSON.stringify(conditions))
+                        },
+                        ...extra
+                    }]
+                    console.log(conditions)
+                    throw new Error('matched')
                 } else {
-                    throw new Error
+                    throw new Error('unknown')
                 }
             } else if (depth == 0) {
                 // TODO It's not depth == 0, more like start of structure.
