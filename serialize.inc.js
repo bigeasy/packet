@@ -231,8 +231,13 @@ function generate (packet) {
             const condition = conditional.serialize.conditions[i]
             const keyword = typeof condition.source == 'boolean' ? 'else'
                                                                : i == 0 ? 'if' : 'else if'
+            const signature = []
+            if (conditional.serialize.split) {
+                signature.push(path)
+            }
+            signature.push(packet.name)
             ladder.push($(`
-                ${keyword} ((${condition.source})(${path}, ${packet.name})) {
+                ${keyword} ((${condition.source})(${signature.join(', ')})) {
                     $step = ${steps[i].step}
                     continue
                 }

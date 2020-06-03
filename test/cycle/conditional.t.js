@@ -38,7 +38,20 @@ function prove (okay) {
                 ]
             }
         },
-        objects: [{ type: 0, value: 0xaaaa }, { type: 1, value: 0xaaaaaaaa }],
-        stopAt: 'parse.bff'
+        objects: [{ type: 0, value: 0xaaaa }, { type: 1, value: 0xaaaaaaaa }]
+    })
+    cycle(okay, {
+        name: 'bidirectional',
+        define: {
+            object: {
+                type: 8,
+                value: [[
+                    $ => $.type == 0, 16
+                ], [
+                    $ => $.type == 1, 32
+                ]]
+            }
+        },
+        objects: [{ type: 0, value: 0xaaaa }, { type: 1, value: 0xaaaaaaaa }]
     })
 }

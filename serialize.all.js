@@ -210,8 +210,13 @@ function generate (packet, bff) {
             const source = join(condition.fields.map(field => dispatch(path, field)))
             const keyword = typeof condition.source == 'boolean' ? 'else'
                                                                : i == 0 ? 'if' : 'else if'
+            const signature = []
+            if (conditional.serialize.split) {
+                signature.push(path)
+            }
+            signature.push(packet.name)
             const ifed = $(`
-                ${keyword} ((${condition.source})(${path}, ${packet.name})) {
+                ${keyword} ((${condition.source})(${signature.join(', ')})) {
                     `, source, `
                 }
             `)
