@@ -145,7 +145,7 @@ function packed (definitions, size, extra = {}) {
     return complete
 }
 
-function map (definitions, packet, depth, extra = {}) {
+function map (definitions, packet, extra = {}) {
     const definition = { parse: null, serialize: null }
     switch (typeof packet) {
     case 'string': {
@@ -194,7 +194,7 @@ function map (definitions, packet, depth, extra = {}) {
                     }
                     // TODO Use `field` as a common child then do bits
                     // recursively. Aren't we going by fixed anyway?
-                    const fields = map(definitions, packet[0], depth, extra)
+                    const fields = map(definitions, packet[0], extra)
                     const bits = fields[0].fixed
                                ? fields[0].bits + before.repeat * before.value.length * 4
                                                 + after.repeat * after.value.length * 4
@@ -233,7 +233,7 @@ function map (definitions, packet, depth, extra = {}) {
                         bits: 0,
                         fixed: false,
                         terminator: terminator,
-                        fields: map(definitions, packet[0][0], depth, {})
+                        fields: map(definitions, packet[0][0], {})
                     }]
                 // Fixed length arrays.
                 } else if (
@@ -246,7 +246,7 @@ function map (definitions, packet, depth, extra = {}) {
                     while (typeof slice[0] == 'number')  {
                         pad.push(slice.shift())
                     }
-                    const fields = map(definitions, packet[1][0], false, {})
+                    const fields = map(definitions, packet[1][0], {})
                     const fixed = fields.filter(field => ! field.fixed).length == 0
                     const bits = fixed
                                ? fields.reduce((bits, field) => bits + field.bits, 0)
@@ -280,7 +280,7 @@ function map (definitions, packet, depth, extra = {}) {
                         bits: 0,
                         fixed: false,
                         // TODO Length encode a structure.
-                        fields: map(definitions, packet[1][0], false, {}),
+                        fields: map(definitions, packet[1][0], {}),
                         ...extra
                     })
                     return fields
@@ -299,7 +299,7 @@ function map (definitions, packet, depth, extra = {}) {
                             conditions.push({
                                 source: test.toString(),
                                 arity: test.length,
-                                fields: map(definitions, packet, false, {})
+                                fields: map(definitions, packet, {})
                             })
                         }
                         return { split: true, conditions }
@@ -307,7 +307,7 @@ function map (definitions, packet, depth, extra = {}) {
                     const parse = function () {
                         const parse = packet[1].slice()
                         const sip = typeof parse[0] == 'number'
-                                  ? map(definitions, parse.shift(), false, {})
+                                  ? map(definitions, parse.shift(), {})
                                   : null
                         const conditions = []
                         for (const serialize of parse) {
@@ -315,7 +315,7 @@ function map (definitions, packet, depth, extra = {}) {
                             conditions.push({
                                 source: test.toString(),
                                 arity: 1,
-                                fields: map(definitions, packet, false, {})
+                                fields: map(definitions, packet, {})
                             })
                         }
                         return { sip, conditions }
@@ -358,7 +358,7 @@ function map (definitions, packet, depth, extra = {}) {
                         conditions.push({
                             source: test.toString(),
                             arity: 1,
-                            fields: map(definitions, field, false, {})
+                            fields: map(definitions, field, {})
                         })
                     }
                     return [{
@@ -380,11 +380,10 @@ function map (definitions, packet, depth, extra = {}) {
                 } else {
                     throw new Error('unknown')
                 }
-            } else if (depth == 0) {
-                // TODO It's not depth == 0, more like start of structure.
+            } else {
                 const fields = []
                 for (const name in packet) {
-                    fields.push.apply(fields, map(definitions, packet[name], 1, {
+                    fields.push.apply(fields, map(definitions, packet[name], {
                         name, dotted: `.${name}`
                     }))
                 }
@@ -400,8 +399,6 @@ function map (definitions, packet, depth, extra = {}) {
                     fields,
                     ...extra
                 }]
-            } else {
-                return [ packed(packet, extra) ]
             }
         }
         break
@@ -433,7 +430,7 @@ function visit (packet, f) {
 module.exports = function (packets) {
     const definitions = []
     for (const packet in packets) {
-        definitions.push.apply(definitions, map(definitions, packets[packet], 0, { name: packet }))
+        definitions.push.apply(definitions, map(definitions, packets[packet], { name: packet }))
     }
     for (const definition of definitions) {
         visit(definition, (packet) => {
