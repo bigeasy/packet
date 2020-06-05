@@ -3,8 +3,7 @@ require('proof')(1, okay => {
     okay(simplified({
         packet: {
             header: [{
-                literal: 'deaf',
-                one: 1,
+                one: [ 'deaf', 1 ],
                 two: -3,
                 three: 12
             }, 32 ]
@@ -25,17 +24,21 @@ require('proof')(1, okay => {
             dotted: '.header',
             fields: [{
                 type: 'literal',
-                bits: 16,
+                bits: 17,
+                dotted: '',
                 fixed: true,
-                value: 'deaf'
-            }, {
-                name: 'one',
-                dotted: '.one',
-                type: 'integer',
-                fixed: true,
-                bits: 1,
-                endianness: 'big',
-                compliment: false
+                ethereal: true,
+                before: { repeat: 1, value: 'deaf', bits: 16 },
+                fields: [{
+                    name: 'one',
+                    dotted: '.one',
+                    type: 'integer',
+                    fixed: true,
+                    bits: 1,
+                    endianness: 'big',
+                    compliment: false
+                }],
+                after: { repeat: 0, value: '' }
             }, {
                 name: 'two',
                 dotted: '.two',

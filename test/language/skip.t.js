@@ -9,12 +9,12 @@ require('proof')(1, okay => {
         fields: [{
             type: 'literal',
             ethereal: true,
-            name: '',
             dotted: '',
             fixed: true,
             before: {
                 value: '0faded',
-                repeat: 2
+                repeat: 2,
+                bits: 24
             },
             fields: [{
                 name: 'value',
@@ -27,7 +27,8 @@ require('proof')(1, okay => {
             }],
             after: {
                 value: 'facade',
-                repeat: 2
+                repeat: 2,
+                bits: 24
             },
             bits: 112
         }]

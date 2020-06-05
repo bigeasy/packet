@@ -6,8 +6,7 @@ function prove (okay) {
         define: {
             object: {
                 header: [{
-                    literal: 'deaf',
-                    one: 1,
+                    one: [ 'deaf', 1 ],
                     two: -3,
                     three: 12
                 }, 32 ]

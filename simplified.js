@@ -145,7 +145,7 @@ function packed (definitions, size, extra = {}) {
     return complete
 }
 
-function map (definitions, packet, extra = {}) {
+function map (definitions, packet, extra = {}, packed = false) {
     const definition = { parse: null, serialize: null }
     switch (typeof packet) {
     case 'string': {
@@ -174,34 +174,37 @@ function map (definitions, packet, extra = {}) {
                     if (typeof packet[0] == 'string') {
                         before.repeat = 1
                         before.value = packet.shift()
+                        before.bits = before.value.length * 4
                     } else if (
                         Array.isArray(packet[0]) &&
                         typeof packet[0][0] == 'string'
                     ) {
                         before.repeat = packet[0][1]
                         before.value = packet[0][0]
+                        before.bits = before.value.length * 4
                         packet.shift()
                     }
                     if (typeof packet[packet.length - 1] == 'string') {
                         after.repeat = 1
                         after.value = packet.pop()
+                        after.bits = after.value.length * 4
                     } else if (
                         Array.isArray(packet[packet.length - 1]) &&
                         typeof packet[packet.length - 1][0] == 'string'
                     ) {
                         after.repeat = packet[packet.length - 1][1]
                         after.value = packet[packet.length - 1][0]
+                        after.bits = after.value.length * 4
                     }
                     // TODO Use `field` as a common child then do bits
                     // recursively. Aren't we going by fixed anyway?
-                    const fields = map(definitions, packet[0], extra)
+                    const fields = map(definitions, packet[0], extra, packed)
                     const bits = fields[0].fixed
                                ? fields[0].bits + before.repeat * before.value.length * 4
                                                 + after.repeat * after.value.length * 4
                                : 0
                     return [{
                         type: 'literal',
-                        name: '',
                         dotted: '',
                         ethereal: true,
                         fixed: fields[0].fixed,
@@ -216,7 +219,14 @@ function map (definitions, packet, extra = {}) {
                     ! Array.isArray(packet[0]) &&
                     typeof packet[1] == 'number'
                 ) {
-                    return [ packed(packet[0], packet[1], extra) ]
+                    const fields = []
+                    for (const name in packet[0]) {
+                        fields.push.apply(fields, map(definitions, packet[0][name], {
+                            name: name, dotted: `.${name}`
+                        }, true))
+                    }
+                    const into = integer(packet[1], false, extra)
+                    return [{ ...into, fields, ...extra }]
                 // Terminated arrays.
                 } else if (
                     Array.isArray(packet[0]) &&
@@ -403,7 +413,7 @@ function map (definitions, packet, extra = {}) {
         }
         break
     case 'number': {
-            return [ integer(packet, false, extra) ]
+            return [ integer(packet, packed, extra) ]
         }
     case 'function': {
             return [{

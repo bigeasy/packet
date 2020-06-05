@@ -48,11 +48,10 @@ require('proof')(3, okay => {
                     fields: [{
                         type: 'literal',
                         ethereal: true,
-                        name: '',
                         dotted: '',
                         fixed: true,
                         bits: 24,
-                        before: { repeat: 1, value: 'fc' },
+                        before: { repeat: 1, value: 'fc', bits: 8 },
                         after: { repeat: 0, value: '' },
                         fields: [{
                             type: 'integer',
