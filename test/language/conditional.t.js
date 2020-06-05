@@ -1,4 +1,4 @@
-require('proof')(3, okay => {
+require('proof')(4, okay => {
     const simplified = require('../../simplified')
     okay(simplified({
         packet: {
@@ -269,4 +269,176 @@ require('proof')(3, okay => {
             }
         }]
     }], 'bi-directional')
+    okay(simplified({
+        packet: {
+            header: {
+                flag: 2,
+                body: [[
+                    $ => $.flag == 0, 6
+                ], [
+                    $ => $.flag == 1, [ 'a', 2 ]
+                ], [
+                    $ => $.flag == 2, [{
+                        two: 2,
+                        four: 4
+                    }, 6 ]
+                ]]
+            }
+        }
+    }), [{
+        dotted: '',
+        fixed: true,
+        bits: 8,
+        type: 'structure',
+        fields: [{
+            dotted: '.header',
+            fixed: true,
+            bits: 8,
+            type: 'structure',
+            fields: [{
+                type: 'integer',
+                dotted: '.flag',
+                fixed: true,
+                bits: 2,
+                endianness: 'big',
+                compliment: false,
+                name: 'flag'
+            }, {
+                type: 'conditional',
+                bits: 6,
+                fixed: true,
+                serialize: {
+                    split: false,
+                    conditions: [{
+                        source: '$ => $.flag == 0',
+                        arity: 1,
+                        fields: [{
+                            type: 'integer',
+                            dotted: '',
+                            fixed: true,
+                            bits: 6,
+                            endianness: 'big',
+                            compliment: false
+                        }]
+                    }, {
+                        source: '$ => $.flag == 1',
+                        arity: 1,
+                        fields: [{
+                            type: 'literal',
+                            dotted: '',
+                            ethereal: true,
+                            fixed: true,
+                            bits: 6,
+                            before: { repeat: 1, value: 'a', bits: 4 },
+                            fields: [{
+                                type: 'integer',
+                                dotted: '',
+                                fixed: true,
+                                bits: 2,
+                                endianness: 'big',
+                                compliment: false
+                              }
+                            ],
+                            after: { repeat: 0, value: '' }
+                        }]
+                    }, {
+                        source: '$ => $.flag == 2',
+                        arity: 1,
+                        fields: [{
+                            type: 'integer',
+                            dotted: '',
+                            fixed: true,
+                            bits: 6,
+                            endianness: 'big',
+                            compliment: false,
+                            fields: [{
+                                type: 'integer',
+                                dotted: '.two',
+                                fixed: true,
+                                bits: 2,
+                                endianness: 'big',
+                                compliment: false,
+                                name: 'two'
+                            }, {
+                                type: 'integer',
+                                dotted: '.four',
+                                fixed: true,
+                                bits: 4,
+                                endianness: 'big',
+                                compliment: false,
+                                name: 'four'
+                            }]
+                        }]
+                    }]
+                },
+                parse: {
+                    sip: null,
+                    conditions: [{
+                        source: '$ => $.flag == 0',
+                        arity: 1,
+                        fields: [{
+                            type: 'integer',
+                            dotted: '',
+                            fixed: true,
+                            bits: 6,
+                            endianness: 'big',
+                            compliment: false
+                        }]
+                    }, {
+                        source: '$ => $.flag == 1',
+                        arity: 1,
+                        fields: [{
+                            type: 'literal',
+                            dotted: '',
+                            ethereal: true,
+                            fixed: true,
+                            bits: 6,
+                            before: { repeat: 1, value: 'a', bits: 4 },
+                            fields: [{
+                                type: 'integer',
+                                dotted: '',
+                                fixed: true,
+                                bits: 2,
+                                endianness: 'big',
+                                compliment: false
+                            }],
+                            after: { repeat: 0, value: '' }
+                        }]
+                    }, {
+                      source: '$ => $.flag == 2',
+                      arity: 1,
+                      fields: [{
+                          type: 'integer',
+                          dotted: '',
+                          fixed: true,
+                          bits: 6,
+                          endianness: 'big',
+                          compliment: false,
+                          fields: [{
+                              type: 'integer',
+                              dotted: '.two',
+                              fixed: true,
+                              bits: 2,
+                              endianness: 'big',
+                              compliment: false,
+                              name: 'two'
+                          }, {
+                              type: 'integer',
+                              dotted: '.four',
+                              fixed: true,
+                              bits: 4,
+                              endianness: 'big',
+                              compliment: false,
+                              name: 'four'
+                          }]
+                      }]
+                  }]
+                },
+                name: 'body',
+                dotted: '.body'
+            }],
+            name: 'header'
+        }],
+        name: 'packet'
+    }], 'packed')
 })

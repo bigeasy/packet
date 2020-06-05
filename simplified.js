@@ -339,7 +339,7 @@ function map (definitions, packet, extra = {}, packed = false) {
                         serialize, parse, ...extra
                     })
                     return fields
-                // Bi-directional conditionals.
+                // Mirrored conditionals.
                 } else if (
                     packet.length > 1 &&
                     packet.slice(0, packet.length - 1).filter(element => {
@@ -365,23 +365,34 @@ function map (definitions, packet, extra = {}, packed = false) {
                             condition.unshift(() => true)
                         }
                         const [ test, field ] = condition
+                        const fields = map(definitions, field, {})
                         conditions.push({
-                            source: test.toString(),
-                            arity: 1,
-                            fields: map(definitions, field, {})
+                            body: {
+                                source: test.toString(),
+                                arity: 1,
+                                fields: fields,
+                            },
+                            bits: fields.reduce((bits, field) => {
+                                return bits == -1 || !field.fixed ? -1 : bits + field.bits
+                            }, 0)
                         })
                     }
+                    const fixed = conditions.reduce((bits, cond) => {
+                        return cond.bits == -1 ? -1
+                                               : bits == cond.bits ? bits
+                                                                   : -1
+                    }, conditions[0].bits)
                     return [{
                         type: 'conditional',
-                        bits: 0,
-                        fixed: false,
+                        bits: fixed == -1 ? 0 : conditions[0].bits,
+                        fixed: fixed != -1,
                         serialize: {
                             split: false,
-                            conditions: conditions
+                            conditions: conditions.map(cond => cond.body)
                         },
                         parse: {
                             sip: null,
-                            conditions: JSON.parse(JSON.stringify(conditions))
+                            conditions: JSON.parse(JSON.stringify(conditions)).map(cond => cond.body)
                         },
                         ...extra
                     }]
