@@ -3,7 +3,7 @@ require('proof')(0, prove)
 function prove (okay) {
     const cycle = require('./cycle')
     cycle(okay, {
-        name: 'mysql',
+        name: 'conditional/mysql',
         define: {
             object: {
                 value: [[[
@@ -20,7 +20,7 @@ function prove (okay) {
         objects: [{ value: 250 }, { value: 251 }]
     })
     cycle(okay, {
-        name: 'sipless',
+        name: 'conditional/sipless',
         define: {
             object: {
                 type: 8,
@@ -41,7 +41,7 @@ function prove (okay) {
         objects: [{ type: 0, value: 0xaaaa }, { type: 1, value: 0xaaaaaaaa }]
     })
     cycle(okay, {
-        name: 'bidirectional',
+        name: 'conditional/bidirectional',
         define: {
             object: {
                 type: 8,

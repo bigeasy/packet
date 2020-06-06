@@ -1,3 +1,4 @@
+const fs = require('fs')
 const path = require('path')
 const compiler = require('../../require')
 const util = require('util')
@@ -22,6 +23,7 @@ module.exports = function (okay, options) {
         const name = `${options.name}${options.objects.length == 1 ? '' : ` ${index + 1}`}`
         const intermediate = simplified(options.define)
         const filename = path.resolve(__filename, '../../generated/' + options.name)
+        fs.mkdirSync(path.dirname(filename), { recursive: true })
         const packet = {
             parsers: { all: {}, inc: {}, bff: {} },
             serializers: { all: {}, inc: {}, bff: {} },
