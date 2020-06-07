@@ -7,9 +7,8 @@ module.exports = function (parsers) {
 
                 object = {
                     header: {
-                        one: 0,
-                        two: 0,
-                        three: 0
+                        flag: 0,
+                        value: 0
                     }
                 }
 
@@ -19,7 +18,7 @@ module.exports = function (parsers) {
 
                 $_ = 0
                 $step = 2
-                $bite = 3
+                $bite = 0
 
             case 2:
 
@@ -31,13 +30,22 @@ module.exports = function (parsers) {
                     $bite--
                 }
 
-                object.header.one = $_ >>> 15 & 0x1
+                object.header.flag = $_ >>> 6 & 0x3
 
-                object.header.two = $_ >>> 12 & 0x7
-                object.header.two =
-                    object.header.two & 0x4 ? (0x7 - object.header.two  + 1) * -1 : object.header.two
+                if (($ => $.header.flag == 0)(object)) {
+                    object.header.value = $_ & 0x3f
+                } else if (($ => $.header.flag == 1)(object)) {
+                    object.header.value = $_ & 0x3
+                } else if (($ => $.header.flag == 2)(object)) {
+                    object.header.value = {
+                        two: 0,
+                        four: 0
+                    }
 
-                object.header.three = $_ & 0xfff
+                    object.header.value.two = $_ >>> 4 & 0x3
+
+                    object.header.value.four = $_ & 0xf
+                }
 
 
             case 3:

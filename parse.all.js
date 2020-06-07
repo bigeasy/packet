@@ -97,7 +97,7 @@ function generate (packet, bff) {
             return $(`
                 `, parse, `
 
-                `, unpack(assignee, field, '$_'), `
+                `, unpack(packet, assignee, field, '$_'), `
             `)
         }
 

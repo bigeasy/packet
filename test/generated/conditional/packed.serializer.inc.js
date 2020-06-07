@@ -7,12 +7,22 @@ module.exports = function (serializers) {
             case 0:
 
                 $step = 1
-                $bite = 3
+                $bite = 0
                 $_ =
-                    ((0xdeaf << 16 & 0xffff0000) >>> 0) |
-                    (object.header.one << 15 & 0x8000) |
-                    (object.header.two << 12 & 0x7000) |
-                    (object.header.three & 0xfff)
+                    (object.header.flag << 6 & 0xc0)
+
+                if (($ => $.header.flag == 0)(object)) {
+                    $_ |=
+                        (object.header.value & 0x3f)
+                } else if (($ => $.header.flag == 1)(object)) {
+                    $_ |=
+                        (0xa << 2 & 0x3c) |
+                        (object.header.value & 0x3)
+                } else if (($ => $.header.flag == 2)(object)) {
+                    $_ |=
+                        (object.header.value.two << 4 & 0x30) |
+                        (object.header.value.four & 0xf)
+                }
 
             case 1:
 

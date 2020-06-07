@@ -84,7 +84,7 @@ function generate (packet, bff) {
         $step += 2
         if (field.fields) {
             variables.register = true
-            const packing = pack(field, path, '$_')
+            const packing = pack(packet, field, path, '$_')
             return $(`
                 `, packing, `
 

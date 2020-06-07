@@ -2,6 +2,7 @@ require('proof')(0, prove)
 
 function prove (okay) {
     const cycle = require('./cycle')
+    /*
     cycle(okay, {
         name: 'conditional/mysql',
         define: {
@@ -53,5 +54,43 @@ function prove (okay) {
             }
         },
         objects: [{ type: 0, value: 0xaaaa }, { type: 1, value: 0xaaaaaaaa }]
+    })
+    */
+    cycle(okay, {
+        name: 'conditional/packed',
+        define: {
+            object: {
+                header: [{
+                    flag: 2,
+                    value: [[
+                        $ => $.header.flag == 0, 6
+                    ], [
+                        $ => $.header.flag == 1, [ 'a', 2 ]
+                    ], [
+                        $ => $.header.flag == 2, [{
+                            two: 2,
+                            four: 4
+                        }, 6 ]
+                    ]]
+                }, 8 ]
+            }
+        },
+        objects: [{
+            header: {
+                flag: 0, value: 0x2a
+            }
+        }, {
+            header: {
+                flag: 1, value: 3
+            }
+        }, {
+            header: {
+                flag: 2,
+                value: {
+                    two: 2,
+                    four: 10
+                }
+            }
+        }]
     })
 }

@@ -1,40 +1,118 @@
 const $ = require('programmatic')
+const snuggle = require('./snuggle')
+const join = require('./join')
 
 const fiddle = require('./fiddle/pack')
 
-function subPack (path, pack, field) {
-    switch (field.type) {
-    case 'literal': {
+function _fiddle (pack) {
+    return fiddle(pack.bits, pack.offset, pack.size, pack.value)
+}
+
+function flatten (flattened, path, fields, assignment = '=') {
+    for (const field of fields) {
+        switch (field.type) {
+        case 'literal':
             if (field.before.repeat != 0) {
-                pack.fields.push(` (${fiddle(pack.bits, pack.offset, field.before.bits, '0x' + field.before.value)})`)
-                pack.offset += field.before.bits
+                flattened.push({
+                    type: 'integer',
+                    compliment: false,
+                    bits: field.before.bits,
+                    value: '0x' + field.before.value
+                })
             }
-            field.fields.forEach(f => subPack(path + field.dotted, pack, f))
-        }
-        break
-    case 'integer': {
-            let variable = path + field.dotted
-            if (field.indexOf) {
-                constants.other = field.indexOf
-                variable = `other.indexOf[${object}.${field.name}]`
+            flatten(flattened, path + field.dotted, field.fields)
+            if (field.after.repeat != 0) {
+                flattened.push({
+                    type: 'literal',
+                    compliment: false,
+                    bits: field.after.bits,
+                    value: '0x' + field.after.value
+                })
             }
-            pack.fields.push(` (${fiddle(pack.bits, pack.offset, field.bits, variable)})`)
-            pack.offset += field.bits
+            break
+        case 'integer':
+            flattened.push({
+                type: 'integer',
+                bits: field.bits,
+                compliment: field.compliment,
+                value: path + field.dotted
+            })
+            break
+        case 'conditional':
+            flattened.push({
+                type: 'conditional',
+                path: path + field.dotted,
+                assignment: assignment,
+                conditional: field
+            })
+            break
         }
-        break
+        assignment = '|='
     }
+    return flattened
+}
+
+function subPack (root, path, bits, offset, fields) {
+    const packed = [[]]
+    for (const field of fields) {
+        switch (field.type) {
+        case 'integer': {
+                packed[0].push({
+                    bits: bits,
+                    offset: offset,
+                    size: field.bits,
+                    value: field.value
+                })
+                offset += field.bits
+            }
+            break
+        case 'conditional': {
+                const { conditional, path, assignment } = field, block = []
+                for (let i = 0, I = conditional.serialize.conditions.length; i < I; i++) {
+                    const condition = conditional.serialize.conditions[i]
+                    const source = module.exports.call(null, root, {
+                        bits: bits,
+                        fields: condition.fields[0].type == 'integer' && condition.fields[0].fields
+                              ? condition.fields[0].fields
+                              : condition.fields
+                    }, path, '$_', assignment, offset)
+                    const keyword = typeof condition.source == 'boolean' ? 'else'
+                                                                       : i == 0 ? 'if' : 'else if'
+                    const signature = []
+                    if (conditional.serialize.split) {
+                        signature.push(path)
+                    }
+                    signature.push(root.name)
+                    const ifed = $(`
+                        ${keyword} ((${condition.source})(${signature.join(', ')})) {
+                            `, source, `
+                        }
+                    `)
+                    block.push(ifed)
+                }
+                offset += conditional.bits
+                packed.unshift(snuggle(block))
+            }
+            break
+        }
+    }
+    return packed.reverse()
 }
 
 // A recent implementation of packing, but one that is now untested and stale.
 // Removing from the `serialize.all` generator for visibility.
-module.exports = function _pack (packet, path, stuff = 'let value') {
-    const pack = { bits: packet.bits, offset: 0, fields: [] }
-    let bits = 0
-    for (const field of packet.fields) {
-        subPack(path, pack, field)
+module.exports = function (root, field, path, stuff, assignment = '=', offset = 0) {
+    const block = [], flattened = flatten([], path, field.fields, assignment)
+    for (const packed of subPack(root, path, field.bits, offset, flattened)) {
+        if (typeof packed == 'string') {
+            block.push(packed)
+        } else if (packed.length != 0) {
+            block.push($(`
+                ${stuff} ${assignment}
+                    `, packed.map(_fiddle).join(' |\n'), `
+            `))
+        }
+        assignment = '|='
     }
-    return $(`
-        ${stuff} =
-            `, pack.fields.join(' |\n'), `
-    `)
+    return join(block)
 }

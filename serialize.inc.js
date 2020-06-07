@@ -16,7 +16,7 @@ function generate (packet) {
         const direction = field.endianness == 'big' ? '--' : '++'
         let bite = field.endianness == 'big' ? bytes - 1 : 0
         let stop = field.endianness == 'big' ? -1 : bytes
-        const assign = field.fields ? pack(field, path, '$_') : `$_ = ${path}`
+        const assign = field.fields ? pack(packet, field, path, '$_') : `$_ = ${path}`
         const source = $(`
             case ${$step++}:
 

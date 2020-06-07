@@ -1,36 +1,98 @@
 const fiddle = require('./fiddle/unpack')
 const unsign = require('./fiddle/unsign')
+const snuggle = require('./snuggle')
+const join = require('./join')
 const $ = require('programmatic')
+const { structure } = require('./vivify')
 
-function unpack (path, field, assignee) {
-    let bits = field.bits, offset = 0, bit = 0
-    function unpack (field) {
+function _fiddle (pack) {
+    return fiddle(pack.bits, pack.offset, pack.size, pack.packed)
+}
+
+function unpack (root, path, field, packed, offset = 0) {
+    let bits = field.bits, bit = offset
+    function advance (size) {
+        const offset = bit
+        bit += size
+        return offset
+    }
+    function unpack (path, field) {
         switch (field.type) {
+        case 'checkpoint':
+            return field
         case 'literal':
             bit += field.before.bits || 0
-            const unpacked = unpack(field.fields[0])
+            const unpacked = unpack(path + field.dotted, field.fields[0])
             bit += field.after.bits || 0
             return unpacked
         case 'integer':
-            field.offset = bit
-            bit += field.bits
-            return field
+            return {
+                type: 'integer',
+                bits: bits,
+                path: path + field.dotted,
+                packed: packed,
+                size: field.bits,
+                offset: advance(field.bits),
+                compliment: field.compliment
+            }
+        case 'conditional':
+            return {
+                type: 'conditional',
+                bits: bits,
+                path: path + field.dotted,
+                packed: packed,
+                offset: bit,
+                size: advance(field.bits),
+                conditional: field
+            }
         }
     }
-    const packing = field.fields.map(unpack)
-    // TODO Faster with an if statement rather than a reassignment (see
-    // generated code) or with a temporary variable.
-    return packing.filter(field => field.type == 'integer').map(function (field) {
-        const assign = `${path}${field.dotted} = ${fiddle(bits, field.offset, field.bits, assignee)}`
-        if (field.compliment) {
-            return $(`
-                `, assign, `
-                ${path}${field.dotted} =
-                    `, unsign(path + field.dotted, field.bits), `
-            `)
+    const blocks = []
+    for (const packing of field.fields.map(f => unpack(path, f))) {
+        switch (packing.type) {
+        case 'checkpoint':
+            break
+        case 'integer': {
+                const assign = `${packing.path} = ${_fiddle(packing)}`
+                if (packing.compliment) {
+                    blocks.push($(`
+                        `, assign, `
+                        ${packing.path} =
+                            `, unsign(packing.path, packing.size), `
+                    `))
+                } else {
+                    blocks.push(assign)
+                }
+            }
+            break
+        case 'conditional': {
+                const { conditional, path, offset } = packing, block = []
+                for (let i = 0, I = conditional.serialize.conditions.length; i < I; i++) {
+                    const condition = conditional.serialize.conditions[i]
+                    const vivifyed = condition.fields[0].type == 'integer' && condition.fields[0].fields
+                    const source = module.exports.call(null, root, path, {
+                        bits: bits,
+                        fields: vivifyed ? condition.fields[0].fields : condition.fields
+                    }, packed, offset)
+                    const keyword = typeof condition.source == 'boolean' ? 'else'
+                                                                       : i == 0 ? 'if' : 'else if'
+                    const vivify = vivifyed ? structure(path, condition.fields[0]) : null
+                    const ifed = $(`
+                        ${keyword} ((${condition.source})(${root.name})) {
+                            `, vivify, -1, `
+
+                            `, source, `
+                        }
+                    `)
+                    block.push(ifed)
+                }
+                blocks.push(snuggle(block))
+            }
+            break
         }
-        return assign
-    }).join('\n')
+        offset += packing.bits
+    }
+    return join(blocks)
 }
 
 module.exports = unpack

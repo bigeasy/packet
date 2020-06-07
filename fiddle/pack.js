@@ -7,7 +7,7 @@ function pack (bits, offset, size, value) {
     const source = shift
                ? value + ' << ' + shift + ' & 0x' + mask.toString(16)
                : value + ' & 0x' + mask.toString(16)
-    return !offset && bits == 32 ? '(' + source + ') >>> 0' : source
+    return `(${!offset && bits == 32 ? '(' + source + ') >>> 0' : source})`
 }
 
 module.exports = pack

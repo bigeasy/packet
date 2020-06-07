@@ -13,7 +13,7 @@ function generate (packet) {
 
     function integer (path, field) {
         const bytes = field.bits / 8
-        if (bytes == 1) {
+        if (bytes == 1 && field.fields == null) {
             return $(`
                 case ${$step++}:
 
@@ -32,7 +32,7 @@ function generate (packet) {
         const start = field.endianness == 'big' ? bytes - 1 : 0
         const stop = field.endianness == 'big' ? -1 : bytes
         const direction = field.endianness == 'big' ?  '--' : '++'
-        const assign = field.fields ? unpack(path, field, '$_')
+        const assign = field.fields ? unpack(packet, path, field, '$_')
                      : field.compliment ? `${path} = ${unsign('$_', field.bits)}`
                      : `${path} = $_`
         return $(`

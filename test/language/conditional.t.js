@@ -274,11 +274,11 @@ require('proof')(4, okay => {
             header: {
                 flag: 2,
                 body: [[
-                    $ => $.flag == 0, 6
+                    $ => $.header.flag == 0, 6
                 ], [
-                    $ => $.flag == 1, [ 'a', 2 ]
+                    $ => $.header.flag == 1, [ 'a', 2 ]
                 ], [
-                    $ => $.flag == 2, [{
+                    $ => $.header.flag == 2, [{
                         two: 2,
                         four: 4
                     }, 6 ]
@@ -310,7 +310,7 @@ require('proof')(4, okay => {
                 serialize: {
                     split: false,
                     conditions: [{
-                        source: '$ => $.flag == 0',
+                        source: '$ => $.header.flag == 0',
                         arity: 1,
                         fields: [{
                             type: 'integer',
@@ -321,7 +321,7 @@ require('proof')(4, okay => {
                             compliment: false
                         }]
                     }, {
-                        source: '$ => $.flag == 1',
+                        source: '$ => $.header.flag == 1',
                         arity: 1,
                         fields: [{
                             type: 'literal',
@@ -342,7 +342,7 @@ require('proof')(4, okay => {
                             after: { repeat: 0, value: '' }
                         }]
                     }, {
-                        source: '$ => $.flag == 2',
+                        source: '$ => $.header.flag == 2',
                         arity: 1,
                         fields: [{
                             type: 'integer',
@@ -374,7 +374,7 @@ require('proof')(4, okay => {
                 parse: {
                     sip: null,
                     conditions: [{
-                        source: '$ => $.flag == 0',
+                        source: '$ => $.header.flag == 0',
                         arity: 1,
                         fields: [{
                             type: 'integer',
@@ -385,7 +385,7 @@ require('proof')(4, okay => {
                             compliment: false
                         }]
                     }, {
-                        source: '$ => $.flag == 1',
+                        source: '$ => $.header.flag == 1',
                         arity: 1,
                         fields: [{
                             type: 'literal',
@@ -405,7 +405,7 @@ require('proof')(4, okay => {
                             after: { repeat: 0, value: '' }
                         }]
                     }, {
-                      source: '$ => $.flag == 2',
+                      source: '$ => $.header.flag == 2',
                       arity: 1,
                       fields: [{
                           type: 'integer',
