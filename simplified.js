@@ -158,10 +158,20 @@ function map (definitions, packet, extra = {}, packed = false) {
             // easier to return to for maintainence and expansion.
             // Outer array.
             if (Array.isArray(packet)) {
+                if (
+                    packet.length == 2 &&
+                    typeof packet[0] == 'number' &&
+                    Array.isArray(packet[1]) &&
+                    packet[1].length > 1 &&
+                    packet[1].filter(value => typeof value == 'string').length == packet[1].length
+                ) {
+                    const field = map(definitions, packet[0], extra, packed).shift()
+                    field.lookup = packet[1].slice()
+                    return [ field ]
                 // Seems that we could still have an object for integer with
                 // padding before and after, we could make literals wrappers.
                 // [ 'ac', 16 ] or [ 'ac', [ 'utf8' ] ]
-                if (
+                } else if (
                     packet.filter(item => typeof item == 'string').length != 0 ||
                     (Array.isArray(packet[0]) && typeof packet[0][0] == 'string') ||
                     (

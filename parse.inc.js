@@ -5,15 +5,17 @@ const unpack = require('./unpack')
 const unsign = require('./fiddle/unsign')
 const $ = require('programmatic')
 const vivify = require('./vivify')
+const lookup = require('./lookup')
 
 function generate (packet) {
     let $step = 0, $i = -1, $sip = -1, iterate = false, _terminated = false
 
     const lets = { packet: true, step: true }
+    const $lookup = {}
 
     function integer (path, field) {
         const bytes = field.bits / 8
-        if (bytes == 1 && field.fields == null) {
+        if (bytes == 1 && field.fields == null && field.lookup == null) {
             return $(`
                 case ${$step++}:
 
@@ -32,9 +34,16 @@ function generate (packet) {
         const start = field.endianness == 'big' ? bytes - 1 : 0
         const stop = field.endianness == 'big' ? -1 : bytes
         const direction = field.endianness == 'big' ?  '--' : '++'
-        const assign = field.fields ? unpack(packet, path, field, '$_')
-                     : field.compliment ? `${path} = ${unsign('$_', field.bits)}`
-                     : `${path} = $_`
+        const assign = field.fields
+            ? unpack(packet, path, field, '$_')
+            : field.compliment
+                ? `${path} = ${unsign('$_', field.bits)}`
+                : field.lookup
+                    ? `${path} = $lookup.${path}[$_]`
+                    : `${path} = $_`
+        if (field.lookup) {
+            lookup($lookup, path, field.lookup.slice())
+        }
         return $(`
             case ${$step++}:
 
@@ -445,8 +454,13 @@ function generate (packet) {
     }
 
     const object = `parsers.inc.${packet.name}`
+    const lookups = Object.keys($lookup).length != 0
+                  ? `const $lookup = ${JSON.stringify($lookup, null, 4)}`
+                  : null
     return $(`
         ${object} = function (${signature.join(', ')}) {
+            `, lookups, -1, `
+
             let $_, $bite
             return function parse ($buffer, $start, $end) {
                 `, source, `

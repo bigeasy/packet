@@ -1,5 +1,6 @@
 const join = require('./join')
 const map = require('./map')
+const lookup = require('./lookup')
 const snuggle = require('./snuggle')
 const pack = require('./pack')
 const $ = require('programmatic')
@@ -66,6 +67,8 @@ function generate (packet, bff) {
     const variables = { packet: true, step: true }
     const constants = { assert: false }
 
+    const $lookup = {}
+
     function word (asignee, field) {
         const bytes = field.bits / 8
         let bite = field.endianness == 'big' ? bytes - 1 : 0
@@ -90,6 +93,16 @@ function generate (packet, bff) {
 
                 `, word('$_', field), `
             `)
+        } else if (field.lookup) {
+            variables.register = true
+            lookup($lookup, path, field.lookup.slice())
+            return $(`
+                $_ = $lookup.${path}.indexOf(${path})
+
+                `, word('$_', field), `
+            `)
+            console.log($lookup)
+            throw new Error
         } else {
             return word(path, field)
         }
@@ -277,8 +290,13 @@ function generate (packet, bff) {
     const lets = Object.keys(declarations)
                             .filter(key => variables[key])
                             .map(key => declarations[key])
+    const lookups = Object.keys($lookup).length != 0
+                  ? `const $lookup = ${JSON.stringify($lookup, null, 4)}`
+                  : null
     return $(`
         serializers.${bff ? 'bff' : 'all'}.${packet.name} = function (${packet.name}) {
+            `, lookups, -1, `
+
             return function ($buffer, $start, $end) {
                 `, consts.length != 0 ? `const ${consts.join(', ')}` : null, -1, `
 

@@ -6,11 +6,14 @@ const unsign = require('./fiddle/unsign')
 const $ = require('programmatic')
 const corporeal = require('./corporeal')
 const vivify = require('./vivify')
+const lookup = require('./lookup')
 
 function generate (packet, bff) {
     let $i = -1, $sip = -1, $step = 1
 
     const variables = { packet: true, step: true }
+
+    const $lookup = {}
 
     // TODO You can certianly do something to make this prettier.
     // TODO Start by prepending the path I think?
@@ -73,7 +76,7 @@ function generate (packet, bff) {
     }
 
     function integer (assignee, field) {
-        const variable = field.fields || field.compliment ? '$_' : assignee
+        const variable = field.lookup || field.fields || field.compliment ? '$_' : assignee
         const bytes = field.bits / 8
         let bite = field.endianness == 'little' ? 0 : bytes - 1
         const stop = field.endianness == 'little' ? bytes : -1
@@ -98,6 +101,14 @@ function generate (packet, bff) {
                 `, parse, `
 
                 `, unpack(packet, assignee, field, '$_'), `
+            `)
+        } else if (field.lookup) {
+            variables.register = true
+            lookup($lookup, assignee, field.lookup.slice())
+            return $(`
+                `, parse, `
+
+                ${assignee} = $lookup.${assignee}[$_]
             `)
         }
 
@@ -365,9 +376,14 @@ function generate (packet, bff) {
     const lets = Object.keys(declarations)
                             .filter(key => variables[key])
                             .map(key => declarations[key])
+    const lookups = Object.keys($lookup).length != 0
+                  ? `const $lookup = ${JSON.stringify($lookup, null, 4)}`
+                  : null
     if (bff) {
         return $(`
             parsers.bff.${packet.name} = function () {
+                `, lookups, -1, `
+
                 return function parse ($buffer, $start, $end) {
                     `, lets.length ? `let ${lets.join(', ')}` : null, -1, `
 
@@ -383,6 +399,8 @@ function generate (packet, bff) {
 
     return $(`
         parsers.all.${packet.name} = function ($buffer, $start) {
+            `, lookups, -1, `
+
             `, lets.length ? `let ${lets.join(', ')}` : null, -1, `
 
             `, vivify.structure(`const ${packet.name}`, packet), `

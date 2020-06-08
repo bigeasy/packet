@@ -3,12 +3,14 @@ const join = require('./join')
 const map = require('./map')
 const snuggle = require('./snuggle')
 const pack = require('./pack')
+const lookup = require('./lookup')
 
 function generate (packet) {
     let $step = 0, $i = -1, surround = false
 
     const variables = { packet: true, step: true }
     const constants = { assert: false }
+    const $lookup = {}
 
     function integer (path, field) {
         const endianness = field.endianness || 'big'
@@ -16,7 +18,14 @@ function generate (packet) {
         const direction = field.endianness == 'big' ? '--' : '++'
         let bite = field.endianness == 'big' ? bytes - 1 : 0
         let stop = field.endianness == 'big' ? -1 : bytes
-        const assign = field.fields ? pack(packet, field, path, '$_') : `$_ = ${path}`
+        if (field.lookup) {
+            lookup($lookup, path, field.lookup.slice())
+        }
+        const assign = field.fields
+            ? pack(packet, field, path, '$_')
+            : field.lookup
+                ? `$_ = $lookup.${path}.indexOf(${path})`
+                : `$_ = ${path}`
         const source = $(`
             case ${$step++}:
 
@@ -328,9 +337,14 @@ function generate (packet) {
     const consts = Object.keys(declarations)
                          .filter(key => constants[key])
                          .map(key => declarations[key])
+    const lookups = Object.keys($lookup).length != 0
+                  ? `const $lookup = ${JSON.stringify($lookup, null, 4)}`
+                  : null
     const object = 'serializers.inc.' + packet.name
     const generated = $(`
         ${object} = function (${signature.join(', ')}) {
+            `, lookups, -1, `
+
             let $bite, $stop, $_
 
             `, consts.length != 0 ? `const ${consts.join(', ')}` : null, -1, `
