@@ -36,12 +36,10 @@ function generate (packet, bff) {
                     condition.fields = checkpoints(path, condition.fields, index)
                 }
                 break
-            case 'lengthEncoding':
-                checkpoint.lengths[0] += field.bits / 8
-                break
             case 'lengthEncoded':
                 variables.i = true
                 variables.I = true
+                checkpoint.lengths[0] += field.encoding[0].bits / 8
                 checked.push(checkpoint = { type: 'checkpoint', lengths: [ 0 ] })
                 if (field.fixed) {
                     checkpoint.lengths.push(`${field.element.bits / 8} * $I[${index}]`)
@@ -144,25 +142,24 @@ function generate (packet, bff) {
     function lengthEncoded (path, field) {
         variables.i = true
         variables.I = true
+        $i++
         const i = `$i[${$i}]`
         const I = `$I[${$i}]`
+        const encoding = map(dispatch, `${I}`, field.encoding)
+        // Step to skip incremental parser's vivification of the array element.
         $step++
-        const looped = map(dispatch, `${path}[${i}]`, field.fields)
-        $i--
-        return $(`
+        const source = $(`
+            ${i} = 0
+            `, encoding, `
+
             for (; ${i} < ${I}; ${i}++) {
                 `, vivify.array(`${path}[${i}]`, field), `
 
-                `, looped, `
+                `, map(dispatch, `${path}[${i}]`, field.fields), `
             }
         `)
-    }
-
-    function lengthEncoding (field) {
-        return $(`
-            $i[${++$i}] = 0
-            `, integer(`$I[${$i}]`, field), `
-        `)
+        $i--
+        return source
     }
 
     function terminated (path, field) {
@@ -348,8 +345,6 @@ function generate (packet, bff) {
             return fixed(path, field)
         case 'terminated':
             return terminated(path, field)
-        case 'lengthEncoding':
-            return lengthEncoding(field)
         case 'lengthEncoded':
             return lengthEncoded(path, field)
         case 'function':

@@ -100,12 +100,16 @@ function generate (packet) {
     function lengthEncoded (path, packet) {
         lets.i = true
         lets.I = true
+        $i++
         const i = `$i[${$i}]`
         const I = `$I[${$i}]`
+        const encoding = map(dispatch, I, packet.encoding)
         // var integer = integer(packet.length, 'length')
         // Invoked here to set `again`.
         const again = $step
         const source = $(`
+            `, encoding, `
+                ${i} = 0
             case ${$step++}:
 
                 `, vivify.array(`${path}[${i}]`, packet), `
@@ -118,16 +122,6 @@ function generate (packet) {
         `)
         $i--
         return source
-    }
-
-    function lengthEncoding (path, field) {
-        $i++
-        const i = `$i[${$i}]`
-        const I = `$I[${$i}]`
-        return $(`
-            `, integer([ I ], field), `
-                ${i} = 0
-        `)
     }
 
     // We will have a special case for bite arrays where we can use index of to
@@ -401,8 +395,6 @@ function generate (packet) {
             return fixed(path, packet)
         case 'terminated':
             return terminated(path, packet)
-        case 'lengthEncoding':
-            return lengthEncoding(path, packet)
         case 'lengthEncoded':
             return lengthEncoded(path, packet)
         case 'integer':

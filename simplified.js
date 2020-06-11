@@ -289,18 +289,17 @@ function map (definitions, packet, extra = {}, packed = false) {
                 ) {
                     const fields = []
                     assert(Array.isArray(packet[1]))
-                    fields.push(integer(packet[0], false, {
-                        ...extra,
-                        type: 'lengthEncoding',
-                        ethereal: true
-                    }))
+                    const encoding = integer(packet[0], false, {})
+                    const element = map(definitions, packet[1][0], {})
+                    assert.equal(element.length, 1, 'badness')
                     fields.push({
                         type: 'lengthEncoded',
+                        encoding: [ encoding ],
                         dotted: '',
                         bits: 0,
                         fixed: false,
                         // TODO Length encode a structure.
-                        fields: map(definitions, packet[1][0], {}),
+                        fields: [ element[0] ],
                         ...extra
                     })
                     return fields

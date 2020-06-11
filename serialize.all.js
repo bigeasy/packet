@@ -28,10 +28,9 @@ function checkpoints (path, fields, index = 0, rewind = 0) {
                 condition.fields = checkpoints(path, condition.fields, index, rewind)
             }
             break
-        case 'lengthEncoding':
-            checkpoint.lengths[0] += field.bits / 8
-            break
         case 'lengthEncoded':
+            // TODO Test a following single byte.
+            checkpoint.lengths[0] += field.encoding[0].bits / 8
             if (field.fixed) {
                 checkpoint.lengths.push(`${field.element.bits / 8} * ${path + field.dotted}.length`)
             }  else {
@@ -141,24 +140,17 @@ function generate (packet, bff) {
 
     function lengthEncoded (path, field) {
         variables.i = true
+        // $step += 2 TODO I think this is outgoing. Delete if tests pass.
         const i = `$i[${++$i}]`
-        // TODO Here and in conditional we see that we know the name, but we
-        // don't know really understand the contents of the packet, so we ought
-        // to create the path with `concat` rather than have the packet
-        // generation code create the full path with the packet name.
-        const looped = map(dispatch, path + `[${i}]`, field.fields)
         const source = $(`
+            `, map(dispatch, path + '.length', field.encoding), `
+
             for (${i} = 0; ${i} < ${path}.length; ${i}++) {
-                `, looped, `
+                `, map(dispatch, path + `[${i}]`, field.fields), `
             }
         `)
         $i--
         return source
-    }
-
-    function lengthEncoding (path, field) {
-        $step += 2
-        return word(path + '.length', field)
     }
 
     function terminated (path, field) {
@@ -262,8 +254,6 @@ function generate (packet, bff) {
             return fixed(path, field)
         case 'terminated':
             return terminated(path, field)
-        case 'lengthEncoding':
-            return lengthEncoding(path, field)
         case 'lengthEncoded':
             return lengthEncoded(path, field)
         case 'buffer':

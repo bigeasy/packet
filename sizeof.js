@@ -37,20 +37,20 @@ function generate (packet) {
         case 'literal':
         case 'integer':
             return `$_ += ${field.bits / 8}`
-        case 'lengthEncoding':
-            return $(`
-                $_ += ${field.bits / 8}
-            `)
         case 'lengthEncoded':
-            if (field.fixed) {
+            if (field.fields[0].fixed) {
                 return $(`
-                    $_ += ${field.element.bits / 8} * ${path}.length
+                    $_ += ${field.encoding[0].bits / 8}
+
+                    $_ += ${field.fields[0].bits / 8} * ${path}.length
                 `)
             } else {
                 variables.i = true
                 $i++
                 const i = `$i[${$i}]`
                 const source = $(`
+                    $_ += ${field.encoding[0].bits / 8}
+
                     for (${i} = 0; ${i} < ${path}.length; ${i}++) {
                         `, join(field.fields.map(field => dispatch(path + `[${i}]`, field))), `
                     }

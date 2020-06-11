@@ -106,9 +106,14 @@ function generate (packet) {
     // TODO I don't need to push and pop $i.
     function lengthEncoded (path, packet) {
         variables.i = true
+        $i++
         const i = `$i[${$i}]`
+        const encoding = map(dispatch, path + '.length', packet.encoding)
         const again = $step
         const source = $(`
+            `, encoding, `
+                ${i} = 0
+
             `, map(dispatch, `${path}[${i}]`, packet.fields), `
 
                 if (++${i} != ${path}.length) {
@@ -118,15 +123,6 @@ function generate (packet) {
         `)
         $i--
         return source
-    }
-
-    function lengthEncoding (path, packet) {
-        $i++
-        return $(`
-            `, integer(path + '.length', packet), `
-                $i[${$i}] = 0
-        `)
-
     }
 
     function terminated (path, field) {
@@ -287,8 +283,6 @@ function generate (packet) {
             return fixed(path, packet)
         case 'terminated':
             return terminated(path, packet)
-        case 'lengthEncoding':
-            return lengthEncoding(path, packet)
         case 'lengthEncoded':
             return lengthEncoded(path, packet)
         case 'literal':

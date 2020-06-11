@@ -3,45 +3,43 @@ require('proof')(1, okay => {
     okay(simplified({ packet: { value: [ 16, [{ first: [ 16, [ 16 ] ] }] ] } }), [{
         name: 'packet',
         fixed: false,
-        bits: 16,
+        bits: 0,
         type: 'structure',
         dotted: '',
         lengthEncoded: true,
         fields: [{
             name: 'value',
             dotted: '.value',
-            type: 'lengthEncoding',
-            ethereal: true,
-            fixed: true,
-            bits: 16,
-            endianness: 'big',
-            compliment: false
-        }, {
-            name: 'value',
-            dotted: '.value',
             type: 'lengthEncoded',
             fixed: false,
             bits: 0,
+            encoding: [{
+                dotted: '',
+                type: 'integer',
+                fixed: true,
+                bits: 16,
+                endianness: 'big',
+                compliment: false
+            }],
             fields: [{
                 type: 'structure',
                 dotted: '',
-                bits: 16,
+                bits: 0,
                 fixed: false,
                 fields: [{
-                    name: 'first',
-                    dotted: '.first',
-                    type: 'lengthEncoding',
-                    ethereal: true,
-                    fixed: true,
-                    bits: 16,
-                    endianness: 'big',
-                    compliment: false
-                }, {
                     name: 'first',
                     dotted: '.first',
                     type: 'lengthEncoded',
                     fixed: false,
                     bits: 0,
+                    encoding: [{
+                        dotted: '',
+                        type: 'integer',
+                        fixed: true,
+                        bits: 16,
+                        endianness: 'big',
+                        compliment: false
+                    }],
                     fields: [{
                         type: 'integer',
                         dotted: '',

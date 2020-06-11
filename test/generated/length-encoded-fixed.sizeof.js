@@ -1,12 +1,10 @@
 module.exports = function (sizeOf) {
     sizeOf.object = function (object) {
-        let $_ = 0, $i = []
+        let $_ = 0
 
         $_ += 2
 
-        for ($i[0] = 0; $i[0] < object.array.length; $i[0]++) {
-            $_ += 4
-        }
+        $_ += 4 * object.array.length
 
         return $_
     }
