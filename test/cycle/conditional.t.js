@@ -2,7 +2,6 @@ require('proof')(0, prove)
 
 function prove (okay) {
     const cycle = require('./cycle')
-    /*
     cycle(okay, {
         name: 'conditional/mysql',
         define: {
@@ -55,7 +54,6 @@ function prove (okay) {
         },
         objects: [{ type: 0, value: 0xaaaa }, { type: 1, value: 0xaaaaaaaa }]
     })
-    */
     cycle(okay, {
         name: 'conditional/packed',
         define: {
