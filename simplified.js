@@ -223,6 +223,31 @@ function map (definitions, packet, extra = {}, packed = false) {
                         fields: fields,
                         after: after
                     }]
+                // Switch statements.
+                } else if (
+                    typeof packet[0] == 'function' &&
+                    typeof packet[1] == 'object'
+                ) {
+                    const cases = []
+                    for (const when in packet[1]) {
+                        cases.push({
+                            when: when,
+                            fields: map(definitions, packet[1][when], {})
+                        })
+                    }
+                    const otherwise = packet.length > 2
+                        ? map(definitions, packet[2], {})
+                        : null
+                    const bits = cases.reduce((value, when) => {
+                        return value != -1 && value == when.fields[0].bits ? value : -1
+                    }, otherwise[0].bits || cases[0].fields[0].bits)
+                    return [{
+                        type: 'switch',
+                        bits: bits < 0 ? 0 : bits,
+                        fixed: bits > 0,
+                        cases: cases,
+                        otherwise: otherwise
+                    }]
                 // Packed integers.
                 } else if (
                     typeof packet[0] == 'object' &&
