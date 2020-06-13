@@ -229,10 +229,10 @@ function map (definitions, packet, extra = {}, packed = false) {
                     typeof packet[1] == 'object'
                 ) {
                     const cases = []
-                    for (const when in packet[1]) {
+                    for (const value in packet[1]) {
                         cases.push({
-                            when: when,
-                            fields: map(definitions, packet[1][when], {})
+                            value: value,
+                            fields: map(definitions, packet[1][value], {})
                         })
                     }
                     const otherwise = packet.length > 2
@@ -243,10 +243,12 @@ function map (definitions, packet, extra = {}, packed = false) {
                     }, otherwise[0].bits || cases[0].fields[0].bits)
                     return [{
                         type: 'switch',
+                        source: packet[0].toString(),
                         bits: bits < 0 ? 0 : bits,
                         fixed: bits > 0,
                         cases: cases,
-                        otherwise: otherwise
+                        otherwise: otherwise,
+                        ...extra
                     }]
                 // Packed integers.
                 } else if (
@@ -430,8 +432,6 @@ function map (definitions, packet, extra = {}, packed = false) {
                         },
                         ...extra
                     }]
-                    console.log(conditions)
-                    throw new Error('matched')
                 } else {
                     throw new Error('unknown')
                 }
