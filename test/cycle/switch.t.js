@@ -24,4 +24,36 @@ function prove (okay) {
             value: 0xabcdef
         }]
     })
+    cycle(okay, {
+        name: 'switched/packed/strings',
+        define: {
+            object: {
+                header: [{
+                    type: 2,
+                    value: [ $ => $.header.type, {
+                        0: 6,
+                        1: [ 'a', 2 ]
+                    }, [ { two: 2, four: 4 }, 6 ] ]
+                }, 8 ]
+            }
+        },
+        objects: [{
+            header: {
+                type: 0,
+                value: 0x2a
+            }
+        }, {
+            header: {
+                type: 1,
+                value: 0x2
+            }
+        }, {
+            header: {
+                type: 3,
+                value: {
+                    two: 2, four: 0xa
+                }
+            }
+        }]
+    })
 }

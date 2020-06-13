@@ -45,6 +45,16 @@ function unpack (root, path, field, packed, offset = 0) {
                 size: advance(field.bits),
                 conditional: field
             }
+        case 'switch':
+            return {
+                type: 'switch',
+                bits: bits,
+                path: path + field.dotted,
+                packed: packed,
+                offset: bit,
+                size: advance(field.bits),
+                switched: field
+            }
         }
     }
     const blocks = []
@@ -87,6 +97,48 @@ function unpack (root, path, field, packed, offset = 0) {
                     block.push(ifed)
                 }
                 blocks.push(snuggle(block))
+            }
+            break
+        case 'switch': {
+                const { switched, path, offset } = packing, block = []
+                const cases = []
+                for (const when of switched.cases) {
+                    const vivifyed = when.fields[0].type == 'integer' && when.fields[0].fields
+                    const source = module.exports.call(null, root, path, {
+                        bits: bits,
+                        fields: vivifyed ? when.fields[0].fields : when.fields
+                    }, packed, offset)
+                    const vivify = vivifyed ? structure(path, when.fields[0]) : null
+                    cases.push($(`
+                        case ${JSON.stringify(when.value)}:
+                            `, vivify, -1, `
+
+                            `, source, `
+
+                            break
+                    `))
+                }
+                if (switched.otherwise) {
+                    const vivifyed = switched.otherwise[0].type == 'integer' && switched.otherwise
+                    const source = module.exports.call(null, root, path, {
+                        bits: bits,
+                        fields: vivifyed ? switched.otherwise[0].fields : switched.otherwise
+                    }, packed, offset)
+                    const vivify = vivifyed ? structure(path, switched.otherwise[0]) : null
+                    cases.push($(`
+                        default:
+                            `, vivify, -1, `
+
+                            `, source, `
+
+                            break
+                    `))
+                }
+                blocks.push($(`
+                    switch (String((${switched.source})(${root.name}))) {
+                    `, join(cases), `
+                    }
+                `))
             }
             break
         }

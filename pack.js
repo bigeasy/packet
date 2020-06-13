@@ -46,6 +46,14 @@ function flatten (flattened, path, fields, assignment = '=') {
                 conditional: field
             })
             break
+        case 'switch':
+            flattened.push({
+                type: 'switch',
+                path: path + field.dotted,
+                assignment: assignment,
+                switched: field
+            })
+            break
         }
         assignment = '|='
     }
@@ -92,6 +100,46 @@ function subPack (root, path, bits, offset, fields) {
                 }
                 offset += conditional.bits
                 packed.unshift(snuggle(block))
+            }
+            break
+        case 'switch': {
+                const { switched, path, assignment } = field, block = []
+                const cases = []
+                for (const when of switched.cases) {
+                    const source = module.exports.call(null, root, {
+                        bits: bits,
+                        fields: when.fields[0].type == 'integer' && when.fields[0].fields
+                              ? when.fields[0].fields
+                              : when.fields
+                    }, path, '$_', assignment, offset)
+                    cases.push($(`
+                        case ${JSON.stringify(when.value)}:
+
+                            `, source, `
+
+                            break
+                    `))
+                }
+                if (switched.otherwise != null) {
+                    const source = module.exports.call(null, root, {
+                        bits: bits,
+                        fields: switched.otherwise[0].type == 'integer' && switched.otherwise[0].fields
+                              ? switched.otherwise[0].fields
+                              : switched.otherwise
+                    }, path, '$_', assignment, offset)
+                    cases.push($(`
+                        default:
+
+                            `, source, `
+
+                            break
+                    `))
+                }
+                packed.unshift($(`
+                    switch (String((${switched.source})(${root.name}))) {
+                    `, join(cases), `
+                    }
+                `))
             }
             break
         }
