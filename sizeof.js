@@ -78,6 +78,38 @@ function generate (packet) {
                 return source
             }
             break
+        case 'switch': {
+                if (field.fixed) {
+                    return $(`
+                        $_ += ${field.bits / 8}
+                    `)
+                }
+                const cases = []
+                for (const when of field.cases) {
+                    cases.push($(`
+                        case ${JSON.stringify(when.value)}:
+
+                            `, join(when.fields.map(dispatch.bind(null, path))), `
+
+                            break
+                    `))
+                }
+                if (field.otherwise != null) {
+                    cases.push($(`
+                        default:
+
+                            `, join(field.otherwise.map(dispatch.bind(null, path))), `
+
+                            break
+                    `))
+                }
+                return $(`
+                    switch (String((${field.source})(${packet.name}))) {
+                    `, join(cases), `
+                    }
+                `)
+            }
+            break
         case 'structure': {
                 if (field.fixed) {
                     return `$_ += ${field.bits / 8}`

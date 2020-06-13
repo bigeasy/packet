@@ -311,6 +311,33 @@ function generate (packet, bff) {
         `)
     }
 
+    function switched (path, field) {
+        const cases = []
+        for (const when of field.cases) {
+            cases.push($(`
+                case ${JSON.stringify(when.value)}:
+
+                    `, join(when.fields.map(field => dispatch(path + field.dotted, field))), `
+
+                    break
+            `))
+        }
+        if (field.otherwise != null) {
+            cases.push($(`
+                default:
+
+                    `, join(field.otherwise.map(dispatch.bind(null, path))), `
+
+                    break
+            `))
+        }
+        return $(`
+            switch (String((${field.source})(${packet.name}))) {
+            `, join(cases), `
+            }
+        `)
+    }
+
     function checkpoint (checkpoint, depth, arrayed) {
         if (checkpoint.lengths.length == 0) {
             return null
@@ -339,6 +366,8 @@ function generate (packet, bff) {
             }
         case 'checkpoint':
             return checkpoint(field)
+        case 'switch':
+            return switched(path, field)
         case 'conditional':
             return conditional(path, field)
         case 'fixed':

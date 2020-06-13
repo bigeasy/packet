@@ -268,6 +268,46 @@ function generate (packet) {
         `)
     }
 
+    function switched (path, field) {
+        surround = true
+        const start = $step++
+        const cases = []
+        const steps = []
+        for (const when of field.cases) {
+            cases.push($(`
+                case ${JSON.stringify(when.value)}:
+
+                    $step = ${$step}
+                    continue
+            `))
+            steps.push(join(when.fields.map(field => dispatch(path, field))))
+        }
+        if (field.otherwise != null) {
+            cases.push($(`
+                default:
+
+                    $step = ${$step}
+                    continue
+            `))
+            steps.push(join(field.otherwise.map(field => dispatch(path, field))))
+        }
+        // TODO Slicing here is because of who writes the next step, which seems
+        // to be somewhat confused.
+        return $(`
+            case ${start}:
+
+                switch (String((${field.source})(${packet.name}))) {
+                `, join(cases), `
+                }
+
+            `, join([].concat(steps.slice(steps, steps.length - 1).map(step => $(`
+                `, step, `
+                    $step = ${$step}
+                    continue
+            `)), steps.slice(steps.length -1))), `
+        `)
+    }
+
     function dispatch (path, packet) {
         switch (packet.type) {
         case 'structure':
@@ -277,6 +317,8 @@ function generate (packet) {
                     `, source, `
                 `)
             }))
+        case 'switch':
+            return switched(path, packet)
         case 'conditional':
             return conditional(path, packet)
         case 'fixed':

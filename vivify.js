@@ -18,6 +18,7 @@ function property_ (field) {
         return `${property.name}: []`
     // TODO Ensure that conditional resolves to same type in all cases or else
     // assign `null` and vivify later. (Ugh.)
+    case 'switch':
     case 'conditional':
     case 'integer':
         if (property.fields) {
