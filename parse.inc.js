@@ -408,12 +408,15 @@ function generate (packet) {
             `))
             steps.push(join(field.otherwise.map(field => dispatch(path, field))))
         }
+        const select = field.stringify
+            ? `String((${field.source})(${packet.name}))`
+            : `(${field.source})(${packet.name})`
         // TODO Slicing here is because of who writes the next step, which seems
         // to be somewhat confused.
         return $(`
             case ${start}:
 
-                switch (String((${field.source})(${packet.name}))) {
+                switch (${select}) {
                 `, join(cases), `
                 }
 

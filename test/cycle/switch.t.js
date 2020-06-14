@@ -56,4 +56,27 @@ function prove (okay) {
             }
         }]
     })
+    cycle(okay, {
+        name: 'switched/variant',
+        define: {
+            object: {
+                type: 8,
+                value: [ $ => $.type, [[
+                    0, 8
+                ], [
+                    1, 16
+                ]], 24 ]
+            }
+        },
+        objects: [{
+            type: 0,
+            value: 0xab
+        }, {
+            type: 1,
+            value: 0xabcd
+        }, {
+            type: 2,
+            value: 0xabcdef
+        }]
+    })
 }

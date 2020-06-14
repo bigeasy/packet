@@ -103,8 +103,11 @@ function generate (packet) {
                             break
                     `))
                 }
+                const select = field.stringify
+                    ? `String((${field.source})(${packet.name}))`
+                    : `(${field.source})(${packet.name})`
                 return $(`
-                    switch (String((${field.source})(${packet.name}))) {
+                    switch (${select}) {
                     `, join(cases), `
                     }
                 `)

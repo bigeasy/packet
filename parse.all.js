@@ -331,8 +331,15 @@ function generate (packet, bff) {
                     break
             `))
         }
+        if (field.stringify) {
+            return $(`
+                switch (String((${field.source})(${packet.name}))) {
+                `, join(cases), `
+                }
+            `)
+        }
         return $(`
-            switch (String((${field.source})(${packet.name}))) {
+            switch ((${field.source})(${packet.name})) {
             `, join(cases), `
             }
         `)

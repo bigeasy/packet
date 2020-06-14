@@ -229,11 +229,20 @@ function map (definitions, packet, extra = {}, packed = false) {
                     typeof packet[1] == 'object'
                 ) {
                     const cases = []
-                    for (const value in packet[1]) {
-                        cases.push({
-                            value: value,
-                            fields: map(definitions, packet[1][value], {})
-                        })
+                    if (Array.isArray(packet[1])) {
+                        for (const when of packet[1]) {
+                            cases.push({
+                                value: when[0],
+                                fields: map(definitions, when[1], {})
+                            })
+                        }
+                    } else {
+                        for (const value in packet[1]) {
+                            cases.push({
+                                value: value,
+                                fields: map(definitions, packet[1][value], {})
+                            })
+                        }
                     }
                     const otherwise = packet.length > 2
                         ? map(definitions, packet[2], {})
@@ -243,6 +252,7 @@ function map (definitions, packet, extra = {}, packed = false) {
                     }, otherwise[0].bits || cases[0].fields[0].bits)
                     return [{
                         type: 'switch',
+                        stringify: ! Array.isArray(packet[1]),
                         source: packet[0].toString(),
                         bits: bits < 0 ? 0 : bits,
                         fixed: bits > 0,
