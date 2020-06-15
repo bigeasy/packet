@@ -30,6 +30,7 @@ require('proof')(4, okay => {
             stringify: true,
             cases: [{
                 value: '0',
+                otherwise: false,
                 fields: [
                   {
                     type: 'integer',
@@ -42,6 +43,7 @@ require('proof')(4, okay => {
                 ]
             }, {
                 value: '1',
+                otherwise: false,
                 fields: [{
                     type: 'integer',
                     dotted: '',
@@ -50,14 +52,17 @@ require('proof')(4, okay => {
                     endianness: 'big',
                     compliment: false
                 }]
-            }],
-            otherwise: [{
-                type: 'integer',
-                dotted: '',
-                fixed: true,
-                bits: 32,
-                endianness: 'big',
-                compliment: false
+            }, {
+                value: null,
+                otherwise: true,
+                fields: [{
+                    type: 'integer',
+                    dotted: '',
+                    fixed: true,
+                    bits: 32,
+                    endianness: 'big',
+                    compliment: false
+                }],
             }],
             name: 'value',
             dotted: '.value'
@@ -103,6 +108,7 @@ require('proof')(4, okay => {
                 fixed: true,
                 cases: [{
                     value: '0',
+                    otherwise: false,
                     fields: [{
                         type: 'integer',
                         dotted: '',
@@ -113,6 +119,7 @@ require('proof')(4, okay => {
                     }]
                 }, {
                     value: '1',
+                    otherwise: false,
                     fields: [{
                         type: 'literal',
                         dotted: '',
@@ -130,28 +137,31 @@ require('proof')(4, okay => {
                         }],
                         after: { repeat: 0, value: '' }
                     }]
-                }],
-                otherwise: [{
-                    dotted: '',
-                    fixed: true,
-                    bits: 6,
-                    type: 'structure',
+                }, {
+                    value: null,
+                    otherwise: true,
                     fields: [{
-                        type: 'integer',
-                        dotted: '.two',
+                        dotted: '',
                         fixed: true,
-                        bits: 2,
-                        endianness: 'big',
-                        compliment: false,
-                        name: 'two'
-                    }, {
-                        type: 'integer',
-                        dotted: '.four',
-                        fixed: true,
-                        bits: 4,
-                        endianness: 'big',
-                        compliment: false,
-                        name: 'four'
+                        bits: 6,
+                        type: 'structure',
+                        fields: [{
+                            type: 'integer',
+                            dotted: '.two',
+                            fixed: true,
+                            bits: 2,
+                            endianness: 'big',
+                            compliment: false,
+                            name: 'two'
+                        }, {
+                            type: 'integer',
+                            dotted: '.four',
+                            fixed: true,
+                            bits: 4,
+                            endianness: 'big',
+                            compliment: false,
+                            name: 'four'
+                        }]
                     }]
                 }],
                 name: 'value',
@@ -190,6 +200,7 @@ require('proof')(4, okay => {
             fixed: false,
             cases: [{
                 value: 0,
+                otherwise: false,
                 fields: [{
                     type: 'integer',
                     dotted: '',
@@ -200,6 +211,7 @@ require('proof')(4, okay => {
                 }]
             }, {
                 value: 1,
+                otherwise: false,
                 fields: [{
                     type: 'integer',
                     dotted: '',
@@ -208,14 +220,17 @@ require('proof')(4, okay => {
                     endianness: 'big',
                     compliment: false
                 }]
-            }],
-            otherwise: [{
-                type: 'integer',
-                dotted: '',
-                fixed: true,
-                bits: 24,
-                endianness: 'big',
-                compliment: false
+            }, {
+                value: null,
+                otherwise: true,
+                fields: [{
+                    type: 'integer',
+                    dotted: '',
+                    fixed: true,
+                    bits: 24,
+                    endianness: 'big',
+                    compliment: false
+                }]
             }],
             name: 'value',
             dotted: '.value'
@@ -264,6 +279,7 @@ require('proof')(4, okay => {
                 fixed: true,
                 cases: [{
                     value: 0,
+                    otherwise: false,
                     fields: [{
                         type: 'integer',
                         dotted: '',
@@ -274,6 +290,7 @@ require('proof')(4, okay => {
                     }]
                 }, {
                     value: 1,
+                    otherwise: false,
                     fields: [{
                         type: 'literal',
                         dotted: '',
@@ -291,28 +308,31 @@ require('proof')(4, okay => {
                         }],
                         after: { repeat: 0, value: '' }
                     }]
-                }],
-                otherwise: [{
-                    dotted: '',
-                    fixed: true,
-                    bits: 6,
-                    type: 'structure',
+                }, {
+                    value: null,
+                    otherwise: true,
                     fields: [{
-                        type: 'integer',
-                        dotted: '.two',
+                        dotted: '',
                         fixed: true,
-                        bits: 2,
-                        endianness: 'big',
-                        compliment: false,
-                        name: 'two'
-                    }, {
-                        type: 'integer',
-                        dotted: '.four',
-                        fixed: true,
-                        bits: 4,
-                        endianness: 'big',
-                        compliment: false,
-                        name: 'four'
+                        bits: 6,
+                        type: 'structure',
+                        fields: [{
+                            type: 'integer',
+                            dotted: '.two',
+                            fixed: true,
+                            bits: 2,
+                            endianness: 'big',
+                            compliment: false,
+                            name: 'two'
+                        }, {
+                            type: 'integer',
+                            dotted: '.four',
+                            fixed: true,
+                            bits: 4,
+                            endianness: 'big',
+                            compliment: false,
+                            name: 'four'
+                        }]
                     }]
                 }],
                 name: 'value',
