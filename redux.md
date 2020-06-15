@@ -1,3 +1,14 @@
+## Mon Jun 15 02:19:56 CDT 2020
+
+I'd added an issue to create string constants that would be added to packets to
+indicate the packet type determined at parse, but don't see a need for it. With
+mapped translations, we can turn a flag into a string, and sips that are used to
+determine the length of a variable length integer, or otherwise the binary type
+of a an integer, as in UTF-8 or MySQL integers, do not convey information that
+is useful to the parse. Plus, what do you do during serialization?
+
+https://github.com/bigeasy/packet/issues/9
+
 ## Thu Apr 30 01:08:34 CDT 2020 ~ todo
 
 Terminated arrays peek for a terminator, but if the array is an array of words
