@@ -92,18 +92,9 @@ function generate (packet) {
                 const cases = []
                 for (const when of field.cases) {
                     cases.push($(`
-                        case ${JSON.stringify(when.value)}:
+                        ${when.otherwise ? 'default' : `case ${JSON.stringify(when.value)}`}:
 
                             `, join(when.fields.map(dispatch.bind(null, path))), `
-
-                            break
-                    `))
-                }
-                if (field.otherwise != null) {
-                    cases.push($(`
-                        default:
-
-                            `, join(field.otherwise.map(dispatch.bind(null, path))), `
 
                             break
                     `))

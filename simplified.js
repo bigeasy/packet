@@ -233,6 +233,7 @@ function map (definitions, packet, extra = {}, packed = false) {
                         for (const when of packet[1]) {
                             cases.push({
                                 value: when[0],
+                                otherwise: false,
                                 fields: map(definitions, when[1], {})
                             })
                         }
@@ -240,6 +241,7 @@ function map (definitions, packet, extra = {}, packed = false) {
                         for (const value in packet[1]) {
                             cases.push({
                                 value: value,
+                                otherwise: false,
                                 fields: map(definitions, packet[1][value], {})
                             })
                         }
@@ -249,7 +251,14 @@ function map (definitions, packet, extra = {}, packed = false) {
                         : null
                     const bits = cases.reduce((value, when) => {
                         return value != -1 && value == when.fields[0].bits ? value : -1
-                    }, otherwise[0].bits || cases[0].fields[0].bits)
+                    }, cases[0].fields[0].bits)
+                    if (otherwise != null) {
+                        cases.push({
+                            value: null,
+                            otherwise: true,
+                            fields: otherwise
+                        })
+                    }
                     return [{
                         type: 'switch',
                         stringify: ! Array.isArray(packet[1]),
@@ -257,7 +266,6 @@ function map (definitions, packet, extra = {}, packed = false) {
                         bits: bits < 0 ? 0 : bits,
                         fixed: bits > 0,
                         cases: cases,
-                        otherwise: otherwise,
                         ...extra
                     }]
                 // Packed integers.

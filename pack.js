@@ -113,22 +113,7 @@ function subPack (root, path, bits, offset, fields) {
                               : when.fields
                     }, path, '$_', assignment, offset)
                     cases.push($(`
-                        case ${JSON.stringify(when.value)}:
-
-                            `, source, `
-
-                            break
-                    `))
-                }
-                if (switched.otherwise != null) {
-                    const source = module.exports.call(null, root, {
-                        bits: bits,
-                        fields: switched.otherwise[0].type == 'integer' && switched.otherwise[0].fields
-                              ? switched.otherwise[0].fields
-                              : switched.otherwise
-                    }, path, '$_', assignment, offset)
-                    cases.push($(`
-                        default:
+                        ${when.otherwise ? 'default' : `case ${JSON.stringify(when.value)}`}:
 
                             `, source, `
 

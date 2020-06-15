@@ -117,23 +117,7 @@ function unpack (root, path, field, packed, offset = 0) {
                     }, packed, offset)
                     const vivify = vivifyed ? structure(path, when.fields[0]) : null
                     cases.push($(`
-                        case ${JSON.stringify(when.value)}:
-                            `, vivify, -1, `
-
-                            `, source, `
-
-                            break
-                    `))
-                }
-                if (switched.otherwise) {
-                    const vivifyed = switched.otherwise[0].type == 'integer' && switched.otherwise
-                    const source = module.exports.call(null, root, path, {
-                        bits: bits,
-                        fields: vivifyed ? switched.otherwise[0].fields : switched.otherwise
-                    }, packed, offset)
-                    const vivify = vivifyed ? structure(path, switched.otherwise[0]) : null
-                    cases.push($(`
-                        default:
+                        ${when.otherwise ? 'default' : `case ${JSON.stringify(when.value)}`}:
                             `, vivify, -1, `
 
                             `, source, `
