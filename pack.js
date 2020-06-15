@@ -135,8 +135,11 @@ function subPack (root, path, bits, offset, fields) {
                             break
                     `))
                 }
+                const select = switched.stringify
+                    ? `String((${switched.source})(${root.name}))`
+                    : `(${switched.source})(${root.name})`
                 packed.unshift($(`
-                    switch (String((${switched.source})(${root.name}))) {
+                    switch (${select}) {
                     `, join(cases), `
                     }
                 `))

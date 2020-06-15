@@ -134,8 +134,11 @@ function unpack (root, path, field, packed, offset = 0) {
                             break
                     `))
                 }
+                const select = switched.stringify
+                    ? `String((${switched.source})(${root.name}))`
+                    : `(${switched.source})(${root.name})`
                 blocks.push($(`
-                    switch (String((${switched.source})(${root.name}))) {
+                    switch (${select}) {
                     `, join(cases), `
                     }
                 `))
