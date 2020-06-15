@@ -263,12 +263,23 @@ function generate (packet, bff) {
     }
 
     function checkpoint (checkpoint) {
-        const i = packet.lengthEncoded ? '$i' : '[]'
+        if (checkpoint.lengths.length == 0) {
+            return null
+        }
+        const signatories = {
+            packet: packet.name,
+            step: $step,
+            i: '$i',
+            I: '$I'
+        }
+        const signature = Object.keys(signatories)
+                                .filter(key => variables[key])
+                                .map(key => signatories[key])
         return $(`
             if ($end - $start < ${checkpoint.lengths.join(' + ')}) {
                 return {
                     start: $start,
-                    serialize: serializers.inc.object(${packet.name}, ${$step - checkpoint.rewind}, ${i})
+                    serialize: serializers.inc.object(${signature.join(', ')})
                 }
             }
         `)

@@ -75,6 +75,7 @@ function generate (packet) {
 
                 `)
             case 2: {
+                    surround = true
                     variables.i = true
                     const redo = $step
                     return $(`
@@ -105,6 +106,7 @@ function generate (packet) {
 
     // TODO I don't need to push and pop $i.
     function lengthEncoded (path, packet) {
+        surround = true
         variables.i = true
         $i++
         const i = `$i[${$i}]`
@@ -126,6 +128,7 @@ function generate (packet) {
     }
 
     function terminated (path, field) {
+        surround = true
         variables.i = true
         $i++
         const init = $step
@@ -167,6 +170,7 @@ function generate (packet) {
     }
 
     function fixed (path, field) {
+        surround = true
         variables.i = true
         $i++
         const init = $step
@@ -350,7 +354,7 @@ function generate (packet) {
         }
     `)
 
-    if (variables.i || surround) {
+    if (surround) {
         source = $(`
             for (;;) {
                 `, source, `

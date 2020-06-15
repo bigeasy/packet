@@ -526,32 +526,10 @@ function map (definitions, packet, extra = {}, packed = false) {
     return [ definition ]
 }
 
-function visit (packet, f) {
-    f(packet)
-    switch (packet.type) {
-    case 'structure':
-        for (const field of packet.fields) {
-            visit(field, f)
-        }
-        break
-    }
-}
-
 module.exports = function (packets) {
     const definitions = []
     for (const packet in packets) {
         definitions.push.apply(definitions, map(definitions, packets[packet], { name: packet }))
-    }
-    for (const definition of definitions) {
-        visit(definition, (packet) => {
-            // TODO Try to sort this out in the generators.
-            if (packet.type == 'lengthEncoded') {
-                definition.lengthEncoded = true
-            }
-            if (packet.type == 'terminated' || packet.type == 'fixed') {
-                definition.arrayed = true
-            }
-        })
     }
     return definitions
 }

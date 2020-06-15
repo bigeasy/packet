@@ -341,7 +341,7 @@ function generate (packet, bff) {
         `)
     }
 
-    function checkpoint (checkpoint, depth, arrayed) {
+    function checkpoint (checkpoint, depth) {
         if (checkpoint.lengths.length == 0) {
             return null
         }

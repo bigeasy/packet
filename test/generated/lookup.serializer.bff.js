@@ -15,7 +15,7 @@ module.exports = function (serializers) {
             if ($end - $start < 1) {
                 return {
                     start: $start,
-                    serialize: serializers.inc.object(object, 0, [])
+                    serialize: serializers.inc.object(object, 0)
                 }
             }
 

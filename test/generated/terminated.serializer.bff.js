@@ -6,7 +6,7 @@ module.exports = function (serializers) {
             if ($end - $start < 2 + 2 * object.array.length) {
                 return {
                     start: $start,
-                    serialize: serializers.inc.object(object, 0, [])
+                    serialize: serializers.inc.object(object, 0)
                 }
             }
 

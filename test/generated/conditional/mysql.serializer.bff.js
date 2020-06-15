@@ -5,7 +5,7 @@ module.exports = function (serializers) {
                 if ($end - $start < 1) {
                     return {
                         start: $start,
-                        serialize: serializers.inc.object(object, 1, [])
+                        serialize: serializers.inc.object(object, 1)
                     }
                 }
 
@@ -14,7 +14,7 @@ module.exports = function (serializers) {
                 if ($end - $start < 3) {
                     return {
                         start: $start,
-                        serialize: serializers.inc.object(object, 3, [])
+                        serialize: serializers.inc.object(object, 3)
                     }
                 }
 
@@ -28,7 +28,7 @@ module.exports = function (serializers) {
                 if ($end - $start < 4) {
                     return {
                         start: $start,
-                        serialize: serializers.inc.object(object, 7, [])
+                        serialize: serializers.inc.object(object, 7)
                     }
                 }
 

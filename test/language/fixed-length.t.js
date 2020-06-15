@@ -8,7 +8,6 @@ require('proof')(1, okay => {
         bits: 64,
         type: 'structure',
         dotted: '',
-        arrayed: true,
         fields: [{
             name: 'value',
             dotted: '.value',

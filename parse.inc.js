@@ -98,6 +98,7 @@ function generate (packet) {
     }
 
     function lengthEncoded (path, packet) {
+        surround = true
         lets.i = true
         lets.I = true
         $i++
@@ -136,6 +137,7 @@ function generate (packet) {
     // it didn't match, I'd feed the array to the parser, this would handle long
     // weird terminators.
     function terminated (path, field) {
+        surround = true
         lets.i = true
         $i++
         const i = `$i[${$i}]`
@@ -209,7 +211,7 @@ function generate (packet) {
 
     function conditional (path, conditional) {
         const { parse } = conditional
-        iterate = true
+        surround = true
         const signature = []
         const sip = function () {
             if (conditional.parse.sip == null) {
@@ -284,6 +286,7 @@ function generate (packet) {
     // it didn't match, I'd feed the array to the parser, this would handle long
     // weird terminators.
     function fixed (path, field) {
+        surround = true
         lets.i = true
         $i++
         const i = `$i[${$i}]`
@@ -426,7 +429,7 @@ function generate (packet) {
         `)
     }
 
-    function dispatch (path, packet, depth, arrayed) {
+    function dispatch (path, packet, depth) {
         switch (packet.type) {
         case 'structure':
             return map(dispatch, path, packet.fields)
@@ -479,7 +482,7 @@ function generate (packet) {
     const signature = Object.keys(signatories)
                             .filter(key => lets[key])
                             .map(key => signatories[key])
-    if (iterate || lets.i || lets.sip || surround) {
+    if (surround) {
         source = $(`
             for (;;) {
                 `, source, `
