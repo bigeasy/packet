@@ -231,11 +231,19 @@ function map (definitions, packet, extra = {}, packed = false) {
                     const cases = []
                     if (Array.isArray(packet[1])) {
                         for (const when of packet[1]) {
-                            cases.push({
-                                value: when[0],
-                                otherwise: false,
-                                fields: map(definitions, when[1], {})
-                            })
+                            if (when.length == 2) {
+                                cases.push({
+                                    value: when[0],
+                                    otherwise: false,
+                                    fields: map(definitions, when[1], {})
+                                })
+                            } else {
+                                cases.push({
+                                    value: null,
+                                    otherwise: true,
+                                    fields: map(definitions, when[0], {})
+                                })
+                            }
                         }
                     } else {
                         for (const value in packet[1]) {
@@ -245,20 +253,17 @@ function map (definitions, packet, extra = {}, packed = false) {
                                 fields: map(definitions, packet[1][value], {})
                             })
                         }
+                        if (packet.length > 2) {
+                            cases.push({
+                                value: null,
+                                otherwise: true,
+                                fields: map(definitions, packet[2], {})
+                            })
+                        }
                     }
-                    const otherwise = packet.length > 2
-                        ? map(definitions, packet[2], {})
-                        : null
                     const bits = cases.reduce((value, when) => {
                         return value != -1 && value == when.fields[0].bits ? value : -1
                     }, cases[0].fields[0].bits)
-                    if (otherwise != null) {
-                        cases.push({
-                            value: null,
-                            otherwise: true,
-                            fields: otherwise
-                        })
-                    }
                     return [{
                         type: 'switch',
                         stringify: ! Array.isArray(packet[1]),

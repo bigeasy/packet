@@ -65,7 +65,9 @@ function prove (okay) {
                     0, 8
                 ], [
                     1, 16
-                ]], 24 ]
+                ], [
+                    24
+                ]]]
             }
         },
         objects: [{
@@ -89,7 +91,9 @@ function prove (okay) {
                         0, 6
                     ], [
                         1, [ 'a', 2 ]
-                    ]], [ { two: 2, four: 4 }, 6 ] ]
+                    ], [
+                        [ { two: 2, four: 4 }, 6 ]
+                    ]]]
                 }, 8 ]
             }
         },
