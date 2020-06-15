@@ -292,14 +292,19 @@ function generate (packet, bff) {
         for (let i = 0, I = conditional.parse.conditions.length; i < I; i++) {
             const condition = conditional.parse.conditions[i]
             const source = join(condition.fields.map(field => dispatch(path, field)))
-            const keyword = typeof condition.source == 'boolean' ? 'else'
-                                                               : i == 0 ? 'if' : 'else if'
-            const ifed = $(`
-                ${keyword} ((${condition.source})(${signature.join(', ')})) {
-                    `, source, `
-                }
-            `)
-            block.push(ifed)
+            if (condition.test != null) {
+                block.push($(`
+                    ${i == 0 ? 'if' : 'else if'} ((${condition.test.source})(${signature.join(', ')})) {
+                        `, source, `
+                    }
+                `))
+            } else {
+                block.push($(`
+                    else {
+                        `, source, `
+                    }
+                `))
+            }
         }
         if (conditional.parse.sip != null) {
             $sip--

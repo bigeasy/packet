@@ -232,14 +232,21 @@ function generate (packet) {
         const ladder = []
         for (let i = 0, I = parse.conditions.length; i < I; i++) {
             const condition = parse.conditions[i]
-            const keyword = typeof condition.source == 'boolean' ? 'else'
-                                                               : i == 0 ? 'if' : 'else if'
-            ladder.push($(`
-                ${keyword} ((${condition.source})(${signature.join(', ')})) {
-                    $step = ${steps[i].number}
-                    continue
-                }
-            `))
+            if (condition.test != null) {
+                ladder.push($(`
+                    ${i == 0 ? 'if' : 'else if'} ((${condition.test.source})(${signature.join(', ')})) {
+                        $step = ${steps[i].number}
+                        continue
+                    }
+                `))
+            } else {
+                ladder.push($(`
+                    else {
+                        $step = ${steps[i].number}
+                        continue
+                    }
+                `))
+            }
         }
         const done = $(`
             $step = ${$step}

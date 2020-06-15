@@ -234,19 +234,26 @@ function generate (packet) {
         const ladder = []
         for (let i = 0, I = conditional.serialize.conditions.length; i < I; i++) {
             const condition = conditional.serialize.conditions[i]
-            const keyword = typeof condition.source == 'boolean' ? 'else'
-                                                               : i == 0 ? 'if' : 'else if'
-            const signature = []
-            if (conditional.serialize.split) {
-                signature.push(path)
-            }
-            signature.push(packet.name)
-            ladder.push($(`
-                ${keyword} ((${condition.source})(${signature.join(', ')})) {
-                    $step = ${steps[i].step}
-                    continue
+            if (condition.test != null) {
+                const signature = []
+                if (conditional.serialize.split) {
+                    signature.push(path)
                 }
-            `))
+                signature.push(packet.name)
+                ladder.push($(`
+                    ${i == 0 ? 'if' : 'else if'} ((${condition.test.source})(${signature.join(', ')})) {
+                        $step = ${steps[i].step}
+                        continue
+                    }
+                `))
+            } else {
+                ladder.push($(`
+                    else {
+                        $step = ${steps[i].step}
+                        continue
+                    }
+                `))
+            }
         }
         const done = $(`
             $step = ${$step}

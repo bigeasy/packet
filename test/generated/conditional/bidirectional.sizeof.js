@@ -7,6 +7,8 @@ module.exports = function (sizeOf) {
         if (($ => $.type == 0)(object)) {
             $_ += 2
         } else if (($ => $.type == 1)(object)) {
+            $_ += 3
+        } else {
             $_ += 4
         }
 

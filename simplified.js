@@ -351,12 +351,22 @@ function map (definitions, packet, extra = {}, packed = false) {
                     const serialize = function () {
                         const conditions = []
                         for (const serialize of packet[0]) {
-                            const [ test, packet ] = serialize
-                            conditions.push({
-                                source: test.toString(),
-                                arity: test.length,
-                                fields: map(definitions, packet, {})
-                            })
+                            if (serialize.length == 2) {
+                                const [ test, packet ] = serialize
+                                conditions.push({
+                                    test: {
+                                        source: test.toString(),
+                                        arity: test.length
+                                    },
+                                    fields: map(definitions, packet, {})
+                                })
+                            } else {
+                                source: null
+                                conditions.push({
+                                    test: null,
+                                    fields: map(definitions, serialize[0], {})
+                                })
+                            }
                         }
                         return { split: true, conditions }
                     } ()
@@ -366,13 +376,23 @@ function map (definitions, packet, extra = {}, packed = false) {
                                   ? map(definitions, parse.shift(), {})
                                   : null
                         const conditions = []
-                        for (const serialize of parse) {
-                            const [ test, packet ] = serialize
-                            conditions.push({
-                                source: test.toString(),
-                                arity: 1,
-                                fields: map(definitions, packet, {})
-                            })
+                        for (const condition of parse) {
+                            if (condition.length == 2) {
+                            const [ test, packet ] = condition
+                                conditions.push({
+                                    test: {
+                                        source: test.toString(),
+                                        arity: 1
+                                    },
+                                    fields: map(definitions, packet, {})
+                                })
+                            } else {
+                                source: null
+                                conditions.push({
+                                    test: null,
+                                    fields: map(definitions, condition[0], {})
+                                })
+                            }
                         }
                         return { sip, conditions }
                     } ()
@@ -407,21 +427,33 @@ function map (definitions, packet, extra = {}, packed = false) {
                     const fields = []
                     const conditions = []
                     for (const condition of packet) {
-                        if (condition.length == 1) {
-                            condition.unshift(() => true)
+                        if (condition.length == 2) {
+                            const [ test, field ] = condition
+                            const fields = map(definitions, field, {})
+                            conditions.push({
+                                body: {
+                                    test: {
+                                        source: test.toString(),
+                                        arity: 1
+                                    },
+                                    fields: fields,
+                                },
+                                bits: fields.reduce((bits, field) => {
+                                    return bits == -1 || !field.fixed ? -1 : bits + field.bits
+                                }, 0)
+                            })
+                        } else {
+                            const fields = map(definitions, condition[0], {})
+                            conditions.push({
+                                body: {
+                                    test: null,
+                                    fields: fields,
+                                },
+                                bits: fields.reduce((bits, field) => {
+                                    return bits == -1 || !field.fixed ? -1 : bits + field.bits
+                                }, 0)
+                            })
                         }
-                        const [ test, field ] = condition
-                        const fields = map(definitions, field, {})
-                        conditions.push({
-                            body: {
-                                source: test.toString(),
-                                arity: 1,
-                                fields: fields,
-                            },
-                            bits: fields.reduce((bits, field) => {
-                                return bits == -1 || !field.fixed ? -1 : bits + field.bits
-                            }, 0)
-                        })
                     }
                     const fixed = conditions.reduce((bits, cond) => {
                         return cond.bits == -1 ? -1

@@ -75,7 +75,7 @@ function subPack (root, path, bits, offset, fields) {
             }
             break
         case 'conditional': {
-                const { conditional, path, assignment } = field, block = []
+                const { conditional, path, assignment } = field, ladder = []
                 for (let i = 0, I = conditional.serialize.conditions.length; i < I; i++) {
                     const condition = conditional.serialize.conditions[i]
                     const source = module.exports.call(null, root, {
@@ -84,22 +84,22 @@ function subPack (root, path, bits, offset, fields) {
                               ? condition.fields[0].fields
                               : condition.fields
                     }, path, '$_', assignment, offset)
-                    const keyword = typeof condition.source == 'boolean' ? 'else'
-                                                                       : i == 0 ? 'if' : 'else if'
-                    const signature = []
-                    if (conditional.serialize.split) {
-                        signature.push(path)
+                    if (condition.test != null) {
+                        ladder.push($(`
+                            ${i == 0 ? 'if' : 'else if'} ((${condition.test.source})(${root.name})) {
+                                `, source, `
+                            }
+                        `))
+                    } else {
+                        ladder.push($(`
+                            else {
+                                `, source, `
+                            }
+                        `))
                     }
-                    signature.push(root.name)
-                    const ifed = $(`
-                        ${keyword} ((${condition.source})(${signature.join(', ')})) {
-                            `, source, `
-                        }
-                    `)
-                    block.push(ifed)
                 }
                 offset += conditional.bits
-                packed.unshift(snuggle(block))
+                packed.unshift(snuggle(ladder))
             }
             break
         case 'switch': {

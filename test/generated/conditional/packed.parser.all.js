@@ -26,6 +26,15 @@ module.exports = function (parsers) {
             object.header.value.two = $_ >>> 4 & 0x3
 
             object.header.value.four = $_ & 0xf
+        } else {
+            object.header.value = {
+                one: 0,
+                five: 0
+            }
+
+            object.header.value.one = $_ >>> 5 & 0x1
+
+            object.header.value.five = $_ & 0x1f
         }
 
         return object

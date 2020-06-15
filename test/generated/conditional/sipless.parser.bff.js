@@ -21,8 +21,17 @@ module.exports = function (parsers) {
                     $buffer[$start++] * 0x100 +
                     $buffer[$start++]
             } else if (($ => $.type == 1)(object)) {
-                if ($end - $start < 4) {
+                if ($end - $start < 3) {
                     return parsers.inc.object(object, 6)($buffer, $start, $end)
+                }
+
+                object.value =
+                    $buffer[$start++] * 0x10000 +
+                    $buffer[$start++] * 0x100 +
+                    $buffer[$start++]
+            } else {
+                if ($end - $start < 4) {
+                    return parsers.inc.object(object, 8)($buffer, $start, $end)
                 }
 
                 object.value =

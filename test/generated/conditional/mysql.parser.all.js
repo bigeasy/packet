@@ -14,6 +14,11 @@ module.exports = function (parsers) {
             object.value =
                 $buffer[$start++] * 0x100 +
                 $buffer[$start++]
+        } else {
+            object.value =
+                $buffer[$start++] * 0x10000 +
+                $buffer[$start++] * 0x100 +
+                $buffer[$start++]
         }
 
         return object

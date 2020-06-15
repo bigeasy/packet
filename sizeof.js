@@ -18,19 +18,24 @@ function generate (packet) {
                 for (let i = 0, I = field.serialize.conditions.length; i < I; i++) {
                     const condition = field.serialize.conditions[i]
                     const source = join(condition.fields.map(dispatch.bind(null, path)))
-                    const keyword = typeof condition.source == 'boolean' ? 'else'
-                                                                       : i == 0 ? 'if' : 'else if'
-                    const signature = []
-                    if (field.serialize.split) {
-                        signature.push(path)
-                    }
-                    signature.push(packet.name)
-                    const ifed = $(`
-                        ${keyword} ((${condition.source})(${signature.join(', ')})) {
-                            `, source, `
+                    if (condition.test != null) {
+                        const signature = []
+                        if (field.serialize.split) {
+                            signature.push(path)
                         }
-                    `)
-                    block.push(ifed)
+                        signature.push(packet.name)
+                        block.push($(`
+                            ${i == 0 ? 'if' : 'else if'} ((${condition.test.source})(${signature.join(', ')})) {
+                                `, source, `
+                            }
+                        `))
+                    } else {
+                        block.push($(`
+                            else {
+                                `, source, `
+                            }
+                        `))
+                    }
                 }
                 return snuggle(block)
             }

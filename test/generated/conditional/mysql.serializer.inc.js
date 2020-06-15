@@ -10,8 +10,11 @@ module.exports = function (serializers) {
                     if ((value => value < 251)(object.value, object)) {
                         $step = 1
                         continue
-                    } else if ((value => value >= 251)(object.value, object)) {
+                    } else if ((value => value >= 251 && value < 2 ** 16)(object.value, object)) {
                         $step = 3
+                        continue
+                    } else {
+                        $step = 7
                         continue
                     }
 
@@ -31,7 +34,7 @@ module.exports = function (serializers) {
                         $bite--
                     }
 
-                    $step = 7
+                    $step = 11
                     continue
 
                 case 3:
@@ -67,9 +70,45 @@ module.exports = function (serializers) {
                     }
 
 
-                    $step = 7
+                    $step = 11
+                    continue
 
                 case 7:
+
+                    $step = 8
+                    $bite = 0
+                    $_ = [253]
+
+                case 8:
+
+                    while ($bite != 1) {
+                        if ($start == $end) {
+                            return { start: $start, serialize }
+                        }
+                        $buffer[$start++] = $_[$bite++]
+                    }
+
+
+                case 9:
+
+                    $step = 10
+                    $bite = 2
+                    $_ = object.value
+
+                case 10:
+
+                    while ($bite != -1) {
+                        if ($start == $end) {
+                            return { start: $start, serialize }
+                        }
+                        $buffer[$start++] = $_ >>> $bite * 8 & 0xff
+                        $bite--
+                    }
+
+
+                    $step = 11
+
+                case 11:
 
                     break
 

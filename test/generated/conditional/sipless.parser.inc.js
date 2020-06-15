@@ -35,6 +35,9 @@ module.exports = function (parsers) {
                     } else if (($ => $.type == 1)(object)) {
                         $step = 6
                         continue
+                    } else {
+                        $step = 8
+                        continue
                     }
 
                 case 4:
@@ -56,14 +59,14 @@ module.exports = function (parsers) {
                     object.value = $_
 
 
-                    $step = 8
+                    $step = 10
                     continue
 
                 case 6:
 
                     $_ = 0
                     $step = 7
-                    $bite = 3
+                    $bite = 2
 
                 case 7:
 
@@ -78,8 +81,30 @@ module.exports = function (parsers) {
                     object.value = $_
 
 
+                    $step = 10
+                    continue
 
                 case 8:
+
+                    $_ = 0
+                    $step = 9
+                    $bite = 3
+
+                case 9:
+
+                    while ($bite != -1) {
+                        if ($start == $end) {
+                            return { start: $start, object: null, parse }
+                        }
+                        $_ += $buffer[$start++] << $bite * 8 >>> 0
+                        $bite--
+                    }
+
+                    object.value = $_
+
+
+
+                case 10:
 
                     return { start: $start, object: object, parse: null }
                 }

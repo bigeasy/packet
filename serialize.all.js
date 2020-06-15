@@ -115,11 +115,13 @@ function generate (packet, bff) {
             case 0:
                 return null
             case 1:
+                $step += 2
                 return $(`
                     $buffer.write(${JSON.stringify(literal.value)}, $start, $start + ${literal.value.length / 2}, 'hex')
                     $start += ${literal.value.length / 2}
                 `)
             default:
+                $step += 4
                 variables.i = true
                 return $(`
                     for ($i[${$i + 1}] = 0; $i[${$i + 1}] < ${literal.repeat}; $i[${$i + 1}]++) {
@@ -213,19 +215,24 @@ function generate (packet, bff) {
         for (let i = 0, I = conditional.serialize.conditions.length; i < I; i++) {
             const condition = conditional.serialize.conditions[i]
             const source = join(condition.fields.map(field => dispatch(path, field)))
-            const keyword = typeof condition.source == 'boolean' ? 'else'
-                                                               : i == 0 ? 'if' : 'else if'
-            const signature = []
-            if (conditional.serialize.split) {
-                signature.push(path)
-            }
-            signature.push(packet.name)
-            const ifed = $(`
-                ${keyword} ((${condition.source})(${signature.join(', ')})) {
-                    `, source, `
+            if (condition.test != null) {
+                const signature = []
+                if (conditional.serialize.split) {
+                    signature.push(path)
                 }
-            `)
-            block.push(ifed)
+                signature.push(packet.name)
+                block.push($(`
+                    ${i == 0 ? 'if' : 'else if'} ((${condition.test.source})(${signature.join(', ')})) {
+                        `, source, `
+                    }
+                `))
+            } else {
+                block.push($(`
+                    else {
+                        `, source, `
+                    }
+                `))
+            }
         }
         return snuggle(block)
     }

@@ -30,6 +30,9 @@ module.exports = function (serializers) {
                     } else if (($ => $.type == 1)(object)) {
                         $step = 5
                         continue
+                    } else {
+                        $step = 7
+                        continue
                     }
 
                 case 3:
@@ -48,13 +51,13 @@ module.exports = function (serializers) {
                         $bite--
                     }
 
-                    $step = 7
+                    $step = 9
                     continue
 
                 case 5:
 
                     $step = 6
-                    $bite = 3
+                    $bite = 2
                     $_ = object.value
 
                 case 6:
@@ -67,9 +70,28 @@ module.exports = function (serializers) {
                         $bite--
                     }
 
-                    $step = 7
+                    $step = 9
+                    continue
 
                 case 7:
+
+                    $step = 8
+                    $bite = 3
+                    $_ = object.value
+
+                case 8:
+
+                    while ($bite != -1) {
+                        if ($start == $end) {
+                            return { start: $start, serialize }
+                        }
+                        $buffer[$start++] = $_ >>> $bite * 8 & 0xff
+                        $bite--
+                    }
+
+                    $step = 9
+
+                case 9:
 
                     break
 

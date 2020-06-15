@@ -9,11 +9,15 @@ require('proof')(4, okay => {
                     // TODO Why isn't this `[ 'fc', [ 16 ] ]`? That way we can pad
                     // anything?
                     value => value >= 251, [ 'fc', 16 ]
+                ], [
+                    [ 'fd', 24 ]
                 ]],
                 [ 8, [
                     sip => sip < 251, sip => sip
                 ], [
                     sip => sip == 0xfc, 16
+                ], [
+                    24
                 ]]
             ]
         }
@@ -32,8 +36,10 @@ require('proof')(4, okay => {
             serialize: {
                 split: true,
                 conditions: [{
-                    source: 'value => value < 251',
-                    arity: 1,
+                    test: {
+                        source: 'value => value < 251',
+                        arity: 1
+                    },
                     fields: [{
                         type: 'integer',
                         dotted: '',
@@ -43,8 +49,10 @@ require('proof')(4, okay => {
                         compliment: false
                     }]
                 }, {
-                    source: 'value => value >= 251',
-                    arity: 1,
+                    test: {
+                        source: 'value => value >= 251',
+                        arity: 1
+                    },
                     fields: [{
                         type: 'literal',
                         ethereal: true,
@@ -62,6 +70,25 @@ require('proof')(4, okay => {
                             compliment: false
                         }]
                     }]
+                }, {
+                    test: null,
+                    fields: [{
+                        type: 'literal',
+                        ethereal: true,
+                        dotted: '',
+                        fixed: true,
+                        bits: 32,
+                        before: { repeat: 1, value: 'fd', bits: 8 },
+                        after: { repeat: 0, value: '' },
+                        fields: [{
+                            type: 'integer',
+                            dotted: '',
+                            fixed: true,
+                            bits: 24,
+                            endianness: 'big',
+                            compliment: false
+                        }]
+                    }]
                 }]
             },
             parse: {
@@ -74,21 +101,35 @@ require('proof')(4, okay => {
                     compliment: false
                 }],
                 conditions: [{
-                    source: 'sip => sip < 251',
-                    arity: 1,
+                    test: {
+                        source: 'sip => sip < 251',
+                        arity: 1
+                    },
                     fields: [{
                         type: 'function',
                         source: 'sip => sip',
                         arity: 1
                     }]
                 }, {
-                    source: 'sip => sip == 0xfc',
-                    arity: 1,
+                    test: {
+                        source: 'sip => sip == 0xfc',
+                        arity: 1
+                    },
                     fields: [{
                         type: 'integer',
                         dotted: '',
                         fixed: true,
                         bits: 16,
+                        endianness: 'big',
+                        compliment: false
+                    }]
+                }, {
+                    test: null,
+                    fields: [{
+                        type: 'integer',
+                        dotted: '',
+                        fixed: true,
+                        bits: 24,
                         endianness: 'big',
                         compliment: false
                     }]
@@ -103,12 +144,16 @@ require('proof')(4, okay => {
                 [[
                     $ => $.type == 0, 16
                 ], [
-                    $ => $.type == 1, 32
+                    $ => $.type == 1, 24
+                ], [
+                    32
                 ]],
                 [[
                     $ => $.type == 0, 16
                 ], [
-                    $ => $.type == 1, 32
+                    $ => $.type == 1, 24
+                ], [
+                    32
                 ]]
             ]
         }
@@ -135,8 +180,10 @@ require('proof')(4, okay => {
             serialize: {
                 split: true,
                 conditions: [{
-                    source: '$ => $.type == 0',
-                    arity: 1,
+                    test: {
+                        source: '$ => $.type == 0',
+                        arity: 1
+                    },
                     fields: [{
                         type: 'integer',
                         dotted: '',
@@ -146,8 +193,20 @@ require('proof')(4, okay => {
                         compliment: false
                     }]
                 }, {
-                    source: '$ => $.type == 1',
-                    arity: 1,
+                    test: {
+                        source: '$ => $.type == 1',
+                        arity: 1
+                    },
+                    fields: [{
+                        type: 'integer',
+                        dotted: '',
+                        fixed: true,
+                        bits: 24,
+                        endianness: 'big',
+                        compliment: false
+                    }]
+                }, {
+                    test: null,
                     fields: [{
                         type: 'integer',
                         dotted: '',
@@ -161,8 +220,10 @@ require('proof')(4, okay => {
             parse: {
                 sip: null,
                 conditions: [{
-                    source: '$ => $.type == 0',
-                    arity: 1,
+                    test: {
+                        source: '$ => $.type == 0',
+                        arity: 1
+                    },
                     fields: [{
                         type: 'integer',
                         dotted: '',
@@ -172,8 +233,20 @@ require('proof')(4, okay => {
                         compliment: false
                     }]
                 }, {
-                    source: '$ => $.type == 1',
-                    arity: 1,
+                    test: {
+                        source: '$ => $.type == 1',
+                        arity: 1
+                    },
+                    fields: [{
+                        type: 'integer',
+                        dotted: '',
+                        fixed: true,
+                        bits: 24,
+                        endianness: 'big',
+                        compliment: false
+                    }]
+                }, {
+                    test: null,
                     fields: [{
                         type: 'integer',
                         dotted: '',
@@ -192,7 +265,9 @@ require('proof')(4, okay => {
             value: [[
                 $ => $.type == 0, 16
             ], [
-                $ => $.type == 1, 32
+                $ => $.type == 1, 24
+            ], [
+                32
             ]]
         }
     }), [{
@@ -218,8 +293,10 @@ require('proof')(4, okay => {
             serialize: {
                 split: false,
                 conditions: [{
-                    source: '$ => $.type == 0',
-                    arity: 1,
+                    test: {
+                        source: '$ => $.type == 0',
+                        arity: 1
+                    },
                     fields: [{
                         type: 'integer',
                         dotted: '',
@@ -229,8 +306,20 @@ require('proof')(4, okay => {
                         compliment: false
                     }]
                 }, {
-                    source: '$ => $.type == 1',
-                    arity: 1,
+                    test: {
+                        source: '$ => $.type == 1',
+                        arity: 1
+                    },
+                    fields: [{
+                        type: 'integer',
+                        dotted: '',
+                        fixed: true,
+                        bits: 24,
+                        endianness: 'big',
+                        compliment: false
+                    }]
+                }, {
+                    test: null,
                     fields: [{
                         type: 'integer',
                         dotted: '',
@@ -244,8 +333,10 @@ require('proof')(4, okay => {
             parse: {
                 sip: null,
                 conditions: [{
-                    source: '$ => $.type == 0',
-                    arity: 1,
+                    test: {
+                        source: '$ => $.type == 0',
+                        arity: 1
+                    },
                     fields: [{
                         type: 'integer',
                         dotted: '',
@@ -255,8 +346,20 @@ require('proof')(4, okay => {
                         compliment: false
                     }]
                 }, {
-                    source: '$ => $.type == 1',
-                    arity: 1,
+                    test: {
+                        source: '$ => $.type == 1',
+                        arity: 1
+                    },
+                    fields: [{
+                        type: 'integer',
+                        dotted: '',
+                        fixed: true,
+                        bits: 24,
+                        endianness: 'big',
+                        compliment: false
+                    }]
+                }, {
+                    test: null,
                     fields: [{
                         type: 'integer',
                         dotted: '',
@@ -281,6 +384,11 @@ require('proof')(4, okay => {
                     $ => $.header.flag == 2, [{
                         two: 2,
                         four: 4
+                    }, 6 ]
+                ], [
+                    [{
+                        one: 1,
+                        five: 5
                     }, 6 ]
                 ]]
             }
@@ -310,8 +418,10 @@ require('proof')(4, okay => {
                 serialize: {
                     split: false,
                     conditions: [{
-                        source: '$ => $.header.flag == 0',
-                        arity: 1,
+                        test: {
+                            source: '$ => $.header.flag == 0',
+                            arity: 1
+                        },
                         fields: [{
                             type: 'integer',
                             dotted: '',
@@ -321,8 +431,10 @@ require('proof')(4, okay => {
                             compliment: false
                         }]
                     }, {
-                        source: '$ => $.header.flag == 1',
-                        arity: 1,
+                        test: {
+                            source: '$ => $.header.flag == 1',
+                            arity: 1
+                        },
                         fields: [{
                             type: 'literal',
                             dotted: '',
@@ -342,8 +454,10 @@ require('proof')(4, okay => {
                             after: { repeat: 0, value: '' }
                         }]
                     }, {
-                        source: '$ => $.header.flag == 2',
-                        arity: 1,
+                        test: {
+                            source: '$ => $.header.flag == 2',
+                            arity: 1
+                        },
                         fields: [{
                             type: 'integer',
                             dotted: '',
@@ -369,13 +483,42 @@ require('proof')(4, okay => {
                                 name: 'four'
                             }]
                         }]
+                    }, {
+                        test: null,
+                        fields: [{
+                            type: 'integer',
+                            dotted: '',
+                            fixed: true,
+                            bits: 6,
+                            endianness: 'big',
+                            compliment: false,
+                            fields: [{
+                                type: 'integer',
+                                dotted: '.one',
+                                fixed: true,
+                                bits: 1,
+                                endianness: 'big',
+                                compliment: false,
+                                name: 'one'
+                            }, {
+                                type: 'integer',
+                                dotted: '.five',
+                                fixed: true,
+                                bits: 5,
+                                endianness: 'big',
+                                compliment: false,
+                                name: 'five'
+                            }]
+                        }]
                     }]
                 },
                 parse: {
                     sip: null,
                     conditions: [{
-                        source: '$ => $.header.flag == 0',
-                        arity: 1,
+                        test: {
+                            source: '$ => $.header.flag == 0',
+                            arity: 1
+                        },
                         fields: [{
                             type: 'integer',
                             dotted: '',
@@ -385,8 +528,10 @@ require('proof')(4, okay => {
                             compliment: false
                         }]
                     }, {
-                        source: '$ => $.header.flag == 1',
-                        arity: 1,
+                        test: {
+                            source: '$ => $.header.flag == 1',
+                            arity: 1
+                        },
                         fields: [{
                             type: 'literal',
                             dotted: '',
@@ -405,33 +550,62 @@ require('proof')(4, okay => {
                             after: { repeat: 0, value: '' }
                         }]
                     }, {
-                      source: '$ => $.header.flag == 2',
-                      arity: 1,
-                      fields: [{
-                          type: 'integer',
-                          dotted: '',
-                          fixed: true,
-                          bits: 6,
-                          endianness: 'big',
-                          compliment: false,
-                          fields: [{
-                              type: 'integer',
-                              dotted: '.two',
-                              fixed: true,
-                              bits: 2,
-                              endianness: 'big',
-                              compliment: false,
-                              name: 'two'
-                          }, {
-                              type: 'integer',
-                              dotted: '.four',
-                              fixed: true,
-                              bits: 4,
-                              endianness: 'big',
-                              compliment: false,
-                              name: 'four'
-                          }]
-                      }]
+                        test: {
+                            source: '$ => $.header.flag == 2',
+                            arity: 1,
+                        },
+                        fields: [{
+                            type: 'integer',
+                            dotted: '',
+                            fixed: true,
+                            bits: 6,
+                            endianness: 'big',
+                            compliment: false,
+                            fields: [{
+                                type: 'integer',
+                                dotted: '.two',
+                                fixed: true,
+                                bits: 2,
+                                endianness: 'big',
+                                compliment: false,
+                                name: 'two'
+                            }, {
+                                type: 'integer',
+                                dotted: '.four',
+                                fixed: true,
+                                bits: 4,
+                                endianness: 'big',
+                                compliment: false,
+                                name: 'four'
+                            }]
+                        }]
+                    }, {
+                        test: null,
+                        fields: [{
+                            type: 'integer',
+                            dotted: '',
+                            fixed: true,
+                            bits: 6,
+                            endianness: 'big',
+                            compliment: false,
+                            fields: [{
+                                type: 'integer',
+                                dotted: '.one',
+                                fixed: true,
+                                bits: 1,
+                                endianness: 'big',
+                                compliment: false,
+                                name: 'one'
+                            }, {
+                                type: 'integer',
+                                dotted: '.five',
+                                fixed: true,
+                                bits: 5,
+                                endianness: 'big',
+                                compliment: false,
+                                name: 'five'
+                            }]
+                        }]
                   }]
                 },
                 name: 'body',

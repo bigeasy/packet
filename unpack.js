@@ -76,7 +76,7 @@ function unpack (root, path, field, packed, offset = 0) {
             }
             break
         case 'conditional': {
-                const { conditional, path, offset } = packing, block = []
+                const { conditional, path, offset } = packing, ladder = []
                 for (let i = 0, I = conditional.serialize.conditions.length; i < I; i++) {
                     const condition = conditional.serialize.conditions[i]
                     const vivifyed = condition.fields[0].type == 'integer' && condition.fields[0].fields
@@ -84,19 +84,26 @@ function unpack (root, path, field, packed, offset = 0) {
                         bits: bits,
                         fields: vivifyed ? condition.fields[0].fields : condition.fields
                     }, packed, offset)
-                    const keyword = typeof condition.source == 'boolean' ? 'else'
-                                                                       : i == 0 ? 'if' : 'else if'
                     const vivify = vivifyed ? structure(path, condition.fields[0]) : null
-                    const ifed = $(`
-                        ${keyword} ((${condition.source})(${root.name})) {
-                            `, vivify, -1, `
+                    if (condition.test != null) {
+                        ladder.push($(`
+                            ${i == 0 ? 'if' : 'else if'} ((${condition.test.source})(${root.name})) {
+                                `, vivify, -1, `
 
-                            `, source, `
-                        }
-                    `)
-                    block.push(ifed)
+                                `, source, `
+                            }
+                        `))
+                    } else {
+                        ladder.push($(`
+                            else {
+                                `, vivify, -1, `
+
+                                `, source, `
+                            }
+                        `))
+                    }
                 }
-                blocks.push(snuggle(block))
+                blocks.push(snuggle(ladder))
             }
             break
         case 'switch': {
