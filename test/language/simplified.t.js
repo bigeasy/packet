@@ -1,13 +1,21 @@
 require('proof')(1, async (okay) => {
     const simplified = require('../../simplified')
-    const path = require('path')
-    const fs = require('fs').promises
-    async function test (name, definition) {
-        const actual = simplified(definition)
-        const expected = JSON.parse(await fs.readFile(path.resolve(__dirname, 'compiled', `${name}.json`)))
-        okay(actual, expected, name)
-    }
-    await test('minimal', { packet: { value: 16 } })
+    okay(simplified({ packet: { value: 16 } }), [{
+        name: 'packet',
+        type: 'structure',
+        dotted: '',
+        fixed: true,
+        bits: 16,
+        fields: [{
+            name: 'value',
+            dotted: '.value',
+            type: 'integer',
+            endianness: 'big',
+            fixed: true,
+            bits: 16,
+            compliment: false
+      }]
+    }], 'minimal')
 
     const encode = [
         8, value => (value % 128) & (value > 128 ? 0x80 : 0x0), value => Math.floor(value / 128), value => value == 0
