@@ -14,8 +14,10 @@ require('proof')(4, okay => {
         fixed: false,
         bits: 8,
         type: 'structure',
+        vivify: 'object',
         fields: [{
             type: 'integer',
+            vivify: 'number',
             dotted: '.type',
             fixed: true,
             bits: 8,
@@ -24,6 +26,7 @@ require('proof')(4, okay => {
             name: 'type'
         }, {
             type: 'switch',
+            vivify: 'number',
             source: '$ => $.type',
             bits: 0,
             fixed: false,
@@ -34,6 +37,7 @@ require('proof')(4, okay => {
                 fields: [
                   {
                     type: 'integer',
+                    vivify: 'number',
                     dotted: '',
                     fixed: true,
                     bits: 8,
@@ -46,6 +50,7 @@ require('proof')(4, okay => {
                 otherwise: false,
                 fields: [{
                     type: 'integer',
+                    vivify: 'number',
                     dotted: '',
                     fixed: true,
                     bits: 16,
@@ -57,6 +62,7 @@ require('proof')(4, okay => {
                 otherwise: true,
                 fields: [{
                     type: 'integer',
+                    vivify: 'number',
                     dotted: '',
                     fixed: true,
                     bits: 32,
@@ -76,7 +82,7 @@ require('proof')(4, okay => {
                 value: [ $ => $.type, {
                     0: 6,
                     1: [ 'a', 2 ]
-                }, { two: 2, four: 4 } ]
+                }, [{ two: 2, four: 4 }, 6 ] ]
             }, 8 ]
         }
     }), [{
@@ -84,8 +90,10 @@ require('proof')(4, okay => {
         fixed: true,
         bits: 8,
         type: 'structure',
+        vivify: 'object',
         fields: [{
             type: 'integer',
+            vivify: 'object',
             dotted: '.header',
             fixed: true,
             bits: 8,
@@ -94,6 +102,7 @@ require('proof')(4, okay => {
             name: 'header',
             fields: [{
                 type: 'integer',
+                vivify: 'number',
                 dotted: '.type',
                 fixed: true,
                 bits: 2,
@@ -102,6 +111,7 @@ require('proof')(4, okay => {
                 name: 'type'
             }, {
                 type: 'switch',
+                vivify: 'variant',
                 source: '$ => $.type',
                 bits: 6,
                 stringify: true,
@@ -111,6 +121,7 @@ require('proof')(4, okay => {
                     otherwise: false,
                     fields: [{
                         type: 'integer',
+                        vivify: 'number',
                         dotted: '',
                         fixed: true,
                         bits: 6,
@@ -122,13 +133,14 @@ require('proof')(4, okay => {
                     otherwise: false,
                     fields: [{
                         type: 'literal',
+                        vivify: 'number',
                         dotted: '',
-                        ethereal: true,
                         fixed: true,
                         bits: 6,
                         before: { repeat: 1, value: 'a', bits: 4 },
                         fields: [{
                             type: 'integer',
+                            vivify: 'number',
                             dotted: '',
                             fixed: true,
                             bits: 2,
@@ -141,12 +153,16 @@ require('proof')(4, okay => {
                     value: null,
                     otherwise: true,
                     fields: [{
+                        type: 'integer',
+                        vivify: 'object',
                         dotted: '',
                         fixed: true,
                         bits: 6,
-                        type: 'structure',
+                        compliment: false,
+                        endianness: 'big',
                         fields: [{
                             type: 'integer',
+                            vivify: 'number',
                             dotted: '.two',
                             fixed: true,
                             bits: 2,
@@ -155,6 +171,7 @@ require('proof')(4, okay => {
                             name: 'two'
                         }, {
                             type: 'integer',
+                            vivify: 'number',
                             dotted: '.four',
                             fixed: true,
                             bits: 4,
@@ -186,8 +203,10 @@ require('proof')(4, okay => {
         fixed: false,
         bits: 8,
         type: 'structure',
+        vivify: 'object',
         fields: [{
             type: 'integer',
+            vivify: 'number',
             dotted: '.type',
             fixed: true,
             bits: 8,
@@ -196,6 +215,7 @@ require('proof')(4, okay => {
             name: 'type'
         }, {
             type: 'switch',
+            vivify: 'number',
             stringify: false,
             source: '$ => $.type',
             bits: 0,
@@ -205,6 +225,7 @@ require('proof')(4, okay => {
                 otherwise: false,
                 fields: [{
                     type: 'integer',
+                    vivify: 'number',
                     dotted: '',
                     fixed: true,
                     bits: 8,
@@ -216,6 +237,7 @@ require('proof')(4, okay => {
                 otherwise: false,
                 fields: [{
                     type: 'integer',
+                    vivify: 'number',
                     dotted: '',
                     fixed: true,
                     bits: 16,
@@ -227,6 +249,7 @@ require('proof')(4, okay => {
                 otherwise: true,
                 fields: [{
                     type: 'integer',
+                    vivify: 'number',
                     dotted: '',
                     fixed: true,
                     bits: 24,
@@ -249,7 +272,7 @@ require('proof')(4, okay => {
                 ], [
                     1, [ 'a', 2 ]
                 ], [
-                    { two: 2, four: 4 }
+                    [{ two: 2, four: 4 }, 6 ]
                 ]]]
             }, 8 ]
         }
@@ -258,9 +281,11 @@ require('proof')(4, okay => {
         fixed: true,
         bits: 8,
         type: 'structure',
+        vivify: 'object',
         fields: [
           {
             type: 'integer',
+            vivify: 'object',
             dotted: '.header',
             fixed: true,
             bits: 8,
@@ -269,6 +294,7 @@ require('proof')(4, okay => {
             name: 'header',
             fields: [{
                 type: 'integer',
+                vivify: 'number',
                 dotted: '.type',
                 fixed: true,
                 bits: 2,
@@ -277,6 +303,7 @@ require('proof')(4, okay => {
                 name: 'type'
             }, {
                 type: 'switch',
+                vivify: 'variant',
                 stringify: false,
                 source: '$ => $.type',
                 bits: 6,
@@ -286,6 +313,7 @@ require('proof')(4, okay => {
                     otherwise: false,
                     fields: [{
                         type: 'integer',
+                        vivify: 'number',
                         dotted: '',
                         fixed: true,
                         bits: 6,
@@ -297,13 +325,14 @@ require('proof')(4, okay => {
                     otherwise: false,
                     fields: [{
                         type: 'literal',
+                        vivify: 'number',
                         dotted: '',
-                        ethereal: true,
                         fixed: true,
                         bits: 6,
                         before: { repeat: 1, value: 'a', bits: 4 },
                         fields: [{
                             type: 'integer',
+                            vivify: 'number',
                             dotted: '',
                             fixed: true,
                             bits: 2,
@@ -319,9 +348,13 @@ require('proof')(4, okay => {
                         dotted: '',
                         fixed: true,
                         bits: 6,
-                        type: 'structure',
+                        type: 'integer',
+                        compliment: false,
+                        endianness: 'big',
+                        vivify: 'object',
                         fields: [{
                             type: 'integer',
+                            vivify: 'number',
                             dotted: '.two',
                             fixed: true,
                             bits: 2,
@@ -330,6 +363,7 @@ require('proof')(4, okay => {
                             name: 'two'
                         }, {
                             type: 'integer',
+                            vivify: 'number',
                             dotted: '.four',
                             fixed: true,
                             bits: 4,

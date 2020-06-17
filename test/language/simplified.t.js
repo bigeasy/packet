@@ -1,15 +1,17 @@
 require('proof')(1, async (okay) => {
     const simplified = require('../../simplified')
     okay(simplified({ packet: { value: 16 } }), [{
-        name: 'packet',
         type: 'structure',
+        vivify: 'object',
+        name: 'packet',
         dotted: '',
         fixed: true,
         bits: 16,
         fields: [{
+            type: 'integer',
+            vivify: 'number',
             name: 'value',
             dotted: '.value',
-            type: 'integer',
             endianness: 'big',
             fixed: true,
             bits: 16,

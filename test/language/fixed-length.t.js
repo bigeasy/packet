@@ -7,11 +7,13 @@ require('proof')(1, okay => {
         fixed: true,
         bits: 64,
         type: 'structure',
+        vivify: 'object',
         dotted: '',
         fields: [{
             name: 'value',
             dotted: '.value',
             type: 'fixed',
+            vivify: 'array',
             length: 4,
             align: 'left',
             pad: [ 0xd, 0xa ],
@@ -19,6 +21,7 @@ require('proof')(1, okay => {
             bits: 64,
             fields: [{
                 type: 'integer',
+                vivify: 'number',
                 dotted: '',
                 fixed: true,
                 bits: 16,

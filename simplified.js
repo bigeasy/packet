@@ -14,6 +14,7 @@ function integer (value, packed, extra = {}) {
         if (value < 0) {
             return {
                 type: 'integer',
+                vivify: 'number',
                 dotted: '',
                 fixed: true,
                 bits: ~value,
@@ -24,6 +25,7 @@ function integer (value, packed, extra = {}) {
         }
         return {
             type: 'integer',
+            vivify: 'number',
             dotted: '',
             fixed: true,
             bits: ~-value,
@@ -34,6 +36,7 @@ function integer (value, packed, extra = {}) {
     }
     return {
         type: 'integer',
+        vivify: 'number',
         dotted: '',
         fixed: true,
         bits: Math.abs(value),
@@ -106,20 +109,23 @@ function map (definitions, packet, extra = {}, packed = false) {
                     }
                     // TODO Use `field` as a common child then do bits
                     // recursively. Aren't we going by fixed anyway?
-                    const fields = map(definitions, packet[0], extra, packed)
+                    const fields = map(definitions, packet[0], {}, packed)
                     const bits = fields[0].fixed
                                ? fields[0].bits + before.repeat * before.value.length * 4
                                                 + after.repeat * after.value.length * 4
                                : 0
+                    // TODO Test literal wrap of a structure.
+                    // TODO Test literal wrap of an array.
                     return [{
                         type: 'literal',
                         dotted: '',
-                        ethereal: true,
+                        vivify: fields[0].vivify,
                         fixed: fields[0].fixed,
                         bits: bits,
                         before: before,
                         fields: fields,
-                        after: after
+                        after: after,
+                        ...extra
                     }]
                 // Switch statements.
                 } else if (
@@ -159,17 +165,23 @@ function map (definitions, packet, extra = {}, packed = false) {
                             })
                         }
                     }
-                    const bits = cases.reduce((value, when) => {
+                    const bits = cases.slice(1).reduce((value, when) => {
                         return value != -1 && value == when.fields[0].bits ? value : -1
                     }, cases[0].fields[0].bits)
+                    const vivify = cases.slice(1).reduce((vivify, when) => {
+                        return vivify == 'variant' || vivify == when.fields[0].vivify
+                            ? vivify
+                            : 'variant'
+                    }, cases[0].fields[0].vivify)
                     return [{
+                        ...extra,
                         type: 'switch',
+                        vivify: vivify == 'object' ? 'variant' : vivify,
                         stringify: ! Array.isArray(packet[1]),
                         source: packet[0].toString(),
                         bits: bits < 0 ? 0 : bits,
                         fixed: bits > 0,
-                        cases: cases,
-                        ...extra
+                        cases: cases
                     }]
                 // Packed integers.
                 } else if (
@@ -183,7 +195,10 @@ function map (definitions, packet, extra = {}, packed = false) {
                             name: name, dotted: `.${name}`
                         }, true))
                     }
-                    const into = integer(packet[1], false, extra)
+                    const into = integer(packet[1], true, {
+                        vivify: 'object',
+                        ...extra
+                    })
                     return [{ ...into, fields, ...extra }]
                 // Terminated arrays.
                 } else if (
@@ -198,6 +213,7 @@ function map (definitions, packet, extra = {}, packed = false) {
                     return [{
                         ...extra,
                         type: 'terminated',
+                        vivify: 'array',
                         bits: 0,
                         fixed: false,
                         terminator: terminator,
@@ -221,6 +237,7 @@ function map (definitions, packet, extra = {}, packed = false) {
                                : 0
                     return [{
                         type: 'fixed',
+                        vivify: 'array',
                         length: packet[0],
                         ...extra,
                         pad,
@@ -242,6 +259,7 @@ function map (definitions, packet, extra = {}, packed = false) {
                     assert.equal(element.length, 1, 'badness')
                     fields.push({
                         type: 'lengthEncoded',
+                        vivify: 'array',
                         encoding: [ encoding ],
                         dotted: '',
                         bits: 0,
@@ -307,10 +325,16 @@ function map (definitions, packet, extra = {}, packed = false) {
                         }
                         return { sip, conditions }
                     } ()
+                    const vivify = parse.conditions.slice(1).reduce((vivify, condition) => {
+                        return vivify == 'variant' || vivify == condition.fields[0].vivify
+                            ? vivify
+                            : 'variant'
+                    }, parse.conditions[0].fields[0].vivify)
                     // TODO Is fixed if all the alternations are the same
                     // length.
                     fields.push({
                         type: 'conditional',
+                        vivify: vivify == 'object' ? 'variant' : vivify,
                         bits: 0,
                         fixed: false,
                         serialize, parse, ...extra
@@ -371,10 +395,16 @@ function map (definitions, packet, extra = {}, packed = false) {
                                                : bits == cond.bits ? bits
                                                                    : -1
                     }, conditions[0].bits)
+                    const vivify = conditions.slice(1).reduce((vivify, condition) => {
+                        return vivify == 'variant' || vivify == condition.body.fields[0].vivify
+                            ? vivify
+                            : 'variant'
+                    }, conditions[0].body.fields[0].vivify)
                     return [{
                         type: 'conditional',
                         bits: fixed == -1 ? 0 : conditions[0].bits,
                         fixed: fixed != -1,
+                        vivify: vivify == 'object' ? 'variant' : vivify,
                         serialize: {
                             split: false,
                             conditions: conditions.map(cond => cond.body)
@@ -400,10 +430,11 @@ function map (definitions, packet, extra = {}, packed = false) {
                 }, true)
                 const bits = fields.reduce((sum, field) => sum + field.bits, 0)
                 return [{
+                    type: 'structure',
+                    vivify: 'object',
                     dotted: '',
                     fixed,
                     bits,
-                    type: 'structure',
                     fields,
                     ...extra
                 }]

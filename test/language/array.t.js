@@ -1,20 +1,23 @@
 require('proof')(4, okay => {
     const simplified = require('../../simplified')
     okay(simplified({ packet: { value: [ 16, [ 16 ] ] } }), [{
+        type: 'structure',
+        vivify: 'object',
         name: 'packet',
         fixed: false,
         bits: 0,
-        type: 'structure',
         dotted: '',
         fields: [{
+            type: 'lengthEncoded',
+            vivify: 'array',
             name: 'value',
             dotted: '.value',
-            type: 'lengthEncoded',
             fixed: false,
             bits: 0,
             encoding: [{
-                dotted: '',
                 type: 'integer',
+                vivify: 'number',
+                dotted: '',
                 fixed: true,
                 bits: 16,
                 endianness: 'big',
@@ -22,6 +25,7 @@ require('proof')(4, okay => {
             }],
             fields: [{
                 type: 'integer',
+                vivify: 'number',
                 dotted: '',
                 bits: 16,
                 fixed: true,
@@ -31,20 +35,23 @@ require('proof')(4, okay => {
         }]
     }], 'length encoded')
     okay(simplified({ packet: { value: [ 16, [{ first: 16, second: 16 }] ] } }), [{
+        type: 'structure',
+        vivify: 'object',
         name: 'packet',
         fixed: false,
         bits: 0,
-        type: 'structure',
         dotted: '',
         fields: [{
+            type: 'lengthEncoded',
+            vivify: 'array',
             name: 'value',
             dotted: '.value',
-            type: 'lengthEncoded',
             fixed: false,
             bits: 0,
             encoding: [{
                 dotted: '',
                 type: 'integer',
+                vivify: 'number',
                 fixed: true,
                 bits: 16,
                 endianness: 'big',
@@ -52,21 +59,25 @@ require('proof')(4, okay => {
             }],
             fields: [{
                 type: 'structure',
+                vivify: 'object',
                 dotted: '',
                 bits: 32,
                 fixed: true,
                 fields: [{
+                    type: 'integer',
+                    vivify: 'number',
                     name: 'first',
                     dotted: '.first',
-                    type: 'integer',
+                    vivify: 'number',
                     fixed: true,
                     bits: 16,
                     endianness: 'big',
                     compliment: false
                 }, {
+                    type: 'integer',
+                    vivify: 'number',
                     name: 'second',
                     dotted: '.second',
-                    type: 'integer',
                     fixed: true,
                     bits: 16,
                     endianness: 'big',
@@ -76,20 +87,23 @@ require('proof')(4, okay => {
         }]
     }], 'length encoded fixed')
     okay(simplified({ packet: { value: [ 16, [[ 16, [ 16 ] ]] ] } }), [{
+        type: 'structure',
+        vivify: 'object',
         name: 'packet',
         fixed: false,
         bits: 0,
-        type: 'structure',
         dotted: '',
         fields: [{
+            type: 'lengthEncoded',
+            vivify: 'array',
             name: 'value',
             dotted: '.value',
-            type: 'lengthEncoded',
             fixed: false,
             bits: 0,
             encoding: [{
-                dotted: '',
                 type: 'integer',
+                vivify: 'number',
+                dotted: '',
                 fixed: true,
                 bits: 16,
                 endianness: 'big',
@@ -98,11 +112,13 @@ require('proof')(4, okay => {
             fields: [{
                 dotted: '',
                 type: 'lengthEncoded',
+                vivify: 'array',
                 fixed: false,
                 bits: 0,
                 encoding: [{
-                    dotted: '',
                     type: 'integer',
+                    vivify: 'number',
+                    dotted: '',
                     fixed: true,
                     bits: 16,
                     endianness: 'big',
@@ -110,6 +126,7 @@ require('proof')(4, okay => {
                 }],
                 fields: [{
                     type: 'integer',
+                    vivify: 'number',
                     dotted: '',
                     fixed: true,
                     bits: 16,
@@ -124,16 +141,19 @@ require('proof')(4, okay => {
         fixed: false,
         bits: 0,
         type: 'structure',
+        vivify: 'object',
         dotted: '',
         fields: [{
+            type: 'lengthEncoded',
+            vivify: 'array',
             name: 'value',
             dotted: '.value',
-            type: 'lengthEncoded',
             fixed: false,
             bits: 0,
             encoding: [{
                 dotted: '',
                 type: 'integer',
+                vivify: 'number',
                 fixed: true,
                 bits: 16,
                 endianness: 'big',
@@ -141,18 +161,21 @@ require('proof')(4, okay => {
             }],
             fields: [{
                 type: 'structure',
+                vivify: 'object',
                 dotted: '',
                 bits: 0,
                 fixed: false,
                 fields: [{
+                    type: 'lengthEncoded',
+                    vivify: 'array',
                     name: 'first',
                     dotted: '.first',
-                    type: 'lengthEncoded',
                     fixed: false,
                     bits: 0,
                     encoding: [{
                         dotted: '',
                         type: 'integer',
+                        vivify: 'number',
                         fixed: true,
                         bits: 16,
                         endianness: 'big',
@@ -160,6 +183,7 @@ require('proof')(4, okay => {
                     }],
                     fields: [{
                         type: 'integer',
+                        vivify: 'number',
                         dotted: '',
                         fixed: true,
                         bits: 16,

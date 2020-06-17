@@ -1,25 +1,28 @@
 require('proof')(1, okay => {
     const simplified = require('../../simplified')
     okay(simplified({ packet: { value: [ '0faded', 16, 'facade' ] } }), [{
+        type: 'structure',
+        vivify: 'object',
         name: 'packet',
         fixed: true,
         bits: 64,
-        type: 'structure',
         dotted: '',
         fields: [{
             type: 'literal',
-            ethereal: true,
+            vivify: 'number',
             dotted: '',
             fixed: true,
+            name: 'value',
+            dotted: '.value',
             before: {
                 value: '0faded',
                 repeat: 1,
                 bits: 24
             },
             fields: [{
-                name: 'value',
-                dotted: '.value',
                 type: 'integer',
+                vivify: 'number',
+                dotted: '',
                 fixed: true,
                 bits: 16,
                 endianness: 'big',

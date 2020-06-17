@@ -5,12 +5,14 @@ require('proof')(1, okay => {
             value: [ 8, [ 'off', 'on' ] ]
         }
     }), [{
+        type: 'structure',
+        vivify: 'object',
         dotted: '',
         fixed: true,
         bits: 8,
-        type: 'structure',
         fields: [{
             type: 'integer',
+            vivify: 'number',
             dotted: '.value',
             fixed: true,
             bits: 8,

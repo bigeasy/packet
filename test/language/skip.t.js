@@ -5,11 +5,13 @@ require('proof')(1, okay => {
         fixed: true,
         bits: 112,
         type: 'structure',
+        vivify: 'object',
         dotted: '',
         fields: [{
             type: 'literal',
-            ethereal: true,
-            dotted: '',
+            vivify: 'number',
+            name: 'value',
+            dotted: '.value',
             fixed: true,
             before: {
                 value: '0faded',
@@ -17,9 +19,9 @@ require('proof')(1, okay => {
                 bits: 24
             },
             fields: [{
-                name: 'value',
-                dotted: '.value',
                 type: 'integer',
+                vivify: 'number',
+                dotted: '',
                 fixed: true,
                 bits: 16,
                 endianness: 'big',

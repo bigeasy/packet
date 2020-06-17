@@ -430,7 +430,7 @@ function generate (packet, bff) {
 
             `, lets.length ? `let ${lets.join(', ')}` : null, -1, `
 
-            `, vivify.structure(`const ${packet.name}`, packet), `
+            `, 'const ' + vivify.structure(packet.name, packet), `
 
             `, source, `
 

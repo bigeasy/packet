@@ -1,39 +1,24 @@
 const $ = require('programmatic')
 
-
-
-function property_ (field) {
-    function corporeal (field) {
-        if (field.ethereal && field.fields) {
-            return field.fields.map(field => corporeal(field))
-                               .filter(field => !! field).shift()
+function structure (path, field, assignment = ' = ') {
+    function vivify (path, field) {
+        switch (field.vivify) {
+        case 'object':
+            return structure((path + field.dotted).split('.').pop(), field, ': ')
+        case 'array':
+            return `${(path + field.dotted).split('.').pop()}: []`
+        case 'number':
+        case 'variant':
+            return `${(path + field.dotted).split('.').pop()}: 0`
+        default:
+            return null
         }
-        return field
     }
-    const property = corporeal(field)
-    switch (property.type) {
-    case 'fixed':
-    case 'terminated':
-    case 'lengthEncoded':
-        return `${property.name}: []`
-    // TODO Ensure that conditional resolves to same type in all cases or else
-    // assign `null` and vivify later. (Ugh.)
-    case 'switch':
-    case 'conditional':
-    case 'integer':
-        if (property.fields) {
-            return structure(property.name, property, ': ')
-        } else {
-            return `${property.name}: 0`
-        }
-    case 'structure':
-        return structure(property.name, property, ': ')
-    }
-    return null
-}
-
-function structure (path, structure, assignment = ' = ') {
-    const properties = structure.fields.map(property_).filter(field => !! field)
+    const object = field.type == 'structure'
+        ? field
+        : field.fields[field.fields.length - 1]
+    const properties = field.fields.map(field => vivify(path, field))
+                                   .filter(field => !! field)
     if (properties.length == 0) {
         return null
     }
@@ -44,29 +29,24 @@ function structure (path, structure, assignment = ' = ') {
     `)
 }
 
-function array (path, array) {
-    function corporeal (fields) {
-        for (const field of fields) {
-            if (field.ethereal) {
-                if ('fields' in field) {
-                    const found = corporeal(field.fields)
-                    if (found != null) {
-                        return found
-                    }
-                }
-            } else {
-                return field
-            }
-        }
-        return null
-    }
-    const assignation = corporeal(array.fields)
-    switch (assignation.type) {
-    case 'structure':
-        return structure(path, assignation)
+function array (path, field) {
+    switch (field.type) {
     case 'lengthEncoded':
     case 'terminated':
-        return `${path} = []`
+    case 'fixed':
+        const element = field.fields[field.fields.length - 1]
+        switch (element.type) {
+        case 'structure':
+            return structure(path + element.dotted, element)
+        case 'lengthEncoded':
+        case 'terminated':
+            return `${path} = []`
+        case 'fixup':
+        case 'literal':
+            return array(path + element.dotted, element)
+        default:
+            return null
+        }
     default:
         return null
     }
