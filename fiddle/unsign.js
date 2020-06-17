@@ -1,8 +1,12 @@
 function unsign (name, bits) {
-    let mask = 0xffffffff, test = 1
-    mask = mask >>> (32 - bits)
-    test = test << bits - 1 >>> 0
-    return `${name} & 0x${test.toString(16)} ? (0x${mask.toString(16)} - ${name}  + 1) * -1 : ${name}`
+    const mask = `0x${((1n << BigInt(bits)) - 1n).toString(16)}`
+    const test = `0x${(1n << BigInt(bits) - 1n).toString(16)}`
+    const cast = bits > 32
+        ? { to: 'Number', from: 'BigInt', suffix: 'n' }
+        : { to: '', from: '', suffix: '' }
+    return `${name} & ${test}${cast.suffix} ` +
+        `? (${mask}${cast.suffix} - ${name} + 1${cast.suffix}) * -1${cast.suffix} ` +
+        `: ${name}`
 }
 
 module.exports = unsign

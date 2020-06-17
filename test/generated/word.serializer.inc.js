@@ -16,7 +16,7 @@ module.exports = function (serializers) {
                     if ($start == $end) {
                         return { start: $start, serialize }
                     }
-                    $buffer[$start++] = $_ >>> $bite * 8 & 0xff
+                    $buffer[$start++] = ($_ >>> $bite * 8 & 0xff)
                     $bite--
                 }
 

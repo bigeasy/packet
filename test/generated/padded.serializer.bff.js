@@ -11,7 +11,7 @@ module.exports = function (serializers) {
             }
 
             for ($i[0] = 0; $i[0] < object.array.length; $i[0]++) {
-                $buffer[$start++] = object.array[$i[0]] & 0xff
+                $buffer[$start++] = (object.array[$i[0]] & 0xff)
             }
 
             for (;;) {

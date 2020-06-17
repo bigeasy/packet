@@ -42,8 +42,8 @@ module.exports = function (parsers) {
                     }
 
                     object.array[$i[0]][$i[1]] =
-                        $buffer[$start++] * 0x100 +
-                        $buffer[$start++]
+                        ($buffer[$start++]) * 0x100 +
+                        ($buffer[$start++])
                     $i[1]++
                 }
                 $i[0]++

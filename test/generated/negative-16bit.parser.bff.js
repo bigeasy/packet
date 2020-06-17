@@ -12,9 +12,9 @@ module.exports = function (parsers) {
             }
 
             $_ =
-                $buffer[$start++] * 0x100 +
-                $buffer[$start++]
-            object.word = $_ & 0x8000 ? (0xffff - $_  + 1) * -1 : $_
+                ($buffer[$start++]) * 0x100 +
+                ($buffer[$start++])
+            object.word = $_ & 0x8000 ? (0xffff - $_ + 1) * -1 : $_
 
             return { start: $start, object: object, parse: null }
         }

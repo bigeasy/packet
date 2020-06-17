@@ -16,16 +16,16 @@ module.exports = function (parsers) {
             }
 
             $_ =
-                $buffer[$start++] * 0x1000000 +
-                $buffer[$start++] * 0x10000 +
-                $buffer[$start++] * 0x100 +
-                $buffer[$start++]
+                ($buffer[$start++]) * 0x1000000 +
+                ($buffer[$start++]) * 0x10000 +
+                ($buffer[$start++]) * 0x100 +
+                ($buffer[$start++])
 
             object.header.one = $_ >>> 15 & 0x1
 
             object.header.two = $_ >>> 12 & 0x7
             object.header.two =
-                object.header.two & 0x4 ? (0x7 - object.header.two  + 1) * -1 : object.header.two
+                object.header.two & 0x4 ? (0x7 - object.header.two + 1) * -1 : object.header.two
 
             object.header.three = $_ & 0xfff
 

@@ -21,7 +21,7 @@ function integer (value, packed, extra = {}) {
     if (!packed && Math.abs(value % 8) == 1) {
         if (value < 0) {
             return {
-                type: 'integer',
+                type: ~value > 32 ? 'bigint' : 'integer',
                 vivify: 'number',
                 dotted: '',
                 fixed: true,
@@ -32,7 +32,7 @@ function integer (value, packed, extra = {}) {
             }
         }
         return {
-            type: 'integer',
+            type: ~-value > 32 ? 'bigint' : 'integer',
             vivify: 'number',
             dotted: '',
             fixed: true,
@@ -43,7 +43,7 @@ function integer (value, packed, extra = {}) {
         }
     }
     return {
-        type: 'integer',
+        type: value > 32 ? 'bigint' : 'integer',
         vivify: 'number',
         dotted: '',
         fixed: true,

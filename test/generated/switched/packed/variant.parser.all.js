@@ -9,7 +9,7 @@ module.exports = function (parsers) {
             }
         }
 
-        $_ = $buffer[$start++]
+        $_ = ($buffer[$start++])
 
         object.header.type = $_ >>> 6 & 0x3
 

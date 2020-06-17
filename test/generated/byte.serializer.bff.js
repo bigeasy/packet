@@ -8,7 +8,7 @@ module.exports = function (serializers) {
                 }
             }
 
-            $buffer[$start++] = object.word & 0xff
+            $buffer[$start++] = (object.word & 0xff)
 
             return { start: $start, serialize: null }
         }

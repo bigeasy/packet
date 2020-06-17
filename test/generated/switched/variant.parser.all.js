@@ -5,29 +5,29 @@ module.exports = function (parsers) {
             value: 0
         }
 
-        object.type = $buffer[$start++]
+        object.type = ($buffer[$start++])
 
         switch (($ => $.type)(object)) {
         case 0:
 
-            object.value = $buffer[$start++]
+            object.value = ($buffer[$start++])
 
             break
 
         case 1:
 
             object.value =
-                $buffer[$start++] * 0x100 +
-                $buffer[$start++]
+                ($buffer[$start++]) * 0x100 +
+                ($buffer[$start++])
 
             break
 
         default:
 
             object.value =
-                $buffer[$start++] * 0x10000 +
-                $buffer[$start++] * 0x100 +
-                $buffer[$start++]
+                ($buffer[$start++]) * 0x10000 +
+                ($buffer[$start++]) * 0x100 +
+                ($buffer[$start++])
 
             break
         }

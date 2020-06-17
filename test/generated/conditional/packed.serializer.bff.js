@@ -30,7 +30,7 @@ module.exports = function (serializers) {
                     (object.header.value.five & 0x1f)
             }
 
-            $buffer[$start++] = $_ & 0xff
+            $buffer[$start++] = ($_ & 0xff)
 
             return { start: $start, serialize: null }
         }

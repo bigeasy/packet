@@ -23,11 +23,11 @@ module.exports = function (parsers) {
                     if ($start == $end) {
                         return { start: $start, object: null, parse }
                     }
-                    $_ += $buffer[$start++] << $bite * 8 >>> 0
+                    $_ += ($buffer[$start++]) << $bite * 8 >>> 0
                     $bite--
                 }
 
-                object.word = $_
+                object.word = $_ & 0x80000000 ? (0xffffffff - $_ + 1) * -1 : $_
 
 
             case 3:

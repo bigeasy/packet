@@ -16,7 +16,7 @@ module.exports = function (parsers) {
                 break
             }
 
-            object.array[$i[0]] = $buffer[$start++]
+            object.array[$i[0]] = ($buffer[$start++])
             $i[0]++
 
             if ($i[0] == 16) {

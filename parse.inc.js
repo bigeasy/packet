@@ -41,23 +41,26 @@ function generate (packet) {
                 : field.lookup
                     ? `${path} = $lookup.${path}[$_]`
                     : `${path} = $_`
+        const cast = field.bits > 32
+            ? { suffix: 'n', to: 'BigInt', fixup: '' }
+            : { suffix: '', to: '', fixup: ' >>> 0' }
         if (field.lookup) {
             lookup($lookup, path, field.lookup.slice())
         }
         return $(`
             case ${$step++}:
 
-                $_ = 0
+                $_ = 0${cast.suffix}
                 $step = ${$step}
-                $bite = ${start}
+                $bite = ${start}${cast.suffix}
 
             case ${$step++}:
 
-                while ($bite != ${stop}) {
+                while ($bite != ${stop}${cast.suffix}) {
                     if ($start == $end) {
                         return { start: $start, object: null, parse }
                     }
-                    $_ += $buffer[$start++] << $bite * 8 >>> 0
+                    $_ += ${cast.to}($buffer[$start++]) << $bite * 8${cast.suffix}${cast.fixup}
                     $bite${direction}
                 }
 
@@ -456,6 +459,7 @@ function generate (packet) {
             return terminated(path, packet)
         case 'lengthEncoded':
             return lengthEncoded(path, packet)
+        case 'bigint':
         case 'integer':
             return integer(path, packet)
         case 'function':

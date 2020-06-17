@@ -13,7 +13,7 @@ module.exports = function (parsers) {
 
             $i[0] = 0
             for (;;) {
-                object.value[$i[0]] = $buffer[$start++]
+                object.value[$i[0]] = ($buffer[$start++])
                 $i[0]++
 
                 if ($i[0] == 4) {

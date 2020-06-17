@@ -14,7 +14,7 @@ module.exports = function (parsers) {
                 return parsers.inc.object(object, 1)($buffer, $start, $end)
             }
 
-            $_ = $buffer[$start++]
+            $_ = ($buffer[$start++])
 
             object.header.type = $_ >>> 6 & 0x3
 

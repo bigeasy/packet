@@ -80,10 +80,13 @@ function generate (packet, bff) {
         const stop = field.endianness == 'little' ? bytes : -1
         const direction = field.endianness == 'little' ? 1 : -1
         const reads = []
+        const cast = field.bits > 32
+            ? { suffix: 'n', to: 'BigInt' }
+            : { suffix: '', to: '' }
         while (bite != stop) {
-            reads.unshift('$buffer[$start++]')
+            reads.unshift(`${cast.to}($buffer[$start++])`)
             if (bite) {
-                reads[0] += ' * 0x' + Math.pow(256, bite).toString(16)
+                reads[0] += ` * 0x${(256n ** BigInt(bite)).toString(16)}${cast.suffix}`
             }
             bite += direction
         }

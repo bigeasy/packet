@@ -21,7 +21,7 @@ module.exports = function (serializers) {
             assert.equal($i[0].length, 8)
 
             for ($i[1] = 0; $i[1] < $i[0].length; $i[1]++) {
-                $buffer[$start++] = $i[0][$i[1]] & 0xff
+                $buffer[$start++] = ($i[0][$i[1]] & 0xff)
             }
 
 

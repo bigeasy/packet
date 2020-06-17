@@ -7,8 +7,8 @@ module.exports = function (parsers) {
         $start += 3
 
         object.padded =
-            $buffer[$start++] * 0x100 +
-            $buffer[$start++]
+            ($buffer[$start++]) * 0x100 +
+            ($buffer[$start++])
 
         $start += 3
 

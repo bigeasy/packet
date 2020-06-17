@@ -26,20 +26,23 @@ function generate (packet) {
             : field.lookup
                 ? `$_ = $lookup.${path}.indexOf(${path})`
                 : `$_ = ${path}`
+        const cast = field.bits > 32
+            ? { suffix: 'n', from: 'Number', shift: '>>' }
+            : { suffix: '', from: '', shift: '>>>' }
         const source = $(`
             case ${$step++}:
 
                 $step = ${$step}
-                $bite = ${bite}
+                $bite = ${bite}${cast.suffix}
                 `, assign, `
 
             case ${$step++}:
 
-                while ($bite != ${stop}) {
+                while ($bite != ${stop}${cast.suffix}) {
                     if ($start == $end) {
                         return { start: $start, serialize }
                     }
-                    $buffer[$start++] = $_ >>> $bite * 8 & 0xff
+                    $buffer[$start++] = ${cast.from}($_ ${cast.shift} $bite * 8${cast.suffix} & 0xff${cast.suffix})
                     $bite${direction}
                 }
 
@@ -361,6 +364,7 @@ function generate (packet) {
             return lengthEncoded(path, packet)
         case 'literal':
             return literal(path, packet)
+        case 'bigint':
         case 'integer':
             // TODO This will not include the final step, we keep it off for the
             // looping constructs.

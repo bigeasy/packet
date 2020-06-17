@@ -27,7 +27,7 @@ module.exports = function (parsers) {
                     if ($start == $end) {
                         return { start: $start, object: null, parse }
                     }
-                    $_ += $buffer[$start++] << $bite * 8 >>> 0
+                    $_ += ($buffer[$start++]) << $bite * 8 >>> 0
                     $bite--
                 }
 
@@ -35,7 +35,7 @@ module.exports = function (parsers) {
 
                 object.header.two = $_ >>> 12 & 0x7
                 object.header.two =
-                    object.header.two & 0x4 ? (0x7 - object.header.two  + 1) * -1 : object.header.two
+                    object.header.two & 0x4 ? (0x7 - object.header.two + 1) * -1 : object.header.two
 
                 object.header.three = $_ & 0xfff
 

@@ -74,9 +74,12 @@ function generate (packet, bff) {
         const stop = field.endianness == 'big' ? -1 : bytes
         const direction = field.endianness == 'big' ? -1 : 1
         const shifts = []
+        const cast = field.bits > 32
+            ? { to: 'n', from: 'Number', shift: '>>' }
+            : { to: '', from: '', shift: '>>>' }
         while (bite != stop) {
-            const shift = bite ? asignee + ' >>> ' + bite * 8 : asignee
-            shifts.push(`$buffer[$start++] = ${shift} & 0xff`)
+            const shift = bite ? `${asignee} ${cast.shift} ${bite * 8}${cast.to}` : asignee
+            shifts.push(`$buffer[$start++] = ${cast.from}(${shift} & 0xff${cast.to})`)
             bite += direction
         }
         return shifts.join('\n')
@@ -328,6 +331,7 @@ function generate (packet, bff) {
             return lengthEncoded(path, field)
         case 'buffer':
             return buffer(field)
+        case 'bigint':
         case 'integer':
             return integer(path, field)
         case 'literal':

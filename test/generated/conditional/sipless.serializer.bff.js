@@ -8,7 +8,7 @@ module.exports = function (serializers) {
                 }
             }
 
-            $buffer[$start++] = object.type & 0xff
+            $buffer[$start++] = (object.type & 0xff)
 
             if (((_, $) => $.type == 0)(object.value, object)) {
                 if ($end - $start < 2) {
@@ -18,8 +18,8 @@ module.exports = function (serializers) {
                     }
                 }
 
-                $buffer[$start++] = object.value >>> 8 & 0xff
-                $buffer[$start++] = object.value & 0xff
+                $buffer[$start++] = (object.value >>> 8 & 0xff)
+                $buffer[$start++] = (object.value & 0xff)
             } else if (((_, $) => $.type == 1)(object.value, object)) {
                 if ($end - $start < 3) {
                     return {
@@ -28,9 +28,9 @@ module.exports = function (serializers) {
                     }
                 }
 
-                $buffer[$start++] = object.value >>> 16 & 0xff
-                $buffer[$start++] = object.value >>> 8 & 0xff
-                $buffer[$start++] = object.value & 0xff
+                $buffer[$start++] = (object.value >>> 16 & 0xff)
+                $buffer[$start++] = (object.value >>> 8 & 0xff)
+                $buffer[$start++] = (object.value & 0xff)
             } else {
                 if ($end - $start < 4) {
                     return {
@@ -39,10 +39,10 @@ module.exports = function (serializers) {
                     }
                 }
 
-                $buffer[$start++] = object.value >>> 24 & 0xff
-                $buffer[$start++] = object.value >>> 16 & 0xff
-                $buffer[$start++] = object.value >>> 8 & 0xff
-                $buffer[$start++] = object.value & 0xff
+                $buffer[$start++] = (object.value >>> 24 & 0xff)
+                $buffer[$start++] = (object.value >>> 16 & 0xff)
+                $buffer[$start++] = (object.value >>> 8 & 0xff)
+                $buffer[$start++] = (object.value & 0xff)
             }
 
             return { start: $start, serialize: null }

@@ -31,7 +31,7 @@ module.exports = function (serializers) {
                 break
             }
 
-            $buffer[$start++] = $_ & 0xff
+            $buffer[$start++] = ($_ & 0xff)
 
             return { start: $start, serialize: null }
         }

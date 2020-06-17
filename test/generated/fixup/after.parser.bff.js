@@ -10,8 +10,8 @@ module.exports = function (parsers) {
             }
 
             object.value =
-                $buffer[$start++] * 0x100 +
-                $buffer[$start++]
+                ($buffer[$start++]) * 0x100 +
+                ($buffer[$start++])
 
             object.value = (value => value)(object.value)
 

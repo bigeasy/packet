@@ -21,7 +21,7 @@ module.exports = function (serializers) {
 
             $_ = $lookup.object.value.indexOf(object.value)
 
-            $buffer[$start++] = $_ & 0xff
+            $buffer[$start++] = ($_ & 0xff)
 
             return { start: $start, serialize: null }
         }

@@ -9,7 +9,7 @@ module.exports = function (serializers) {
                     }
                 }
 
-                $buffer[$start++] = object.value & 0xff
+                $buffer[$start++] = (object.value & 0xff)
             } else if ((value => value >= 251 && value < 2 ** 16)(object.value, object)) {
                 if ($end - $start < 3) {
                     return {
@@ -21,8 +21,8 @@ module.exports = function (serializers) {
                 $buffer.write("fc", $start, $start + 1, 'hex')
                 $start += 1
 
-                $buffer[$start++] = object.value >>> 8 & 0xff
-                $buffer[$start++] = object.value & 0xff
+                $buffer[$start++] = (object.value >>> 8 & 0xff)
+                $buffer[$start++] = (object.value & 0xff)
 
             } else {
                 if ($end - $start < 4) {
@@ -35,9 +35,9 @@ module.exports = function (serializers) {
                 $buffer.write("fd", $start, $start + 1, 'hex')
                 $start += 1
 
-                $buffer[$start++] = object.value >>> 16 & 0xff
-                $buffer[$start++] = object.value >>> 8 & 0xff
-                $buffer[$start++] = object.value & 0xff
+                $buffer[$start++] = (object.value >>> 16 & 0xff)
+                $buffer[$start++] = (object.value >>> 8 & 0xff)
+                $buffer[$start++] = (object.value & 0xff)
 
             }
 

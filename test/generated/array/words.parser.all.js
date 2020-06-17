@@ -8,14 +8,14 @@ module.exports = function (parsers) {
 
         $i[0] = 0
         $I[0] =
-            $buffer[$start++] * 0x100 +
-            $buffer[$start++]
+            ($buffer[$start++]) * 0x100 +
+            ($buffer[$start++])
 
         for (; $i[0] < $I[0]; $i[0]++) {
 
             object.array[$i[0]] =
-                $buffer[$start++] * 0x100 +
-                $buffer[$start++]
+                ($buffer[$start++]) * 0x100 +
+                ($buffer[$start++])
         }
 
         return object

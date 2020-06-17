@@ -15,7 +15,7 @@ module.exports = function (parsers) {
             value: 0
         }
 
-        $_ = $buffer[$start++]
+        $_ = ($buffer[$start++])
 
         object.value = $lookup.object.value[$_]
 
