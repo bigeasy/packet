@@ -395,6 +395,17 @@ function generate (packet) {
         return source
     }
 
+    function fixup (path, field) {
+        const after = field.after != null ? function () {
+            return `${path} = (${field.after.source})(${path})`
+        } () : null
+        const source =  $(`
+            `, map(dispatch, path, field.fields), `
+                `, -1, after, `
+        `)
+        return source
+    }
+
     function switched (path, field) {
         surround = true
         const start = $step++
@@ -437,6 +448,8 @@ function generate (packet) {
             return switched(path, packet)
         case 'conditional':
             return conditional(path, packet)
+        case 'fixup':
+            return fixup(path, packet)
         case 'fixed':
             return fixed(path, packet)
         case 'terminated':

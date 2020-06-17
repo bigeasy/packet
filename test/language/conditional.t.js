@@ -12,6 +12,8 @@ require('proof')(4, okay => {
                 ], [
                     [ 'fd', 24 ]
                 ]],
+                // TODO Here is the pure function, so maybe we need pure
+                // functions in general.
                 [ 8, [
                     sip => sip < 251, sip => sip
                 ], [

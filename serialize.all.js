@@ -209,6 +209,29 @@ function generate (packet, bff) {
         return source
     }
 
+    function fixup (path, field) {
+        // TODO Maybe instead of reusing I, use a `$stack` variable.
+        // TODO Or maybe a single stack `$$` or similar.
+        const before = field.before != null ? function () {
+            $step++
+            variables.i = true
+            const i = `$i[${++$i}]`
+            return {
+                path: i,
+                source: `${i} = (${field.before.source})(${path})`
+            }
+        } () : { path: path, source: null }
+        const source =  $(`
+            `, before.source, -1, `
+
+            `, map(dispatch, before.path, field.fields), `
+        `)
+        if (field.before) {
+            $i--
+        }
+        return source
+    }
+
     function conditional (path, conditional) {
         const block = []
         $step++
@@ -295,6 +318,8 @@ function generate (packet, bff) {
             return switched(path, field)
         case 'conditional':
             return conditional(path, field)
+        case 'fixup':
+            return fixup(path, field)
         case 'fixed':
             return fixed(path, field)
         case 'terminated':

@@ -46,6 +46,10 @@ function integer (value, packed, extra = {}) {
     }
 }
 
+function isFixup (field) {
+    return Array.isArray(field) && field.length == 1 && typeof field[0] == 'function'
+}
+
 function map (definitions, packet, extra = {}, packed = false) {
     const definition = { parse: null, serialize: null }
     switch (typeof packet) {
@@ -125,6 +129,32 @@ function map (definitions, packet, extra = {}, packed = false) {
                         before: before,
                         fields: fields,
                         after: after,
+                        ...extra
+                    }]
+                // Fixups.
+                } else if (
+                    isFixup(packet[0]) || isFixup(packet[packet.length - 1])
+                ) {
+                    const fixup = packet.slice()
+                    const before = isFixup(fixup[0]) ? fixup.shift() : null
+                    const after = isFixup(fixup[fixup.length - 1]) ? fixup.pop() : null
+                    const fields = map(definitions, fixup[0], {})
+                    return [{
+                        type: 'fixup',
+                        // TODO Test with a structure member.
+                        // TODO Test with an array member.
+                        vivify: fields[0].vivify,
+                        dotted: '',
+                        bits: fields[0].bits,
+                        fixed: fields[0].fixed,
+                        ethereal: true,
+                        before: before != null
+                            ? { source: before.toString(), arity: before.length }
+                            : null,
+                        fields: fields,
+                        after: after != null
+                            ? { source: after.toString(), arity: after.length }
+                            : null,
                         ...extra
                     }]
                 // Switch statements.

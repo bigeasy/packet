@@ -275,6 +275,18 @@ function generate (packet, bff) {
         return source
     }
 
+    function fixup (path, field) {
+        const after = field.after != null ? function () {
+            return `${path} = (${field.after.source})(${path})`
+        } () : null
+        const source =  $(`
+            `, map(dispatch, path, field.fields), `
+
+            `, -1, after, `
+        `)
+        return source
+    }
+
     function conditional (path, conditional) {
         const block = []
         const signature = []
@@ -371,6 +383,8 @@ function generate (packet, bff) {
             return checkpoint(field)
         case 'switch':
             return switched(path, field)
+        case 'fixup':
+            return fixup(path, field)
         case 'conditional':
             return conditional(path, field)
         case 'fixed':

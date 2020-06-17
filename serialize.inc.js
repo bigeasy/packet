@@ -225,6 +225,31 @@ function generate (packet) {
         return source
     }
 
+    function fixup (path, field) {
+        const before = field.before != null ? function () {
+            variables.i = true
+            const i = `$i[${++$i}]`
+            const source = `${i} = (${field.before.source})(${path})`
+            return {
+                path: i,
+                source: $(`
+                    case ${$step++}:
+
+                        `, source, `
+                `)
+            }
+        } () : { path: path, source: null }
+        const source =  $(`
+            `, before.source, -1, `
+
+            `, map(dispatch, before.path, field.fields), `
+        `)
+        if (field.before) {
+            $i--
+        }
+        return source
+    }
+
     function conditional (path, conditional) {
         surround = true
         const start = $step++
@@ -326,6 +351,8 @@ function generate (packet) {
             return switched(path, packet)
         case 'conditional':
             return conditional(path, packet)
+        case 'fixup':
+            return fixup(path, packet)
         case 'fixed':
             return fixed(path, packet)
         case 'terminated':
