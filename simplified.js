@@ -9,6 +9,14 @@ const coalesce = require('extant')
 // This can be done by adding and `arrayed` property to everything that loops
 // and merging any initial fields are are unarrayed.
 
+function trim (source) {
+    const $ = /\n(.*)}$/.exec(source)
+    if ($ != null) {
+        return source.replace(new RegExp(`^${$[1]}`, 'gm'), '')
+    }
+    return source
+}
+
 function integer (value, packed, extra = {}) {
     if (!packed && Math.abs(value % 8) == 1) {
         if (value < 0) {
@@ -131,6 +139,69 @@ function map (definitions, packet, extra = {}, packed = false) {
                         after: after,
                         ...extra
                     }]
+                // Doubles with bit information.
+                } else if (
+                    packet.length == 2 &&
+                    typeof packet[0] == 'number' &&
+                    typeof packet[1] == 'number'
+                ) {
+                    if (Math.abs(packet[1]) % 8 == 1) {
+                        const bits = Math.abs(packet[1] + 1)
+                        assert.equal(packet[0] * 100, bits, 'bits mismatch')
+                        switch (bits) {
+                        case 64:
+                            return map(definitions, [[
+                                function (value) {
+                                    const buffer = Buffer.alloc(8)
+                                    buffer.writeDoubleLE(value)
+                                    return buffer
+                                }
+                            ], [[ 8 ], [ 8 ]], [
+                                function (value) {
+                                    return Buffer.from(value).readDoubleLE()
+                                }
+                            ]], extra)
+                        case 32:
+                            return map(definitions, [[
+                                function (value) {
+                                    const buffer = Buffer.alloc(4)
+                                    buffer.writeFloatLE(value)
+                                    return buffer
+                                }
+                            ], [[ 4 ], [ 8 ]], [
+                                function (value) {
+                                    return Buffer.from(value).readFloatLE()
+                                }
+                            ]], extra)
+                        }
+                    }
+                    assert.equal(packet[0] * 100, packet[1], 'bits mismatch')
+                    switch (packet[1]) {
+                    case 64:
+                        return map(definitions, [[
+                            function (value) {
+                                const buffer = Buffer.alloc(8)
+                                buffer.writeDoubleBE(value)
+                                return buffer
+                            }
+                        ], [[ 8 ], [ 8 ]], [
+                            function (value) {
+                                return Buffer.from(value).readDoubleBE()
+                            }
+                        ]], extra)
+                    case 32:
+                        return map(definitions, [[
+                            function (value) {
+                                const buffer = Buffer.alloc(4)
+                                buffer.writeFloatBE(value)
+                                return buffer
+                            }
+                        ], [[ 4 ], [ 8 ]], [
+                            function (value) {
+                                return Buffer.from(value).readFloatBE()
+                            }
+                        ]], extra)
+                    }
                 // Fixups.
                 } else if (
                     isFixup(packet[0]) || isFixup(packet[packet.length - 1])
@@ -149,11 +220,11 @@ function map (definitions, packet, extra = {}, packed = false) {
                         fixed: fields[0].fixed,
                         ethereal: true,
                         before: before != null
-                            ? { source: before.toString(), arity: before.length }
+                            ? { source: trim(before.toString()), arity: before.length }
                             : null,
                         fields: fields,
                         after: after != null
-                            ? { source: after.toString(), arity: after.length }
+                            ? { source: trim(after.toString()), arity: after.length }
                             : null,
                         ...extra
                     }]
@@ -208,7 +279,7 @@ function map (definitions, packet, extra = {}, packed = false) {
                         type: 'switch',
                         vivify: vivify == 'object' ? 'variant' : vivify,
                         stringify: ! Array.isArray(packet[1]),
-                        source: packet[0].toString(),
+                        source: trim(packet[0].toString()),
                         bits: bits < 0 ? 0 : bits,
                         fixed: bits > 0,
                         cases: cases
@@ -269,6 +340,7 @@ function map (definitions, packet, extra = {}, packed = false) {
                         type: 'fixed',
                         vivify: 'array',
                         length: packet[0],
+                        dotted: '',
                         ...extra,
                         pad,
                         fixed,
@@ -314,7 +386,7 @@ function map (definitions, packet, extra = {}, packed = false) {
                                 const [ test, packet ] = serialize
                                 conditions.push({
                                     test: {
-                                        source: test.toString(),
+                                        source: trim(test.toString()),
                                         arity: test.length
                                     },
                                     fields: map(definitions, packet, {})
@@ -340,7 +412,7 @@ function map (definitions, packet, extra = {}, packed = false) {
                             const [ test, packet ] = condition
                                 conditions.push({
                                     test: {
-                                        source: test.toString(),
+                                        source: trim(test.toString()),
                                         arity: 1
                                     },
                                     fields: map(definitions, packet, {})
@@ -398,7 +470,7 @@ function map (definitions, packet, extra = {}, packed = false) {
                             conditions.push({
                                 body: {
                                     test: {
-                                        source: test.toString(),
+                                        source: trim(test.toString()),
                                         arity: 1
                                     },
                                     fields: fields,
@@ -472,12 +544,28 @@ function map (definitions, packet, extra = {}, packed = false) {
         }
         break
     case 'number': {
+            const fractional = packet - Math.floor(packet)
+            if (fractional != 0) {
+                switch (Math.floor(packet)) {
+                case 64:
+                    if (fractional == 0.46) {
+                        return map(definitions, [ 0.64, ~64 ], extra)
+                    }
+                    return map(definitions, [ 0.64, 64 ], extra)
+                case 32:
+                default:
+                    if (fractional == 0.23) {
+                        return map(definitions, [ 0.32, ~32 ], extra)
+                    }
+                    return map(definitions, [ 0.32, 32 ], extra)
+                }
+            }
             return [ integer(packet, packed, extra) ]
         }
     case 'function': {
             return [{
                 type: 'function',
-                source: packet.toString(),
+                source: trim(packet.toString()),
                 arity: packet.length
             }]
         }
