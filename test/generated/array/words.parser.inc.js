@@ -1,67 +1,48 @@
 module.exports = function (parsers) {
-    parsers.inc.object = function (object = {}, $step = 0, $i = [], $I = []) {
+    parsers.inc.object = function (object = {}, $step = 0) {
         let $_, $bite
         return function parse ($buffer, $start, $end) {
-            for (;;) {
-                switch ($step) {
-                case 0:
+            switch ($step) {
+            case 0:
 
-                    object = {
-                        array: []
+                object = {
+                    value: {
+                        first: 0,
+                        second: 0
                     }
-
-                    $step = 1
-
-                case 1:
-
-                    $_ = 0
-                    $step = 2
-                    $bite = 1
-
-                case 2:
-
-                    while ($bite != -1) {
-                        if ($start == $end) {
-                            return { start: $start, object: null, parse }
-                        }
-                        $_ += ($buffer[$start++]) << $bite * 8 >>> 0
-                        $bite--
-                    }
-
-                    $I[0] = $_
-
-                    $i[0] = 0
-                case 3:
-
-
-                case 4:
-
-                    $_ = 0
-                    $step = 5
-                    $bite = 1
-
-                case 5:
-
-                    while ($bite != -1) {
-                        if ($start == $end) {
-                            return { start: $start, object: null, parse }
-                        }
-                        $_ += ($buffer[$start++]) << $bite * 8 >>> 0
-                        $bite--
-                    }
-
-                    object.array[$i[0]] = $_
-
-                    if (++$i[0] != $I[0]) {
-                        $step = 3
-                        continue
-                    }
-
-                case 6:
-
-                    return { start: $start, object: object, parse: null }
                 }
-                break
+
+                $step = 1
+
+            case 1:
+
+                $step = 2
+
+            case 2:
+
+                if ($start == $end) {
+                    return { start: $start, object: null, parse }
+                }
+
+                object.value.first = $buffer[$start++]
+
+
+            case 3:
+
+                $step = 4
+
+            case 4:
+
+                if ($start == $end) {
+                    return { start: $start, object: null, parse }
+                }
+
+                object.value.second = $buffer[$start++]
+
+
+            case 5:
+
+                return { start: $start, object: object, parse: null }
             }
         }
     }

@@ -1,59 +1,49 @@
 module.exports = function (serializers) {
-    serializers.inc.object = function (object, $step = 0, $i = []) {
+    serializers.inc.object = function (object, $step = 0) {
         let $bite, $stop, $_
 
         return function serialize ($buffer, $start, $end) {
-            for (;;) {
-                switch ($step) {
-                case 0:
+            switch ($step) {
+            case 0:
 
-                    $step = 1
-                    $bite = 1
-                    $_ = object.array.length
+                $step = 1
+                $bite = 0
+                $_ = object.value.first
 
-                case 1:
+            case 1:
 
-                    while ($bite != -1) {
-                        if ($start == $end) {
-                            return { start: $start, serialize }
-                        }
-                        $buffer[$start++] = ($_ >>> $bite * 8 & 0xff)
-                        $bite--
+                while ($bite != -1) {
+                    if ($start == $end) {
+                        return { start: $start, serialize }
                     }
-
-                    $i[0] = 0
-
-                case 2:
-
-                    $step = 3
-                    $bite = 1
-                    $_ = object.array[$i[0]]
-
-                case 3:
-
-                    while ($bite != -1) {
-                        if ($start == $end) {
-                            return { start: $start, serialize }
-                        }
-                        $buffer[$start++] = ($_ >>> $bite * 8 & 0xff)
-                        $bite--
-                    }
-
-
-                    if (++$i[0] != object.array.length) {
-                        $step = 2
-                        continue
-                    }
-
-                    $step = 4
-
-                case 4:
-
-                    break
-
+                    $buffer[$start++] = ($_ >>> $bite * 8 & 0xff)
+                    $bite--
                 }
 
+
+            case 2:
+
+                $step = 3
+                $bite = 0
+                $_ = object.value.second
+
+            case 3:
+
+                while ($bite != -1) {
+                    if ($start == $end) {
+                        return { start: $start, serialize }
+                    }
+                    $buffer[$start++] = ($_ >>> $bite * 8 & 0xff)
+                    $bite--
+                }
+
+
+                $step = 4
+
+            case 4:
+
                 break
+
             }
 
             return { start: $start, serialize: null }
