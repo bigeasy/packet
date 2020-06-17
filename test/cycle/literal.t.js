@@ -8,7 +8,6 @@ function prove (okay) {
                 padded: [ '0faded', 16, 'facade' ]
             }
         },
-        objects: [{ padded: 0xabcd }],
-        stopAt: 'parse.all'
+        objects: [{ padded: 0xabcd }]
     })
 }
