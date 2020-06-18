@@ -4,10 +4,7 @@ module.exports = function (serializers) {
             let $i = []
 
             if ($end - $start < 14) {
-                return {
-                    start: $start,
-                    serialize: serializers.inc.object(object, 0)
-                }
+                return serializers.inc.object(object, 0)($buffer, $start, $end)
             }
 
             for ($i[0] = 0; $i[0] < 2; $i[0]++) {

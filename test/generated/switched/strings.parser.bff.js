@@ -15,11 +15,19 @@ module.exports = function (parsers) {
             switch (String(($ => $.type)(object))) {
             case "0":
 
+                if ($end - $start < 1) {
+                    return parsers.inc.object(object, 4)($buffer, $start, $end)
+                }
+
                 object.value = ($buffer[$start++])
 
                 break
 
             case "1":
+
+                if ($end - $start < 2) {
+                    return parsers.inc.object(object, 6)($buffer, $start, $end)
+                }
 
                 object.value =
                     ($buffer[$start++]) * 0x100 +
@@ -28,6 +36,10 @@ module.exports = function (parsers) {
                 break
 
             default:
+
+                if ($end - $start < 3) {
+                    return parsers.inc.object(object, 8)($buffer, $start, $end)
+                }
 
                 object.value =
                     ($buffer[$start++]) * 0x10000 +

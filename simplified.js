@@ -289,6 +289,7 @@ function map (definitions, packet, extra = {}, packed = false) {
                         terminator.push(packet[i])
                     }
                     return [{
+                        dotted: '',
                         ...extra,
                         type: 'terminated',
                         vivify: 'array',

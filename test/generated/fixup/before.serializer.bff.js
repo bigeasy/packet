@@ -4,10 +4,7 @@ module.exports = function (serializers) {
             let $i = []
 
             if ($end - $start < 2) {
-                return {
-                    start: $start,
-                    serialize: serializers.inc.object(object, 0)
-                }
+                return serializers.inc.object(object, 0)($buffer, $start, $end)
             }
 
             $i[0] = (value => value)(object.value)

@@ -5,50 +5,110 @@ const snuggle = require('./snuggle')
 const pack = require('./pack')
 const $ = require('programmatic')
 
+function expand (fields) {
+    const expanded = []
+    for (const field of fields) {
+        switch (field.type) {
+        case 'lengthEncoded':
+            field.fields = expand(field.fields)
+            expanded.push({ type: 'lengthEncoding', body: field, dotted: field.dotted })
+            expanded.push(field)
+            break
+        case 'terminated':
+            field.fields = expand(field.fields)
+            expanded.push(field)
+            expanded.push({ type: 'terminator', body: field })
+            break
+        case 'fixed':
+        case 'structure':
+            field.fields = expand(field.fields)
+            expanded.push(field)
+            break
+        case 'conditional':
+            for (const condition of field.serialize.conditions) {
+                condition.fields = expand(condition.fields)
+            }
+            expanded.push(field)
+            break
+        case 'switch':
+            for (const when of field.cases) {
+                when.fields = expand(when.fields)
+            }
+            expanded.push(field)
+            break
+        default:
+            expanded.push(field)
+            break
+        }
+    }
+    return expanded
+}
+
 function checkpoints (path, fields, index = 0, rewind = 0) {
     let checkpoint
     const checked = [ checkpoint = { type: 'checkpoint', lengths: [ 0 ], rewind } ]
     for (const field of fields) {
         switch (field.type) {
         case 'literal':
+            checked.push(field)
             if (field.fixed) {
                 checkpoint.lengths[0] += field.bits / 8
             }
             break
         case 'terminated':
-            if (field.fields.filter(field => ! field.fixed).length == 0) {
-                checkpoint.lengths[0] += field.terminator.length
-                const bits = field.fields.reduce((sum, field) => sum + field.bits, 0)
-                checkpoint.lengths.push(`${bits / 8} * ${path + field.dotted}.length`)
+            checked.push(field)
+            if (field.fields[0].fixed) {
+                checkpoint.lengths.push(`${field.fields[0].bits / 8} * ${path + field.dotted}.length`)
             } else {
+                field.fields = checkpoints(path + `${field.dotted}[$i[${index}]]`, field.fields, index + 1)
+                checked.push(checkpoint = { type: 'checkpoint', lengths: [ 0 ] })
             }
             break
+        case 'terminator':
+            checked.push(field)
+            checkpoint.lengths[0] += field.body.terminator.length
+            break
+        case 'switch':
+            checked.push(field)
+            for (const when of field.cases) {
+                when.fields = checkpoints(path, when.fields, index, rewind)
+            }
+            checked.push(checkpoint = { type: 'checkpoint', lengths: [ 0 ] })
+            break
         case 'conditional':
+            checked.push(field)
             for (const condition of field.serialize.conditions) {
                 condition.fields = checkpoints(path, condition.fields, index, rewind)
             }
+            checked.push(checkpoint = { type: 'checkpoint', lengths: [ 0 ] })
+            break
+        case 'lengthEncoding':
+            checked.push(field)
+            checkpoint.lengths[0] += field.body.encoding[0].bits / 8
             break
         case 'lengthEncoded':
+            checked.push(field)
             // TODO Test a following single byte.
-            checkpoint.lengths[0] += field.encoding[0].bits / 8
-            if (field.fixed) {
-                checkpoint.lengths.push(`${field.element.bits / 8} * ${path + field.dotted}.length`)
+            if (field.fields[0].fixed) {
+                checkpoint.lengths.push(`${field.fields[0].bits / 8} * ${path + field.dotted}.length`)
             }  else {
                 field.fields = checkpoints(path + `${field.dotted}[$i[${index}]]`, field.fields, index + 1)
+                checked.push(checkpoint = { type: 'checkpoint', lengths: [ 0 ] })
             }
             break
         case 'structure':
+            checked.push(field)
             if (field.fixed) {
-                checkpoint.lengths.push(`${field.bits / 8} * ${path + field.dotted}.length`)
+                checkpoint.lengths.push(`${field.bits / 8}`)
             }  else {
-                field.fields = checkpoints(path + `${field.dotted}[$i[${index}]]`, field.fields, index + 1)
+                field.fields = checkpoints(path + `${field.dotted}`, field.fields, index + 1)
             }
             break
         default:
+            checked.push(field)
             checkpoint.lengths[0] += field.bits / 8
             break
         }
-        checked.push(field)
     }
     checked.forEach(field => {
         if (field.type == 'checkpoint' && field.lengths[0] == 0) {
@@ -143,13 +203,15 @@ function generate (packet, bff) {
         `)
     }
 
-    function lengthEncoded (path, field) {
+    function lengthEncoding (path, field) {
         variables.i = true
+        return map(dispatch, path + '.length', field.body.encoding)
+    }
+
+    function lengthEncoded (path, field) {
         // $step += 2 TODO I think this is outgoing. Delete if tests pass.
         const i = `$i[${++$i}]`
         const source = $(`
-            `, map(dispatch, path + '.length', field.encoding), `
-
             for (${i} = 0; ${i} < ${path}.length; ${i}++) {
                 `, map(dispatch, path + `[${i}]`, field.fields), `
             }
@@ -160,22 +222,25 @@ function generate (packet, bff) {
 
     function terminated (path, field) {
         variables.i = true
-        $step += 2
+        $step += 1
         const i = `$i[${++$i}]`
         const looped = join(field.fields.map(field => dispatch(path + `[${i}]`, field)))
-        const terminator = []
-        for (const bite of field.terminator) {
-            terminator.push(`$buffer[$start++] = 0x${bite.toString(16)}`)
-        }
         const source = $(`
             for (${i} = 0; ${i} < ${path}.length; ${i}++) {
                 `, looped, `
             }
-
-            `, terminator.join('\n'), `
         `)
         $i--
         return source
+    }
+
+    function terminator (field) {
+        const terminator = []
+        $step += field.body.terminator.length
+        for (const bite of field.body.terminator) {
+            terminator.push(`$buffer[$start++] = 0x${bite.toString(16)}`)
+        }
+        return terminator.join('\n')
     }
 
     function fixed (path, field) {
@@ -264,6 +329,7 @@ function generate (packet, bff) {
     }
 
     function switched (path, field) {
+        $step++
         const cases = []
         for (const when of field.cases) {
             cases.push($(`
@@ -303,10 +369,7 @@ function generate (packet, bff) {
                                 .map(key => signatories[key])
         return $(`
             if ($end - $start < ${checkpoint.lengths.join(' + ')}) {
-                return {
-                    start: $start,
-                    serialize: serializers.inc.object(${signature.join(', ')})
-                }
+                return serializers.inc.object(${signature.join(', ')})($buffer, $start, $end)
             }
         `)
     }
@@ -327,6 +390,10 @@ function generate (packet, bff) {
             return fixed(path, field)
         case 'terminated':
             return terminated(path, field)
+        case 'terminator':
+            return terminator(field)
+        case 'lengthEncoding':
+            return lengthEncoding(path, field)
         case 'lengthEncoded':
             return lengthEncoded(path, field)
         case 'buffer':
@@ -375,7 +442,8 @@ function generate (packet, bff) {
 }
 
 module.exports = function (compiler, definition, options = {}) {
-    const source = join(JSON.parse(JSON.stringify(definition)).map(function (packet) {
+    const expanded = expand(JSON.parse(JSON.stringify(definition)))
+    const source = join(expanded.map(function (packet) {
         if (options.bff) {
             packet.fields = checkpoints(packet.name, packet.fields)
         }

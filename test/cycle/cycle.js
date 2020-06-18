@@ -94,11 +94,13 @@ module.exports = function (okay, options) {
                 {
                     ({ start, serialize } = serialize(buffer, 0, buffer.length - i))
                 }
+                const partial = start
                 if (serialize != null) {
                     ({ start, serialize } = serialize(buffer, start, buffer.length))
                 }
-                okay({ start, serialize, buffer: buffer.toJSON().data }, {
+                okay({ start, partial, serialize, buffer: buffer.toJSON().data }, {
                     start: buffer.length,
+                    partial: buffer.length - i,
                     serialize: null,
                     buffer: expected.toJSON().data
                 }, `${name} incremental serialize ${i}`)
@@ -125,11 +127,13 @@ module.exports = function (okay, options) {
                 {
                     ({ start, object, parse } = parse(expected, 0, expected.length - i))
                 }
+                const partial = start
                 if (parse != null) {
                     ({ start, object, parse } = parse(expected, start, expected.length))
                 }
-                okay({ start, parse, object }, {
+                okay({ start, partial, parse, object }, {
                     start: expected.length,
+                    partial: expected.length - i,
                     parse: null,
                     object: actual
                 }, `${name} incremental parse ${i}`)
@@ -158,11 +162,13 @@ module.exports = function (okay, options) {
                 {
                     ({ start, serialize } = serialize(buffer, 0, buffer.length - i))
                 }
+                const partial = start
                 if (serialize != null) {
                     ({ start, serialize } = serialize(buffer, start, buffer.length))
                 }
-                okay({ start, serialize, buffer: buffer.toJSON().data }, {
+                okay({ start, partial, serialize, buffer: buffer.toJSON().data }, {
                     start: buffer.length,
+                    partial: buffer.length - i,
                     serialize: null,
                     buffer: expected.toJSON().data
                 }, `${name} best-foot-forward serialize ${i}`)
@@ -190,11 +196,13 @@ module.exports = function (okay, options) {
                 {
                     ({ start, object, parse } = parse(expected, 0, expected.length - i))
                 }
+                const partial = start
                 if (parse != null) {
                     ({ start, object, parse } = parse(expected, start, expected.length))
                 }
-                okay({ start, parse, object }, {
+                okay({ start, partial, parse, object }, {
                     start: expected.length,
+                    partial: expected.length - i,
                     parse: null,
                     object: actual
                 }, `${name} best-foot-forward parse ${i}`)

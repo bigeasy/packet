@@ -8,8 +8,50 @@ const corporeal = require('./corporeal')
 const vivify = require('./vivify')
 const lookup = require('./lookup')
 
+function expand (fields) {
+    const expanded = []
+    for (const field of fields) {
+        switch (field.type) {
+        case 'lengthEncoded':
+            field.fields = expand(field.fields)
+            expanded.push({ type: 'lengthEncoding', body: field })
+            expanded.push(field)
+            break
+        case 'terminated':
+            field.fields = [{
+                type: 'terminator', body: field, dotted: ''
+            }, {
+                type: 'repeated', body: field, fields: expand(field.fields), dotted: ''
+            }]
+            expanded.push(field)
+            break
+        case 'fixed':
+        case 'structure':
+            field.fields = expand(field.fields)
+            expanded.push(field)
+            break
+        case 'conditional':
+            for (const condition of field.serialize.conditions) {
+                condition.fields = expand(condition.fields)
+            }
+            expanded.push(field)
+            break
+        case 'switch':
+            for (const when of field.cases) {
+                when.fields = expand(when.fields)
+            }
+            expanded.push(field)
+            break
+        default:
+            expanded.push(field)
+            break
+        }
+    }
+    return expanded
+}
+
 function generate (packet, bff) {
-    let $i = -1, $sip = -1, $step = 1
+    let $i = -1, $I = -1, $sip = -1, $step = 1
 
     const variables = { packet: true, step: true }
 
@@ -18,16 +60,22 @@ function generate (packet, bff) {
     // TODO You can certianly do something to make this prettier.
     // TODO Start by prepending the path I think?
     function checkpoints (path, fields, index = 0) {
-        let checkpoint = {
-            type: 'checkpoint',
-            ethereal: true,
-            lengths: [ 0 ]
-        }, checked = [ checkpoint ]
+        let checkpoint = { type: 'checkpoint', lengths: [ 0 ] }, checked = [ checkpoint ]
         for (const field of fields) {
             switch (field.type) {
             case 'function':
+                checked.push(field)
+                break
+            case 'switch':
+                checked.push(field)
+                for (const when of field.cases) {
+                    when.fields = checkpoints(path, when.fields, index)
+                }
+                checked.push(checkpoint = { type: 'checkpoint', lengths: [ 0 ] })
                 break
             case 'conditional':
+                checked.push(field)
+                // TODO Sip belongs outside since it is generally a byte or so.
                 if (field.parse.sip != null) {
                     variables.sip = true
                     field.parse.sip = checkpoints(path, field.parse.sip, index)
@@ -35,33 +83,50 @@ function generate (packet, bff) {
                 for (const condition of field.parse.conditions) {
                     condition.fields = checkpoints(path, condition.fields, index)
                 }
+                checked.push(checkpoint = { type: 'checkpoint', lengths: [ 0 ] })
+                break
+            case 'lengthEncoding':
+                checked.push(field)
+                checkpoint.lengths[0] += field.body.encoding[0].bits / 8
+                checked.push(checkpoint = { type: 'checkpoint', lengths: [ 0 ] })
                 break
             case 'lengthEncoded':
-                variables.i = true
-                variables.I = true
-                checkpoint.lengths[0] += field.encoding[0].bits / 8
-                checked.push(checkpoint = { type: 'checkpoint', lengths: [ 0 ] })
-                if (field.fixed) {
-                    checkpoint.lengths.push(`${field.element.bits / 8} * $I[${index}]`)
+                checked.push(field)
+                if (field.fields[0].fixed) {
+                    // Tricky, stick the checkpoint for a fixed array at the end
+                    // of the encoding fields. Let any subsequent fields use the
+                    // checkpoint.
+                    checkpoint.lengths.push(`${field.fields[0].bits / 8} * $I[${index}]`)
                 } else {
                     field.fields = checkpoints(path + `${field.dotted}[$i[${index}]]`, field.fields, index + 1)
+                    checked.push(checkpoint = { type: 'checkpoint', lengths: [ 0 ] })
                 }
                 break
+            case 'terminator':
+                checked.push(field)
+                checkpoint.lengths[0] += field.body.terminator.length
+                break
+            case 'repeated':
+                // TODO If the terminator is greater than or equal to the size
+                // of the repeated part, we do not have to perform the
+                // checkpoint.
+                checked.push(field)
+                field.fields = checkpoints(path, field.fields, index + 1)
+                break
             case 'terminated':
-                // TODO I have notes on termination improvements in the Redux
-                // diary.
-                variables.i = true
+                checked.push(field)
                 field.fields = checkpoints(path + `${field.dotted}[$i[${index}]]`, field.fields, index + 1)
                 checked.push(checkpoint = { type: 'checkpoint', lengths: [ 0 ] })
                 break
             case 'structure':
+                checked.push(field)
                 field.fields = checkpoints(path + field.dotted, field.fields, index)
                 break
             default:
+                checked.push(field)
                 checkpoint.lengths[0] += field.bits / 8
                 break
             }
-            checked.push(field)
         }
         checked.forEach(field => {
             if (field.type == 'checkpoint' && field.lengths[0] == 0) {
@@ -142,38 +207,35 @@ function generate (packet, bff) {
         `)
     }
 
-    function lengthEncoded (path, field) {
+    function lengthEncoding (path, field) {
         variables.i = true
         variables.I = true
         $i++
+        $I++
+        return $(`
+            `, map(dispatch, `$I[${$I}]`, field.body.encoding), `
+            $i[${$i}] = 0
+        `)
+    }
+
+    function lengthEncoded (path, field) {
         const i = `$i[${$i}]`
-        const I = `$I[${$i}]`
-        const encoding = map(dispatch, `${I}`, field.encoding)
         // Step to skip incremental parser's vivification of the array element.
         $step++
         const source = $(`
-            ${i} = 0
-            `, encoding, `
-
-            for (; ${i} < ${I}; ${i}++) {
-                `, vivify.array(`${path}[${i}]`, field), `
+            for (; ${i} < $I[${$I}]; ${i}++) {
+                `, vivify.array(`${path}[${i}]`, field), -1, `
 
                 `, map(dispatch, `${path}[${i}]`, field.fields), `
             }
         `)
         $i--
+        $I--
         return source
     }
 
-    function terminated (path, field) {
-        variables.i = true
-        const i = `$i[${++$i}]`
-        $step += 1
-        const check = bff ? checkpoint({ lengths: [ field.terminator.length ] }) : null
-        $step += 1
-        $step += field.terminator.length
-        const looped = join(field.fields.map(field => dispatch(path + `[${i}]`, field)))
-        $step += field.terminator.length
+    function terminator (field) {
+        $step += field.body.terminator.length + 1
         // TODO We really do not want to go beyond the end of the buffer in a
         // whole parser and loop forever, so we still need the checkpoints. The
         // same goes for length encoded. We don't want a malformed packet to
@@ -192,29 +254,45 @@ function generate (packet, bff) {
         // size. Perhaps we have upper limits on arrays, sure. Add that to the
         // langauge somehow, but we shouldn't have unchecked parsers. We use the
         // `bff` logic and return an error if it doesn't fit.
-        const terminator = field.terminator.map((bite, index) => {
+        const terminator = field.body.terminator.map((bite, index) => {
             if (index == 0) {
                 return `$buffer[$start] == 0x${bite.toString(16)}`
             } else {
                 return `$buffer[$start + ${index}] == 0x${bite.toString(16)}`
             }
         })
+
+        return $(`
+            if (
+                `, terminator.join(' &&\n'), `
+            ) {
+                $start += ${terminator.length}
+                break
+            }
+        `)
+    }
+
+    function repeated (path, field) {
+        const i = `$i[${$i}]`
+        const looped = join(field.fields.map(field => dispatch(path + `[${i}]`, field)))
+        return $(`
+            `, vivify.array(path + `[${i}]`, field), -1, `
+
+            `, looped, `
+
+            ${i}++
+        `)
+    }
+
+    function terminated (path, field) {
+        $step++
+        variables.i = true
+        $i++
+        const looped = join(field.fields.map(field => dispatch(path + field.dotted, field)))
         const source = $(`
-            ${i} = 0
+            $i[${$i}] = 0
             for (;;) {
-                `, check, -1, `
-
-                if (
-                    `, terminator.join(' &&\n'), `
-                ) {
-                    $start += ${terminator.length}
-                    break
-                }
-
-                `, vivify.array(path + `[${i}]`, field), -1, `
-
                 `, looped, `
-                ${i}++
             }
         `)
         $i--
@@ -332,6 +410,7 @@ function generate (packet, bff) {
     }
 
     function switched (path, field) {
+        $step++
         const cases = []
         for (const when of field.cases) {
             cases.push($(`
@@ -392,8 +471,14 @@ function generate (packet, bff) {
             return conditional(path, field)
         case 'fixed':
             return fixed(path, field)
+        case 'repeated':
+            return repeated(path, field)
+        case 'terminator':
+            return terminator(field)
         case 'terminated':
             return terminated(path, field)
+        case 'lengthEncoding':
+            return lengthEncoding(path, field)
         case 'lengthEncoded':
             return lengthEncoded(path, field)
         case 'function':
@@ -457,5 +542,6 @@ function generate (packet, bff) {
 }
 
 module.exports = function (compiler, definition, options = {}) {
-    return compiler(join(JSON.parse(JSON.stringify(definition)).map(packet => generate(packet, options.bff))))
+    const expanded = expand(JSON.parse(JSON.stringify(definition)))
+    return compiler(join(expanded.map(packet => generate(packet, options.bff))))
 }

@@ -13,10 +13,7 @@ module.exports = function (serializers) {
             let $_
 
             if ($end - $start < 1) {
-                return {
-                    start: $start,
-                    serialize: serializers.inc.object(object, 0)
-                }
+                return serializers.inc.object(object, 0)($buffer, $start, $end)
             }
 
             $_ = $lookup.object.value.indexOf(object.value)

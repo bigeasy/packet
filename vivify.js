@@ -33,6 +33,7 @@ function array (path, field) {
     switch (field.type) {
     case 'lengthEncoded':
     case 'terminated':
+    case 'repeated':
     case 'fixed':
         const element = field.fields[field.fields.length - 1]
         switch (element.type) {

@@ -45,9 +45,8 @@ function generate (packet) {
         case 'lengthEncoded':
             if (field.fields[0].fixed) {
                 return $(`
-                    $_ += ${field.encoding[0].bits / 8}
-
-                    $_ += ${field.fields[0].bits / 8} * ${path}.length
+                    $_ += ${field.encoding[0].bits / 8} +
+                        ${field.fields[0].bits / 8} * ${path}.length
                 `)
             } else {
                 variables.i = true

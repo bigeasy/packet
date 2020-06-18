@@ -6,10 +6,7 @@ module.exports = function (serializers) {
             let $i = []
 
             if ($end - $start < 8) {
-                return {
-                    start: $start,
-                    serialize: serializers.inc.object(object, 0)
-                }
+                return serializers.inc.object(object, 0)($buffer, $start, $end)
             }
 
             assert.equal(object.array.length, 4)

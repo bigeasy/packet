@@ -48,6 +48,7 @@ require('proof')(2, okay => {
             fields: [{
                 type: 'terminated',
                 vivify: 'array',
+                dotted: '',
                 fixed: false,
                 bits: 0,
                 terminator: [ 0, 0 ],

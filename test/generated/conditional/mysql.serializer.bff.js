@@ -3,19 +3,13 @@ module.exports = function (serializers) {
         return function ($buffer, $start, $end) {
             if ((value => value < 251)(object.value, object)) {
                 if ($end - $start < 1) {
-                    return {
-                        start: $start,
-                        serialize: serializers.inc.object(object, 1)
-                    }
+                    return serializers.inc.object(object, 1)($buffer, $start, $end)
                 }
 
                 $buffer[$start++] = (object.value & 0xff)
             } else if ((value => value >= 251 && value < 2 ** 16)(object.value, object)) {
                 if ($end - $start < 3) {
-                    return {
-                        start: $start,
-                        serialize: serializers.inc.object(object, 3)
-                    }
+                    return serializers.inc.object(object, 3)($buffer, $start, $end)
                 }
 
                 $buffer.write("fc", $start, $start + 1, 'hex')
@@ -26,10 +20,7 @@ module.exports = function (serializers) {
 
             } else {
                 if ($end - $start < 4) {
-                    return {
-                        start: $start,
-                        serialize: serializers.inc.object(object, 7)
-                    }
+                    return serializers.inc.object(object, 7)($buffer, $start, $end)
                 }
 
                 $buffer.write("fd", $start, $start + 1, 'hex')
