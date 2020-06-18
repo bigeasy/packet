@@ -4,7 +4,6 @@ const snuggle = require('./snuggle')
 const unpack = require('./unpack')
 const unsign = require('./fiddle/unsign')
 const $ = require('programmatic')
-const corporeal = require('./corporeal')
 const vivify = require('./vivify')
 const lookup = require('./lookup')
 
