@@ -1,5 +1,11 @@
 module.exports = function (ignore) {
-    const $Buffer = Buffer
+    function $alloc (value) {
+        return Buffer.alloc(value)
+    }
+
+    function $from (value) {
+        return Buffer.from(value)
+    }
 
     return 0xaaaa
 }

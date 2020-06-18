@@ -1,5 +1,11 @@
 module.exports = function (serializers) {
-    const $Buffer = Buffer
+    function $alloc (value) {
+        return Buffer.alloc(value)
+    }
+
+    function $from (value) {
+        return Buffer.from(value)
+    }
 
     serializers.inc.object = function (object, $step = 0, $i = []) {
         let $bite, $stop, $_

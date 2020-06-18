@@ -1,5 +1,11 @@
 module.exports = function (parsers) {
-    const $Buffer = Buffer
+    function $alloc (value) {
+        return Buffer.alloc(value)
+    }
+
+    function $from (value) {
+        return Buffer.from(value)
+    }
 
     parsers.inc.object = function (object = {}, $step = 0, $i = []) {
         let $_, $bite
@@ -63,7 +69,7 @@ module.exports = function (parsers) {
 
                     $step = 8
                     object.value = (function (value) {
-                        return $Buffer.from(value).readDoubleLE()
+                        return $from(value).readDoubleLE()
                     })(object.value)
 
                 case 8:

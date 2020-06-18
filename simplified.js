@@ -152,25 +152,25 @@ function map (definitions, packet, extra = {}, packed = false) {
                         case 64:
                             return map(definitions, [[
                                 function (value) {
-                                    const buffer = $Buffer.alloc(8)
+                                    const buffer = $alloc(8)
                                     buffer.writeDoubleLE(value)
                                     return buffer
                                 }
                             ], [[ 8 ], [ 8 ]], [
                                 function (value) {
-                                    return $Buffer.from(value).readDoubleLE()
+                                    return $from(value).readDoubleLE()
                                 }
                             ]], extra)
                         case 32:
                             return map(definitions, [[
                                 function (value) {
-                                    const buffer = $Buffer.alloc(4)
+                                    const buffer = $alloc(4)
                                     buffer.writeFloatLE(value)
                                     return buffer
                                 }
                             ], [[ 4 ], [ 8 ]], [
                                 function (value) {
-                                    return $Buffer.from(value).readFloatLE()
+                                    return $from(value).readFloatLE()
                                 }
                             ]], extra)
                         }
@@ -180,25 +180,25 @@ function map (definitions, packet, extra = {}, packed = false) {
                     case 64:
                         return map(definitions, [[
                             function (value) {
-                                const buffer = $Buffer.alloc(8)
+                                const buffer = $alloc(8)
                                 buffer.writeDoubleBE(value)
                                 return buffer
                             }
                         ], [[ 8 ], [ 8 ]], [
                             function (value) {
-                                return $Buffer.from(value).readDoubleBE()
+                                return $from(value).readDoubleBE()
                             }
                         ]], extra)
                     case 32:
                         return map(definitions, [[
                             function (value) {
-                                const buffer = $Buffer.alloc(4)
+                                const buffer = $alloc(4)
                                 buffer.writeFloatBE(value)
                                 return buffer
                             }
                         ], [[ 4 ], [ 8 ]], [
                             function (value) {
-                                return $Buffer.from(value).readFloatBE()
+                                return $from(value).readFloatBE()
                             }
                         ]], extra)
                     }

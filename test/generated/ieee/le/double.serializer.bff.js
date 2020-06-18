@@ -1,5 +1,11 @@
 module.exports = function (serializers) {
-    const $Buffer = Buffer
+    function $alloc (value) {
+        return Buffer.alloc(value)
+    }
+
+    function $from (value) {
+        return Buffer.from(value)
+    }
 
     serializers.bff.object = function (object) {
         return function ($buffer, $start, $end) {
@@ -15,7 +21,7 @@ module.exports = function (serializers) {
             }
 
             $i[0] = (function (value) {
-                const buffer = $Buffer.alloc(8)
+                const buffer = $alloc(8)
                 buffer.writeDoubleBE(value)
                 return buffer
             })(object.value)

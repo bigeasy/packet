@@ -1,5 +1,11 @@
 module.exports = function (parsers) {
-    const $Buffer = Buffer
+    function $alloc (value) {
+        return Buffer.alloc(value)
+    }
+
+    function $from (value) {
+        return Buffer.from(value)
+    }
 
     parsers.bff.object = function () {
         return function parse ($buffer, $start, $end) {
@@ -25,7 +31,7 @@ module.exports = function (parsers) {
 
 
             object.value = (function (value) {
-                return $Buffer.from(value).readDoubleBE()
+                return $from(value).readDoubleBE()
             })(object.value)
 
             return { start: $start, object: object, parse: null }

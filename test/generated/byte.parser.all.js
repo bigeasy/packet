@@ -1,5 +1,11 @@
 module.exports = function (parsers) {
-    const $Buffer = Buffer
+    function $alloc (value) {
+        return Buffer.alloc(value)
+    }
+
+    function $from (value) {
+        return Buffer.from(value)
+    }
 
     parsers.all.object = function ($buffer, $start) {
         const object = {
