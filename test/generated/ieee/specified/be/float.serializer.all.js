@@ -1,4 +1,6 @@
 module.exports = function (serializers) {
+    const $Buffer = Buffer
+
     serializers.all.object = function (object) {
         return function ($buffer, $start, $end) {
             const assert = require('assert')
@@ -6,7 +8,7 @@ module.exports = function (serializers) {
             let $i = []
 
             $i[0] = (function (value) {
-                const buffer = Buffer.alloc(4)
+                const buffer = $Buffer.alloc(4)
                 buffer.writeFloatBE(value)
                 return buffer
             })(object.value)

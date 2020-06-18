@@ -1,4 +1,6 @@
 module.exports = function (serializers) {
+    const $Buffer = Buffer
+
     serializers.all.object = function (object) {
         const $lookup = {
             "object": {

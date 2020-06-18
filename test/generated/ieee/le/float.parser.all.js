@@ -1,4 +1,6 @@
 module.exports = function (parsers) {
+    const $Buffer = Buffer
+
     parsers.all.object = function ($buffer, $start) {
         let $i = []
 
@@ -18,7 +20,7 @@ module.exports = function (parsers) {
 
 
         object.value = (function (value) {
-            return Buffer.from(value).readFloatBE()
+            return $Buffer.from(value).readFloatBE()
         })(object.value)
 
         return object

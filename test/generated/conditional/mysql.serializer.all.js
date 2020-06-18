@@ -1,4 +1,6 @@
 module.exports = function (serializers) {
+    const $Buffer = Buffer
+
     serializers.all.object = function (object) {
         return function ($buffer, $start, $end) {
             if ((value => value < 251)(object.value, object)) {

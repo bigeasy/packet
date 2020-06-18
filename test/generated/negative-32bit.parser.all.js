@@ -1,4 +1,6 @@
 module.exports = function (parsers) {
+    const $Buffer = Buffer
+
     parsers.all.object = function ($buffer, $start) {
         let $_
 

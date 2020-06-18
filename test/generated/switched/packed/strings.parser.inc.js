@@ -1,4 +1,6 @@
 module.exports = function (parsers) {
+    const $Buffer = Buffer
+
     parsers.inc.object = function (object = {}, $step = 0) {
         let $_, $bite
         return function parse ($buffer, $start, $end) {

@@ -1,4 +1,6 @@
 module.exports = function (serializers) {
+    const $Buffer = Buffer
+
     serializers.all.object = function (object) {
         return function ($buffer, $start, $end) {
             $buffer[$start++] = (object.value & 0xff)

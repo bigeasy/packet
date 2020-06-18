@@ -5,6 +5,8 @@ module.exports = function (collection, filename) {
     return function (source) {
         var exported = $(`
             module.exports = function (${collection}) {
+                const $Buffer = Buffer
+
                 `, source, `
             }
         `)

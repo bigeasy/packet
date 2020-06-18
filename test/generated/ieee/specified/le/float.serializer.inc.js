@@ -1,4 +1,6 @@
 module.exports = function (serializers) {
+    const $Buffer = Buffer
+
     serializers.inc.object = function (object, $step = 0, $i = []) {
         let $bite, $stop, $_
 
@@ -10,7 +12,7 @@ module.exports = function (serializers) {
                 case 0:
 
                     $i[0] = (function (value) {
-                        const buffer = Buffer.alloc(4)
+                        const buffer = $Buffer.alloc(4)
                         buffer.writeFloatLE(value)
                         return buffer
                     })(object.value)

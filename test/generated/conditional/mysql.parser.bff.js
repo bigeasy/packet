@@ -1,4 +1,6 @@
 module.exports = function (parsers) {
+    const $Buffer = Buffer
+
     parsers.bff.object = function () {
         return function parse ($buffer, $start, $end) {
             let $sip = []

@@ -1,4 +1,6 @@
 module.exports = function (serializers) {
+    const $Buffer = Buffer
+
     serializers.inc.object = function (object, $step = 0) {
         let $bite, $stop, $_
 

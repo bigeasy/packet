@@ -1,4 +1,6 @@
 module.exports = function (parsers) {
+    const $Buffer = Buffer
+
     parsers.inc.object = function (object = {}, $step = 0, $i = []) {
         let $_, $bite
         return function parse ($buffer, $start, $end) {
@@ -61,7 +63,7 @@ module.exports = function (parsers) {
 
                     $step = 8
                     object.value = (function (value) {
-                        return Buffer.from(value).readDoubleBE()
+                        return $Buffer.from(value).readDoubleBE()
                     })(object.value)
 
                 case 8:

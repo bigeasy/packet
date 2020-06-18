@@ -1,4 +1,6 @@
 module.exports = function (serializers) {
+    const $Buffer = Buffer
+
     serializers.all.object = function (object) {
         return function ($buffer, $start, $end) {
             $buffer[$start++] = Number(object.value >> 56n & 0xffn)
