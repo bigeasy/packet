@@ -1,5 +1,6 @@
 const assert = require('assert')
 const coalesce = require('extant')
+const ieee = require('./ieee')
 
 // TODO It always needs to be an array of fields because we need to be able to
 // insert checkpoints, even for ostensible fixed fields like literal.
@@ -151,27 +152,15 @@ function map (definitions, packet, extra = {}, packed = false) {
                         switch (bits) {
                         case 64:
                             return map(definitions, [[
-                                function (value) {
-                                    const buffer = $alloc(8)
-                                    buffer.writeDoubleLE(value)
-                                    return buffer
-                                }
+                                ieee.writeDoubleLE
                             ], [[ 8 ], [ 8 ]], [
-                                function (value) {
-                                    return $from(value).readDoubleLE()
-                                }
+                                ieee.readDoubleLE
                             ]], extra)
                         case 32:
                             return map(definitions, [[
-                                function (value) {
-                                    const buffer = $alloc(4)
-                                    buffer.writeFloatLE(value)
-                                    return buffer
-                                }
+                                ieee.writeFloatLE
                             ], [[ 4 ], [ 8 ]], [
-                                function (value) {
-                                    return $from(value).readFloatLE()
-                                }
+                                ieee.readFloatLE
                             ]], extra)
                         }
                     }
@@ -179,27 +168,15 @@ function map (definitions, packet, extra = {}, packed = false) {
                     switch (packet[1]) {
                     case 64:
                         return map(definitions, [[
-                            function (value) {
-                                const buffer = $alloc(8)
-                                buffer.writeDoubleBE(value)
-                                return buffer
-                            }
+                            ieee.writeDoubleBE
                         ], [[ 8 ], [ 8 ]], [
-                            function (value) {
-                                return $from(value).readDoubleBE()
-                            }
+                            ieee.readDoubleBE
                         ]], extra)
                     case 32:
                         return map(definitions, [[
-                            function (value) {
-                                const buffer = $alloc(4)
-                                buffer.writeFloatBE(value)
-                                return buffer
-                            }
+                            ieee.writeFloatBE
                         ], [[ 4 ], [ 8 ]], [
-                            function (value) {
-                                return $from(value).readFloatBE()
-                            }
+                            ieee.readFloatBE
                         ]], extra)
                     }
                 // Fixups.

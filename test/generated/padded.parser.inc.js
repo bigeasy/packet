@@ -1,12 +1,4 @@
 module.exports = function (parsers) {
-    function $alloc (value) {
-        return Buffer.alloc(value)
-    }
-
-    function $from (value) {
-        return Buffer.from(value)
-    }
-
     parsers.inc.object = function (object = {}, $step = 0, $i = []) {
         let $_, $bite
         return function parse ($buffer, $start, $end) {

@@ -1,12 +1,4 @@
 module.exports = function (serializers) {
-    function $alloc (value) {
-        return Buffer.alloc(value)
-    }
-
-    function $from (value) {
-        return Buffer.from(value)
-    }
-
     serializers.inc.object = function (object, $step = 0, $i = []) {
         let $bite, $stop, $_
 
@@ -18,7 +10,7 @@ module.exports = function (serializers) {
                 case 0:
 
                     $i[0] = (function (value) {
-                        const buffer = $alloc(8)
+                        const buffer = Buffer.alloc(8)
                         buffer.writeDoubleLE(value)
                         return buffer
                     })(object.value)

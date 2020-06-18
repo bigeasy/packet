@@ -15,7 +15,7 @@ require('proof')(1, okay => {
             ethereal: true,
             before: {
                 source: 'function (value) {\n' +
-                  '    const buffer = $alloc(8)\n' +
+                  '    const buffer = Buffer.alloc(8)\n' +
                   '    buffer.writeDoubleLE(value)\n' +
                   '    return buffer\n' +
                   '}',
@@ -41,7 +41,7 @@ require('proof')(1, okay => {
                 }]
             }],
             after: {
-                source: 'function (value) {\n    return $from(value).readDoubleLE()\n}',
+                source: 'function (value) {\n    return Buffer.from(value).readDoubleLE()\n}',
                 arity: 1
             },
             name: 'value'

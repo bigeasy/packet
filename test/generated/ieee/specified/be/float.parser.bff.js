@@ -1,12 +1,4 @@
 module.exports = function (parsers) {
-    function $alloc (value) {
-        return Buffer.alloc(value)
-    }
-
-    function $from (value) {
-        return Buffer.from(value)
-    }
-
     parsers.bff.object = function () {
         return function parse ($buffer, $start, $end) {
             let $i = []
@@ -31,7 +23,7 @@ module.exports = function (parsers) {
 
 
             object.value = (function (value) {
-                return $from(value).readFloatBE()
+                return Buffer.from(value).readFloatBE()
             })(object.value)
 
             return { start: $start, object: object, parse: null }

@@ -1,12 +1,4 @@
 module.exports = function (serializers) {
-    function $alloc (value) {
-        return Buffer.alloc(value)
-    }
-
-    function $from (value) {
-        return Buffer.from(value)
-    }
-
     serializers.all.object = function (object) {
         return function ($buffer, $start, $end) {
             $buffer.write("0faded", $start, $start + 3, 'hex')

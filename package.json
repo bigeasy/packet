@@ -55,5 +55,9 @@
     "scripts":
     {
                             "test": "proof test/*/*.t.js"
+    },
+    "nyc":
+    {
+                            "exclude": [ "test", "ieee.js" ]
     }
 }

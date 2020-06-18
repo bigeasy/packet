@@ -1,12 +1,4 @@
 module.exports = function (serializers) {
-    function $alloc (value) {
-        return Buffer.alloc(value)
-    }
-
-    function $from (value) {
-        return Buffer.from(value)
-    }
-
     serializers.inc.object = function (object, $step = 0) {
         const $lookup = {
             "object": {
