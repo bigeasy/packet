@@ -1,3 +1,7 @@
+## Thu Jun 18 17:42:34 CDT 2020
+
+For this checksum nonsense I need to recall how to do service discovery.
+
 ## Thu Jun 18 04:57:18 CDT 2020
 
 Trasnforms saved here so I can reference them if I decide to parse `tar`.
@@ -342,8 +346,12 @@ define({
     longSignedLittleEndian: -~64n,
     // 16-bit length encoded array of 16-bit integers.
     lengthEncoded: [ 16, [ 16 ]],
+    // TODO Thinking about how to do lengths that are encoded by a packed value.
+    extractedEncoded: [ $ => $.header.length, [ 8 ] ],
     // Zero terminated array of 16-bit integers, terminator is 16-bit.
     zeroTerminated: [[ 16 ], 0x0 ],
+    // TODO Similarly, how do you a calcuated termination?
+    calculatedTerminated: [[ 8 ], value => value[value.length - 1] == 0 ]
     // Zero terminated array of 16-bit integers, terminator is 8-bit.
     zeroTerminatedByByte: [[ 16 ], 0x0 ]
     // Carrage-return, newline terminated array of bytes.
@@ -357,13 +365,15 @@ define({
     // CR-LF fillled. Wonder if such a thing exists in the wild?
     fixedCRLF: [[ 8 ], [ 16 ], 0x0d, 0x0a ],
     // Bit-packed 16-bit integer, note that bit-fields are always big-endian.
-    flags: {
+    flags: [{
         temperature: -4,     // two's compliment signed
         height: 8
         running: 1
         resv: 3
-    },
-    // We can make the entire field little-endian by explicitly specifying.
+    }, 16 ],
+    // We can make the entire field little-endian by explicitly specifying. I
+    // don't know that the packed values are supposed to be little endian, so
+    // I'm not going to worry about that for now.
     flags: [{
         temperature: -4,     // two's compliment signed
         height: 8
@@ -371,9 +381,13 @@ define({
         resv: 3
     }, ~16 ],
     // 4-byte IEEE floating point, a C float.
-    float: 0.4,
+    float: 32.32,
+    // 4-byte IEEE little endian floating point, a C float.
+    float: 32.23,
     // 8-byte IEEE floating point, a C double.
-    double: 0.8,
+    double: 64.64,
+    // 8-byte IEEE little endian floating point, a C double.
+    double: 64.46,
     // Literals.
     literal: [ 'fc' ],
     // Skip 30, fill with ASCII spaces? No different from literal.
@@ -382,16 +396,55 @@ define({
     literal: [ 'fc', 16 ],
     skip: [[ '20', 30 ], 16, [ '20', 3 ]],
     // Would want to import encoding and decoding functions.
-    fixup: [ value => encode(value), [
+    fixup: [[ value => encode(value) ], [
         [ [ 8 ], 0x0 ]
-    ], value => decode(value) ],
+    ], [ value => decode(value) ]],
     skipAndFixup: [
         [ '00', 16 ], [
-            [ value => encode(value), [
+            [[ value => encode(value) ], [
                 [ [ 8 ], 0x0 ]
-            ], value => decode(value) ]
+            ], [ value => decode(value) ]]
         ]
-i   ]
+    ],
+    // I've run out of sigils, so might have to use strings. Can't pass in an
+    // object unless the object wants to be a very special sort of object.
+    // Usually you checksum a run of bytes, but what if the checksum is supposed
+    // to skip some bytes? Hmm... We can disambiguate between references to
+    // other patterns in the definition and includes easily enough and insist
+    // that a package does not have the name name as a hexidecmal integer.
+    checksumed: {
+        body: [ crc32.create, [ crc32.update, 32, [ 8 ], crc32.update ],
+        footer: {
+            crc32.digest
+        }
+    },
+    // The major difference for a checksum is that it operates on the underlying
+    // buffer and not the values.
+    $checksum: 'packet/crc32',
+    // Always insist on a sub-object?
+    checksumed: [{ $checksum: 'packet/crc32' }, {
+        body: [[ ({ $checksum, buffer }) => checksum.update(buffer) ], {
+            value: 32
+        }, [[ ({ $checksum, buffer }) => checksum.update(buffer) ]]
+    }],
+    example: {
+        checksumed: [{ $checksum: 'packet/crc32' }, {
+            body: [[ ($checksum, buffer) => checksum.update(buffer), Buffer ], {
+                value: 32
+            }, [ ($checksum, buffer) => checksum.update(buffer), Buffer ]],
+            checksum: [[ $checksum => checksum.digest() ]]
+        }]
+    },
+    // What about the wierd case of interpreting something differently if there
+    // is not enough space remaining in the packet? So, there is a header in
+    // MySQL and worse case I'd have to be decrementing a count from the start
+    // of the packet. This could be done with a counter as designed above.
+    mysql: {
+        packet: {
+            header: {
+            }
+        }
+    }
 })
 ```
 
