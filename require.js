@@ -1,9 +1,9 @@
-var fs = require('fs')
-var $ = require('programmatic')
+const fs = require('fs')
+const $ = require('programmatic')
 
 module.exports = function (collection, filename) {
     return function (source) {
-        var exported = $(`
+        const exported = $(`
             module.exports = function (${collection}) {
                 `, source, `
             }
