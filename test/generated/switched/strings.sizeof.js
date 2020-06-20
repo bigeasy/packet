@@ -24,6 +24,8 @@ module.exports = function (sizeOf) {
             break
         }
 
+        $_ += 1
+
         return $_
     }
 }

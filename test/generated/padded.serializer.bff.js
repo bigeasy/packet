@@ -3,7 +3,7 @@ module.exports = function (serializers) {
         return function ($buffer, $start, $end) {
             let $i = []
 
-            if ($end - $start < 16) {
+            if ($end - $start < 17) {
                 return serializers.inc.object(object, 0)($buffer, $start, $end)
             }
 
@@ -24,6 +24,8 @@ module.exports = function (serializers) {
                 $buffer[$start++] = 0xa
                 $i[0]++
             }
+
+            $buffer[$start++] = (object.sentry & 0xff)
 
             return { start: $start, serialize: null }
         }

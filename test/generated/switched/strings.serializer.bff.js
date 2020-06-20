@@ -42,6 +42,12 @@ module.exports = function (serializers) {
                 break
             }
 
+            if ($end - $start < 1) {
+                return serializers.inc.object(object, 9)($buffer, $start, $end)
+            }
+
+            $buffer[$start++] = (object.sentry & 0xff)
+
             return { start: $start, serialize: null }
         }
     }

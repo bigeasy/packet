@@ -9,9 +9,10 @@ function prove (okay) {
                     one: [ 'deaf', 1 ],
                     two: -3,
                     three: 12
-                }, 32 ]
+                }, 32 ],
+                sentry: 8
             }
         },
-        objects: [{ header: { one: 1, two: -4, three: 1 } }]
+        objects: [{ header: { one: 1, two: -4, three: 1 }, sentry: 0xaa }]
     })
 }

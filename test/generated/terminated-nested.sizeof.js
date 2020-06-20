@@ -7,6 +7,8 @@ module.exports = function (sizeOf) {
         }
         $_ += 2
 
+        $_ += 1
+
         return $_
     }
 }

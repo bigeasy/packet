@@ -3,7 +3,8 @@ module.exports = function (parsers) {
         let $i = []
 
         const object = {
-            array: []
+            array: [],
+            sentry: 0
         }
 
         $i[0] = 0
@@ -22,6 +23,8 @@ module.exports = function (parsers) {
 
             $i[0]++
         }
+
+        object.sentry = ($buffer[$start++])
 
         return object
     }

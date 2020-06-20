@@ -8,10 +8,11 @@ module.exports = function (parsers) {
                     one: 0,
                     two: 0,
                     three: 0
-                }
+                },
+                sentry: 0
             }
 
-            if ($end - $start < 4) {
+            if ($end - $start < 5) {
                 return parsers.inc.object(object, 1)($buffer, $start, $end)
             }
 
@@ -28,6 +29,8 @@ module.exports = function (parsers) {
                 object.header.two & 0x4 ? (0x7 - object.header.two + 1) * -1 : object.header.two
 
             object.header.three = $_ & 0xfff
+
+            object.sentry = ($buffer[$start++])
 
             return { start: $start, object: object, parse: null }
         }

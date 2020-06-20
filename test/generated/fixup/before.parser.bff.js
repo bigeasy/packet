@@ -2,16 +2,19 @@ module.exports = function (parsers) {
     parsers.bff.object = function () {
         return function parse ($buffer, $start, $end) {
             const object = {
-                value: 0
+                value: 0,
+                sentry: 0
             }
 
-            if ($end - $start < 2) {
+            if ($end - $start < 3) {
                 return parsers.inc.object(object, 1)($buffer, $start, $end)
             }
 
             object.value =
                 ($buffer[$start++]) * 0x100 +
                 ($buffer[$start++])
+
+            object.sentry = ($buffer[$start++])
 
             return { start: $start, object: object, parse: null }
         }

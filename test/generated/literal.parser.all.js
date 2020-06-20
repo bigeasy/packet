@@ -1,7 +1,8 @@
 module.exports = function (parsers) {
     parsers.all.object = function ($buffer, $start) {
         const object = {
-            padded: 0
+            padded: 0,
+            sentry: 0
         }
 
         $start += 3
@@ -11,6 +12,8 @@ module.exports = function (parsers) {
             ($buffer[$start++])
 
         $start += 3
+
+        object.sentry = ($buffer[$start++])
 
         return object
     }

@@ -3,7 +3,8 @@ module.exports = function (parsers) {
         let $_
 
         const object = {
-            value: 0
+            value: 0,
+            sentry: 0
         }
 
         $_ =
@@ -12,6 +13,8 @@ module.exports = function (parsers) {
         object.value = $_ & 0x8000 ? (0xffff - $_ + 1) * -1 : $_
 
         object.value = (value => -value)(object.value)
+
+        object.sentry = ($buffer[$start++])
 
         return object
     }

@@ -4,6 +4,8 @@ module.exports = function (sizeOf) {
 
         $_ += 2 * object.array.length + 2
 
+        $_ += 1
+
         return $_
     }
 }

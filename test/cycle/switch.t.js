@@ -10,18 +10,22 @@ function prove (okay) {
                 value: [ $ => $.type, {
                     0: 8,
                     1: 16
-                }, 24 ]
+                }, 24 ],
+                sentry: 8
             }
         },
         objects: [{
             type: 0,
-            value: 0xab
+            value: 0xab,
+            sentry: 0xaa
         }, {
             type: 1,
-            value: 0xabcd
+            value: 0xabcd,
+            sentry: 0xaa
         }, {
             type: 2,
-            value: 0xabcdef
+            value: 0xabcdef,
+            sentry: 0xaa
         }]
     })
     cycle(okay, {
@@ -34,26 +38,30 @@ function prove (okay) {
                         0: 6,
                         1: [ 'a', 2 ]
                     }, [ { two: 2, four: 4 }, 6 ] ]
-                }, 8 ]
+                }, 8 ],
+                sentry: 8
             }
         },
         objects: [{
             header: {
                 type: 0,
                 value: 0x2a
-            }
+            },
+            sentry: 0xaa
         }, {
             header: {
                 type: 1,
                 value: 0x2
-            }
+            },
+            sentry: 0xaa
         }, {
             header: {
                 type: 3,
                 value: {
                     two: 2, four: 0xa
                 }
-            }
+            },
+            sentry: 0xaa
         }]
     })
     cycle(okay, {
@@ -67,18 +75,22 @@ function prove (okay) {
                     1, 16
                 ], [
                     24
-                ]]]
+                ]]],
+                sentry: 8
             }
         },
         objects: [{
             type: 0,
-            value: 0xab
+            value: 0xab,
+            sentry: 0xaa
         }, {
             type: 1,
-            value: 0xabcd
+            value: 0xabcd,
+            sentry: 0xaa
         }, {
             type: 2,
-            value: 0xabcdef
+            value: 0xabcdef,
+            sentry: 0xaa
         }]
     })
     cycle(okay, {
@@ -94,19 +106,22 @@ function prove (okay) {
                     ], [
                         [ { two: 2, four: 4 }, 6 ]
                     ]]]
-                }, 8 ]
+                }, 8 ],
+                sentry: 8
             }
         },
         objects: [{
             header: {
                 type: 0,
                 value: 0x2a
-            }
+            },
+            sentry: 0xaa
         }, {
             header: {
                 type: 1,
                 value: 0x2
-            }
+            },
+            sentry: 0xaa
         }, {
             header: {
                 type: 2,
@@ -114,7 +129,8 @@ function prove (okay) {
                     two: 2,
                     four: 0xa
                 }
-            }
+            },
+            sentry: 0xaa
         }]
     })
 }

@@ -119,7 +119,14 @@ function generate (packet, bff) {
                 break
             case 'structure':
                 checked.push(field)
-                field.fields = checkpoints(path + field.dotted, field.fields, index)
+                if (field.fixed) {
+                    checkpoint.lengths[0] += field.bits / 8
+                } else {
+                    // TODO Could start from the nested checkpoint since we are
+                    // are not actually looping for the structure.
+                    field.fields = checkpoints(path + field.dotted, field.fields, index)
+                    checked.push(checkpoint = { type: 'checkpoint', lengths: [ 0 ] })
+                }
                 break
             default:
                 checked.push(field)
@@ -288,6 +295,7 @@ function generate (packet, bff) {
         variables.i = true
         $i++
         const looped = join(field.fields.map(field => dispatch(path + field.dotted, field)))
+        $step++
         const source = $(`
             $i[${$i}] = 0
             for (;;) {

@@ -3,7 +3,8 @@ module.exports = function (parsers) {
         let $sip = []
 
         const object = {
-            value: 0
+            value: 0,
+            sentry: 0
         }
 
         $sip[0] = ($buffer[$start++])
@@ -20,6 +21,8 @@ module.exports = function (parsers) {
                 ($buffer[$start++]) * 0x100 +
                 ($buffer[$start++])
         }
+
+        object.sentry = ($buffer[$start++])
 
         return object
     }

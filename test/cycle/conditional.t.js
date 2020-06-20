@@ -18,10 +18,17 @@ function prove (okay) {
                     sip => sip == 0xfc, 16
                 ], [
                     24
-                ]]]
+                ]]],
+                sentry: 8
             }
         },
-        objects: [{ value: 250 }, { value: 251 }, { value: 2 ** 16 }]
+        objects: [{
+            value: 250, sentry: 0xaa
+        }, {
+            value: 251, sentry: 0xaa
+        }, {
+            value: 2 ** 16, sentry: 0xaa
+        }]
     })
     cycle(okay, {
         name: 'conditional/sipless',
@@ -43,15 +50,16 @@ function prove (okay) {
                     ], [
                         32
                     ]]
-                ]
+                ],
+                sentry: 8
             }
         },
         objects: [{
-            type: 0, value: 0xaaaa
+            type: 0, value: 0xaaaa, sentry: 0xaa
         }, {
-            type: 1, value: 0xaaaaaa
+            type: 1, value: 0xaaaaaa, sentry: 0xaa
         }, {
-            type: 2, value: 0xaaaaaaaa
+            type: 2, value: 0xaaaaaaaa, sentry: 0xaa
         }]
     })
     cycle(okay, {
@@ -65,15 +73,16 @@ function prove (okay) {
                     $ => $.type == 1, 24
                 ], [
                     32
-                ]]
+                ]],
+                sentry: 8
             }
         },
         objects: [{
-            type: 0, value: 0xaaaa
+            type: 0, value: 0xaaaa, sentry: 0xaa
         }, {
-            type: 1, value: 0xaaaaaa
+            type: 1, value: 0xaaaaaa, sentry: 0xaa
         }, {
-            type: 2, value: 0xaaaaaaaa
+            type: 2, value: 0xaaaaaaaa, sentry: 0xaa
         }]
     })
     cycle(okay, {
@@ -97,17 +106,20 @@ function prove (okay) {
                             five: 5
                         }, 6 ]
                     ]]
-                }, 8 ]
+                }, 8 ],
+                sentry: 8
             }
         },
         objects: [{
             header: {
                 flag: 0, value: 0x2a
-            }
+            },
+            sentry: 0xaa
         }, {
             header: {
                 flag: 1, value: 3
-            }
+            },
+            sentry: 8
         }, {
             header: {
                 flag: 2,
@@ -115,7 +127,8 @@ function prove (okay) {
                     two: 2,
                     four: 10
                 }
-            }
+            },
+            sentry: 0xaa
         }, {
             header: {
                 flag: 3,
@@ -123,7 +136,8 @@ function prove (okay) {
                     one: 1,
                     five: 0x13
                 }
-            }
+            },
+            sentry: 0xaa
         }]
     })
 }

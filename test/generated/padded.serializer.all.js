@@ -21,6 +21,8 @@ module.exports = function (serializers) {
                 $i[0]++
             }
 
+            $buffer[$start++] = (object.sentry & 0xff)
+
             return { start: $start, serialize: null }
         }
     }

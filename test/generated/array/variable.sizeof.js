@@ -9,6 +9,8 @@ module.exports = function (sizeOf) {
                 2 * object.array[$i[0]].first.length
         }
 
+        $_ += 1
+
         return $_
     }
 }

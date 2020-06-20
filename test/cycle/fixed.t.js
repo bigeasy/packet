@@ -4,8 +4,8 @@ function prove (okay) {
     require('./cycle')(okay, {
         name: 'fixed',
         define: {
-            object: { array: [ [ 4 ], [ 16 ] ]  }
+            object: { array: [ [ 4 ], [ 16 ] ], sentry: 8  }
         },
-        objects: [{ array: [ 0xabcd, 0xdcba, 0xabcd, 0xdbca ] }]
+        objects: [{ array: [ 0xabcd, 0xdcba, 0xabcd, 0xdbca ], sentry: 0xaa }]
     })
 }

@@ -3,7 +3,8 @@ module.exports = function (parsers) {
         let $i = []
 
         const object = {
-            array: []
+            array: [],
+            sentry: 0
         }
 
         $i[0] = 0
@@ -26,6 +27,8 @@ module.exports = function (parsers) {
 
 
         $start += (16 - $i[0]) * 1 - 2
+
+        object.sentry = ($buffer[$start++])
 
         return object
     }

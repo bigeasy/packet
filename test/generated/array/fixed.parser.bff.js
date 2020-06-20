@@ -4,7 +4,8 @@ module.exports = function (parsers) {
             let $i = [], $I = []
 
             const object = {
-                array: []
+                array: [],
+                sentry: 0
             }
 
             if ($end - $start < 2) {
@@ -16,7 +17,7 @@ module.exports = function (parsers) {
                 ($buffer[$start++])
             $i[0] = 0
 
-            if ($end - $start < 4 * $I[0]) {
+            if ($end - $start < 1 + 4 * $I[0]) {
                 return parsers.inc.object(object, 3, $i, $I)($buffer, $start, $end)
             }
 
@@ -34,6 +35,8 @@ module.exports = function (parsers) {
                     ($buffer[$start++]) * 0x100 +
                     ($buffer[$start++])
             }
+
+            object.sentry = ($buffer[$start++])
 
             return { start: $start, object: object, parse: null }
         }

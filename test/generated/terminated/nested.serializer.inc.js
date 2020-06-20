@@ -84,9 +84,26 @@ module.exports = function (serializers) {
 
                     $step = 8
 
-                    $step = 8
-
                 case 8:
+
+                    $step = 9
+                    $bite = 0
+                    $_ = object.sentry
+
+                case 9:
+
+                    while ($bite != -1) {
+                        if ($start == $end) {
+                            return { start: $start, serialize }
+                        }
+                        $buffer[$start++] = ($_ >>> $bite * 8 & 0xff)
+                        $bite--
+                    }
+
+
+                    $step = 10
+
+                case 10:
 
                     break
 

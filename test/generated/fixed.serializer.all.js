@@ -13,6 +13,8 @@ module.exports = function (serializers) {
             }
 
 
+            $buffer[$start++] = (object.sentry & 0xff)
+
             return { start: $start, serialize: null }
         }
     }

@@ -5,9 +5,10 @@ function prove (okay) {
         name: 'literal',
         define: {
             object: {
-                padded: [ '0faded', 16, 'facade' ]
+                padded: [ '0faded', 16, 'facade' ],
+                sentry: 8
             }
         },
-        objects: [{ padded: 0xabcd }]
+        objects: [{ padded: 0xabcd, sentry: 0xaa }]
     })
 }

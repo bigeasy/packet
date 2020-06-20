@@ -12,12 +12,15 @@ module.exports = function (parsers) {
         let $_
 
         const object = {
-            value: 0
+            value: 0,
+            sentry: 0
         }
 
         $_ = ($buffer[$start++])
 
         object.value = $lookup.object.value[$_]
+
+        object.sentry = ($buffer[$start++])
 
         return object
     }

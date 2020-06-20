@@ -2,10 +2,11 @@ module.exports = function (parsers) {
     parsers.bff.object = function () {
         return function parse ($buffer, $start, $end) {
             const object = {
-                padded: 0
+                padded: 0,
+                sentry: 0
             }
 
-            if ($end - $start < 8) {
+            if ($end - $start < 9) {
                 return parsers.inc.object(object, 1)($buffer, $start, $end)
             }
 
@@ -16,6 +17,8 @@ module.exports = function (parsers) {
                 ($buffer[$start++])
 
             $start += 3
+
+            object.sentry = ($buffer[$start++])
 
             return { start: $start, object: object, parse: null }
         }

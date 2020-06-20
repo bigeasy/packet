@@ -3,7 +3,8 @@ module.exports = function (parsers) {
         let $i = []
 
         const object = {
-            value: []
+            value: [],
+            sentry: 0
         }
 
         $i[0] = 0
@@ -20,6 +21,8 @@ module.exports = function (parsers) {
         object.value = (function (value) {
             return Buffer.from(value).readFloatLE()
         })(object.value)
+
+        object.sentry = ($buffer[$start++])
 
         return object
     }

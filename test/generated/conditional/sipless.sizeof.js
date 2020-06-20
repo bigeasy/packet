@@ -12,6 +12,8 @@ module.exports = function (sizeOf) {
             $_ += 4
         }
 
+        $_ += 1
+
         return $_
     }
 }

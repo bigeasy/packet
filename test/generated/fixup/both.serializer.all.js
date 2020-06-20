@@ -8,6 +8,8 @@ module.exports = function (serializers) {
             $buffer[$start++] = ($i[0] >>> 8 & 0xff)
             $buffer[$start++] = ($i[0] & 0xff)
 
+            $buffer[$start++] = (object.sentry & 0xff)
+
             return { start: $start, serialize: null }
         }
     }

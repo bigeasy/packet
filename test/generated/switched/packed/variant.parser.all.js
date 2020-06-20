@@ -6,7 +6,8 @@ module.exports = function (parsers) {
             header: {
                 type: 0,
                 value: 0
-            }
+            },
+            sentry: 0
         }
 
         $_ = ($buffer[$start++])
@@ -36,6 +37,8 @@ module.exports = function (parsers) {
 
             break
         }
+
+        object.sentry = ($buffer[$start++])
 
         return object
     }

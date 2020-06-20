@@ -4,10 +4,11 @@ module.exports = function (parsers) {
             let $i = []
 
             const object = {
-                value: []
+                value: [],
+                sentry: 0
             }
 
-            if ($end - $start < 4) {
+            if ($end - $start < 5) {
                 return parsers.inc.object(object, 1)($buffer, $start, $end)
             }
 
@@ -25,6 +26,8 @@ module.exports = function (parsers) {
             object.value = (function (value) {
                 return Buffer.from(value).readFloatLE()
             })(object.value)
+
+            object.sentry = ($buffer[$start++])
 
             return { start: $start, object: object, parse: null }
         }

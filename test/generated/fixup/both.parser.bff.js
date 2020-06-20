@@ -4,10 +4,11 @@ module.exports = function (parsers) {
             let $_
 
             const object = {
-                value: 0
+                value: 0,
+                sentry: 0
             }
 
-            if ($end - $start < 2) {
+            if ($end - $start < 3) {
                 return parsers.inc.object(object, 1)($buffer, $start, $end)
             }
 
@@ -17,6 +18,8 @@ module.exports = function (parsers) {
             object.value = $_ & 0x8000 ? (0xffff - $_ + 1) * -1 : $_
 
             object.value = (value => -value)(object.value)
+
+            object.sentry = ($buffer[$start++])
 
             return { start: $start, object: object, parse: null }
         }

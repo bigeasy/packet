@@ -1,15 +1,24 @@
 module.exports = function (parsers) {
     parsers.all.object = function ($buffer, $start) {
+        let $i = [], $I = []
+
         const object = {
-            value: {
-                first: 0,
-                second: 0
-            }
+            array: [],
+            sentry: 0
         }
 
-        object.value.first = ($buffer[$start++])
+        $I[0] =
+            ($buffer[$start++]) * 0x100 +
+            ($buffer[$start++])
+        $i[0] = 0
 
-        object.value.second = ($buffer[$start++])
+        for (; $i[0] < $I[0]; $i[0]++) {
+            object.array[$i[0]] =
+                ($buffer[$start++]) * 0x100 +
+                ($buffer[$start++])
+        }
+
+        object.sentry = ($buffer[$start++])
 
         return object
     }

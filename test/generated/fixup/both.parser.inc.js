@@ -6,7 +6,8 @@ module.exports = function (parsers) {
             case 0:
 
                 object = {
-                    value: 0
+                    value: 0,
+                    sentry: 0
                 }
 
                 $step = 1
@@ -32,6 +33,19 @@ module.exports = function (parsers) {
                 object.value = (value => -value)(object.value)
 
             case 3:
+
+                $step = 4
+
+            case 4:
+
+                if ($start == $end) {
+                    return { start: $start, object: null, parse }
+                }
+
+                object.sentry = $buffer[$start++]
+
+
+            case 5:
 
                 return { start: $start, object: object, parse: null }
             }
