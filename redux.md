@@ -347,13 +347,18 @@ define({
     // 16-bit length encoded array of 16-bit integers.
     lengthEncoded: [ 16, [ 16 ]],
     // TODO Thinking about how to do lengths that are encoded by a packed value.
+    // The repeated bit will always be an array with a single something in it,
+    // so that could be the disambiguation we need to use the array around a
+    // function universally. Note that `eval` is available as a keyword. Note
+    // that symbols are available as well.
     extractedEncoded: [ $ => $.header.length, [ 8 ] ],
     // Zero terminated array of 16-bit integers, terminator is 16-bit.
     zeroTerminated: [[ 16 ], 0x0 ],
-    // TODO Similarly, how do you a calcuated termination?
-    calculatedTerminated: [[ 8 ], value => value[value.length - 1] == 0 ]
+    // TODO Similarly, how do you a calcuated termination? Say you actually want
+    // the terminator to be a part of the value?
+    calculatedTerminated: [[ 8 ], value => value[value.length - 1] == 0xa ],
     // Zero terminated array of 16-bit integers, terminator is 8-bit.
-    zeroTerminatedByByte: [[ 16 ], 0x0 ]
+    zeroTerminatedByByte: [[ 16 ], 0x0 ],
     // Carrage-return, newline terminated array of bytes.
     crlfTerminated: [[ 8 ], 0x0d, 0x0a ],
     // Fixed with array of bytes.
@@ -422,19 +427,46 @@ define({
     // buffer and not the values.
     $checksum: 'packet/crc32',
     // Always insist on a sub-object?
+    // TODO We can always parse the source to deterine if we are being passed
+    // an object, so that's actually well determined. If we are being passed an
+    // object, we might be able to parse the destructuring well enough to know
+    // which objects we need to pass in, so we don't waste time slicing buffers.
     checksumed: [{ $checksum: 'packet/crc32' }, {
         body: [[ ({ $checksum, buffer }) => checksum.update(buffer) ], {
             value: 32
         }, [[ ({ $checksum, buffer }) => checksum.update(buffer) ]]
+        checksum: [[ ({ $checksum }) => checksum.digest() ], 32, [ ({ $checksum }) => checksum.digest() ]]
     }],
     example: {
-        checksumed: [{ $checksum: 'packet/crc32' }, {
+        checksummed: [{ $checksum: 'packet/crc32' }, {
             body: [[ ($checksum, buffer) => checksum.update(buffer), Buffer ], {
                 value: 32
             }, [ ($checksum, buffer) => checksum.update(buffer), Buffer ]],
-            checksum: [[ $checksum => checksum.digest() ]]
+            checksum: [[ $checksum => checksum.digest() ], 32, [ $checksum => checksum.digest() ]]
         }]
     },
+    // A checksum-like helper might define what it is supposed to do in a scope.
+    // Oof, but then how would you get the value when it leaves scope?
+    example: {
+        checksummed: [[ { $checksum: 'packet/crc32' }, 'md5' ], {
+            value: 32
+        }],
+        checksum: [[ $checksum => checksum.digest() ], 32, [ $checksum => checksum.digest() ]]
+    },
+    // Maybe something like this...
+    // Or maybe it exists until it is overwritten?
+    // And maybe something ugly like double arrays means forward and backward?
+    example: {
+        body: [[ { $checksum: 'packet/crc32' }, 'md5' ], {
+            checksummed: [[[ ({ $checksum }) => $checksum.begin ]], {
+                first: 32,
+                second: 32,
+                third: 32
+            }]
+            checksum: [[[ $checksum => checksum.digest() ]], 32 ]
+        }]
+    },
+
     // What about the wierd case of interpreting something differently if there
     // is not enough space remaining in the packet? So, there is a header in
     // MySQL and worse case I'd have to be decrementing a count from the start
