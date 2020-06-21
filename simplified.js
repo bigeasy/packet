@@ -72,6 +72,7 @@ function map (definitions, packet, extra = {}, packed = false) {
             // easier to return to for maintainence and expansion.
             // Outer array.
             if (Array.isArray(packet)) {
+                // Array of string values for an integer.
                 if (
                     packet.length == 2 &&
                     typeof packet[0] == 'number' &&

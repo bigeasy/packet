@@ -1,3 +1,48 @@
+## Sun Jun 21 08:24:13 CDT 2020
+
+Looking at a benchmark, it appears that the real performance cost comes from a
+slice of the buffer, if that's how we want to do it, and in reality we probably
+want to build an object that has `$buffer`, `$start` and `$end`, where maybe
+instead of `$start` we have some sort of marker indicating some point in the
+parse, a place greater than the start of a marker in the language or the last
+time the value was referenced. Ah, not necessary. We can use the scope concept
+and track it automatically.
+
+What if the scopes get nested? Same thing with sips. Makes me feel that sip
+should be an array, but that is so ugly for the common case. At least it is
+going to be constant so we don't have to do `sip[sip.length - 1]`, except maybe
+in blind helpers functions.
+
+Thought I'd resolved ambiguities because length-encoded and terminated arrays
+are both identified by an array with a single element at a certain position, but
+switch statements that use maps are going to be indistinquishable from a fixup
+only. Could decided to put the switch condition in an array, but then putting an
+array around a fixup for coming and going doesn't work.
+
+Could say coming and going is an array around after, but that's kind of weird
+rule and will be hard to remember and from my latest sketches won't look right.
+Seems like you want to see this funny thing we're going to do right off.
+
+Could say that the mnemonic is that these fixups are parenthetical, operating on
+the objects, values or buffers outside of the context of the language and leave
+it the way it is, even as we're getting rid of `Buffer` and `Object` and other
+things.
+
+Had a look now at using `{ switch: $ => $.type, cases: [] }` and that would be
+such a departure. Now we have names that are part of the language whereas before
+there are no names in the language. All names are provided by the user.
+
+Putting an array around the case map makes it into a length-encoded array of
+structures.
+
+Map for switch statements is a go for sure, though, since we already have map
+translations and I already have a place to use it in MQTT. Function definitely
+leads. No other way to envision that aspect of it. Only other possibility
+conceivable is to insist on a default value, but no.
+
+Updated my latest examples. It isn't so bad. I can live with it. We're at the I
+can get used to it stage of resolving ambiguities.
+
 ## Thu Jun 18 17:42:34 CDT 2020
 
 For this checksum nonsense I need to recall how to do service discovery.
@@ -457,16 +502,32 @@ define({
     // Or maybe it exists until it is overwritten?
     // And maybe something ugly like double arrays means forward and backward?
     example: {
+        // This would have special definition saying apply this function to
+        // everything here as a buffer comming and going.
         body: [[ { $checksum: 'packet/crc32' }, 'md5' ], {
-            checksummed: [[[ ({ $checksum }) => $checksum.begin ]], {
-                first: 32,
-                second: 32,
-                third: 32
-            }]
-            checksum: [[[ $checksum => checksum.digest() ]], 32 ]
-        }]
+            first: 32,
+            second: 32,
+            third: 32
+        }],
+        // Still exisits outside scope, not overwritten, so we get the digest.
+        checksum: [[[ ({ $checksum }) => checksum.digest() ]], 32 ]
     },
-
+    example: {
+        // This would be more explicit. A declaration, followed by a function
+        // applied coming and going.
+        body: [[
+            { $checksum: 'packet/crc32' }, 'md5'
+        ], [[
+            // And maybe `$body` to get a specific start?
+            ({ $checksum, $buffer, $start, $end }) => $checksum.update($buffer, $start, $end)
+        ]], {
+            first: 32,
+            second: 32,
+            third: 32
+        }],
+        // Still exisits outside scope, not overwritten, so we get the digest.
+        checksum: [[[ ({ $checksum }) => checksum.digest() ]], 32 ]
+    },
     // What about the wierd case of interpreting something differently if there
     // is not enough space remaining in the packet? So, there is a header in
     // MySQL and worse case I'd have to be decrementing a count from the start
