@@ -9,4 +9,5 @@ require('proof')(1, okay => {
             array: [ 32, [ null ]]
         }
     }, [ 'packet', 'array' ], 'unable to parse length-encoded element type'))
+    okay('dummy')
 })
