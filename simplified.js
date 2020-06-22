@@ -72,8 +72,8 @@ function map (definitions, packet, extra = {}, packed = false) {
             // easier to return to for maintainence and expansion.
             // Outer array.
             if (Array.isArray(packet)) {
-                // Array map of integer to string values for integer. There must
-                // be more than one element.
+                // **String maps**: A two element array with a number followed
+                // by an array entirely of strings with more than one element.
                 if (
                     packet.length == 2 &&
                     typeof packet[0] == 'number' &&
@@ -84,51 +84,66 @@ function map (definitions, packet, extra = {}, packed = false) {
                     const field = map(definitions, packet[0], extra, packed).shift()
                     field.lookup = packet[1].slice()
                     return [ field ]
-                // Seems that we could still have an object for integer with
-                // padding before and after, we could make literals wrappers.
-                // [ 'ac', 16 ] or [ 'ac', [ 'utf8' ] ]
+                // **Literals**: Constant value padding bytes. A type definition
+                // with a preceding or following literal or both. The preceding
+                // or following element is defined by a either string of
+                // hexidecimal or an array with a bit size as number preceding a
+                // string hexidecimal value, or a string hexdecimal value
+                // followed by a repeat count as number.
                 } else if (
                     packet.filter(item => typeof item == 'string').length != 0 ||
-                    (Array.isArray(packet[0]) && typeof packet[0][0] == 'string') ||
+                    (
+                        Array.isArray(packet[0]) &&
+                        packet[0].length == 2 &&
+                        packet[0].filter(item => typeof item == 'string').length != 0
+                    ) ||
                     (
                         Array.isArray(packet[packet.length - 1]) &&
-                        typeof packet[packet.length - 1][0] == 'string'
+                        packet[packet.length - 1].length == 2 &&
+                        packet[packet.length - 1].filter(item => typeof item == 'string').length != 0
                     )
                 ) {
-                    const before = { repeat: 0, value: '' }, after = { repeat: 0, value: '' }
-                    packet = packet.slice(0)
-                    if (typeof packet[0] == 'string') {
-                        before.repeat = 1
-                        before.value = packet.shift()
-                        before.bits = before.value.length * 4
-                    } else if (
-                        Array.isArray(packet[0]) &&
-                        typeof packet[0][0] == 'string'
-                    ) {
-                        before.repeat = packet[0][1]
-                        before.value = packet[0][0]
-                        before.bits = before.value.length * 4
-                        packet.shift()
+                    function literal (packet, index) {
+                        if (typeof packet[index] == 'string') {
+                            const value = packet.splice(index, 1).pop()
+                            return {
+                                repeat: 1,
+                                value: value,
+                                bits: value.length * 4
+                            }
+                        // **TODO**: Ambiguity if we have literals inside
+                        // literals. Would be resolved by insisting on the array
+                        // surrounding the literal definition.
+                        } else if (
+                            Array.isArray(packet[index]) &
+                            typeof packet[index][1] == 'string'
+                        ) {
+                            const packed = packet.splice(index, 1).pop()
+                            return {
+                                repeat: 1,
+                                value: packed[1],
+                                bits: packed[0]
+                            }
+                        } else if (
+                            Array.isArray(packet[index]) &&
+                            typeof packet[index][0] == 'string'
+                        ) {
+                            const repeated = packet.splice(index, 1).pop()
+                            return {
+                                repeat: repeated[1],
+                                value: repeated[0],
+                                bits: repeated[0].length * 4
+                            }
+                        } else {
+                            return { repeat: 0, value: '', bits: 0 }
+                        }
                     }
-                    if (typeof packet[packet.length - 1] == 'string') {
-                        after.repeat = 1
-                        after.value = packet.pop()
-                        after.bits = after.value.length * 4
-                    } else if (
-                        Array.isArray(packet[packet.length - 1]) &&
-                        typeof packet[packet.length - 1][0] == 'string'
-                    ) {
-                        after.repeat = packet[packet.length - 1][1]
-                        after.value = packet[packet.length - 1][0]
-                        after.bits = after.value.length * 4
-                    }
+                    const sliced = packet.slice(0)
+                    const before = literal(sliced, 0)
+                    const after = literal(sliced, sliced.length - 1)
                     // TODO Use `field` as a common child then do bits
                     // recursively. Aren't we going by fixed anyway?
-                    const fields = map(definitions, packet[0], {}, packed)
-                    const bits = fields[0].fixed
-                               ? fields[0].bits + before.repeat * before.value.length * 4
-                                                + after.repeat * after.value.length * 4
-                               : 0
+                    const fields = map(definitions, sliced[0], {}, packed)
                     // TODO Test literal wrap of a structure.
                     // TODO Test literal wrap of an array.
                     return [{
@@ -136,7 +151,10 @@ function map (definitions, packet, extra = {}, packed = false) {
                         dotted: '',
                         vivify: fields[0].vivify,
                         fixed: fields[0].fixed,
-                        bits: bits,
+                        bits: fields[0].fixed
+                            ? fields[0].bits + before.repeat * before.bits
+                                                + after.repeat * after.bits
+                            : 0,
                         before: before,
                         fields: fields,
                         after: after,
@@ -263,7 +281,8 @@ function map (definitions, packet, extra = {}, packed = false) {
                         fixed: bits > 0,
                         cases: cases
                     }]
-                // Packed integers.
+                // **Packed integers**: Defined by an object that is not an
+                // array followed by a number.
                 } else if (
                     typeof packet[0] == 'object' &&
                     ! Array.isArray(packet[0]) &&
@@ -280,7 +299,8 @@ function map (definitions, packet, extra = {}, packed = false) {
                         ...extra
                     })
                     return [{ ...into, fields, ...extra }]
-                // Terminated arrays.
+                // **Terminated arrays**: An array followed by one or more
+                // numbers representing termination bytes.
                 } else if (
                     Array.isArray(packet[0]) &&
                     typeof packet[1] == 'number'

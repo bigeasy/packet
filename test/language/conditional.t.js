@@ -65,7 +65,7 @@ require('proof')(4, okay => {
                         fixed: true,
                         bits: 24,
                         before: { repeat: 1, value: 'fc', bits: 8 },
-                        after: { repeat: 0, value: '' },
+                        after: { repeat: 0, value: '', bits: 0 },
                         fields: [{
                             type: 'integer',
                             vivify: 'number',
@@ -85,7 +85,7 @@ require('proof')(4, okay => {
                         fixed: true,
                         bits: 32,
                         before: { repeat: 1, value: 'fd', bits: 8 },
-                        after: { repeat: 0, value: '' },
+                        after: { repeat: 0, value: '', bits: 0 },
                         fields: [{
                             type: 'integer',
                             vivify: 'number',
@@ -485,7 +485,7 @@ require('proof')(4, okay => {
                                 compliment: false
                               }
                             ],
-                            after: { repeat: 0, value: '' }
+                            after: { repeat: 0, value: '', bits: 0 }
                         }]
                     }, {
                         test: {
@@ -589,7 +589,7 @@ require('proof')(4, okay => {
                                 endianness: 'big',
                                 compliment: false
                             }],
-                            after: { repeat: 0, value: '' }
+                            after: { repeat: 0, value: '', bits: 0 }
                         }]
                     }, {
                         test: {

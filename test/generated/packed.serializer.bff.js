@@ -8,8 +8,8 @@ module.exports = function (serializers) {
             }
 
             $_ =
-                ((0xdeaf << 16 & 0xffff0000) >>> 0) |
-                (object.header.one << 15 & 0x8000) |
+                ((0xdeaf << 17 & 0xfffe0000) >>> 0) |
+                (object.header.one << 15 & 0x18000) |
                 (object.header.two << 12 & 0x7000) |
                 (object.header.three & 0xfff)
 

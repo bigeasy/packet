@@ -17,7 +17,7 @@ module.exports = function (parsers) {
             ($buffer[$start++]) * 0x100 +
             ($buffer[$start++])
 
-        object.header.one = $_ >>> 15 & 0x1
+        object.header.one = $_ >>> 15 & 0x3
 
         object.header.two = $_ >>> 12 & 0x7
         object.header.two =

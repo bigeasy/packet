@@ -147,7 +147,7 @@ require('proof')(4, okay => {
                             endianness: 'big',
                             compliment: false
                         }],
-                        after: { repeat: 0, value: '' }
+                        after: { repeat: 0, value: '', bits: 0 }
                     }]
                 }, {
                     value: null,
@@ -339,7 +339,7 @@ require('proof')(4, okay => {
                             endianness: 'big',
                             compliment: false
                         }],
-                        after: { repeat: 0, value: '' }
+                        after: { repeat: 0, value: '', bits: 0 }
                     }]
                 }, {
                     value: null,

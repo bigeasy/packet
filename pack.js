@@ -23,7 +23,7 @@ function flatten (flattened, path, fields, assignment = '=') {
             flatten(flattened, path + field.dotted, field.fields)
             if (field.after.repeat != 0) {
                 flattened.push({
-                    type: 'literal',
+                    type: 'integer',
                     compliment: false,
                     bits: field.after.bits,
                     value: '0x' + field.after.value

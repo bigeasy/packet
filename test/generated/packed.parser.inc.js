@@ -32,7 +32,7 @@ module.exports = function (parsers) {
                     $bite--
                 }
 
-                object.header.one = $_ >>> 15 & 0x1
+                object.header.one = $_ >>> 15 & 0x3
 
                 object.header.two = $_ >>> 12 & 0x7
                 object.header.two =

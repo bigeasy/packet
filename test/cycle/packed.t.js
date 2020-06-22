@@ -6,13 +6,14 @@ function prove (okay) {
         define: {
             object: {
                 header: [{
-                    one: [ 'deaf', 1 ],
+                    one: [[ 15, '5eaf' ], 2 ],
                     two: -3,
                     three: 12
                 }, 32 ],
                 sentry: 8
             }
         },
-        objects: [{ header: { one: 1, two: -4, three: 1 }, sentry: 0xaa }]
+        objects: [{ header: { one: 3, two: -4, three: 1 }, sentry: 0xaa }],
+        stopAt: 'parse.all'
     })
 }
