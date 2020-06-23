@@ -2,6 +2,22 @@ require('proof')(0, prove)
 
 function prove (okay) {
     require('./cycle')(okay, {
+        name: 'integer/byte/whole',
+        define: {
+            object: { word: 8 }
+        },
+        objects: [{ word: 0xab }]
+    })
+    /* TODO
+    require('./cycle')(okay, {
+        name: 'integer/byte/negative',
+        define: {
+            object: { word: -8 }
+        },
+        objects: [{ word: -0x7b }]
+    })
+    */
+    require('./cycle')(okay, {
         name: 'integer/be/word/short',
         define: {
             object: { value: 16 }
