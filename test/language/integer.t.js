@@ -1,4 +1,4 @@
-require('proof')(4, okay => {
+require('proof')(5, okay => {
     const simplified = require('../../simplified')
     okay(simplified({ packet: { value: 16 } }), [{
         type: 'structure',
@@ -72,4 +72,22 @@ require('proof')(4, okay => {
             compliment: true
         }]
     }], 'two\'s compliment little endian')
+    okay(simplified({ packet: { value: ~-16 } }), [{
+        type: 'structure',
+        vivify: 'object',
+        name: 'packet',
+        fixed: true,
+        bits: 16,
+        dotted: '',
+        fields: [{
+            type: 'integer',
+            vivify: 'number',
+            name: 'value',
+            dotted: '.value',
+            fixed: true,
+            bits: 16,
+            endianness: 'little',
+            compliment: true
+        }]
+    }], 'two\'s compliment little endian transposed')
 })

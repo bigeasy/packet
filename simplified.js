@@ -19,28 +19,42 @@ function trim (source) {
 }
 
 function integer (value, packed, extra = {}) {
-    if (!packed && Math.abs(value % 8) == 1) {
-        if (value < 0) {
+    if (!packed) {
+        if (Math.abs(value % 8) == 1) {
+            if (value < 0) {
+                return {
+                    type: 'integer',
+                    vivify: 'number',
+                    dotted: '',
+                    fixed: true,
+                    bits: ~value,
+                    endianness: 'little',
+                    compliment: false,
+                    ...extra
+                }
+            }
             return {
                 type: 'integer',
                 vivify: 'number',
                 dotted: '',
                 fixed: true,
-                bits: ~value,
+                bits: ~-value,
                 endianness: 'little',
-                compliment: false,
+                compliment: true,
                 ...extra
             }
         }
-        return {
-            type: 'integer',
-            vivify: 'number',
-            dotted: '',
-            fixed: true,
-            bits: ~-value,
-            endianness: 'little',
-            compliment: true,
-            ...extra
+        if (value % 8 == 7) {
+            return {
+                type: 'integer',
+                vivify: 'number',
+                dotted: '',
+                fixed: true,
+                bits: -~value,
+                endianness: 'little',
+                compliment: true,
+                ...extra
+            }
         }
     }
     return {
