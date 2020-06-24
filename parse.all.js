@@ -548,7 +548,7 @@ function generate (packet, bff) {
     `)
 }
 
-module.exports = function (compiler, definition, options = {}) {
+module.exports = function (definition, options = {}) {
     const expanded = expand(JSON.parse(JSON.stringify(definition)))
-    return compiler(join(expanded.map(packet => generate(packet, options.bff))))
+    return join(expanded.map(packet => generate(packet, options.bff)))
 }

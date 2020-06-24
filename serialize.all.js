@@ -441,13 +441,12 @@ function generate (packet, bff) {
     `)
 }
 
-module.exports = function (compiler, definition, options = {}) {
+module.exports = function (definition, options = {}) {
     const expanded = expand(JSON.parse(JSON.stringify(definition)))
-    const source = join(expanded.map(function (packet) {
+    return join(expanded.map(function (packet) {
         if (options.bff) {
             packet.fields = checkpoints(packet.name, packet.fields)
         }
         return generate(packet, options.bff)
     }))
-    return compiler(source)
 }

@@ -1,4 +1,4 @@
-module.exports = function (serializers) {
+module.exports = function ({ serializers }) {
     serializers.bff.object = function (object) {
         return function ($buffer, $start, $end) {
             if ($end - $start < 8) {

@@ -1,4 +1,4 @@
-module.exports = function (serializers) {
+module.exports = function ({ serializers }) {
     serializers.inc.object = function (object, $step = 0) {
         const $lookup = {
             "object": {

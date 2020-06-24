@@ -524,6 +524,6 @@ function generate (packet) {
     `)
 }
 
-module.exports = function (compiler, definition) {
-    return compiler(join(JSON.parse(JSON.stringify(definition)).map(packet => generate(packet))))
+module.exports = function (definition) {
+    return join(JSON.parse(JSON.stringify(definition)).map(packet => generate(packet)))
 }

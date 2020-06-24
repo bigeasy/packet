@@ -1,7 +1,8 @@
 const fs = require('fs')
 const path = require('path')
-const compiler = require('../../require')
 const util = require('util')
+const coalesce = require('extant')
+const $ = require('programmatic')
 
 const simplified = require('../../simplified')
 
@@ -18,22 +19,35 @@ const composers = {
     sizeOf: require('../../sizeof')
 }
 
+function compiler ({ object, file, source }) {
+    fs.writeFileSync(file, $(`
+        module.exports = function ({ ${object} }) {
+            `, source, `
+        }
+    `) + '\n')
+}
+
 module.exports = function (okay, options) {
     options.objects.forEach(function (actual, index) {
         const name = `${options.name}${options.objects.length == 1 ? '' : ` ${index + 1}`}`
         const intermediate = simplified(options.define)
         const filename = path.resolve(__filename, '../../generated/' + options.name)
+        const compile = coalesce(options.compile, true)
         fs.mkdirSync(path.dirname(filename), { recursive: true })
         const packet = {
             parsers: { all: {}, inc: {}, bff: {} },
             serializers: { all: {}, inc: {}, bff: {} },
             sizeOf: {}
         }
-        composers.sizeOf(
-            compiler('sizeOf', filename + '.sizeof.js'),
-            intermediate
-        )(packet.sizeOf)
 
+        if (compile) {
+            compiler({
+                object: 'sizeOf',
+                file: `${filename}.sizeof.js`,
+                source: composers.sizeOf(intermediate)
+            })
+        }
+        require(`${filename}.sizeof.js`)(packet)
         const sizeOf = packet.sizeOf.object(actual)
 
         if (options.stopAt == 'sizeof') {
@@ -42,10 +56,15 @@ module.exports = function (okay, options) {
             okay(true, `${options.name} sizeof`)
             return
         }
-        composers.serializer.all(
-            compiler('serializers', filename + '.serializer.all.js'),
-            intermediate
-        )(packet.serializers)
+
+        if (compile) {
+            compiler({
+                object: 'serializers',
+                file: `${filename}.serializer.all.js`,
+                source: composers.serializer.all(intermediate)
+            })
+        }
+        require(`${filename}.serializer.all.js`)(packet)
 
         const expected = Buffer.alloc(sizeOf)
 
@@ -62,10 +81,14 @@ module.exports = function (okay, options) {
             return
         }
 
-        composers.parser.all(
-            compiler('parsers', filename + '.parser.all.js'),
-            intermediate
-        )(packet.parsers)
+        if (compile) {
+            compiler({
+                object: 'parsers',
+                file: `${filename}.parser.all.js`,
+                source: composers.parser.all(intermediate)
+            })
+        }
+        require(`${filename}.parser.all.js`)(packet)
 
         okay.inc(1)
 
@@ -80,10 +103,14 @@ module.exports = function (okay, options) {
             return
         }
 
-        composers.serializer.inc(
-            compiler('serializers', filename + '.serializer.inc.js'),
-            intermediate
-        )(packet.serializers)
+        if (compile) {
+            compiler({
+                object: 'serializers',
+                file: `${filename}.serializer.inc.js`,
+                source: composers.serializer.inc(intermediate)
+            })
+        }
+        require(`${filename}.serializer.inc.js`)(packet)
 
         okay.inc(sizeOf + 1)
 
@@ -116,10 +143,14 @@ module.exports = function (okay, options) {
 
         okay.inc(sizeOf + 1)
 
-        composers.parser.inc(
-            compiler('parsers', filename + '.parser.inc.js'),
-            intermediate
-        )(packet.parsers)
+        if (compile) {
+            compiler({
+                object: 'parsers',
+                file: `${filename}.parser.inc.js`,
+                source: composers.parser.inc(intermediate)
+            })
+        }
+        require(`${filename}.parser.inc.js`)(packet)
 
         try {
             for (let i = 0; i <= expected.length; i++) {
@@ -146,12 +177,15 @@ module.exports = function (okay, options) {
         if (options.stopAt == 'parse.inc') {
             return
         }
-        composers.serializer.all(
-            compiler('serializers', filename + '.serializer.bff.js'),
-            // () => require(filename + '.serializer.bff.js'),
-            intermediate,
-            { bff: true }
-        )(packet.serializers)
+
+        if (compile) {
+            compiler({
+                object: 'serializers',
+                file: `${filename}.serializer.bff.js`,
+                source: composers.serializer.all(intermediate, { bff: true })
+            })
+        }
+        require(`${filename}.serializer.bff.js`)(packet)
 
         okay.inc(sizeOf + 1)
 
@@ -182,11 +216,14 @@ module.exports = function (okay, options) {
             return
         }
 
-        composers.parser.all(
-            compiler('parsers', filename + '.parser.bff.js'),
-            intermediate,
-            { bff: true }
-        )(packet.parsers)
+        if (compile) {
+            compiler({
+                object: 'parsers',
+                file: `${filename}.parser.bff.js`,
+                source: composers.parser.all(intermediate, { bff: true })
+            })
+        }
+        require(`${filename}.parser.bff.js`)(packet)
 
         okay.inc(sizeOf + 1)
 

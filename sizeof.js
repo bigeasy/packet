@@ -138,7 +138,6 @@ function generate (packet) {
     `)
 }
 
-module.exports = function (compiler, packets) {
-    const sources = packets.map(packet => generate(packet))
-    return compiler(join(sources))
+module.exports = function (packets) {
+    return join(packets.map(packet => generate(packet)))
 }

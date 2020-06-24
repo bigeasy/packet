@@ -1,4 +1,4 @@
-module.exports = function (serializers) {
+module.exports = function ({ serializers }) {
     serializers.all.object = function (object) {
         return function ($buffer, $start, $end) {
             if ((value => value < 251)(object.value, object)) {

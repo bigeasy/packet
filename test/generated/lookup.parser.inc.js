@@ -1,4 +1,4 @@
-module.exports = function (parsers) {
+module.exports = function ({ parsers }) {
     parsers.inc.object = function (object = {}, $step = 0) {
         const $lookup = {
             "object": {
