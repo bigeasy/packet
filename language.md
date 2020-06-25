@@ -244,12 +244,13 @@ taught about naming variables. How would you even pronounce that?
 
 Well, my first real language was Perl, and good old "dollar under" is the
 default variable for an array value when you loop through an array with
-`foreach`. I miss those days, so I thought I revive them. No, don't cry.
+`foreach`. I miss those days, so I thought I revive them. No, don't cry. You can
+name positional arguments anything you like, but I'll be using these names to
+get you used to them, because they're available as named arguments as well.
 
-You can name positional arguments anything you like, but you can also use named
-arguments via object desconstruction. When you do, you must specify names that
-are in the current namespace. The namespace will contain the object properties
-in the current path.
+You can also use named arguments via object desconstruction. When you do, you
+must specify names that are in the current namespace. The namespace will contain
+the object properties in the current path.
 
 ```javascript
 define({
@@ -259,8 +260,8 @@ define({
 })
 ```
 
-But, if that takes up too much of your screen real estate, Perl-esque shorthand
-variables names are also available to use as named parameters.
+But, if that takes up too much of your screen real estate, Perl-esque variables
+names are also available to use as named arguments.
 
 ```javascript
 define({
@@ -522,7 +523,7 @@ define({
 })
 ```
 
-You can use named parameters to declare an assertion function.
+You can use named arguments to declare an assertion function.
 
 ```javascript
 define({
@@ -570,13 +571,13 @@ define({
 })
 ```
 
-When using named parameters, the argument values are assigned to the named
+When using named arguments, the argument values are assigned to the named
 parameters preceding the first variable that is defined in the current scope.
 That is, the first occurrence of a variable name that is either the name of a
 property in the current path or a system name beginning with `$` dollar sign.
 
 In the following definition the first argument to the `max` function will be
-assigned to the `max` named parameter. The positional parameter mapping stops at
+assigned to the `max` named argument. The positional argument mapping stops at
 the `$path` parameter since it is a system parameter beginning with `$` dollar
 sign. The `'oops'` parameter of the `max` function call for the `type` property
 will be ignored.
@@ -595,7 +596,7 @@ define({
 ```
 
 In the following definition the first argument to the `max` function will be
-assigned to the `max` named parameter. The positional parameter mapping stops at
+assigned to the `max` named argument. The positional argument mapping stops at
 the `packet` parameter since it is the name of a property &mdash; actually the
 name of the root object &mdash; in the current path.
 
