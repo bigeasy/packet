@@ -25,20 +25,53 @@ define({
 
 The above is the definition of an IP packet. The name of the packet is `ip`.
 
+### Basic Assumptions
+
+TK: Somewhere, a soliloquy about syntax bashing.
+
+The Packet definition language is a syntax bashed language. It is specified in
+JavaScript and transformed into JavaScript. There is no parsing except for the
+parsing that the JavaScript does itself. This does make a few errors
+undetectable at compile time, unfortunately.
+
+We expect you to ship the generated serializers and parsers and not to create
+definitions on the fly. Maybe you want to build a general purpose tool of some
+sort, and maybe Packet can help, or maybe it can only serve as inspiration, but
+we're not going to accommodate headless generation of serializers and parsers in
+response to data going out or coming in over the wire.
+
+Packet is written for Node.js 12. It uses features of ES2015 and breaks without
+them. The serializer and parser generator has been tested on Node.js 12 as have
+the generated serializers and parsers. The generator is designed to run in
+Node.js 12. The generated parsers and serializers should run in any modern
+JavaScript interpreter, but I've not built an API for streaming except against
+Node.js streams. (Hmm... WebSockets?)
+
+The generator depends on the order of insertion of the object properties of the
+defintion. This used to be a _de facto_ standard of JavaScript but ES2015 made
+it official.
+
+With the exception of packed integers, we assume that the underlying protocol
+uses 8-bit bytes and that integers sizes are multiples of 8-bits. There are
+machines from the days of yore with 18-bit words and 9-bit bytes and the like,
+but 8-bits has been the standard since the 1970's.
+
 ### Whole Integers
 
-A 16-bit whole integer, valid values from 0 to 65535.
+Outside of packed integers we assume that binary integers sizes are multiples of
+8 bits. You specify the size of a whole integer in bits.
 
-Outside of packed integers (see below) we assume that binary integers sizes are
-multiples of 8 bits. There are machines from the days of yore with 18-bit words
-and 9-bit bytes and the like, but 8-bits has been the standard since the 1970's.
+In the following defintion `value` is a 16-bit whole integer with valid values
+from 0 to 65535.
 
 **Mnemonic**: Number of bits, as opposed to bytes so that numbers remain
 consistent when bit packing.
 
 ```
 define({
-    value: 16
+    packet: {
+        value: 16
+    }
 })
 
 serialize({ value: 0xabcd }) // => [ 0xab, 0xcd ]
@@ -46,8 +79,8 @@ serialize({ value: 0xabcd }) // => [ 0xab, 0xcd ]
 
 If you define a whole integer as greter than 32-bits it will be parsed and
 serialized as a `BigInt`. The parser will create a `BigInt`. You must provide a
-`BigInt` value to the serializer, the serializer will not perform any
-conversion.
+`BigInt` value to the serializer as the serializer will not perform a `number`
+to `BitInt` conversion.
 
 ```
 define({
@@ -61,8 +94,9 @@ Integers with potential negative values are generally represented as two's
 compliment integers on most machines. To parse and serialize as two's complient
 you preceed the bit length of an integer field with a `-` negative symbol.
 
-A two's compliment 16 bit integer, value values from -32768 to 32767. Two's
-compliment is a binary representation of negative numbers.
+In the following defination `value` is a two's compliment 16 bit integer with
+valid values from -32768 to 32767. Two's compliment is a binary representation
+of negative numbers.
 
 **Mnemonic**: Negative symbol to indicate a negative value.
 
@@ -237,12 +271,19 @@ define({
 ```
 
 There are two Perl-esque variable names `$_` for the immediate property value,
-and <code>$</code> for the root object. Any other system provided names such as
-`$i`, `$buffer`, `$start` and `$end` will begin with a `$` do distinquish them
-from user specified names and to avoid namespace collisions.
+and `$` for the root object. Any other system provided names such as `$i`,
+`buffer`, `$start` and `$end` will begin with a `$` do distinguish them from
+user specified names and to avoid namespace collisions.
 
-The first argument to a transformation function is the transformed value, the
-second argument is the root object being transformed.
+**Mnemonic**: Borrowed from Perl `foreach` loop, `$_` is the immediate property
+value, useful for its brevity. `$` is the root variable, the shortest special
+variable because if you're starting from the root, you have a path ahead of you.
+
+We'll continue to use `$_` and `$` in positional argument examples so we can all
+get used to them.
+
+The first argument to a transformation function with positional arguments is the
+transformed value, the second argument is the root object being transformed.
 
 The following WebSockets inspired example xors a value with a `mask` property in
 the packet.
@@ -256,13 +297,41 @@ define({
 })
 ```
 
+This can be expressed using named arguments. Note how we can order the arguments
+any way we like.
+
+```javascript
+define({
+    packet: {
+        mask: 32,
+        value: [[ ({ $, $_ }) => $_ ^ $.mask ], 32 [ ({ $_, $ }) => value ^ $.mask ]]
+    }
+})
+```
+
+You can also name the names of the object properties in the current path. Again,
+note that the order of names does not matter with named arguments.
+
+```javascript
+define({
+    packet: {
+        mask: 32,
+        value: [[
+            ({ packet, value }) => value ^ packet.mask
+        ], 32 [
+            ({ value, packet }) => value ^ packet.mask
+        ]]
+    }
+})
+```
+
 (Not to self: Seems like it might also be useful to be able to reference the
 current object in a loop, which could be `$0` for the current object, `$1` for a
 parent. This would be simplier than passing in the indicies, but that would be
 simple enough, just give them the already existing `$i`. Heh, no make them
 suffer.)
 
-The third argument passed to a transformation function is an array of indicies
+The third argument passed to a transformation function is an array of indices
 indicating the index of each array in the path to the object. TK Move fixed
 arrays above.
 
@@ -281,6 +350,42 @@ define({
 })
 ```
 
+We can use named arguments as well.
+
+```javascript
+define({
+    packet: {
+        array: [[ 4 ], {
+            mask: 32,
+            value: [[
+                ({ $_, $, $i }) => $_ ^ $.array[$i[0]].mask
+            ], 32 [
+                ({ $_, $, $i }) => $_ ^ $.array[$i[0]].mask
+            ]]
+        })
+    }
+})
+```
+
+We can also use the names of the object properties in the current path. The `$i`
+array variable of is a special system property and it therefore retains its
+dollar sign prepended name.
+
+```javascript
+define({
+    packet: {
+        array: [[ 4 ], {
+            mask: 32,
+            value: [[
+                ({ value, packet, $i }) => value ^ packet.array[$i[0]].mask
+            ], 32 [
+                ({ value, packet, $i }) => value ^ packet.array[$i[0]].mask
+            ]]
+        })
+    }
+})
+```
+
 If your pre-serialization function and post-parsing function are the same you
 can specify it once and use it for both serialization and parsing by surrounding
 it with an additional array.
@@ -289,7 +394,7 @@ it with an additional array.
 define({
     packet: {
         mask: 32,
-        value: [[[ (value, $) => value ^ $.mask ]], 32 ]
+        value: [[[ ($_, $) => $_ ^ $.mask ]], 32 ]
     }
 })
 ```
@@ -301,8 +406,8 @@ functions are generally more concise, however.
 define({
     packet: {
         mask: 32,
-        value: [[[ function (value, $) {
-            return value ^ $.mask
+        value: [[[ function ({ value, packet }) {
+            return value ^ packet.mask
         } ]], 32 ]
     }
 })
@@ -315,32 +420,211 @@ The functions in our packet parser may depend on external libraries. We can
 ```javascript
 define({
     packet: {
-        [[ $value => ip.toLong($value) ], 32, [ $value => ip.fromLong($value) ]]
+        value: [[ $value => ip.toLong($value) ], 32, [ $value => ip.fromLong($value) ]]
     }
 }, {
     require: { ip: 'ip' }
 })
 ```
 
-We can also perform inline assertions. When performing inline assertions, we are
-not transforming a value, we're simply checking it's validity and raising an
-exception if we
+When can also use modules local to the current project using relative paths, but
+we face a problem; we're not going to ship language definition with our
+completed project, we're going to ship the generated software. Therefore,
+relative must be relative to the generated file. Your relative paths much be
+relative to the output directory... (eh, whatever. Maybe I can fix that up for
+you.)
 
-We can use parenthetical functions to perform assertions as well. When
+```javascript
+define({
+    packet: {
+        value: [[ $value => ip.toLong($value) ], 32, [ $value => ip.fromLong($value) ]]
+    }
+}, {
+    require: { ip: '../ip' }
+})
+```
 
-You can also use named arguments in your transformation functions by using
-object desconstruction to specify exactly which values you want to use.
+### Assertions
+
+We can also perform inline assertions. You specify an assertion the same way you
+specify a transformation. You wrap your definition in an array.
+A pre-serialization assertion is a function within an array in the element
+before the definition. A post-parsing assertions is a function within an array
+in the element after the definition.
+
+When performing inline assertions, we are not transforming a value, we're simply
+checking it's validity and raising an exception if a value is invalid. You could
+use a transformation to do this, but you would end up returning the value as is.
+
+With an assertion function the return value is ignored. It is not used as the
+serialization or assignment value.
+
+To declare an assertion function you assign a default value of `0` or `null` to
+the immediate property argument.
+
+In the following definition we use a `0` default value for the immediate
+property argument which indicates that the value and should not be used for
+serialization for the pre-serialization function nor assignment for the
+post-parsing function.
+
+```
+define({
+    packet: {
+        value: [[
+            ($_ = 0) => assert($_ < 1000, 'excedes max value')
+        ], 16, [[
+            ($_ = 0) => assert($_ < 1000, 'excedes max value')
+        ]]
+    }
+}, {
+    require: { assert: require('assert') }
+})
+```
+
+(I assume I'll implement this in this way:) The execption will propagate to the
+API caller so that you can catch it in your code and cancel the serialization or
+parse. (However, if I do wrap the assertion in a try/catch and rethrow it
+somehow, then the following example is moot.
+
+If you where to use a transform, you would have to return the value and your
+definition would be more verbose.
+
+```
+define({
+    packet: {
+        value: [[
+            $_ => {
+                assert($_ < 1000, 'excedes max value')
+                return $_
+            }
+        ], 16, [[
+            $_ => {
+                assert($_ < 1000, 'execdes max value')
+                return $_
+            }
+        ]]
+    }
+}, {
+    require: { assert: require('assert') }
+})
+```
+
+You can use the name function for both pre-serialization and post-parsing by
+surrounding the function in an additional array.
+
+```javascript
+define({
+    packet: {
+        value: [[[ ($_ = 0) => assert($_ < 1000, 'excedes max value') ]], 16 ]
+    }
+}, {
+    require: { assert: require('assert') }
+})
+```
+
+You can use named parameters to declare an assertion function.
+
+```javascript
+define({
+    packet: {
+        value: [[[ ({ $_ = 0 }) => assert($_ < 1000, 'excedes max value') ]], 16 ]
+    }
+}, {
+    require: { assert: require('assert') }
+})
+```
+
+### Assertion and Transformation Arguments
+
+You can pass arguments to assertions and transforms. Any value in the array that
+follows the function that is not itself a `function` is considered an argument
+to the function. The arguments are passed in the order in which they are
+specified preceding the immediate property value.
+
+In the following definition the function is followed by a `number` argument
+which is passed as the first parameter to the function in serializer or parser.
+
+```javascript
+define({
+    packet: {
+        value: [[[ (max, $_ = 0) => assert($_ < max, `value excedes ${max}`), 1024 ]], 16 ]
+    }
+}, {
+    require: { assert: require('assert') }
+})
+```
+
+This is useful when defining a function that you use more than once in your
+definition.
+
+```javascript
+const max = (max, $_ = 0) => assert($_ < max, `value excedes ${max}`)
+
+define({
+    packet: {
+        length: [[[ max, 1024 ]], 16 ],
+        type: [[[ max, 12 ]], 8 ]
+    }
+}, {
+    require: { assert: require('assert') }
+})
+```
+
+When using named parameters, the argument values are assigned to the named
+parameters preceding the first variable that is defined in the current scope.
+That is, the first occurrence of a variable name that is either the name of a
+property in the current path or a system name beginning with `$` dollar sign.
+
+In the following definition the first argument to the `max` function will be
+assigned to the `max` named parameter. The positional parameter mapping stops at
+the `$path` parameter since it is a system parameter beginning with `$` dollar
+sign. The `'oops'` parameter of the `max` function call for the `type` property
+will be ignored.
+
+```javascript
+const max = ({ max, $path, $_ = 0 }) => assert($_ < max, `${$path.pop()} excedes ${max}`)
+
+define({
+    packet: {
+        length: [[[ max, 1024 ]], 16 ],
+        type: [[[ max, 12, 'oops' ]], 8 ]
+    }
+}, {
+    require: { assert: require('assert') }
+})
+```
+
+In the following definition the first argument to the `max` function will be
+assigned to the `max` named parameter. The positional parameter mapping stops at
+the `packet` parameter since it is the name of a property &mdash; actually the
+name of the root object &mdash; in the current path.
+
+```javascript
+function max ({ max, packet, $path, $_ = 0 }) {
+    assert($_ < max, `${$path.pop()} excedes ${max} in packet ${packet.series}`)
+}
+
+define({
+    packet: {
+        series: [ 32 ],
+        length: [[[ max, 1024 ]], 16 ],
+        type: [[[ max, 12, 'oops' ]], 8 ]
+    }
+}, {
+    require: { assert: require('assert') }
+})
+```
+
+Note that you cannot use closures to define functions because we're using the
+function source in the seiralizer and parser generation so the encoded value is
+lost. You'll end up with global variables with undefined values.
+
+You can reduce the verbosity of your code by creating functions that declare
+functions for transforms or assertions that you perform on more than one . The
+function declaration function will return a function that will be included in
+the serializer or parser. If you give it a meaningful name
 
 
-See Checksums and Counting for examples where we indicate that we want to
-operate on the underlying buffer instead
-
-Assertions can also be performed by raising an `AssertionError`.
-
-If all your function does is perform an assertion, you can forgo returning a
-value by object decomposition to create named arguments. Then, if you default
-the value to `null` or `0`, the generated serializer or parser will not use the
-return value for serialization or assignment.
 
 ```javascript
 define({
