@@ -67,7 +67,7 @@ from 0 to 65535.
 **Mnemonic**: Number of bits, as opposed to bytes so that numbers remain
 consistent when bit packing.
 
-```
+```javascript
 define({
     packet: {
         value: 16
@@ -82,7 +82,7 @@ serialized as a `BigInt`. The parser will create a `BigInt`. You must provide a
 `BigInt` value to the serializer as the serializer will not perform a `number`
 to `BitInt` conversion.
 
-```
+```javascript
 define({
     value: 64
 })
@@ -468,7 +468,7 @@ property argument which indicates that the value and should not be used for
 serialization for the pre-serialization function nor assignment for the
 post-parsing function.
 
-```
+```javascript
 define({
     packet: {
         value: [[
@@ -490,7 +490,7 @@ somehow, then the following example is moot.
 If you where to use a transform, you would have to return the value and your
 definition would be more verbose.
 
-```
+```javascript
 define({
     packet: {
         value: [[
@@ -647,7 +647,7 @@ return a value you can
 You can specify a function to be performed both before serializtion and after
 parsing by surrounding the function with an additional set of parenthesis.
 
-```
+```javascript
 define({
     packet: {
         value [[[ value => ~value ]]], 32 ]
