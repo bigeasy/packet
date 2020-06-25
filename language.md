@@ -84,7 +84,9 @@ to `BitInt` conversion.
 
 ```javascript
 define({
-    value: 64
+    packet: {
+        value: 64
+    }
 })
 ```
 
@@ -102,7 +104,9 @@ of negative numbers.
 
 ```javascript
 define({
-    value: -16
+    packet: {
+        value: -16
+    }
 })
 ```
 
@@ -124,7 +128,9 @@ an integer field with a `~` tilde.
 
 ```javascript
 define({
-    value: ~16
+    packet: {
+        value: ~16
+    }
 })
 ```
 
