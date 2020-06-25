@@ -18,7 +18,12 @@ function trim (source) {
     return source
 }
 
+// Interpret integers.
 function integer (value, packed, extra = {}) {
+    // Whole integers are expected to be multiples of 8-bits and if they are off
+    // by one then someone applied bitwise NOT. We have to revert the bitwise
+    // NOT to get the bit length. Two's compliment is indicated by a positive
+    // value for bit length instead of a negative value.
     if (!packed) {
         if (Math.abs(value % 8) == 1) {
             if (value < 0) {
@@ -57,6 +62,7 @@ function integer (value, packed, extra = {}) {
             }
         }
     }
+    // Big-endian integer. Two's compliment if the bit length is negative.
     return {
         type: 'integer',
         vivify: 'number',
@@ -174,7 +180,7 @@ function map (definitions, packet, extra = {}, packed = false) {
                         after: after,
                         ...extra
                     }]
-                // Doubles with bit information.
+                // **Doubles** specified with an array:
                 } else if (
                     packet.length == 2 &&
                     typeof packet[0] == 'number' &&
@@ -213,7 +219,7 @@ function map (definitions, packet, extra = {}, packed = false) {
                             ieee.readFloatBE
                         ]], extra)
                     }
-                // Fixups.
+                // **Fixups**:.
                 } else if (
                     isFixup(packet[0]) || isFixup(packet[packet.length - 1])
                 ) {
