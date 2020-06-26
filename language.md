@@ -286,6 +286,36 @@ user specified names and to avoid namespace collisions.
 value, useful for its brevity. `$` is the root variable, the shortest special
 variable because if you're starting from the root, you have a path ahead of you.
 
+Named arguments have limitations. We're using a simple regex based parser to
+extract the arguments from the function source, not a complete JavaScript
+parser. We are able to parse object destructuring, array destructuring, and
+default argument values of numbers, single quoted strings and double quoted
+strings.
+
+Do not use regular expressions, interpolated strings or function calls, in your
+default argument assignments.
+
+In the following definition we've added an unused named variable that is default
+assigned a value extracted from a literal string by a regular expression. The
+right curly brace in the literal string won't confuse our simple argument
+parser, but the right curly brace in the regular expression will.
+
+```javascript
+define({
+    packet: {
+        value: [[
+            ({ $_, packet: { extra = /^([}])/.exec("}")[1] } }) => parseInt($_, 16)
+        ], 32, [
+            ({ $_ }) => $_.toString(16)
+        ]]
+    }
+})
+```
+
+As you can see it's rather obscene in any case. Basically, if you find yourself
+writing logic in your named arguments, stop and place it in a function in a
+module and invoke that module function from the inline function.
+
 We'll continue to use `$_` and `$` in positional argument examples so we can all
 get used to them.
 
