@@ -286,6 +286,22 @@ user specified names and to avoid namespace collisions.
 value, useful for its brevity. `$` is the root variable, the shortest special
 variable because if you're starting from the root, you have a path ahead of you.
 
+You must always define a pre-serialization and post-parsing set of functions.
+One or the other set must have at least one function. If you do not one to
+perform one or the other actions, specify an empty array. This is uncommon for
+transformations, but you may only want to perform assertions
+
+In the following we do not want to perform a post-parsing action, so we
+leave the post-parsing array empty, but we do not neglect to add it.
+
+```javascript
+define({
+    packet: {
+        value: [[ $_ => typeof $_ == 'string' ? parseInt($_, 16) : $_ ], 32, []]
+    }
+})
+```
+
 Named arguments have limitations. We're using a simple regex based parser to
 extract the arguments from the function source, not a complete JavaScript
 parser. We are able to parse object destructuring, array destructuring, and
@@ -701,23 +717,179 @@ serialization. See Checksums and Running Calculations.
 
 ### Fixed Length Arrays
 
+Fixed length arrays are arrays of a fixed length. They are specified by an array
+containing the numeric length of the array.
+
+```javascript
+define({
+    packet: {
+        fixed: [[ 32 ], [ 8 ]]
+    }
+})
+```
+
+### Fixed Length Arrays
+
+Calculated length arrays are arrays where the length is determined by a function
+which can read a value from...
+
+```javascript
+define({
+    packet: {
+        header: {
+            length: 16,
+            type: 16
+        },
+        fixed: [[ $.header.length ], [ 8 ]]
+    }
+})
+```
+
 ### Length-Encoded Arrays
 
 A length-encoded indicates a series of values
 
-**Mnemonic**: The negative sign indicates a negative value.
+```javascript
+define({
+    packet: {
+        array: [ 16, [ 8 ] ]
+    }
+})
+```
 
 ### Terminated Arrays
 
+```javascript
+define({
+    packet: {
+        array: [[ 8 ], 0xa ]
+    }
+})
+```
+
+In the following example, we terminate when the result ends with a new line.
+This will create a result with the newline termiantor included.
+
+```javascript
+define({
+    packet: {
+        array: [[ 8 ], $_ => $_[$_.length - 1] == 0xa) ]
+    }
+})
+```
+
+A terminator can be multi-byte. Each byte in the multi-byte terminator is
+specified as an individual element in the array.
+
+```javascript
+define({
+    packet: {
+        array: [[ 8 ], 0xa ]
+    }
+})
+```
+
 ### String Value Maps
+
+```javascript
+define ({
+    packet: {
+        type: [ 8, [ 'off', 'on' ] ]
+    }
+})
+```
+
+```javascript
+define ({
+    packet: {
+        type: [ 8, { 0: 'off', 1: 'on', null: unknown } ]
+    }
+})
+```
 
 ### Floating Point Values
 
-IEEE754
+Packet supports serializing and parsing IEEE754 floating point numbers. This is
+the respsentation common to C.
+
+A floating point number is is specified by specifying the value as a floating
+the point number as `number` with the bit size repeated in the decimal digits of
+the number.
+
+```javascript
+define({
+    double: 64.64,
+    float: 32.32
+})
+```
+
+There are only two sizes of floating point number available, 64-bit and 32-bit.
+These are based on the IEEE 754 standard. As of 2008, the standard defines a
+[128-bit quad precision floating
+point](https://en.wikipedia.org/wiki/Quadruple-precision_floating-point_format)
+but the JavaScript `number` is itself a 64-bit IEEE 754 double-precision float,
+so we'd have to introduce one of the big decimal libraries from NPM to support
+it, so it's probably best you sort out a solution for your application using
+inline functions, maybe serializing to a byte array or `BigInt`. If you
+encounter at 128-bit number in the wild, I'd be curious. Please let me know.
 
 ### Conditionals
 
+Basic conditionals are expressed as an array of boolean functions paired with
+field definitions. The functions and definitions repeat creating an if/else if
+conditional. The array can end with a feild definition that acts as the `else`
+condition.
+
+If the function has positional arguments, the function is called with the root
+object, followed by an array of indices into any arrays the current path,
+followed by an array of names of the properties in the current path.
+
+In the following definition the bit size of value is 8 bits of the `type`
+property is `1`, 16 bits if the type property is `2`, 24 bits if the `type`
+property `3` and `32` bits for any other value of `type`.
+
+```javascript
+define({
+    packet: {
+        type: 8,
+        value: [
+            $ => $.type == 1, 8,
+            $ => $.type == 2, 16,
+            $ => $.type == 3, 24,
+            32
+        ]
+    }
+})
+```
+
+You can use conditionals in bit-packed integers as well.
+
+```javascript
+define({
+    packet: {
+        header: {
+            type: 4,
+            value: [
+                $ => $.type == 1, 28,
+                $ => $.type == 2, [{ first: 4, second: 24 }, 28 ],
+                $ => $.type == 3, [{ first: 14, second: 14 }, 28 ]
+                [[ 24, 'ffffff' ], 4 ]
+            ]
+        }
+    }
+})
+```
+
 ### Switch Conditionals
+
+```javascript
+define ({
+    packet: {
+        type: [ 8, [ 'off', 'on' ] ],
+        value: [ $ = $.type, { off: 8, on: 16 } ]
+    }
+})
+```
 
 ### References
 
