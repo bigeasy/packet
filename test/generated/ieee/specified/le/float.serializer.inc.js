@@ -1,5 +1,5 @@
 module.exports = function ({ serializers }) {
-    serializers.inc.object = function (object, $step = 0, $i = []) {
+    serializers.inc.object = function (object, $step = 0, $i = [], $$ = []) {
         let $bite, $stop, $_
 
         const assert = require('assert')
@@ -9,7 +9,7 @@ module.exports = function ({ serializers }) {
                 switch ($step) {
                 case 0:
 
-                    $i[0] = (function (value) {
+                    $$[0] = (function (value) {
                         const buffer = Buffer.alloc(4)
                         buffer.writeFloatLE(value)
                         return buffer
@@ -17,15 +17,15 @@ module.exports = function ({ serializers }) {
 
                 case 1:
 
-                    $i[1] = 0
+                    $i[0] = 0
                     $step = 2
-                    assert.equal($i[0].length, 4)
+                    assert.equal($$[0].length, 4)
 
                 case 2:
 
                     $step = 3
                     $bite = 0
-                    $_ = $i[0][$i[1]]
+                    $_ = $$[0][$i[0]]
 
                 case 3:
 
@@ -37,7 +37,7 @@ module.exports = function ({ serializers }) {
                         $bite--
                     }
 
-                    if (++$i[1] != $i[0].length) {
+                    if (++$i[0] != $$[0].length) {
                         $step = 2
                         continue
                     }
@@ -45,7 +45,7 @@ module.exports = function ({ serializers }) {
                     $step = 4
 
 
-                    if ($i[1] != 4) {
+                    if ($i[0] != 4) {
                         $step = 4
                         continue
                     }

@@ -6,7 +6,7 @@ const pack = require('./pack')
 const lookup = require('./lookup')
 
 function generate (packet) {
-    let $step = 0, $i = -1, surround = false
+    let $step = 0, $i = -1, $$ = -1, surround = false
 
     const variables = { packet: true, step: true }
     const constants = { assert: false }
@@ -230,11 +230,11 @@ function generate (packet) {
 
     function fixup (path, field) {
         const before = field.before != null ? function () {
-            variables.i = true
-            const i = `$i[${++$i}]`
-            const source = `${i} = (${field.before.source})(${path})`
+            variables.stack = true
+            const register = `$$[${++$$}]`
+            const source = `${register} = (${field.before.source})(${path})`
             return {
-                path: i,
+                path: register,
                 source: $(`
                     case ${$step++}:
 
@@ -248,7 +248,7 @@ function generate (packet) {
             `, map(dispatch, before.path, field.fields), `
         `)
         if (field.before) {
-            $i--
+            $$--
         }
         return source
     }
@@ -398,7 +398,8 @@ function generate (packet) {
     const signatories = {
         packet: `${packet.name}`,
         step: '$step = 0',
-        i: '$i = []'
+        i: '$i = []',
+        stack: '$$ = []'
     }
     const declarations = {
         assert: `assert = require('assert')`

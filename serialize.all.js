@@ -44,9 +44,9 @@ function expand (fields) {
     return expanded
 }
 
-function checkpoints (path, fields, index = 0, rewind = 0) {
+function checkpoints (path, fields, index = 0) {
     let checkpoint
-    const checked = [ checkpoint = { type: 'checkpoint', lengths: [ 0 ], rewind } ]
+    const checked = [ checkpoint = { type: 'checkpoint', lengths: [ 0 ] } ]
     for (const field of fields) {
         switch (field.type) {
         case 'literal':
@@ -71,14 +71,14 @@ function checkpoints (path, fields, index = 0, rewind = 0) {
         case 'switch':
             checked.push(field)
             for (const when of field.cases) {
-                when.fields = checkpoints(path, when.fields, index, rewind)
+                when.fields = checkpoints(path, when.fields, index)
             }
             checked.push(checkpoint = { type: 'checkpoint', lengths: [ 0 ] })
             break
         case 'conditional':
             checked.push(field)
             for (const condition of field.serialize.conditions) {
-                condition.fields = checkpoints(path, condition.fields, index, rewind)
+                condition.fields = checkpoints(path, condition.fields, index)
             }
             checked.push(checkpoint = { type: 'checkpoint', lengths: [ 0 ] })
             break
@@ -121,7 +121,7 @@ function checkpoints (path, fields, index = 0, rewind = 0) {
 }
 
 function generate (packet, bff) {
-    let $step = 0, $i = -1
+    let $step = 0, $i = -1, $$ = -1
 
     const variables = { packet: true, step: true }
     const constants = { assert: false }
@@ -282,11 +282,11 @@ function generate (packet, bff) {
         // TODO Or maybe a single stack `$$` or similar.
         const before = field.before != null ? function () {
             $step++
-            variables.i = true
-            const i = `$i[${++$i}]`
+            variables.stack = true
+            const register = `$$[${++$$}]`
             return {
-                path: i,
-                source: `${i} = (${field.before.source})(${path})`
+                path: register,
+                source: `${register} = (${field.before.source})(${path})`
             }
         } () : { path: path, source: null }
         const source =  $(`
@@ -295,7 +295,7 @@ function generate (packet, bff) {
             `, map(dispatch, before.path, field.fields), `
         `)
         if (field.before) {
-            $i--
+            $$--
         }
         return source
     }
@@ -362,7 +362,7 @@ function generate (packet, bff) {
             packet: packet.name,
             step: $step,
             i: '$i',
-            I: '$I'
+            stack: '$$'
         }
         const signature = Object.keys(signatories)
                                 .filter(key => variables[key])
@@ -412,6 +412,7 @@ function generate (packet, bff) {
     const declarations = {
         register: '$_',
         i: '$i = []',
+        stack: '$$ = []',
         sip: '$sip = []',
         assert: `assert = require('assert')`
     }

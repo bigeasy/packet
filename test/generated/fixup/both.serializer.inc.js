@@ -1,18 +1,18 @@
 module.exports = function ({ serializers }) {
-    serializers.inc.object = function (object, $step = 0, $i = []) {
+    serializers.inc.object = function (object, $step = 0, $$ = []) {
         let $bite, $stop, $_
 
         return function serialize ($buffer, $start, $end) {
             switch ($step) {
             case 0:
 
-                $i[0] = (value => -value)(object.value)
+                $$[0] = (value => -value)(object.value)
 
             case 1:
 
                 $step = 2
                 $bite = 1
-                $_ = $i[0]
+                $_ = $$[0]
 
             case 2:
 
