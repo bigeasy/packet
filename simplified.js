@@ -412,7 +412,6 @@ function map (definitions, packet, extra = {}, packed = false) {
                                     fields: map(definitions, packet, {})
                                 })
                             } else {
-                                source: null
                                 conditions.push({
                                     test: null,
                                     fields: map(definitions, serialize[0], {})
