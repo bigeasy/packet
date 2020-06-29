@@ -18,14 +18,6 @@ const args = require('./arguments')
 // This can be done by adding and `arrayed` property to everything that loops
 // and merging any initial fields are are unarrayed.
 
-function trim (source) {
-    const $ = /\n(.*)}$/.exec(source)
-    if ($ != null) {
-        return source.replace(new RegExp(`^${$[1]}`, 'gm'), '')
-    }
-    return source
-}
-
 // Interpret integers.
 function integer (value, packed, extra = {}) {
     // Whole integers are expected to be multiples of 8-bits and if they are off
@@ -81,10 +73,6 @@ function integer (value, packed, extra = {}) {
         compliment: value < 0,
         ...extra
     }
-}
-
-function isInline (field) {
-    return Array.isArray(field) && field.length == 1 && typeof field[0] == 'function'
 }
 
 function map (definitions, packet, extra = {}, packed = false) {
