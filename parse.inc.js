@@ -398,9 +398,11 @@ function generate (packet) {
         return source
     }
 
-    function fixup (path, field) {
-        const after = field.after != null ? function () {
-            return `${path} = (${field.after.source})(${path})`
+    function inline (path, field) {
+        const after = field.after.length != 0 ? function () {
+            return join(field.after.map(inline => {
+                return `${path} = (${inline.source})(${path})`
+            }))
         } () : null
         const source =  $(`
             `, map(dispatch, path, field.fields), `
@@ -451,8 +453,8 @@ function generate (packet) {
             return switched(path, packet)
         case 'conditional':
             return conditional(path, packet)
-        case 'fixup':
-            return fixup(path, packet)
+        case 'inline':
+            return inline(path, packet)
         case 'fixed':
             return fixed(path, packet)
         case 'terminated':

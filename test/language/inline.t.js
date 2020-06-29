@@ -1,7 +1,7 @@
 require('proof')(1, okay => {
     const simplified = require('../../simplified')
     okay(simplified({ packet: {
-        value: [[ value => -value ], 16 ] }
+        value: [[ value => -value ], 16 , []] }
     }), [{
         name: 'packet',
         fixed: true,
@@ -10,17 +10,20 @@ require('proof')(1, okay => {
         vivify: 'object',
         dotted: '',
         fields: [{
-            type: 'fixup',
+            type: 'inline',
             vivify: 'number',
             name: 'value',
             dotted: '.value',
             fixed: true,
             ethereal: true,
             bits: 16,
-            before: {
+            before: [{
+                defaulted: [],
+                properties: [],
                 source: 'value => -value',
-                arity: 1
-            },
+                arity: 1,
+                vargs: []
+            }],
             fields: [{
                 type: 'integer',
                 vivify: 'number',
@@ -30,7 +33,7 @@ require('proof')(1, okay => {
                 endianness: 'big',
                 compliment: false
             }],
-            after: null
+            after: []
         }]
     }], 'serialize')
 })

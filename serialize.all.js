@@ -277,16 +277,17 @@ function generate (packet, bff) {
         return source
     }
 
-    function fixup (path, field) {
-        // TODO Maybe instead of reusing I, use a `$stack` variable.
-        // TODO Or maybe a single stack `$$` or similar.
-        const before = field.before != null ? function () {
+    function inline (path, field) {
+        const before = field.before.length != 0 ? function () {
             $step++
             variables.stack = true
             const register = `$$[${++$$}]`
+            const inlined = field.before.map((inline, index) => {
+                return `${register} = (${inline.source})(${index == 0 ? path : register})`
+            })
             return {
                 path: register,
-                source: `${register} = (${field.before.source})(${path})`
+                source: join(inlined)
             }
         } () : { path: path, source: null }
         const source =  $(`
@@ -384,8 +385,8 @@ function generate (packet, bff) {
             return switched(path, field)
         case 'conditional':
             return conditional(path, field)
-        case 'fixup':
-            return fixup(path, field)
+        case 'inline':
+            return inline(path, field)
         case 'fixed':
             return fixed(path, field)
         case 'terminated':

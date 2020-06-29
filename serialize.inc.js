@@ -228,17 +228,19 @@ function generate (packet) {
         return source
     }
 
-    function fixup (path, field) {
-        const before = field.before != null ? function () {
+    function inline (path, field) {
+        const before = field.before.length != 0 ? function () {
             variables.stack = true
             const register = `$$[${++$$}]`
-            const source = `${register} = (${field.before.source})(${path})`
+            const inlined = field.before.map((inline, index) => {
+                return `${register} = (${inline.source})(${index == 0 ? path : register})`
+            })
             return {
                 path: register,
                 source: $(`
                     case ${$step++}:
 
-                        `, source, `
+                        `, join(inlined), `
                 `)
             }
         } () : { path: path, source: null }
@@ -354,8 +356,8 @@ function generate (packet) {
             return switched(path, packet)
         case 'conditional':
             return conditional(path, packet)
-        case 'fixup':
-            return fixup(path, packet)
+        case 'inline':
+            return inline(path, packet)
         case 'fixed':
             return fixed(path, packet)
         case 'terminated':

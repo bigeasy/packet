@@ -119,6 +119,7 @@ module.exports = function (f) {
         defaulted,
         properties: properties,
         source: trim(f.toString()).replace(/^function\s*[^(]+\s*\(/, 'function ('),
-        airty: f.length
+        arity: f.length,
+        vargs: []
     }
 }

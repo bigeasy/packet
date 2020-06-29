@@ -1,6 +1,14 @@
+// Node.js API.
 const assert = require('assert')
+
+// Return the first non-null value.
 const coalesce = require('extant')
+
+// Wrapper around Buffer float parsing to exclude from NYC coverage.
 const ieee = require('./ieee')
+
+// Inline function argument parser.
+const args = require('./arguments')
 
 // TODO It always needs to be an array of fields because we need to be able to
 // insert checkpoints, even for ostensible fixed fields like literal.
@@ -75,7 +83,7 @@ function integer (value, packed, extra = {}) {
     }
 }
 
-function isFixup (field) {
+function isInline (field) {
     return Array.isArray(field) && field.length == 1 && typeof field[0] == 'function'
 }
 
@@ -219,16 +227,37 @@ function map (definitions, packet, extra = {}, packed = false) {
                             ieee.readFloatBE
                         ]], extra)
                     }
-                // **Fixups**:.
+                // **Inline functions**: User defined functions that perform
+                // inline transformations and assertions.
                 } else if (
-                    isFixup(packet[0]) || isFixup(packet[packet.length - 1])
+                    packet.length == 3 &&
+                    Array.isArray(packet[0]) &&
+                    Array.isArray(packet[packet.length - 1]) &&
+                    (
+                        typeof packet[0][0] == 'function' ||
+                        typeof packet[packet.length - 1][0] == 'function'
+                    )
                 ) {
-                    const fixup = packet.slice()
-                    const before = isFixup(fixup[0]) ? fixup.shift() : null
-                    const after = isFixup(fixup[fixup.length - 1]) ? fixup.pop() : null
-                    const fields = map(definitions, fixup[0], {})
+                    const inliner = function (inlined, field) {
+                        if (typeof field[0] == 'function') {
+                            field = field.slice()
+                            const f = field.shift()
+                            const inline = args(f)
+                            while (field.length != 0 && typeof field[0] != 'function') {
+                                inline.vargs.push(field.shift())
+                            }
+                            inlined.push(inline)
+                            inliner(inlined, field)
+                        }
+                    }
+                    packet = packet.slice()
+                    const before = []
+                    inliner(before, packet.shift().slice())
+                    const after = []
+                    inliner(after, packet.pop().slice())
+                    const fields = map(definitions, packet[0], {})
                     return [{
-                        type: 'fixup',
+                        type: 'inline',
                         // TODO Test with a structure member.
                         // TODO Test with an array member.
                         vivify: fields[0].vivify,
@@ -236,13 +265,9 @@ function map (definitions, packet, extra = {}, packed = false) {
                         bits: fields[0].bits,
                         fixed: fields[0].fixed,
                         ethereal: true,
-                        before: before != null
-                            ? { source: trim(before.toString()), arity: before.length }
-                            : null,
+                        before: before,
                         fields: fields,
-                        after: after != null
-                            ? { source: trim(after.toString()), arity: after.length }
-                            : null,
+                        after: after,
                         ...extra
                     }]
                 // Switch statements.

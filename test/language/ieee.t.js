@@ -7,20 +7,23 @@ require('proof')(1, okay => {
         fixed: true,
         bits: 64,
         fields: [{
-            type: 'fixup',
+            type: 'inline',
             vivify: 'array',
             dotted: '.value',
             bits: 64,
             fixed: true,
             ethereal: true,
-            before: {
+            before: [{
+                defaulted: [],
+                properties: [],
                 source: 'function (value) {\n' +
                   '    const buffer = Buffer.alloc(8)\n' +
                   '    buffer.writeDoubleLE(value)\n' +
                   '    return buffer\n' +
                   '}',
-                arity: 1
-            },
+                arity: 1,
+                vargs: []
+            }],
             fields: [{
                 type: 'fixed',
                 vivify: 'array',
@@ -40,10 +43,13 @@ require('proof')(1, okay => {
                     compliment: false
                 }]
             }],
-            after: {
+            after: [{
+                defaulted: [],
+                properties: [],
                 source: 'function (value) {\n    return Buffer.from(value).readDoubleLE()\n}',
-                arity: 1
-            },
+                arity: 1,
+                vargs: []
+            }],
             name: 'value'
         }],
         name: 'packet'

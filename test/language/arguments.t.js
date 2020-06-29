@@ -8,67 +8,78 @@ require('proof')(11, okay => {
         defaulted: [],
         properties: [ 'checksum', '$buffer' ],
         source: '({ checksum: md5, $buffer }) => {}',
-        airty: 1
+        arity: 1,
+        vargs: []
     }, 'destructured')
     okay(args(({ max, value = 0 }) => {}), {
         defaulted: [ 'value' ],
         properties: [ 'max', 'value' ],
         source: '({ max, value = 0 }) => {}',
-        airty: 1
+        arity: 1,
+        vargs: []
     }, 'assertion with zero')
     okay(args(({ max, value = null }) => {}), {
         defaulted: [ 'value' ],
         properties: [ 'max', 'value' ],
         source: '({ max, value = null }) => {}',
-        airty: 1
+        arity: 1,
+        vargs: []
     }, 'assertion with null')
     okay(args(({ max, value: renamed = 0 }) => {}), {
         defaulted: [ 'value' ],
         properties: [ 'max', 'value' ],
         source: '({ max, value: renamed = 0 }) => {}',
-        airty: 1
+        arity: 1,
+        vargs: []
     }, 'assertion destructured')
     okay(args((value, $) => {}), {
         defaulted: [],
         properties: [],
         source: '(value, $) => {}',
-        airty: 2
+        arity: 2,
+        vargs: []
     }, 'arrow')
     okay(args(new Foo().foo), {
         defaulted: [],
         properties: [],
         source: 'foo ($) {}',
-        airty: 1
+        arity: 1,
+        vargs: []
     }, 'object member')
     okay(args(Foo.prototype.foo), {
         defaulted: [],
         properties: [],
         source: 'foo ($) {}',
-        airty: 1
+        arity: 1,
+        vargs: []
     }, 'class member')
     okay(args(value => {}), {
         defaulted: [],
         properties: [],
         source: 'value => {}',
-        airty: 1
+        arity: 1,
+        vargs: []
     }, 'arrow single argument')
     okay(args(function ($) {
     }), {
         defaulted: [],
         properties: [],
         source: 'function ($) {\n}',
-        airty: 1
+        arity: 1,
+        vargs: []
     }, 'trimmed')
     okay(args(({ value = 0 }) => {}), {
         defaulted: [ 'value' ],
         properties: [ 'value' ],
         source: '({ value = 0 }) => {}',
-        airty: 1
+        arity: 1,
+        vargs: []
     }, 'assertion')
     okay(args(({ $: { header: { mask: m = 0, string = "\"\}" } }, value = 0 }) => { return value }), {
         defaulted: [ 'value' ],
         properties: [ '$', 'value' ],
         source: '({ $: { header: { mask: m = 0, string = "\\"\\}" } }, value = 0 }) => { return value }',
-        airty: 1
+        arity: 1,
+        vargs: []
     }, 'super ugly')
 })
