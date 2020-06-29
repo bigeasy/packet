@@ -1,3 +1,74 @@
+## Sun Jun 28 20:49:02 CDT 2020
+
+Disambguation.
+
+```javascript
+const define = {
+    // If we require always three, then this could be ambiguous. However, the
+    // middle part is not a valid type on its own.
+    conditional: [
+        [ $ => $.type == 0, 32 ],
+        [ $ => $.type == 0, 32 ],
+        [ $ => $.type == 0, 32 ]
+    ],
+    // This is a valid type for a inline, it would be considered a switch
+    // statement instead of a condition. So this could either be a inline that
+    // transforming the result of a switch statment, or a conditional with a
+    // middle case that indicates a nested structure.
+    conditional: [
+        [ $ => $.type == 0, 32 ],
+        [ $ => $.type == 1, { first: 16, second: 16 } ],
+        [ $ => $.type == 2, 32 ]
+    ],
+    // This would remove the ambiguity for conditionals. Now the conditional
+    // cannot be interpreted as an inline.
+    conditional: [
+        $ => $.type == 0, 32,
+        $ => $.type == 1, { first: 16, second: 16 },
+        $ => $.type == 2, 32
+    ],
+    // Do we still require that an inline is defined with both before and after?
+    inline: [
+        32,
+        [ max, 8 ]
+    ],
+    switched: [ $ => $.type, {
+    }],
+    switched: [ $ => $.type, [
+        [ 0, 8 ],
+        [ 1, 16 ],
+        [ 32 ]
+    ]],
+    // Yes, here because we won't know which element is a conditional statement
+    // and which element is a series of inline functions.
+    inline: [[
+        min, 1, max, 8
+    ], [
+        $ => $.type == 0, 32,
+        $ => $.type == 1, { first: 16, second: 16 },
+        $ => $.type == 2, 32
+    ]],
+    // With this empty array it is resolved.
+    inline: [[
+        min, 1, max, 8
+    ], [
+        $ => $.type == 0, 32,
+        $ => $.type == 1, { first: 16, second: 16 },
+        $ => $.type == 2, 32
+    ], []],
+    // Is it also resolved with the bi-directional notation? It could begin to
+    // be mistaken for a terminated array containing a conditional with a
+    // calcuated terminator, but that would expect the termination function to
+    // be a member of the array.
+    inline: [[[
+        min, 1, max, 8
+    ]], [
+        $ => $.type == 0, 32,
+        $ => $.type == 1, { first: 16, second: 16 },
+        $ => $.type == 2, 32
+    ]]
+}
+```
 ## Sun Jun 21 08:24:13 CDT 2020
 
 Looking at a benchmark, it appears that the real performance cost comes from a
