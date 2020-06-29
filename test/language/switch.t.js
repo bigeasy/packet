@@ -190,13 +190,11 @@ require('proof')(4, okay => {
     okay(simplified({
         object: {
             type: 8,
-            value: [ $ => $.type, [[
-                0, 8
-            ], [
-                1, 16
-            ], [
-                24
-            ]]]
+            value: [ $ => $.type, [
+                [ 0, 8 ],
+                [ 1, 16 ],
+                [ 24 ]
+            ]]
         }
     }), [{
         dotted: '',
@@ -267,13 +265,11 @@ require('proof')(4, okay => {
         object: {
             header: [{
                 type: 2,
-                value: [ $ => $.type, [[
-                    0,  6,
-                ], [
-                    1, [ 'a', 2 ]
-                ], [
-                    [{ two: 2, four: 4 }, 6 ]
-                ]]]
+                value: [ $ => $.type, [
+                    [ 0,  6 ],
+                    [ 1, [ 'a', 2 ] ],
+                    [ [{ two: 2, four: 4 }, 6 ] ]
+                ]]
             }, 8 ]
         }
     }), [{

@@ -757,6 +757,29 @@ define({
 })
 ```
 
+Is this possible? Yikes. We kind of want it don't we?
+
+```javascript
+define({
+    packet: {
+        array: [ [[[ $_ = 0 => max, 1024 ]], 16 ], [ 8 ] ]
+    }
+})
+```
+
+Here's a common case, though.
+
+```javascript
+define({
+    packet: {
+        header: {
+            length: [[ ({ $ }) => $.array.length ], 16, [ max, 1024 ]]
+        }
+        array: [ [[[ $_ = 0 => max, 1024 ]], 16, [ 8 ] ]
+    }
+})
+```
+
 ### Terminated Arrays
 
 ```javascript

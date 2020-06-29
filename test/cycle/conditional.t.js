@@ -6,17 +6,13 @@ function prove (okay) {
         name: 'conditional/mysql',
         define: {
             object: {
-                value: [[[
-                    value => value < 251, 8
-                ], [
-                    value => value >= 251 && value < 2 ** 16, [ 'fc', 16 ]
-                ], [
+                value: [[
+                    value => value < 251, 8,
+                    value => value >= 251 && value < 2 ** 16, [ 'fc', 16 ],
                     [ 'fd', 24 ]
-                ]], [ 8, [
-                    sip => sip < 251, sip => sip
-                ], [
-                    sip => sip == 0xfc, 16
-                ], [
+                ], [ 8, [
+                    sip => sip < 251, sip => sip,
+                    sip => sip == 0xfc, 16,
                     24
                 ]]],
                 sentry: 8
@@ -36,20 +32,16 @@ function prove (okay) {
             object: {
                 type: 8,
                 value: [
-                    [[
-                        (_, $) => $.type == 0, 16
-                    ], [
-                        (_, $) => $.type == 1, 24
-                    ], [
+                    [
+                        (_, $) => $.type == 0, 16,
+                        (_, $) => $.type == 1, 24,
                         32
-                    ]],
-                    [[
-                        $ => $.type == 0, 16
-                    ], [
-                        $ => $.type == 1, 24
-                    ], [
+                    ],
+                    [
+                        $ => $.type == 0, 16,
+                        $ => $.type == 1, 24,
                         32
-                    ]]
+                    ]
                 ],
                 sentry: 8
             }
@@ -67,13 +59,11 @@ function prove (okay) {
         define: {
             object: {
                 type: 8,
-                value: [[
-                    $ => $.type == 0, 16
-                ], [
-                    $ => $.type == 1, 24
-                ], [
+                value: [
+                    $ => $.type == 0, 16,
+                    $ => $.type == 1, 24,
                     32
-                ]],
+                ],
                 sentry: 8
             }
         },
@@ -91,21 +81,18 @@ function prove (okay) {
             object: {
                 header: [{
                     flag: 2,
-                    value: [[
-                        $ => $.header.flag == 0, 6
-                    ], [
-                        $ => $.header.flag == 1, [ 'a', 2 ]
-                    ], [
+                    value: [
+                        $ => $.header.flag == 0, 6,
+                        $ => $.header.flag == 1, [ 'a', 2 ],
                         $ => $.header.flag == 2, [{
                             two: 2,
                             four: 4
-                        }, 6 ]
-                    ], [
+                        }, 6 ],
                         [{
                             one: 1,
                             five: 5
                         }, 6 ]
-                    ]]
+                    ]
                 }, 8 ],
                 sentry: 8
             }

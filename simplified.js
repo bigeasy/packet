@@ -340,7 +340,8 @@ function map (definitions, packet, extra = {}, packed = false) {
                         terminator: terminator,
                         fields: map(definitions, packet[0][0], {})
                     }]
-                // Fixed length arrays.
+                // **Fixed length arrays**: Arrays of fixed length or calculated
+                // length.
                 } else if (
                     Array.isArray(packet[0]) &&
                     typeof packet[0][0] == 'number' &&
@@ -369,7 +370,8 @@ function map (definitions, packet, extra = {}, packed = false) {
                         bits: bits * packet[0][0],
                         fields
                     }]
-                // Length-encoded arrays.
+                // **Length-encoded arrays**: Length encoded by a leading
+                // integer.
                 } else if (
                     packet.length == 2 &&
                     typeof packet[0] == 'number'
@@ -391,30 +393,33 @@ function map (definitions, packet, extra = {}, packed = false) {
                         ...extra
                     })
                     return fields
-                // Split conditionals.
+                // **Split conditionals**: Might get rid of them generally and
+                // have only sipping conditionals, or at least have them the
+                // only one's documented.
                 } else if (
                     (packet.length == 2 || packet.length == 1) &&
                     Array.isArray(packet[0]) &&
-                    Array.isArray(packet[0][0]) &&
-                    typeof packet[0][0][0] == 'function'
+                    typeof packet[0][0] == 'function'
                 ) {
                     const fields = []
                     const serialize = function () {
+                        const serialize = packet[0].slice()
                         const conditions = []
-                        for (const serialize of packet[0]) {
-                            if (serialize.length == 2) {
-                                const [ test, packet ] = serialize
+                        while (serialize.length) {
+                            const first = serialize.shift()
+                            if (serialize.length > 0) {
+                                const second = serialize.shift()
                                 conditions.push({
                                     test: {
-                                        source: trim(test.toString()),
-                                        arity: test.length
+                                        source: trim(first.toString()),
+                                        arity: first.length
                                     },
-                                    fields: map(definitions, packet, {})
+                                    fields: map(definitions, second, {})
                                 })
                             } else {
                                 conditions.push({
                                     test: null,
-                                    fields: map(definitions, serialize[0], {})
+                                    fields: map(definitions, first, {})
                                 })
                             }
                         }
@@ -422,29 +427,31 @@ function map (definitions, packet, extra = {}, packed = false) {
                     } ()
                     const parse = function () {
                         const parse = packet[1].slice()
-                        const sip = typeof parse[0] == 'number'
-                                  ? map(definitions, parse.shift(), {})
-                                  : null
+                        const sip = []
+                        if (typeof parse[0] == 'number') {
+                            sip.push(map(definitions, parse.shift(), {}).shift())
+                            parse.push.apply(parse, parse.shift())
+                        }
                         const conditions = []
-                        for (const condition of parse) {
-                            if (condition.length == 2) {
-                            const [ test, packet ] = condition
+                        while (parse.length) {
+                            const first = parse.shift()
+                            if (parse.length > 0) {
+                                const second = parse.shift()
                                 conditions.push({
                                     test: {
-                                        source: trim(test.toString()),
-                                        arity: 1
+                                        source: trim(first.toString()),
+                                        arity: first.length
                                     },
-                                    fields: map(definitions, packet, {})
+                                    fields: map(definitions, second, {})
                                 })
                             } else {
-                                source: null
                                 conditions.push({
                                     test: null,
-                                    fields: map(definitions, condition[0], {})
+                                    fields: map(definitions, first, {})
                                 })
                             }
                         }
-                        return { sip, conditions }
+                        return { sip: sip.length ? sip : null, conditions }
                     } ()
                     const vivify = parse.conditions.slice(1).reduce((vivify, condition) => {
                         return vivify == 'variant' || vivify == condition.fields[0].vivify
@@ -461,49 +468,47 @@ function map (definitions, packet, extra = {}, packed = false) {
                         serialize, parse, ...extra
                     })
                     return fields
-                // Mirrored conditionals.
+                // **Conditionals**: TODO Come back and create a set of test
+                // functions and maybe put them in an object. It would simplify
+                // this ladder. Kind of don't want them named and scattered.
+                //
+                // TODO This is a weak test. We could test that every other
+                // element is a function.
                 } else if (
                     packet.length > 1 &&
-                    packet.slice(0, packet.length - 1).filter(element => {
-                        return Array.isArray(element) &&
-                               element.length == 2 &&
-                               typeof element[0] == 'function'
-                    }).length == packet.length - 1 &&
-                    (
-                        Array.isArray(packet[packet.length - 1]) &&
-                        (
-                            packet[packet.length - 1].length == 1 ||
+                    packet.every((element, index) => {
+                        return index % 2 == 1 ||
                             (
-                                packet[packet.length - 1].length == 2 &&
-                                typeof packet[packet.length - 1][0] == 'function'
+                                typeof element == 'function'  ||
+                                index == packet.length - 1
                             )
-                        )
-                    )
+                    })
                 ) {
+                    packet = packet.slice()
                     const fields = []
                     const conditions = []
-                    for (const condition of packet) {
-                        if (condition.length == 2) {
-                            const [ test, field ] = condition
-                            const fields = map(definitions, field, {})
+                    while (packet.length) {
+                        const first = packet.shift()
+                        if (packet.length > 0) {
+                            const fields = map(definitions, packet.shift(), {})
                             conditions.push({
                                 body: {
                                     test: {
-                                        source: trim(test.toString()),
-                                        arity: 1
+                                        source: trim(first.toString()),
+                                        arity: first.length
                                     },
-                                    fields: fields,
+                                    fields: fields
                                 },
                                 bits: fields.reduce((bits, field) => {
                                     return bits == -1 || !field.fixed ? -1 : bits + field.bits
                                 }, 0)
                             })
                         } else {
-                            const fields = map(definitions, condition[0], {})
+                            const fields = map(definitions, first, {})
                             conditions.push({
                                 body: {
                                     test: null,
-                                    fields: fields,
+                                    fields: map(definitions, first, {})
                                 },
                                 bits: fields.reduce((bits, field) => {
                                     return bits == -1 || !field.fixed ? -1 : bits + field.bits

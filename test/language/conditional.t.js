@@ -3,22 +3,18 @@ require('proof')(4, okay => {
     okay(simplified({
         packet: {
             value: [
-                [[
-                    value => value < 251, 8
-                ], [
+                [
+                    value => value < 251, 8,
                     // TODO Why isn't this `[ 'fc', [ 16 ] ]`? That way we can pad
                     // anything?
-                    value => value >= 251, [ 'fc', 16 ]
-                ], [
+                    value => value >= 251, [ 'fc', 16 ],
                     [ 'fd', 24 ]
-                ]],
+                ],
                 // TODO Here is the pure function, so maybe we need pure
                 // functions in general.
                 [ 8, [
-                    sip => sip < 251, sip => sip
-                ], [
-                    sip => sip == 0xfc, 16
-                ], [
+                    sip => sip < 251, sip => sip,
+                    sip => sip == 0xfc, 16,
                     24
                 ]]
             ]
@@ -151,20 +147,15 @@ require('proof')(4, okay => {
         packet: {
             type: 8,
             value: [
-                [[
-                    $ => $.type == 0, 16
-                ], [
-                    $ => $.type == 1, 24
-                ], [
+                [
+                    $ => $.type == 0, 16,
+                    $ => $.type == 1, 24,
                     32
-                ]],
-                [[
-                    $ => $.type == 0, 16
                 ], [
-                    $ => $.type == 1, 24
-                ], [
+                    $ => $.type == 0, 16,
+                    $ => $.type == 1, 24,
                     32
-                ]]
+                ]
             ]
         }
     }), [{
@@ -281,13 +272,11 @@ require('proof')(4, okay => {
     okay(simplified({
         packet: {
             type: 8,
-            value: [[
-                $ => $.type == 0, 16
-            ], [
-                $ => $.type == 1, 24
-            ], [
+            value: [
+                $ => $.type == 0, 16,
+                $ => $.type == 1, 24,
                 32
-            ]]
+            ]
         }
     }), [{
         dotted: '',
@@ -404,21 +393,18 @@ require('proof')(4, okay => {
         packet: {
             header: {
                 flag: 2,
-                body: [[
-                    $ => $.header.flag == 0, 6
-                ], [
-                    $ => $.header.flag == 1, [ 'a', 2 ]
-                ], [
+                body: [
+                    $ => $.header.flag == 0, 6,
+                    $ => $.header.flag == 1, [ 'a', 2 ],
                     $ => $.header.flag == 2, [{
                         two: 2,
                         four: 4
-                    }, 6 ]
-                ], [
+                    }, 6 ],
                     [{
                         one: 1,
                         five: 5
                     }, 6 ]
-                ]]
+                ]
             }
         }
     }), [{
