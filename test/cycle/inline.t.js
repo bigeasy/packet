@@ -31,4 +31,14 @@ function prove (okay) {
         },
         objects: [{ value: 1, sentry: 0xaa }]
     })
+    require('./cycle')(okay, {
+        name: 'inline/mirrored',
+        define: {
+            object: {
+                value: [[[ value => ~value ]], 32 ],
+                sentry: 8
+            }
+        },
+        objects: [{ value: 1, sentry: 0xaa }]
+    })
 }

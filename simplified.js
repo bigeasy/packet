@@ -266,6 +266,50 @@ function map (definitions, packet, extra = {}, packed = false) {
                         after: after,
                         ...extra
                     }]
+                // **Inline mirroed functions**: User defined functions that
+                // perform inline transformations or assertions defined once for
+                // both pre-serialization and post-parsing.
+                } else if (
+                    packet.length == 2 &&
+                    Array.isArray(packet[0]) &&
+                    packet[0].length == 1 &&
+                    Array.isArray(packet[0][0]) &&
+                    typeof packet[0][0][0] == 'function'
+                ) {
+                    // TODO You are repeating yourself now.
+                    const inliner = function (inlined, field) {
+                        if (typeof field[0] == 'function') {
+                            field = field.slice()
+                            const f = field.shift()
+                            const inline = args(f)
+                            while (field.length != 0 && typeof field[0] != 'function') {
+                                inline.vargs.push(field.shift())
+                            }
+                            inlined.push(inline)
+                            inliner(inlined, field)
+                        }
+                    }
+                    packet = packet.slice()
+                    const inlines = packet.shift()[0]
+                    const before = []
+                    inliner(before, inlines.slice())
+                    const after = []
+                    inliner(after, inlines.slice())
+                    const fields = map(definitions, packet[0], {})
+                    return [{
+                        type: 'inline',
+                        // TODO Test with a structure member.
+                        // TODO Test with an array member.
+                        vivify: fields[0].vivify,
+                        dotted: '',
+                        bits: fields[0].bits,
+                        fixed: fields[0].fixed,
+                        ethereal: true,
+                        before: before,
+                        fields: fields,
+                        after: after,
+                        ...extra
+                    }]
                 // Switch statements.
                 } else if (
                     typeof packet[0] == 'function' &&
