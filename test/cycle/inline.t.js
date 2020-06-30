@@ -2,7 +2,7 @@ require('proof')(0, prove)
 
 function prove (okay) {
     require('./cycle')(okay, {
-        name: 'fixup/both',
+        name: 'inline/both',
         define: {
             object: {
                 value: [[ value => -value ], -16, [ value => -value ]],
@@ -12,7 +12,7 @@ function prove (okay) {
         objects: [{ value: 1, sentry: 0xaa }]
     })
     require('./cycle')(okay, {
-        name: 'fixup/before',
+        name: 'inline/before',
         define: {
             object: {
                 value: [[ value => value ], 16 , []],
@@ -22,7 +22,7 @@ function prove (okay) {
         objects: [{ value: 1, sentry: 0xaa }]
     })
     require('./cycle')(okay, {
-        name: 'fixup/after',
+        name: 'inline/after',
         define: {
             object: {
                 value: [[], 16, [ value => value ]],
