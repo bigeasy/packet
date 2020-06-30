@@ -10,6 +10,14 @@ const ieee = require('./ieee')
 // Inline function argument parser.
 const args = require('./arguments')
 
+function trim (source) {
+    const $ = /\n(.*)}$/.exec(source)
+    if ($ != null) {
+        return source.replace(new RegExp(`^${$[1]}`, 'gm'), '')
+    }
+    return source
+}
+
 // TODO It always needs to be an array of fields because we need to be able to
 // insert checkpoints, even for ostensible fixed fields like literal.
 
