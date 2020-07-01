@@ -1,70 +1,74 @@
 module.exports = function ({ serializers }) {
-    serializers.inc.object = function (object, $step = 0) {
-        let $bite, $stop, $_
+    serializers.inc.object = function () {
 
-        return function serialize ($buffer, $start, $end) {
-            switch ($step) {
-            case 0:
 
-                $step = 1
-                $bite = 0
-                $_ =
-                    (object.header.flag << 6 & 0xc0)
+        return function (object, $step = 0) {
+            let $bite, $stop, $_
 
-                if (($ => $.header.flag == 0)(object)) {
-                    $_ |=
-                        (object.header.value & 0x3f)
-                } else if (($ => $.header.flag == 1)(object)) {
-                    $_ |=
-                        (0xa << 2 & 0x3c) |
-                        (object.header.value & 0x3)
-                } else if (($ => $.header.flag == 2)(object)) {
-                    $_ |=
-                        (object.header.value.two << 4 & 0x30) |
-                        (object.header.value.four & 0xf)
-                } else {
-                    $_ |=
-                        (object.header.value.one << 5 & 0x20) |
-                        (object.header.value.five & 0x1f)
-                }
+            return function serialize ($buffer, $start, $end) {
+                switch ($step) {
+                case 0:
 
-            case 1:
+                    $step = 1
+                    $bite = 0
+                    $_ =
+                        (object.header.flag << 6 & 0xc0)
 
-                while ($bite != -1) {
-                    if ($start == $end) {
-                        return { start: $start, serialize }
+                    if (($ => $.header.flag == 0)(object)) {
+                        $_ |=
+                            (object.header.value & 0x3f)
+                    } else if (($ => $.header.flag == 1)(object)) {
+                        $_ |=
+                            (0xa << 2 & 0x3c) |
+                            (object.header.value & 0x3)
+                    } else if (($ => $.header.flag == 2)(object)) {
+                        $_ |=
+                            (object.header.value.two << 4 & 0x30) |
+                            (object.header.value.four & 0xf)
+                    } else {
+                        $_ |=
+                            (object.header.value.one << 5 & 0x20) |
+                            (object.header.value.five & 0x1f)
                     }
-                    $buffer[$start++] = ($_ >>> $bite * 8 & 0xff)
-                    $bite--
-                }
 
+                case 1:
 
-            case 2:
-
-                $step = 3
-                $bite = 0
-                $_ = object.sentry
-
-            case 3:
-
-                while ($bite != -1) {
-                    if ($start == $end) {
-                        return { start: $start, serialize }
+                    while ($bite != -1) {
+                        if ($start == $end) {
+                            return { start: $start, serialize }
+                        }
+                        $buffer[$start++] = ($_ >>> $bite * 8 & 0xff)
+                        $bite--
                     }
-                    $buffer[$start++] = ($_ >>> $bite * 8 & 0xff)
-                    $bite--
+
+
+                case 2:
+
+                    $step = 3
+                    $bite = 0
+                    $_ = object.sentry
+
+                case 3:
+
+                    while ($bite != -1) {
+                        if ($start == $end) {
+                            return { start: $start, serialize }
+                        }
+                        $buffer[$start++] = ($_ >>> $bite * 8 & 0xff)
+                        $bite--
+                    }
+
+
+                    $step = 4
+
+                case 4:
+
+                    break
+
                 }
 
-
-                $step = 4
-
-            case 4:
-
-                break
-
+                return { start: $start, serialize: null }
             }
-
-            return { start: $start, serialize: null }
         }
-    }
+    } ()
 }

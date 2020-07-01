@@ -1,14 +1,32 @@
-const join = require('./join')
-const map = require('./map')
-const snuggle = require('./snuggle')
-const unpack = require('./unpack')
-const unsign = require('./fiddle/unsign')
+// Format source code maintaining indentation.
 const $ = require('programmatic')
+
+// Generate literal object construction.
 const vivify = require('./vivify')
+
+// Generate two's compliment conversion.
+const unsign = require('./fiddle/unsign')
+
+// Generate integer unpacking.
+const unpack = require('./unpack')
+
+// Maintain a set of lookup constants.
 const lookup = require('./lookup')
 
 // Generate inline function source.
 const inliner = require('./inliner')
+
+// Generate required modules and functions.
+const required = require('./required')
+
+const map = require('./map')
+
+// Format source code maintaining indentation.
+const join = require('./join')
+
+// Join an array of strings with first line of subsequent element catenated to
+// last line of previous element.
+const snuggle = require('./snuggle')
 
 function expand (fields) {
     const expanded = []
@@ -52,7 +70,7 @@ function expand (fields) {
     return expanded
 }
 
-function generate (packet, bff) {
+function generate (packet, { require, bff }) {
     let $i = -1, $I = -1, $sip = -1, $step = 1
 
     const variables = { packet: true, step: true }
@@ -521,40 +539,51 @@ function generate (packet, bff) {
     const lookups = Object.keys($lookup).length != 0
                   ? `const $lookup = ${JSON.stringify($lookup, null, 4)}`
                   : null
+
+    const requires = required(require)
+
     if (bff) {
         return $(`
             parsers.bff.${packet.name} = function () {
+                `, requires, -1, `
+
                 `, lookups, -1, `
 
-                return function parse ($buffer, $start, $end) {
-                    `, lets.length ? `let ${lets.join(', ')}` : null, -1, `
+                return function () {
+                    return function parse ($buffer, $start, $end) {
+                        `, lets.length ? `let ${lets.join(', ')}` : null, -1, `
 
-                    `, vivify.structure(`const ${packet.name}`, packet), `
+                        `, vivify.structure(`const ${packet.name}`, packet), `
 
-                    `, source, `
+                        `, source, `
 
-                    return { start: $start, object: object, parse: null }
-                }
+                        return { start: $start, object: object, parse: null }
+                    }
+                } ()
             }
         `)
     }
 
     return $(`
-        parsers.all.${packet.name} = function ($buffer, $start) {
+        parsers.all.${packet.name} = function () {
+            `, requires, -1, `
+
             `, lookups, -1, `
 
-            `, lets.length ? `let ${lets.join(', ')}` : null, -1, `
+            return function ($buffer, $start) {
+                `, lets.length ? `let ${lets.join(', ')}` : null, -1, `
 
-            `, 'const ' + vivify.structure(packet.name, packet), `
+                `, 'const ' + vivify.structure(packet.name, packet), `
 
-            `, source, `
+                `, source, `
 
-            return ${packet.name}
-        }
+                return ${packet.name}
+            }
+        } ()
     `)
 }
 
 module.exports = function (definition, options = {}) {
     const expanded = expand(JSON.parse(JSON.stringify(definition)))
-    return join(expanded.map(packet => generate(packet, options.bff)))
+    return join(expanded.map(packet => generate(packet, options)))
 }

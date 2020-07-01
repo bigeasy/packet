@@ -1,7 +1,7 @@
 // Node.js API.
 const util = require('util')
 
-// Format source code maintaining indents.
+// Format source code maintaining indentation.
 const $ = require('programmatic')
 
 function generate (packet) {

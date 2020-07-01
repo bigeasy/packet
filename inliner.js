@@ -1,4 +1,4 @@
-// Format source code maintaining indents.
+// Format source code maintaining indentation.
 const $ = require('programmatic')
 
 //

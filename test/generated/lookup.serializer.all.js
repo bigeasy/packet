@@ -1,5 +1,7 @@
 module.exports = function ({ serializers }) {
-    serializers.all.object = function (object) {
+    serializers.all.object = function () {
+
+
         const $lookup = {
             "object": {
                 "value": [
@@ -9,16 +11,18 @@ module.exports = function ({ serializers }) {
             }
         }
 
-        return function ($buffer, $start, $end) {
-            let $_
+        return function (object) {
+            return function ($buffer, $start, $end) {
+                let $_
 
-            $_ = $lookup.object.value.indexOf(object.value)
+                $_ = $lookup.object.value.indexOf(object.value)
 
-            $buffer[$start++] = ($_ & 0xff)
+                $buffer[$start++] = ($_ & 0xff)
 
-            $buffer[$start++] = (object.sentry & 0xff)
+                $buffer[$start++] = (object.sentry & 0xff)
 
-            return { start: $start, serialize: null }
+                return { start: $start, serialize: null }
+            }
         }
-    }
+    } ()
 }

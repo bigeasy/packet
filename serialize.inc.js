@@ -1,14 +1,28 @@
+// Format source code maintaining indentation.
 const $ = require('programmatic')
-const join = require('./join')
-const map = require('./map')
-const snuggle = require('./snuggle')
+
+// Generate integer packing.
 const pack = require('./pack')
+
+// Maintain a set of lookup constants.
 const lookup = require('./lookup')
 
 // Generate inline function source.
 const inliner = require('./inliner')
 
-function generate (packet) {
+// Generate required modules and functions.
+const required = require('./required')
+
+const map = require('./map')
+
+// Format source code maintaining indentation.
+const join = require('./join')
+
+// Join an array of strings with first line of subsequent element catenated to
+// last line of previous element.
+const snuggle = require('./snuggle')
+
+function generate (packet, { require = null }) {
     let $step = 0, $i = -1, $$ = -1, surround = false
 
     const variables = { packet: true, step: true }
@@ -409,37 +423,46 @@ function generate (packet) {
         i: '$i = []',
         stack: '$$ = []'
     }
+
     const declarations = {
         assert: `assert = require('assert')`
     }
+
     const signature = Object.keys(signatories)
                             .filter(key => variables[key])
                             .map(key => signatories[key])
+
     const consts = Object.keys(declarations)
                          .filter(key => constants[key])
                          .map(key => declarations[key])
+
     const lookups = Object.keys($lookup).length != 0
                   ? `const $lookup = ${JSON.stringify($lookup, null, 4)}`
                   : null
-    const object = 'serializers.inc.' + packet.name
-    const generated = $(`
-        ${object} = function (${signature.join(', ')}) {
+
+    const requires = required(require)
+
+    return $(`
+        serializers.inc.${packet.name} = function () {
+            `, requires, -1, `
+
             `, lookups, -1, `
 
-            let $bite, $stop, $_
+            return function (${signature.join(', ')}) {
+                let $bite, $stop, $_
 
-            `, consts.length != 0 ? `const ${consts.join(', ')}` : null, -1, `
+                `, consts.length != 0 ? `const ${consts.join(', ')}` : null, -1, `
 
-            return function serialize ($buffer, $start, $end) {
-                `, source, `
+                return function serialize ($buffer, $start, $end) {
+                    `, source, `
 
-                return { start: $start, serialize: null }
+                    return { start: $start, serialize: null }
+                }
             }
-        }
+        } ()
     `)
-    return generated
 }
 
-module.exports = function (definition) {
-    return join(JSON.parse(JSON.stringify(definition)).map(packet => generate(packet)))
+module.exports = function (definition, options) {
+    return join(JSON.parse(JSON.stringify(definition)).map(packet => generate(packet, options)))
 }

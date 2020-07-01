@@ -1,39 +1,43 @@
 module.exports = function ({ parsers }) {
-    parsers.inc.object = function (object = {}, $step = 0) {
-        let $_, $bite
-        return function parse ($buffer, $start, $end) {
-            switch ($step) {
-            case 0:
+    parsers.inc.object = function () {
 
-                object = {
-                    word: 0
-                }
 
-                $step = 1
+        return function (object = {}, $step = 0) {
+            let $_, $bite
+            return function parse ($buffer, $start, $end) {
+                switch ($step) {
+                case 0:
 
-            case 1:
-
-                $_ = 0
-                $step = 2
-                $bite = 0
-
-            case 2:
-
-                while ($bite != 4) {
-                    if ($start == $end) {
-                        return { start: $start, object: null, parse }
+                    object = {
+                        word: 0
                     }
-                    $_ += ($buffer[$start++]) << $bite * 8 >>> 0
-                    $bite++
+
+                    $step = 1
+
+                case 1:
+
+                    $_ = 0
+                    $step = 2
+                    $bite = 0
+
+                case 2:
+
+                    while ($bite != 4) {
+                        if ($start == $end) {
+                            return { start: $start, object: null, parse }
+                        }
+                        $_ += ($buffer[$start++]) << $bite * 8 >>> 0
+                        $bite++
+                    }
+
+                    object.word = $_
+
+
+                case 3:
+
+                    return { start: $start, object: object, parse: null }
                 }
-
-                object.word = $_
-
-
-            case 3:
-
-                return { start: $start, object: object, parse: null }
             }
         }
-    }
+    } ()
 }

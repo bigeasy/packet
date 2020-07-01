@@ -1,16 +1,34 @@
-const join = require('./join')
-const map = require('./map')
-const snuggle = require('./snuggle')
-const unpack = require('./unpack')
-const unsign = require('./fiddle/unsign')
+// Format source code maintaining indentation.
 const $ = require('programmatic')
+
+// Generate literal object construction.
 const vivify = require('./vivify')
+
+// Generate two's compliment conversion.
+const unsign = require('./fiddle/unsign')
+
+// Generate integer unpacking.
+const unpack = require('./unpack')
+
+// Maintain a set of lookup constants.
 const lookup = require('./lookup')
 
 // Generate inline function source.
 const inliner = require('./inliner')
 
-function generate (packet) {
+// Generate required modules and functions.
+const required = require('./required')
+
+const map = require('./map')
+
+// Format source code maintaining indentation.
+const join = require('./join')
+
+// Join an array of strings with first line of subsequent element catenated to
+// last line of previous element.
+const snuggle = require('./snuggle')
+
+function generate (packet, { require = null }) {
     let $step = 0, $i = -1, $sip = -1, iterate = false, _terminated = false, surround = false
 
     const variables = { packet: true, step: true }
@@ -515,21 +533,29 @@ function generate (packet) {
     }
 
     const object = `parsers.inc.${packet.name}`
+
     const lookups = Object.keys($lookup).length != 0
                   ? `const $lookup = ${JSON.stringify($lookup, null, 4)}`
                   : null
+
+    const requires = required(require)
+
     return $(`
-        ${object} = function (${signature.join(', ')}) {
+        parsers.inc.${packet.name} = function () {
+            `, requires, -1, `
+
             `, lookups, -1, `
 
-            let $_, $bite
-            return function parse ($buffer, $start, $end) {
-                `, source, `
+            return function (${signature.join(', ')}) {
+                let $_, $bite
+                return function parse ($buffer, $start, $end) {
+                    `, source, `
+                }
             }
-        }
+        } ()
     `)
 }
 
-module.exports = function (definition) {
-    return join(JSON.parse(JSON.stringify(definition)).map(packet => generate(packet)))
+module.exports = function (definition, options) {
+    return join(JSON.parse(JSON.stringify(definition)).map(packet => generate(packet, options)))
 }

@@ -1,84 +1,88 @@
 module.exports = function ({ serializers }) {
-    serializers.inc.object = function (object, $step = 0, $i = [], $$ = []) {
-        let $bite, $stop, $_
+    serializers.inc.object = function () {
 
-        const assert = require('assert')
 
-        return function serialize ($buffer, $start, $end) {
-            for (;;) {
-                switch ($step) {
-                case 0:
+        return function (object, $step = 0, $i = [], $$ = []) {
+            let $bite, $stop, $_
 
-                    $$[0] = (function (value) {
-                        const buffer = Buffer.alloc(8)
-                        buffer.writeDoubleBE(value)
-                        return buffer
-                    })(object.value)
+            const assert = require('assert')
 
-                case 1:
+            return function serialize ($buffer, $start, $end) {
+                for (;;) {
+                    switch ($step) {
+                    case 0:
 
-                    $i[0] = 0
-                    $step = 2
-                    assert.equal($$[0].length, 8)
+                        $$[0] = (function (value) {
+                            const buffer = Buffer.alloc(8)
+                            buffer.writeDoubleBE(value)
+                            return buffer
+                        })(object.value)
 
-                case 2:
+                    case 1:
 
-                    $step = 3
-                    $bite = 0
-                    $_ = $$[0][$i[0]]
-
-                case 3:
-
-                    while ($bite != -1) {
-                        if ($start == $end) {
-                            return { start: $start, serialize }
-                        }
-                        $buffer[$start++] = ($_ >>> $bite * 8 & 0xff)
-                        $bite--
-                    }
-
-                    if (++$i[0] != $$[0].length) {
+                        $i[0] = 0
                         $step = 2
-                        continue
-                    }
+                        assert.equal($$[0].length, 8)
 
-                    $step = 4
+                    case 2:
 
+                        $step = 3
+                        $bite = 0
+                        $_ = $$[0][$i[0]]
 
-                    if ($i[0] != 8) {
-                        $step = 4
-                        continue
-                    }
+                    case 3:
 
-                case 4:
-
-                    $step = 5
-                    $bite = 0
-                    $_ = object.sentry
-
-                case 5:
-
-                    while ($bite != -1) {
-                        if ($start == $end) {
-                            return { start: $start, serialize }
+                        while ($bite != -1) {
+                            if ($start == $end) {
+                                return { start: $start, serialize }
+                            }
+                            $buffer[$start++] = ($_ >>> $bite * 8 & 0xff)
+                            $bite--
                         }
-                        $buffer[$start++] = ($_ >>> $bite * 8 & 0xff)
-                        $bite--
+
+                        if (++$i[0] != $$[0].length) {
+                            $step = 2
+                            continue
+                        }
+
+                        $step = 4
+
+
+                        if ($i[0] != 8) {
+                            $step = 4
+                            continue
+                        }
+
+                    case 4:
+
+                        $step = 5
+                        $bite = 0
+                        $_ = object.sentry
+
+                    case 5:
+
+                        while ($bite != -1) {
+                            if ($start == $end) {
+                                return { start: $start, serialize }
+                            }
+                            $buffer[$start++] = ($_ >>> $bite * 8 & 0xff)
+                            $bite--
+                        }
+
+
+                        $step = 6
+
+                    case 6:
+
+                        break
+
                     }
-
-
-                    $step = 6
-
-                case 6:
 
                     break
-
                 }
 
-                break
+                return { start: $start, serialize: null }
             }
-
-            return { start: $start, serialize: null }
         }
-    }
+    } ()
 }

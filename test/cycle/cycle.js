@@ -33,6 +33,7 @@ module.exports = function (okay, options) {
         const intermediate = simplified(options.define)
         const filename = path.resolve(__filename, '../../generated/' + options.name)
         const compile = coalesce(options.compile, true)
+        const required = coalesce(options.require, {})
         fs.mkdirSync(path.dirname(filename), { recursive: true })
         const packet = {
             parsers: { all: {}, inc: {}, bff: {} },
@@ -44,7 +45,7 @@ module.exports = function (okay, options) {
             compiler({
                 object: 'sizeOf',
                 file: `${filename}.sizeof.js`,
-                source: composers.sizeOf(intermediate)
+                source: composers.sizeOf(intermediate, { require: required })
             })
         }
         require(`${filename}.sizeof.js`)(packet)
@@ -61,7 +62,7 @@ module.exports = function (okay, options) {
             compiler({
                 object: 'serializers',
                 file: `${filename}.serializer.all.js`,
-                source: composers.serializer.all(intermediate)
+                source: composers.serializer.all(intermediate, { require: required })
             })
         }
         require(`${filename}.serializer.all.js`)(packet)
@@ -85,7 +86,7 @@ module.exports = function (okay, options) {
             compiler({
                 object: 'parsers',
                 file: `${filename}.parser.all.js`,
-                source: composers.parser.all(intermediate)
+                source: composers.parser.all(intermediate, { require: required })
             })
         }
         require(`${filename}.parser.all.js`)(packet)
@@ -107,7 +108,7 @@ module.exports = function (okay, options) {
             compiler({
                 object: 'serializers',
                 file: `${filename}.serializer.inc.js`,
-                source: composers.serializer.inc(intermediate)
+                source: composers.serializer.inc(intermediate, { require: required })
             })
         }
         require(`${filename}.serializer.inc.js`)(packet)
@@ -147,7 +148,7 @@ module.exports = function (okay, options) {
             compiler({
                 object: 'parsers',
                 file: `${filename}.parser.inc.js`,
-                source: composers.parser.inc(intermediate)
+                source: composers.parser.inc(intermediate, { require: required })
             })
         }
         require(`${filename}.parser.inc.js`)(packet)
@@ -182,7 +183,10 @@ module.exports = function (okay, options) {
             compiler({
                 object: 'serializers',
                 file: `${filename}.serializer.bff.js`,
-                source: composers.serializer.all(intermediate, { bff: true })
+                source: composers.serializer.all(intermediate, {
+                    bff: true,
+                    require: required
+                })
             })
         }
         require(`${filename}.serializer.bff.js`)(packet)
@@ -220,7 +224,10 @@ module.exports = function (okay, options) {
             compiler({
                 object: 'parsers',
                 file: `${filename}.parser.bff.js`,
-                source: composers.parser.all(intermediate, { bff: true })
+                source: composers.parser.all(intermediate, {
+                    bff: true,
+                    require: required
+                })
             })
         }
         require(`${filename}.parser.bff.js`)(packet)

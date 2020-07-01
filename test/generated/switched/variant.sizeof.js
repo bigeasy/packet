@@ -1,31 +1,35 @@
 module.exports = function ({ sizeOf }) {
-    sizeOf.object = function (object) {
-        let $_ = 0
+    sizeOf.object = function () {
 
-        $_ += 1
 
-        switch (($ => $.type)(object)) {
-        case 0:
+        return function (object) {
+            let $_ = 0
 
             $_ += 1
 
-            break
+            switch (($ => $.type)(object)) {
+            case 0:
 
-        case 1:
+                $_ += 1
 
-            $_ += 2
+                break
 
-            break
+            case 1:
 
-        default:
+                $_ += 2
 
-            $_ += 3
+                break
 
-            break
+            default:
+
+                $_ += 3
+
+                break
+            }
+
+            $_ += 1
+
+            return $_
         }
-
-        $_ += 1
-
-        return $_
-    }
+    } ()
 }

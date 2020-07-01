@@ -1,34 +1,38 @@
 module.exports = function ({ serializers }) {
-    serializers.all.object = function (object) {
-        return function ($buffer, $start, $end) {
-            $buffer[$start++] = (object.type & 0xff)
+    serializers.all.object = function () {
 
-            switch (String(($ => $.type)(object))) {
-            case "0":
 
-                $buffer[$start++] = (object.value & 0xff)
+        return function (object) {
+            return function ($buffer, $start, $end) {
+                $buffer[$start++] = (object.type & 0xff)
 
-                break
+                switch (String(($ => $.type)(object))) {
+                case "0":
 
-            case "1":
+                    $buffer[$start++] = (object.value & 0xff)
 
-                $buffer[$start++] = (object.value >>> 8 & 0xff)
-                $buffer[$start++] = (object.value & 0xff)
+                    break
 
-                break
+                case "1":
 
-            default:
+                    $buffer[$start++] = (object.value >>> 8 & 0xff)
+                    $buffer[$start++] = (object.value & 0xff)
 
-                $buffer[$start++] = (object.value >>> 16 & 0xff)
-                $buffer[$start++] = (object.value >>> 8 & 0xff)
-                $buffer[$start++] = (object.value & 0xff)
+                    break
 
-                break
+                default:
+
+                    $buffer[$start++] = (object.value >>> 16 & 0xff)
+                    $buffer[$start++] = (object.value >>> 8 & 0xff)
+                    $buffer[$start++] = (object.value & 0xff)
+
+                    break
+                }
+
+                $buffer[$start++] = (object.sentry & 0xff)
+
+                return { start: $start, serialize: null }
             }
-
-            $buffer[$start++] = (object.sentry & 0xff)
-
-            return { start: $start, serialize: null }
         }
-    }
+    } ()
 }

@@ -1,29 +1,33 @@
 module.exports = function ({ parsers }) {
-    parsers.all.object = function ($buffer, $start) {
-        let $i = []
+    parsers.all.object = function () {
 
-        const object = {
-            value: [],
-            sentry: 0
-        }
 
-        $i[0] = 0
-        for (;;) {
-            object.value[$i[0]] = ($buffer[$start++])
-            $i[0]++
+        return function ($buffer, $start) {
+            let $i = []
 
-            if ($i[0] == 4) {
-                break
+            const object = {
+                value: [],
+                sentry: 0
             }
+
+            $i[0] = 0
+            for (;;) {
+                object.value[$i[0]] = ($buffer[$start++])
+                $i[0]++
+
+                if ($i[0] == 4) {
+                    break
+                }
+            }
+
+
+            object.value = (function (value) {
+                return Buffer.from(value).readFloatLE()
+            })(object.value)
+
+            object.sentry = ($buffer[$start++])
+
+            return object
         }
-
-
-        object.value = (function (value) {
-            return Buffer.from(value).readFloatLE()
-        })(object.value)
-
-        object.sentry = ($buffer[$start++])
-
-        return object
-    }
+    } ()
 }

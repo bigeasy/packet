@@ -1,9 +1,13 @@
 module.exports = function ({ sizeOf }) {
-    sizeOf.object = function (object) {
-        let $_ = 0
+    sizeOf.object = function () {
 
-        $_ += 17
 
-        return $_
-    }
+        return function (object) {
+            let $_ = 0
+
+            $_ += 17
+
+            return $_
+        }
+    } ()
 }

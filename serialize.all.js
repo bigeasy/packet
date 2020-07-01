@@ -1,13 +1,32 @@
-const join = require('./join')
 const map = require('./map')
-const lookup = require('./lookup')
-const snuggle = require('./snuggle')
+
+// Generate integer packing.
 const pack = require('./pack')
+
+// Maintain a set of lookup constants.
+const lookup = require('./lookup')
+
+// Format source code maintaining indentation.
 const $ = require('programmatic')
 
 // Generate inline function source.
 const inliner = require('./inliner')
 
+// Generate required modules and functions.
+const required = require('./required')
+
+// Format source code maintaining indentation.
+const join = require('./join')
+
+// Join an array of strings with first line of subsequent element catenated to
+// last line of previous element.
+const snuggle = require('./snuggle')
+
+//
+
+// Add implicit field definitions to the given array of field definitions.
+
+//
 function expand (fields) {
     const expanded = []
     for (const field of fields) {
@@ -123,7 +142,7 @@ function checkpoints (path, fields, index = 0) {
     })
 }
 
-function generate (packet, bff) {
+function generate (packet, { require = null, bff }) {
     let $step = 0, $i = -1, $$ = -1
 
     const variables = { packet: true, step: true }
@@ -432,20 +451,27 @@ function generate (packet, bff) {
     const lookups = Object.keys($lookup).length != 0
                   ? `const $lookup = ${JSON.stringify($lookup, null, 4)}`
                   : null
+
+    const requires = required(require)
+
     return $(`
-        serializers.${bff ? 'bff' : 'all'}.${packet.name} = function (${packet.name}) {
+        serializers.${bff ? 'bff' : 'all'}.${packet.name} = function () {
+            `, requires, -1, `
+
             `, lookups, -1, `
 
-            return function ($buffer, $start, $end) {
-                `, consts.length != 0 ? `const ${consts.join(', ')}` : null, -1, `
+            return function (${packet.name}) {
+                return function ($buffer, $start, $end) {
+                    `, consts.length != 0 ? `const ${consts.join(', ')}` : null, -1, `
 
-                `, lets.length != 0 ? `let ${lets.join(', ')}` : null, -1, `
+                    `, lets.length != 0 ? `let ${lets.join(', ')}` : null, -1, `
 
-                `, source, `
+                    `, source, `
 
-                return { start: $start, serialize: null }
+                    return { start: $start, serialize: null }
+                }
             }
-        }
+        } ()
     `)
 }
 
@@ -455,6 +481,6 @@ module.exports = function (definition, options = {}) {
         if (options.bff) {
             packet.fields = checkpoints(packet.name, packet.fields)
         }
-        return generate(packet, options.bff)
+        return generate(packet, options)
     }))
 }

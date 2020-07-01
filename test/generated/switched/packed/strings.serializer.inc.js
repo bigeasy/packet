@@ -1,78 +1,82 @@
 module.exports = function ({ serializers }) {
-    serializers.inc.object = function (object, $step = 0) {
-        let $bite, $stop, $_
+    serializers.inc.object = function () {
 
-        return function serialize ($buffer, $start, $end) {
-            switch ($step) {
-            case 0:
 
-                $step = 1
-                $bite = 0
-                $_ =
-                    (object.header.type << 6 & 0xc0)
+        return function (object, $step = 0) {
+            let $bite, $stop, $_
 
-                switch (String(($ => $.header.type)(object))) {
-                case "0":
+            return function serialize ($buffer, $start, $end) {
+                switch ($step) {
+                case 0:
 
-                    $_ |=
-                        (object.header.value & 0x3f)
+                    $step = 1
+                    $bite = 0
+                    $_ =
+                        (object.header.type << 6 & 0xc0)
 
-                    break
+                    switch (String(($ => $.header.type)(object))) {
+                    case "0":
 
-                case "1":
+                        $_ |=
+                            (object.header.value & 0x3f)
 
-                    $_ |=
-                        (0xa << 2 & 0x3c) |
-                        (object.header.value & 0x3)
+                        break
 
-                    break
+                    case "1":
 
-                default:
+                        $_ |=
+                            (0xa << 2 & 0x3c) |
+                            (object.header.value & 0x3)
 
-                    $_ |=
-                        (object.header.value.two << 4 & 0x30) |
-                        (object.header.value.four & 0xf)
+                        break
 
-                    break
-                }
+                    default:
 
-            case 1:
+                        $_ |=
+                            (object.header.value.two << 4 & 0x30) |
+                            (object.header.value.four & 0xf)
 
-                while ($bite != -1) {
-                    if ($start == $end) {
-                        return { start: $start, serialize }
+                        break
                     }
-                    $buffer[$start++] = ($_ >>> $bite * 8 & 0xff)
-                    $bite--
-                }
 
+                case 1:
 
-            case 2:
-
-                $step = 3
-                $bite = 0
-                $_ = object.sentry
-
-            case 3:
-
-                while ($bite != -1) {
-                    if ($start == $end) {
-                        return { start: $start, serialize }
+                    while ($bite != -1) {
+                        if ($start == $end) {
+                            return { start: $start, serialize }
+                        }
+                        $buffer[$start++] = ($_ >>> $bite * 8 & 0xff)
+                        $bite--
                     }
-                    $buffer[$start++] = ($_ >>> $bite * 8 & 0xff)
-                    $bite--
+
+
+                case 2:
+
+                    $step = 3
+                    $bite = 0
+                    $_ = object.sentry
+
+                case 3:
+
+                    while ($bite != -1) {
+                        if ($start == $end) {
+                            return { start: $start, serialize }
+                        }
+                        $buffer[$start++] = ($_ >>> $bite * 8 & 0xff)
+                        $bite--
+                    }
+
+
+                    $step = 4
+
+                case 4:
+
+                    break
+
                 }
 
-
-                $step = 4
-
-            case 4:
-
-                break
-
+                return { start: $start, serialize: null }
             }
-
-            return { start: $start, serialize: null }
         }
-    }
+    } ()
 }

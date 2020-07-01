@@ -1,99 +1,103 @@
 module.exports = function ({ parsers }) {
-    parsers.inc.object = function (object = {}, $step = 0, $i = []) {
-        let $_, $bite
-        return function parse ($buffer, $start, $end) {
-            for (;;) {
-                switch ($step) {
-                case 0:
+    parsers.inc.object = function () {
 
-                    object = {
-                        array: [],
-                        sentry: 0
-                    }
 
-                    $step = 1
+        return function (object = {}, $step = 0, $i = []) {
+            let $_, $bite
+            return function parse ($buffer, $start, $end) {
+                for (;;) {
+                    switch ($step) {
+                    case 0:
 
-                case 1:
+                        object = {
+                            array: [],
+                            sentry: 0
+                        }
 
-                    $i[0] = 0
+                        $step = 1
 
-                case 2:
+                    case 1:
 
-                    if ($start == $end) {
-                        return { start: $start, parse }
-                    }
+                        $i[0] = 0
 
-                    if ($buffer[$start] != 0x0) {
-                        $step = 4
+                    case 2:
+
+                        if ($start == $end) {
+                            return { start: $start, parse }
+                        }
+
+                        if ($buffer[$start] != 0x0) {
+                            $step = 4
+                            continue
+                        }
+                        $start++
+
+                        $step = 3
+
+                    case 3:
+
+                        if ($start == $end) {
+                            return { start: $start, parse }
+                        }
+
+                        if ($buffer[$start] != 0x0) {
+                            $step = 4
+                            parse([ 0x0 ], 0, 1)
+                            continue
+                        }
+                        $start++
+
+                        $step = 8
                         continue
-                    }
-                    $start++
 
-                    $step = 3
+                    case 4:
 
-                case 3:
 
-                    if ($start == $end) {
-                        return { start: $start, parse }
-                    }
+                    case 5:
 
-                    if ($buffer[$start] != 0x0) {
-                        $step = 4
-                        parse([ 0x0 ], 0, 1)
+                        $_ = 0
+                        $step = 6
+                        $bite = 1
+
+                    case 6:
+
+                        while ($bite != -1) {
+                            if ($start == $end) {
+                                return { start: $start, object: null, parse }
+                            }
+                            $_ += ($buffer[$start++]) << $bite * 8 >>> 0
+                            $bite--
+                        }
+
+                        object.array[$i[0]] = $_
+
+
+                    case 7:
+
+                        $i[0]++
+                        $step = 2
                         continue
-                    }
-                    $start++
 
-                    $step = 8
-                    continue
+                    case 8:
 
-                case 4:
+                        $step = 9
 
+                    case 9:
 
-                case 5:
-
-                    $_ = 0
-                    $step = 6
-                    $bite = 1
-
-                case 6:
-
-                    while ($bite != -1) {
                         if ($start == $end) {
                             return { start: $start, object: null, parse }
                         }
-                        $_ += ($buffer[$start++]) << $bite * 8 >>> 0
-                        $bite--
+
+                        object.sentry = $buffer[$start++]
+
+
+                    case 10:
+
+                        return { start: $start, object: object, parse: null }
                     }
-
-                    object.array[$i[0]] = $_
-
-
-                case 7:
-
-                    $i[0]++
-                    $step = 2
-                    continue
-
-                case 8:
-
-                    $step = 9
-
-                case 9:
-
-                    if ($start == $end) {
-                        return { start: $start, object: null, parse }
-                    }
-
-                    object.sentry = $buffer[$start++]
-
-
-                case 10:
-
-                    return { start: $start, object: object, parse: null }
+                    break
                 }
-                break
             }
         }
-    }
+    } ()
 }

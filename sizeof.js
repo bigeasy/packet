@@ -1,9 +1,25 @@
+// Node.js API.
+const util = require('util')
+
+// Format source code maintaining indentation.
 const $ = require('programmatic')
 
-const snuggle = require('./snuggle')
+// Generate required modules and functions.
+const required = require('./required')
+
+// Join an array of strings separated by an empty line.
 const join = require('./join')
 
-function generate (packet) {
+// Join an array of strings with first line of subsequent element catenated to
+// last line of previous element.
+const snuggle = require('./snuggle')
+
+//
+
+// Generate sizeof function for a given packet definition.
+
+//
+function generate (packet, { require = null }) {
     const variables = {
         register: true
     }
@@ -123,21 +139,29 @@ function generate (packet) {
         register: '$_ = 0',
         i: '$i = []'
     }
+
     const lets = Object.keys(declarations)
                             .filter(key => variables[key])
                             .map(key => declarations[key])
 
+    const requires = required(require)
+
     return  $(`
-        sizeOf.${packet.name} = function (${packet.name}) {
-            let ${lets.join(', ')}
+        sizeOf.${packet.name} = function () {
+            `, requires, -1, `
 
-            `, source, `
+            return function (${packet.name}) {
+                let ${lets.join(', ')}
 
-            return $_
-        }
+                `, source, `
+
+                return $_
+            }
+        } ()
     `)
 }
 
-module.exports = function (packets) {
-    return join(packets.map(packet => generate(packet)))
+module.exports = function (packets, options = {}) {
+    console.log(options)
+    return join(packets.map(packet => generate(packet, options)))
 }

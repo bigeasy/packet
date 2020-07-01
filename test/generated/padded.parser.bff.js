@@ -1,45 +1,49 @@
 module.exports = function ({ parsers }) {
     parsers.bff.object = function () {
-        return function parse ($buffer, $start, $end) {
-            let $i = []
 
-            const object = {
-                array: [],
-                sentry: 0
-            }
 
-            if ($end - $start < 17) {
-                return parsers.inc.object(object, 1)($buffer, $start, $end)
-            }
+        return function () {
+            return function parse ($buffer, $start, $end) {
+                let $i = []
 
-            $i[0] = 0
-            for (;;) {
-                if ($end - $start < 2) {
-                    return parsers.inc.object(object, 2, $i)($buffer, $start, $end)
+                const object = {
+                    array: [],
+                    sentry: 0
                 }
 
-                if (
-                    $buffer[$start] == 0xd &&
-                    $buffer[$start + 1] == 0xa
-                ) {
-                    $start += 2
-                    break
+                if ($end - $start < 17) {
+                    return parsers.inc.object(object, 1)($buffer, $start, $end)
                 }
 
-                object.array[$i[0]] = ($buffer[$start++])
-                $i[0]++
+                $i[0] = 0
+                for (;;) {
+                    if ($end - $start < 2) {
+                        return parsers.inc.object(object, 2, $i)($buffer, $start, $end)
+                    }
 
-                if ($i[0] == 16) {
-                    break
+                    if (
+                        $buffer[$start] == 0xd &&
+                        $buffer[$start + 1] == 0xa
+                    ) {
+                        $start += 2
+                        break
+                    }
+
+                    object.array[$i[0]] = ($buffer[$start++])
+                    $i[0]++
+
+                    if ($i[0] == 16) {
+                        break
+                    }
                 }
+
+
+                $start += (16 - $i[0]) * 1 - 2
+
+                object.sentry = ($buffer[$start++])
+
+                return { start: $start, object: object, parse: null }
             }
-
-
-            $start += (16 - $i[0]) * 1 - 2
-
-            object.sentry = ($buffer[$start++])
-
-            return { start: $start, object: object, parse: null }
-        }
+        } ()
     }
 }
