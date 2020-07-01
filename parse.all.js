@@ -7,6 +7,9 @@ const $ = require('programmatic')
 const vivify = require('./vivify')
 const lookup = require('./lookup')
 
+// Generate inline function source.
+const inliner = require('./inliner')
+
 function expand (fields) {
     const expanded = []
     for (const field of fields) {
@@ -365,9 +368,10 @@ function generate (packet, bff) {
 
     function inline (path, field) {
         const after = field.after.length != 0 ? function () {
-            return join(field.after.map(inline => {
-                return `${path} = (${inline.source})(${path})`
-            }))
+            const inlined = inliner({
+                path, assignee: path, packet, variables, registers: [ path ], direction: 'parse'
+            })
+            return join(field.after.map(inlined))
         } () : null
         const source =  $(`
             `, map(dispatch, path, field.fields), `

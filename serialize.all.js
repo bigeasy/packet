@@ -5,6 +5,9 @@ const snuggle = require('./snuggle')
 const pack = require('./pack')
 const $ = require('programmatic')
 
+// Generate inline function source.
+const inliner = require('./inliner')
+
 function expand (fields) {
     const expanded = []
     for (const field of fields) {
@@ -128,7 +131,7 @@ function generate (packet, bff) {
 
     const $lookup = {}
 
-    function word (asignee, field) {
+    function word (assignee, field) {
         const bytes = field.bits / 8
         let bite = field.endianness == 'big' ? bytes - 1 : 0
         const stop = field.endianness == 'big' ? -1 : bytes
@@ -138,7 +141,7 @@ function generate (packet, bff) {
             ? { to: 'n', from: 'Number', shift: '>>' }
             : { to: '', from: '', shift: '>>>' }
         while (bite != stop) {
-            const shift = bite ? `${asignee} ${cast.shift} ${bite * 8}${cast.to}` : asignee
+            const shift = bite ? `${assignee} ${cast.shift} ${bite * 8}${cast.to}` : assignee
             shifts.push(`$buffer[$start++] = ${cast.from}(${shift} & 0xff${cast.to})`)
             bite += direction
         }
@@ -282,12 +285,15 @@ function generate (packet, bff) {
             $step++
             variables.stack = true
             const register = `$$[${++$$}]`
-            const inlined = field.before.map((inline, index) => {
-                return `${register} = (${inline.source})(${index == 0 ? path : register})`
+            const inlined = inliner({
+                path, packet, variables,
+                assignee: register,
+                registers: [ path, register ],
+                direction: 'serialize'
             })
             return {
                 path: register,
-                source: join(inlined)
+                source: join(field.before.map(inlined))
             }
         } () : { path: path, source: null }
         const source =  $(`

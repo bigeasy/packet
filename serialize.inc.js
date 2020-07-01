@@ -5,6 +5,9 @@ const snuggle = require('./snuggle')
 const pack = require('./pack')
 const lookup = require('./lookup')
 
+// Generate inline function source.
+const inliner = require('./inliner')
+
 function generate (packet) {
     let $step = 0, $i = -1, $$ = -1, surround = false
 
@@ -232,15 +235,18 @@ function generate (packet) {
         const before = field.before.length != 0 ? function () {
             variables.stack = true
             const register = `$$[${++$$}]`
-            const inlined = field.before.map((inline, index) => {
-                return `${register} = (${inline.source})(${index == 0 ? path : register})`
+            const inlined = inliner({
+                path, packet, variables,
+                assignee: register,
+                registers: [ path, register ],
+                direction: 'serialize'
             })
             return {
                 path: register,
                 source: $(`
                     case ${$step++}:
 
-                        `, join(inlined), `
+                        `, join(field.before.map(inlined)), `
                 `)
             }
         } () : { path: path, source: null }

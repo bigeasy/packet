@@ -7,10 +7,13 @@ const $ = require('programmatic')
 const vivify = require('./vivify')
 const lookup = require('./lookup')
 
+// Generate inline function source.
+const inliner = require('./inliner')
+
 function generate (packet) {
     let $step = 0, $i = -1, $sip = -1, iterate = false, _terminated = false, surround = false
 
-    const lets = { packet: true, step: true }
+    const variables = { packet: true, step: true }
     const $lookup = {}
 
     function integer (path, field) {
@@ -102,8 +105,8 @@ function generate (packet) {
 
     function lengthEncoded (path, packet) {
         surround = true
-        lets.i = true
-        lets.I = true
+        variables.i = true
+        variables.I = true
         $i++
         const i = `$i[${$i}]`
         const I = `$I[${$i}]`
@@ -141,7 +144,7 @@ function generate (packet) {
     // weird terminators.
     function terminated (path, field) {
         surround = true
-        lets.i = true
+        variables.i = true
         $i++
         const i = `$i[${$i}]`
         _terminated = true
@@ -220,7 +223,7 @@ function generate (packet) {
             if (conditional.parse.sip == null) {
                 return null
             }
-            lets.sip = true
+            variables.sip = true
             $sip++
             signature.push(`$sip[${$sip}]`)
             return join(parse.sip.map(field => dispatch(`$sip[${$sip}]`, field)))
@@ -290,7 +293,7 @@ function generate (packet) {
     // weird terminators.
     function fixed (path, field) {
         surround = true
-        lets.i = true
+        variables.i = true
         $i++
         const i = `$i[${$i}]`
         _terminated = true
@@ -400,9 +403,10 @@ function generate (packet) {
 
     function inline (path, field) {
         const after = field.after.length != 0 ? function () {
-            return join(field.after.map(inline => {
-                return `${path} = (${inline.source})(${path})`
-            }))
+            const inlined = inliner({
+                path, assignee: path, packet, variables, registers: [ path ], direction: 'parse'
+            })
+            return join(field.after.map(inlined))
         } () : null
         const source =  $(`
             `, map(dispatch, path, field.fields), `
@@ -499,7 +503,7 @@ function generate (packet) {
         sip: '$sip = []'
     }
     const signature = Object.keys(signatories)
-                            .filter(key => lets[key])
+                            .filter(key => variables[key])
                             .map(key => signatories[key])
     if (surround) {
         source = $(`

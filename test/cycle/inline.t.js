@@ -1,7 +1,8 @@
 require('proof')(0, prove)
 
 function prove (okay) {
-    require('./cycle')(okay, {
+    const cycle = require('./cycle')
+    cycle(okay, {
         name: 'inline/both',
         define: {
             object: {
@@ -11,7 +12,7 @@ function prove (okay) {
         },
         objects: [{ value: 1, sentry: 0xaa }]
     })
-    require('./cycle')(okay, {
+    cycle(okay, {
         name: 'inline/before',
         define: {
             object: {
@@ -21,7 +22,7 @@ function prove (okay) {
         },
         objects: [{ value: 1, sentry: 0xaa }]
     })
-    require('./cycle')(okay, {
+    cycle(okay, {
         name: 'inline/after',
         define: {
             object: {
@@ -31,11 +32,41 @@ function prove (okay) {
         },
         objects: [{ value: 1, sentry: 0xaa }]
     })
-    require('./cycle')(okay, {
+    cycle(okay, {
         name: 'inline/mirrored',
         define: {
             object: {
                 value: [[[ value => ~value ]], 32 ],
+                sentry: 8
+            }
+        },
+        objects: [{ value: 1, sentry: 0xaa }]
+    })
+    cycle(okay, {
+        name: 'inline/named',
+        define: {
+            object: {
+                value: [[[ function ({ $_, $, $path, $i, $direction }) {
+                    const assert = require('assert')
+                    if ($direction == 'serialize') {
+                        assert.deepEqual({ $_, $, $path, $i, $direction }, {
+                            $_: 1,
+                            $: { value: 1, sentry: 0xaa },
+                            $path: [ 'object', 'value' ],
+                            $i: [],
+                            $direction: 'serialize'
+                        })
+                    } else {
+                        assert.deepEqual({ $_, $, $path, $i, $direction }, {
+                            $_: 4294967294,
+                            $: { value: 4294967294, sentry: 0 },
+                            $path: [ 'object', 'value' ],
+                            $i: [],
+                            $direction: 'parse'
+                        })
+                    }
+                    return ~$_
+                } ]], 32 ],
                 sentry: 8
             }
         },
