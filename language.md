@@ -917,3 +917,120 @@ define ({
 ### References
 
 ### Checksums and Running Calcuations
+
+```javascript
+define({
+    packet: [{ hash: () => crypto.createHash('md5') }, {
+        body: [[[
+            ({ $buffer, $start, $end, hash }) => hash.update($buffer, $start, $end)
+        ]], {
+            value: 32,
+            string: [[ 8 ], 0x0 ]
+        }],
+        checksum: [[
+            ({ hash }) => hash.digest().toJSON().data
+        ], [[ 40 ], [ 8 ]], [
+            ({ value = 0, hash }) => {
+                assert.deepEqual(hash.digest(binary).toJSON().data, value)
+            }
+        ]]
+    }]
+}, {
+    require: {
+        assert: 'assert',
+        crypto: 'crypto'
+    }
+})
+```
+
+```javascript
+define({
+    packet: {
+        array: [ 32, [[{ hash: () => crypto.createHash('md5') }, {
+            body: [[[
+                ({ $buffer, $start, $end, hash }) => hash.update($buffer, $start, $end)
+            ]], {
+                value: 32,
+                string: [[ 8 ], 0x0 ]
+            }],
+            checksum: [[
+                ({ hash }) => toArray(hash.digest())
+            ], [[ 40 ], [ 8 ]], [
+                ({ value = 0, hash }) => {
+                    assert.deepEqual(toArray(hash.digest(binary)), value)
+                }
+            ]]
+        }]]
+    }
+}, {
+    require: {
+        assert: 'assert',
+        crypto: 'crypto',
+        toArray: (buffer) => buffer.toJSON().data
+    }
+})
+```
+
+```javascript
+define({
+    packet: [{ counter: () => [] }, {
+        header: {
+            type: 8,
+            length: [[
+                ({ $, counter }) => {
+                    return counter[0] = $sizeof.packet($) - $offsetof.packet($, 'body')
+                }
+            ], 16, [
+                ({ $_, counter }) => {
+                    return counter[0] = $_
+                }
+            ]]
+        },
+        body: [[[
+            ({ $start, $end, counter }) => counter[0] -= $end - $start
+        ]], {
+            value: 32,
+            string: [[ 8 ], 0x0 ]
+            variable: [
+                ({ counter }) => counter[0] == 4, 32
+                ({ counter }) => counter[0] == 2, 16
+                8
+            ]
+        }],
+    }]
+})
+```
+
+```javascript
+define({
+    packet: [{ counter: () => [] }, {
+        header: {
+            type: 8,
+            length: [[
+                ({ $, counter }) => {
+                    return counter[0] = $sizeof.packet($) - $offsetof.packet($, 'body')
+                }
+            ], 16, [
+                ({ $_, counter }) => {
+                    return counter[0] = $_
+                }
+            ]]
+        },
+        body: [[[
+            ({ $start, $end, counter }) => counter[0] -= $end - $start
+        ]], {
+            value: 32,
+            string: [[ 8 ], 0x0 ]
+            variable: [
+                ({ counter }) => counter[0] == 4, 32
+                ({ counter }) => counter[0] == 2, 16
+                8
+            ]
+        }],
+    }]
+}, {
+    parameters: {
+        counter: []
+    }
+})
+```
