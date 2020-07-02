@@ -133,7 +133,7 @@ require('proof')(4, okay => {
                     otherwise: false,
                     fields: [{
                         type: 'literal',
-                        vivify: 'number',
+                        vivify: 'descend',
                         dotted: '',
                         fixed: true,
                         bits: 6,
@@ -321,7 +321,7 @@ require('proof')(4, okay => {
                     otherwise: false,
                     fields: [{
                         type: 'literal',
-                        vivify: 'number',
+                        vivify: 'descend',
                         dotted: '',
                         fixed: true,
                         bits: 6,

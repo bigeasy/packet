@@ -34,14 +34,18 @@ function expand (fields) {
         switch (field.type) {
         case 'lengthEncoded':
             field.fields = expand(field.fields)
-            expanded.push({ type: 'lengthEncoding', body: field })
+            expanded.push({ type: 'lengthEncoding', body: field, vivify: null })
             expanded.push(field)
             break
         case 'terminated':
             field.fields = [{
-                type: 'terminator', body: field, dotted: ''
+                type: 'terminator', body: field, dotted: '', vivify: null
             }, {
-                type: 'repeated', body: field, fields: expand(field.fields), dotted: ''
+                type: 'repeated',
+                body: field,
+                fields: expand(field.fields),
+                dotted: '',
+                vivify: 'array'
             }]
             expanded.push(field)
             break
@@ -91,7 +95,9 @@ function generate (packet, { require, bff }) {
                 for (const when of field.cases) {
                     when.fields = checkpoints(path, when.fields, index)
                 }
-                checked.push(checkpoint = { type: 'checkpoint', lengths: [ 0 ] })
+                checked.push(checkpoint = {
+                    type: 'checkpoint', lengths: [ 0 ], vivify: null
+                })
                 break
             case 'conditional':
                 checked.push(field)
@@ -103,12 +109,16 @@ function generate (packet, { require, bff }) {
                 for (const condition of field.parse.conditions) {
                     condition.fields = checkpoints(path, condition.fields, index)
                 }
-                checked.push(checkpoint = { type: 'checkpoint', lengths: [ 0 ] })
+                checked.push(checkpoint = {
+                    type: 'checkpoint', lengths: [ 0 ], vivify: null
+                })
                 break
             case 'lengthEncoding':
                 checked.push(field)
                 checkpoint.lengths[0] += field.body.encoding[0].bits / 8
-                checked.push(checkpoint = { type: 'checkpoint', lengths: [ 0 ] })
+                checked.push(checkpoint = {
+                    type: 'checkpoint', lengths: [ 0 ], vivify: null
+                })
                 break
             case 'lengthEncoded':
                 checked.push(field)
@@ -119,7 +129,9 @@ function generate (packet, { require, bff }) {
                     checkpoint.lengths.push(`${field.fields[0].bits / 8} * $I[${index}]`)
                 } else {
                     field.fields = checkpoints(path + `${field.dotted}[$i[${index}]]`, field.fields, index + 1)
-                    checked.push(checkpoint = { type: 'checkpoint', lengths: [ 0 ] })
+                    checked.push(checkpoint = {
+                        type: 'checkpoint', lengths: [ 0 ], vivify: null
+                    })
                 }
                 break
             case 'terminator':
@@ -136,7 +148,9 @@ function generate (packet, { require, bff }) {
             case 'terminated':
                 checked.push(field)
                 field.fields = checkpoints(path + `${field.dotted}[$i[${index}]]`, field.fields, index + 1)
-                checked.push(checkpoint = { type: 'checkpoint', lengths: [ 0 ] })
+                checked.push(checkpoint = {
+                    type: 'checkpoint', lengths: [ 0 ], vivify: null
+                })
                 break
             case 'structure':
                 checked.push(field)
@@ -146,7 +160,9 @@ function generate (packet, { require, bff }) {
                     // TODO Could start from the nested checkpoint since we are
                     // are not actually looping for the structure.
                     field.fields = checkpoints(path + field.dotted, field.fields, index)
-                    checked.push(checkpoint = { type: 'checkpoint', lengths: [ 0 ] })
+                    checked.push(checkpoint = {
+                        type: 'checkpoint', lengths: [ 0 ], vivify: null
+                    })
                 }
                 break
             default:

@@ -30,7 +30,7 @@ require('proof')(1, okay => {
                 dotted: '.one',
                 bits: 17,
                 fixed: true,
-                vivify: 'number',
+                vivify: 'descend',
                 before: { repeat: 1, value: 'deaf', bits: 16 },
                 fields: [{
                     type: 'integer',

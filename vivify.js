@@ -10,13 +10,14 @@ function structure (path, field, assignment = ' = ') {
         case 'number':
         case 'variant':
             return `${(path + field.dotted).split('.').pop()}: 0`
+        case 'descend':
+            return vivify(path + field.dotted, field.fields.filter(field => {
+                return field.vivify != null
+            }).pop())
         default:
             return null
         }
     }
-    const object = field.type == 'structure'
-        ? field
-        : field.fields[field.fields.length - 1]
     const properties = field.fields.map(field => vivify(path, field))
                                    .filter(field => !! field)
     if (properties.length == 0) {

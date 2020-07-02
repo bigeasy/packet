@@ -56,7 +56,7 @@ require('proof')(4, okay => {
                     },
                     fields: [{
                         type: 'literal',
-                        vivify: 'number',
+                        vivify: 'descend',
                         dotted: '',
                         fixed: true,
                         bits: 24,
@@ -76,7 +76,7 @@ require('proof')(4, okay => {
                     test: null,
                     fields: [{
                         type: 'literal',
-                        vivify: 'number',
+                        vivify: 'descend',
                         dotted: '',
                         fixed: true,
                         bits: 32,
@@ -456,7 +456,7 @@ require('proof')(4, okay => {
                         },
                         fields: [{
                             type: 'literal',
-                            vivify: 'number',
+                            vivify: 'descend',
                             dotted: '',
                             fixed: true,
                             bits: 6,
@@ -561,7 +561,7 @@ require('proof')(4, okay => {
                         },
                         fields: [{
                             type: 'literal',
-                            vivify: 'number',
+                            vivify: 'descend',
                             dotted: '',
                             fixed: true,
                             bits: 6,

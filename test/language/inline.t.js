@@ -11,7 +11,7 @@ require('proof')(2, okay => {
         dotted: '',
         fields: [{
             type: 'inline',
-            vivify: 'number',
+            vivify: 'descend',
             name: 'value',
             dotted: '.value',
             fixed: true,
@@ -47,7 +47,7 @@ require('proof')(2, okay => {
         dotted: '',
         fields: [{
             type: 'inline',
-            vivify: 'number',
+            vivify: 'descend',
             name: 'value',
             dotted: '.value',
             fixed: true,

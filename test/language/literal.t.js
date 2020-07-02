@@ -28,7 +28,7 @@ require('proof')(2, okay => {
           {
             type: 'literal',
             dotted: '.before',
-            vivify: 'number',
+            vivify: 'descend',
             fixed: true,
             bits: 4,
             before: { repeat: 1, value: '3', bits: 2 },
@@ -49,7 +49,7 @@ require('proof')(2, okay => {
           {
             type: 'literal',
             dotted: '.after',
-            vivify: 'number',
+            vivify: 'descend',
             fixed: true,
             bits: 4,
             before: { repeat: 0, value: '', bits: 0 },
@@ -81,7 +81,7 @@ require('proof')(2, okay => {
         dotted: '',
         fields: [{
             type: 'literal',
-            vivify: 'number',
+            vivify: 'descend',
             dotted: '',
             fixed: true,
             name: 'value',

@@ -33,13 +33,15 @@ function expand (fields) {
         switch (field.type) {
         case 'lengthEncoded':
             field.fields = expand(field.fields)
-            expanded.push({ type: 'lengthEncoding', body: field, dotted: field.dotted })
+            expanded.push({
+                type: 'lengthEncoding', body: field, dotted: field.dotted, vivify: null
+            })
             expanded.push(field)
             break
         case 'terminated':
             field.fields = expand(field.fields)
             expanded.push(field)
-            expanded.push({ type: 'terminator', body: field })
+            expanded.push({ type: 'terminator', body: field, vivify: null })
             break
         case 'fixed':
         case 'structure':
@@ -68,7 +70,7 @@ function expand (fields) {
 
 function checkpoints (path, fields, index = 0) {
     let checkpoint
-    const checked = [ checkpoint = { type: 'checkpoint', lengths: [ 0 ] } ]
+    const checked = [ checkpoint = { type: 'checkpoint', lengths: [ 0 ], vivify: null } ]
     for (const field of fields) {
         switch (field.type) {
         case 'literal':
@@ -83,7 +85,9 @@ function checkpoints (path, fields, index = 0) {
                 checkpoint.lengths.push(`${field.fields[0].bits / 8} * ${path + field.dotted}.length`)
             } else {
                 field.fields = checkpoints(path + `${field.dotted}[$i[${index}]]`, field.fields, index + 1)
-                checked.push(checkpoint = { type: 'checkpoint', lengths: [ 0 ] })
+                checked.push(checkpoint = {
+                    type: 'checkpoint', lengths: [ 0 ], vivify: null
+                })
             }
             break
         case 'terminator':
@@ -95,14 +99,18 @@ function checkpoints (path, fields, index = 0) {
             for (const when of field.cases) {
                 when.fields = checkpoints(path, when.fields, index)
             }
-            checked.push(checkpoint = { type: 'checkpoint', lengths: [ 0 ] })
+            checked.push(checkpoint = {
+                type: 'checkpoint', lengths: [ 0 ], vivify: null
+            })
             break
         case 'conditional':
             checked.push(field)
             for (const condition of field.serialize.conditions) {
                 condition.fields = checkpoints(path, condition.fields, index)
             }
-            checked.push(checkpoint = { type: 'checkpoint', lengths: [ 0 ] })
+            checked.push(checkpoint = {
+                type: 'checkpoint', lengths: [ 0 ], vivify: null
+            })
             break
         case 'lengthEncoding':
             checked.push(field)
@@ -115,7 +123,9 @@ function checkpoints (path, fields, index = 0) {
                 checkpoint.lengths.push(`${field.fields[0].bits / 8} * ${path + field.dotted}.length`)
             }  else {
                 field.fields = checkpoints(path + `${field.dotted}[$i[${index}]]`, field.fields, index + 1)
-                checked.push(checkpoint = { type: 'checkpoint', lengths: [ 0 ] })
+                checked.push(checkpoint = {
+                    type: 'checkpoint', lengths: [ 0 ], vivify: null
+                })
             }
             break
         case 'structure':

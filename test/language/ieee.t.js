@@ -8,7 +8,7 @@ require('proof')(1, okay => {
         bits: 64,
         fields: [{
             type: 'inline',
-            vivify: 'array',
+            vivify: 'descend',
             dotted: '.value',
             bits: 64,
             fixed: true,

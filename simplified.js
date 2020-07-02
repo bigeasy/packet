@@ -10,6 +10,15 @@ const ieee = require('./ieee')
 // Inline function argument parser.
 const args = require('./arguments')
 
+// Determine the vivified literal of the given field, descending into the actual
+// field type for ethereal fields like inlines and literals.
+function vivified (field) {
+    if (field.vivify == 'descend') {
+        return vivified(field.fields[0])
+    }
+    return field.vivify
+}
+
 function trim (source) {
     const $ = /\n(.*)}$/.exec(source)
     if ($ != null) {
@@ -173,7 +182,7 @@ function map (definitions, packet, extra = {}, packed = false) {
                     return [{
                         type: 'literal',
                         dotted: '',
-                        vivify: fields[0].vivify,
+                        vivify: 'descend',
                         fixed: fields[0].fixed,
                         bits: fields[0].fixed
                             ? fields[0].bits + before.repeat * before.bits
@@ -256,7 +265,7 @@ function map (definitions, packet, extra = {}, packed = false) {
                         type: 'inline',
                         // TODO Test with a structure member.
                         // TODO Test with an array member.
-                        vivify: fields[0].vivify,
+                        vivify: 'descend',
                         dotted: '',
                         bits: fields[0].bits,
                         fixed: fields[0].fixed,
@@ -300,7 +309,7 @@ function map (definitions, packet, extra = {}, packed = false) {
                         type: 'inline',
                         // TODO Test with a structure member.
                         // TODO Test with an array member.
-                        vivify: fields[0].vivify,
+                        vivify: 'descend',
                         dotted: '',
                         bits: fields[0].bits,
                         fixed: fields[0].fixed,
@@ -352,7 +361,7 @@ function map (definitions, packet, extra = {}, packed = false) {
                         return value != -1 && value == when.fields[0].bits ? value : -1
                     }, cases[0].fields[0].bits)
                     const vivify = cases.slice(1).reduce((vivify, when) => {
-                        return vivify == 'variant' || vivify == when.fields[0].vivify
+                        return vivify == 'variant' || vivify == vivified(when.fields[0])
                             ? vivify
                             : 'variant'
                     }, cases[0].fields[0].vivify)
@@ -519,7 +528,7 @@ function map (definitions, packet, extra = {}, packed = false) {
                         return { sip: sip.length ? sip : null, conditions }
                     } ()
                     const vivify = parse.conditions.slice(1).reduce((vivify, condition) => {
-                        return vivify == 'variant' || vivify == condition.fields[0].vivify
+                        return vivify == 'variant' || vivify == vivified(condition.fields[0])
                             ? vivify
                             : 'variant'
                     }, parse.conditions[0].fields[0].vivify)

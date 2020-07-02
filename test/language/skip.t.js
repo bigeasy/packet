@@ -9,7 +9,7 @@ require('proof')(1, okay => {
         dotted: '',
         fields: [{
             type: 'literal',
-            vivify: 'number',
+            vivify: 'descend',
             name: 'value',
             dotted: '.value',
             fixed: true,
