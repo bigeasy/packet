@@ -1,3 +1,6 @@
+// Node.js API.
+const util = require('util')
+
 // Format source code maintaining indentation.
 const $ = require('programmatic')
 
@@ -9,7 +12,9 @@ const $ = require('programmatic')
 // generator.
 
 //
-module.exports = function ({ path, assignee, packet, variables, registers, direction }) {
+module.exports = function ({
+    path, assignee, packet, variables, accumulators, registers, direction
+}) {
     return function (inline, index) {
         const $_ = registers[0]
         if (registers.length != 1) {
@@ -30,6 +35,8 @@ module.exports = function ({ path, assignee, packet, variables, registers, direc
                     properties[property] = require('util').inspect(path.split('.'))
                 } else if (property == packet.name || property == '$') {
                     properties[property] = packet.name
+                } else if (accumulators[property]) {
+                    properties[property] = `$accumulator[${util.inspect(property)}]`
                 }
             }
             const body = Object.keys(properties).map(property => {

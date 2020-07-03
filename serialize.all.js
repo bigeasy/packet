@@ -9,6 +9,9 @@ const lookup = require('./lookup')
 // Format source code maintaining indentation.
 const $ = require('programmatic')
 
+// Generate accumulator declaration source.
+const accumulatorer = require('./accumulator')
+
 // Generate inline function source.
 const inliner = require('./inliner')
 
@@ -157,6 +160,7 @@ function generate (packet, { require = null, bff }) {
 
     const variables = { packet: true, step: true }
     const constants = { assert: false }
+    const accumulators = {}
 
     const $lookup = {}
 
@@ -317,6 +321,7 @@ function generate (packet, { require = null, bff }) {
             const inlined = inliner({
                 path, packet, variables,
                 assignee: register,
+                accumulators: accumulators,
                 registers: [ path, register ],
                 direction: 'serialize'
             })
@@ -390,6 +395,15 @@ function generate (packet, { require = null, bff }) {
         `)
     }
 
+    function accumulator (path, field) {
+        variables.accumulator = true
+        return $(`
+            `, accumulatorer(accumulators, field), `
+
+            `, map(dispatch, path + field.dotted, field.fields), `
+        `)
+    }
+
     function checkpoint (checkpoint) {
         if (checkpoint.lengths.length == 0) {
             return null
@@ -416,6 +430,8 @@ function generate (packet, { require = null, bff }) {
             return join(field.fields.map(field => dispatch(path + field.dotted, field)))
         case 'checkpoint':
             return checkpoint(field)
+        case 'accumulator':
+            return accumulator(path, field)
         case 'switch':
             return switched(path, field)
         case 'conditional':
@@ -450,7 +466,9 @@ function generate (packet, { require = null, bff }) {
         i: '$i = []',
         stack: '$$ = []',
         sip: '$sip = []',
-        assert: `assert = require('assert')`
+        // TODO Going to want to prefix with `$`.
+        assert: `assert = require('assert')`,
+        accumulator: '$accumulator = {}'
     }
     const consts = Object.keys(declarations)
                          .filter(key => constants[key])

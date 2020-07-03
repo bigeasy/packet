@@ -18,6 +18,9 @@ function structure (path, field, assignment = ' = ') {
             return null
         }
     }
+    while (field.vivify == 'descend') {
+        field = field.fields[field.fields.length - 1]
+    }
     const properties = field.fields.map(field => vivify(path, field))
                                    .filter(field => !! field)
     if (properties.length == 0) {

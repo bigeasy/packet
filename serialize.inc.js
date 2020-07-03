@@ -7,6 +7,9 @@ const pack = require('./pack')
 // Maintain a set of lookup constants.
 const lookup = require('./lookup')
 
+// Generate accumulator declaration source.
+const accumulatorer = require('./accumulator')
+
 // Generate inline function source.
 const inliner = require('./inliner')
 
@@ -23,7 +26,7 @@ const join = require('./join')
 const snuggle = require('./snuggle')
 
 function generate (packet, { require = null }) {
-    let $step = 0, $i = -1, $$ = -1, surround = false
+    let $step = 0, $i = -1, $$ = -1, accumulators = {}, surround = false
 
     const variables = { packet: true, step: true }
     const constants = { assert: false }
@@ -250,7 +253,7 @@ function generate (packet, { require = null }) {
             variables.stack = true
             const register = `$$[${++$$}]`
             const inlined = inliner({
-                path, packet, variables,
+                path, packet, variables, accumulators,
                 assignee: register,
                 registers: [ path, register ],
                 direction: 'serialize'
@@ -363,6 +366,17 @@ function generate (packet, { require = null }) {
         `)
     }
 
+    function accumulator (path, field) {
+        variables.accumulator = true
+        return $(`
+            case ${$step++}:
+
+                `, accumulatorer(accumulators, field), `
+
+            `, map(dispatch, path + field.dotted, field.fields), `
+        `)
+    }
+
     function dispatch (path, packet) {
         switch (packet.type) {
         case 'structure':
@@ -372,6 +386,8 @@ function generate (packet, { require = null }) {
                     `, source, `
                 `)
             }))
+        case 'accumulator':
+            return accumulator(path, packet)
         case 'switch':
             return switched(path, packet)
         case 'conditional':
@@ -421,7 +437,8 @@ function generate (packet, { require = null }) {
         packet: `${packet.name}`,
         step: '$step = 0',
         i: '$i = []',
-        stack: '$$ = []'
+        stack: '$$ = []',
+        accumulator: '$accumulator = {}'
     }
 
     const declarations = {

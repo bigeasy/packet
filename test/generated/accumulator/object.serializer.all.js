@@ -8,9 +8,13 @@ module.exports = function ({ serializers }) {
 
                 $accumulator['counter'] = [ 0 ]
 
-                $$[0] = (function ($_) {
+                $$[0] = (function ({ $_, counter }) {
+                    assert.deepEqual(counter, [ 0 ])
                     return $_
-                })(object)
+                })({
+                    $_: object,
+                    counter: $accumulator['counter']
+                })
 
                 $buffer[$start++] = ($$[0].value.first & 0xff)
 

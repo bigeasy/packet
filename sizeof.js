@@ -124,6 +124,7 @@ function generate (packet, { require = null }) {
                 `)
             }
             break
+        case 'accumulator':
         case 'structure': {
                 if (field.fixed) {
                     return `$_ += ${field.bits / 8}`
@@ -162,6 +163,5 @@ function generate (packet, { require = null }) {
 }
 
 module.exports = function (packets, options = {}) {
-    console.log(options)
     return join(packets.map(packet => generate(packet, options)))
 }

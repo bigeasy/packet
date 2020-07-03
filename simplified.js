@@ -93,7 +93,6 @@ function integer (value, packed, extra = {}) {
 }
 
 function map (definitions, packet, extra = {}, packed = false) {
-    const definition = { parse: null, serialize: null }
     switch (typeof packet) {
     case 'string': {
             return [{ ...extra, ...definitions[packet] }]
@@ -615,6 +614,48 @@ function map (definitions, packet, extra = {}, packed = false) {
                         },
                         ...extra
                     }]
+                // *Variables*:
+                } else if (
+                    packet.length == 2 &&
+                    typeof packet[0] == 'object' &&
+                    ! Array.isArray(packet[0][0])
+                ) {
+                    const accumulators = Object.keys(packet[0]).map(name => {
+                        const accumulator = packet[0][name]
+                        switch (typeof accumulator) {
+                        case 'function':
+                            return {
+                                type: 'function',
+                                name: name,
+                                ...args(accumulator)
+                            }
+                        default:
+                            if (accumulator instanceof RegExp) {
+                                return {
+                                    type: 'regex',
+                                    name: name,
+                                    source: accumulator.toString()
+                                }
+                            }
+                            return {
+                                type: 'object',
+                                name: name,
+                                value: accumulator
+                            }
+                        }
+                    })
+                    const fields = map(definitions, packet[1], {})
+                    return [{
+                        type: 'accumulator',
+                        dotted: '',
+                        vivify: 'descend',
+                        bits: fields[0].bits,
+                        fixed: fields[0].fixed,
+                        accumulators: accumulators,
+                        fields: fields,
+                        ...extra
+                    }]
+                    throw new Error('variables')
                 } else {
                     throw new Error('unknown')
                 }
@@ -668,7 +709,7 @@ function map (definitions, packet, extra = {}, packed = false) {
             }]
         }
     }
-    return [ definition ]
+    throw new Error
 }
 
 module.exports = function (packets) {

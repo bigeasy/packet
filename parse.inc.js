@@ -13,6 +13,9 @@ const unpack = require('./unpack')
 // Maintain a set of lookup constants.
 const lookup = require('./lookup')
 
+// Generate accumulator declaration source.
+const accumulatorer = require('./accumulator')
+
 // Generate inline function source.
 const inliner = require('./inliner')
 
@@ -29,7 +32,7 @@ const join = require('./join')
 const snuggle = require('./snuggle')
 
 function generate (packet, { require = null }) {
-    let $step = 0, $i = -1, $sip = -1, iterate = false, _terminated = false, surround = false
+    let $step = 0, $i = -1, $sip = -1, accumulators = {}, surround = false
 
     const variables = { packet: true, step: true }
     const $lookup = {}
@@ -165,7 +168,6 @@ function generate (packet, { require = null }) {
         variables.i = true
         $i++
         const i = `$i[${$i}]`
-        _terminated = true
         const init = $step
         let sip = ++$step
         const redo = $step
@@ -314,7 +316,6 @@ function generate (packet, { require = null }) {
         variables.i = true
         $i++
         const i = `$i[${$i}]`
-        _terminated = true
         const init = $step
         let sip = ++$step
         const redo = $step
@@ -422,7 +423,10 @@ function generate (packet, { require = null }) {
     function inline (path, field) {
         const after = field.after.length != 0 ? function () {
             const inlined = inliner({
-                path, assignee: path, packet, variables, registers: [ path ], direction: 'parse'
+                path, packet, variables, accumulators,
+                assignee: path,
+                registers: [ path ],
+                direction: 'parse'
             })
             return join(field.after.map(inlined))
         } () : null
@@ -467,10 +471,23 @@ function generate (packet, { require = null }) {
         `)
     }
 
+    function accumulator (path, field) {
+        variables.accumulator = true
+        return $(`
+            case ${$step++}:
+
+                `, accumulatorer(accumulators, field), `
+
+            `, map(dispatch, path + field.dotted, field.fields), `
+        `)
+    }
+
     function dispatch (path, packet, depth) {
         switch (packet.type) {
         case 'structure':
             return map(dispatch, path, packet.fields)
+        case 'accumulator':
+            return accumulator(path, packet)
         case 'switch':
             return switched(path, packet)
         case 'conditional':
@@ -518,11 +535,13 @@ function generate (packet, { require = null }) {
         step: '$step = 0',
         i: '$i = []',
         I: '$I = []',
-        sip: '$sip = []'
+        sip: '$sip = []',
+        accumulator: '$accumulator = []'
     }
     const signature = Object.keys(signatories)
                             .filter(key => variables[key])
                             .map(key => signatories[key])
+
     if (surround) {
         source = $(`
             for (;;) {

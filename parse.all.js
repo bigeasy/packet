@@ -13,6 +13,9 @@ const unpack = require('./unpack')
 // Maintain a set of lookup constants.
 const lookup = require('./lookup')
 
+// Generate accumulator declaration source.
+const accumulatorer = require('./accumulator')
+
 // Generate inline function source.
 const inliner = require('./inliner')
 
@@ -75,7 +78,7 @@ function expand (fields) {
 }
 
 function generate (packet, { require, bff }) {
-    let $i = -1, $I = -1, $sip = -1, $step = 1
+    let $i = -1, $I = -1, $sip = -1, $step = 1, accumulators = {}
 
     const variables = { packet: true, step: true }
 
@@ -403,7 +406,7 @@ function generate (packet, { require, bff }) {
     function inline (path, field) {
         const after = field.after.length != 0 ? function () {
             const inlined = inliner({
-                path, assignee: path, packet, variables, registers: [ path ], direction: 'parse'
+                path, assignee: path, accumulators, packet, variables, registers: [ path ], direction: 'parse'
             })
             return join(field.after.map(inlined))
         } () : null
@@ -482,6 +485,15 @@ function generate (packet, { require, bff }) {
         `)
     }
 
+    function accumulator (path, field) {
+        variables.accumulator = true
+        return $(`
+            `, accumulatorer(accumulators, field), `
+
+            `, map(dispatch, path + field.dotted, field.fields), `
+        `)
+    }
+
     function checkpoint (checkpoint, depth) {
         if (checkpoint.lengths.length == 0) {
             return null
@@ -510,6 +522,8 @@ function generate (packet, { require, bff }) {
             }
         case 'checkpoint':
             return checkpoint(field)
+        case 'accumulator':
+            return accumulator(path, field)
         case 'switch':
             return switched(path, field)
         case 'inline':
@@ -547,7 +561,8 @@ function generate (packet, { require, bff }) {
         register: '$_',
         i: '$i = []',
         I: '$I = []',
-        sip: '$sip = []'
+        sip: '$sip = []',
+        accumulator: '$accumulator = {}'
     }
     const lets = Object.keys(declarations)
                             .filter(key => variables[key])
@@ -569,7 +584,7 @@ function generate (packet, { require, bff }) {
                     return function parse ($buffer, $start, $end) {
                         `, lets.length ? `let ${lets.join(', ')}` : null, -1, `
 
-                        `, vivify.structure(`const ${packet.name}`, packet), `
+                        `, vivify.structure(`let ${packet.name}`, packet), `
 
                         `, source, `
 
@@ -589,7 +604,7 @@ function generate (packet, { require, bff }) {
             return function ($buffer, $start) {
                 `, lets.length ? `let ${lets.join(', ')}` : null, -1, `
 
-                `, 'const ' + vivify.structure(packet.name, packet), `
+                `, 'let ' + vivify.structure(packet.name, packet), `
 
                 `, source, `
 
