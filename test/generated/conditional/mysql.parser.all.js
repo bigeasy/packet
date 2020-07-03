@@ -5,7 +5,7 @@ module.exports = function ({ parsers }) {
         return function ($buffer, $start) {
             let $sip = []
 
-            const object = {
+            let object = {
                 value: 0,
                 sentry: 0
             }

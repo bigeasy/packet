@@ -6,7 +6,7 @@ module.exports = function ({ parsers }) {
             return function parse ($buffer, $start, $end) {
                 let $i = []
 
-                const object = {
+                let object = {
                     array: [],
                     sentry: 0
                 }

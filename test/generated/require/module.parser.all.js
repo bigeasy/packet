@@ -3,7 +3,7 @@ module.exports = function ({ parsers }) {
         const twiddle = require('../../../test/cycle/twiddle')
 
         return function ($buffer, $start) {
-            const object = {
+            let object = {
                 value: 0,
                 sentry: 0
             }

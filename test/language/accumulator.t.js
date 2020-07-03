@@ -8,6 +8,10 @@ require('proof')(3, okay => {
         }]
     }), [{
         type: 'accumulator',
+        dotted: '',
+        vivify: 'descend',
+        bits: 32,
+        fixed: true,
         accumulators: [ { type: 'object', name: 'counter', value: [ 0 ] } ],
         fields: [{
             type: 'structure',
@@ -36,6 +40,10 @@ require('proof')(3, okay => {
         }]
     }), [{
         type: 'accumulator',
+        dotted: '',
+        vivify: 'descend',
+        bits: 32,
+        fixed: true,
         accumulators: [{ type: 'regex', name: 'regex', source: '/^\\//g' }],
         fields: [{
             type: 'structure',
@@ -64,6 +72,10 @@ require('proof')(3, okay => {
         }]
     }), [{
         type: 'accumulator',
+        dotted: '',
+        vivify: 'descend',
+        bits: 32,
+        fixed: true,
         accumulators: [{
             type: 'function',
             name: 'f',

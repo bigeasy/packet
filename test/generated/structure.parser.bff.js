@@ -4,7 +4,7 @@ module.exports = function ({ parsers }) {
 
         return function () {
             return function parse ($buffer, $start, $end) {
-                const object = {
+                let object = {
                     value: {
                         first: 0,
                         second: 0

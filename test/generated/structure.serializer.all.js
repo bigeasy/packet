@@ -1,22 +1,14 @@
 module.exports = function ({ serializers }) {
     serializers.all.object = function () {
-        const assert = require('assert')
+
 
         return function (object) {
             return function ($buffer, $start, $end) {
-                let $$ = [], $accumulator = {}
+                $buffer[$start++] = (object.value.first & 0xff)
 
-                $accumulator['counter'] = [ 0 ]
+                $buffer[$start++] = (object.value.second & 0xff)
 
-                $$[0] = (function ($_) {
-                    return $_
-                })(object)
-
-                $buffer[$start++] = ($$[0].value.first & 0xff)
-
-                $buffer[$start++] = ($$[0].value.second & 0xff)
-
-                $buffer[$start++] = ($$[0].sentry & 0xff)
+                $buffer[$start++] = (object.sentry & 0xff)
 
                 return { start: $start, serialize: null }
             }
