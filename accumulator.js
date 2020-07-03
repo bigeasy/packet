@@ -13,6 +13,11 @@ module.exports = function (accumulators, field, parameterize = false) {
                 accumulators[name] = true
                 return `$accumulator[${util.inspect(name)}] = ${source}`
             }
+        case 'function': {
+                const { name, source } = accumulator
+                accumulators[name] = true
+                return `$accumulator[${util.inspect(name)}] = (${source})()`
+            }
         }
     }).join('\n')
 }
