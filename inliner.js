@@ -23,12 +23,24 @@ module.exports = function ({
         }
         const $_ = registers[0]
         if (inline.properties.length == 0) {
-            is.transformational = true
-            inlined.push(`${assignee} = (${inline.source})(${$_})`)
+            if (inline.defaulted[0] == 0) {
+                is.assertion = true
+            }
+            if (is.assertion) {
+                inlined.push(`; (${inline.source})(${$_})`)
+            } else {
+                if (registers.length != 1) {
+                    registers.shift()
+                }
+                inlined.push(`${assignee} = (${inline.source})(${$_})`)
+            }
         } else {
-            const properties = {}
+            const properties = {}, name = path.split('.').pop()
             for (const property of inline.properties) {
-                if (property == '$_' || property == path.split('.').pop()) {
+                if (property == '$_' || property == name) {
+                    if (inline.defaulted.includes(property)) {
+                        is.assertion = true
+                    }
                     properties[property] = $_
                 } else if (property == '$direction') {
                     properties[property] = util.inspect(direction)
@@ -66,5 +78,5 @@ module.exports = function ({
             }
         }
     }
-    return { inlined, buffered, accumulated }
+    return { inlined, buffered, accumulated, register: registers[0] }
 }

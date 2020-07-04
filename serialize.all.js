@@ -330,16 +330,19 @@ function generate (packet, { require = null, bff }) {
                 return { path: path, source: null }
             }
             return {
-                path: register,
+                path: inline.register,
                 source: join(inline.inlined)
             }
         } () : { path: path, source: null }
+        if (before.path[0] != '$') {
+            $$--
+        }
         const source =  $(`
             `, before.source, -1, `
 
             `, map(dispatch, before.path, field.fields), `
         `)
-        if (field.before) {
+        if (before.path[0] == '$') {
             $$--
         }
         return source

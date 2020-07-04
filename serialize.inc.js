@@ -264,7 +264,7 @@ function generate (packet, { require = null }) {
                 return { path: path, source: null }
             }
             return {
-                path: register,
+                path: inline.register,
                 source: $(`
                     case ${$step++}:
 
@@ -272,12 +272,15 @@ function generate (packet, { require = null }) {
                 `)
             }
         } () : { path: path, source: null }
+        if (before.path[0] != '$') {
+            $$--
+        }
         const source =  $(`
             `, before.source, -1, `
 
             `, map(dispatch, before.path, field.fields), `
         `)
-        if (field.before) {
+        if (before.path[0] == '$') {
             $$--
         }
         return source
