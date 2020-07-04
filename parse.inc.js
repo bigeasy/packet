@@ -35,6 +35,7 @@ function generate (packet, { require = null }) {
     let $step = 0, $i = -1, $sip = -1, accumulators = {}, surround = false
 
     const variables = { packet: true, step: true }
+    const accumulate = { accumulator: {}, variables, packet, direction: 'parse' }
     const $lookup = {}
 
     function integer (path, field) {
@@ -422,14 +423,7 @@ function generate (packet, { require = null }) {
 
     function inline (path, field) {
         const after = field.after.length != 0 ? function () {
-            const inline = inliner({
-                path, packet, variables,
-                inlines: field.after,
-                assignee: path,
-                accumulators: accumulators,
-                registers: [ path ],
-                direction: 'parse'
-            })
+            const inline = inliner(accumulate, path, field.after, path, [ path ])
             if (inline.inlined.length == 0) {
                 return null
             }
@@ -481,7 +475,7 @@ function generate (packet, { require = null }) {
         return $(`
             case ${$step++}:
 
-                `, accumulatorer(accumulators, field), `
+                `, accumulatorer(accumulate, field), `
 
             `, map(dispatch, path + field.dotted, field.fields), `
         `)

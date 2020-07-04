@@ -58,7 +58,7 @@ function expand (fields) {
             expanded.push(field)
             break
         case 'conditional':
-            for (const condition of field.serialize.conditions) {
+            for (const condition of field.parse.conditions) {
                 condition.fields = expand(condition.fields)
             }
             expanded.push(field)
@@ -78,9 +78,10 @@ function expand (fields) {
 }
 
 function generate (packet, { require, bff }) {
-    let $i = -1, $I = -1, $sip = -1, $step = 1, accumulators = {}
+    let $i = -1, $I = -1, $sip = -1, $step = 1
 
     const variables = { packet: true, step: true }
+    const accumulate = { accumulator: {}, variables, packet, direction: 'parse' }
 
     const $lookup = {}
 
@@ -405,14 +406,7 @@ function generate (packet, { require, bff }) {
 
     function inline (path, field) {
         const after = field.after.length != 0 ? function () {
-            const inline = inliner({
-                path, packet, variables,
-                inlines: field.after,
-                assignee: path,
-                accumulators: accumulators,
-                registers: [ path ],
-                direction: 'parse'
-            })
+            const inline = inliner(accumulate, path, field.after, path, [ path ])
             if (inline.inlined.length == 0) {
                 return null
             }
@@ -496,7 +490,7 @@ function generate (packet, { require, bff }) {
     function accumulator (path, field) {
         variables.accumulator = true
         return $(`
-            `, accumulatorer(accumulators, field), `
+            `, accumulatorer(accumulate, field), `
 
             `, map(dispatch, path + field.dotted, field.fields), `
         `)

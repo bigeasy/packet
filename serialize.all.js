@@ -160,7 +160,7 @@ function generate (packet, { require = null, bff }) {
 
     const variables = { packet: true, step: true }
     const constants = { assert: false }
-    const accumulators = {}
+    const accumulate = { accumulator: {}, variables, packet, direction: 'serialize' }
 
     const $lookup = {}
 
@@ -318,14 +318,9 @@ function generate (packet, { require = null, bff }) {
             $step++
             variables.stack = true
             const register = `$$[${++$$}]`
-            const inline = inliner({
-                path, packet, variables,
-                inlines: field.before,
-                assignee: register,
-                accumulators: accumulators,
-                registers: [ path, register ],
-                direction: 'serialize'
-            })
+            const inline = inliner(accumulate, path, field.before, register, [
+                path, register
+            ])
             if (inline.inlined.length == 0) {
                 return { path: path, source: null }
             }
@@ -405,7 +400,7 @@ function generate (packet, { require = null, bff }) {
     function accumulator (path, field) {
         variables.accumulator = true
         return $(`
-            `, accumulatorer(accumulators, field), `
+            `, accumulatorer(accumulate, field), `
 
             `, map(dispatch, path + field.dotted, field.fields), `
         `)

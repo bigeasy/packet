@@ -26,10 +26,11 @@ const join = require('./join')
 const snuggle = require('./snuggle')
 
 function generate (packet, { require = null }) {
-    let $step = 0, $i = -1, $$ = -1, accumulators = {}, surround = false
+    let $step = 0, $i = -1, $$ = -1, surround = false
 
     const variables = { packet: true, step: true }
     const constants = { assert: false }
+    const accumulate = { accumulator: {}, variables, packet, direction: 'serialize' }
     const $lookup = {}
 
     function integer (path, field) {
@@ -252,14 +253,9 @@ function generate (packet, { require = null }) {
         const before = field.before.length != 0 ? function () {
             variables.stack = true
             const register = `$$[${++$$}]`
-            const inline = inliner({
-                path, packet, variables,
-                inlines: field.before,
-                assignee: register,
-                accumulators: accumulators,
-                registers: [ path, register ],
-                direction: 'serialize'
-            })
+            const inline = inliner(accumulate, path, field.before, register, [
+                path, register
+            ])
             if (inline.inlined.length == 0) {
                 return { path: path, source: null }
             }
@@ -379,7 +375,7 @@ function generate (packet, { require = null }) {
         return $(`
             case ${$step++}:
 
-                `, accumulatorer(accumulators, field), `
+                `, accumulatorer(accumulate, field), `
 
             `, map(dispatch, path + field.dotted, field.fields), `
         `)

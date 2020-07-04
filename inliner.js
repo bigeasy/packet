@@ -12,9 +12,7 @@ const $ = require('programmatic')
 // generator.
 
 //
-module.exports = function ({
-    inlines, path, assignee, packet, variables, accumulators, registers, direction
-}) {
+module.exports = function (accumulate, path, inlines, assignee, registers) {
     const inlined = [], buffered = [], accumulated = []
     for (const inline of inlines) {
         const is = {
@@ -43,14 +41,14 @@ module.exports = function ({
                     }
                     properties[property] = $_
                 } else if (property == '$direction') {
-                    properties[property] = util.inspect(direction)
+                    properties[property] = util.inspect(accumulate.direction)
                 } else if (property == '$i') {
-                    properties[property] = variables.i ? property : '[]'
+                    properties[property] = accumulate.variables.i ? property : '[]'
                 } else if (property == '$path') {
                     properties[property] = util.inspect(path.split('.'))
-                } else if (property == packet.name || property == '$') {
-                    properties[property] = packet.name
-                } else if (accumulators[property]) {
+                } else if (property == accumulate.packet.name || property == '$') {
+                    properties[property] = accumulate.packet.name
+                } else if (accumulate.accumulator[property]) {
                     properties[property] = `$accumulator[${util.inspect(property)}]`
                 }
             }
