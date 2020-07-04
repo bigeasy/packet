@@ -422,13 +422,18 @@ function generate (packet, { require = null }) {
 
     function inline (path, field) {
         const after = field.after.length != 0 ? function () {
-            const inlined = inliner({
-                path, packet, variables, accumulators,
+            const inline = inliner({
+                path, packet, variables,
+                inlines: field.after,
                 assignee: path,
+                accumulators: accumulators,
                 registers: [ path ],
                 direction: 'parse'
             })
-            return join(field.after.map(inlined))
+            if (inline.inlined.length == 0) {
+                return null
+            }
+            return join(inline.inlined)
         } () : null
         const source =  $(`
             `, map(dispatch, path, field.fields), `

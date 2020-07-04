@@ -13,40 +13,58 @@ const $ = require('programmatic')
 
 //
 module.exports = function ({
-    path, assignee, packet, variables, accumulators, registers, direction
+    inlines, path, assignee, packet, variables, accumulators, registers, direction
 }) {
-    return function (inline, index) {
-        const $_ = registers[0]
-        if (registers.length != 1) {
-            registers.shift()
+    const inlined = [], buffered = [], accumulated = []
+    for (const inline of inlines) {
+        const is = {
+            buffered: false,
+            assertion: false
         }
+        const $_ = registers[0]
         if (inline.properties.length == 0) {
-            return `${assignee} = (${inline.source})(${$_})`
+            is.transformational = true
+            inlined.push(`${assignee} = (${inline.source})(${$_})`)
         } else {
             const properties = {}
             for (const property of inline.properties) {
                 if (property == '$_' || property == path.split('.').pop()) {
                     properties[property] = $_
                 } else if (property == '$direction') {
-                    properties[property] = require('util').inspect(direction)
+                    properties[property] = util.inspect(direction)
                 } else if (property == '$i') {
                     properties[property] = variables.i ? property : '[]'
                 } else if (property == '$path') {
-                    properties[property] = require('util').inspect(path.split('.'))
+                    properties[property] = util.inspect(path.split('.'))
                 } else if (property == packet.name || property == '$') {
                     properties[property] = packet.name
                 } else if (accumulators[property]) {
                     properties[property] = `$accumulator[${util.inspect(property)}]`
                 }
             }
-            const body = Object.keys(properties).map(property => {
-                return `${property}: ${properties[property]}`
-            })
-            return `${assignee} = (${inline.source})(` + $(`
-                {
-                    `, body.join(',\n'), `
+            if (is.buffered) {
+            } else {
+                const body = Object.keys(properties).map(property => {
+                    return `${property}: ${properties[property]}`
                 })
-            `)
+                if (is.assertion) {
+                    inlined.push(`; (${inline.source})(` + $(`
+                        {
+                            `, body.join(',\n'), `
+                        })
+                    `))
+                } else {
+                    if (registers.length != 1) {
+                        registers.shift()
+                    }
+                    inlined.push(`${assignee} = (${inline.source})(` + $(`
+                        {
+                            `, body.join(',\n'), `
+                        })
+                    `))
+                }
+            }
         }
     }
+    return { inlined, buffered, accumulated }
 }

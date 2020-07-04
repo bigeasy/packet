@@ -318,16 +318,20 @@ function generate (packet, { require = null, bff }) {
             $step++
             variables.stack = true
             const register = `$$[${++$$}]`
-            const inlined = inliner({
+            const inline = inliner({
                 path, packet, variables,
+                inlines: field.before,
                 assignee: register,
                 accumulators: accumulators,
                 registers: [ path, register ],
                 direction: 'serialize'
             })
+            if (inline.inlined.length == 0) {
+                return { path: path, source: null }
+            }
             return {
                 path: register,
-                source: join(field.before.map(inlined))
+                source: join(inline.inlined)
             }
         } () : { path: path, source: null }
         const source =  $(`
