@@ -1,3 +1,11 @@
+## Sat Jul  4 12:04:12 CDT 2020
+
+The API should implement strategies, and be a wrapper around a definition. Thus,
+BestFootForwardParse or SynchronousSerialize. This way the API can be probably
+be the same across implementations and you're not providing different function
+names for different strategies which would make for terse or wavy camel-case
+`parseBFF` or `parseBestFootForward`.
+
 ## Fri Jul  3 19:41:57 CDT 2020 ~ todo
 
 Just occured to me that I might want to have `8n`, should I have some variable
