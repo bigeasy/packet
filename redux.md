@@ -1,3 +1,57 @@
+## Fri Jul  3 19:41:57 CDT 2020 ~ todo
+
+Just occured to me that I might want to have `8n`, should I have some variable
+number that ranges from 8 bits to 64 bits, but I want the same type to appear in
+the deserialized structure. Do this instead of inferring `BigInt`.
+
+## Fri Jul  3 19:30:25 CDT 2020
+
+Felt I had a challenge where I'd have to maintian an counter and that counter
+would have to update in order to implement MySQL integers, but I realize now
+that I only need to get the header value and the start of particular field.
+
+It would be akin to this.
+
+```javascript
+define({
+    packet: {
+        length: 32,             // Total length of packet.
+        string: [[ 8 ], 0x0 ],  // Null terminated string.
+        number: [               // Number occupying remaining bytes.
+            ({ $, $start }) => $.length - $start == 1, 8
+            ({ $, $start }) => $.length - $start == 2, 16
+            32
+        ]
+    }
+})
+```
+
+If you can parse that now, you should be okay to parse MySQL when the time
+comes.
+
+Wait... Oh, you silly git. Start is not from the start of the packet, it is the
+current start of the buffer which may not be the same buffer as when the length
+is recorded. We do need running calculations.
+
+```javascript
+define({
+    packet: [{ counter: [ 0 ] }, [[[ ({ $start, $end, counter }) => {
+        counter[0] += $end - $start
+    } ]], {
+        length: 32,             // Total length of packet.
+        string: [[ 8 ], 0x0 ],  // Null terminated string.
+        number: [               // Number occupying remaining bytes.
+            ({ $, counter }) => $.length - counter[0] == 1, 8
+            ({ $, counter }) => $.length - counter[0] == 2, 16
+            32
+        ]
+    }
+})
+```
+
+Which makes it appear that we'll need to have the count so far if we reference
+it in a conditional or switch, and maybe not in a transform or assertion.
+
 ## Sun Jun 28 20:49:02 CDT 2020
 
 Disambguation.
