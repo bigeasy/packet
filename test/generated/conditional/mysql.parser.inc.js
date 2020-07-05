@@ -31,10 +31,10 @@ module.exports = function ({ parsers }) {
 
                     case 3:
 
-                        if ((sip => sip < 251)($sip[0], object)) {
+                        if (((sip => sip < 251)($sip[0]))) {
                             $step = 4
                             continue
-                        } else if ((sip => sip == 0xfc)($sip[0], object)) {
+                        } else if (((sip => sip == 0xfc)($sip[0]))) {
                             $step = 5
                             continue
                         } else {

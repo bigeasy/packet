@@ -37,6 +37,9 @@ require('proof')(4, okay => {
                 split: true,
                 conditions: [{
                     test: {
+                        defaulted: [],
+                        properties: [],
+                        vargs: [],
                         source: 'value => value < 251',
                         arity: 1
                     },
@@ -51,6 +54,9 @@ require('proof')(4, okay => {
                     }]
                 }, {
                     test: {
+                        defaulted: [],
+                        properties: [],
+                        vargs: [],
                         source: 'value => value >= 251',
                         arity: 1
                     },
@@ -106,6 +112,9 @@ require('proof')(4, okay => {
                 }],
                 conditions: [{
                     test: {
+                        defaulted: [],
+                        properties: [],
+                        vargs: [],
                         source: 'sip => sip < 251',
                         arity: 1
                     },
@@ -116,6 +125,9 @@ require('proof')(4, okay => {
                     }]
                 }, {
                     test: {
+                        defaulted: [],
+                        properties: [],
+                        vargs: [],
                         source: 'sip => sip == 0xfc',
                         arity: 1
                     },
@@ -185,6 +197,9 @@ require('proof')(4, okay => {
                 split: true,
                 conditions: [{
                     test: {
+                        defaulted: [],
+                        properties: [],
+                        vargs: [],
                         source: '$ => $.type == 0',
                         arity: 1
                     },
@@ -199,6 +214,9 @@ require('proof')(4, okay => {
                     }]
                 }, {
                     test: {
+                        defaulted: [],
+                        properties: [],
+                        vargs: [],
                         source: '$ => $.type == 1',
                         arity: 1
                     },
@@ -228,6 +246,9 @@ require('proof')(4, okay => {
                 sip: null,
                 conditions: [{
                     test: {
+                        defaulted: [],
+                        properties: [],
+                        vargs: [],
                         source: '$ => $.type == 0',
                         arity: 1
                     },
@@ -242,6 +263,9 @@ require('proof')(4, okay => {
                     }]
                 }, {
                     test: {
+                        defaulted: [],
+                        properties: [],
+                        vargs: [],
                         source: '$ => $.type == 1',
                         arity: 1
                     },
@@ -305,6 +329,9 @@ require('proof')(4, okay => {
                 split: false,
                 conditions: [{
                     test: {
+                        defaulted: [],
+                        properties: [],
+                        vargs: [],
                         source: '$ => $.type == 0',
                         arity: 1
                     },
@@ -319,6 +346,9 @@ require('proof')(4, okay => {
                     }]
                 }, {
                     test: {
+                        defaulted: [],
+                        properties: [],
+                        vargs: [],
                         source: '$ => $.type == 1',
                         arity: 1
                     },
@@ -348,6 +378,9 @@ require('proof')(4, okay => {
                 sip: null,
                 conditions: [{
                     test: {
+                        defaulted: [],
+                        properties: [],
+                        vargs: [],
                         source: '$ => $.type == 0',
                         arity: 1
                     },
@@ -362,6 +395,9 @@ require('proof')(4, okay => {
                     }]
                 }, {
                     test: {
+                        defaulted: [],
+                        properties: [],
+                        vargs: [],
                         source: '$ => $.type == 1',
                         arity: 1
                     },
@@ -437,6 +473,9 @@ require('proof')(4, okay => {
                     split: false,
                     conditions: [{
                         test: {
+                            defaulted: [],
+                            properties: [],
+                            vargs: [],
                             source: '$ => $.header.flag == 0',
                             arity: 1
                         },
@@ -451,6 +490,9 @@ require('proof')(4, okay => {
                         }]
                     }, {
                         test: {
+                            defaulted: [],
+                            properties: [],
+                            vargs: [],
                             source: '$ => $.header.flag == 1',
                             arity: 1
                         },
@@ -475,6 +517,9 @@ require('proof')(4, okay => {
                         }]
                     }, {
                         test: {
+                            defaulted: [],
+                            properties: [],
+                            vargs: [],
                             source: '$ => $.header.flag == 2',
                             arity: 1
                         },
@@ -542,6 +587,9 @@ require('proof')(4, okay => {
                     sip: null,
                     conditions: [{
                         test: {
+                            defaulted: [],
+                            properties: [],
+                            vargs: [],
                             source: '$ => $.header.flag == 0',
                             arity: 1
                         },
@@ -556,6 +604,9 @@ require('proof')(4, okay => {
                         }]
                     }, {
                         test: {
+                            defaulted: [],
+                            properties: [],
+                            vargs: [],
                             source: '$ => $.header.flag == 1',
                             arity: 1
                         },
@@ -579,8 +630,11 @@ require('proof')(4, okay => {
                         }]
                     }, {
                         test: {
+                            defaulted: [],
+                            properties: [],
+                            vargs: [],
                             source: '$ => $.header.flag == 2',
-                            arity: 1,
+                            arity: 1
                         },
                         fields: [{
                             type: 'integer',

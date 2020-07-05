@@ -160,7 +160,12 @@ function generate (packet, { require = null, bff }) {
 
     const variables = { packet: true, step: true }
     const constants = { assert: false }
-    const accumulate = { accumulator: {}, variables, packet, direction: 'serialize' }
+    const accumulate = {
+        accumulator: {},
+        variables: variables,
+        packet: packet.name,
+        direction: 'serialize'
+    }
 
     const $lookup = {}
 
@@ -318,9 +323,9 @@ function generate (packet, { require = null, bff }) {
             $step++
             variables.stack = true
             const register = `$$[${++$$}]`
-            const inline = inliner(accumulate, path, field.before, register, [
+            const inline = inliner(accumulate, path, field.before, [
                 path, register
-            ])
+            ], register)
             if (inline.inlined.length == 0) {
                 return { path: path, source: null }
             }
@@ -350,13 +355,10 @@ function generate (packet, { require = null, bff }) {
             const condition = conditional.serialize.conditions[i]
             const source = join(condition.fields.map(field => dispatch(path, field)))
             if (condition.test != null) {
-                const signature = []
-                if (conditional.serialize.split) {
-                    signature.push(path)
-                }
-                signature.push(packet.name)
+                const registers = conditional.serialize.split ? [ path ] : []
+                const f = inliner(accumulate, path, [ condition.test ], registers)
                 block.push($(`
-                    ${i == 0 ? 'if' : 'else if'} ((${condition.test.source})(${signature.join(', ')})) {
+                    ${i == 0 ? 'if' : 'else if'} (${f.inlined.shift()}) {
                         `, source, `
                     }
                 `))

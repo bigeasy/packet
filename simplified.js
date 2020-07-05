@@ -483,10 +483,7 @@ function map (definitions, packet, extra = {}, packed = false) {
                             if (serialize.length > 0) {
                                 const second = serialize.shift()
                                 conditions.push({
-                                    test: {
-                                        source: trim(first.toString()),
-                                        arity: first.length
-                                    },
+                                    test: { ...args(first) },
                                     fields: map(definitions, second, {})
                                 })
                             } else {
@@ -511,10 +508,7 @@ function map (definitions, packet, extra = {}, packed = false) {
                             if (parse.length > 0) {
                                 const second = parse.shift()
                                 conditions.push({
-                                    test: {
-                                        source: trim(first.toString()),
-                                        arity: first.length
-                                    },
+                                    test: { ...args(first) },
                                     fields: map(definitions, second, {})
                                 })
                             } else {
@@ -566,10 +560,7 @@ function map (definitions, packet, extra = {}, packed = false) {
                             const fields = map(definitions, packet.shift(), {})
                             conditions.push({
                                 body: {
-                                    test: {
-                                        source: trim(first.toString()),
-                                        arity: first.length
-                                    },
+                                    test: { ...args(first) },
                                     fields: fields
                                 },
                                 bits: fields.reduce((bits, field) => {

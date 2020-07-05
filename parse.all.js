@@ -81,7 +81,12 @@ function generate (packet, { require, bff }) {
     let $i = -1, $I = -1, $sip = -1, $step = 1
 
     const variables = { packet: true, step: true }
-    const accumulate = { accumulator: {}, variables, packet, direction: 'parse' }
+    const accumulate = {
+        accumulator: {},
+        variables: variables,
+        packet: packet.name,
+        direction: 'parse'
+    }
 
     const $lookup = {}
 
@@ -406,7 +411,7 @@ function generate (packet, { require, bff }) {
 
     function inline (path, field) {
         const after = field.after.length != 0 ? function () {
-            const inline = inliner(accumulate, path, field.after, path, [ path ])
+            const inline = inliner(accumulate, path, field.after, [ path ], path)
             if (inline.inlined.length == 0) {
                 return null
             }
@@ -432,14 +437,14 @@ function generate (packet, { require, bff }) {
             signature.push(`$sip[${$sip}]`)
             return join(conditional.parse.sip.map(field => dispatch(`$sip[${$sip}]`, field)))
         } ()
-        signature.push(packet.name)
         $step++
         for (let i = 0, I = conditional.parse.conditions.length; i < I; i++) {
             const condition = conditional.parse.conditions[i]
             const source = join(condition.fields.map(field => dispatch(path, field)))
             if (condition.test != null) {
+                const inline = inliner(accumulate, path, [ condition.test ], signature)
                 block.push($(`
-                    ${i == 0 ? 'if' : 'else if'} ((${condition.test.source})(${signature.join(', ')})) {
+                    ${i == 0 ? 'if' : 'else if'} (${inline.inlined.shift()}) {
                         `, source, `
                     }
                 `))

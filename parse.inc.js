@@ -35,7 +35,12 @@ function generate (packet, { require = null }) {
     let $step = 0, $i = -1, $sip = -1, accumulators = {}, surround = false
 
     const variables = { packet: true, step: true }
-    const accumulate = { accumulator: {}, variables, packet, direction: 'parse' }
+    const accumulate = {
+        accumulator: {},
+        variables: variables,
+        packet: packet.name,
+        direction: 'parse'
+    }
     const $lookup = {}
 
     function integer (path, field) {
@@ -262,8 +267,9 @@ function generate (packet, { require = null }) {
         for (let i = 0, I = parse.conditions.length; i < I; i++) {
             const condition = parse.conditions[i]
             if (condition.test != null) {
+                const inline = inliner(accumulate, path, [ condition.test ], signature)
                 ladder.push($(`
-                    ${i == 0 ? 'if' : 'else if'} ((${condition.test.source})(${signature.join(', ')})) {
+                    ${i == 0 ? 'if' : 'else if'} ((${inline.inlined.shift()})) {
                         $step = ${steps[i].number}
                         continue
                     }
@@ -423,7 +429,7 @@ function generate (packet, { require = null }) {
 
     function inline (path, field) {
         const after = field.after.length != 0 ? function () {
-            const inline = inliner(accumulate, path, field.after, path, [ path ])
+            const inline = inliner(accumulate, path, field.after, [ path ], path)
             if (inline.inlined.length == 0) {
                 return null
             }

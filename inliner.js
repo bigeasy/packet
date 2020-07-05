@@ -12,10 +12,11 @@ const $ = require('programmatic')
 // generator.
 
 //
-module.exports = function (accumulate, path, inlines, assignee, registers) {
+module.exports = function (accumulate, path, inlines, registers, assignee = null) {
     const inlined = [], buffered = [], accumulated = []
     for (const inline of inlines) {
         const is = {
+            conditional: assignee == null,
             buffered: false,
             assertion: false
         }
@@ -24,7 +25,10 @@ module.exports = function (accumulate, path, inlines, assignee, registers) {
             if (inline.defaulted[0] == 0) {
                 is.assertion = true
             }
-            if (is.assertion) {
+            if (is.conditional) {
+                const signature = registers.concat([ accumulate.packet ]).slice(0, inline.arity)
+                inlined.push(`(${inline.source})(${signature.join(', ')})`)
+            } else if (is.assertion) {
                 inlined.push(`; (${inline.source})(${$_})`)
             } else {
                 if (registers.length != 1) {
@@ -46,12 +50,19 @@ module.exports = function (accumulate, path, inlines, assignee, registers) {
                     properties[property] = accumulate.variables.i ? property : '[]'
                 } else if (property == '$path') {
                     properties[property] = util.inspect(path.split('.'))
-                } else if (property == accumulate.packet.name || property == '$') {
-                    properties[property] = accumulate.packet.name
+                } else if (property == accumulate.packet || property == '$') {
+                    properties[property] = accumulate.packet
                 } else if (accumulate.accumulator[property]) {
                     properties[property] = `$accumulator[${util.inspect(property)}]`
                 }
             }
+            if (is.conditional) {
+                inlined.push(`(${inline.source})(` + $(`
+                    {
+                        `, body.join(',\n'), `
+                    })
+                `))
+            } else
             if (is.buffered) {
             } else {
                 const body = Object.keys(properties).map(property => {
