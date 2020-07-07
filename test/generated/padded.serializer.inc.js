@@ -12,6 +12,7 @@ module.exports = function ({ serializers }) {
 
                         $i[0] = 0
                         $step = 1
+
                     case 1:
 
                         $step = 2

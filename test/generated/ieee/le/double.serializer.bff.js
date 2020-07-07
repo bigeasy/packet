@@ -4,8 +4,6 @@ module.exports = function ({ serializers }) {
 
         return function (object) {
             return function ($buffer, $start, $end) {
-                const assert = require('assert')
-
                 let $i = [], $$ = []
 
                 if ($end - $start < 9) {
@@ -17,8 +15,6 @@ module.exports = function ({ serializers }) {
                     buffer.writeDoubleBE(value)
                     return buffer
                 })(object.value)
-
-                assert.equal($$[0].length, 8)
 
                 for ($i[0] = 0; $i[0] < $$[0].length; $i[0]++) {
                     $buffer[$start++] = ($$[0][$i[0]] & 0xff)

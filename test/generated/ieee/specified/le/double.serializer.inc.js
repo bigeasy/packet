@@ -5,8 +5,6 @@ module.exports = function ({ serializers }) {
         return function (object, $step = 0, $i = [], $$ = []) {
             let $bite, $stop, $_
 
-            const assert = require('assert')
-
             return function serialize ($buffer, $start, $end) {
                 for (;;) {
                     switch ($step) {
@@ -22,7 +20,6 @@ module.exports = function ({ serializers }) {
 
                         $i[0] = 0
                         $step = 2
-                        assert.equal($$[0].length, 8)
 
                     case 2:
 

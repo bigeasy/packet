@@ -159,7 +159,6 @@ function generate (packet, { require = null, bff }) {
     let $step = 0, $i = -1, $$ = -1
 
     const variables = { packet: true, step: true }
-    const constants = { assert: false }
     const accumulate = {
         accumulator: {},
         variables: variables,
@@ -302,12 +301,7 @@ function generate (packet, { require = null, bff }) {
                 })), `
             }
         `)
-        const assertion = (constants.assert = field.pad.length == 0)
-                        ? `assert.equal(${path}.length, ${field.length})`
-                        : null
         const source = $(`
-            `, assertion, -1, `
-
             for (${i} = 0; ${i} < ${path}.length; ${i}++) {
                 `, looped, `
             }
@@ -470,13 +464,8 @@ function generate (packet, { require = null, bff }) {
         i: '$i = []',
         stack: '$$ = []',
         sip: '$sip = []',
-        // TODO Going to want to prefix with `$`.
-        assert: `assert = require('assert')`,
         accumulator: '$accumulator = {}'
     }
-    const consts = Object.keys(declarations)
-                         .filter(key => constants[key])
-                         .map(key => declarations[key])
     const lets = Object.keys(declarations)
                             .filter(key => variables[key])
                             .map(key => declarations[key])
@@ -494,8 +483,6 @@ function generate (packet, { require = null, bff }) {
 
             return function (${packet.name}) {
                 return function ($buffer, $start, $end) {
-                    `, consts.length != 0 ? `const ${consts.join(', ')}` : null, -1, `
-
                     `, lets.length != 0 ? `let ${lets.join(', ')}` : null, -1, `
 
                     `, source, `
