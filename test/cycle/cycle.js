@@ -3,6 +3,7 @@ const path = require('path')
 const util = require('util')
 const coalesce = require('extant')
 const $ = require('programmatic')
+const assert = require('assert')
 
 const simplified = require('../../simplified')
 
@@ -93,8 +94,25 @@ module.exports = function (okay, options) {
 
         okay.inc(1)
 
+        function fast (object) {
+            if (typeof object == 'object') {
+                assert(%HasFastProperties(object))
+                if (Array.isArray(object)) {
+                    for (const element of object) {
+                        fast(element)
+                    }
+                } else {
+                    for (const key in object) {
+                        fast(object[key])
+                    }
+                }
+            }
+        }
+
         try {
-            okay(packet.parsers.all.object(expected, 0), actual, `${name} whole parse`)
+            const object = packet.parsers.all.object(expected, 0)
+            okay(object, actual, `${name} whole parse`)
+            fast(object)
         } catch (error) {
             console.log(packet.parsers.all.object.toString())
             throw error

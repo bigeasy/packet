@@ -54,7 +54,7 @@
     "main":                 "packet.js",
     "scripts":
     {
-                            "test": "proof test/*/*.t.js"
+                            "test": "proof -n --allow-natives-syntax test/*/*.t.js"
     },
     "nyc":
     {
