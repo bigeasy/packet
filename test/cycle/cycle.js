@@ -120,14 +120,16 @@ module.exports = function (okay, options) {
                 const buffer = Buffer.alloc(sizeOf)
                 let serialize = packet.serializers.inc.object(actual), start
                 {
-                    ({ start, serialize } = serialize(buffer, 0, buffer.length - i))
+                    const slice = buffer.slice(0, buffer.length - i)
+                    ; ({ start, serialize } = serialize(slice, 0, buffer.length - i))
                 }
                 const partial = start
                 if (serialize != null) {
-                    ({ start, serialize } = serialize(buffer, start, buffer.length))
+                    const slice = buffer.slice(start, buffer.length)
+                    ; ({ start, serialize } = serialize(slice, 0, buffer.length - start))
                 }
                 okay({ start, partial, serialize, buffer: buffer.toJSON().data }, {
-                    start: buffer.length,
+                    start: i == 0 ? buffer.length : buffer.length - partial,
                     partial: buffer.length - i,
                     serialize: null,
                     buffer: expected.toJSON().data
@@ -157,14 +159,16 @@ module.exports = function (okay, options) {
             for (let i = 0; i <= expected.length; i++) {
                 let parse = packet.parsers.inc.object(actual), start, object
                 {
-                    ({ start, object, parse } = parse(expected, 0, expected.length - i))
+                    const slice = expected.slice(0, expected.length - i)
+                    ; ({ start, object, parse } = parse(slice, 0, expected.length - i))
                 }
                 const partial = start
                 if (parse != null) {
-                    ({ start, object, parse } = parse(expected, start, expected.length))
+                    const slice = expected.slice(start, expected.length)
+                    ; ({ start, object, parse } = parse(slice, 0, expected.length - start))
                 }
                 okay({ start, partial, parse, object }, {
-                    start: expected.length,
+                    start: i == 0 ? expected.length : expected.length - partial,
                     partial: expected.length - i,
                     parse: null,
                     object: actual
@@ -198,14 +202,16 @@ module.exports = function (okay, options) {
                 const buffer = Buffer.alloc(sizeOf)
                 let serialize = packet.serializers.bff.object(actual), start
                 {
-                    ({ start, serialize } = serialize(buffer, 0, buffer.length - i))
+                    const slice = buffer.slice(0, buffer.length - i)
+                    ; ({ start, serialize } = serialize(slice, 0, buffer.length - i))
                 }
                 const partial = start
                 if (serialize != null) {
-                    ({ start, serialize } = serialize(buffer, start, buffer.length))
+                    const slice = buffer.slice(start, buffer.length)
+                    ; ({ start, serialize } = serialize(slice, 0, buffer.length - start))
                 }
                 okay({ start, partial, serialize, buffer: buffer.toJSON().data }, {
-                    start: buffer.length,
+                    start: i == 0 ? buffer.length : buffer.length - partial,
                     partial: buffer.length - i,
                     serialize: null,
                     buffer: expected.toJSON().data
@@ -238,14 +244,16 @@ module.exports = function (okay, options) {
             for (let i = 0; i <= expected.length; i++) {
                 let parse = packet.parsers.bff.object(actual), start, object
                 {
-                    ({ start, object, parse } = parse(expected, 0, expected.length - i))
+                    const slice = expected.slice(0, expected.length - i)
+                    ; ({ start, object, parse } = parse(slice, 0, expected.length - i))
                 }
                 const partial = start
                 if (parse != null) {
-                    ({ start, object, parse } = parse(expected, start, expected.length))
+                    const slice = expected.slice(start, expected.length)
+                    ; ({ start, object, parse } = parse(slice, 0, expected.length - start))
                 }
                 okay({ start, partial, parse, object }, {
-                    start: expected.length,
+                    start: i == 0 ? expected.length : expected.length - partial,
                     partial: expected.length - i,
                     parse: null,
                     object: actual
