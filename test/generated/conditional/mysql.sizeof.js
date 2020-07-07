@@ -3,19 +3,20 @@ module.exports = function ({ sizeOf }) {
 
 
         return function (object) {
-            let $_ = 0
+            let $start = 0
 
-            if ((value => value < 251)(object.value, object)) {
-                $_ += 1
-            } else if ((value => value >= 251 && value < 2 ** 16)(object.value, object)) {
-                $_ += 3
+
+            if ((value => value < 251)(object.value)){
+                $start += 1
+            } else if ((value => value >= 251 && value < 2 ** 16)(object.value)){
+                $start += 3
             } else {
-                $_ += 4
+                $start += 4
             }
 
-            $_ += 1
+            $start += 1
 
-            return $_
+            return $start
         }
     } ()
 }

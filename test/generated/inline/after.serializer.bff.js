@@ -4,7 +4,7 @@ module.exports = function ({ serializers }) {
 
         return function (object) {
             return function ($buffer, $start, $end) {
-                if ($end - $start < 3) {
+                if ($end - $start < 1 + 2) {
                     return serializers.inc.object(object, 0)($buffer, $start, $end)
                 }
 

@@ -6,10 +6,10 @@ module.exports = function ({ serializers }) {
             return function ($buffer, $start, $end) {
                 $buffer[$start++] = (object.type & 0xff)
 
-                if (((_, $) => $.type == 0)(object.value, object)) {
+                if (((_, $) => $.type == 0)(object.value, object)){
                     $buffer[$start++] = (object.value >>> 8 & 0xff)
                     $buffer[$start++] = (object.value & 0xff)
-                } else if (((_, $) => $.type == 1)(object.value, object)) {
+                } else if (((_, $) => $.type == 1)(object.value, object)){
                     $buffer[$start++] = (object.value >>> 16 & 0xff)
                     $buffer[$start++] = (object.value >>> 8 & 0xff)
                     $buffer[$start++] = (object.value & 0xff)

@@ -3,33 +3,33 @@ module.exports = function ({ sizeOf }) {
 
 
         return function (object) {
-            let $_ = 0
+            let $start = 0
 
-            $_ += 1
+            $start += 1
 
             switch (String(($ => $.type)(object))) {
             case "0":
 
-                $_ += 1
+                $start += 1
 
                 break
 
             case "1":
 
-                $_ += 2
+                $start += 2
 
                 break
 
             default:
 
-                $_ += 3
+                $start += 3
 
                 break
             }
 
-            $_ += 1
+            $start += 1
 
-            return $_
+            return $start
         }
     } ()
 }

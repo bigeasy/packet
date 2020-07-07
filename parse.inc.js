@@ -10,6 +10,9 @@ const unsign = require('./fiddle/unsign')
 // Generate integer unpacking.
 const unpack = require('./unpack')
 
+// Determine necessary variables.
+const { parse: declare } = require('./declare')
+
 // Maintain a set of lookup constants.
 const lookup = require('./lookup')
 
@@ -34,9 +37,12 @@ const snuggle = require('./snuggle')
 function generate (packet, { require = null }) {
     let $step = 0, $i = -1, $sip = -1, accumulators = {}, surround = false
 
-    const variables = { packet: true, step: true }
+    const variables = declare(packet)
+
     const accumulate = {
         accumulator: {},
+        accumulated: [],
+        buffered: [],
         variables: variables,
         packet: packet.name,
         direction: 'parse'
@@ -45,6 +51,7 @@ function generate (packet, { require = null }) {
 
     function integer (path, field) {
         const bytes = field.bits / 8
+        const buffered = accumulate.buffered.map(buffered => buffered.source)
         if (bytes == 1 && field.fields == null && field.lookup == null) {
             return $(`
                 case ${$step++}:
@@ -54,6 +61,7 @@ function generate (packet, { require = null }) {
                 case ${$step++}:
 
                     if ($start == $end) {
+                        `, buffered.length != 0 ? buffered.join('\n') : null, `
                         return { start: $start, object: null, parse }
                     }
 
@@ -88,6 +96,7 @@ function generate (packet, { require = null }) {
 
                 while ($bite != ${stop}${cast.suffix}) {
                     if ($start == $end) {
+                        `, buffered.length != 0 ? buffered.join('\n') : null, `
                         return { start: $start, object: null, parse }
                     }
                     $_ += ${cast.to}($buffer[$start++]) << $bite * 8${cast.suffix}${cast.fixup}
@@ -132,8 +141,6 @@ function generate (packet, { require = null }) {
 
     function lengthEncoded (path, packet) {
         surround = true
-        variables.i = true
-        variables.I = true
         $i++
         const i = `$i[${$i}]`
         const I = `$I[${$i}]`
@@ -171,7 +178,6 @@ function generate (packet, { require = null }) {
     // weird terminators.
     function terminated (path, field) {
         surround = true
-        variables.i = true
         $i++
         const i = `$i[${$i}]`
         const init = $step
@@ -179,6 +185,7 @@ function generate (packet, { require = null }) {
         const redo = $step
         const begin = $step += field.terminator.length
         $step++
+        const buffered = accumulate.buffered.map(buffered => buffered.source)
         const looped = join(field.fields.map(field => dispatch(`${path}[${i}]`, field)))
         const literal = field.terminator.map(bite => `0x${bite.toString(16)}`)
         const terminator = join(field.terminator.map((bite, index) => {
@@ -187,6 +194,7 @@ function generate (packet, { require = null }) {
                     case ${sip++}:
 
                         if ($start == $end) {
+                            `, buffered.length != 0 ? buffered.join('\n') : null, `
                             return { start: $start, parse }
                         }
 
@@ -203,6 +211,7 @@ function generate (packet, { require = null }) {
                     case ${sip++}:
 
                         if ($start == $end) {
+                            `, buffered.length != 0 ? buffered.join('\n') : null, `
                             return { start: $start, parse }
                         }
 
@@ -249,11 +258,31 @@ function generate (packet, { require = null }) {
             if (conditional.parse.sip == null) {
                 return null
             }
-            variables.sip = true
             $sip++
             signature.push(`$sip[${$sip}]`)
             return join(parse.sip.map(field => dispatch(`$sip[${$sip}]`, field)))
         } ()
+        const accumulators = {}
+        conditional.parse.conditions.forEach(condition => {
+            if (condition.test == null) {
+                return
+            }
+            condition.test.properties.forEach(property => {
+                if (accumulate.accumulator[property] != null) {
+                    accumulators[property] = true
+                }
+            })
+        })
+        const invocations = accumulate.buffered.filter(accumulator => {
+            return accumulator.properties.filter(property => {
+                return accumulate.accumulator[property] != null
+            }).length != 0
+        }).map(invocation => {
+            return $(`
+                `, invocation.source, `
+                $starts[${invocation.start}] = $start
+            `)
+        })
         signature.push(packet.name)
         const start = $step++
         const steps = []
@@ -268,8 +297,8 @@ function generate (packet, { require = null }) {
             const condition = parse.conditions[i]
             if (condition.test != null) {
                 const inline = inliner(accumulate, path, [ condition.test ], signature)
-                ladder.push($(`
-                    ${i == 0 ? 'if' : 'else if'} ((${inline.inlined.shift()})) {
+                ladder.push(`${i == 0 ? 'if' : 'else if'} ((${inline.inlined.shift()}))` + $(`
+                    {
                         $step = ${steps[i].number}
                         continue
                     }
@@ -294,6 +323,8 @@ function generate (packet, { require = null }) {
             `, sip, `
 
             case ${start}:
+
+                `, invocations.length != 0 ? invocations.join('\n') : null, -1, `
 
                 `, snuggle(ladder), `
 
@@ -320,7 +351,6 @@ function generate (packet, { require = null }) {
     // weird terminators.
     function fixed (path, field) {
         surround = true
-        variables.i = true
         $i++
         const i = `$i[${$i}]`
         const init = $step
@@ -430,16 +460,53 @@ function generate (packet, { require = null }) {
     function inline (path, field) {
         const after = field.after.length != 0 ? function () {
             const inline = inliner(accumulate, path, field.after, [ path ], path)
-            if (inline.inlined.length == 0) {
-                return null
+            if (
+                inline.inlined.length == 0 &&
+                inline.buffered.start == inline.buffered.end
+            ) {
+                return {
+                    before: null,
+                    after: null,
+                    buffered: {
+                        start: accumulate.buffered.length,
+                        end: accumulate.buffered.length
+                    }
+                }
             }
-            return join(inline.inlined)
-        } () : null
-        const source =  $(`
-            `, map(dispatch, path, field.fields), `
-                `, -1, after, `
+            const starts = []
+            for (let i = inline.buffered.start, I = inline.buffered.end; i < I; i++) {
+                starts.push(`$starts[${i}] = $start`)
+            }
+            return {
+                before: starts.length != 0 ? $(`
+                    case ${$step++}:
+
+                        `, starts.join('\n'), `
+
+                `) : null,
+                after: join(inline.inlined),
+                buffered: inline.buffered
+            }
+        } () : {
+            before: null,
+            after: null,
+            buffered: {
+                start: accumulate.buffered.length,
+                end: accumulate.buffered.length
+            }
+        }
+        const source = map(dispatch, path, field.fields)
+        const buffered = accumulate.buffered
+            .splice(0, after.buffered.end)
+            .map(buffered => {
+                return buffered.source
+            })
+        return $(`
+            `, after.before, `
+            `, source, `
+                `, -1, after.after, `
+                `, buffered.length != 0 ? buffered.join('\n') : null, `
         `)
-        return source
     }
 
     function switched (path, field) {
@@ -477,13 +544,12 @@ function generate (packet, { require = null }) {
     }
 
     function accumulator (path, field) {
-        variables.accumulator = true
         return $(`
             case ${$step++}:
 
                 `, accumulatorer(accumulate, field), `
 
-            `, map(dispatch, path + field.dotted, field.fields), `
+            `, map(dispatch, path, field.fields), `
         `)
     }
 
@@ -541,7 +607,8 @@ function generate (packet, { require = null }) {
         i: '$i = []',
         I: '$I = []',
         sip: '$sip = []',
-        accumulator: '$accumulator = []'
+        accumulator: '$accumulator = []',
+        starts: '$starts = []'
     }
     const signature = Object.keys(signatories)
                             .filter(key => variables[key])
@@ -564,6 +631,19 @@ function generate (packet, { require = null }) {
 
     const requires = required(require)
 
+    const lets = [ '$_', '$bite' ].concat(
+        variables.starts ? [ '$restart = false' ] : []
+    )
+
+    const restart = variables.starts ? $(`
+        if ($restart) {
+            for (let $j = 0; $j < $starts.length; $j++) {
+                $starts[$j] = $start
+            }
+        }
+        $restart = true
+    `) : null
+
     return $(`
         parsers.inc.${packet.name} = function () {
             `, requires, -1, `
@@ -571,8 +651,11 @@ function generate (packet, { require = null }) {
             `, lookups, -1, `
 
             return function (${signature.join(', ')}) {
-                let $_, $bite
+                let ${lets.join(', ')}
+
                 return function parse ($buffer, $start, $end) {
+                    `, restart, -1, `
+
                     `, source, `
                 }
             }

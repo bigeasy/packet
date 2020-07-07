@@ -3,21 +3,22 @@ module.exports = function ({ sizeOf }) {
 
 
         return function (object) {
-            let $_ = 0
+            let $start = 0
 
-            $_ += 1
+            $start += 1
 
-            if (($ => $.type == 0)(object)) {
-                $_ += 2
-            } else if (($ => $.type == 1)(object)) {
-                $_ += 3
+
+            if (($ => $.type == 0)(object)){
+                $start += 2
+            } else if (($ => $.type == 1)(object)){
+                $start += 3
             } else {
-                $_ += 4
+                $start += 4
             }
 
-            $_ += 1
+            $start += 1
 
-            return $_
+            return $start
         }
     } ()
 }

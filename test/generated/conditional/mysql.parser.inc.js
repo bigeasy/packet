@@ -4,6 +4,7 @@ module.exports = function ({ parsers }) {
 
         return function (object = {}, $step = 0, $sip = []) {
             let $_, $bite
+
             return function parse ($buffer, $start, $end) {
                 for (;;) {
                     switch ($step) {
@@ -31,10 +32,10 @@ module.exports = function ({ parsers }) {
 
                     case 3:
 
-                        if (((sip => sip < 251)($sip[0]))) {
+                        if (((sip => sip < 251)($sip[0]))){
                             $step = 4
                             continue
-                        } else if (((sip => sip == 0xfc)($sip[0]))) {
+                        } else if (((sip => sip == 0xfc)($sip[0]))){
                             $step = 5
                             continue
                         } else {

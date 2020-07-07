@@ -10,14 +10,14 @@ module.exports = function ({ serializers }) {
 
                 $buffer[$start++] = (object.type & 0xff)
 
-                if (($ => $.type == 0)(object)) {
+                if (($ => $.type == 0)(object)){
                     if ($end - $start < 2) {
                         return serializers.inc.object(object, 3)($buffer, $start, $end)
                     }
 
                     $buffer[$start++] = (object.value >>> 8 & 0xff)
                     $buffer[$start++] = (object.value & 0xff)
-                } else if (($ => $.type == 1)(object)) {
+                } else if (($ => $.type == 1)(object)){
                     if ($end - $start < 3) {
                         return serializers.inc.object(object, 5)($buffer, $start, $end)
                     }

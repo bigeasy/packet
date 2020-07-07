@@ -10,6 +10,9 @@ const unsign = require('./fiddle/unsign')
 // Generate integer unpacking.
 const unpack = require('./unpack')
 
+// Determine necessary variables.
+const { parse: declare } = require('./declare')
+
 // Maintain a set of lookup constants.
 const lookup = require('./lookup')
 
@@ -53,6 +56,8 @@ function expand (fields) {
             expanded.push(field)
             break
         case 'fixed':
+        case 'inline':
+        case 'accumulator':
         case 'structure':
             field.fields = expand(field.fields)
             expanded.push(field)
@@ -80,9 +85,12 @@ function expand (fields) {
 function generate (packet, { require, bff }) {
     let $i = -1, $I = -1, $sip = -1, $step = 1
 
-    const variables = { packet: true, step: true }
+    const variables = declare(packet)
+
     const accumulate = {
         accumulator: {},
+        accumulated: [],
+        buffered: [],
         variables: variables,
         packet: packet.name,
         direction: 'parse'
@@ -161,6 +169,8 @@ function generate (packet, { require, bff }) {
                     type: 'checkpoint', lengths: [ 0 ], vivify: null
                 })
                 break
+            case 'inline':
+            case 'accumulator':
             case 'structure':
                 checked.push(field)
                 if (field.fixed) {
@@ -214,14 +224,12 @@ function generate (packet, { require, bff }) {
                                             `, reads.reverse().join(' +\n'), `
                                     `)
         if (field.fields) {
-            variables.register = true
             return $(`
                 `, parse, `
 
                 `, unpack(packet, assignee, field, '$_'), `
             `)
         } else if (field.lookup) {
-            variables.register = true
             lookup($lookup, assignee, field.lookup.slice())
             return $(`
                 `, parse, `
@@ -412,21 +420,72 @@ function generate (packet, { require, bff }) {
     function inline (path, field) {
         const after = field.after.length != 0 ? function () {
             const inline = inliner(accumulate, path, field.after, [ path ], path)
-            if (inline.inlined.length == 0) {
-                return null
+            if (inline.buffered.start != inline.buffered.end) {
+                $step++
+                variables.starts = true
             }
-            return join(inline.inlined)
-        } () : null
-        const source =  $(`
-            `, map(dispatch, path, field.fields), `
+            if (inline.inlined.length == 0) {
+                return {
+                    source: null,
+                    buffered: inline.buffered
+                }
+            }
+            return {
+                source: join(inline.inlined),
+                buffered: inline.buffered
+            }
+        } () : {
+            path: path,
+            source: null,
+            buffered: {
+                start: accumulate.buffered.length,
+                end: accumulate.buffered.length
+            }
+        }
+        const starts = []
+        for (let i = after.buffered.start, I = after.buffered.end; i < I; i++) {
+            starts.push(`$starts[${i}] = $start`)
+        }
+        const source = map(dispatch, path, field.fields)
+        const buffered = accumulate.buffered
+            .splice(0, after.buffered.end)
+            .map(buffered => {
+                return buffered.source
+            })
+        return $(`
+            `, starts.length != 0 ? starts.join('\n') : null, -1, `
 
-            `, -1, after, `
+            `, source, `
+
+            `, -1, after.source, `
+
+            `, -1, buffered.length != 0 ? buffered.join('\n') : null, `
         `)
-        return source
     }
 
     function conditional (path, conditional) {
         const block = []
+        const accumulators = {}
+        conditional.parse.conditions.forEach(condition => {
+            if (condition.test == null) {
+                return
+            }
+            condition.test.properties.forEach(property => {
+                if (accumulate.accumulator[property] != null) {
+                    accumulators[property] = true
+                }
+            })
+        })
+        const invocations = accumulate.buffered.filter(accumulator => {
+            return accumulator.properties.filter(property => {
+                return accumulate.accumulator[property] != null
+            }).length != 0
+        }).map(invocation => {
+            return $(`
+                `, invocation.source, `
+                $starts[${invocation.start}] = $start
+            `)
+        })
         const signature = []
         const sip = function () {
             if (conditional.parse.sip == null) {
@@ -443,8 +502,8 @@ function generate (packet, { require, bff }) {
             const source = join(condition.fields.map(field => dispatch(path, field)))
             if (condition.test != null) {
                 const inline = inliner(accumulate, path, [ condition.test ], signature)
-                block.push($(`
-                    ${i == 0 ? 'if' : 'else if'} (${inline.inlined.shift()}) {
+                block.push(`${i == 0 ? 'if' : 'else if'} (${inline.inlined.shift()})` + $(`
+                    {
                         `, source, `
                     }
                 `))
@@ -460,6 +519,8 @@ function generate (packet, { require, bff }) {
             $sip--
         }
         return $(`
+            `, invocations.length != 0 ? invocations.join('\n') : null, -1, `
+
             `, sip, -1, `
 
             `, snuggle(block), `
@@ -493,11 +554,12 @@ function generate (packet, { require, bff }) {
     }
 
     function accumulator (path, field) {
+        $step++
         variables.accumulator = true
         return $(`
             `, accumulatorer(accumulate, field), `
 
-            `, map(dispatch, path + field.dotted, field.fields), `
+            `, map(dispatch, path, field.fields), `
         `)
     }
 
@@ -510,7 +572,9 @@ function generate (packet, { require, bff }) {
             step: $step,
             i: '$i',
             I: '$I',
-            sip: '$sip'
+            sip: '$sip',
+            accumulator: '$accumulator',
+            starts: '$starts'
         }
         const signature = Object.keys(signatories)
                                 .filter(key => variables[key])
@@ -569,7 +633,8 @@ function generate (packet, { require, bff }) {
         i: '$i = []',
         I: '$I = []',
         sip: '$sip = []',
-        accumulator: '$accumulator = {}'
+        accumulator: '$accumulator = {}',
+        starts: '$starts = []'
     }
     const lets = Object.keys(declarations)
                             .filter(key => variables[key])

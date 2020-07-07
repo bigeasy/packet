@@ -7,7 +7,7 @@ module.exports = function ({ serializers }) {
                 let $i = []
 
                 if ($end - $start < 2) {
-                    return serializers.inc.object(object, 0)($buffer, $start, $end)
+                    return serializers.inc.object(object, 0, $i)($buffer, $start, $end)
                 }
 
                 $buffer[$start++] = (object.array.length >>> 8 & 0xff)

@@ -4,6 +4,7 @@ module.exports = function ({ parsers }) {
 
         return function (object = {}, $step = 0) {
             let $_, $bite
+
             return function parse ($buffer, $start, $end) {
                 for (;;) {
                     switch ($step) {
@@ -33,10 +34,10 @@ module.exports = function ({ parsers }) {
 
                     case 3:
 
-                        if ((($ => $.type == 0)(object))) {
+                        if ((($ => $.type == 0)(object))){
                             $step = 4
                             continue
-                        } else if ((($ => $.type == 1)(object))) {
+                        } else if ((($ => $.type == 1)(object))){
                             $step = 6
                             continue
                         } else {

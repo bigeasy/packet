@@ -1,8 +1,16 @@
 // Node.js API.
 const util = require('util')
 
+const map = require('./map')
+
 // Format source code maintaining indentation.
 const $ = require('programmatic')
+
+// Generate accumulator declaration source.
+const accumulatorer = require('./accumulator')
+
+// Generate inline function source.
+const inliner = require('./inliner')
 
 // Generate required modules and functions.
 const required = require('./required')
@@ -23,6 +31,15 @@ function generate (packet, { require = null }) {
     const variables = {
         register: true
     }
+    const accumulate = {
+        accumulator: {},
+        accumulated: [],
+        buffered: [],
+        start: 0,
+        variables: variables,
+        packet: packet.name,
+        direction: 'serialize'
+    }
 
     let $i = -1
 
@@ -30,18 +47,36 @@ function generate (packet, { require = null }) {
     function dispatch (path, field) {
         switch (field.type) {
         case 'conditional': {
+                const accumulators = {}
+                field.serialize.conditions.forEach(condition => {
+                    if (condition.test == null) {
+                        return
+                    }
+                    condition.test.properties.forEach(property => {
+                        if (referenced[property]) {
+                            accumulators[property] = true
+                        }
+                    })
+                })
+                const invocations = accumulate.buffered.filter(accumulator => {
+                    return accumulator.properties.filter(property => {
+                        return referenced[property]
+                    }).length != 0
+                }).map(invocation => {
+                    return $(`
+                        `, invocation.source, `
+                        $starts[${invocation.start}] = $start
+                    `)
+                })
                 const block = []
                 for (let i = 0, I = field.serialize.conditions.length; i < I; i++) {
                     const condition = field.serialize.conditions[i]
                     const source = join(condition.fields.map(dispatch.bind(null, path)))
                     if (condition.test != null) {
-                        const signature = []
-                        if (field.serialize.split) {
-                            signature.push(path)
-                        }
-                        signature.push(packet.name)
-                        block.push($(`
-                            ${i == 0 ? 'if' : 'else if'} ((${condition.test.source})(${signature.join(', ')})) {
+                        const registers = field.serialize.split ? [ path ] : []
+                        const inlined = inliner(accumulate, path, [ condition.test ], registers)
+                        block.push(`${i == 0 ? 'if' : 'else if'} (${inlined.inlined.shift()})` + $(`
+                            {
                                 `, source, `
                             }
                         `))
@@ -53,15 +88,19 @@ function generate (packet, { require = null }) {
                         `))
                     }
                 }
-                return snuggle(block)
+                return $(`
+                    `, invocations.length != 0 ? invocations.join('\n') : null, `
+
+                    `, snuggle(block), `
+                `)
             }
         case 'literal':
         case 'integer':
-            return `$_ += ${field.bits / 8}`
+            return `$start += ${field.bits / 8}`
         case 'lengthEncoded':
             if (field.fields[0].fixed) {
                 return $(`
-                    $_ += ${field.encoding[0].bits / 8} +
+                    $start += ${field.encoding[0].bits / 8} +
                         ${field.fields[0].bits / 8} * ${path}.length
                 `)
             } else {
@@ -69,7 +108,7 @@ function generate (packet, { require = null }) {
                 $i++
                 const i = `$i[${$i}]`
                 const source = $(`
-                    $_ += ${field.encoding[0].bits / 8}
+                    $start += ${field.encoding[0].bits / 8}
 
                     for (${i} = 0; ${i} < ${path}.length; ${i}++) {
                         `, join(field.fields.map(field => dispatch(path + `[${i}]`, field))), `
@@ -82,7 +121,7 @@ function generate (packet, { require = null }) {
                 if (field.fields.filter(field => !field.fixed).length == 0) {
                     const bits = field.fields.reduce((sum, field) => sum + field.bits, 0)
                     return $(`
-                        $_ += ${bits / 8} * ${path}.length + ${field.terminator.length}
+                        $start += ${bits / 8} * ${path}.length + ${field.terminator.length}
                     `)
                 }
                 variables.i = true
@@ -92,7 +131,7 @@ function generate (packet, { require = null }) {
                     for (${i} = 0; ${i} < ${path}.length; ${i}++) {
                         `, join(field.fields.map(field => dispatch(path + `[${i}]`, field))), `
                     }
-                    $_ += ${field.terminator.length}
+                    $start += ${field.terminator.length}
                 `)
                 $i--
                 return source
@@ -101,7 +140,7 @@ function generate (packet, { require = null }) {
         case 'switch': {
                 if (field.fixed) {
                     return $(`
-                        $_ += ${field.bits / 8}
+                        $start += ${field.bits / 8}
                     `)
                 }
                 const cases = []
@@ -124,21 +163,154 @@ function generate (packet, { require = null }) {
                 `)
             }
             break
-        case 'accumulator':
+        case 'inline': {
+                const inlines = field.before.filter(inline => {
+                    return inline.properties.filter(property => {
+                        return referenced[property]
+                    }).length != 0
+                })
+                const inlined = inliner(accumulate, path, inlines, [ path ], '')
+                const starts = []
+                for (let i = inlined.buffered.start, I = inlined.buffered.end; i < I; i++) {
+                    starts.push(`$starts[${i}] = $start`)
+                }
+                const source = map(dispatch, path, field.fields)
+                // TODO Exclude if not externally referenced.
+                const buffered = accumulate.buffered
+                    .splice(0, inlined.buffered.end)
+                    .map(buffered => {
+                        return buffered.source
+                    })
+                return $(`
+                    `, starts.length != 0 ? starts.join('\n') : null, -1, `
+
+                    `, source, `
+
+                    `, -1, buffered.length != 0 ? buffered.join('\n') : null, `
+                `)
+            }
+            break
+        case 'accumulator': {
+                variables.accumulator = true
+                const accumulators = field.accumulators
+                    .filter(accumulator => referenced[accumulator.name])
+                    .map(accumulator => accumulatorer(accumulate, accumulator))
+                const declarations = accumulators.length != 0
+                                   ? accumulators.join('\n')
+                                   : null
+                const source = field.fixed
+                             ? `$start += ${field.bits / 8}`
+                             : map(dispatch, path, field.fields)
+                return  $(`
+                    `, declarations, -1, `
+
+                    `, source, `
+                `)
+            }
+            break
         case 'structure': {
                 if (field.fixed) {
-                    return `$_ += ${field.bits / 8}`
+                    return `$start += ${field.bits / 8}`
                 }
-                return join(field.fields.map(field => dispatch(path + field.dotted, field)))
+                return map(dispatch, path, field.fields)
             }
             break
         }
     }
 
+    const references = { accumulators: [], buffered: {} }, referenced = {}
+
+    function dependencies (field) {
+        switch (field.type) {
+        case 'accumulator': {
+                field.accumulators.forEach(accumulator => {
+                    references.accumulators.push(accumulator.name)
+                })
+                field.fields.map(dependencies)
+            }
+            break
+        case 'structure': {
+                field.fields.map(dependencies)
+            }
+            break
+        case 'fixed': {
+                field.fields.map(dependencies)
+            }
+            break
+        case 'inline': {
+                field.before.forEach(inline => {
+                    if (
+                        inline.properties.filter(property => {
+                            return /^(?:\$start|\$end)$/.test(property)
+                        }).length != 0
+                    ) {
+                        references.accumulators.forEach(accumulator => {
+                            if (inline.properties.includes(accumulator)) {
+                                references.buffered[accumulator] = true
+                            }
+                        })
+                    }
+                })
+                field.fields.map(dependencies)
+            }
+            break
+        case 'conditional': {
+                field.serialize.conditions.forEach(condition => {
+                    if (condition.test == null) {
+                        return
+                    }
+                    if (
+                        condition.test.properties.filter(property => {
+                            return /^(?:\$start|\$end)$/.test(property)
+                        }).length != 0
+                    ) {
+                        buffered = true
+                    }
+                    condition.test.properties.forEach(property => {
+                        if (references.buffered[property]) {
+                            referenced[property] = true
+                        }
+                    })
+                })
+            }
+            break
+        case 'literal': {
+                field.fields.map(dependencies)
+            }
+            break
+        case 'switch': {
+                field.cases.forEach(when => {
+                    when.fields.map(dependencies)
+                })
+            }
+            break
+        case 'lengthEncoded': {
+                field.fields.map(dependencies)
+            }
+            break
+        case 'terminated':
+        case 'integer':
+            break
+        default: {
+                throw new Error(field.type)
+            }
+            break
+        }
+    }
+
+    dependencies(packet)
+
+    const buffered = Object.keys(referenced).length != 0
+    if (buffered) {
+        variables.starts = true
+    }
+
     const source = dispatch(packet.name, packet)
     const declarations = {
-        register: '$_ = 0',
-        i: '$i = []'
+        register: '$start = 0',
+        i: '$i = []',
+        starts: '$starts = []',
+        accumulator: '$accumulator = {}'
     }
 
     const lets = Object.keys(declarations)
@@ -156,7 +328,7 @@ function generate (packet, { require = null }) {
 
                 `, source, `
 
-                return $_
+                return $start
             }
         } ()
     `)

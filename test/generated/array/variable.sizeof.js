@@ -3,18 +3,18 @@ module.exports = function ({ sizeOf }) {
 
 
         return function (object) {
-            let $_ = 0, $i = []
+            let $start = 0, $i = []
 
-            $_ += 2
+            $start += 2
 
             for ($i[0] = 0; $i[0] < object.array.length; $i[0]++) {
-                $_ += 2 +
+                $start += 2 +
                     2 * object.array[$i[0]].first.length
             }
 
-            $_ += 1
+            $start += 1
 
-            return $_
+            return $start
         }
     } ()
 }

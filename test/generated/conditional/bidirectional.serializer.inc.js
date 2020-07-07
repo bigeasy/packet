@@ -27,10 +27,10 @@ module.exports = function ({ serializers }) {
 
                     case 2:
 
-                        if (($ => $.type == 0)(object)) {
+                        if (($ => $.type == 0)(object)){
                             $step = 3
                             continue
-                        } else if (($ => $.type == 1)(object)) {
+                        } else if (($ => $.type == 1)(object)){
                             $step = 5
                             continue
                         } else {

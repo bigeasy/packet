@@ -12,7 +12,7 @@ module.exports = function ({ parsers }) {
                 }
 
                 if ($end - $start < 2) {
-                    return parsers.inc.object(object, 1)($buffer, $start, $end)
+                    return parsers.inc.object(object, 1, $i, $I)($buffer, $start, $end)
                 }
 
                 $I[0] =

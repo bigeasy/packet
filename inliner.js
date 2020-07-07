@@ -13,10 +13,23 @@ const $ = require('programmatic')
 
 //
 module.exports = function (accumulate, path, inlines, registers, assignee = null) {
-    const inlined = [], buffered = [], accumulated = []
+    const inlined = [], accumulated = []
+    const buffered = {
+        start: accumulate.buffered.length,
+        end: accumulate.buffered.length
+    }
+    accumulate.accumulated.unshift(function () {
+        const accumulated = {}
+        for (const name in accumulate.accumulator) {
+            accumulated[name] = []
+        }
+        return accumulated
+    } ())
     for (const inline of inlines) {
         const is = {
             conditional: assignee == null,
+            accumulated: false,
+            transform: false,
             buffered: false,
             assertion: false
         }
@@ -44,6 +57,7 @@ module.exports = function (accumulate, path, inlines, registers, assignee = null
                         is.assertion = true
                     }
                     properties[property] = $_
+                    is.transform = true
                 } else if (property == '$direction') {
                     properties[property] = util.inspect(accumulate.direction)
                 } else if (property == '$i') {
@@ -53,21 +67,48 @@ module.exports = function (accumulate, path, inlines, registers, assignee = null
                 } else if (property == accumulate.packet || property == '$') {
                     properties[property] = accumulate.packet
                 } else if (accumulate.accumulator[property]) {
+                    accumulated.push(property)
                     properties[property] = `$accumulator[${util.inspect(property)}]`
+                } else if (property == '$buffer') {
+                    is.buffered = true
+                    properties[property] = property
+                } else if (property == '$start') {
+                    is.buffered = true
+                    properties[property] = `$starts[${buffered.end++}]`
+                } else if (property == '$end') {
+                    is.buffered = true
+                    properties[property] = '$start'
                 }
             }
+            const body = Object.keys(properties).map(property => {
+                return `${property}: ${properties[property]}`
+            })
             if (is.conditional) {
                 inlined.push(`(${inline.source})(` + $(`
                     {
                         `, body.join(',\n'), `
                     })
                 `))
-            } else
-            if (is.buffered) {
+            } else if (is.buffered) {
+                if (is.transform) {
+                } else {
+                    accumulated.map(property => {
+                        if (!(property in accumulate.accumulated[0])) {
+                            accumulate.accumulated[0] = {}
+                        }
+                        accumulate.accumulated[0][property] = accumulate.buffered.length
+                    })
+                    accumulate.buffered.push({
+                        start: accumulate.buffered.length,
+                        properties: inline.properties,
+                        source: `; (${inline.source})(` + $(`
+                            {
+                                `, body.join(',\n'), `
+                            })
+                        `)
+                    })
+                }
             } else {
-                const body = Object.keys(properties).map(property => {
-                    return `${property}: ${properties[property]}`
-                })
                 if (is.assertion) {
                     inlined.push(`; (${inline.source})(` + $(`
                         {

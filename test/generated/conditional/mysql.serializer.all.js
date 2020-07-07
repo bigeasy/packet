@@ -4,9 +4,9 @@ module.exports = function ({ serializers }) {
 
         return function (object) {
             return function ($buffer, $start, $end) {
-                if ((value => value < 251)(object.value)) {
+                if ((value => value < 251)(object.value)){
                     $buffer[$start++] = (object.value & 0xff)
-                } else if ((value => value >= 251 && value < 2 ** 16)(object.value)) {
+                } else if ((value => value >= 251 && value < 2 ** 16)(object.value)){
                     $buffer.write("fc", $start, $start + 1, 'hex')
                     $start += 1
 

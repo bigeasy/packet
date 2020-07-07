@@ -3,16 +3,16 @@ module.exports = function ({ sizeOf }) {
 
 
         return function (object) {
-            let $_ = 0, $i = []
+            let $start = 0, $i = []
 
             for ($i[0] = 0; $i[0] < object.array.length; $i[0]++) {
-                $_ += 2 * object.array[$i[0]].length + 2
+                $start += 2 * object.array[$i[0]].length + 2
             }
-            $_ += 2
+            $start += 2
 
-            $_ += 1
+            $start += 1
 
-            return $_
+            return $start
         }
     } ()
 }

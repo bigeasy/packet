@@ -6,8 +6,8 @@ module.exports = function ({ serializers }) {
             return function ($buffer, $start, $end) {
                 let $$ = []
 
-                if ($end - $start < 3) {
-                    return serializers.inc.object(object, 0)($buffer, $start, $end)
+                if ($end - $start < 1 + 2) {
+                    return serializers.inc.object(object, 0, $$)($buffer, $start, $end)
                 }
 
                 $$[0] = (value => -value)(object.value)

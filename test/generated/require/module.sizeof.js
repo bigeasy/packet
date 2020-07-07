@@ -3,11 +3,11 @@ module.exports = function ({ sizeOf }) {
         const twiddle = require('../../../test/cycle/twiddle')
 
         return function (object) {
-            let $_ = 0
+            let $start = 0
 
-            $_ += 5
+            $start += 5
 
-            return $_
+            return $start
         }
     } ()
 }

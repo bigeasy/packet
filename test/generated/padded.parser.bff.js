@@ -12,7 +12,7 @@ module.exports = function ({ parsers }) {
                 }
 
                 if ($end - $start < 17) {
-                    return parsers.inc.object(object, 1)($buffer, $start, $end)
+                    return parsers.inc.object(object, 1, $i)($buffer, $start, $end)
                 }
 
                 $i[0] = 0

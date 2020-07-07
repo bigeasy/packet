@@ -3,11 +3,11 @@ module.exports = function ({ sizeOf }) {
 
 
         return function (object) {
-            let $_ = 0
+            let $start = 0
 
-            $_ += 4
+            $start += 4
 
-            return $_
+            return $start
         }
     } ()
 }
