@@ -4,6 +4,7 @@ module.exports = function ({ parsers }) {
 
         return function (object = {}, $step = 0, $accumulator = []) {
             let $_, $bite
+
             return function parse ($buffer, $start, $end) {
                 switch ($step) {
                 case 0:

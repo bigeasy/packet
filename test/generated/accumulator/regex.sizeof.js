@@ -3,11 +3,11 @@ module.exports = function ({ sizeOf }) {
         const assert = require('assert')
 
         return function (object) {
-            let $_ = 0, $accumulator = {}
+            let $start = 0, $accumulator = {}
 
-            $_ += 3
+            $start += 3
 
-            return $_
+            return $start
         }
     } ()
 }

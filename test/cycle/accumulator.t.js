@@ -2,7 +2,6 @@ require('proof')(0, prove)
 
 function prove (okay) {
     const cycle = require('./cycle')
-    /*
     cycle(okay, {
         name: 'accumulator/object',
         define: {
@@ -51,7 +50,6 @@ function prove (okay) {
             assert: 'assert'
         }
     })
-    */
     cycle(okay, {
         name: 'accumulator/counted',
         define: {

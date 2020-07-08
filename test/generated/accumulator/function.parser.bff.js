@@ -17,7 +17,7 @@ module.exports = function ({ parsers }) {
                 $accumulator['counter'] = (() => [ 0 ])()
 
                 if ($end - $start < 3) {
-                    return parsers.inc.object(object, 1)($buffer, $start, $end)
+                    return parsers.inc.object(object, 2, $accumulator)($buffer, $start, $end)
                 }
 
                 object.value.first = ($buffer[$start++])

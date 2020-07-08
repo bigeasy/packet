@@ -9,7 +9,7 @@ module.exports = function ({ serializers }) {
                 $accumulator['counter'] = [ 0 ]
 
                 if ($end - $start < 3) {
-                    return serializers.inc.object(object, 0)($buffer, $start, $end)
+                    return serializers.inc.object(object, 1, $$, $accumulator)($buffer, $start, $end)
                 }
 
                 $$[0] = (function ({ $_, counter }) {
