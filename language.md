@@ -782,16 +782,39 @@ define({
 
 ### Terminated Arrays
 
+In the following example, we terminate the array when we encounter a `0` value.
+The `0` is not included in the array result.
+
 ```javascript
 define({
     packet: {
-        array: [[ 8 ], 0xa ]
+        array: [[ 8 ], 0x0 ]
     }
 })
 ```
 
+#### Multi-byte Terminators
+
+You can specify multi-byte terminators by specifying the multi-byte terminator
+byte by byte in the end of the definition array.
+
+In the following example, we terminate the array when we encounter a `0xa` value
+followed by a `0xd` value, carriage return followed by line feed.
+
+The `0` is not included in the array result.
+
+```javascript
+define({
+    packet: {
+        array: [[ 8 ], 0xd, 0xa ]
+    }
+})
+```
+
+#### Calculated Terminators
+
 In the following example, we terminate when the result ends with a new line.
-This will create a result with the newline termiantor included.
+This will create a result with the newline terminator included.
 
 ```javascript
 define({

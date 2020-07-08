@@ -7,9 +7,12 @@ function structure (path, field, assignment = ' = ') {
             return structure((path + field.dotted).split('.').pop(), field, ': ')
         case 'array':
             return `${(path + field.dotted).split('.').pop()}: []`
+        case 'buffer':
+            return `${(path + field.dotted).split('.').pop()}: Buffer.alloc(${field.length})`
         case 'number':
-        case 'variant':
             return `${(path + field.dotted).split('.').pop()}: 0`
+        case 'variant':
+            return `${(path + field.dotted).split('.').pop()}: null`
         case 'descend':
             return vivify(path + field.dotted, field.fields.filter(field => {
                 return field.vivify != null

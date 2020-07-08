@@ -1,4 +1,4 @@
-require('proof')(2, okay => {
+require('proof')(3, okay => {
     const simplified = require('../../simplified')
     okay(simplified({ packet: {
         value: [ [ 16 ], 0x0, 0x0 ] }
@@ -27,7 +27,7 @@ require('proof')(2, okay => {
                 compliment: false
             }]
         }]
-    }], 'terminated-fixed')
+    }], 'terminated fixed')
     okay(simplified({ packet: {
         value: [ [ [ [ 16 ], 0x0, 0x0 ] ], 0x0, 0x0 ] }
     }), [{
@@ -63,5 +63,34 @@ require('proof')(2, okay => {
                 }]
             }]
         }]
-    }], 'terminated-nested')
+    }], 'terminated nested')
+    okay(simplified({ packet: {
+        value: [ [ Buffer ], 0xd, 0xa ] }
+    }), [{
+        name: 'packet',
+        fixed: false,
+        bits: 0,
+        type: 'structure',
+        vivify: 'object',
+        dotted: '',
+        fields: [{
+            name: 'value',
+            dotted: '.value',
+            type: 'terminated',
+            vivify: 'variant',
+            fixed: false,
+            bits: 0,
+            terminator: [ 0xd, 0xa ],
+            fields: [{
+                type: 'buffer',
+                vivify: 'number',
+                dotted: '',
+                concat: true,
+                fixed: true,
+                bits: 8,
+                endianness: 'big',
+                compliment: false
+            }]
+        }]
+    }], 'terminated concat')
 })

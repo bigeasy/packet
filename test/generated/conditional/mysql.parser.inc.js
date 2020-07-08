@@ -11,7 +11,7 @@ module.exports = function ({ parsers }) {
                     case 0:
 
                         object = {
-                            value: 0,
+                            value: null,
                             sentry: 0
                         }
 

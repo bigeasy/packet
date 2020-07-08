@@ -8,7 +8,7 @@ module.exports = function ({ parsers }) {
             let object = {
                 header: {
                     type: 0,
-                    value: 0
+                    value: null
                 },
                 sentry: 0
             }

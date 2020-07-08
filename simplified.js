@@ -92,6 +92,39 @@ function integer (value, packed, extra = {}) {
     }
 }
 
+function buffered (field) {
+    if (field === Buffer) {
+        return [{
+            type: 'buffer',
+            vivify: 'number',
+            dotted: '',
+            concat: true,
+            bits: 8,
+            fixed: true,
+            dotted: '',
+            endianness: 'big',
+            compliment: false
+        }]
+    }
+    if (
+        Array.isArray(field) &&
+        field.length == 1 &&
+        field[0] === Buffer
+    ) {
+        return [{
+            type: 'buffer',
+            vivify: 'number',
+            dotted: '',
+            concat: false,
+            bits: 8,
+            fixed: true,
+            endianness: 'big',
+            compliment: false
+        }]
+    }
+    return null
+}
+
 function map (definitions, packet, extra = {}, packed = false) {
     switch (typeof packet) {
     case 'string': {
@@ -398,20 +431,20 @@ function map (definitions, packet, extra = {}, packed = false) {
                     Array.isArray(packet[0]) &&
                     typeof packet[1] == 'number'
                 ) {
-                    const fields = []
                     const terminator = []
                     for (let i = 1, I = packet.length; i < I; i++) {
                         terminator.push(packet[i])
                     }
+                    const fields = buffered(packet[0][0]) || map(definitions, packet[0][0], {})
                     return [{
                         dotted: '',
                         ...extra,
                         type: 'terminated',
-                        vivify: 'array',
+                        vivify: fields[0].type == 'buffer' ? 'variant' : 'array',
                         bits: 0,
                         fixed: false,
                         terminator: terminator,
-                        fields: map(definitions, packet[0][0], {})
+                        fields: fields
                     }]
                 // **Fixed length arrays**: Arrays of fixed length or calculated
                 // length.
@@ -425,14 +458,15 @@ function map (definitions, packet, extra = {}, packed = false) {
                     while (typeof slice[0] == 'number')  {
                         pad.push(slice.shift())
                     }
-                    const fields = map(definitions, packet[1][0], {})
+                    const fields = buffered(packet[1][0]) || map(definitions, packet[1][0], {})
                     const fixed = fields.filter(field => ! field.fixed).length == 0
                     const bits = fixed
                                ? fields.reduce((bits, field) => bits + field.bits, 0)
                                : 0
                     return [{
                         type: 'fixed',
-                        vivify: 'array',
+                        vivify: fields[0].type == 'buffer' && fields[0].concat
+                                                ? 'buffer' : 'array',
                         length: packet[0],
                         dotted: '',
                         ...extra,

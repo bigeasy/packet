@@ -293,6 +293,14 @@ function generate (packet, { require = null, bff }) {
     function fixed (path, field) {
         $step += 2
         const i = `$i[${++$i}]`
+        const element = field.fields[field.fields.length - 1]
+        if (element.type == 'buffer' && ! element.concat) {
+            console.log($(`
+                for (${i} = 0; i < ${field.length}; i++) {
+                }
+            `))
+            throw new Error
+        }
         const looped = map(dispatch, `${path}[${i}]`, field.fields)
         const pad = field.pad.length == 0 ? null : $(`
             for (;;) {
@@ -502,7 +510,6 @@ function generate (packet, { require = null, bff }) {
         case 'lengthEncoded':
             return lengthEncoded(path, field)
         case 'buffer':
-            return buffer(field)
         case 'bigint':
         case 'integer':
             return integer(path, field)

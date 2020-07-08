@@ -64,6 +64,7 @@ exports.serialize = function (field) {
                 }
             }
             break
+        case 'buffer':
         case 'checkpoint':
         case 'lengthEncoding':
         case 'terminator':
@@ -110,6 +111,20 @@ exports.parse = function (field) {
             break
         case 'terminated': {
                 variables.i = true
+                if (field.fields[0].type == 'terminator') {
+                    const element = field.fields.slice().pop().fields.slice().pop()
+                    if (element.type == 'buffer') {
+                        variables.register = true
+                    } else {
+                        field.fields.map(declare)
+                    }
+                } else {
+                    field.fields.map(declare)
+                }
+            }
+            break
+        case 'repeated': {
+                field.fields.map(declare)
             }
             break
         case 'switch': {
@@ -138,6 +153,7 @@ exports.parse = function (field) {
                 }
             }
             break
+        case 'buffer':
         case 'lengthEncoding':
         case 'literal':
         case 'checkpoint':

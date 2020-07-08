@@ -7,7 +7,7 @@ module.exports = function ({ parsers }) {
                 let $sip = []
 
                 let object = {
-                    value: 0,
+                    value: null,
                     sentry: 0
                 }
 

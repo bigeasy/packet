@@ -1,3 +1,6 @@
+// Node.js API.
+const util = require('util')
+
 // Format source code maintaining indentation.
 const $ = require('programmatic')
 
@@ -178,6 +181,63 @@ function generate (packet, { require = null }) {
     // weird terminators.
     function terminated (path, field) {
         surround = true
+        if (field.fields[0].type == 'buffer') {
+            variables.buffers = true
+            const redo = $step + 1
+            const terminator = field.terminator
+            const buffered = accumulate.buffered.map(buffered => buffered.source)
+            const slice = $(`
+                case ${$step++}:
+
+                    $_ = $buffer.indexOf(${terminator[0]}, $start)
+                    if (~$_) {
+                        $buffers.push($buffer.slice($start, $_))
+                        $start = $_ + 1
+                        $step = ${$step}
+                        continue
+                    } else {
+                        $buffers.push($buffer.slice($start))
+                        `, buffered.length != 0 ? buffered.join('\n') : null, `
+                        return { start: $end, parse }
+                    }
+
+                    $step = ${$step}
+
+            `)
+            const subsequent = []
+            const done = $step + terminator.length
+            for (let i = 1; i < terminator.length; i++) {
+                const sofar = util.inspect(terminator.slice(0, i))
+                subsequent.push($(`
+                    case ${$step++}:
+
+                        if ($start == $end) {
+                            `, buffered.length != 0 ? buffered.join('\n') : null, `
+                            return { start: $start, parse }
+                        }
+
+                        if ($buffer[$start++] != ${terminator[1]}) {
+                            $buffers.push(Buffer.from(${sofar}.concat($buffer[$start])))
+                            $step = ${redo}
+                            continue
+                        }
+
+                        $step = ${$step}
+                `))
+            }
+            return $(`
+                `, slice, `
+
+                `, subsequent.length != 0 ? join(subsequent) : null, `
+
+                case ${$step++}:
+
+                    ${path} = $buffers.length == 1 ? $buffers[0] : Buffer.concat($buffers)
+                    $buffers.length = 0
+
+                    $step = 5
+            `)
+        }
         $i++
         const i = `$i[${$i}]`
         const init = $step
@@ -571,6 +631,7 @@ function generate (packet, { require = null }) {
             return terminated(path, packet)
         case 'lengthEncoded':
             return lengthEncoded(path, packet)
+        case 'buffer':
         case 'bigint':
         case 'integer':
             return integer(path, packet)
@@ -631,9 +692,19 @@ function generate (packet, { require = null }) {
 
     const requires = required(require)
 
-    const lets = [ '$_', '$bite' ].concat(
-        variables.starts ? [ '$restart = false' ] : []
-    )
+    variables.register = true
+    variables.bite = true
+
+    const declarations = {
+        register: '$_',
+        bite: '$bite',
+        starts: '$restart = false',
+        buffers: '$buffers = []'
+    }
+
+    const lets = Object.keys(declarations)
+                       .filter(key => variables[key])
+                       .map(key => declarations[key])
 
     const restart = variables.starts ? $(`
         if ($restart) {

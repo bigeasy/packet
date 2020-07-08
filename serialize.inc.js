@@ -462,6 +462,7 @@ function generate (packet, { require = null }) {
             return lengthEncoded(path, packet)
         case 'literal':
             return literal(path, packet)
+        case 'buffer':
         case 'bigint':
         case 'integer':
             // TODO This will not include the final step, we keep it off for the

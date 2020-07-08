@@ -290,6 +290,7 @@ function generate (packet, { require = null }) {
             break
         case 'terminated':
         case 'integer':
+        case 'buffer':
             break
         default: {
                 throw new Error(field.type)

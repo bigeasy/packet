@@ -1,3 +1,6 @@
+// Node.js API.
+const util = require('util')
+
 // Format source code maintaining indentation.
 const $ = require('programmatic')
 
@@ -345,6 +348,29 @@ function generate (packet, { require, bff }) {
     }
 
     function terminated (path, field) {
+        const element = field.fields.slice().pop().fields.slice().pop()
+        if (element.type == 'buffer') {
+            const terminator = field.terminator
+            if (bff) {
+                const source = $(`
+                    $_ = $buffer.indexOf(Buffer.from(${util.inspect(terminator)}), $start)
+                    if (~$_) {
+                        ${path} = $buffer.slice($start, $_)
+                        $start = $_ + ${terminator.length}
+                    } else {
+                        return parsers.inc.${packet.name}(${signature().join(', ')})($buffer, $start, $end)
+                    }
+                `)
+                $step += 2 + terminator.length
+                return source
+            }
+            return $(`
+                $_ = $buffer.indexOf(Buffer.from(${util.inspect(terminator)}), $start)
+                $_ = ~$_ ? $_ : $start
+                ${path} = $buffer.slice($start, $_)
+                $start = $_ + ${terminator.length}
+            `)
+        }
         $step++
         variables.i = true
         $i++
@@ -563,10 +589,7 @@ function generate (packet, { require, bff }) {
         `)
     }
 
-    function checkpoint (checkpoint, depth) {
-        if (checkpoint.lengths.length == 0) {
-            return null
-        }
+    function signature () {
         const signatories = {
             packet: packet.name,
             step: $step,
@@ -576,12 +599,18 @@ function generate (packet, { require, bff }) {
             accumulator: '$accumulator',
             starts: '$starts'
         }
-        const signature = Object.keys(signatories)
-                                .filter(key => variables[key])
-                                .map(key => signatories[key])
+        return Object.keys(signatories)
+                     .filter(key => variables[key])
+                     .map(key => signatories[key])
+    }
+
+    function checkpoint (checkpoint, depth) {
+        if (checkpoint.lengths.length == 0) {
+            return null
+        }
         return $(`
             if ($end - $start < ${checkpoint.lengths.join(' + ')}) {
-                return parsers.inc.${packet.name}(${signature.join(', ')})($buffer, $start, $end)
+                return parsers.inc.${packet.name}(${signature().join(', ')})($buffer, $start, $end)
             }
         `)
     }

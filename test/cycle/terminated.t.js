@@ -17,7 +17,19 @@ function prove (okay) {
                 sentry: 8
             }
         },
-        objects: [{ array: [ [ 0x1234, 0x4567 ], [ 0x890a, 0xcdef ] ], sentry: 0xaa }],
-        stopAt: 'parse.bff'
+        objects: [{ array: [ [ 0x1234, 0x4567 ], [ 0x890a, 0xcdef ] ], sentry: 0xaa }]
+    })
+    cycle(okay, {
+        name: 'terminated/concat',
+        define: {
+            object: {
+                array: [ [ Buffer ], 0xd, 0xa ],
+                sentry: 8
+            }
+        },
+        objects: [{
+            array: Buffer.from('abcdefghij'),
+            sentry: 0xaa
+        }]
     })
 }

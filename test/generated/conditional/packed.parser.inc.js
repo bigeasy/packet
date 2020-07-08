@@ -12,7 +12,7 @@ module.exports = function ({ parsers }) {
                     object = {
                         header: {
                             flag: 0,
-                            value: 0
+                            value: null
                         },
                         sentry: 0
                     }
