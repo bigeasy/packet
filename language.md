@@ -918,6 +918,17 @@ define ({
 
 ### Checksums and Running Calcuations
 
+Some protocols perform checksums on the body of message. Others require tracking
+the remaining bytes in a message based on a length property in a header and
+making decisions about the contents of the message based on the bytes remaining.
+
+To perform runnign calculations like buffers and remaining bytes we can use
+accumlators, lexically scoped object variables that can be used to store the
+state of a running calculation.
+
+The following defintion creates an MD5 checksum of the body of a packet and
+stores the result in a checksum property that follows the body of the message.
+
 ```javascript
 define({
     packet: [{ hash: () => crypto.createHash('md5') }, {
@@ -928,10 +939,10 @@ define({
             string: [[ 8 ], 0x0 ]
         }],
         checksum: [[
-            ({ hash }) => hash.digest().toJSON().data
-        ], [[ 40 ], [ 8 ]], [
+            ({ hash }) => hash.digest()
+        ], [[ 40 ], [ Buffer ]], [
             ({ value = 0, hash }) => {
-                assert.deepEqual(hash.digest(binary).toJSON().data, value)
+                assert.deepEqual(hash.digest(binary).toJSON(), value.toJSON())
             }
         ]]
     }]
@@ -943,33 +954,22 @@ define({
 })
 ```
 
-```javascript
-define({
-    packet: {
-        array: [ 32, [[{ hash: () => crypto.createHash('md5') }, {
-            body: [[[
-                ({ $buffer, $start, $end, hash }) => hash.update($buffer, $start, $end)
-            ]], {
-                value: 32,
-                string: [[ 8 ], 0x0 ]
-            }],
-            checksum: [[
-                ({ hash }) => toArray(hash.digest())
-            ], [[ 40 ], [ 8 ]], [
-                ({ value = 0, hash }) => {
-                    assert.deepEqual(toArray(hash.digest(binary)), value)
-                }
-            ]]
-        }]]
-    }
-}, {
-    require: {
-        assert: 'assert',
-        crypto: 'crypto',
-        toArray: (buffer) => buffer.toJSON().data
-    }
-})
-```
+Here we also introduce the concept of buffer inlines. These are inlines that
+operate not on the serialized or parsed value, but instead on the underlying
+buffer. In the above example the `hash.update()` inline is not called once for
+each property in the `body`, it is called for each buffer chunk that contians the
+binary data for the `body`.
+
+Unlike odinary inline functions, a buffer inline is not called prior to
+serialization. Buffer inlines are called as late as possible to process as much
+of the buffer continguously as possible. In the previous example, the
+`hash.update()` inline is applied to the binary data that defines the entire
+`body` which it encapsulates.
+
+We use nested structures to group.
+
+**TK**: Simplier calculation example to start. Calculation is important because
+it will allow us to talk about the difference between `sizeof`, `offsetof`.
 
 ```javascript
 define({
@@ -1003,7 +1003,7 @@ define({
 
 ```javascript
 define({
-    packet: [{ counter: () => [] }, {
+    packet: [{ counter: [ 0 ] }, {
         header: {
             type: 8,
             length: [[
