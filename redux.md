@@ -1,3 +1,43 @@
+## Tue Jul  7 07:52:20 CDT 2020 ~ buffer, streaming
+
+`Buffer` based byte arrays might be nice, but then why not do `TypeArray`s as
+well? You could be making life difficult for yourself.
+
+Actually, you could declare these rather easily.
+
+```javascript
+const definition = {
+    lengthEncodedBuffer: [ 32, Buffer ],
+    fixedBuffer: [[ 32 ], Buffer ],
+    terminatedBuffer [ Buffer, 0x0 ]
+}
+```
+
+From what I can see, there's no point in creating different TypedArrays, just
+the underlying ArrayBuffer which is simple enough for fixed and length encoded
+but would require catenation for terminated.
+
+Terminated would be best as an array of segments so that the user could decide
+if the user needs to catenate them, in case the user can do without the
+catenation. Perhaps the user is just writing to file so they can write one
+buffer and then the next, not an entire catenated buffer.
+
+For now, we can let this be and edge case.
+
+Oh, well, this is too easy. [`Buffer` instances are also `Uint8Array` instances,
+which is the language’s built-in class for working with binary
+data](https://nodejs.org/api/buffer.html#buffer_buffers_and_typedarrays). Let's
+support buffers and let's concat zero terminated strings.
+
+Anyway, when I looked at this at first, I thought I'd have to support all the
+different types, and then do I want to support endianness, etc? Now I can see
+that I return an `ArrayBuffer` and the user can cast it.
+
+Which brings us to streaming. This shouldn't be specified in the language, but
+the APIs should allow the user to pull a chunk of bytes or write a chunk of
+bytes to the underlying stream somehow, not have to worry about how to switch
+from parsing headers to streaming bodies.
+
 ## Sat Jul  4 12:04:12 CDT 2020
 
 The API should implement strategies, and be a wrapper around a definition. Thus,
