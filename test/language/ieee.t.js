@@ -12,7 +12,6 @@ require('proof')(1, okay => {
             dotted: '.value',
             bits: 64,
             fixed: true,
-            ethereal: true,
             before: [{
                 defaulted: [],
                 properties: [],
