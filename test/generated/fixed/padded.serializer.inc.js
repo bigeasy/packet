@@ -42,6 +42,11 @@ module.exports = function ({ serializers }) {
                             return { start: $start, serialize }
                         }
 
+                        if ($i[0]++ == 16) {
+                            $step = 5
+                            continue
+                        }
+
                         $buffer[$start++] = 0xd
 
                         $step = 4
@@ -52,9 +57,19 @@ module.exports = function ({ serializers }) {
                             return { start: $start, serialize }
                         }
 
+                        if ($i[0]++ == 16) {
+                            $step = 5
+                            continue
+                        }
+
                         $buffer[$start++] = 0xa
 
                         $step = 5
+
+                        if ($i[0] != 16) {
+                            $step = 3
+                            continue
+                        }
 
                     case 5:
 

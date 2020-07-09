@@ -19,4 +19,11 @@ function prove (okay) {
         },
         objects: [{ array: Buffer.from('abcdefgh'), sentry: 0xaa }]
     })
+    cycle(okay, {
+        name: 'fixed/padded',
+        define: {
+            object: { array: [ [ 16 ], [ 8 ], 0xd, 0xa ], sentry: 8  }
+        },
+        objects: [{ array: Buffer.from('hello, world').toJSON().data, sentry: 0xaa }]
+    })
 }
