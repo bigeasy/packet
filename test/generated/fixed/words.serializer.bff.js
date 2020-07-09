@@ -6,7 +6,7 @@ module.exports = function ({ serializers }) {
             return function ($buffer, $start, $end) {
                 let $i = []
 
-                if ($end - $start < 9) {
+                if ($end - $start < 9 + 1 * object.sentry.length) {
                     return serializers.inc.object(object, 0, $i)($buffer, $start, $end)
                 }
 
@@ -16,7 +16,11 @@ module.exports = function ({ serializers }) {
                 }
 
 
-                $buffer[$start++] = (object.sentry & 0xff)
+                for ($i[0] = 0; $i[0] < object.sentry.length; $i[0]++) {
+                    $buffer[$start++] = (object.sentry[$i[0]] & 0xff)
+                }
+
+                $buffer[$start++] = 0x0
 
                 return { start: $start, serialize: null }
             }

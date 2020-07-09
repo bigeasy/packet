@@ -12,7 +12,7 @@ module.exports = function ({ parsers }) {
 
                         object = {
                             array: [],
-                            sentry: 0
+                            sentry: []
                         }
 
                         $step = 1
@@ -73,18 +73,47 @@ module.exports = function ({ parsers }) {
 
                     case 8:
 
-                        $step = 9
+                        $i[0] = 0
 
                     case 9:
+
+                        if ($start == $end) {
+                            return { start: $start, parse }
+                        }
+
+                        if ($buffer[$start] != 0x0) {
+                            $step = 10
+                            parse([  ], 0, 0)
+                            continue
+                        }
+                        $start++
+
+                        $step = 14
+                        continue
+
+                    case 10:
+
+
+                    case 11:
+
+                        $step = 12
+
+                    case 12:
 
                         if ($start == $end) {
                             return { start: $start, object: null, parse }
                         }
 
-                        object.sentry = $buffer[$start++]
+                        object.sentry[$i[0]] = $buffer[$start++]
 
 
-                    case 10:
+                    case 13:
+
+                        $i[0]++
+                        $step = 9
+                        continue
+
+                    case 14:
 
                         return { start: $start, object: object, parse: null }
                     }

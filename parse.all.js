@@ -397,6 +397,7 @@ function generate (packet, { require, bff }) {
         $step += field.pad.length
         const looped = join(field.fields.map(field => dispatch(path + `[${i}]`, field)))
         $step += field.pad.length
+        $step += 3 // Skip termination test and fill.
         const terminator = field.pad.map((bite, index) => {
             if (index == 0) {
                 return `$buffer[$start] == 0x${bite.toString(16)}`

@@ -97,6 +97,16 @@ function generate (packet, { require = null }) {
         case 'literal':
         case 'integer':
             return `$start += ${field.bits / 8}`
+        case 'fixed': {
+                if (field.fixed) {
+                    return $(`
+                        $start += ${field.bits / 8}
+                    `)
+                } else {
+                    throw new Error
+                }
+            }
+            break
         case 'lengthEncoded':
             if (field.fields[0].fixed) {
                 return $(`

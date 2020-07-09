@@ -5,9 +5,15 @@ function prove (okay) {
     cycle(okay, {
         name: 'fixed/words',
         define: {
-            object: { array: [ [ 4 ], [ 16 ] ], sentry: 8  }
+            object: {
+                array: [ [ 4 ], [ 16 ] ],
+                sentry: [ [ 8 ], 0x0 ]
+            }
         },
-        objects: [{ array: [ 0xabcd, 0xdcba, 0xabcd, 0xdbca ], sentry: 0xaa }]
+        objects: [{
+            array: [ 0xabcd, 0xdcba, 0xabcd, 0xdbca ],
+            sentry: [ 0xaa ]
+        }]
     })
     cycle(okay, {
         name: 'fixed/padded/single',
