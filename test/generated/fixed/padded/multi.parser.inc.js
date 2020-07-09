@@ -23,11 +23,6 @@ module.exports = function ({ parsers }) {
 
                     case 2:
 
-                        if (16 - $i[0] < 2) {
-                            $step = 8
-                            continue
-                        }
-
                         if ($start == $end) {
                             return { start: $start, parse }
                         }
@@ -48,7 +43,7 @@ module.exports = function ({ parsers }) {
 
                         if ($buffer[$start] != 0xa) {
                             $step = 4
-                            parse([ 0xd ], 0, 1)
+                            parse(Buffer.from([ 0xd ]), 0, 1)
                             continue
                         }
                         $start++
@@ -57,7 +52,6 @@ module.exports = function ({ parsers }) {
                         continue
 
                     case 4:
-
 
                     case 5:
 

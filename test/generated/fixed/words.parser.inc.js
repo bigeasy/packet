@@ -23,7 +23,6 @@ module.exports = function ({ parsers }) {
 
                     case 2:
 
-
                     case 3:
 
                         $_ = 0

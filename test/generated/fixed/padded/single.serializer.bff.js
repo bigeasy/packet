@@ -14,6 +14,13 @@ module.exports = function ({ serializers }) {
                     $buffer[$start++] = (object.array[$i[0]] & 0xff)
                 }
 
+                for (;;) {
+                    if ($i[0] == 8) {
+                        break
+                    }
+                    $buffer[$start++] = 0x0
+                    $i[0]++
+                }
 
                 $buffer[$start++] = (object.sentry & 0xff)
 

@@ -411,8 +411,7 @@ function generate (packet, { require = null }) {
     // weird terminators.
     function fixed (path, field) {
         surround = true
-        $i++
-        const i = `$i[${$i}]`
+        const i = `$i[${++$i}]`
         const init = $step
         let sip = ++$step
         const redo = $step
@@ -425,33 +424,11 @@ function generate (packet, { require = null }) {
         // terminated array of variable structures that could also be fixed,
         // that's a horrible format.
         const fit = Math.ceil(field.pad.length / (field.bits / 8))
-        const remaining
-            = field.fixed ? $(`
-                if (${field.length} - ${i} < ${field.pad.length}) {
-                    $step = ${$step + 1}
-                    continue
-                }
-            `) : null
-        const terminator = field.pad.length ? join(field.pad.map((bite, index) => {
-            if (index != field.pad.length - 1) {
-                return $(`
-                    case ${sip++}:
-
-                        `, remaining, 1, `
-
-                        if ($start == $end) {
-                            return { start: $start, parse }
-                        }
-
-                        if ($buffer[$start] != 0x${bite.toString(16)}) {
-                            $step = ${begin}
-                            continue
-                        }
-                        $start++
-
-                        $step = ${sip}
-                `)
-            } else {
+        const terminator = function () {
+            switch (literal.length) {
+            case 0:
+                return null
+            case 1:
                 return $(`
                     case ${sip++}:
 
@@ -459,18 +436,64 @@ function generate (packet, { require = null }) {
                             return { start: $start, parse }
                         }
 
-                        if ($buffer[$start] != 0x${bite.toString(16)}) {
-                            $step = ${begin}
-                            parse([ ${literal.slice(0, index).join(', ')} ], 0, ${index})
+                        if ($buffer[$start] == ${literal[0].toString(16)}) {
+                            $start++
+                            $step = ${$step + 1}
                             continue
                         }
-                        $start++
 
-                        $step = ${$step + 1}
-                        continue
+                        $step = ${$step}
                 `)
+            default:
+                return join(literal.map((bite, index) => {
+                    const remaining
+                        = false && field.fixed && index == 0 ? $(`
+                            if (${field.length} - ${i} < ${field.pad.length}) {
+                                $step = ${$step + 1}
+                                continue
+                            }
+                        `) : null
+                    if (index != field.pad.length - 1) {
+                        return $(`
+                            case ${sip++}:
+
+                                `, remaining, -1, `
+
+                                if ($start == $end) {
+                                    return { start: $start, parse }
+                                }
+
+                                if ($buffer[$start] != ${bite}) {
+                                    $step = ${begin}
+                                    continue
+                                }
+                                $start++
+
+                                $step = ${sip}
+                        `)
+                    } else {
+                        return $(`
+                            case ${sip++}:
+
+                                if ($start == $end) {
+                                    return { start: $start, parse }
+                                }
+
+                                if ($buffer[$start] != ${bite}) {
+                                    $step = ${begin}
+                                    parse(Buffer.from([ ${literal.slice(0, index).join(', ')} ]), 0, ${index})
+                                    continue
+                                }
+                                $start++
+
+                                $step = ${$step + 1}
+                                continue
+                        `)
+                    }
+                }))
             }
-        })) : null
+        } ()
+        // TODO Eliminate vivify step if not used.
         const source = $(`
             case ${init}:
 
@@ -480,7 +503,7 @@ function generate (packet, { require = null }) {
 
             case ${begin}:
 
-                `, vivify.array(`${path}[${i}]`, field), `
+                `, vivify.array(`${path}[${i}]`, field), -1, `
 
             `, looped, `
 
