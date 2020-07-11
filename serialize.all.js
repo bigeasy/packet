@@ -1,4 +1,10 @@
+// Node.js API.
+const assert = require('assert')
+
 const map = require('./map')
+
+// Convert numbers and arrays to numbers to literals with hex literals.
+const hex = require('./hex')
 
 // Generate integer packing.
 const pack = require('./pack')
@@ -291,16 +297,55 @@ function generate (packet, { require = null, bff }) {
     }
 
     function fixed (path, field) {
+        const element = field.fields[field.fields.length - 1]
+        if (element.type == 'buffer') {
+            $step += 2
+            let source = ''
+            variables.register = true
+            // For whole buffers, we slice the buffer out of the underlying
+            // buffer.
+            //
+            // **TODO** Create buffer as `null` in vivified object for bff parse
+            // because we're allocating memory we might not use if we end up
+            // failing toward incremental parse. Oh, no, better still, let's
+            // slice the incoming buffer. If this bothers the user, they can
+            // make a copy of the buffer on parse using an inline.
+            if (element.concat) {
+                source = $(`
+                    $_ = $start
+                    ${path}.copy($buffer, $start)
+                    $start += ${path}.length
+                    $_ += ${path}.length
+                `)
+            // If we're gathering the chunks, we push them onto an array of
+            // chunks.
+            } else {
+                const i = `$i[${++$i}]`
+                source = $(`
+                    $_ = $start
+                    for (${i} = 0; ${i} < ${path}.length; ${i}++) {
+                        ${path}[${i}].copy($buffer, $start)
+                        $start += ${path}[${i}].length
+                        $_ += ${path}[${i}].length
+                    }
+                `)
+                $i--
+            }
+            if (field.pad.length == 0) {
+                return source
+            }
+            $step += 2
+            const fill = field.pad.length > 1 ? `Buffer.from(${hex(field.pad)})` : hex(field.pad[0])
+            return $(`
+                `, source, `
+
+                $_ = ${field.length} - $_
+                $buffer.fill(${fill}, $start, $start + $_)
+                $start += $_
+            `)
+        }
         $step += 2
         const i = `$i[${++$i}]`
-        const element = field.fields[field.fields.length - 1]
-        if (element.type == 'buffer' && ! element.concat) {
-            console.log($(`
-                for (${i} = 0; i < ${field.length}; i++) {
-                }
-            `))
-            throw new Error
-        }
         const looped = map(dispatch, `${path}[${i}]`, field.fields)
         const pad = field.pad.length == 0 ? null : $(`
             for (;;) {
@@ -537,6 +582,8 @@ function generate (packet, { require = null, bff }) {
                   : null
 
     const requires = required(require)
+
+    assert.equal($i, -1)
 
     return $(`
         serializers.${bff ? 'bff' : 'all'}.${packet.name} = function () {

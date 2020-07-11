@@ -3,7 +3,7 @@ module.exports = function ({ serializers }) {
 
 
         return function (object, $step = 0, $i = [], $$ = []) {
-            let $bite, $stop, $_
+            let $_, $bite
 
             return function serialize ($buffer, $start, $end) {
                 for (;;) {
@@ -42,13 +42,15 @@ module.exports = function ({ serializers }) {
                             continue
                         }
 
+                        $_ = $i[0] * 1
+
                         $step = 4
 
 
-                        if ($i[0] != 4) {
-                            $step = 4
-                            continue
-                        }
+                    if ($_ != 4) {
+                        $step = 4
+                        continue
+                    }
 
                     case 4:
 

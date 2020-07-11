@@ -40,20 +40,15 @@ module.exports = function ({ parsers }) {
 
                         $i[0]++
 
-                        if ($i[0] == 8) {
-                            $step = 6
+                        if ($i[0] != 8) {
+                            $step = 3
                             continue
                         }
 
-                        $step = 2
-                        continue
+                        $_ = (8 - $i[0]) * 1 - 0
+                        $step = 6
 
                     case 6:
-
-                        $_ = (8 - $i[0]) * 1 - 0
-                        $step = 7
-
-                    case 7:
 
                         $bite = Math.min($end - $start, $_)
                         $_ -= $bite
@@ -63,16 +58,16 @@ module.exports = function ({ parsers }) {
                             return { start: $start, object: null, parse }
                         }
 
-                        $step = 8
+                        $step = 7
                         object.value = (function (value) {
                             return Buffer.from(value).readDoubleLE()
                         })(object.value)
 
+                    case 7:
+
+                        $step = 8
+
                     case 8:
-
-                        $step = 9
-
-                    case 9:
 
                         if ($start == $end) {
                             return { start: $start, object: null, parse }
@@ -81,7 +76,7 @@ module.exports = function ({ parsers }) {
                         object.sentry = $buffer[$start++]
 
 
-                    case 10:
+                    case 9:
 
                         return { start: $start, object: object, parse: null }
                     }

@@ -3,7 +3,7 @@ module.exports = function ({ serializers }) {
         const twiddle = require('../../../test/cycle/twiddle')
 
         return function (object, $step = 0, $$ = []) {
-            let $bite, $stop, $_
+            let $_, $bite
 
             return function serialize ($buffer, $start, $end) {
                 switch ($step) {

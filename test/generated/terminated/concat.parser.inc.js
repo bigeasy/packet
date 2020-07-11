@@ -17,12 +17,12 @@ module.exports = function ({ parsers }) {
 
                         $step = 1
 
-                    case 1:
+                    case 1: {
 
-                        $_ = $buffer.indexOf(13, $start)
-                        if (~$_) {
-                            $buffers.push($buffer.slice($start, $_))
-                            $start = $_ + 1
+                        const $index = $buffer.indexOf(0xd, $start)
+                        if (~$index) {
+                            $buffers.push($buffer.slice($start, $index))
+                            $start = $index + 1
                             $step = 2
                             continue
                         } else {
@@ -32,6 +32,7 @@ module.exports = function ({ parsers }) {
 
                         $step = 2
 
+                    }
 
                     case 2:
 
@@ -39,7 +40,7 @@ module.exports = function ({ parsers }) {
                             return { start: $start, parse }
                         }
 
-                        if ($buffer[$start++] != 10) {
+                        if ($buffer[$start++] != 0xa) {
                             $buffers.push(Buffer.from([ 13 ].concat($buffer[$start])))
                             $step = 2
                             continue
@@ -49,10 +50,11 @@ module.exports = function ({ parsers }) {
 
                     case 3:
 
+
                         object.array = $buffers.length == 1 ? $buffers[0] : Buffer.concat($buffers)
                         $buffers.length = 0
 
-                        $step = 5
+                        $step = 4
 
                     case 4:
 

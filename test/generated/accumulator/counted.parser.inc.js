@@ -3,7 +3,7 @@ module.exports = function ({ parsers }) {
 
 
         return function (object = {}, $step = 0, $i = [], $accumulator = [], $starts = []) {
-            let $_, $bite, $restart = false
+            let $_, $bite, $restart = false, $length = 0
 
             return function parse ($buffer, $start, $end) {
                 if ($restart) {
@@ -79,15 +79,13 @@ module.exports = function ({ parsers }) {
                             return { start: $start, parse }
                         }
 
-                        if ($buffer[$start] != 0x0) {
-                            $step = 7
-                            parse([  ], 0, 0)
+                        if ($buffer[$start] == 0x0) {
+                            $start++
+                            $step = 11
                             continue
                         }
-                        $start++
 
-                        $step = 11
-                        continue
+                        $step = 7
 
                     case 7:
 

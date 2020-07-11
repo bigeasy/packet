@@ -387,17 +387,57 @@ function generate (packet, { require, bff }) {
     }
 
     function fixed (path, field) {
+        // Fetch the type of element.
+        const element = field.fields[field.fields.length - 1]
+        //
+
+        // Buffers can use `indexOf`, `fill` and `copy` and will be much faster
+        // than operating byte-by-byte.
+
+        //
+        if (element.type == 'buffer') {
+            variables.register = true
+            variables.slice = true
+            // Advance past buffer read to padding skip.
+            $step += field.pad.length == 0 ? 2 : 3
+            const slice = $(`
+                $slice = $buffer.slice($start, ${field.length})
+                $start += ${field.length}
+            `)
+            const assign = element.concat ? `${path} = $slice` : `${path}.push($slice)`
+            if (field.pad.length != 0) {
+                $step += field.pad.length
+                const pad = field.pad.length > 1
+                    ? `Buffer.from(${util.format(field.pad)})`
+                    : field.pad[0]
+                return ($(`
+                    `, slice, `
+
+                    $_ = $slice.indexOf(${pad})
+                    if (~$_) {
+                        $slice = $buffer.slice(0, $_)
+                    }
+
+                    `, assign, `
+                `))
+            }
+            // See: https://marcradziwill.com/blog/mastering-javascript-high-performance/
+            return ($(`
+                `, slice, `
+                `, assign, `
+            `))
+        }
         variables.i = true
         const i = `$i[${++$i}]`
         $step += 1
         const check = bff && field.pad.length != 0
                     ? checkpoint({ lengths: [ field.pad.length ] })
                     : null
-        $step += 1
-        $step += field.pad.length
+        // Advance past initialization and terminator tests.
+        $step += 1 + field.pad.length
         const looped = join(field.fields.map(field => dispatch(path + `[${i}]`, field)))
-        $step += field.pad.length
-        $step += 3 // Skip termination test and fill.
+        // Advance past end-of-loop test and fill skip.
+        $step += 1 + (field.pad.length != 0 ? 2 : 0)
         const terminator = field.pad.map((bite, index) => {
             if (index == 0) {
                 return `$buffer[$start] == 0x${bite.toString(16)}`
@@ -438,7 +478,9 @@ function generate (packet, { require, bff }) {
             return $(`
                 `, source, `
 
-                $start += (${field.length} - ${i}) * ${field.bits / field.length / 8} - ${field.pad.length}
+                $start += ${field.length} != ${i}
+                        ? (${field.length} - ${i}) * ${field.bits / field.length / 8} - ${field.pad.length}
+                        : 0
             `)
         }
         return source
@@ -663,6 +705,7 @@ function generate (packet, { require, bff }) {
         i: '$i = []',
         I: '$I = []',
         sip: '$sip = []',
+        slice: '$slice = null',
         accumulator: '$accumulator = {}',
         starts: '$starts = []'
     }

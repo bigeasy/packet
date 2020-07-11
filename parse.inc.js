@@ -1,5 +1,9 @@
 // Node.js API.
 const util = require('util')
+const { inspect } = require('util')
+
+// Convert numbers and arrays to numbers to literals with hex literals.
+const hex = require('./hex')
 
 // Format source code maintaining indentation.
 const $ = require('programmatic')
@@ -28,20 +32,42 @@ const inliner = require('./inliner')
 // Generate required modules and functions.
 const required = require('./required')
 
-const map = require('./map')
-
 // Format source code maintaining indentation.
 const join = require('./join')
+
+const map = require('./map')
 
 // Join an array of strings with first line of subsequent element catenated to
 // last line of previous element.
 const snuggle = require('./snuggle')
 
-function generate (packet, { require = null }) {
-    let $step = 0, $i = -1, $sip = -1, accumulators = {}, surround = false
+//
 
+// Generate an incremental parser from our AST.
+
+//
+function generate (packet, { require = null }) {
+    // Whether or not to surround the switch statement with a forever loop.
+    let surround = false
+
+    // Current step being generated.
+    let $step = 0
+
+    // Current position in the array of array indices.
+    let $i = -1
+
+    // Current position in the array of sipped words.
+    let $sip = -1
+
+    // An map of parser scoped variable definitions to their initialization
+    // values.
+    const locals = {}
+
+    // Determine which variables will be passed into in this parser from a
+    // best-foot-forward parse.
     const variables = declare(packet)
 
+    // An object that tracks the declaration of accumulators.
     const accumulate = {
         accumulator: {},
         accumulated: [],
@@ -50,6 +76,8 @@ function generate (packet, { require = null }) {
         packet: packet.name,
         direction: 'parse'
     }
+
+    // Gather up declared lookup constants.
     const $lookup = {}
 
     function integer (path, field) {
@@ -72,6 +100,7 @@ function generate (packet, { require = null }) {
 
             `)
         }
+        //
         const start = field.endianness == 'big' ? bytes - 1 : 0
         const stop = field.endianness == 'big' ? -1 : bytes
         const direction = field.endianness == 'big' ?  '--' : '++'
@@ -179,44 +208,132 @@ function generate (packet, { require = null }) {
     // Seems like in the past I would read the terminator into an array and if
     // it didn't match, I'd feed the array to the parser, this would handle long
     // weird terminators.
+
+    //
     function terminated (path, field) {
+        // We will be looping.
         surround = true
+        // Get the element type contained by the array.
+        const element = field.fields[field.fields.length - 1]
+        // Our terminator is the padding definition for padded fixed arrays.
+        const bytes = field.terminator || field.pad
+        // Generate any buffered function calls to process the buffer if we
+        // reach the end of the buffer.
+        const buffered = accumulate.buffered.length != 0
+                       ? accumulate.buffered.map(buffered => buffered.source).join('\n')
+                       : null
+        // Skip the remainder for of a fixed padded buffer. Common to buffered
+        // and byte-by-byte fixed arrays, not used for terminated. Note that
+        // it's a function because of the `$step++`.
+        function skip (i) {
+            return $(`
+                case ${$step++}: {
+
+                    const length = Math.min($_, $end - $start)
+                    $start += length
+                    $_ -= length
+
+                    if ($_ != 0) {
+                        `, buffered, `
+                        return { start: $start, parse }
+                    }
+
+                    $step = ${$step}
+
+                }
+            `)
+        }
+        //
+
+        // Buffers are a special case. Data is raw, can be copied in bulk,
+        // terminators can be found with `indexOf`. Separate implemention for
+        // buffers.
+
+        //
         if (field.fields[0].type == 'buffer') {
-            variables.buffers = true
+            locals['buffers'] = '[]'
+            if (field.fixed) {
+                locals['length'] = 0
+            }
             const redo = $step + 1
-            const terminator = field.terminator
-            const buffered = accumulate.buffered.map(buffered => buffered.source)
-            const slice = $(`
+            // **TODO** This is off for a multi-byte terminator that occurs at
+            // the last element. Would begin trying to match the terminator and
+            // go past the end of the buffer.
+            const slice = field.type == 'fixed' ? $(`
                 case ${$step++}:
 
-                    $_ = $buffer.indexOf(${terminator[0]}, $start)
-                    if (~$_) {
-                        $buffers.push($buffer.slice($start, $_))
-                        $start = $_ + 1
-                        $step = ${$step}
+                    $_ = 0
+
+                    $step = ${$step}
+
+                case ${$step++}: {
+
+                    const $index = $buffer.indexOf(${hex(bytes[0])}, $start)
+                    if (~$index) {
+                        if ($_ + $index > ${field.length}) {
+                            const $length = ${field.length} - $_
+                            $buffers.push($buffer.slice($start, $start + $length))
+                            $_ += $length
+                            $start += $length
+                            $step = ${$step + field.pad.length - 1}
+                            continue
+                        } else {
+                            $buffers.push($buffer.slice($start, $index))
+                            $_ += ($index - $start) + 1
+                            $start = $index + 1
+                            $step = ${$step}
+                            continue
+                        }
+                    } else if ($_ + ($end - $start) >= ${field.length}) {
+                        const $length = ${field.length} - $_
+                        $buffers.push($buffer.slice($start, $start + $length))
+                        $_ += $length
+                        $start += $length
+                        $step = ${$step + field.pad.length - 1}
                         continue
                     } else {
+                        $_ += $end - $start
                         $buffers.push($buffer.slice($start))
-                        `, buffered.length != 0 ? buffered.join('\n') : null, `
+                        `, buffered, `
                         return { start: $end, parse }
                     }
 
                     $step = ${$step}
 
+                }
+
+            `) : $(`
+                case ${$step++}: {
+
+                    const $index = $buffer.indexOf(${hex(bytes[0])}, $start)
+                    if (~$index) {
+                        $buffers.push($buffer.slice($start, $index))
+                        $start = $index + 1
+                        $step = ${$step}
+                        continue
+                    } else {
+                        $buffers.push($buffer.slice($start))
+                        `, buffered, `
+                        return { start: $end, parse }
+                    }
+
+                    $step = ${$step}
+
+                }
             `)
             const subsequent = []
-            const done = $step + terminator.length
-            for (let i = 1; i < terminator.length; i++) {
-                const sofar = util.inspect(terminator.slice(0, i))
+            const done = $step + bytes.length
+            for (let i = 1; i < bytes.length; i++) {
+                const sofar = util.inspect(bytes.slice(0, i))
                 subsequent.push($(`
                     case ${$step++}:
 
                         if ($start == $end) {
-                            `, buffered.length != 0 ? buffered.join('\n') : null, `
+                            `, buffered, `
                             return { start: $start, parse }
                         }
 
-                        if ($buffer[$start++] != ${terminator[1]}) {
+                        if ($buffer[$start++] != ${hex(bytes[1])}) {
                             $buffers.push(Buffer.from(${sofar}.concat($buffer[$start])))
                             $step = ${redo}
                             continue
@@ -225,68 +342,156 @@ function generate (packet, { require = null }) {
                         $step = ${$step}
                 `))
             }
+            // Assignment buffer with a possible recording of length so far if
+            // we have to skip padding.
+            function assign () {
+                // **TODO** Could use the calculation of `$_` above, but would
+                // have to special case `$_` everywhere for fixed/terminated and
+                // make the code in here ugly.
+                const length = field.type == 'fixed' ? $(`
+                    $_ = ${field.length} -  Math.min($buffers.reduce((sum, buffer) => {
+                        return sum + buffer.length
+                    }, ${bytes.length}), ${field.length})
+                `) : null
+                return element.concat ? $(`
+                    case ${$step++}:
+
+                        `, length, `
+
+                        ${path} = $buffers.length == 1 ? $buffers[0] : Buffer.concat($buffers)
+                        $buffers.length = 0
+
+                        $step = ${$step}
+                `) : $(`
+                    case ${$step++}:
+
+                        `, length, `
+
+                        ${path} = $buffers
+                        $buffers = []
+
+                        $step = ${$step}
+                `)
+            }
+            if (field.type == 'terminated') {
+                return $(`
+                    `, slice, `
+
+                    `, subsequent.length != 0 ? join(subsequent) : null, -1, `
+
+                    `, assign(), `
+                `)
+            }
             return $(`
                 `, slice, `
 
-                `, subsequent.length != 0 ? join(subsequent) : null, `
+                `, subsequent.length != 0 ? join(subsequent) : null, -1, `
 
-                case ${$step++}:
+                `, assign(), `
 
-                    ${path} = $buffers.length == 1 ? $buffers[0] : Buffer.concat($buffers)
-                    $buffers.length = 0
-
-                    $step = 5
+                `, skip(), `
             `)
         }
-        $i++
-        const i = `$i[${$i}]`
+        // Our regular parsing seeks terminators at the start of each iteration
+        // of the parse loop.
+
+        // Obtain a next index from the index array.
+        const i = `$i[${++$i}]`
+        // Initialization step.
         const init = $step
-        let sip = ++$step
-        const redo = $step
-        const begin = $step += field.terminator.length
+        // Start of element fields, loop reset.
+        const redo = ++$step
+        // We need a step for each byte in the terminator.
+        const begin = $step += bytes.length
+        // We will sometimes have a vivification step to an object element.
         $step++
-        const buffered = accumulate.buffered.map(buffered => buffered.source)
+        // Create the body of the loop.
         const looped = join(field.fields.map(field => dispatch(`${path}[${i}]`, field)))
-        const literal = field.terminator.map(bite => `0x${bite.toString(16)}`)
-        const terminator = join(field.terminator.map((bite, index) => {
-            if (index != field.terminator.length - 1) {
-                return $(`
-                    case ${sip++}:
+        // Step of next field is after a final loop jump step.
+        const done = $step + 1
+        //
 
-                        if ($start == $end) {
-                            `, buffered.length != 0 ? buffered.join('\n') : null, `
-                            return { start: $start, parse }
-                        }
+        // Generate the terminator detection.
 
-                        if ($buffer[$start] != 0x${bite.toString(16)}) {
-                            $step = ${begin}
-                            continue
-                        }
+        //
+        const fixed = field.type == 'fixed'
+            ? $(`
+                if (${i} == ${field.length}) {
+                    $step = ${done}
+                    continue
+                }
+            `) : null
+        const terminator = bytes.length == 1
+            // If we have a single byte terminator, we skip over the loop if the
+            // we see the byte. A multi-byte terminator is more complicated.
+            ? $(`
+                case ${redo}:
+
+                    `, fixed, -1, `
+
+                    if ($start == $end) {
+                        `, buffered, `
+                        return { start: $start, parse }
+                    }
+
+                    if ($buffer[$start] == ${hex(bytes[0])}) {
                         $start++
-
-                        $step = ${sip}
-                `)
-            } else {
-                return $(`
-                    case ${sip++}:
-
-                        if ($start == $end) {
-                            `, buffered.length != 0 ? buffered.join('\n') : null, `
-                            return { start: $start, parse }
-                        }
-
-                        if ($buffer[$start] != 0x${bite.toString(16)}) {
-                            $step = ${begin}
-                            parse([ ${literal.slice(0, index).join(', ')} ], 0, ${index})
-                            continue
-                        }
-                        $start++
-
-                        $step = ${$step + 1}
+                        $step = ${done}
                         continue
+                    }
+
+                    $step = ${begin}
+            `)
+            // For a multi-byte terminator we have a step for each byte.
+            //
+            // For every terminator byte last check to see if it
+            // matches the byte in the buffer. If it does we fall through to
+            // test next byte. If not we set the `$step` to the start of the
+            // body.
+            //
+            // Subsequent to the first byte we will have matched and skipped
+            // bytes but we'll know what they where, so we can still parse them
+            // by calling the defined `$parse` function with a literal buffer.
+            //
+            // If the last byte does not match we jump to the end. The last byte
+            // might seem like a good place to fall through instead of jumping,
+            // but we will have already begun parsing by parsing the terminator
+            // literal and it will have proceded past the initialization of the
+            // next field. We won't know how many initialization steps there, it
+            // varies based on field and even if we did attempt to ensure that
+            // every field type had a single initialization step it would still
+            // vary due to nesting.
+            : join(bytes.map((bite, index) => {
+                const parse = index != 0
+                    ? `parse(Buffer.from(${hex(bytes.slice(0, index))}), 0, ${index})`
+                    : null
+                const next = index != literal.length - 1
+                    ? `$step = ${redo + index + 1}`
+                    : $(`
+                        $step = ${done}
+                        continue
+                    `)
+                return $(`
+                    case ${redo + index}:
+
+                        `, index == 0 ? fixed : null, -1, `
+
+                        if ($start == $end) {
+                            `, buffered, `
+                            return { start: $start, parse }
+                        }
+
+                        if ($buffer[$start] != ${hex(bite)}) {
+                            $step = ${begin}
+                            `, parse, `
+                            continue
+                        }
+                        $start++
+
+                        `, next, `
                 `)
-            }
-        }))
+            }))
+        // Put it all together.
         const source = $(`
             case ${init}:
 
@@ -306,7 +511,26 @@ function generate (packet, { require = null }) {
                 $step = ${redo}
                 continue
         `)
+        // Release the array index from the array of indices.
         $i--
+        // If we are actually padded fixed array, we need to skip over the
+        // remaining bytes in the fixed width field.
+        locals['length'] = 0
+        if (field.type == 'fixed') {
+            return $(`
+                `, source, `
+
+                case ${$step++}:
+
+                    $_ = ${field.length} != ${i}
+                        ? (${field.length} - ${i}) * ${element.bits / 8} - ${bytes.length}
+                        : 0
+
+                    $step = ${$step}
+
+                `, skip(`(${i} + ${bytes.length})`), `
+            `)
+        }
         return source
     }
 
@@ -398,6 +622,8 @@ function generate (packet, { require = null }) {
         `)
     }
 
+    // TODO: Folling is notes on things to come.
+
     // We will have a special case for bite arrays where we can use index of to
     // find the terminator, when the termiantor is zero or `\n\n` or the like,
     // because we can use `indexOf` to find the boundary. Maybe byte arrays
@@ -409,117 +635,109 @@ function generate (packet, { require = null }) {
     // Seems like in the past I would read the terminator into an array and if
     // it didn't match, I'd feed the array to the parser, this would handle long
     // weird terminators.
+
+    //
     function fixed (path, field) {
-        surround = true
-        const i = `$i[${++$i}]`
-        const init = $step
-        let sip = ++$step
-        const redo = $step
-        const begin = $step += field.pad.length
-        $step++
-        const looped = join(field.fields.map(field => dispatch(`${path}[${i}]`, field)))
-        const literal = field.pad.map(bite => `0x${bite.toString(16)}`)
-        // TODO Seems like there ought to be some rules. I'm only going to
-        // support multi-character string terminators, really. If you have an
-        // terminated array of variable structures that could also be fixed,
-        // that's a horrible format.
-        const fit = Math.ceil(field.pad.length / (field.bits / 8))
-        const terminator = function () {
-            switch (literal.length) {
-            case 0:
-                return null
-            case 1:
-                return $(`
-                    case ${sip++}:
+        if (field.pad.length != 0) {
+            return terminated(path, field)
+        }
+        const element = field.fields[field.fields.length - 1]
+        const buffered = accumulate.buffered.map(buffered => buffered.source)
+        //
 
-                        if ($start == $end) {
-                            return { start: $start, parse }
-                        }
+        // Use `Buffer` functions when fixed array is a `Buffer`.
+        //
+        // **TODO** I'm going to make this a todo, not an issue, but it would be
+        // nice to use `TypedArray` when we have an array of words and the
+        // desired byte order matches the machine byte order.
+        //
+        // **TODO** Use `concat` instead of `copy`.
 
-                        if ($buffer[$start] == ${literal[0].toString(16)}) {
-                            $start++
-                            $step = ${$step + 1}
-                            continue
-                        }
+        //
+        if (element.type == 'buffer') {
+            locals['buffers'] = '[]'
+            return element.concat
+            ? $(`
+                case ${$step++}:
 
-                        $step = ${$step}
-                `)
-            default:
-                return join(literal.map((bite, index) => {
-                    const remaining
-                        = false && field.fixed && index == 0 ? $(`
-                            if (${field.length} - ${i} < ${field.pad.length}) {
-                                $step = ${$step + 1}
-                                continue
-                            }
-                        `) : null
-                    if (index != field.pad.length - 1) {
-                        return $(`
-                            case ${sip++}:
+                    $_ = 0
 
-                                `, remaining, -1, `
+                    $step = ${$step}
 
-                                if ($start == $end) {
-                                    return { start: $start, parse }
-                                }
+                case ${$step++}: {
 
-                                if ($buffer[$start] != ${bite}) {
-                                    $step = ${begin}
-                                    continue
-                                }
-                                $start++
+                    const length = Math.min($end - $start, ${field.length} - $_)
+                    $buffer.copy(${path}, $_, $start, $start + length)
+                    $start += length
+                    $_ += length
 
-                                $step = ${sip}
-                        `)
-                    } else {
-                        return $(`
-                            case ${sip++}:
-
-                                if ($start == $end) {
-                                    return { start: $start, parse }
-                                }
-
-                                if ($buffer[$start] != ${bite}) {
-                                    $step = ${begin}
-                                    parse(Buffer.from([ ${literal.slice(0, index).join(', ')} ]), 0, ${index})
-                                    continue
-                                }
-                                $start++
-
-                                $step = ${$step + 1}
-                                continue
-                        `)
+                    if ($_ != ${field.length}) {
+                        `, buffered.length != 0 ? buffered.join('\n') : null, `
+                        return { start: $start, parse }
                     }
-                }))
-            }
-        } ()
-        // TODO Eliminate vivify step if not used.
+
+                    $step = ${$step}
+
+                }
+            `)
+            : $(`
+                case ${$step++}:
+
+                    $_ = 0
+
+                    $step = ${$step}
+
+                case ${$step++}: {
+
+                    const length = Math.min($end - $start, ${field.length} - $_)
+                    $buffers.push($buffer.slice($start, $start + length))
+                    $start += length
+                    $_ += length
+
+                    if ($_ != ${field.length}) {
+                        `, buffered.length != 0 ? buffered.join('\n') : null, `
+                        return { start: $start, parse }
+                    }
+
+                    ${path} = $buffers
+                    $buffers = []
+
+                    $step = ${$step}
+
+                }
+            `)
+        }
+        //
+
+        // For everything but `Buffer`, generate byte-by-byte parsers.
+
+        //
+        surround = true
+        // Obtain a next index from the index array.
+        const i = `$i[${++$i}]`
+        // The loop return step is after loop index initialization.
+        const redo = $step + 2
+        // We sometimes have a vivification step to create an object element.
+        // **TODO** Eliminate vivify step if not used.
         const source = $(`
-            case ${init}:
+            case ${$step++}:
 
                 ${i} = 0
 
-            `, terminator, -1, `
-
-            case ${begin}:
+            case ${$step++}:
 
                 `, vivify.array(`${path}[${i}]`, field), -1, `
 
-            `, looped, `
+            `, map(dispatch,`${path}[${i}]`, field.fields), `
 
             case ${$step++}:
 
                 ${i}++
 
-                if (${i} == ${field.length}) {
-                    $step = ${$step}
+                if (${i} != ${field.length}) {
+                    $step = ${redo}
                     continue
                 }
-
-                $step = ${redo}
-                continue
-
-            case ${$step++}:
 
                 $_ = (${field.length} - ${i}) * ${field.bits / field.length / 8} - ${field.pad.length}
                 $step = ${$step}
@@ -536,6 +754,7 @@ function generate (packet, { require = null }) {
 
                 $step = ${$step}
         `)
+        // Release the array index from the array of indices.
         $i--
         return source
     }
@@ -722,12 +941,14 @@ function generate (packet, { require = null }) {
         register: '$_',
         bite: '$bite',
         starts: '$restart = false',
-        buffers: '$buffers = []'
+        buffers: '$buffers = []',
+        begin: '$begin = 0'
     }
 
     const lets = Object.keys(declarations)
                        .filter(key => variables[key])
                        .map(key => declarations[key])
+                       .concat(Object.keys(locals).map(name => `$${name} = ${locals[name]}`))
 
     const restart = variables.starts ? $(`
         if ($restart) {

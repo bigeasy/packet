@@ -3,7 +3,7 @@ module.exports = function ({ serializers }) {
         const assert = require('assert')
 
         return function (object, $step = 0, $$ = [], $accumulator = {}) {
-            let $bite, $stop, $_
+            let $_, $bite
 
             return function serialize ($buffer, $start, $end) {
                 switch ($step) {

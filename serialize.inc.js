@@ -1,6 +1,9 @@
 // Format source code maintaining indentation.
 const $ = require('programmatic')
 
+// Convert numbers and arrays to numbers to literals with hex literals.
+const hex = require('./hex')
+
 // Generate integer packing.
 const pack = require('./pack')
 
@@ -32,6 +35,8 @@ function generate (packet, { require = null }) {
     let $step = 0, $i = -1, $$ = -1, surround = false
 
     const variables = declare(packet)
+
+    const locals = {}
 
     const accumulate = {
         accumulator: {},
@@ -210,52 +215,210 @@ function generate (packet, { require = null }) {
     }
 
     function fixed (path, field) {
+        // We will be looping.
         surround = true
-        $i++
-        const init = $step
-        const again = ++$step
-        const i = `$i[${$i}]`
-        const looped = join(field.fields.map(field => dispatch(`${path}[${i}]`, field)))
-        const done = $step
-        const pad = join(field.pad.map(bite => {
+        // Get the element type contained by the array.
+        const element = field.fields[field.fields.length - 1]
+        // Generate any buffered function calls to process the buffer if we
+        // reach the end of the buffer.
+        const buffered = accumulate.buffered.length != 0
+                       ? accumulate.buffered.map(buffered => buffered.source).join('\n')
+                       : null
+        // The byte-by-byte implementation of pad is used by byte-by-byte, of
+        // course, and buffers when the terminator is multi-byte.
+        //
+        // **TODO** Seems like pad should use `fill` in both cases and use as
+        // `fill` as much as possible when multi-byte, track the offsets, etc.
+        // Would worry about it more if fixed buffers weren't such a goofball
+        // case. It would be slice remainder copy, fill, slice remainder copy
+        // each time.
+        //
+        // **TODO** Lengths seem off, array length and not byte length? I've
+        // added the multiplication, let's see if it breaks.
+        function pad (i) {
+            // First step of padding.
+            const redo = $step
+            // First step of next field.
+            const done = $step + field.pad.length
+            // Assign the padding byte to the buffer, break if we've reached the
+            // end of the buffer.
+            const pad = join(field.pad.map(bite => {
+                return $(`
+                    case ${$step++}:
+
+                        if ($start == $end) {
+                            `, buffered, `
+                            return { start: $start, serialize }
+                        }
+
+                        if ($_++ == ${field.bits / 8}) {
+                            $step = ${done}
+                            continue
+                        }
+
+                        $buffer[$start++] = ${hex(bite)}
+
+                        $step = ${$step}
+                `)
+            }))
+            // Repeat the padding fill if we've not filled the buffer
             return $(`
+                `, pad, `
+
+                if ($_ != ${field.bits / 8}) {
+                    $step = ${redo}
+                    continue
+                }
+            `)
+        }
+        //
+
+        // If a buffer, use `copy` and `fill`.
+
+        //
+        if (element.type == 'buffer') {
+            // If we have an array of buffers, we need a loop index and a
+            // variable to track the offset in the specific buffer.
+            let i
+            if (!element.concat) {
+                locals['offset'] = 0
+                locals['length'] = 0
+                i = `$i[${++$i}]`
+            }
+            const source = element.concat
+            // Copy the single buffer using copy.
+            ? $(`
                 case ${$step++}:
 
-                    if ($start == $end) {
+                    $_ = 0
+
+                    $step = ${$step}
+
+                case ${$step++}: {
+
+                        const length = Math.min($end - $start, ${path}.length - $_)
+                        ${path}.copy($buffer, $start, $_, $_ + length)
+                        $start += length
+                        $_ += length
+
+                        if ($_ != ${path}.length) {
+                            `, buffered, `
+                            return { start: $start, serialize }
+                        }
+
+                        $step = ${$step}
+
+                    }
+            `)
+            // Loop through an array of buffers copying to the serialization
+            // buffer using `Buffer.copy()`. Need to track the index of the
+            // current buffer in the array the offset in the current buffer.
+            : $(`
+                case ${$step++}:
+
+                    $_ = 0
+                    $offset = 0
+                    $length = ${path}.reduce((sum, buffer) => sum + buffer.length, 0)
+                    ${i} = 0
+
+                    $step = ${$step}
+
+                case ${$step++}: {
+
+                    for (;;) {
+                        const length = Math.min($end - $start, ${path}[${i}].length - $offset)
+                        ${path}[${i}].copy($buffer, $start, $offset, $offset + length)
+                        $offset += length
+                        $start += length
+                        $_ += length
+
+                        if ($offset == ${path}[${i}].length) {
+                            ${i}++
+                            $offset = 0
+                        }
+
+                        if ($_ == $length) {
+                            break
+                        }
+
+                        `, buffered, `
                         return { start: $start, serialize }
                     }
 
-                    if (${i}++ == ${field.length}) {
-                        $step = ${done + field.pad.length}
-                        continue
-                    }
-
-                    $buffer[$start++] = 0x${bite.toString(16)}
-
                     $step = ${$step}
+
+                }
             `)
-        }))
+            // If we have an array of buffers, we need to release the allocated
+            // array index.
+            if (!element.concat) {
+                i--
+            }
+            // If there is no padding, we are done.
+            if (field.pad.length == 0) {
+                return source
+            }
+            // We can use `Buffer.fill()` for single-byte padding.
+            // TODO Unnecessary `$_` assignment.
+            if (field.pad.length == 1) {
+                return $(`
+                    `, source, `
+
+                    case ${$step++}:
+
+                        $_ = ${field.length} - $_
+
+                        $step = ${$step}
+
+                    case ${$step++}: {
+
+                        const length = Math.min($end - $start, $_)
+                        $buffer.fill(${hex(field.pad[0])}, $start, $start + length)
+                        $start += length
+                        $_ -= length
+
+                        if ($_ != 0) {
+                            return { start: $start, serialize }
+                        }
+
+                        $step = ${$step}
+
+                    }
+                `)
+            }
+            // We use bite-by-bite padfor multi-byte padding.
+            return $(`
+                `, source, `
+
+                `, pad(), `
+            `)
+        }
+        // Obtain a next index from the index array.
+        const i = `$i[${++$i}]`
+        // Initialization step.
+        const init = $step++
+        // Start of element fields, loop reset.
+        const redo = $step
+        // Put it all together.
         const source = $(`
             case ${init}:
 
                 ${i} = 0
-                $step = ${again}
+                $step = ${redo}
 
-            `, looped, `
+            `, map(dispatch, `${path}[${i}]`, field.fields), `
                 if (++${i} != ${path}.length) {
-                    $step = ${again}
+                    $step = ${redo}
                     continue
                 }
 
-                $step = ${done}
+                $_ = ${i} * ${element.bits / 8}
 
-            `, pad, `
+                $step = ${$step}
 
-                if (${i} != ${field.length}) {
-                    $step = ${done}
-                    continue
-                }
+            `, pad(), `
         `)
+        // Release the array index from the array of indices.
         $i--
         return source
     }
@@ -522,9 +685,20 @@ function generate (packet, { require = null }) {
         $restart = true
     `) : null
 
-    const lets = [ '$bite', '$stop', '$_' ].concat(
-        variables.starts ? [ '$restart = false' ] : []
-    )
+    const declarations = {
+        register: '$_',
+        bite: '$bite',
+        starts: '$restart = false',
+        length: '$length = 0'
+    }
+
+    variables.register = true
+    variables.bite = true
+
+    const lets = Object.keys(declarations)
+                       .filter(key => variables[key])
+                       .map(key => declarations[key])
+                       .concat(Object.keys(locals).map(name => `$${name} = ${locals[name]}`))
 
     return $(`
         serializers.inc.${packet.name} = function () {

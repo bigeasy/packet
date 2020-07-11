@@ -1,3 +1,54 @@
+## Thu Jul  9 14:20:56 CDT 2020
+
+It is decided that fixed buffers will strip after the buffers are read into
+memory in every case. Trying to reuse the terminated code is aesthetically
+unpleasing. With it, I could stop when I hit a padding, but it complicates the
+code such that the terminated code has to also stop at a fixed point. Fixed
+length buffers with padding are for older protocols, specifically `tar` which
+has these strange null terminated and fixed strings, that I believe are
+sometimes unfixed in later implementations of `tar`.
+
+Although, upon consideration, maybe reusing the terminated code is not so bad.
+
+The reasoning going into this diary entry is that the fixed width means some
+reasonable size and the data is always there, so you may as well read it all in,
+then trim with buffer slice. This would allow for the same slice code in both
+the incremental parser and synchronous parser. There ought not to be a protocol
+that has an enormous fixed length, but commonly uses it for a handful of bytes.
+
+However, it occurs to me that the ugliness comes from duplicating the
+termination code. My latest foray into this mess is to implement special
+handling for buffers. Padded fixed termination is implemented as terminated, but
+with checking to see if we've reached the of the width of the field in addition
+to checking for the terminator. This was bascially copy and paste from the
+terminator implementation.
+
+Rather than having the padding be a property of a fixed field, why not make the
+limited length of the field a property of a terminated field. If the width is
+not zero, then we adjust the generated terminator code to stop at a limit.
+
+Note that we do not want to use this limit to prevent starvation from a client
+sending us a terminated field without a terminator. That sort of checking should
+be external to the parser. You'll want to add that to the documentation. That is
+maxiumum length terminated verusus fixed length padded. We could add a counter
+to the API externally counting how many bytes have been fed to a particular
+parser.
+
+So, the documentation and language will call this a fixed length padded, but the
+AST calls it terminated and I can corral this mess into a single generator
+function. The direction I was going was making helper functions that both
+functions call. This was getting so very ugly. Actually routing everything to
+the single terminator function would probably be more both more performant, in
+theory, cancelling a continuation of the parse, proceding to skip.
+
+Seems like this should be done during expansion since when we are doing a
+synchronous parse we can slice out the full buffer always, or else we'd already
+gone incremental, and then slice out anything after the teminator. The existing
+implemenation works fine.
+
+Should note that you should test that you don't overrun by placing a field
+afterward that has the terminator character in it.
+
 ## Tue Jul  7 07:52:20 CDT 2020 ~ buffer, streaming
 
 `Buffer` based byte arrays might be nice, but then why not do `TypeArray`s as

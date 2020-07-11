@@ -3,7 +3,7 @@ module.exports = function ({ serializers }) {
 
 
         return function (object, $step = 0, $i = [], $accumulator = {}, $starts = []) {
-            let $bite, $stop, $_, $restart = false
+            let $_, $bite, $restart = false
 
             return function serialize ($buffer, $start, $end) {
                 if ($restart) {

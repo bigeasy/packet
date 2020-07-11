@@ -109,10 +109,30 @@ module.exports = function (okay, options) {
             }
         }
 
+        function concat (object) {
+            if (typeof object == 'object') {
+                if (Array.isArray(object)) {
+                    for (const element of object) {
+                        concat(element)
+                    }
+                } else {
+                    for (const key in object) {
+                        if (Array.isArray(object[key]) && Buffer.isBuffer(object[key][0])) {
+                            object[key] = [ Buffer.concat(object[key]) ]
+                        } else {
+                            concat(object[key])
+                        }
+                    }
+                }
+            }
+        }
+
         try {
             const object = packet.parsers.all.object(expected, 0)
-            okay(object, actual, `${name} whole parse`)
             fast(object)
+            concat(object)
+            concat(actual)
+            okay(object, actual, `${name} whole parse`)
         } catch (error) {
             console.log(packet.parsers.all.object.toString())
             throw error
@@ -185,6 +205,8 @@ module.exports = function (okay, options) {
                     const slice = expected.slice(start, expected.length)
                     ; ({ start, object, parse } = parse(slice, 0, expected.length - start))
                 }
+                concat(object)
+                concat(actual)
                 okay({ start, partial, parse, object }, {
                     start: i == 0 ? expected.length : expected.length - partial,
                     partial: expected.length - i,
@@ -270,6 +292,8 @@ module.exports = function (okay, options) {
                     const slice = expected.slice(start, expected.length)
                     ; ({ start, object, parse } = parse(slice, 0, expected.length - start))
                 }
+                concat(object)
+                concat(actual)
                 okay({ start, partial, parse, object }, {
                     start: i == 0 ? expected.length : expected.length - partial,
                     partial: expected.length - i,
