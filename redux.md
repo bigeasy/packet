@@ -1,3 +1,94 @@
+## Sun Jul 12 17:33:00 CDT 2020
+
+The following is ambiguous.
+
+```javascript
+const definition = {
+    packet: {
+        type: 8,
+        value: [
+            $ => $.type == 1, { first: 16, second: 16 },
+            32
+        ]
+    }
+}
+```
+
+May appear to be a conditional but it is also a switch statement.
+
+```javascript
+const definition = {
+    packet: {
+        type: 8,
+        value: [
+            $ => $.type == 1, {
+                first: 16,
+                second: 16
+            }, 32
+        ]
+    }
+}
+```
+
+We can resolve this ambiguity by keeping our rule that a conditional must have
+at least two conditions, and by using an explicit value for `else`.
+
+```javascript
+const definition = {
+    packet: {
+        type: 8,
+        value: [
+            $ => $.type == 1, { first: 16, second: 16 },
+            true, 32
+        ]
+    }
+}
+```
+
+If we ever want to have a value that is not there, we can just use `null`.
+
+```javascript
+const definition = {
+    packet: {
+        type: 8,
+        value: [
+            $ => $.type == 1, { first: 16, second: 16 },
+            true, null
+        ]
+    }
+}
+```
+
+Maybe even also allow `[]` if an array isn't there.
+
+```javascript
+const definition = {
+    packet: {
+        type: 8,
+        value: [
+            $ => $.type == 1, [ [ 8 ], [ 16 ] ]
+            true, []
+        ]
+    }
+}
+```
+
+Could also be expressed as...
+
+```javascript
+const definition = {
+    packet: {
+        type: 8,
+        value: [
+            $ => $.type == 1, [ [ 8 ], [ 16 ] ]
+            true, [ [ 0 ], [ 16 ] ]
+        ]
+    }
+}
+```
+
+But that generates dead code.
+
 ## Thu Jul  9 14:20:56 CDT 2020
 
 It is decided that fixed buffers will strip after the buffers are read into
