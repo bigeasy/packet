@@ -270,23 +270,54 @@ function generate (packet, { require, bff }) {
         `)
     }
 
+    //
+    // **Length-encoded arrays**: First first the length of the array as an
+    // integer followed by the array elements in a loop.
+    //
+
+    // Parse the length of the array into a variable we can pass to an
+    // incremental parser during best-foot-forward parsing. We zero the loop
+    // index right after reading the length-encoding because if the array
+    // elements are fixed width, we're about to preform a best-foot-forward
+    // check that will jump to the loop body of an incremental parser.
     function lengthEncoding (path, field) {
+        const element = field.body.fields[field.body.fields.length - 1]
         variables.i = true
         variables.I = true
-        $i++
-        $I++
+        const I = `$I[${++$I}]`
+        if (element.type == 'buffer') {
+            return map(dispatch, I, field.body.encoding)
+        }
         return $(`
-            `, map(dispatch, `$I[${$I}]`, field.body.encoding), `
-            $i[${$i}] = 0
+            `, map(dispatch, I, field.body.encoding), `
+            $i[${++$i}] = 0
         `)
     }
 
     function lengthEncoded (path, field) {
+        const element = field.fields[field.fields.length - 1]
+        const I = `$I[${$I}]`
+        if (element.type == 'buffer') {
+            $step++
+            $I--
+            // Slice the buffer straight out of the parsed buffer. Wrap it in an
+            // array if the buffers are chunked.
+            return element.concat ? $(`
+                ${path} = $buffer.slice($start, $start + ${I})
+                $start += ${I}
+            `) : $(`
+                ${path} = [ $buffer.slice($start, $start + ${I}) ]
+                $start += ${I}
+            `)
+        }
+        // Loop overt the elements in an array running byte-by-byte parsers to
+        // create each element. Indices can be passed to an incremental during
+        // best-foot-forward parsing.
         const i = `$i[${$i}]`
         // Step to skip incremental parser's vivification of the array element.
         $step++
         const source = $(`
-            for (; ${i} < $I[${$I}]; ${i}++) {
+            for (; ${i} < ${I}; ${i}++) {
                 `, vivify.array(`${path}[${i}]`, field), -1, `
 
                 `, map(dispatch, `${path}[${i}]`, field.fields), `

@@ -144,21 +144,94 @@ function generate (packet, { require = null }) {
         `)
     }
 
-    // TODO I don't need to push and pop $i.
-    function lengthEncoded (path, packet) {
+    function lengthEncoded (path, field) {
+        const element = field.fields[0]
         surround = true
-        $i++
-        const i = `$i[${$i}]`
-        const encoding = map(dispatch, path + '.length', packet.encoding)
-        const again = $step
+        const buffered = accumulate.buffered.length != 0 ? accumulate.buffered.map(buffered => {
+            return $(`
+                `, buffered.source, `
+                $starts[${buffered.start}] = $start
+            `)
+        }).join('\n') : null
+        if (element.type == 'buffer') {
+            locals['copied'] = 0
+            if (!element.concat) {
+                locals['offset'] = 0
+                locals['index'] = 0
+                locals['length'] = 0
+            }
+            // New to you as of this writing is resetting `$index`. We're not
+            // proagating an index from the best-foot-forward parser. Should we
+            // call this incremental scope versus best-foot-forward scope?
+            return element.concat
+            ? $(`
+                `, map(dispatch, path + '.length', field.encoding), `
+
+                case ${$step++}: {
+
+                    const $bytes = Math.min($end - $start, ${path}.length - $copied)
+                    ${path}.copy($buffer, $start, $copied, $copied + $bytes)
+                    $copied += $bytes
+                    $start += $bytes
+
+                    if ($copied != ${path}.length) {
+                        `, buffered, `
+                        return { start: $start, serialize }
+                    }
+
+                    $copied = 0
+
+                    $step = ${$step}
+
+                }
+            `)
+            : $(`
+                case ${$step++}:
+
+                    $length = ${path}.reduce((sum, buffer) => sum + buffer.length, 0)
+
+                    $step = ${$step}
+
+                `, map(dispatch, '$length', field.encoding), `
+
+                case ${$step++}: {
+
+                    do {
+                        const $bytes = Math.min($end - $start, ${path}[$index].length - $offset)
+                        ${path}[$index].copy($buffer, $start, $offset, $offset + $bytes)
+                        $copied += $bytes
+                        $offset += $bytes
+                        $start += $bytes
+                        if ($start == $end) {
+                            `, buffered, `
+                            return { start: $start, serialize }
+                        }
+                        if ($offset == ${path}[$index].length) {
+                            $index++
+                            $offset = 0
+                        }
+                    } while ($copied != $length)
+
+                    $index = 0
+                    $copied = 0
+                    $offset = 0
+
+                    $step = ${$step}
+
+                }
+            `)
+        }
+        const encoding = map(dispatch, path + '.length', field.encoding)
+        const redo = $step
+        const i = `$i[${++$i}]`
         const source = $(`
             `, encoding, `
                 ${i} = 0
 
-            `, map(dispatch, `${path}[${i}]`, packet.fields), `
+            `, map(dispatch, `${path}[${i}]`, field.fields), `
 
                 if (++${i} != ${path}.length) {
-                    $step = ${again}
+                    $step = ${redo}
                     continue
                 }
         `)

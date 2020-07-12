@@ -6,7 +6,7 @@ module.exports = function ({ serializers }) {
             return function ($buffer, $start, $end) {
                 let $_, $i = []
 
-                if ($end - $start < 9 + 1 * object.sentry.length) {
+                if ($end - $start < 9 + object.sentry.length * 1) {
                     return serializers.inc.object(object, 0, $i)($buffer, $start, $end)
                 }
 

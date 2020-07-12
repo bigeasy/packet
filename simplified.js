@@ -484,7 +484,7 @@ function map (definitions, packet, extra = {}, packed = false) {
                     const fields = []
                     assert(Array.isArray(packet[1]))
                     const encoding = integer(packet[0], false, {})
-                    const element = map(definitions, packet[1][0], {})
+                    const element = buffered(packet[1][0]) || map(definitions, packet[1][0], {})
                     assert.equal(element.length, 1, 'badness')
                     fields.push({
                         type: 'lengthEncoded',

@@ -34,11 +34,14 @@ const join = require('./join')
 // last line of previous element.
 const snuggle = require('./snuggle')
 
-//
-
 // Add implicit field definitions to the given array of field definitions.
-
+// Specifically, we split length-encoded arrays into separate nodes for the
+// encoding and the array body, and terminated arrays into separate nodes for
+// the array body and the terminator. This allows us to inject best-foot-forward
+// checkpoints between the array bodies and their sentinals.
 //
+// All other nodes are merely recursing into their bodies if necessary looking
+// for length-encoded and terminated arrays.
 function expand (fields) {
     const expanded = []
     for (const field of fields) {
@@ -81,7 +84,48 @@ function expand (fields) {
     }
     return expanded
 }
+//
 
+// Inject checkpoint nodes into AST when generating a best-foot-forward parser.
+//
+// Child nodes for nodes that have children &mdash; which is almost ever node except
+// for unpacked integers &mdash; are stored in fields array.
+//
+// Comeing from the AST, all nodes except for structure notes the field arrays
+// always have a single child element. Structure nodes have an element for each
+// field in the structure.
+//
+// The array allows us insert checkpoint nodes. Checkpoint nodes will generate a
+// conditional that will ensure that the serialization buffer has enough bytes
+// remaining for the next field or fields.
+//
+// We try to group these so that the sum of a series of contiguous fixed width
+// fields in a structure is tested instead of testing each field in turn. You'll
+// see that when we have a fixed width field we add its byte value to the the
+// first element of the checkpoint.
+//
+// If we have a field that requires a calculation, such as an multiplying the
+// length of an array of words with the byte size of the word type stored in the
+// array, we add that to the array of lengths, but we can continue to add fixed
+// with values to the first element.
+//
+// We are able to group fixed with elements and arrays of fixed with elements
+// into a single `if` conditional. We've already propagated the fixed nature of
+// children to the parent when we created the AST, so a fixed array of fixed
+// arrays ought to be itself fixed with. When we get things like arrays of
+// variable length arrays we have to perform tests on top of each loop.
+//
+// When we encouter a node that requires such looping, we add checkpoints to
+// that that nodes `fields` property by calling this function `checkpoints`
+// array with that nodes fields proeprty and assigning the checkpointed fields
+// to the field property.
+//
+// When we checkpoint child nodes like that we start a new checkpoint for
+// subsequent fields. Before we leave the function we strip any checkpoints from
+// the array that where never actually used, a checkpoint with a single
+// element in it's `lengths` property with a value of `0`.
+
+//
 function checkpoints (path, fields, index = 0) {
     let checkpoint
     const checked = [ checkpoint = { type: 'checkpoint', lengths: [ 0 ], vivify: null } ]
@@ -89,33 +133,39 @@ function checkpoints (path, fields, index = 0) {
         switch (field.type) {
         case 'literal':
             checked.push(field)
+            // **TODO** Unfixed fields padded with literals.
             if (field.fixed) {
                 checkpoint.lengths[0] += field.bits / 8
             }
             break
         case 'terminated':
+            //
             checked.push(field)
             if (field.fields[0].fixed) {
-                checkpoint.lengths.push(`${field.fields[0].bits / 8} * ${path + field.dotted}.length`)
+                // *Division in string templates upsets Docco JavaScript parser.*
+                checkpoint.lengths.push((path + field.dotted) + '.length * ' + (field.fields[0].bits / 8))
             } else {
                 field.fields = checkpoints(path + `${field.dotted}[$i[${index}]]`, field.fields, index + 1)
-                checked.push(checkpoint = {
-                    type: 'checkpoint', lengths: [ 0 ], vivify: null
-                })
+                checked.push(checkpoint = { type: 'checkpoint', lengths: [ 0 ], vivify: null })
             }
             break
         case 'terminator':
             checked.push(field)
             checkpoint.lengths[0] += field.body.terminator.length
             break
+        // Checkpoints are evaluated within each specific case.
+        //
+        // **TODO** If a switch statement resolves all entries to a fixed value
+        // with the same bit size, make the switch statement fixed width. This
+        // is likely in the case of packed integers, but moot since the integer
+        // will itself be fixed. Still likely, however, but not as likely
+        // outside of packed integers.
         case 'switch':
             checked.push(field)
             for (const when of field.cases) {
                 when.fields = checkpoints(path, when.fields, index)
             }
-            checked.push(checkpoint = {
-                type: 'checkpoint', lengths: [ 0 ], vivify: null
-            })
+            checked.push(checkpoint = { type: 'checkpoint', lengths: [ 0 ], vivify: null })
             break
         case 'conditional':
             checked.push(field)
@@ -132,9 +182,15 @@ function checkpoints (path, fields, index = 0) {
             break
         case 'lengthEncoded':
             checked.push(field)
-            // TODO Test a following single byte.
             if (field.fields[0].fixed) {
-                checkpoint.lengths.push(`${field.fields[0].bits / 8} * ${path + field.dotted}.length`)
+                if (field.fields[0].type == 'buffer' && !field.fields[0].concat) {
+                    checkpoint.lengths.push($(`
+                        ${path + field.dotted}.reduce((sum, buffer) => sum + buffer.length, 0)
+                    `))
+                } else {
+                    // *Division in string templates upsets Docco JavaScript parser.*
+                    checkpoint.lengths.push((path + field.dotted) + '.length * ' + (field.fields[0].bits / 8))
+                }
             }  else {
                 field.fields = checkpoints(path + `${field.dotted}[$i[${index}]]`, field.fields, index + 1)
                 checked.push(checkpoint = {
@@ -147,9 +203,9 @@ function checkpoints (path, fields, index = 0) {
         case 'structure':
             checked.push(field)
             if (field.fixed) {
-                checkpoint.lengths.push(`${field.bits / 8}`)
+                checkpoint.lengths.push(field.bits / 8)
             }  else {
-                field.fields = checkpoints(path + `${field.dotted}`, field.fields, index + 1)
+                field.fields = checkpoints(path + field.dotted, field.fields, index + 1)
                 checked.push(checkpoint = {
                     type: 'checkpoint', lengths: [ 0 ], vivify: null
                 })
@@ -161,6 +217,7 @@ function checkpoints (path, fields, index = 0) {
             break
         }
     }
+    // **TODO** Merge these two functions.
     checked.forEach(field => {
         if (field.type == 'checkpoint' && field.lengths[0] == 0) {
             field.lengths.shift()
@@ -258,12 +315,60 @@ function generate (packet, { require = null, bff }) {
         `)
     }
 
+    //
+    // **Length-encoded arrays**: Serialize first the length of the array as an
+    // integer followed by the array elements in a loop.
+    //
+    // We split the AST node into two separate nodes for the encoding and the
+    // elements so we can do a best-foot-forward check that combines the
+    // encoding with any fixed fields that come before it, and check the array
+    // elements separately if they are variable length.
+    //
+
+    // Serialize the length of of a length-encoded array.
     function lengthEncoding (path, field) {
+        const element = field.body.fields[field.body.fields.length - 1]
+        // If we have a chunked buffers, we have to serialize the sum of all the
+        // buffers in an array of buffers.
+        if (element.type == 'buffer' && !element.concat) {
+            return $(`
+                {
+                    const length = ${path}.reduce((sum, buffer) => sum + buffer.length, 0)
+                    `, map(dispatch, 'length', field.body.encoding), `
+                }
+            `)
+        }
+        // Otherwise serialize the array length.
         return map(dispatch, path + '.length', field.body.encoding)
     }
+    //
 
+    // Serialize the elements of a length-encoded array.
     function lengthEncoded (path, field) {
-        // $step += 2 TODO I think this is outgoing. Delete if tests pass.
+        const element = field.fields[field.fields.length - 1]
+        if (element.type == 'buffer') {
+            $step += element.concat ? 1 : 2
+            return element.concat
+            // Straight up copy the buffer into the serialization buffer.
+            ? $(`
+                ${path}.copy($buffer, $start, 0, ${path}.length)
+                $start += ${path}.length
+            `)
+            // Copy each buffer in an array of buffer to the serialization
+            // buffer. We can use a block scope variable, best-foot-forward
+            // checks have already been performed.
+            : $(`
+                {
+                    for (let i = 0, I = ${path}.length; i < I; i++) {
+                        ${path}[i].copy($buffer, $start, 0, ${path}[i].length)
+                        $start += ${path}[i].length
+                    }
+                }
+            `)
+        }
+        // Generate serialization for the array body. We loop over the elements
+        // using an index we can pass to the incremental parser during
+        // best-foot-foward serialization.
         const i = `$i[${++$i}]`
         const source = $(`
             for (${i} = 0; ${i} < ${path}.length; ${i}++) {
@@ -529,7 +634,9 @@ function generate (packet, { require = null, bff }) {
             }
         `)
     }
+    //
 
+    // Dispatch based on field type.
     function dispatch (path, field) {
         switch (field.type) {
         case 'structure':

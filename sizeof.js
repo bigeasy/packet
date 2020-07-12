@@ -109,7 +109,11 @@ function generate (packet, { require = null }) {
             break
         case 'lengthEncoded':
             if (field.fields[0].fixed) {
-                return $(`
+                return field.fields[0].type == 'buffer' && !field.fields[0].concat
+                ? $(`
+                    $start += ${path}.reduce((sum, buffer) => sum + buffer.length, 0) +
+                        ${field.fields[0].bits / 8} * ${path}.length
+                `) : $(`
                     $start += ${field.encoding[0].bits / 8} +
                         ${field.fields[0].bits / 8} * ${path}.length
                 `)

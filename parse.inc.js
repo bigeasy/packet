@@ -56,6 +56,9 @@ function generate (packet, { require = null }) {
     // Current position in the array of array indices.
     let $i = -1
 
+    // Current array length for length encoded arrays.
+    let $I = -1
+
     // Current position in the array of sipped words.
     let $sip = -1
 
@@ -171,28 +174,65 @@ function generate (packet, { require = null }) {
         `)
     }
 
-    function lengthEncoded (path, packet) {
+    function lengthEncoded (path, field) {
+        const element = field.fields[0]
+        const I = `$I[${++$I}]`
+        const encoding = map(dispatch, I, field.encoding)
+        if (element.type == 'buffer') {
+            const buffered = accumulate.buffered.length != 0 ? accumulate.buffered.map(buffered => {
+                return $(`
+                    `, buffered.source, `
+                    $starts[${buffered.start}] = $start
+                `)
+            }).join('\n') : null
+            locals['index'] = 0
+            locals['buffers'] = '[]'
+            $I--
+            const assign = element.concat
+                ? `${path} = $buffers.length == 1 ? $buffers[0] : Buffer.concat($buffers)`
+                : `${path} = $buffers`
+            return $(`
+                `, encoding, `
+
+                    $step = ${$step}
+
+                case ${$step++}:
+
+                    const $length = Math.min(${I} - $index, $end - $start)
+                    $buffers.push($buffer.slice($start, $start + $length))
+                    $index += $length
+                    $start += $length
+
+                    if ($index != ${I}) {
+                        `, buffered, `
+                        return { start: $start, parse }
+                    }
+
+                    `, assign, `
+
+                    $index = 0
+                    $buffers = []
+
+                    $step = ${$step}
+            `)
+        }
+        const i = `$i[${++$i}]`
         surround = true
-        $i++
-        const i = `$i[${$i}]`
-        const I = `$I[${$i}]`
-        const encoding = map(dispatch, I, packet.encoding)
-        // var integer = integer(packet.length, 'length')
-        // Invoked here to set `again`.
-        const again = $step
+        const redo = $step
         const source = $(`
             `, encoding, `
                 ${i} = 0
             case ${$step++}:
 
-                `, vivify.array(`${path}[${i}]`, packet), `
+                `, vivify.array(`${path}[${i}]`, field), `
 
-            `, map(dispatch,`${path}[${i}]`, packet.fields), `
+            `, map(dispatch,`${path}[${i}]`, field.fields), `
                 if (++${i} != ${I}) {
-                    $step = ${again}
+                    $step = ${redo}
                     continue
                 }
         `)
+        $I--
         $i--
         return source
     }

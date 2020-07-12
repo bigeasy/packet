@@ -7,7 +7,7 @@ module.exports = function ({ serializers }) {
                 let $i = []
 
                 for ($i[0] = 0; $i[0] < object.array.length; $i[0]++) {
-                    if ($end - $start < 2 + 2 * object.array[$i[0]].length) {
+                    if ($end - $start < 2 + object.array[$i[0]].length * 2) {
                         return serializers.inc.object(object, 1, $i)($buffer, $start, $end)
                     }
 

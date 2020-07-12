@@ -1,4 +1,4 @@
-require('proof')(4, okay => {
+require('proof')(6, okay => {
     const simplified = require('../../simplified')
     okay(simplified({ packet: { value: [ 16, [ 16 ] ] } }), [{
         type: 'structure',
@@ -194,4 +194,94 @@ require('proof')(4, okay => {
             }]
         }]
     }], 'length encoded variable')
+    okay(simplified({
+        packet: {
+            value: [ 16, [ Buffer ] ]
+        }
+    }), [{
+        type: 'structure',
+        vivify: 'object',
+        dotted: '',
+        fixed: false,
+        bits: 0,
+        fields: [
+          {
+            type: 'lengthEncoded',
+            vivify: 'array',
+            encoding: [
+              {
+                type: 'integer',
+                vivify: 'number',
+                dotted: '',
+                fixed: true,
+                bits: 16,
+                endianness: 'big',
+                compliment: false
+              }
+            ],
+            dotted: '.value',
+            bits: 0,
+            fixed: false,
+            fields: [
+              {
+                type: 'buffer',
+                vivify: 'number',
+                dotted: '',
+                concat: true,
+                bits: 8,
+                fixed: true,
+                endianness: 'big',
+                compliment: false
+              }
+            ],
+            name: 'value'
+          }
+        ],
+        name: 'packet'
+    }], 'length encoded catenated')
+    okay(simplified({
+        packet: {
+            value: [ 16, [[ Buffer ]] ]
+        }
+    }), [{
+        type: 'structure',
+        vivify: 'object',
+        dotted: '',
+        fixed: false,
+        bits: 0,
+        fields: [
+          {
+            type: 'lengthEncoded',
+            vivify: 'array',
+            encoding: [
+              {
+                type: 'integer',
+                vivify: 'number',
+                dotted: '',
+                fixed: true,
+                bits: 16,
+                endianness: 'big',
+                compliment: false
+              }
+            ],
+            dotted: '.value',
+            bits: 0,
+            fixed: false,
+            fields: [
+              {
+                type: 'buffer',
+                vivify: 'number',
+                dotted: '',
+                concat: false,
+                bits: 8,
+                fixed: true,
+                endianness: 'big',
+                compliment: false
+              }
+            ],
+            name: 'value'
+          }
+        ],
+        name: 'packet'
+    }], 'length encoded chunked')
 })

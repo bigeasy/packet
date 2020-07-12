@@ -10,7 +10,7 @@ module.exports = function ({ serializers }) {
 
                 $starts[0] = $start
 
-                if ($end - $start < 5 + 1 * object.counted.string.length) {
+                if ($end - $start < 5 + object.counted.string.length * 1) {
                     return serializers.inc.object(object, 2, $i, $accumulator, $starts)($buffer, $start, $end)
                 }
 
