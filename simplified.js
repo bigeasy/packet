@@ -126,6 +126,11 @@ function buffered (field) {
 }
 
 const is = {
+    absent: function (packet) {
+        return packet == null || (
+            Array.isArray(packet) && packet.length == 0
+        )
+    },
     conditional: {
         ladder: function (array) {
             if (!Array.isArray(array) || array.length % 2 != 0) {
@@ -171,9 +176,20 @@ function map (definitions, packet, extra = {}, packed = false) {
             // easier to return to for maintainence and expansion.
             // Outer array.
             if (Array.isArray(packet)) {
+                // **Absent array**: Used when there should be no value,
+                // combined with conditionals to implement optional fields.
+                if (is.absent(packet)) {
+                    return [{
+                        ...extra,
+                        type: 'absent',
+                        vivify: 'array',
+                        value: [],
+                        bits: 0,
+                        fixed: true
+                    }]
                 // **String maps**: A two element array with a number followed
                 // by an array entirely of strings with more than one element.
-                if (
+                } else if (
                     packet.length == 2 &&
                     typeof packet[0] == 'number' &&
                     Array.isArray(packet[1]) &&
@@ -713,6 +729,15 @@ function map (definitions, packet, extra = {}, packed = false) {
                 } else {
                     throw new Error('unknown')
                 }
+            } else if (is.absent(packet)) {
+                return [{
+                    ...extra,
+                    type: 'absent',
+                    vivify: 'variant',
+                    value: null,
+                    bits: 0,
+                    fixed: true
+                }]
             } else {
                 const fields = []
                 for (const name in packet) {

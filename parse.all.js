@@ -203,6 +203,11 @@ function generate (packet, { require, bff }) {
         })
     }
 
+    function absent (path, field) {
+        $step++
+        return `${path} = ${util.inspect(field.value)}`
+    }
+
     function integer (assignee, field) {
         const variable = field.lookup || field.fields || field.compliment ? '$_' : assignee
         const bytes = field.bits / 8
@@ -721,8 +726,12 @@ function generate (packet, { require, bff }) {
             return `${path} = (${field.source})($sip[${$sip}])`
         case 'literal':
             return literal(path, field)
-        default:
+        case 'integer':
             return integer(path, field)
+        case 'absent':
+            return absent(path, field)
+        default:
+            throw new Error(field.type)
         }
     }
 

@@ -64,6 +64,7 @@ exports.serialize = function (field) {
                 }
             }
             break
+        case 'absent':
         case 'buffer':
         case 'checkpoint':
         case 'lengthEncoding':
@@ -153,6 +154,7 @@ exports.parse = function (field) {
                 }
             }
             break
+        case 'absent':
         case 'buffer':
         case 'lengthEncoding':
         case 'literal':

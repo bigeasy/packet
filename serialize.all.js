@@ -244,6 +244,11 @@ function generate (packet, { require = null, bff }) {
 
     const $lookup = {}
 
+    function absent (path, field) {
+        $step++
+        return null
+    }
+
     function word (assignee, field) {
         const bytes = field.bits / 8
         let bite = field.endianness == 'big' ? bytes - 1 : 0
@@ -667,6 +672,8 @@ function generate (packet, { require = null, bff }) {
             return integer(path, field)
         case 'literal':
             return literal(path, field)
+        case 'absent':
+            return absent(path, field)
         default:
             throw new Error
         }

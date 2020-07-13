@@ -48,6 +48,15 @@ function generate (packet, { require = null }) {
     }
     const $lookup = {}
 
+    function absent () {
+        // TODO Can we have nothing instead?
+        return $(`
+            case ${$step++}:
+
+                $step = ${$step}
+        `)
+    }
+
     function integer (path, field) {
         const endianness = field.endianness || 'big'
         const bytes = field.bits / 8
@@ -704,6 +713,8 @@ function generate (packet, { require = null }) {
             // TODO This will not include the final step, we keep it off for the
             // looping constructs.
             return integer(path, packet)
+        case 'absent':
+            return absent(path, packet)
         }
     }
 

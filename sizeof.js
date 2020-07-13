@@ -304,6 +304,7 @@ function generate (packet, { require = null }) {
             break
         case 'terminated':
         case 'integer':
+        case 'absent':
         case 'buffer':
             break
         default: {

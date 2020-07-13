@@ -83,6 +83,16 @@ function generate (packet, { require = null }) {
     // Gather up declared lookup constants.
     const $lookup = {}
 
+    function absent (path, field) {
+        return $(`
+            case ${$step++}:
+
+                ${path} = ${util.inspect(field.value)}
+
+                $step = ${$step}
+        `)
+    }
+
     function integer (path, field) {
         const bytes = field.bits / 8
         const buffered = accumulate.buffered.map(buffered => buffered.source)
@@ -917,6 +927,8 @@ function generate (packet, { require = null }) {
         case 'bigint':
         case 'integer':
             return integer(path, packet)
+        case 'absent':
+            return absent(path, packet)
         case 'function':
             return $(`
                 case ${$step++}:

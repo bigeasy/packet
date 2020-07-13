@@ -95,7 +95,7 @@ module.exports = function (okay, options) {
         okay.inc(1)
 
         function fast (object) {
-            if (typeof object == 'object') {
+            if (typeof object == 'object' && object != null) {
                 assert(%HasFastProperties(object))
                 if (Array.isArray(object)) {
                     for (const element of object) {
