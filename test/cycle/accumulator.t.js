@@ -64,7 +64,7 @@ function prove (okay) {
                     number: [               // Number occupying remaining bytes.
                         ({ $, counter }) => $.counted.length - counter[0] == 1, 8,
                         ({ $, counter }) => $.counted.length - counter[0] == 2, 16,
-                        32
+                        true, 32
                     ]
                 }]],
                 sentry: 8

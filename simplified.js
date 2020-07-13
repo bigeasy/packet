@@ -125,6 +125,40 @@ function buffered (field) {
     return null
 }
 
+const is = {
+    conditional: {
+        ladder: function (array) {
+            if (!Array.isArray(array) || array.length % 2 != 0) {
+                return false
+            }
+            if (typeof array[array.length - 2] == 'boolean') {
+                array = array.slice(0, array.length - 2)
+            } else if (array.length < 4) {
+                return false
+            }
+            return array.filter((value, index) => {
+                return index % 2 == 1 || typeof value == 'function'
+            }).length == array.length
+        },
+        sip: function (array) {
+            return typeof array[0] == 'number' &&
+                is.conditional.ladder(array[1])
+        },
+        split: function (packet) {
+            return packet.length == 2 &&
+                is.conditional.ladder(packet[0]) &&
+                (
+                    is.conditional.ladder(packet[1]) ||
+                    is.conditional.sip(packet[1])
+                )
+
+        },
+        mirrored: function (packet) {
+            return is.conditional.ladder(packet)
+        }
+    }
+}
+
 function map (definitions, packet, extra = {}, packed = false) {
     switch (typeof packet) {
     case 'string': {
@@ -349,62 +383,6 @@ function map (definitions, packet, extra = {}, packed = false) {
                         after: after,
                         ...extra
                     }]
-                // Switch statements.
-                } else if (
-                    typeof packet[0] == 'function' &&
-                    typeof packet[1] == 'object'
-                ) {
-                    const cases = []
-                    if (Array.isArray(packet[1])) {
-                        for (const when of packet[1]) {
-                            if (when.length == 2) {
-                                cases.push({
-                                    value: when[0],
-                                    otherwise: false,
-                                    fields: map(definitions, when[1], {})
-                                })
-                            } else {
-                                cases.push({
-                                    value: null,
-                                    otherwise: true,
-                                    fields: map(definitions, when[0], {})
-                                })
-                            }
-                        }
-                    } else {
-                        for (const value in packet[1]) {
-                            cases.push({
-                                value: value,
-                                otherwise: false,
-                                fields: map(definitions, packet[1][value], {})
-                            })
-                        }
-                        if (packet.length > 2) {
-                            cases.push({
-                                value: null,
-                                otherwise: true,
-                                fields: map(definitions, packet[2], {})
-                            })
-                        }
-                    }
-                    const bits = cases.slice(1).reduce((value, when) => {
-                        return value != -1 && value == when.fields[0].bits ? value : -1
-                    }, cases[0].fields[0].bits)
-                    const vivify = cases.slice(1).reduce((vivify, when) => {
-                        return vivify == 'variant' || vivify == vivified(when.fields[0])
-                            ? vivify
-                            : 'variant'
-                    }, cases[0].fields[0].vivify)
-                    return [{
-                        ...extra,
-                        type: 'switch',
-                        vivify: vivify == 'object' ? 'variant' : vivify,
-                        stringify: ! Array.isArray(packet[1]),
-                        source: trim(packet[0].toString()),
-                        bits: bits < 0 ? 0 : bits,
-                        fixed: bits > 0,
-                        cases: cases
-                    }]
                 // **Packed integers**: Defined by an object that is not an
                 // array followed by a number.
                 } else if (
@@ -500,29 +478,28 @@ function map (definitions, packet, extra = {}, packed = false) {
                     return fields
                 // **Split conditionals**: Might get rid of them generally and
                 // have only sipping conditionals, or at least have them the
-                // only one's documented.
-                } else if (
-                    (packet.length == 2 || packet.length == 1) &&
-                    Array.isArray(packet[0]) &&
-                    typeof packet[0][0] == 'function'
-                ) {
+                // only one's documented. Not a very deep or thorough check.
+                } else if (is.conditional.split(packet)) {
                     const fields = []
                     const serialize = function () {
                         const serialize = packet[0].slice()
                         const conditions = []
                         while (serialize.length) {
-                            const first = serialize.shift()
-                            if (serialize.length > 0) {
-                                const second = serialize.shift()
+                            const test = serialize.shift()
+                            const field = serialize.shift()
+                            switch (typeof test) {
+                            case 'function':
                                 conditions.push({
-                                    test: { ...args(first) },
-                                    fields: map(definitions, second, {})
+                                    test: { ...args(test) },
+                                    fields: map(definitions, field, {})
                                 })
-                            } else {
+                                break
+                            case 'boolean':
                                 conditions.push({
                                     test: null,
-                                    fields: map(definitions, first, {})
+                                    fields: map(definitions, field, {})
                                 })
+                                break
                             }
                         }
                         return { split: true, conditions }
@@ -536,18 +513,21 @@ function map (definitions, packet, extra = {}, packed = false) {
                         }
                         const conditions = []
                         while (parse.length) {
-                            const first = parse.shift()
-                            if (parse.length > 0) {
-                                const second = parse.shift()
+                            const test = parse.shift()
+                            const field = parse.shift()
+                            switch (typeof test) {
+                            case 'function':
                                 conditions.push({
-                                    test: { ...args(first) },
-                                    fields: map(definitions, second, {})
+                                    test: { ...args(test) },
+                                    fields: map(definitions, field, {})
                                 })
-                            } else {
+                                break
+                            case 'boolean':
                                 conditions.push({
                                     test: null,
-                                    fields: map(definitions, first, {})
+                                    fields: map(definitions, field, {})
                                 })
+                                break
                             }
                         }
                         return { sip: sip.length ? sip : null, conditions }
@@ -573,43 +553,36 @@ function map (definitions, packet, extra = {}, packed = false) {
                 //
                 // TODO This is a weak test. We could test that every other
                 // element is a function.
-                } else if (
-                    packet.length > 1 &&
-                    packet.every((element, index) => {
-                        return index % 2 == 1 ||
-                            (
-                                typeof element == 'function'  ||
-                                index == packet.length - 1
-                            )
-                    })
-                ) {
+                } else if (is.conditional.mirrored(packet)) {
                     packet = packet.slice()
                     const fields = []
                     const conditions = []
                     while (packet.length) {
-                        const first = packet.shift()
-                        if (packet.length > 0) {
-                            const fields = map(definitions, packet.shift(), {})
+                        const test = packet.shift()
+                        const fields = map(definitions, packet.shift(), {})
+                        switch (typeof test) {
+                        case 'function':
                             conditions.push({
                                 body: {
-                                    test: { ...args(first) },
+                                    test: { ...args(test) },
                                     fields: fields
                                 },
                                 bits: fields.reduce((bits, field) => {
                                     return bits == -1 || !field.fixed ? -1 : bits + field.bits
                                 }, 0)
                             })
-                        } else {
-                            const fields = map(definitions, first, {})
+                            break
+                        case 'boolean':
                             conditions.push({
                                 body: {
                                     test: null,
-                                    fields: map(definitions, first, {})
+                                    fields: fields
                                 },
                                 bits: fields.reduce((bits, field) => {
                                     return bits == -1 || !field.fixed ? -1 : bits + field.bits
                                 }, 0)
                             })
+                            break
                         }
                     }
                     const fixed = conditions.reduce((bits, cond) => {
@@ -678,7 +651,65 @@ function map (definitions, packet, extra = {}, packed = false) {
                         fields: fields,
                         ...extra
                     }]
-                    throw new Error('variables')
+                // **Switch statements**.
+                } else if (
+                    typeof packet[0] == 'function' &&
+                    typeof packet[1] == 'object' &&
+                    (
+                        packet.length == 2 || packet.length == 3
+                    )
+                ) {
+                    const cases = []
+                    if (Array.isArray(packet[1])) {
+                        for (const when of packet[1]) {
+                            if (when.length == 2) {
+                                cases.push({
+                                    value: when[0],
+                                    otherwise: false,
+                                    fields: map(definitions, when[1], {})
+                                })
+                            } else {
+                                cases.push({
+                                    value: null,
+                                    otherwise: true,
+                                    fields: map(definitions, when[0], {})
+                                })
+                            }
+                        }
+                    } else {
+                        for (const value in packet[1]) {
+                            cases.push({
+                                value: value,
+                                otherwise: false,
+                                fields: map(definitions, packet[1][value], {})
+                            })
+                        }
+                        if (packet.length > 2) {
+                            cases.push({
+                                value: null,
+                                otherwise: true,
+                                fields: map(definitions, packet[2], {})
+                            })
+                        }
+                    }
+                    const bits = cases.slice(1).reduce((value, when) => {
+                        return value != -1 && value == when.fields[0].bits ? value : -1
+                    }, cases[0].fields[0].bits)
+                    const vivify = cases.slice(1).reduce((vivify, when) => {
+                        return vivify == 'variant' || vivify == vivified(when.fields[0])
+                            ? vivify
+                            : 'variant'
+                    }, cases[0].fields[0].vivify)
+                    return [{
+                        ...extra,
+                        type: 'switch',
+                        vivify: vivify == 'object' ? 'variant' : vivify,
+                        stringify: ! Array.isArray(packet[1]),
+                        source: trim(packet[0].toString()),
+                        bits: bits < 0 ? 0 : bits,
+                        fixed: bits > 0,
+                        cases: cases
+                    }]
                 } else {
                     throw new Error('unknown')
                 }

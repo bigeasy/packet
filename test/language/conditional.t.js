@@ -8,14 +8,14 @@ require('proof')(4, okay => {
                     // TODO Why isn't this `[ 'fc', [ 16 ] ]`? That way we can pad
                     // anything?
                     value => value >= 251, [ 'fc', 16 ],
-                    [ 'fd', 24 ]
+                    true, [ 'fd', 24 ]
                 ],
                 // TODO Here is the pure function, so maybe we need pure
                 // functions in general.
                 [ 8, [
                     sip => sip < 251, sip => sip,
                     sip => sip == 0xfc, 16,
-                    24
+                    true, 24
                 ]]
             ]
         }
@@ -162,11 +162,11 @@ require('proof')(4, okay => {
                 [
                     $ => $.type == 0, 16,
                     $ => $.type == 1, 24,
-                    32
+                    true, 32
                 ], [
                     $ => $.type == 0, 16,
                     $ => $.type == 1, 24,
-                    32
+                    true, 32
                 ]
             ]
         }
@@ -299,7 +299,7 @@ require('proof')(4, okay => {
             value: [
                 $ => $.type == 0, 16,
                 $ => $.type == 1, 24,
-                32
+                true, 32
             ]
         }
     }), [{
@@ -436,7 +436,7 @@ require('proof')(4, okay => {
                         two: 2,
                         four: 4
                     }, 6 ],
-                    [{
+                    true, [{
                         one: 1,
                         five: 5
                     }, 6 ]

@@ -48,15 +48,22 @@ function prove (okay) {
         name: 'array/concat',
         define: {
             object: {
+                type: 8,
                 array: [ 8, [ Buffer ] ],
                 // Need to force the best-foot-forward check.
                 sentry: [
-                    $ => false, 16,
-                    $ => true, 8
+                    $ => $.type == 0, 8,
+                    $ => true, 16
                 ]
             }
         },
+        // Repeat test simply to get the coverage of the generated conditional.
         objects: [{
+            type: 0,
+            array: Buffer.from('abcdefgh'),
+            sentry: 0xaa
+        }, {
+            type: 1,
             array: Buffer.from('abcdefgh'),
             sentry: 0xaa
         }]
@@ -65,15 +72,22 @@ function prove (okay) {
         name: 'array/chunked',
         define: {
             object: {
+                type: 8,
                 array: [ 8, [[ Buffer ]] ],
                 // Need to force the best-foot-forward check.
                 sentry: [
-                    $ => false, 16,
-                    $ => true, 8
+                    $ => $.type == 0, 8,
+                    true, 16
                 ]
             }
         },
+        // Repeat test simply to get the coverage of the generated conditional.
         objects: [{
+            type: 0,
+            array: [ Buffer.from('abcdefgh') ],
+            sentry: 0xaa
+        }, {
+            type: 1,
             array: [ Buffer.from('abcdefgh') ],
             sentry: 0xaa
         }]

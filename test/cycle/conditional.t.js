@@ -9,11 +9,11 @@ function prove (okay) {
                 value: [[
                     value => value < 251, 8,
                     value => value >= 251 && value < 2 ** 16, [ 'fc', 16 ],
-                    [ 'fd', 24 ]
+                    true, [ 'fd', 24 ]
                 ], [ 8, [
                     sip => sip < 251, sip => sip,
                     sip => sip == 0xfc, 16,
-                    24
+                    true, 24
                 ]]],
                 sentry: 8
             }
@@ -35,12 +35,12 @@ function prove (okay) {
                     [
                         (_, $) => $.type == 0, 16,
                         (_, $) => $.type == 1, 24,
-                        32
+                        true, 32
                     ],
                     [
                         $ => $.type == 0, 16,
                         $ => $.type == 1, 24,
-                        32
+                        true, 32
                     ]
                 ],
                 sentry: 8
@@ -62,7 +62,7 @@ function prove (okay) {
                 value: [
                     $ => $.type == 0, 16,
                     $ => $.type == 1, 24,
-                    32
+                    true, 32
                 ],
                 sentry: 8
             }
@@ -88,7 +88,7 @@ function prove (okay) {
                             two: 2,
                             four: 4
                         }, 6 ],
-                        [{
+                        true, [{
                             one: 1,
                             five: 5
                         }, 6 ]
