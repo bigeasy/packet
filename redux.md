@@ -1,3 +1,104 @@
+## Mon Jul 13 06:46:02 CDT 2020
+
+Thoughts on sipping. I'd imagined that UTF-8 would parse by looking at each byte
+for a terminator, but this is not the case. The first byte determines the
+length, but the subsequent bites have the first two bits ignored. Can't simply
+logical and them away either. It would change the nature of the shift.
+
+Thus, we have to consider whether we want to support this, or how. Would be able
+to do it now using calculated terminated arrays, to find the end by checking the
+start, then a fixup function that would calculate. Or can still use a sip to
+determine a fixed array length.
+
+Sipping each byte is definitely calls for using terminated arrays, though.
+Nested sips would not be of much use, they would produce an array and have to be
+constructed, so nested sipping is gone.
+
+There's an advantage to the sip, but it would be nice if we could preserve the
+buffer one parse, and have the user tell us the actual value.
+
+```javascript
+const conditional = {
+    object: {
+        mysqlInteger: [[
+            $_ => $_ < 251n, 8n
+            $_ => $_ >= 251n && $_ < 2n ^ 16, [ 'fc', 16n ],
+            $_ => $_ >= 2n ^ 16 && $_ < 2n ^ 24, [ 'fd', 24n ],
+            true, [ 'fe', 64n ]
+        ], [ 8n, [
+            $sip => $sip < 251, 8n,
+            $sip => $sip == 0xfc, [ 'fc', 16n ],
+            $sip => $sip == 0xfd, [ 'fd', 24n ],
+            $sip => $sip == 0xfe, [ 'fe', 64n ]
+        ]]
+    }
+}
+```
+
+But to do so means we have to rewind, which is always annoying. Simple for the
+incremental parser, simply keep an array of the sip and call the parse function.
+
+Oh, wait, also simple for the synchronous parser. Just reset the `$start` index.
+
+Ah, we _could_ keep an array for the incremental parser, or we could just explode
+the integer we gathered for the sip.
+
+And you can see that we can also skip some parsing in the case of MySQL where we
+don't really need to parse the literal, but we need to specify it in order to
+skip the bytes, but the skip is a increment and if we want to be really crafty,
+after a sip we can deduct any literals from the `$start` rewind.
+
+Anyway, here's the imagined protocol, the one I thought I had to make
+conditionals nested to support.
+
+Parser side only, bytes are 7-bits, the top bit is used to indicate an end of
+number with a `0`. Seems like something like that is going to be out there.
+
+```javascript
+const definition = {
+    object: {
+        value: [[], [
+            [ 8 ], array => array[array.length - 1] & 0x80 != 0x80
+        ], [ function (array) {
+            array.reduce((sum, value, index) => {
+                if (index == array.length - 1) {
+                    return (sum << 7) + (value & 0x7f)
+                }
+                return (sum << 7) + (value & 0x7f)
+            }, 0)
+        }]]
+    }
+}
+```
+
+Will I ever need to nest sipping?
+
+What is sipping? It's when you read a byte to determine the type, but the byte
+you read is part of the type. In the case of MySQL the leading byte could be a
+flag indicating that length of the integer that follows the byte, but if the top
+bit is not set, the value is the byte itself.
+
+Now, about stripping those bytes. If sipping gets us to a specific width, then a
+parse inline can assemble an array near as quickly as anything generated in the
+parser. Otherwise, I need to define how the bytes are unpacked.
+
+```javascript
+const definition = {
+    object: {
+        value: [ 24, 3, 6, 6 ]
+    }
+}
+```
+
+That would be a 24-bit UTF-8 encoded charcter, which is really 15 bits. It's
+saying a 24-bit integer but using 3 bits from the first, 6 from the rest of the
+bytes.
+
+Ugly, but the space in the language is available. How about we parse UTF-8 last,
+after parsing a bunch of other stuff, parse it for now with special functions,
+because we may need this space, and we're never going to really use Packet to
+parse UTF-8.
+
 ## Sun Jul 12 17:33:00 CDT 2020
 
 The following is ambiguous.
