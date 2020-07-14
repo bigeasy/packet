@@ -4,10 +4,10 @@ module.exports = function ({ parsers }) {
 
         return function () {
             return function parse ($buffer, $start, $end) {
-                let $sip = []
+                let $sip = 0
 
                 let object = {
-                    value: null,
+                    value: 0,
                     sentry: 0
                 }
 
@@ -15,21 +15,27 @@ module.exports = function ({ parsers }) {
                     return parsers.inc.object(object, 1, $sip)($buffer, $start, $end)
                 }
 
-                $sip[0] = ($buffer[$start++])
+                $sip = ($buffer[$start++])
 
-                if ((sip => sip < 251)($sip[0])){
-                    object.value = (sip => sip)($sip[0])
-                } else if ((sip => sip == 0xfc)($sip[0])){
-                    if ($end - $start < 2) {
-                        return parsers.inc.object(object, 5, $sip)($buffer, $start, $end)
+                if ((sip => sip < 251)($sip)){
+                    if ($end - ($start - 1) < 1) {
+                        return parsers.inc.object(object, 4, $sip)($buffer, $start - 1, $end)
+                    }
+
+                    $start -= 1
+
+                    object.value = ($buffer[$start++])
+                } else if ((sip => sip == 0xfc)($sip)){
+                    if ($end - ($start - 1) < 3) {
+                        return parsers.inc.object(object, 6, $sip)($buffer, $start - 1, $end)
                     }
 
                     object.value =
                         ($buffer[$start++]) * 0x100 +
                         ($buffer[$start++])
                 } else {
-                    if ($end - $start < 3) {
-                        return parsers.inc.object(object, 7, $sip)($buffer, $start, $end)
+                    if ($end - ($start - 1) < 4) {
+                        return parsers.inc.object(object, 10, $sip)($buffer, $start - 1, $end)
                     }
 
                     object.value =
@@ -39,7 +45,7 @@ module.exports = function ({ parsers }) {
                 }
 
                 if ($end - $start < 1) {
-                    return parsers.inc.object(object, 9, $sip)($buffer, $start, $end)
+                    return parsers.inc.object(object, 14, $sip)($buffer, $start, $end)
                 }
 
                 object.sentry = ($buffer[$start++])

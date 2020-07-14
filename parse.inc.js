@@ -59,9 +59,6 @@ function generate (packet, { require = null }) {
     // Current array length for length encoded arrays.
     let $I = -1
 
-    // Current position in the array of sipped words.
-    let $sip = -1
-
     // An map of parser scoped variable definitions to their initialization
     // values.
     const locals = {}
@@ -589,12 +586,31 @@ function generate (packet, { require = null }) {
         surround = true
         const signature = []
         const sip = function () {
-            if (conditional.parse.sip == null) {
+            if (parse.sip == null) {
                 return null
             }
-            $sip++
-            signature.push(`$sip[${$sip}]`)
-            return join(parse.sip.map(field => dispatch(`$sip[${$sip}]`, field)))
+            signature.push(`$sip`)
+            return join(parse.sip.map(field => dispatch(`$sip`, field)))
+        } ()
+        const rewind = function () {
+            if (parse.sip == null) {
+                return null
+            }
+            const bytes = []
+            if (parse.sip[0].endianness == 'big') {
+                for (let i = 0, I = parse.sip[0].bits / 8; i < I; i++) {
+                    bytes.push(`($sip >>> ${i * 8}) & 0xff`)
+                }
+            } else {
+                for (let i = parse.sip[0].bits / 8 - 1, I = -1; i > I; i--) {
+                    bytes.push(`($sip >>> ${i * 8}) & 0xff`)
+                }
+            }
+            return $(`
+                parse([
+                    `, bytes.join('\n'), `
+                ], 0, ${bytes.length})
+            `)
         } ()
         const accumulators = {}
         conditional.parse.conditions.forEach(condition => {
@@ -634,6 +650,7 @@ function generate (packet, { require = null }) {
                 ladder.push(`${i == 0 ? 'if' : 'else if'} ((${inline.inlined.shift()}))` + $(`
                     {
                         $step = ${steps[i].number}
+                        `, rewind, `
                         continue
                     }
                 `))
@@ -641,6 +658,7 @@ function generate (packet, { require = null }) {
                 ladder.push($(`
                     else {
                         $step = ${steps[i].number}
+                        `, rewind, `
                         continue
                     }
                 `))
@@ -650,9 +668,6 @@ function generate (packet, { require = null }) {
             $step = ${$step}
             continue
         `)
-        if (conditional.parse.sip != null) {
-            $sip--
-        }
         return $(`
             `, sip, `
 
@@ -961,7 +976,7 @@ function generate (packet, { require = null }) {
         step: '$step = 0',
         i: '$i = []',
         I: '$I = []',
-        sip: '$sip = []',
+        sip: '$sip = 0',
         accumulator: '$accumulator = []',
         starts: '$starts = []'
     }

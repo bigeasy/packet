@@ -1,3 +1,30 @@
+## Mon Jul 13 23:01:43 CDT 2020 ~ todo
+
+Checkpoints are hard to test because I have to devise tests that force
+checkpoint creation, which usually means injecting a conditional somewhere.
+Literal tests where passing, but the best-foot-forward parser was not advancing
+the checkpoint for the literal correctly. Because the literal structure was
+fixed width, we always fell back to the best-foot-forward parser immediately,
+so no way to detect that the literal was not correctly generating a jump in its
+best-foot-forward parser.
+
+Makes me want to consider a switch that would tell the best-foot-forward
+generation to add a checkpoint for each field. Otherwise, I'm almost certain to
+get feedback from the wild. Would mean generating two new tests and worst of
+all, trying to come up with a new three letter file suffix prefix. Meh, just use
+`chk` and try not to worry about it, it's only for testing.
+
+## Mon Jul 13 12:40:35 CDT 2020 ~ todo
+
+Not liking the recursive call to the incremental parser for the common case of
+literals and integers. Seems that for an integer we could unwind the sip and
+skip the literal somehow, but if the conditional resolves to anything else
+besides a literal surrounding an integer we do the recursive parse.
+
+In order to do with, `$sip` will need to be an array and passed to the
+incremental parser so it can unwind the `$sip` gathered by the best-foot-forward
+parser.
+
 ## Mon Jul 13 06:46:02 CDT 2020
 
 Thoughts on sipping. I'd imagined that UTF-8 would parse by looking at each byte

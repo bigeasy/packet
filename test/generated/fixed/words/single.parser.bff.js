@@ -17,8 +17,8 @@ module.exports = function ({ parsers }) {
 
                 $i[0] = 0
                 for (;;) {
-                    if ($end - $start < 1) {
-                        return parsers.inc.object(object, 2, $i)($buffer, $start, $end)
+                    if ($end - ($start - undefined) < 1) {
+                        return parsers.inc.object(object, 2, $i)($buffer, $start - undefined, $end)
                     }
 
                     if (

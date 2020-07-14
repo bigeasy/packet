@@ -2,7 +2,7 @@ module.exports = function ({ parsers }) {
     parsers.inc.object = function () {
 
 
-        return function (object = {}, $step = 0, $sip = []) {
+        return function (object = {}, $step = 0, $sip = 0) {
             let $_, $bite
 
             return function parse ($buffer, $start, $end) {
@@ -11,7 +11,7 @@ module.exports = function ({ parsers }) {
                     case 0:
 
                         object = {
-                            value: null,
+                            value: 0,
                             sentry: 0
                         }
 
@@ -27,58 +27,69 @@ module.exports = function ({ parsers }) {
                             return { start: $start, object: null, parse }
                         }
 
-                        $sip[0] = $buffer[$start++]
+                        $sip = $buffer[$start++]
 
 
                     case 3:
 
-                        if (((sip => sip < 251)($sip[0]))){
+                        if (((sip => sip < 251)($sip))){
                             $step = 4
+                            parse([
+                                ($sip >>> 0) & 0xff
+                            ], 0, 1)
                             continue
-                        } else if (((sip => sip == 0xfc)($sip[0]))){
-                            $step = 5
+                        } else if (((sip => sip == 0xfc)($sip))){
+                            $step = 6
+                            parse([
+                                ($sip >>> 0) & 0xff
+                            ], 0, 1)
                             continue
                         } else {
-                            $step = 7
+                            $step = 10
+                            parse([
+                                ($sip >>> 0) & 0xff
+                            ], 0, 1)
                             continue
                         }
 
                     case 4:
 
-                        object.value = (sip => sip)($sip[0])
-
-                        $step = 9
-                        continue
+                        $step = 5
 
                     case 5:
 
-                        $_ = 0
-                        $step = 6
-                        $bite = 1
+                        if ($start == $end) {
+                            return { start: $start, object: null, parse }
+                        }
+
+                        object.value = $buffer[$start++]
+
+
+                        $step = 14
+                        continue
 
                     case 6:
 
-                        while ($bite != -1) {
-                            if ($start == $end) {
-                                return { start: $start, object: null, parse }
-                            }
-                            $_ += ($buffer[$start++]) << $bite * 8 >>> 0
-                            $bite--
-                        }
-
-                        object.value = $_
-
-
-                        $step = 9
-                        continue
+                        $_ = 1
+                        $step = 7
 
                     case 7:
 
-                        $_ = 0
-                        $step = 8
-                        $bite = 2
+                        $bite = Math.min($end - $start, $_)
+                        $_ -= $bite
+                        $start += $bite
+
+                        if ($_ != 0) {
+                            return { start: $start, object: null, parse }
+                        }
 
                     case 8:
+
+                        $_ = 0
+                        $step = 9
+                        $bite = 1
+
+                    case 9:
 
                         while ($bite != -1) {
                             if ($start == $end) {
@@ -92,11 +103,50 @@ module.exports = function ({ parsers }) {
 
 
 
-                    case 9:
-
-                        $step = 10
+                        $step = 14
+                        continue
 
                     case 10:
+
+                        $_ = 1
+                        $step = 11
+
+                    case 11:
+
+                        $bite = Math.min($end - $start, $_)
+                        $_ -= $bite
+                        $start += $bite
+
+                        if ($_ != 0) {
+                            return { start: $start, object: null, parse }
+                        }
+
+                    case 12:
+
+                        $_ = 0
+                        $step = 13
+                        $bite = 2
+
+                    case 13:
+
+                        while ($bite != -1) {
+                            if ($start == $end) {
+                                return { start: $start, object: null, parse }
+                            }
+                            $_ += ($buffer[$start++]) << $bite * 8 >>> 0
+                            $bite--
+                        }
+
+                        object.value = $_
+
+
+
+
+                    case 14:
+
+                        $step = 15
+
+                    case 15:
 
                         if ($start == $end) {
                             return { start: $start, object: null, parse }
@@ -105,7 +155,7 @@ module.exports = function ({ parsers }) {
                         object.sentry = $buffer[$start++]
 
 
-                    case 11:
+                    case 16:
 
                         return { start: $start, object: object, parse: null }
                     }

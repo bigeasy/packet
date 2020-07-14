@@ -86,7 +86,7 @@ function expand (fields) {
 }
 
 function generate (packet, { require, bff }) {
-    let $i = -1, $I = -1, $sip = -1, $step = 1
+    let $i = -1, $I = -1, $step = 1
 
     const variables = declare(packet)
 
@@ -104,7 +104,7 @@ function generate (packet, { require, bff }) {
     // TODO You can certianly do something to make this prettier.
     // TODO Start by prepending the path I think?
     function checkpoints (path, fields, index = 0) {
-        let checkpoint = { type: 'checkpoint', lengths: [ 0 ] }, checked = [ checkpoint ]
+        let checkpoint = { type: 'checkpoint', lengths: [ 0 ], rewind: 0 }, checked = [ checkpoint ]
         for (const field of fields) {
             switch (field.type) {
             case 'function':
@@ -115,30 +115,23 @@ function generate (packet, { require, bff }) {
                 for (const when of field.cases) {
                     when.fields = checkpoints(path, when.fields, index)
                 }
-                checked.push(checkpoint = {
-                    type: 'checkpoint', lengths: [ 0 ], vivify: null
-                })
+                checked.push(checkpoint = { type: 'checkpoint', lengths: [ 0 ], rewind: 0 })
                 break
             case 'conditional':
                 checked.push(field)
                 // TODO Sip belongs outside since it is generally a byte or so.
                 if (field.parse.sip != null) {
-                    variables.sip = true
                     field.parse.sip = checkpoints(path, field.parse.sip, index)
                 }
                 for (const condition of field.parse.conditions) {
                     condition.fields = checkpoints(path, condition.fields, index)
                 }
-                checked.push(checkpoint = {
-                    type: 'checkpoint', lengths: [ 0 ], vivify: null
-                })
+                checked.push(checkpoint = { type: 'checkpoint', lengths: [ 0 ], rewind: 0 })
                 break
             case 'lengthEncoding':
                 checked.push(field)
                 checkpoint.lengths[0] += field.body.encoding[0].bits / 8
-                checked.push(checkpoint = {
-                    type: 'checkpoint', lengths: [ 0 ], vivify: null
-                })
+                checked.push(checkpoint = { type: 'checkpoint', lengths: [ 0 ], rewind: 0 })
                 break
             case 'lengthEncoded':
                 checked.push(field)
@@ -149,9 +142,7 @@ function generate (packet, { require, bff }) {
                     checkpoint.lengths.push(`${field.fields[0].bits / 8} * $I[${index}]`)
                 } else {
                     field.fields = checkpoints(path + `${field.dotted}[$i[${index}]]`, field.fields, index + 1)
-                    checked.push(checkpoint = {
-                        type: 'checkpoint', lengths: [ 0 ], vivify: null
-                    })
+                    checked.push(checkpoint = { type: 'checkpoint', lengths: [ 0 ], rewind: 0 })
                 }
                 break
             case 'terminator':
@@ -168,9 +159,7 @@ function generate (packet, { require, bff }) {
             case 'terminated':
                 checked.push(field)
                 field.fields = checkpoints(path + `${field.dotted}[$i[${index}]]`, field.fields, index + 1)
-                checked.push(checkpoint = {
-                    type: 'checkpoint', lengths: [ 0 ], vivify: null
-                })
+                checked.push(checkpoint = { type: 'checkpoint', lengths: [ 0 ], rewind: 0 })
                 break
             case 'inline':
             case 'accumulator':
@@ -182,9 +171,7 @@ function generate (packet, { require, bff }) {
                     // TODO Could start from the nested checkpoint since we are
                     // are not actually looping for the structure.
                     field.fields = checkpoints(path + field.dotted, field.fields, index)
-                    checked.push(checkpoint = {
-                        type: 'checkpoint', lengths: [ 0 ], vivify: null
-                    })
+                    checked.push(checkpoint = { type: 'checkpoint', lengths: [ 0 ], rewind: 0 })
                 }
                 break
             default:
@@ -257,8 +244,17 @@ function generate (packet, { require, bff }) {
         return parse
     }
 
+    function rewind (field) {
+        return $(`
+            $start -= ${field.bytes}
+        `)
+    }
+
     function literal (path, field) {
         function write (literal) {
+            if (literal.value.length != 0) {
+                $step += 2
+            }
             if (literal.repeat == 0) {
                 return null
             }
@@ -267,11 +263,11 @@ function generate (packet, { require, bff }) {
             `)
         }
         return $(`
-            `, write(field.before), 1, `
+            `, write(field.before), -1, `
 
             `, map(dispatch, path, field.fields), `
 
-            `, write(field.after), -1, `
+            `, -1, write(field.after), `
         `)
     }
 
@@ -568,10 +564,9 @@ function generate (packet, { require, bff }) {
         `)
     }
 
-    function conditional (path, conditional) {
-        const block = []
+    function conditional (path, field) {
         const accumulators = {}
-        conditional.parse.conditions.forEach(condition => {
+        field.parse.conditions.forEach(condition => {
             if (condition.test == null) {
                 return
             }
@@ -593,42 +588,76 @@ function generate (packet, { require, bff }) {
         })
         const signature = []
         const sip = function () {
-            if (conditional.parse.sip == null) {
+            if (field.parse.sip == null) {
                 return null
             }
-            variables.sip = true
-            $sip++
-            signature.push(`$sip[${$sip}]`)
-            return join(conditional.parse.sip.map(field => dispatch(`$sip[${$sip}]`, field)))
+            signature.push(`$sip`)
+            return join(field.parse.sip.map(field => dispatch(`$sip`, field)))
         } ()
         $step++
-        for (let i = 0, I = conditional.parse.conditions.length; i < I; i++) {
-            const condition = conditional.parse.conditions[i]
+        const ladder = []
+        for (let i = 0, I = field.parse.conditions.length; i < I; i++) {
+            const condition = field.parse.conditions[i]
+            const rewind = function () {
+                if (field.parse.sip == null) {
+                    return null
+                }
+                const sip = field.parse.sip[field.parse.sip.length - 1]
+                let sipped = sip.bits / 8
+                LITERALS: for (let j = 0, J = condition.fields.length; sipped != 0 && j < J; j++) {
+                    switch (condition.fields[j].type) {
+                    case 'literal':
+                        const before = condition.fields[j].before
+                        let advance = Math.min(sipped, before.value.length / 2 * before.repeat)
+                        sipped -= advance
+                        if (advance >= before.value.length / 2) {
+                            const remove = Math.floor(advance / (before.value.length / 2))
+                            advance -= remove
+                            before.repeat -= remove
+                        }
+                        if (advance != 0) {
+                            before.splice(0, advance * 2)
+                        }
+                        break
+                    case 'absent':
+                    case 'checkpoint':
+                        break
+                    default:
+                        break LITERALS
+                    }
+                }
+                const checkpoint = condition.fields[0].type == 'checkpoint'
+                if (sipped != 0) {
+                    condition.fields.splice(checkpoint ? 1 : 0, 0, {
+                        type: 'rewind', bytes: sipped
+                    })
+                }
+                if (checkpoint) {
+                    condition.fields[0].rewind = sip.bits / 8
+                }
+            } ()
             const source = join(condition.fields.map(field => dispatch(path, field)))
             if (condition.test != null) {
                 const inline = inliner(accumulate, path, [ condition.test ], signature)
-                block.push(`${i == 0 ? 'if' : 'else if'} (${inline.inlined.shift()})` + $(`
+                ladder.push(`${i == 0 ? 'if' : 'else if'} (${inline.inlined.shift()})` + $(`
                     {
                         `, source, `
                     }
                 `))
             } else {
-                block.push($(`
+                ladder.push($(`
                     else {
                         `, source, `
                     }
                 `))
             }
         }
-        if (conditional.parse.sip != null) {
-            $sip--
-        }
         return $(`
             `, invocations.length != 0 ? invocations.join('\n') : null, -1, `
 
             `, sip, -1, `
 
-            `, snuggle(block), `
+            `, snuggle(ladder), `
         `)
     }
 
@@ -687,6 +716,13 @@ function generate (packet, { require, bff }) {
         if (checkpoint.lengths.length == 0) {
             return null
         }
+        if (checkpoint.rewind != 0) {
+            return $(`
+                if ($end - ($start - ${checkpoint.rewind}) < ${checkpoint.lengths.join(' + ')}) {
+                    return parsers.inc.${packet.name}(${signature().join(', ')})($buffer, $start - ${checkpoint.rewind}, $end)
+                }
+            `)
+        }
         return $(`
             if ($end - $start < ${checkpoint.lengths.join(' + ')}) {
                 return parsers.inc.${packet.name}(${signature().join(', ')})($buffer, $start, $end)
@@ -721,9 +757,8 @@ function generate (packet, { require, bff }) {
             return lengthEncoding(path, field)
         case 'lengthEncoded':
             return lengthEncoded(path, field)
-        case 'function':
-            $step++
-            return `${path} = (${field.source})($sip[${$sip}])`
+        case 'rewind':
+            return rewind(field)
         case 'literal':
             return literal(path, field)
         case 'integer':
@@ -744,7 +779,7 @@ function generate (packet, { require, bff }) {
         register: '$_',
         i: '$i = []',
         I: '$I = []',
-        sip: '$sip = []',
+        sip: '$sip = 0',
         slice: '$slice = null',
         accumulator: '$accumulator = {}',
         starts: '$starts = []'
