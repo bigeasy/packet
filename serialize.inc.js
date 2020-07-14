@@ -116,7 +116,7 @@ function generate (packet, { require = null }) {
 
                     case ${$step++}:
 
-                        while ($bite != ${literal.value.length / 2}) {
+                        while ($bite != ${literal.value.length >>> 1}) {
                             if ($start == $end) {
                                 return { start: $start, serialize }
                             }
@@ -340,7 +340,7 @@ function generate (packet, { require = null }) {
                             return { start: $start, serialize }
                         }
 
-                        if ($_++ == ${field.bits / 8}) {
+                        if ($_++ == ${field.bits >>> 3}) {
                             $step = ${done}
                             continue
                         }
@@ -358,7 +358,7 @@ function generate (packet, { require = null }) {
 
                 `, pad, `
 
-                    if ($_ != ${field.bits / 8}) {
+                    if ($_ != ${field.bits >>> 3}) {
                         $step = ${redo}
                         continue
                     }
@@ -505,7 +505,7 @@ function generate (packet, { require = null }) {
                     continue
                 }
 
-            `, pad(`$_ = ${i} * ${element.bits / 8}`), `
+            `, pad(`$_ = ${i} * ${element.bits >>> 3}`), `
         `)
         // Release the array index from the array of indices.
         $i--

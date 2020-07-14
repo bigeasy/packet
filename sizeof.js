@@ -96,11 +96,11 @@ function generate (packet, { require = null }) {
             }
         case 'literal':
         case 'integer':
-            return `$start += ${field.bits / 8}`
+            return `$start += ${field.bits >>> 3}`
         case 'fixed': {
                 if (field.fixed) {
                     return $(`
-                        $start += ${field.bits / 8}
+                        $start += ${field.bits >>> 3}
                     `)
                 } else {
                     throw new Error
@@ -112,17 +112,17 @@ function generate (packet, { require = null }) {
                 return field.fields[0].type == 'buffer' && !field.fields[0].concat
                 ? $(`
                     $start += ${path}.reduce((sum, buffer) => sum + buffer.length, 0) +
-                        ${field.fields[0].bits / 8} * ${path}.length
+                        ${field.fields[0].bits >>> 3} * ${path}.length
                 `) : $(`
-                    $start += ${field.encoding[0].bits / 8} +
-                        ${field.fields[0].bits / 8} * ${path}.length
+                    $start += ${field.encoding[0].bits >>> 3} +
+                        ${field.fields[0].bits >>> 3} * ${path}.length
                 `)
             } else {
                 variables.i = true
                 $i++
                 const i = `$i[${$i}]`
                 const source = $(`
-                    $start += ${field.encoding[0].bits / 8}
+                    $start += ${field.encoding[0].bits >>> 3}
 
                     for (${i} = 0; ${i} < ${path}.length; ${i}++) {
                         `, join(field.fields.map(field => dispatch(path + `[${i}]`, field))), `
@@ -135,7 +135,7 @@ function generate (packet, { require = null }) {
                 if (field.fields.filter(field => !field.fixed).length == 0) {
                     const bits = field.fields.reduce((sum, field) => sum + field.bits, 0)
                     return $(`
-                        $start += ${bits / 8} * ${path}.length + ${field.terminator.length}
+                        $start += ${bits >>> 3} * ${path}.length + ${field.terminator.length}
                     `)
                 }
                 variables.i = true
@@ -154,7 +154,7 @@ function generate (packet, { require = null }) {
         case 'switch': {
                 if (field.fixed) {
                     return $(`
-                        $start += ${field.bits / 8}
+                        $start += ${field.bits >>> 3}
                     `)
                 }
                 const cases = []
@@ -213,7 +213,7 @@ function generate (packet, { require = null }) {
                                    ? accumulators.join('\n')
                                    : null
                 const source = field.fixed
-                             ? `$start += ${field.bits / 8}`
+                             ? `$start += ${field.bits >>> 3}`
                              : map(dispatch, path, field.fields)
                 return  $(`
                     `, declarations, -1, `
@@ -224,7 +224,7 @@ function generate (packet, { require = null }) {
             break
         case 'structure': {
                 if (field.fixed) {
-                    return `$start += ${field.bits / 8}`
+                    return `$start += ${field.bits >>> 3}`
                 }
                 return map(dispatch, path, field.fields)
             }

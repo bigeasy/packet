@@ -144,9 +144,9 @@ function checkpoints (path, fields, index = 0) {
             checked.push(field)
             if (field.fields[0].fixed) {
                 // *Division in string templates upsets Docco JavaScript parser.*
-                checkpoint.lengths.push((path + field.dotted) + '.length * ' + (field.fields[0].bits / 8))
+                checkpoint.lengths.push(`${path + field.dotted}.length * ${field.fields[0].bits >>> 3}`)
             } else {
-                field.fields = checkpoints(path + `${field.dotted}[$i[${index}]]`, field.fields, index + 1)
+                field.fields = checkpoints(`${path}${field.dotted}[$i[${index}]]`, field.fields, index + 1)
                 checked.push(checkpoint = { type: 'checkpoint', lengths: [ 0 ] })
             }
             break
@@ -188,10 +188,10 @@ function checkpoints (path, fields, index = 0) {
                     `))
                 } else {
                     // *Division in string templates upsets Docco JavaScript parser.*
-                    checkpoint.lengths.push((path + field.dotted) + '.length * ' + (field.fields[0].bits / 8))
+                    checkpoint.lengths.push(`${path + field.dotted}.length * ${field.fields[0].bits >>> 3}`)
                 }
             }  else {
-                field.fields = checkpoints(path + `${field.dotted}[$i[${index}]]`, field.fields, index + 1)
+                field.fields = checkpoints(`${path}${field.dotted}[$i[${index}]]`, field.fields, index + 1)
                 checked.push(checkpoint = { type: 'checkpoint', lengths: [ 0 ] })
             }
             break
@@ -371,15 +371,15 @@ function generate (packet, { require = null, bff, chk }) {
             case 1:
                 $step += 2
                 return $(`
-                    $buffer.write(${JSON.stringify(literal.value)}, $start, $start + ${literal.value.length / 2}, 'hex')
-                    $start += ${literal.value.length / 2}
+                    $buffer.write(${JSON.stringify(literal.value)}, $start, $start + ${literal.value.length >>> 1}, 'hex')
+                    $start += ${literal.value.length >>> 1}
                 `)
             default:
                 $step += 4
                 return $(`
                     for ($i[${$i + 1}] = 0; $i[${$i + 1}] < ${literal.repeat}; $i[${$i + 1}]++) {
-                        $buffer.write(${JSON.stringify(literal.value)}, $start, $start + ${literal.value.length / 2}, 'hex')
-                        $start += ${literal.value.length / 2}
+                        $buffer.write(${JSON.stringify(literal.value)}, $start, $start + ${literal.value.length >>> 1}, 'hex')
+                        $start += ${literal.value.length >>> 1}
                     }
                 `)
             }
@@ -417,7 +417,7 @@ function generate (packet, { require = null, bff, chk }) {
             `)
         }
         // Otherwise serialize the array length.
-        return map(dispatch, path + '.length', field.body.encoding)
+        return map(dispatch, `${path}.length`, field.body.encoding)
     }
     //
 
@@ -450,7 +450,7 @@ function generate (packet, { require = null, bff, chk }) {
         const i = `$i[${++$i}]`
         const source = $(`
             for (${i} = 0; ${i} < ${path}.length; ${i}++) {
-                `, map(dispatch, path + `[${i}]`, field.fields), `
+                `, map(dispatch, `${path}[${i}]`, field.fields), `
             }
         `)
         $i--
@@ -460,7 +460,7 @@ function generate (packet, { require = null, bff, chk }) {
     function terminated (path, field) {
         $step += 1
         const i = `$i[${++$i}]`
-        const looped = join(field.fields.map(field => dispatch(path + `[${i}]`, field)))
+        const looped = join(field.fields.map(field => dispatch(`${path}[${i}]`, field)))
         const source = $(`
             for (${i} = 0; ${i} < ${path}.length; ${i}++) {
                 `, looped, `

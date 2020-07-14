@@ -158,7 +158,7 @@ function generate (packet, { require = null }) {
             return $(`
                 case ${$step++}:
 
-                    $_ = ${literal.value.length / 2 * literal.repeat}
+                    $_ = ${(literal.value.length >>> 1) * literal.repeat}
                     $step = ${$step}
 
                 case ${$step++}:
@@ -570,7 +570,7 @@ function generate (packet, { require = null }) {
                 case ${$step++}:
 
                     $_ = ${field.length} != ${i}
-                        ? (${field.length} - ${i}) * ${element.bits / 8} - ${bytes.length}
+                        ? (${field.length} - ${i}) * ${element.bits >>> 3} - ${bytes.length}
                         : 0
 
                     $step = ${$step}
@@ -784,6 +784,7 @@ function generate (packet, { require = null }) {
         const redo = $step + 2
         // We sometimes have a vivification step to create an object element.
         // **TODO** Eliminate vivify step if not used.
+        const width = field.bits / field.length / 8
         const source = $(`
             case ${$step++}:
 
@@ -804,7 +805,7 @@ function generate (packet, { require = null }) {
                     continue
                 }
 
-                $_ = (${field.length} - ${i}) * ${field.bits / field.length / 8} - ${field.pad.length}
+                $_ = (${field.length} - ${i}) * ${width} - ${field.pad.length}
                 $step = ${$step}
         `)
         const skip = field.pad.length != 0 ? $(`

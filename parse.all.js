@@ -227,7 +227,7 @@ function generate (packet, { require, bff, chk }) {
                     // Tricky, stick the checkpoint for a fixed array at the end
                     // of the encoding fields. Let any subsequent fields use the
                     // checkpoint.
-                    checkpoint.lengths.push(`${field.fields[0].bits / 8} * $I[${index}]`)
+                    checkpoint.lengths.push(`${field.fields[0].bits >>> 3} * $I[${index}]`)
                 } else {
                     field.fields = checkpoints(path + `${field.dotted}[$i[${index}]]`, field.fields, index + 1)
                     checked.push(checkpoint = { type: 'checkpoint', lengths: [ 0 ], rewind: 0 })
@@ -350,7 +350,7 @@ function generate (packet, { require, bff, chk }) {
                 return null
             }
             return $(`
-                $start += ${literal.value.length / 2 * literal.repeat}
+                $start += ${(literal.value.length >>> 1) * literal.repeat}
             `)
         }
         return $(`
@@ -563,6 +563,7 @@ function generate (packet, { require, bff, chk }) {
         $step += 1 + (field.pad.length != 0 ? 2 : 0)
         const terminator = field.pad.map((bite, index) => {
             if (index == 0) {
+                // TODO Use `hex`.
                 return `$buffer[$start] == 0x${bite.toString(16)}`
             } else {
                 return `$buffer[$start + ${index}] == 0x${bite.toString(16)}`
@@ -585,7 +586,7 @@ function generate (packet, { require, bff, chk }) {
 
                 `, terminate, -1, `
 
-                `, vivify.array(path + `[${i}]`, field), -1, `
+                `, vivify.array(`${path}[${i}]`, field), -1, `
 
                 `, looped, `
                 ${i}++
@@ -598,11 +599,12 @@ function generate (packet, { require, bff, chk }) {
         `)
         $i--
         if (terminator.length) {
+            const width = field.bits / field.length / 8
             return $(`
                 `, source, `
 
                 $start += ${field.length} != ${i}
-                        ? (${field.length} - ${i}) * ${field.bits / field.length / 8} - ${field.pad.length}
+                        ? (${field.length} - ${i}) * ${width} - ${field.pad.length}
                         : 0
             `)
         }
