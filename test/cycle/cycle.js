@@ -37,8 +37,8 @@ module.exports = function (okay, options) {
         const required = coalesce(options.require, {})
         fs.mkdirSync(path.dirname(filename), { recursive: true })
         const packet = {
-            parsers: { all: {}, inc: {}, bff: {} },
-            serializers: { all: {}, inc: {}, bff: {} },
+            parsers: { all: {}, inc: {}, bff: {}, chk: {} },
+            serializers: { all: {}, inc: {}, bff: {}, chk: {} },
             sizeOf: {}
         }
 
@@ -303,6 +303,93 @@ module.exports = function (okay, options) {
             }
         } catch (error) {
             console.log(packet.parsers.bff.object.toString())
+            throw error
+        }
+
+        if (options.stopAt == 'parse.bff') {
+            return
+        }
+
+        if (compile) {
+            compiler({
+                object: 'serializers',
+                file: `${filename}.serializer.chk.js`,
+                source: composers.serializer.all(intermediate, {
+                    chk: true,
+                    require: required
+                })
+            })
+        }
+        require(`${filename}.serializer.chk.js`)(packet)
+
+        okay.inc(sizeOf + 1)
+
+        try {
+            for (let i = 0; i <= expected.length; i++) {
+                const buffer = Buffer.alloc(sizeOf)
+                let serialize = packet.serializers.chk.object(actual), start
+                {
+                    const slice = buffer.slice(0, buffer.length - i)
+                    ; ({ start, serialize } = serialize(slice, 0, buffer.length - i))
+                }
+                const partial = start
+                if (serialize != null) {
+                    const slice = buffer.slice(start, buffer.length)
+                    ; ({ start, serialize } = serialize(slice, 0, buffer.length - start))
+                }
+                okay({ start, partial, serialize, buffer: buffer.toJSON().data }, {
+                    start: i == 0 ? buffer.length : buffer.length - partial,
+                    partial: buffer.length - i,
+                    serialize: null,
+                    buffer: expected.toJSON().data
+                }, `${name} inquisition serialize ${i}`)
+            }
+        } catch (error) {
+            console.log(packet.serializers.chk.object.toString())
+            throw error
+        }
+
+        if (options.stopAt == 'serialize.chk') {
+            return
+        }
+
+        if (compile) {
+            compiler({
+                object: 'parsers',
+                file: `${filename}.parser.chk.js`,
+                source: composers.parser.all(intermediate, {
+                    chk: true,
+                    require: required
+                })
+            })
+        }
+        require(`${filename}.parser.chk.js`)(packet)
+
+        okay.inc(sizeOf + 1)
+
+        try {
+            for (let i = 0; i <= expected.length; i++) {
+                let parse = packet.parsers.chk.object(actual), start, object
+                {
+                    const slice = expected.slice(0, expected.length - i)
+                    ; ({ start, object, parse } = parse(slice, 0, expected.length - i))
+                }
+                const partial = start
+                if (parse != null) {
+                    const slice = expected.slice(start, expected.length)
+                    ; ({ start, object, parse } = parse(slice, 0, expected.length - start))
+                }
+                concat(object)
+                concat(actual)
+                okay({ start, partial, parse, object }, {
+                    start: i == 0 ? expected.length : expected.length - partial,
+                    partial: expected.length - i,
+                    parse: null,
+                    object: actual
+                }, `${name} inquisition parse ${i}`)
+            }
+        } catch (error) {
+            console.log(packet.parsers.chk.object.toString())
             throw error
         }
     })

@@ -317,7 +317,10 @@ function generate (packet, { require = null }) {
         //
         // **TODO** Lengths seem off, array length and not byte length? I've
         // added the multiplication, let's see if it breaks.
-        function pad (i) {
+        function pad (assignment = null) {
+            if (field.pad.length == 0) {
+                return `$step = ${$step}`
+            }
             // First step of padding.
             const redo = $step
             // First step of next field.
@@ -326,6 +329,10 @@ function generate (packet, { require = null }) {
             // end of the buffer.
             const pad = join(field.pad.map(bite => {
                 return $(`
+                    x
+                        `, -1, null, `
+                        $step = ${$step}
+
                     case ${$step++}:
 
                         if ($start == $end) {
@@ -345,12 +352,16 @@ function generate (packet, { require = null }) {
             }))
             // Repeat the padding fill if we've not filled the buffer
             return $(`
+                x
+                    `, -1, null, `
+                    `, assignment, -1, `
+
                 `, pad, `
 
-                if ($_ != ${field.bits / 8}) {
-                    $step = ${redo}
-                    continue
-                }
+                    if ($_ != ${field.bits / 8}) {
+                        $step = ${redo}
+                        continue
+                    }
             `)
         }
         //
@@ -494,11 +505,7 @@ function generate (packet, { require = null }) {
                     continue
                 }
 
-                $_ = ${i} * ${element.bits / 8}
-
-                $step = ${$step}
-
-            `, pad(), `
+            `, pad(`$_ = ${i} * ${element.bits / 8}`), `
         `)
         // Release the array index from the array of indices.
         $i--

@@ -3,89 +3,59 @@ module.exports = function ({ parsers }) {
 
 
         return function (object = {}, $step = 0, $i = []) {
-            let $_, $bite, $buffers = [], $length = 0
+            let $_, $bite, $buffers = []
 
             return function parse ($buffer, $start, $end) {
-                for (;;) {
-                    switch ($step) {
-                    case 0:
+                switch ($step) {
+                case 0:
 
-                        object = {
-                            array: [],
-                            sentry: []
-                        }
-
-                        $step = 1
-
-                    case 1:
-
-                        $_ = 0
-
-                        $step = 2
-
-                    case 2: {
-
-                        const length = Math.min($end - $start, 8 - $_)
-                        $buffers.push($buffer.slice($start, $start + length))
-                        $start += length
-                        $_ += length
-
-                        if ($_ != 8) {
-                            return { start: $start, parse }
-                        }
-
-                        object.array = $buffers
-                        $buffers = []
-
-                        $step = 3
-
+                    object = {
+                        array: [],
+                        sentry: 0
                     }
 
-                    case 3:
+                    $step = 1
 
-                        $i[0] = 0
+                case 1:
 
-                    case 4:
+                    $_ = 0
 
-                        if ($start == $end) {
-                            return { start: $start, parse }
-                        }
+                    $step = 2
 
-                        if ($buffer[$start] == 0x0) {
-                            $start++
-                            $step = 9
-                            continue
-                        }
+                case 2: {
 
-                        $step = 5
+                    const length = Math.min($end - $start, 8 - $_)
+                    $buffers.push($buffer.slice($start, $start + length))
+                    $start += length
+                    $_ += length
 
-                    case 5:
-
-
-                    case 6:
-
-                        $step = 7
-
-                    case 7:
-
-                        if ($start == $end) {
-                            return { start: $start, object: null, parse }
-                        }
-
-                        object.sentry[$i[0]] = $buffer[$start++]
-
-
-                    case 8:
-
-                        $i[0]++
-                        $step = 4
-                        continue
-
-                    case 9:
-
-                        return { start: $start, object: object, parse: null }
+                    if ($_ != 8) {
+                        return { start: $start, parse }
                     }
-                    break
+
+                    object.array = $buffers
+                    $buffers = []
+
+                    $step = 3
+
+                }
+
+                case 3:
+
+                    $step = 4
+
+                case 4:
+
+                    if ($start == $end) {
+                        return { start: $start, object: null, parse }
+                    }
+
+                    object.sentry = $buffer[$start++]
+
+
+                case 5:
+
+                    return { start: $start, object: object, parse: null }
                 }
             }
         }

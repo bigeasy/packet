@@ -8,10 +8,10 @@ module.exports = function ({ parsers }) {
 
                 let object = {
                     array: [],
-                    sentry: []
+                    sentry: 0
                 }
 
-                if ($end - $start < 16) {
+                if ($end - $start < 17) {
                     return parsers.inc.object(object, 1, $i)($buffer, $start, $end)
                 }
 
@@ -42,27 +42,7 @@ module.exports = function ({ parsers }) {
                         ? (16 - $i[0]) * 1 - 2
                         : 0
 
-                $i[0] = 0
-                for (;;) {
-                    if ($end - $start < 1) {
-                        return parsers.inc.object(object, 11, $i)($buffer, $start, $end)
-                    }
-
-                    if (
-                        $buffer[$start] == 0x0
-                    ) {
-                        $start += 1
-                        break
-                    }
-
-                    if ($end - $start < 1) {
-                        return parsers.inc.object(object, 13, $i)($buffer, $start, $end)
-                    }
-
-                    object.sentry[$i[0]] = ($buffer[$start++])
-
-                    $i[0]++
-                }
+                object.sentry = ($buffer[$start++])
 
                 return { start: $start, object: object, parse: null }
             }

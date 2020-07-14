@@ -6,8 +6,6 @@ module.exports = function ({ serializers }) {
             return function ($buffer, $start, $end) {
                 let $i = []
 
-                $buffer[$start++] = (object.type & 0xff)
-
                 {
                     const length = object.array.reduce((sum, buffer) => sum + buffer.length, 0)
                     $buffer[$start++] = (length & 0xff)
@@ -20,12 +18,7 @@ module.exports = function ({ serializers }) {
                     }
                 }
 
-                if (($ => $.type == 0)(object)){
-                    $buffer[$start++] = (object.sentry & 0xff)
-                } else {
-                    $buffer[$start++] = (object.sentry >>> 8 & 0xff)
-                    $buffer[$start++] = (object.sentry & 0xff)
-                }
+                $buffer[$start++] = (object.sentry & 0xff)
 
                 return { start: $start, serialize: null }
             }

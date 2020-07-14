@@ -15,11 +15,7 @@ module.exports = function ({ serializers }) {
                 $buffer.fill(Buffer.from([ 0xa, 0xb ]), $start, $start + $_)
                 $start += $_
 
-                for ($i[0] = 0; $i[0] < object.sentry.length; $i[0]++) {
-                    $buffer[$start++] = (object.sentry[$i[0]] & 0xff)
-                }
-
-                $buffer[$start++] = 0x0
+                $buffer[$start++] = (object.sentry & 0xff)
 
                 return { start: $start, serialize: null }
             }

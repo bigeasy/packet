@@ -48,26 +48,15 @@ module.exports = function ({ parsers }) {
                         $_ = (4 - $i[0]) * 1 - 0
                         $step = 6
 
-                    case 6:
-
-                        $bite = Math.min($end - $start, $_)
-                        $_ -= $bite
-                        $start += $bite
-
-                        if ($_ != 0) {
-                            return { start: $start, object: null, parse }
-                        }
-
-                        $step = 7
                         object.value = (function (value) {
                             return Buffer.from(value).readFloatBE()
                         })(object.value)
 
+                    case 6:
+
+                        $step = 7
+
                     case 7:
-
-                        $step = 8
-
-                    case 8:
 
                         if ($start == $end) {
                             return { start: $start, object: null, parse }
@@ -76,7 +65,7 @@ module.exports = function ({ parsers }) {
                         object.sentry = $buffer[$start++]
 
 
-                    case 9:
+                    case 8:
 
                         return { start: $start, object: object, parse: null }
                     }

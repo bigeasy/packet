@@ -85,7 +85,93 @@ function expand (fields) {
     return expanded
 }
 
-function generate (packet, { require, bff }) {
+//
+
+// Use only in testing. Inserts a checkpoint before every actual read to ensure
+// that we're correctly incrementing the step. Otherwise we have to add a
+// complicated subsequent field to every test that the step is set correctly
+// because most of the time the checkpoint will evaluate the buffer for the
+// length of the entire packet.
+
+//
+function inquisition (fields, $I = 0) {
+    const checked = []
+    for (const field of fields) {
+        switch (field.type) {
+        case 'accumulator':
+        case 'inline':
+        case 'structure':
+            field.fields = inquisition(field.fields)
+            checked.push(field)
+            break
+        case 'conditional':
+            if (field.parse.sip != null) {
+                field.parse.sip = inquisition(field.parse.sip)
+            }
+            for (const condition of field.parse.conditions) {
+                condition.fields = inquisition(condition.fields)
+            }
+            checked.push(field)
+            break
+        case 'switch':
+            for (const when of field.cases) {
+                when.fields = inquisition(when.fields)
+            }
+            checked.push(field)
+            break
+        case 'terminated':
+            field.fields = inquisition(field.fields)
+            checked.push(field)
+            break
+        case 'terminator':
+            checked.push({ type: 'checkpoint', lengths: [ field.body.terminator.length ], rewind: 0 })
+            checked.push(field)
+            break
+        case 'lengthEncoding':
+            checked.push({
+                type: 'checkpoint',
+                lengths: [ field.body.encoding[0].bits / 8 ],
+                rewind: 0
+            })
+            checked.push(field)
+            break
+        case 'lengthEncoded': {
+                const element = field.fields[field.fields.length - 1]
+                if (element.fixed) {
+                    const bytes = element.bits / 8
+                    checked.push({
+                        type: 'checkpoint',
+                        lengths: [ `${bytes} * $I[${$I}]` ],
+                        rewind: 0
+                    })
+                } else {
+                    field.fields = inquisition(field.fields, $I + 1)
+                }
+                checked.push(field)
+            }
+            break
+        case 'repeated':
+            field.fields = inquisition(field.fields)
+            checked.push(field)
+            break
+        case 'buffer':
+        case 'absent':
+            checked.push(field)
+            break
+        case 'fixed':
+        case 'integer':
+        case 'literal':
+            checked.push({ type: 'checkpoint', lengths: [ field.bits / 8 ], rewind: 0 })
+            checked.push(field)
+            break
+        default:
+            throw new Error(field.type)
+        }
+    }
+    return checked
+}
+
+function generate (packet, { require, bff, chk }) {
     let $i = -1, $I = -1, $step = 1
 
     const variables = declare(packet)
@@ -103,8 +189,10 @@ function generate (packet, { require, bff }) {
 
     // TODO You can certianly do something to make this prettier.
     // TODO Start by prepending the path I think?
+    // TODO Uh, `index` is not the same as `$I`, need `$i` and `$I`.
     function checkpoints (path, fields, index = 0) {
-        let checkpoint = { type: 'checkpoint', lengths: [ 0 ], rewind: 0 }, checked = [ checkpoint ]
+        let checkpoint = { type: 'checkpoint', lengths: [ 0 ], rewind: 0 }
+        const checked = [ checkpoint ]
         for (const field of fields) {
             switch (field.type) {
             case 'function':
@@ -180,11 +268,14 @@ function generate (packet, { require, bff }) {
                 break
             }
         }
+        // Remove any list of lengths that begins with a zero constant. There
+        // may still be calculated lengths following.
         checked.forEach(field => {
             if (field.type == 'checkpoint' && field.lengths[0] == 0) {
                 field.lengths.shift()
             }
         })
+        // Remove any checkpoints that only had the zero constant.
         return checked.filter(field => {
             return field.type != 'checkpoint' || field.lengths.length != 0
         })
@@ -383,7 +474,7 @@ function generate (packet, { require, bff }) {
         const element = field.fields.slice().pop().fields.slice().pop()
         if (element.type == 'buffer') {
             const terminator = field.terminator
-            if (bff) {
+            if (bff || chk) {
                 const source = $(`
                     $_ = $buffer.indexOf(Buffer.from(${util.inspect(terminator)}), $start)
                     if (~$_) {
@@ -770,7 +861,9 @@ function generate (packet, { require, bff }) {
         }
     }
 
-    if (bff) {
+    if (chk) {
+        packet.fields = inquisition(packet.fields)
+    } else if (bff) {
         packet.fields = checkpoints(packet.name, packet.fields)
     }
 
@@ -793,9 +886,9 @@ function generate (packet, { require, bff }) {
 
     const requires = required(require)
 
-    if (bff) {
+    if (bff || chk) {
         return $(`
-            parsers.bff.${packet.name} = function () {
+            parsers.${bff ? 'bff' : 'chk'}.${packet.name} = function () {
                 `, requires, -1, `
 
                 `, lookups, -1, `

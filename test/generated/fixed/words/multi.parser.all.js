@@ -7,7 +7,7 @@ module.exports = function ({ parsers }) {
 
             let object = {
                 array: [],
-                sentry: []
+                sentry: 0
             }
 
             $i[0] = 0
@@ -33,19 +33,7 @@ module.exports = function ({ parsers }) {
                     ? (16 - $i[0]) * 1 - 2
                     : 0
 
-            $i[0] = 0
-            for (;;) {
-                if (
-                    $buffer[$start] == 0x0
-                ) {
-                    $start += 1
-                    break
-                }
-
-                object.sentry[$i[0]] = ($buffer[$start++])
-
-                $i[0]++
-            }
+            object.sentry = ($buffer[$start++])
 
             return object
         }

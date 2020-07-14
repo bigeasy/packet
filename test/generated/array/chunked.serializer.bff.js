@@ -10,8 +10,6 @@ module.exports = function ({ serializers }) {
                     return serializers.inc.object(object, 0, $i)($buffer, $start, $end)
                 }
 
-                $buffer[$start++] = (object.type & 0xff)
-
                 {
                     const length = object.array.reduce((sum, buffer) => sum + buffer.length, 0)
                     $buffer[$start++] = (length & 0xff)
@@ -24,20 +22,7 @@ module.exports = function ({ serializers }) {
                     }
                 }
 
-                if (($ => $.type == 0)(object)){
-                    if ($end - $start < 1) {
-                        return serializers.inc.object(object, 7, $i)($buffer, $start, $end)
-                    }
-
-                    $buffer[$start++] = (object.sentry & 0xff)
-                } else {
-                    if ($end - $start < 2) {
-                        return serializers.inc.object(object, 9, $i)($buffer, $start, $end)
-                    }
-
-                    $buffer[$start++] = (object.sentry >>> 8 & 0xff)
-                    $buffer[$start++] = (object.sentry & 0xff)
-                }
+                $buffer[$start++] = (object.sentry & 0xff)
 
                 return { start: $start, serialize: null }
             }

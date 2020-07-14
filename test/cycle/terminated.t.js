@@ -28,8 +28,7 @@ function prove (okay) {
             }
         },
         objects: [{
-            array: Buffer.from('abcdefghij'),
-            sentry: 0xaa
+            array: Buffer.from('abcdefghij'), sentry: 0xaa
         }]
     })
 }

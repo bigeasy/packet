@@ -5,9 +5,7 @@ module.exports = function ({ sizeOf }) {
         return function (object) {
             let $start = 0
 
-            $start += 16
-
-            $start += 1 * object.sentry.length + 1
+            $start += 17
 
             return $start
         }

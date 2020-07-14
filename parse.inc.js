@@ -806,7 +806,8 @@ function generate (packet, { require = null }) {
 
                 $_ = (${field.length} - ${i}) * ${field.bits / field.length / 8} - ${field.pad.length}
                 $step = ${$step}
-
+        `)
+        const skip = field.pad.length != 0 ? $(`
             case ${$step++}:
 
                 $bite = Math.min($end - $start, $_)
@@ -818,10 +819,14 @@ function generate (packet, { require = null }) {
                 }
 
                 $step = ${$step}
-        `)
+        `) : null
         // Release the array index from the array of indices.
         $i--
-        return source
+        return $(`
+            `, source, `
+
+            `, skip, `
+        `)
     }
 
     function inline (path, field) {

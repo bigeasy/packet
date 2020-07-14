@@ -9,6 +9,6 @@ function prove (okay) {
                 sentry: 8
             }
         },
-        objects: [{ padded: 0xabcd, sentry: 0xaa }]
+        objects: [{ padded: 0xabcd, sentry: 0xaa }],
     })
 }

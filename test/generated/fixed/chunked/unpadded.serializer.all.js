@@ -13,11 +13,7 @@ module.exports = function ({ serializers }) {
                     $_ += object.array[$i[0]].length
                 }
 
-                for ($i[0] = 0; $i[0] < object.sentry.length; $i[0]++) {
-                    $buffer[$start++] = (object.sentry[$i[0]] & 0xff)
-                }
-
-                $buffer[$start++] = 0x0
+                $buffer[$start++] = (object.sentry & 0xff)
 
                 return { start: $start, serialize: null }
             }

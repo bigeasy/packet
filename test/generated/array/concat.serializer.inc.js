@@ -12,7 +12,7 @@ module.exports = function ({ serializers }) {
 
                         $step = 1
                         $bite = 0
-                        $_ = object.type
+                        $_ = object.array.length
 
                     case 1:
 
@@ -25,24 +25,7 @@ module.exports = function ({ serializers }) {
                         }
 
 
-                    case 2:
-
-                        $step = 3
-                        $bite = 0
-                        $_ = object.array.length
-
-                    case 3:
-
-                        while ($bite != -1) {
-                            if ($start == $end) {
-                                return { start: $start, serialize }
-                            }
-                            $buffer[$start++] = ($_ >>> $bite * 8 & 0xff)
-                            $bite--
-                        }
-
-
-                    case 4: {
+                    case 2: {
 
                         const $bytes = Math.min($end - $start, object.array.length - $copied)
                         object.array.copy($buffer, $start, $copied, $copied + $bytes)
@@ -55,27 +38,17 @@ module.exports = function ({ serializers }) {
 
                         $copied = 0
 
-                        $step = 5
+                        $step = 3
 
                     }
 
-                    case 5:
+                    case 3:
 
-                        if (($ => $.type == 0)(object)){
-                            $step = 6
-                            continue
-                        } else if (($ => true)(object)){
-                            $step = 8
-                            continue
-                        }
-
-                    case 6:
-
-                        $step = 7
+                        $step = 4
                         $bite = 0
                         $_ = object.sentry
 
-                    case 7:
+                    case 4:
 
                         while ($bite != -1) {
                             if ($start == $end) {
@@ -85,28 +58,10 @@ module.exports = function ({ serializers }) {
                             $bite--
                         }
 
-                        $step = 10
-                        continue
 
-                    case 8:
+                        $step = 5
 
-                        $step = 9
-                        $bite = 1
-                        $_ = object.sentry
-
-                    case 9:
-
-                        while ($bite != -1) {
-                            if ($start == $end) {
-                                return { start: $start, serialize }
-                            }
-                            $buffer[$start++] = ($_ >>> $bite * 8 & 0xff)
-                            $bite--
-                        }
-
-                        $step = 10
-
-                    case 10:
+                    case 5:
 
                         break
 

@@ -42,6 +42,8 @@ module.exports = function ({ serializers }) {
 
                     }
 
+                        $step = 2
+
                     case 2:
 
                         if ($start == $end) {
@@ -54,6 +56,8 @@ module.exports = function ({ serializers }) {
                         }
 
                         $buffer[$start++] = 0xd
+
+                        $step = 3
 
                         $step = 3
 
@@ -72,10 +76,10 @@ module.exports = function ({ serializers }) {
 
                         $step = 4
 
-                    if ($_ != 8) {
-                        $step = 2
-                        continue
-                    }
+                        if ($_ != 8) {
+                            $step = 2
+                            continue
+                        }
 
                     case 4:
 

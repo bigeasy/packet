@@ -20,7 +20,7 @@ function prove (okay) {
             }, {
                 first: 0x89a0, second: 0xcdef
             }],
-            sentry: 1
+            sentry: 0xaa
         }]
     })
     cycle(okay, {
@@ -41,53 +41,36 @@ function prove (okay) {
             }, {
                 first: [ 1, 2 ]
             }],
-            sentry: 8
+            sentry: 0xaa
         }]
     })
     cycle(okay, {
         name: 'array/concat',
         define: {
             object: {
-                type: 8,
                 array: [ 8, [ Buffer ] ],
                 // Need to force the best-foot-forward check.
-                sentry: [
-                    $ => $.type == 0, 8,
-                    $ => true, 16
-                ]
+                sentry: 8
             }
         },
         // Repeat test simply to get the coverage of the generated conditional.
         objects: [{
-            type: 0,
             array: Buffer.from('abcdefgh'),
             sentry: 0xaa
-        }, {
-            type: 1,
-            array: Buffer.from('abcdefgh'),
-            sentry: 0xaa
-        }]
+        }],
+        stopAt: 'serialize.chk'
     })
     cycle(okay, {
         name: 'array/chunked',
         define: {
             object: {
-                type: 8,
                 array: [ 8, [[ Buffer ]] ],
                 // Need to force the best-foot-forward check.
-                sentry: [
-                    $ => $.type == 0, 8,
-                    true, 16
-                ]
+                sentry: 8
             }
         },
         // Repeat test simply to get the coverage of the generated conditional.
         objects: [{
-            type: 0,
-            array: [ Buffer.from('abcdefgh') ],
-            sentry: 0xaa
-        }, {
-            type: 1,
             array: [ Buffer.from('abcdefgh') ],
             sentry: 0xaa
         }]

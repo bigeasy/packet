@@ -53,23 +53,18 @@ module.exports = function ({ serializers }) {
 
                         $step = 4
 
-                    if ($_ != 8) {
-                        $step = 3
-                        continue
-                    }
+                        if ($_ != 8) {
+                            $step = 3
+                            continue
+                        }
 
                     case 4:
 
-                        $i[0] = 0
                         $step = 5
+                        $bite = 0
+                        $_ = object.sentry
 
                     case 5:
-
-                        $step = 6
-                        $bite = 0
-                        $_ = object.sentry[$i[0]]
-
-                    case 6:
 
                         while ($bite != -1) {
                             if ($start == $end) {
@@ -79,26 +74,10 @@ module.exports = function ({ serializers }) {
                             $bite--
                         }
 
-                        if (++$i[0] != object.sentry.length) {
-                            $step = 5
-                            continue
-                        }
 
-                        $step = 7
+                        $step = 6
 
-                    case 7:
-
-                        if ($start == $end) {
-                            return { start: $start, serialize }
-                        }
-
-                        $buffer[$start++] = 0x0
-
-                        $step = 8
-
-                        $step = 8
-
-                    case 8:
+                    case 6:
 
                         break
 

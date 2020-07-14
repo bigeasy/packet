@@ -42,15 +42,7 @@ module.exports = function ({ serializers }) {
                             continue
                         }
 
-                        $_ = $i[0] * 1
-
-                        $step = 4
-
-
-                    if ($_ != 8) {
-                        $step = 4
-                        continue
-                    }
+                    $step = 4
 
                     case 4:
 

@@ -84,6 +84,7 @@ function expand (fields) {
     }
     return expanded
 }
+
 //
 
 // Inject checkpoint nodes into AST when generating a best-foot-forward parser.
@@ -128,7 +129,7 @@ function expand (fields) {
 //
 function checkpoints (path, fields, index = 0) {
     let checkpoint
-    const checked = [ checkpoint = { type: 'checkpoint', lengths: [ 0 ], vivify: null } ]
+    const checked = [ checkpoint = { type: 'checkpoint', lengths: [ 0 ] } ]
     for (const field of fields) {
         switch (field.type) {
         case 'literal':
@@ -146,7 +147,7 @@ function checkpoints (path, fields, index = 0) {
                 checkpoint.lengths.push((path + field.dotted) + '.length * ' + (field.fields[0].bits / 8))
             } else {
                 field.fields = checkpoints(path + `${field.dotted}[$i[${index}]]`, field.fields, index + 1)
-                checked.push(checkpoint = { type: 'checkpoint', lengths: [ 0 ], vivify: null })
+                checked.push(checkpoint = { type: 'checkpoint', lengths: [ 0 ] })
             }
             break
         case 'terminator':
@@ -165,16 +166,14 @@ function checkpoints (path, fields, index = 0) {
             for (const when of field.cases) {
                 when.fields = checkpoints(path, when.fields, index)
             }
-            checked.push(checkpoint = { type: 'checkpoint', lengths: [ 0 ], vivify: null })
+            checked.push(checkpoint = { type: 'checkpoint', lengths: [ 0 ] })
             break
         case 'conditional':
             checked.push(field)
             for (const condition of field.serialize.conditions) {
                 condition.fields = checkpoints(path, condition.fields, index)
             }
-            checked.push(checkpoint = {
-                type: 'checkpoint', lengths: [ 0 ], vivify: null
-            })
+            checked.push(checkpoint = { type: 'checkpoint', lengths: [ 0 ] })
             break
         case 'lengthEncoding':
             checked.push(field)
@@ -193,9 +192,7 @@ function checkpoints (path, fields, index = 0) {
                 }
             }  else {
                 field.fields = checkpoints(path + `${field.dotted}[$i[${index}]]`, field.fields, index + 1)
-                checked.push(checkpoint = {
-                    type: 'checkpoint', lengths: [ 0 ], vivify: null
-                })
+                checked.push(checkpoint = { type: 'checkpoint', lengths: [ 0 ] })
             }
             break
         case 'accumulator':
@@ -206,9 +203,7 @@ function checkpoints (path, fields, index = 0) {
                 checkpoint.lengths.push(field.bits / 8)
             }  else {
                 field.fields = checkpoints(path + field.dotted, field.fields, index + 1)
-                checked.push(checkpoint = {
-                    type: 'checkpoint', lengths: [ 0 ], vivify: null
-                })
+                checked.push(checkpoint = { type: 'checkpoint', lengths: [ 0 ] })
             }
             break
         default:
@@ -228,7 +223,85 @@ function checkpoints (path, fields, index = 0) {
     })
 }
 
-function generate (packet, { require = null, bff }) {
+//
+
+// Use only in testing. Inserts a checkpoint before every actual read to ensure
+// that we're correctly incrementing the step. Otherwise we have to add a
+// complicated subsequent field to every test that the step is set correctly
+// because most of the time the checkpoint will evaluate the buffer for the
+// length of the entire packet.
+
+//
+function inquisition (path, fields) {
+    const checked = []
+    for (const field of fields) {
+        switch (field.type) {
+        case 'accumulator':
+        case 'inline':
+        case 'structure':
+            field.fields = inquisition(path + field.dotted, field.fields)
+            checked.push(field)
+            break
+        case 'conditional':
+            for (const condition of field.serialize.conditions) {
+                condition.fields = inquisition(path + field.dotted, condition.fields)
+            }
+            checked.push(field)
+            break
+        case 'switch':
+            for (const when of field.cases) {
+                when.fields = inquisition(path + field.dotted, when.fields)
+            }
+            checked.push(field)
+            break
+        case 'terminated':
+            field.fields = inquisition(path + field.dotted, field.fields)
+            checked.push(field)
+            break
+        case 'terminator':
+            checked.push({ type: 'checkpoint', lengths: [ field.body.terminator.length ]})
+            checked.push(field)
+            break
+        case 'lengthEncoding':
+            checked.push({ type: 'checkpoint', lengths: [ field.body.encoding[0].bits / 8 ]})
+            checked.push(field)
+            break
+        // When we encounter a length encoded buffer, we still skip the whole
+        // length encoding with the buffer length. We're not testing checkpoints
+        // that will never exist, just that subsequent fields are aligned to the
+        // correct step.
+        case 'lengthEncoded':
+            if (field.fixed) {
+                checked.push({ type: 'checkpoint', lengths: [ field.bits / 8 ] })
+            } else if (field.fields[field.fields.length - 1].type == 'buffer') {
+                const lengthEncoding = checked[checked.length - 2]
+                lengthEncoding.lengths.push(field.fields[field.fields.length - 1].concat
+                    ? `${path + field.dotted}.length`
+                    : `${path + field.dotted}.reduce((sum, buffer) => sum + buffer.length, 0)`
+                )
+            } else {
+                field.fields = inquisition(path + field.dotted, field.fields)
+            }
+            checked.push(field)
+            break
+        case 'absent':
+            checked.push(field)
+            break
+        case 'fixed':
+        case 'buffer':
+        case 'integer':
+        case 'literal':
+            checked.push({ type: 'checkpoint', lengths: [ field.bits / 8 ]})
+            checked.push(field)
+            break
+        default:
+            throw new Error(field.type)
+        }
+    }
+    return checked
+}
+
+function generate (packet, { require = null, bff, chk }) {
     let $step = 0, $i = -1, $$ = -1
 
     const variables = declare (packet)
@@ -454,7 +527,7 @@ function generate (packet, { require = null, bff }) {
                 $start += $_
             `)
         }
-        $step += 2
+        $step += 1 + field.pad.length
         const i = `$i[${++$i}]`
         const looped = map(dispatch, `${path}[${i}]`, field.fields)
         const pad = field.pad.length == 0 ? null : $(`
@@ -512,6 +585,9 @@ function generate (packet, { require = null, bff }) {
         const starts = []
         for (let i = before.buffered.start, I = before.buffered.end; i < I; i++) {
             starts.push(`$starts[${i}] = $start`)
+        }
+        if (before.source != null) {
+            $step++
         }
         const source = map(dispatch, before.path, field.fields)
         const buffered = accumulate.buffered
@@ -700,7 +776,7 @@ function generate (packet, { require = null, bff }) {
     assert.equal($i, -1)
 
     return $(`
-        serializers.${bff ? 'bff' : 'all'}.${packet.name} = function () {
+        serializers.${bff ? 'bff' : chk ? 'chk' : 'all'}.${packet.name} = function () {
             `, requires, -1, `
 
             `, lookups, -1, `
@@ -721,7 +797,9 @@ function generate (packet, { require = null, bff }) {
 module.exports = function (definition, options = {}) {
     const expanded = expand(JSON.parse(JSON.stringify(definition)))
     return join(expanded.map(function (packet) {
-        if (options.bff) {
+        if (options.chk) {
+            packet.fields = inquisition(packet.name, packet.fields)
+        } else if (options.bff) {
             packet.fields = checkpoints(packet.name, packet.fields)
         }
         return generate(packet, options)

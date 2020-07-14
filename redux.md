@@ -1,4 +1,9 @@
-## Mon Jul 13 23:01:43 CDT 2020 ~ todo
+## Tue Jul 14 03:26:09 CDT 2020 ~ todo
+
+Another little thing to fix. If the size of a condition is less than or equal to
+the size of a sip, we can remove the checkpoint from the condidition.
+
+## Mon Jul 13 23:01:43 CDT 2020
 
 Checkpoints are hard to test because I have to devise tests that force
 checkpoint creation, which usually means injecting a conditional somewhere.

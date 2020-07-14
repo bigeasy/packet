@@ -3,7 +3,7 @@ module.exports = function ({ parsers }) {
 
 
         return function (object = {}, $step = 0, $i = []) {
-            let $_, $bite, $length = 0
+            let $_, $bite
 
             return function parse ($buffer, $start, $end) {
                 for (;;) {
@@ -12,7 +12,7 @@ module.exports = function ({ parsers }) {
 
                         object = {
                             array: [],
-                            sentry: []
+                            sentry: 0
                         }
 
                         $step = 1
@@ -54,59 +54,21 @@ module.exports = function ({ parsers }) {
                         $_ = (4 - $i[0]) * 2 - 0
                         $step = 6
 
+
                     case 6:
-
-                        $bite = Math.min($end - $start, $_)
-                        $_ -= $bite
-                        $start += $bite
-
-                        if ($_ != 0) {
-                            return { start: $start, object: null, parse }
-                        }
 
                         $step = 7
 
                     case 7:
 
-                        $i[0] = 0
-
-                    case 8:
-
-                        if ($start == $end) {
-                            return { start: $start, parse }
-                        }
-
-                        if ($buffer[$start] == 0x0) {
-                            $start++
-                            $step = 13
-                            continue
-                        }
-
-                        $step = 9
-
-                    case 9:
-
-
-                    case 10:
-
-                        $step = 11
-
-                    case 11:
-
                         if ($start == $end) {
                             return { start: $start, object: null, parse }
                         }
 
-                        object.sentry[$i[0]] = $buffer[$start++]
+                        object.sentry = $buffer[$start++]
 
 
-                    case 12:
-
-                        $i[0]++
-                        $step = 8
-                        continue
-
-                    case 13:
+                    case 8:
 
                         return { start: $start, object: object, parse: null }
                     }
