@@ -2,7 +2,7 @@ require('proof')(0, prove)
 
 function prove (okay) {
     const cycle = require('./cycle')
-    /*cycle(okay, {
+    cycle(okay, {
         name: 'conditional/mysql',
         define: {
             object: {
@@ -126,7 +126,7 @@ function prove (okay) {
             },
             sentry: 0xaa
         }]
-    }) */
+    })
     cycle(okay, {
         name: 'conditional/vivify',
         define: {
@@ -143,7 +143,7 @@ function prove (okay) {
                 sentry: 8
             }
         },
-        objects: [/*{
+        objects: [{
             type: 0, value: { value: 1 }, sentry: 0xaa
         }, {
             type: 1, value: Buffer.from('abc').toJSON().data, sentry: 0xaa
@@ -153,7 +153,7 @@ function prove (okay) {
             type: 3, value: Buffer.from('abc'), sentry: 0xaa
         }, {
             type: 4, value: Buffer.from('abc').toJSON().data, sentry: 0xaa
-        }*/, {
+        }, {
             type: 5, value: Buffer.from('abc'), sentry: 0xaa
         }]
     })
