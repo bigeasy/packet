@@ -6,8 +6,14 @@ module.exports = function ({ serializers }) {
             return function ($buffer, $start, $end) {
                 let $i = []
 
-                if ($end - $start < 1 + object.array.reduce((sum, buffer) => sum + buffer.length, 0)) {
+                if ($end - $start < 1) {
                     return serializers.inc.object(object, 0, $i)($buffer, $start, $end)
+                }
+
+                $buffer[$start++] = (object.nudge & 0xff)
+
+                if ($end - $start < 1 + object.array.reduce((sum, buffer) => sum + buffer.length, 0)) {
+                    return serializers.inc.object(object, 2, $i)($buffer, $start, $end)
                 }
 
                 {
@@ -23,7 +29,7 @@ module.exports = function ({ serializers }) {
                 }
 
                 if ($end - $start < 1) {
-                    return serializers.inc.object(object, 4, $i)($buffer, $start, $end)
+                    return serializers.inc.object(object, 6, $i)($buffer, $start, $end)
                 }
 
                 $buffer[$start++] = (object.sentry & 0xff)

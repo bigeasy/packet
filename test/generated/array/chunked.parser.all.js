@@ -6,9 +6,12 @@ module.exports = function ({ parsers }) {
             let $i = [], $I = []
 
             let object = {
+                nudge: 0,
                 array: [],
                 sentry: 0
             }
+
+            object.nudge = ($buffer[$start++])
 
             $I[0] = ($buffer[$start++])
 

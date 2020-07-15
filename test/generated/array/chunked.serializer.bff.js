@@ -6,9 +6,11 @@ module.exports = function ({ serializers }) {
             return function ($buffer, $start, $end) {
                 let $i = []
 
-                if ($end - $start < 2 + object.array.reduce((sum, buffer) => sum + buffer.length, 0)) {
+                if ($end - $start < 3 + object.array.reduce((sum, buffer) => sum + buffer.length, 0)) {
                     return serializers.inc.object(object, 0, $i)($buffer, $start, $end)
                 }
+
+                $buffer[$start++] = (object.nudge & 0xff)
 
                 {
                     const length = object.array.reduce((sum, buffer) => sum + buffer.length, 0)

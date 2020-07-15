@@ -11,6 +11,7 @@ module.exports = function ({ parsers }) {
                     case 0:
 
                         object = {
+                            nudge: 0,
                             array: [],
                             sentry: 0
                         }
@@ -19,11 +20,24 @@ module.exports = function ({ parsers }) {
 
                     case 1:
 
-                        $_ = 0
-
                         $step = 2
 
-                    case 2: {
+                    case 2:
+
+                        if ($start == $end) {
+                            return { start: $start, object: null, parse }
+                        }
+
+                        object.nudge = $buffer[$start++]
+
+
+                    case 3:
+
+                        $_ = 0
+
+                        $step = 4
+
+                    case 4: {
 
                         const $index = $buffer.indexOf(0xd, $start)
                         if (~$index) {
@@ -32,13 +46,13 @@ module.exports = function ({ parsers }) {
                                 $buffers.push($buffer.slice($start, $start + $length))
                                 $_ += $length
                                 $start += $length
-                                $step = 4
+                                $step = 6
                                 continue
                             } else {
                                 $buffers.push($buffer.slice($start, $index))
                                 $_ += ($index - $start) + 1
                                 $start = $index + 1
-                                $step = 3
+                                $step = 5
                                 continue
                             }
                         } else if ($_ + ($end - $start) >= 8) {
@@ -46,7 +60,7 @@ module.exports = function ({ parsers }) {
                             $buffers.push($buffer.slice($start, $start + $length))
                             $_ += $length
                             $start += $length
-                            $step = 4
+                            $step = 6
                             continue
                         } else {
                             $_ += $end - $start
@@ -54,12 +68,12 @@ module.exports = function ({ parsers }) {
                             return { start: $end, parse }
                         }
 
-                        $step = 3
+                        $step = 5
 
                     }
 
 
-                    case 3:
+                    case 5:
 
                         if ($start == $end) {
                             return { start: $start, parse }
@@ -67,13 +81,13 @@ module.exports = function ({ parsers }) {
 
                         if ($buffer[$start++] != 0xa) {
                             $buffers.push(Buffer.from([ 13 ].concat($buffer[$start])))
-                            $step = 2
+                            $step = 4
                             continue
                         }
 
-                        $step = 4
+                        $step = 6
 
-                    case 4:
+                    case 6:
 
                         $_ = 8 -  Math.min($buffers.reduce((sum, buffer) => {
                             return sum + buffer.length
@@ -82,9 +96,9 @@ module.exports = function ({ parsers }) {
                         object.array = $buffers
                         $buffers = []
 
-                        $step = 5
+                        $step = 7
 
-                    case 5: {
+                    case 7: {
 
                         const length = Math.min($_, $end - $start)
                         $start += length
@@ -94,15 +108,15 @@ module.exports = function ({ parsers }) {
                             return { start: $start, parse }
                         }
 
-                        $step = 6
+                        $step = 8
 
                     }
 
-                    case 6:
+                    case 8:
 
-                        $step = 7
+                        $step = 9
 
-                    case 7:
+                    case 9:
 
                         if ($start == $end) {
                             return { start: $start, object: null, parse }
@@ -111,7 +125,7 @@ module.exports = function ({ parsers }) {
                         object.sentry = $buffer[$start++]
 
 
-                    case 8:
+                    case 10:
 
                         return { start: $start, object: object, parse: null }
                     }

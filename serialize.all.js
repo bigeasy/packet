@@ -495,7 +495,7 @@ function generate (packet, { require = null, bff, chk }) {
             // make a copy of the buffer on parse using an inline.
             if (element.concat) {
                 source = $(`
-                    $_ = $start
+                    $_ = 0
                     ${path}.copy($buffer, $start)
                     $start += ${path}.length
                     $_ += ${path}.length
@@ -505,7 +505,7 @@ function generate (packet, { require = null, bff, chk }) {
             } else {
                 const i = `$i[${++$i}]`
                 source = $(`
-                    $_ = $start
+                    $_ = 0
                     for (${i} = 0; ${i} < ${path}.length; ${i}++) {
                         ${path}[${i}].copy($buffer, $start)
                         $start += ${path}[${i}].length

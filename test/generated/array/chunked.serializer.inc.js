@@ -10,17 +10,11 @@ module.exports = function ({ serializers }) {
                     switch ($step) {
                     case 0:
 
-                        $length = object.array.reduce((sum, buffer) => sum + buffer.length, 0)
-
                         $step = 1
+                        $bite = 0
+                        $_ = object.nudge
 
                     case 1:
-
-                        $step = 2
-                        $bite = 0
-                        $_ = $length
-
-                    case 2:
 
                         while ($bite != -1) {
                             if ($start == $end) {
@@ -31,7 +25,30 @@ module.exports = function ({ serializers }) {
                         }
 
 
-                    case 3: {
+                    case 2:
+
+                        $length = object.array.reduce((sum, buffer) => sum + buffer.length, 0)
+
+                        $step = 3
+
+                    case 3:
+
+                        $step = 4
+                        $bite = 0
+                        $_ = $length
+
+                    case 4:
+
+                        while ($bite != -1) {
+                            if ($start == $end) {
+                                return { start: $start, serialize }
+                            }
+                            $buffer[$start++] = ($_ >>> $bite * 8 & 0xff)
+                            $bite--
+                        }
+
+
+                    case 5: {
 
                         do {
                             const $bytes = Math.min($end - $start, object.array[$index].length - $offset)
@@ -52,17 +69,17 @@ module.exports = function ({ serializers }) {
                         $copied = 0
                         $offset = 0
 
-                        $step = 4
+                        $step = 6
 
                     }
 
-                    case 4:
+                    case 6:
 
-                        $step = 5
+                        $step = 7
                         $bite = 0
                         $_ = object.sentry
 
-                    case 5:
+                    case 7:
 
                         while ($bite != -1) {
                             if ($start == $end) {
@@ -73,9 +90,9 @@ module.exports = function ({ serializers }) {
                         }
 
 
-                        $step = 6
+                        $step = 8
 
-                    case 6:
+                    case 8:
 
                         break
 

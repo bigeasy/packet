@@ -6,9 +6,11 @@ module.exports = function ({ serializers }) {
             return function ($buffer, $start, $end) {
                 let $_, $i = []
 
-                if ($end - $start < 9) {
+                if ($end - $start < 10) {
                     return serializers.inc.object(object, 0, $i)($buffer, $start, $end)
                 }
+
+                $buffer[$start++] = (object.nudge & 0xff)
 
                 $_ = $start
                 object.array.copy($buffer, $start)

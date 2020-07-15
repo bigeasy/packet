@@ -10,14 +10,31 @@ module.exports = function ({ serializers }) {
                     switch ($step) {
                     case 0:
 
+                        $step = 1
+                        $bite = 0
+                        $_ = object.nudge
+
+                    case 1:
+
+                        while ($bite != -1) {
+                            if ($start == $end) {
+                                return { start: $start, serialize }
+                            }
+                            $buffer[$start++] = ($_ >>> $bite * 8 & 0xff)
+                            $bite--
+                        }
+
+
+                    case 2:
+
                         $_ = 0
                         $offset = 0
                         $length = object.array.reduce((sum, buffer) => sum + buffer.length, 0)
                         $i[0] = 0
 
-                        $step = 1
+                        $step = 3
 
-                    case 1: {
+                    case 3: {
 
                         for (;;) {
                             const length = Math.min($end - $start, object.array[$i[0]].length - $offset)
@@ -38,17 +55,17 @@ module.exports = function ({ serializers }) {
                             return { start: $start, serialize }
                         }
 
-                        $step = 2
+                        $step = 4
 
                     }
 
-                    case 2:
+                    case 4:
 
-                        $step = 3
+                        $step = 5
                         $bite = 0
                         $_ = object.sentry
 
-                    case 3:
+                    case 5:
 
                         while ($bite != -1) {
                             if ($start == $end) {
@@ -59,9 +76,9 @@ module.exports = function ({ serializers }) {
                         }
 
 
-                        $step = 4
+                        $step = 6
 
-                    case 4:
+                    case 6:
 
                         break
 

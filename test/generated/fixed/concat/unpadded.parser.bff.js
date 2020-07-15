@@ -7,15 +7,18 @@ module.exports = function ({ parsers }) {
                 let $_, $i = [], $slice = null
 
                 let object = {
+                    nudge: 0,
                     array: null,
                     sentry: 0
                 }
 
-                if ($end - $start < 9) {
+                if ($end - $start < 10) {
                     return parsers.inc.object(object, 1, $i)($buffer, $start, $end)
                 }
 
-                $slice = $buffer.slice($start, 8)
+                object.nudge = ($buffer[$start++])
+
+                $slice = $buffer.slice($start, $start + 8)
                 $start += 8
                 object.array = $slice
 

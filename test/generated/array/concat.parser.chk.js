@@ -7,6 +7,7 @@ module.exports = function ({ parsers }) {
                 let $i = [], $I = []
 
                 let object = {
+                    nudge: 0,
                     array: [],
                     sentry: 0
                 }
@@ -15,17 +16,23 @@ module.exports = function ({ parsers }) {
                     return parsers.inc.object(object, 1, $i, $I)($buffer, $start, $end)
                 }
 
+                object.nudge = ($buffer[$start++])
+
+                if ($end - $start < 1) {
+                    return parsers.inc.object(object, 3, $i, $I)($buffer, $start, $end)
+                }
+
                 $I[0] = ($buffer[$start++])
 
                 if ($end - $start < 1 * $I[0]) {
-                    return parsers.inc.object(object, 3, $i, $I)($buffer, $start, $end)
+                    return parsers.inc.object(object, 5, $i, $I)($buffer, $start, $end)
                 }
 
                 object.array = $buffer.slice($start, $start + $I[0])
                 $start += $I[0]
 
                 if ($end - $start < 1) {
-                    return parsers.inc.object(object, 4, $i, $I)($buffer, $start, $end)
+                    return parsers.inc.object(object, 6, $i, $I)($buffer, $start, $end)
                 }
 
                 object.sentry = ($buffer[$start++])

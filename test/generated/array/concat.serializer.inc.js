@@ -12,7 +12,7 @@ module.exports = function ({ serializers }) {
 
                         $step = 1
                         $bite = 0
-                        $_ = object.array.length
+                        $_ = object.nudge
 
                     case 1:
 
@@ -25,7 +25,24 @@ module.exports = function ({ serializers }) {
                         }
 
 
-                    case 2: {
+                    case 2:
+
+                        $step = 3
+                        $bite = 0
+                        $_ = object.array.length
+
+                    case 3:
+
+                        while ($bite != -1) {
+                            if ($start == $end) {
+                                return { start: $start, serialize }
+                            }
+                            $buffer[$start++] = ($_ >>> $bite * 8 & 0xff)
+                            $bite--
+                        }
+
+
+                    case 4: {
 
                         const $bytes = Math.min($end - $start, object.array.length - $copied)
                         object.array.copy($buffer, $start, $copied, $copied + $bytes)
@@ -38,17 +55,17 @@ module.exports = function ({ serializers }) {
 
                         $copied = 0
 
-                        $step = 3
+                        $step = 5
 
                     }
 
-                    case 3:
+                    case 5:
 
-                        $step = 4
+                        $step = 6
                         $bite = 0
                         $_ = object.sentry
 
-                    case 4:
+                    case 6:
 
                         while ($bite != -1) {
                             if ($start == $end) {
@@ -59,9 +76,9 @@ module.exports = function ({ serializers }) {
                         }
 
 
-                        $step = 5
+                        $step = 7
 
-                    case 5:
+                    case 7:
 
                         break
 

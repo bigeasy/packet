@@ -524,7 +524,7 @@ function generate (packet, { require, bff, chk }) {
             // Advance past buffer read to padding skip.
             $step += field.pad.length == 0 ? 2 : 3
             const slice = $(`
-                $slice = $buffer.slice($start, ${field.length})
+                $slice = $buffer.slice($start, $start + ${field.length})
                 $start += ${field.length}
             `)
             const assign = element.concat ? `${path} = $slice` : `${path}.push($slice)`
@@ -538,7 +538,7 @@ function generate (packet, { require, bff, chk }) {
 
                     $_ = $slice.indexOf(${pad})
                     if (~$_) {
-                        $slice = $buffer.slice(0, $_)
+                        $slice = $slice.slice(0, $_)
                     }
 
                     `, assign, `

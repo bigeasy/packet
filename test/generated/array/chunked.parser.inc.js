@@ -10,6 +10,7 @@ module.exports = function ({ parsers }) {
                 case 0:
 
                     object = {
+                        nudge: 0,
                         array: [],
                         sentry: 0
                     }
@@ -26,12 +27,25 @@ module.exports = function ({ parsers }) {
                         return { start: $start, object: null, parse }
                     }
 
+                    object.nudge = $buffer[$start++]
+
+
+                case 3:
+
+                    $step = 4
+
+                case 4:
+
+                    if ($start == $end) {
+                        return { start: $start, object: null, parse }
+                    }
+
                     $I[0] = $buffer[$start++]
 
 
-                    $step = 3
+                    $step = 5
 
-                case 3:
+                case 5:
 
                     const $length = Math.min($I[0] - $index, $end - $start)
                     $buffers.push($buffer.slice($start, $start + $length))
@@ -47,13 +61,13 @@ module.exports = function ({ parsers }) {
                     $index = 0
                     $buffers = []
 
-                    $step = 4
+                    $step = 6
 
-                case 4:
+                case 6:
 
-                    $step = 5
+                    $step = 7
 
-                case 5:
+                case 7:
 
                     if ($start == $end) {
                         return { start: $start, object: null, parse }
@@ -62,7 +76,7 @@ module.exports = function ({ parsers }) {
                     object.sentry = $buffer[$start++]
 
 
-                case 6:
+                case 8:
 
                     return { start: $start, object: object, parse: null }
                 }

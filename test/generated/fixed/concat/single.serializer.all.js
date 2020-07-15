@@ -6,7 +6,9 @@ module.exports = function ({ serializers }) {
             return function ($buffer, $start, $end) {
                 let $_, $i = []
 
-                $_ = $start
+                $buffer[$start++] = (object.nudge & 0xff)
+
+                $_ = 0
                 object.array.copy($buffer, $start)
                 $start += object.array.length
                 $_ += object.array.length

@@ -68,6 +68,8 @@ module.exports = function ({ parsers }) {
 
                     case 6:
 
+                        $step = 6
+
                         if ($start == $end) {
                             ; (function ({ $start, $end, counter }) {
                                 counter[0] += $end - $start

@@ -6,16 +6,19 @@ module.exports = function ({ parsers }) {
             let $_, $i = [], $slice = null
 
             let object = {
+                nudge: 0,
                 array: [],
                 sentry: 0
             }
 
-            $slice = $buffer.slice($start, 8)
+            object.nudge = ($buffer[$start++])
+
+            $slice = $buffer.slice($start, $start + 8)
             $start += 8
 
             $_ = $slice.indexOf(0)
             if (~$_) {
-                $slice = $buffer.slice(0, $_)
+                $slice = $slice.slice(0, $_)
             }
 
             object.array.push($slice)

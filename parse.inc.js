@@ -350,7 +350,14 @@ function generate (packet, { require = null }) {
                 }
 
             `) : $(`
+                // TODO Here we set the step upon entry, which is why we don't
+                // always have to set the step for an integer. Usually we have
+                // some sort of preamble that sets the step. We should eliminate
+                // steps where we can (why not?) and close the door behind us
+                // when we enter a step.
                 case ${$step++}: {
+
+                    $step = ${$step - 1}
 
                     const $index = $buffer.indexOf(${hex(bytes[0])}, $start)
                     if (~$index) {
@@ -474,6 +481,8 @@ function generate (packet, { require = null }) {
             ? $(`
                 case ${redo}:
 
+                    $step = ${redo}
+
                     `, fixed, -1, `
 
                     if ($start == $end) {
@@ -520,6 +529,8 @@ function generate (packet, { require = null }) {
                     `)
                 return $(`
                     case ${redo + index}:
+
+                        $step = ${redo + index}
 
                         `, index == 0 ? fixed : null, -1, `
 

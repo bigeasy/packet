@@ -6,6 +6,8 @@ module.exports = function ({ serializers }) {
             return function ($buffer, $start, $end) {
                 let $i = []
 
+                $buffer[$start++] = (object.nudge & 0xff)
+
                 {
                     const length = object.array.reduce((sum, buffer) => sum + buffer.length, 0)
                     $buffer[$start++] = (length & 0xff)

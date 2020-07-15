@@ -2,7 +2,7 @@ require('proof')(0, prove)
 
 function prove (okay) {
     const cycle = require('./cycle')
-    cycle(okay, {
+    /*cycle(okay, {
         name: 'fixed/words/unpadded',
         define: {
             object: {
@@ -53,78 +53,84 @@ function prove (okay) {
         name: 'fixed/concat/unpadded',
         define: {
             object: {
+                nudge: 8,
                 array: [ [ 8 ], [ Buffer ] ],
                 sentry: 8
             }
         },
-        objects: [{ array: Buffer.from('abcdefgh'), sentry: 0xaa }]
-    })
+        objects: [{ nudge: 0xaa, array: Buffer.from('abcdefgh'), sentry: 0xaa }]
+    }) */
     cycle(okay, {
         name: 'fixed/concat/single',
         define: {
             object: {
+                nudge: 8,
                 array: [ [ 8 ], [ Buffer ], 0x0 ],
                 sentry: 8
             }
         },
         objects: [{
-            array: Buffer.from('abcdefgh'), sentry: 0xaa
+            nudge: 0xaa, array: Buffer.from('abcdefgh'), sentry: 0xaa
         }, {
-            array: Buffer.from('abcd'), sentry: 0xaa
+            nudge: 0xaa, array: Buffer.from('abcd'), sentry: 0xaa
         }]
     })
     cycle(okay, {
         name: 'fixed/concat/multiple',
         define: {
             object: {
+                nudge: 8,
                 array: [ [ 8 ], [ Buffer ], 0xa, 0xb ],
                 sentry: 8
             }
         },
         objects: [{
-            array: Buffer.from('abcdefgh'), sentry: 0xaa
+            nudge: 0xaa, array: Buffer.from('abcdefgh'), sentry: 0xaa
         }, {
-            array: Buffer.from('abcd'), sentry: 0xaa
+            nudge: 0xaa, array: Buffer.from('abcd'), sentry: 0xaa
         }]
     })
     cycle(okay, {
         name: 'fixed/chunked/unpadded',
         define: {
             object: {
+                nudge: 8,
                 array: [ [ 8 ], [[ Buffer ]] ],
                 sentry: 8
             }
         },
         objects: [{
-            array: [ Buffer.from('abcdefgh') ], sentry: 0xaa
+            nudge: 0xaa, array: [ Buffer.from('abcdefgh') ], sentry: 0xaa
         }]
     })
     cycle(okay, {
         name: 'fixed/chunked/single',
         define: {
             object: {
+                nudge: 8,
                 array: [ [ 8 ], [[ Buffer ]], 0x0 ],
                 sentry: 8
             }
         },
         objects: [{
-            array: [ Buffer.from('abcd') ], sentry: 0xaa
+            nudge: 0xaa, array: [ Buffer.from('abcd') ], sentry: 0xaa
         }, {
-            array: [ Buffer.from('abcdefgh') ], sentry: 0xaa
+            nudge: 0xaa, array: [ Buffer.from('abcdefgh') ], sentry: 0xaa
         }]
     })
     cycle(okay, {
         name: 'fixed/chunked/multiple',
         define: {
             object: {
+                nudge: 8,
                 array: [ [ 8 ], [[ Buffer ]], 0xd, 0xa ],
                 sentry: 8
             }
         },
         objects: [{
-            array: [ Buffer.from('abcd') ], sentry: 0xaa
+            nudge: 0xaa, array: [ Buffer.from('abcd') ], sentry: 0xaa
         }, {
-            array: [ Buffer.from('abcdefgh') ], sentry: 0xaa
+            nudge: 0xaa, array: [ Buffer.from('abcdefgh') ], sentry: 0xaa
         }]
     })
 }

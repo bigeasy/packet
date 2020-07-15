@@ -48,6 +48,7 @@ function prove (okay) {
         name: 'array/concat',
         define: {
             object: {
+                nudge: 8,
                 array: [ 8, [ Buffer ] ],
                 // Need to force the best-foot-forward check.
                 sentry: 8
@@ -55,6 +56,7 @@ function prove (okay) {
         },
         // Repeat test simply to get the coverage of the generated conditional.
         objects: [{
+            nudge: 0xaa,
             array: Buffer.from('abcdefgh'),
             sentry: 0xaa
         }]
@@ -63,6 +65,7 @@ function prove (okay) {
         name: 'array/chunked',
         define: {
             object: {
+                nudge: 8,
                 array: [ 8, [[ Buffer ]] ],
                 // Need to force the best-foot-forward check.
                 sentry: 8
@@ -70,6 +73,7 @@ function prove (okay) {
         },
         // Repeat test simply to get the coverage of the generated conditional.
         objects: [{
+            nudge: 0xaa,
             array: [ Buffer.from('abcdefgh') ],
             sentry: 0xaa
         }]
