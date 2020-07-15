@@ -1,3 +1,12 @@
+## Wed Jul 15 12:45:09 CDT 2020 ~ todo
+
+What about some sort of limit if there is a header length? Stop when we reach
+the limit, but only really works of we're incremental, or best-foot-forward.
+
+Seems possible. Make it a special accumulator. It can be scoped using
+structures. Would probably raise an exception. Not sure how the user would
+resume a stream in this case.
+
 ## Wed Jul 15 02:41:25 CDT 2020 ~ todo
 
 Easiest way to resolve the double jump on termianted incremental parse would be
