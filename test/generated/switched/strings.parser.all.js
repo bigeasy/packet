@@ -13,13 +13,11 @@ module.exports = function ({ parsers }) {
 
             switch (String(($ => $.type)(object))) {
             case "0":
-
                 object.value = ($buffer[$start++])
 
                 break
 
             case "1":
-
                 object.value =
                     ($buffer[$start++]) * 0x100 +
                     ($buffer[$start++])
@@ -27,7 +25,6 @@ module.exports = function ({ parsers }) {
                 break
 
             default:
-
                 object.value =
                     ($buffer[$start++]) * 0x10000 +
                     ($buffer[$start++]) * 0x100 +

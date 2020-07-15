@@ -888,8 +888,11 @@ function generate (packet, { require = null }) {
         const cases = []
         const steps = []
         for (const when of field.cases) {
+            const vivified = vivify.assignment(path, when)
             cases.push($(`
                 ${when.otherwise ? 'default' : `case ${JSON.stringify(when.value)}`}:
+
+                    `, vivified, -1, `
 
                     $step = ${$step}
                     continue

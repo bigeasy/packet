@@ -133,4 +133,33 @@ function prove (okay) {
             sentry: 0xaa
         }]
     })
+    cycle(okay, {
+        name: 'switch/vivify',
+        define: {
+            object: {
+                type: 8,
+                value: [ $ => $.type, {
+                    0: { value: 8 },
+                    1: [ 8, [ 8 ] ],
+                    2: [ [ 8 ], 0x0 ],
+                    3: [ 8, [ Buffer ] ],
+                    4: [ [ 3 ], [ 8 ] ]
+                }, [ [ 3 ], [ Buffer ] ]],
+                sentry: 8
+            }
+        },
+        objects: [{
+            type: 0, value: { value: 1 }, sentry: 0xaa
+        }, {
+            type: 1, value: Buffer.from('abc').toJSON().data, sentry: 0xaa
+        }, {
+            type: 2, value: Buffer.from('abc').toJSON().data, sentry: 0xaa
+        }, {
+            type: 3, value: Buffer.from('abc'), sentry: 0xaa
+        }, {
+            type: 4, value: Buffer.from('abc').toJSON().data, sentry: 0xaa
+        }, {
+            type: 5, value: Buffer.from('abc'), sentry: 0xaa
+        }]
+    })
 }
