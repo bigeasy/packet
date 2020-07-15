@@ -124,13 +124,19 @@ function inquisition (fields, $I = 0) {
             checked.push(field)
             break
         case 'terminator':
-            checked.push({ type: 'checkpoint', lengths: [ field.body.terminator.length ], rewind: 0 })
+            checked.push({
+                type: 'checkpoint',
+                lengths: [ field.body.terminator.length ],
+                vivify: null,
+                rewind: 0
+            })
             checked.push(field)
             break
         case 'lengthEncoding':
             checked.push({
                 type: 'checkpoint',
                 lengths: [ field.body.encoding[0].bits / 8 ],
+                vivify: null,
                 rewind: 0
             })
             checked.push(field)
@@ -142,6 +148,7 @@ function inquisition (fields, $I = 0) {
                     checked.push({
                         type: 'checkpoint',
                         lengths: [ `${bytes} * $I[${$I}]` ],
+                        vivify: null,
                         rewind: 0
                     })
                 } else {
@@ -161,7 +168,12 @@ function inquisition (fields, $I = 0) {
         case 'fixed':
         case 'integer':
         case 'literal':
-            checked.push({ type: 'checkpoint', lengths: [ field.bits / 8 ], rewind: 0 })
+            checked.push({
+                type: 'checkpoint',
+                lengths: [ field.bits / 8 ],
+                vivify: null,
+                rewind: 0
+            })
             checked.push(field)
             break
         default:
@@ -191,7 +203,7 @@ function generate (packet, { require, bff, chk }) {
     // TODO Start by prepending the path I think?
     // TODO Uh, `index` is not the same as `$I`, need `$i` and `$I`.
     function checkpoints (path, fields, index = 0) {
-        let checkpoint = { type: 'checkpoint', lengths: [ 0 ], rewind: 0 }
+        let checkpoint = { type: 'checkpoint', lengths: [ 0 ], vivify: null, rewind: 0 }
         const checked = [ checkpoint ]
         for (const field of fields) {
             switch (field.type) {
@@ -203,7 +215,9 @@ function generate (packet, { require, bff, chk }) {
                 for (const when of field.cases) {
                     when.fields = checkpoints(path, when.fields, index)
                 }
-                checked.push(checkpoint = { type: 'checkpoint', lengths: [ 0 ], rewind: 0 })
+                checked.push(checkpoint = {
+                    type: 'checkpoint', lengths: [ 0 ], vivify: null, rewind: 0
+                })
                 break
             case 'conditional':
                 checked.push(field)
@@ -214,12 +228,16 @@ function generate (packet, { require, bff, chk }) {
                 for (const condition of field.parse.conditions) {
                     condition.fields = checkpoints(path, condition.fields, index)
                 }
-                checked.push(checkpoint = { type: 'checkpoint', lengths: [ 0 ], rewind: 0 })
+                checked.push(checkpoint = {
+                    type: 'checkpoint', lengths: [ 0 ], vivify: null, rewind: 0
+                })
                 break
             case 'lengthEncoding':
                 checked.push(field)
                 checkpoint.lengths[0] += field.body.encoding[0].bits / 8
-                checked.push(checkpoint = { type: 'checkpoint', lengths: [ 0 ], rewind: 0 })
+                checked.push(checkpoint = {
+                    type: 'checkpoint', lengths: [ 0 ], vivify: null, rewind: 0
+                })
                 break
             case 'lengthEncoded':
                 checked.push(field)
@@ -230,7 +248,9 @@ function generate (packet, { require, bff, chk }) {
                     checkpoint.lengths.push(`${field.fields[0].bits >>> 3} * $I[${index}]`)
                 } else {
                     field.fields = checkpoints(path + `${field.dotted}[$i[${index}]]`, field.fields, index + 1)
-                    checked.push(checkpoint = { type: 'checkpoint', lengths: [ 0 ], rewind: 0 })
+                    checked.push(checkpoint = {
+                        type: 'checkpoint', lengths: [ 0 ], vivify: null, rewind: 0
+                    })
                 }
                 break
             case 'terminator':
@@ -247,7 +267,9 @@ function generate (packet, { require, bff, chk }) {
             case 'terminated':
                 checked.push(field)
                 field.fields = checkpoints(path + `${field.dotted}[$i[${index}]]`, field.fields, index + 1)
-                checked.push(checkpoint = { type: 'checkpoint', lengths: [ 0 ], rewind: 0 })
+                checked.push(checkpoint = {
+                    type: 'checkpoint', lengths: [ 0 ], vivify: null, rewind: 0
+                })
                 break
             case 'inline':
             case 'accumulator':
@@ -259,7 +281,9 @@ function generate (packet, { require, bff, chk }) {
                     // TODO Could start from the nested checkpoint since we are
                     // are not actually looping for the structure.
                     field.fields = checkpoints(path + field.dotted, field.fields, index)
-                    checked.push(checkpoint = { type: 'checkpoint', lengths: [ 0 ], rewind: 0 })
+                    checked.push(checkpoint = {
+                        type: 'checkpoint', lengths: [ 0 ], vivify: null, rewind: 0
+                    })
                 }
                 break
             default:
@@ -410,7 +434,7 @@ function generate (packet, { require, bff, chk }) {
         $step++
         const source = $(`
             for (; ${i} < ${I}; ${i}++) {
-                `, vivify.array(`${path}[${i}]`, field), -1, `
+                `, vivify.assignment(`${path}[${i}]`, field), -1, `
 
                 `, map(dispatch, `${path}[${i}]`, field.fields), `
             }
@@ -462,7 +486,7 @@ function generate (packet, { require, bff, chk }) {
         const i = `$i[${$i}]`
         const looped = join(field.fields.map(field => dispatch(path + `[${i}]`, field)))
         return $(`
-            `, vivify.array(path + `[${i}]`, field), -1, `
+            `, vivify.assignment(path + `[${i}]`, field), -1, `
 
             `, looped, `
 
@@ -527,7 +551,7 @@ function generate (packet, { require, bff, chk }) {
                 $slice = $buffer.slice($start, $start + ${field.length})
                 $start += ${field.length}
             `)
-            const assign = element.concat ? `${path} = $slice` : `${path}.push($slice)`
+            const assign = element.concat ? `${path} = $slice` : `${path} = [ $slice ]`
             if (field.pad.length != 0) {
                 $step += field.pad.length
                 const pad = field.pad.length > 1
@@ -586,7 +610,7 @@ function generate (packet, { require, bff, chk }) {
 
                 `, terminate, -1, `
 
-                `, vivify.array(`${path}[${i}]`, field), -1, `
+                `, vivify.assignment(`${path}[${i}]`, field), -1, `
 
                 `, looped, `
                 ${i}++

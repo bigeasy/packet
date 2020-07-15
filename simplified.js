@@ -457,8 +457,7 @@ function map (definitions, packet, extra = {}, packed = false) {
                                : 0
                     return [{
                         type: 'fixed',
-                        vivify: fields[0].type == 'buffer' && fields[0].concat
-                                                ? 'buffer' : 'array',
+                        vivify: fields[0].type == 'buffer' ? 'variant' : 'array',
                         length: packet[0],
                         dotted: '',
                         ...extra,
@@ -482,7 +481,7 @@ function map (definitions, packet, extra = {}, packed = false) {
                     assert.equal(element.length, 1, 'badness')
                     fields.push({
                         type: 'lengthEncoded',
-                        vivify: 'array',
+                        vivify: element.type == 'buffer' ? 'variant' : 'array',
                         encoding: [ encoding ],
                         dotted: '',
                         bits: 0,

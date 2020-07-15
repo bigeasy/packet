@@ -231,7 +231,7 @@ function generate (packet, { require = null }) {
                 ${i} = 0
             case ${$step++}:
 
-                `, vivify.array(`${path}[${i}]`, field), `
+                `, vivify.assignment(`${path}[${i}]`, field), `
 
             `, map(dispatch,`${path}[${i}]`, field.fields), `
                 if (++${i} != ${I}) {
@@ -559,7 +559,7 @@ function generate (packet, { require = null }) {
 
             case ${begin}:
 
-                `, vivify.array(`${path}[${i}]`, field), `
+                `, vivify.assignment(`${path}[${i}]`, field), `
 
             `, looped, `
 
@@ -780,7 +780,7 @@ function generate (packet, { require = null }) {
 
             case ${$step++}:
 
-                `, vivify.array(`${path}[${i}]`, field), -1, `
+                `, vivify.assignment(`${path}[${i}]`, field), -1, `
 
             `, map(dispatch,`${path}[${i}]`, field.fields), `
 

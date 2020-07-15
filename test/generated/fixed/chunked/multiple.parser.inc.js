@@ -12,7 +12,7 @@ module.exports = function ({ parsers }) {
 
                         object = {
                             nudge: 0,
-                            array: [],
+                            array: null,
                             sentry: 0
                         }
 

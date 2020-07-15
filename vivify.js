@@ -1,24 +1,32 @@
+// Node.js API.
+const assert = require('assert')
+
 const $ = require('programmatic')
 
 function structure (path, field, assignment = ' = ') {
     function vivify (path, field) {
-        switch (field.vivify) {
-        case 'object':
-            return structure((path + field.dotted).split('.').pop(), field, ': ')
-        case 'array':
-            return `${(path + field.dotted).split('.').pop()}: []`
-        case 'buffer':
-            return `${(path + field.dotted).split('.').pop()}: null`
-        case 'number':
-            return `${(path + field.dotted).split('.').pop()}: 0`
-        case 'variant':
-            return `${(path + field.dotted).split('.').pop()}: null`
-        case 'descend':
+        if (field.vivify == 'descend') {
             return vivify(path + field.dotted, field.fields.filter(field => {
                 return field.vivify != null
             }).pop())
-        default:
-            return null
+        } else {
+            const name = (path + field.dotted).split('.').pop()
+            switch (field.vivify) {
+            case 'object':
+                return structure((path + field.dotted).split('.').pop(), field, ': ')
+            case 'array':
+                return `${name}: []`
+            case 'number':
+                return `${name}: 0`
+            case 'variant':
+                return `${name}: null`
+            case null:
+                return null
+            // TODO Remove when tests pass.
+            default:
+                console.log(field)
+                throw new Error
+            }
         }
     }
     while (field.vivify == 'descend') {
@@ -26,9 +34,7 @@ function structure (path, field, assignment = ' = ') {
     }
     const properties = field.fields.map(field => vivify(path, field))
                                    .filter(field => !! field)
-    if (properties.length == 0) {
-        return null
-    }
+    assert(properties.length != 0)
     return $(`
         ${path}${assignment}{
             `, properties.join(',\n'), `
@@ -36,29 +42,25 @@ function structure (path, field, assignment = ' = ') {
     `)
 }
 
-function array (path, field) {
-    switch (field.type) {
-    case 'lengthEncoded':
-    case 'terminated':
-    case 'repeated':
-    case 'fixed':
-        const element = field.fields[field.fields.length - 1]
-        switch (element.type) {
-        case 'structure':
-            return structure(path + element.dotted, element)
-        case 'lengthEncoded':
-        case 'terminated':
+function assignment (path, field) {
+    function vivify (path, fields) {
+        const field = fields[fields.length - 1]
+        switch (field.vivify) {
+        case 'descend':
+            return vivify(path + field.dotted, field.fields)
+        case 'object':
+            return structure(path + field.dotted, field)
+        case 'array':
             return `${path} = []`
-        case 'fixup':
-        case 'literal':
-            return array(path + element.dotted, element)
-        default:
+        case 'variant':
+        case 'number':
             return null
+        default: throw new Error
         }
-    default:
-        return null
     }
+    return vivify(path, field.fields)
 }
 
+// TODO Rename declaration.
 exports.structure = structure
-exports.array = array
+exports.assignment = assignment

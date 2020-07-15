@@ -8,7 +8,7 @@ module.exports = function ({ parsers }) {
 
                 let object = {
                     nudge: 0,
-                    array: [],
+                    array: null,
                     sentry: 0
                 }
 
@@ -26,7 +26,7 @@ module.exports = function ({ parsers }) {
                     $slice = $slice.slice(0, $_)
                 }
 
-                object.array.push($slice)
+                object.array = [ $slice ]
 
                 object.sentry = ($buffer[$start++])
 
