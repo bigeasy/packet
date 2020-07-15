@@ -1,3 +1,10 @@
+## Wed Jul 15 02:41:25 CDT 2020 ~ todo
+
+Easiest way to resolve the double jump on termianted incremental parse would be
+to count the steps in a conditional first, then pass a done property to the
+decent, or maintain a stack, so that the terminated parse would use that done
+instead of using one it calculated itself.
+
 ## Tue Jul 14 03:26:09 CDT 2020 ~ todo
 
 Another little thing to fix. If the size of a condition is less than or equal to
