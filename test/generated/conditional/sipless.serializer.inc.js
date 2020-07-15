@@ -54,6 +54,7 @@ module.exports = function ({ serializers }) {
                             $bite--
                         }
 
+
                         $step = 9
                         continue
 
@@ -73,6 +74,7 @@ module.exports = function ({ serializers }) {
                             $bite--
                         }
 
+
                         $step = 9
                         continue
 
@@ -91,6 +93,7 @@ module.exports = function ({ serializers }) {
                             $buffer[$start++] = ($_ >>> $bite * 8 & 0xff)
                             $bite--
                         }
+
 
                     case 9:
 

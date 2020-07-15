@@ -291,6 +291,8 @@ function generate (packet, { require = null }) {
                 $step = ${done}
 
             `, terminator, `
+
+            case ${$step++}:
         `)
         $i--
         return source
@@ -639,10 +641,12 @@ function generate (packet, { require = null }) {
             `, join(steps.map((step, i) => {
                 return $(`
                     `, step.source, `
+
                         `, -1, steps.length - 1 != i ? done : null, `
                 `)
             })), `
         `)
+        return source
     }
 
     function switched (path, field) {

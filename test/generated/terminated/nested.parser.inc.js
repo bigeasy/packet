@@ -66,7 +66,7 @@ module.exports = function ({ parsers }) {
                         }
                         $start++
 
-                        $step = 15
+                        $step = 16
                         continue
 
                     case 6:
@@ -141,15 +141,25 @@ module.exports = function ({ parsers }) {
 
                     case 14:
 
+                        // Here
+                        $step = 14
+
+                    case 15:
+
                         $i[0]++
                         $step = 4
                         continue
 
-                    case 15:
+                    case 16:
 
+                        // Here
                         $step = 16
 
-                    case 16:
+                    case 17:
+
+                        $step = 18
+
+                    case 18:
 
                         if ($start == $end) {
                             return { start: $start, object: null, parse }
@@ -158,7 +168,7 @@ module.exports = function ({ parsers }) {
                         object.sentry = $buffer[$start++]
 
 
-                    case 17:
+                    case 19:
 
                         return { start: $start, object: object, parse: null }
                     }

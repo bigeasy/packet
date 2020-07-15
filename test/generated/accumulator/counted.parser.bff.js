@@ -65,7 +65,7 @@ module.exports = function ({ parsers }) {
                     counter: $accumulator['counter']
                 })){
                     if ($end - $start < 1) {
-                        return parsers.inc.object(object, 12, $i, $accumulator, $starts)($buffer, $start, $end)
+                        return parsers.inc.object(object, 13, $i, $accumulator, $starts)($buffer, $start, $end)
                     }
 
                     object.counted.number = ($buffer[$start++])
@@ -74,7 +74,7 @@ module.exports = function ({ parsers }) {
                     counter: $accumulator['counter']
                 })){
                     if ($end - $start < 2) {
-                        return parsers.inc.object(object, 14, $i, $accumulator, $starts)($buffer, $start, $end)
+                        return parsers.inc.object(object, 15, $i, $accumulator, $starts)($buffer, $start, $end)
                     }
 
                     object.counted.number =
@@ -82,7 +82,7 @@ module.exports = function ({ parsers }) {
                         ($buffer[$start++])
                 } else {
                     if ($end - $start < 4) {
-                        return parsers.inc.object(object, 16, $i, $accumulator, $starts)($buffer, $start, $end)
+                        return parsers.inc.object(object, 17, $i, $accumulator, $starts)($buffer, $start, $end)
                     }
 
                     object.counted.number =
@@ -101,7 +101,7 @@ module.exports = function ({ parsers }) {
                 })
 
                 if ($end - $start < 1) {
-                    return parsers.inc.object(object, 18, $i, $accumulator, $starts)($buffer, $start, $end)
+                    return parsers.inc.object(object, 19, $i, $accumulator, $starts)($buffer, $start, $end)
                 }
 
                 object.sentry = ($buffer[$start++])

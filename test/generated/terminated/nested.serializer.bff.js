@@ -27,7 +27,7 @@ module.exports = function ({ serializers }) {
                 }
 
                 if ($end - $start < 3) {
-                    return serializers.inc.object(object, 8, $i)($buffer, $start, $end)
+                    return serializers.inc.object(object, 9, $i)($buffer, $start, $end)
                 }
 
                 $buffer[$start++] = 0x0

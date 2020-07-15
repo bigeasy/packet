@@ -44,7 +44,7 @@ module.exports = function ({ parsers }) {
                 }
 
                 if ($end - $start < 1) {
-                    return parsers.inc.object(object, 10, $i)($buffer, $start, $end)
+                    return parsers.inc.object(object, 11, $i)($buffer, $start, $end)
                 }
 
                 object.sentry = ($buffer[$start++])

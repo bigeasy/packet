@@ -118,8 +118,13 @@ module.exports = function ({ parsers }) {
                         $step = 6
                         continue
 
-
                     case 11:
+
+                        // Here
+                        $step = 11
+
+
+                    case 12:
 
                         ; (function ({ $start, $end, counter }) {
                             counter[0] += $end - $start
@@ -134,24 +139,24 @@ module.exports = function ({ parsers }) {
                             $: object,
                             counter: $accumulator['counter']
                         }))){
-                            $step = 12
+                            $step = 13
                             continue
                         } else if (((({ $, counter }) => $.counted.length - counter[0] == 2)({
                             $: object,
                             counter: $accumulator['counter']
                         }))){
-                            $step = 14
+                            $step = 15
                             continue
                         } else {
-                            $step = 16
+                            $step = 17
                             continue
                         }
 
-                    case 12:
-
-                        $step = 13
-
                     case 13:
+
+                        $step = 14
+
+                    case 14:
 
                         if ($start == $end) {
                             ; (function ({ $start, $end, counter }) {
@@ -167,16 +172,16 @@ module.exports = function ({ parsers }) {
                         object.counted.number = $buffer[$start++]
 
 
-                        $step = 18
+                        $step = 19
                         continue
 
-                    case 14:
+                    case 15:
 
                         $_ = 0
-                        $step = 15
+                        $step = 16
                         $bite = 1
 
-                    case 15:
+                    case 16:
 
                         while ($bite != -1) {
                             if ($start == $end) {
@@ -196,16 +201,16 @@ module.exports = function ({ parsers }) {
                         object.counted.number = $_
 
 
-                        $step = 18
+                        $step = 19
                         continue
 
-                    case 16:
+                    case 17:
 
                         $_ = 0
-                        $step = 17
+                        $step = 18
                         $bite = 3
 
-                    case 17:
+                    case 18:
 
                         while ($bite != -1) {
                             if ($start == $end) {
@@ -232,11 +237,11 @@ module.exports = function ({ parsers }) {
                             counter: $accumulator['counter']
                         })
 
-                    case 18:
-
-                        $step = 19
-
                     case 19:
+
+                        $step = 20
+
+                    case 20:
 
                         if ($start == $end) {
                             return { start: $start, object: null, parse }
@@ -245,7 +250,7 @@ module.exports = function ({ parsers }) {
                         object.sentry = $buffer[$start++]
 
 
-                    case 20:
+                    case 21:
 
                         return { start: $start, object: object, parse: null }
                     }

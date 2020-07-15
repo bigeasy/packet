@@ -99,9 +99,14 @@ module.exports = function ({ parsers }) {
 
                     case 10:
 
-                        $step = 11
+                        // Here
+                        $step = 10
 
                     case 11:
+
+                        $step = 12
+
+                    case 12:
 
                         if ($start == $end) {
                             return { start: $start, object: null, parse }
@@ -110,7 +115,7 @@ module.exports = function ({ parsers }) {
                         object.sentry = $buffer[$start++]
 
 
-                    case 12:
+                    case 13:
 
                         return { start: $start, object: object, parse: null }
                     }

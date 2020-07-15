@@ -29,7 +29,7 @@ module.exports = function ({ serializers }) {
                 $buffer[$start++] = 0x0
 
                 if ($end - $start < 1) {
-                    return serializers.inc.object(object, 7, $i)($buffer, $start, $end)
+                    return serializers.inc.object(object, 8, $i)($buffer, $start, $end)
                 }
 
                 $buffer[$start++] = (object.sentry & 0xff)

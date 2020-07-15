@@ -164,14 +164,14 @@ function checkpoints (path, fields, index = 0) {
         case 'switch':
             checked.push(field)
             for (const when of field.cases) {
-                when.fields = checkpoints(path, when.fields, index)
+                when.fields = checkpoints(path + field.dotted, when.fields, index)
             }
             checked.push(checkpoint = { type: 'checkpoint', lengths: [ 0 ] })
             break
         case 'conditional':
             checked.push(field)
             for (const condition of field.serialize.conditions) {
-                condition.fields = checkpoints(path, condition.fields, index)
+                condition.fields = checkpoints(path + field.dotted, condition.fields, index)
             }
             checked.push(checkpoint = { type: 'checkpoint', lengths: [ 0 ] })
             break
@@ -472,7 +472,7 @@ function generate (packet, { require = null, bff, chk }) {
 
     function terminator (field) {
         const terminator = []
-        $step += field.body.terminator.length
+        $step += field.body.terminator.length + 1
         for (const bite of field.body.terminator) {
             terminator.push(`$buffer[$start++] = 0x${bite.toString(16)}`)
         }

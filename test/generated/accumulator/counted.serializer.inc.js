@@ -102,6 +102,8 @@ module.exports = function ({ serializers }) {
 
                     case 8:
 
+                    case 9:
+
                         ; (function ({ $start, $end, counter }) {
                             counter[0] += $end - $start
                         })({
@@ -115,78 +117,80 @@ module.exports = function ({ serializers }) {
                             $: object,
                             counter: $accumulator['counter']
                         })){
-                            $step = 9
+                            $step = 10
                             continue
                         } else if ((({ $, counter }) => $.counted.length - counter[0] == 2)({
                             $: object,
                             counter: $accumulator['counter']
                         })){
-                            $step = 11
+                            $step = 12
                             continue
                         } else {
-                            $step = 13
+                            $step = 14
                             continue
                         }
-
-                    case 9:
-
-                        $step = 10
-                        $bite = 0
-                        $_ = object.counted.number
 
                     case 10:
 
-                        while ($bite != -1) {
-                            if ($start == $end) {
-                                ; (function ({ $start, $end, counter }) {
-                                    counter[0] += $end - $start
-                                })({
-                                    $start: $starts[0],
-                                    $end: $start,
-                                    counter: $accumulator['counter']
-                                })
-                                return { start: $start, serialize }
-                            }
-                            $buffer[$start++] = ($_ >>> $bite * 8 & 0xff)
-                            $bite--
-                        }
-
-                        $step = 15
-                        continue
+                        $step = 11
+                        $bite = 0
+                        $_ = object.counted.number
 
                     case 11:
 
-                        $step = 12
-                        $bite = 1
-                        $_ = object.counted.number
+                        while ($bite != -1) {
+                            if ($start == $end) {
+                                ; (function ({ $start, $end, counter }) {
+                                    counter[0] += $end - $start
+                                })({
+                                    $start: $starts[0],
+                                    $end: $start,
+                                    counter: $accumulator['counter']
+                                })
+                                return { start: $start, serialize }
+                            }
+                            $buffer[$start++] = ($_ >>> $bite * 8 & 0xff)
+                            $bite--
+                        }
+
+
+                        $step = 16
+                        continue
 
                     case 12:
 
-                        while ($bite != -1) {
-                            if ($start == $end) {
-                                ; (function ({ $start, $end, counter }) {
-                                    counter[0] += $end - $start
-                                })({
-                                    $start: $starts[0],
-                                    $end: $start,
-                                    counter: $accumulator['counter']
-                                })
-                                return { start: $start, serialize }
-                            }
-                            $buffer[$start++] = ($_ >>> $bite * 8 & 0xff)
-                            $bite--
-                        }
-
-                        $step = 15
-                        continue
+                        $step = 13
+                        $bite = 1
+                        $_ = object.counted.number
 
                     case 13:
 
-                        $step = 14
+                        while ($bite != -1) {
+                            if ($start == $end) {
+                                ; (function ({ $start, $end, counter }) {
+                                    counter[0] += $end - $start
+                                })({
+                                    $start: $starts[0],
+                                    $end: $start,
+                                    counter: $accumulator['counter']
+                                })
+                                return { start: $start, serialize }
+                            }
+                            $buffer[$start++] = ($_ >>> $bite * 8 & 0xff)
+                            $bite--
+                        }
+
+
+                        $step = 16
+                        continue
+
+                    case 14:
+
+                        $step = 15
                         $bite = 3
                         $_ = object.counted.number
 
-                    case 14:
+                    case 15:
 
                         while ($bite != -1) {
                             if ($start == $end) {
@@ -202,6 +206,7 @@ module.exports = function ({ serializers }) {
                             $buffer[$start++] = ($_ >>> $bite * 8 & 0xff)
                             $bite--
                         }
+
 
                         ; (function ({ $start, $end, counter }) {
                             counter[0] += $end - $start
@@ -211,13 +216,13 @@ module.exports = function ({ serializers }) {
                             counter: $accumulator['counter']
                         })
 
-                    case 15:
+                    case 16:
 
-                        $step = 16
+                        $step = 17
                         $bite = 0
                         $_ = object.sentry
 
-                    case 16:
+                    case 17:
 
                         while ($bite != -1) {
                             if ($start == $end) {
@@ -228,9 +233,9 @@ module.exports = function ({ serializers }) {
                         }
 
 
-                        $step = 17
+                        $step = 18
 
-                    case 17:
+                    case 18:
 
                         break
 

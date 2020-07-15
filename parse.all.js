@@ -213,7 +213,7 @@ function generate (packet, { require, bff, chk }) {
             case 'switch':
                 checked.push(field)
                 for (const when of field.cases) {
-                    when.fields = checkpoints(path, when.fields, index)
+                    when.fields = checkpoints(path + field.dotted, when.fields, index)
                 }
                 checked.push(checkpoint = {
                     type: 'checkpoint', lengths: [ 0 ], vivify: null, rewind: 0
@@ -223,10 +223,10 @@ function generate (packet, { require, bff, chk }) {
                 checked.push(field)
                 // TODO Sip belongs outside since it is generally a byte or so.
                 if (field.parse.sip != null) {
-                    field.parse.sip = checkpoints(path, field.parse.sip, index)
+                    field.parse.sip = checkpoints(path + field.dotted, field.parse.sip, index)
                 }
                 for (const condition of field.parse.conditions) {
-                    condition.fields = checkpoints(path, condition.fields, index)
+                    condition.fields = checkpoints(path + field.dotted, condition.fields, index)
                 }
                 checked.push(checkpoint = {
                     type: 'checkpoint', lengths: [ 0 ], vivify: null, rewind: 0
@@ -522,7 +522,7 @@ function generate (packet, { require, bff, chk }) {
         variables.i = true
         $i++
         const looped = join(field.fields.map(field => dispatch(path + field.dotted, field)))
-        $step++
+        $step += 2
         const source = $(`
             $i[${$i}] = 0
             for (;;) {
@@ -753,17 +753,22 @@ function generate (packet, { require, bff, chk }) {
                     condition.fields[0].rewind = sip.bits / 8
                 }
             } ()
+            const vivified = vivify.assignment(path, condition)
             const source = join(condition.fields.map(field => dispatch(path, field)))
             if (condition.test != null) {
                 const inline = inliner(accumulate, path, [ condition.test ], signature)
                 ladder.push(`${i == 0 ? 'if' : 'else if'} (${inline.inlined.shift()})` + $(`
                     {
+                        `, vivified, -1, `
+
                         `, source, `
                     }
                 `))
             } else {
                 ladder.push($(`
                     else {
+                        `, vivified, -1, `
+
                         `, source, `
                     }
                 `))

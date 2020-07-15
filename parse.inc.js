@@ -589,7 +589,14 @@ function generate (packet, { require = null }) {
                 `, skip(`(${i} + ${bytes.length})`), `
             `)
         }
-        return source
+        return $(`
+            `, source, `
+
+            case ${$step}:
+
+                // Here
+                $step = ${$step++}
+        `)
     }
 
     function conditional (path, conditional) {
@@ -656,10 +663,13 @@ function generate (packet, { require = null }) {
         const ladder = []
         for (let i = 0, I = parse.conditions.length; i < I; i++) {
             const condition = parse.conditions[i]
+            const vivified = vivify.assignment(path, condition)
             if (condition.test != null) {
                 const inline = inliner(accumulate, path, [ condition.test ], signature)
                 ladder.push(`${i == 0 ? 'if' : 'else if'} ((${inline.inlined.shift()}))` + $(`
                     {
+                        `, vivified, -1, `
+
                         $step = ${steps[i].number}
                         `, rewind, `
                         continue
@@ -668,6 +678,8 @@ function generate (packet, { require = null }) {
             } else {
                 ladder.push($(`
                     else {
+                        `, vivified, -1, `
+
                         $step = ${steps[i].number}
                         `, rewind, `
                         continue

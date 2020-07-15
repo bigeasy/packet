@@ -75,11 +75,13 @@ module.exports = function ({ serializers }) {
 
                     case 7:
 
-                        $step = 8
+                    case 8:
+
+                        $step = 9
                         $bite = 0
                         $_ = object.sentry
 
-                    case 8:
+                    case 9:
 
                         while ($bite != -1) {
                             if ($start == $end) {
@@ -90,9 +92,9 @@ module.exports = function ({ serializers }) {
                         }
 
 
-                        $step = 9
+                        $step = 10
 
-                    case 9:
+                    case 10:
 
                         break
 

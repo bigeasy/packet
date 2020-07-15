@@ -39,7 +39,7 @@ module.exports = function ({ serializers }) {
                     counter: $accumulator['counter']
                 })){
                     if ($end - $start < 1) {
-                        return serializers.inc.object(object, 9, $i, $accumulator, $starts)($buffer, $start, $end)
+                        return serializers.inc.object(object, 10, $i, $accumulator, $starts)($buffer, $start, $end)
                     }
 
                     $buffer[$start++] = (object.counted.number & 0xff)
@@ -48,14 +48,14 @@ module.exports = function ({ serializers }) {
                     counter: $accumulator['counter']
                 })){
                     if ($end - $start < 2) {
-                        return serializers.inc.object(object, 11, $i, $accumulator, $starts)($buffer, $start, $end)
+                        return serializers.inc.object(object, 12, $i, $accumulator, $starts)($buffer, $start, $end)
                     }
 
                     $buffer[$start++] = (object.counted.number >>> 8 & 0xff)
                     $buffer[$start++] = (object.counted.number & 0xff)
                 } else {
                     if ($end - $start < 4) {
-                        return serializers.inc.object(object, 13, $i, $accumulator, $starts)($buffer, $start, $end)
+                        return serializers.inc.object(object, 14, $i, $accumulator, $starts)($buffer, $start, $end)
                     }
 
                     $buffer[$start++] = (object.counted.number >>> 24 & 0xff)
@@ -73,7 +73,7 @@ module.exports = function ({ serializers }) {
                 })
 
                 if ($end - $start < 1) {
-                    return serializers.inc.object(object, 15, $i, $accumulator, $starts)($buffer, $start, $end)
+                    return serializers.inc.object(object, 16, $i, $accumulator, $starts)($buffer, $start, $end)
                 }
 
                 $buffer[$start++] = (object.sentry & 0xff)
