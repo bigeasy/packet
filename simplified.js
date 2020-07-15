@@ -779,13 +779,6 @@ function map (definitions, packet, extra = {}, packed = false) {
             }
             return [ integer(packet, packed, extra) ]
         }
-    case 'function': {
-            return [{
-                type: 'function',
-                source: trim(packet.toString()),
-                arity: packet.length
-            }]
-        }
     }
     throw new Error
 }

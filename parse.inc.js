@@ -953,12 +953,6 @@ function generate (packet, { require = null }) {
             return integer(path, packet)
         case 'absent':
             return absent(path, packet)
-        case 'function':
-            return $(`
-                case ${$step++}:
-
-                    ${path} = (${packet.source})($sip[0])
-            `)
         case 'literal':
             return literal(path, packet)
         }

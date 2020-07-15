@@ -13,9 +13,9 @@ require('proof')(4, okay => {
                 // TODO Here is the pure function, so maybe we need pure
                 // functions in general.
                 [ 8, [
-                    sip => sip < 251, sip => sip,
-                    sip => sip == 0xfc, 16,
-                    true, 24
+                    sip => sip < 251, 8,
+                    sip => sip == 0xfc, [ 'fc', 16 ],
+                    true, [ 'fd', 24 ]
                 ]]
             ]
         }
@@ -30,7 +30,7 @@ require('proof')(4, okay => {
             name: 'value',
             dotted: '.value',
             type: 'conditional',
-            vivify: 'variant',
+            vivify: 'number',
             fixed: false,
             bits: 0,
             serialize: {
@@ -119,9 +119,13 @@ require('proof')(4, okay => {
                         arity: 1
                     },
                     fields: [{
-                        type: 'function',
-                        source: 'sip => sip',
-                        arity: 1
+                        type: 'integer',
+                        vivify: 'number',
+                        dotted: '',
+                        fixed: true,
+                        bits: 8,
+                        endianness: 'big',
+                        compliment: false
                     }]
                 }, {
                     test: {
@@ -132,24 +136,42 @@ require('proof')(4, okay => {
                         arity: 1
                     },
                     fields: [{
-                        type: 'integer',
-                        vivify: 'number',
+                        type: 'literal',
                         dotted: '',
+                        vivify: 'descend',
                         fixed: true,
-                        bits: 16,
-                        endianness: 'big',
-                        compliment: false
+                        bits: 24,
+                        before: { repeat: 1, value: 'fc', bits: 8 },
+                        fields: [{
+                            type: 'integer',
+                            vivify: 'number',
+                            dotted: '',
+                            fixed: true,
+                            bits: 16,
+                            endianness: 'big',
+                            compliment: false
+                        }],
+                        after: { repeat: 0, value: '', bits: 0 }
                     }]
                 }, {
                     test: null,
                     fields: [{
-                        type: 'integer',
-                        vivify: 'number',
+                        type: 'literal',
                         dotted: '',
+                        vivify: 'descend',
                         fixed: true,
-                        bits: 24,
-                        endianness: 'big',
-                        compliment: false
+                        bits: 32,
+                        before: { repeat: 1, value: 'fd', bits: 8 },
+                        fields: [{
+                            type: 'integer',
+                            vivify: 'number',
+                            dotted: '',
+                            fixed: true,
+                            bits: 24,
+                            endianness: 'big',
+                            compliment: false
+                        }],
+                        after: { repeat: 0, value: '', bits: 0 }
                     }]
                 }]
             }

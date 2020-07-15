@@ -207,9 +207,6 @@ function generate (packet, { require, bff, chk }) {
         const checked = [ checkpoint ]
         for (const field of fields) {
             switch (field.type) {
-            case 'function':
-                checked.push(field)
-                break
             case 'switch':
                 checked.push(field)
                 for (const when of field.cases) {
