@@ -11,7 +11,7 @@ module.exports = function ({ parsers }) {
                     case 0:
 
                         object = {
-                            array: Buffer.alloc(8),
+                            array: null,
                             sentry: 0
                         }
 

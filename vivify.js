@@ -8,7 +8,7 @@ function structure (path, field, assignment = ' = ') {
         case 'array':
             return `${(path + field.dotted).split('.').pop()}: []`
         case 'buffer':
-            return `${(path + field.dotted).split('.').pop()}: Buffer.alloc(${field.length})`
+            return `${(path + field.dotted).split('.').pop()}: null`
         case 'number':
             return `${(path + field.dotted).split('.').pop()}: 0`
         case 'variant':

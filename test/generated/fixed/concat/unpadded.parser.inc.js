@@ -10,7 +10,7 @@ module.exports = function ({ parsers }) {
                 case 0:
 
                     object = {
-                        array: Buffer.alloc(8),
+                        array: null,
                         sentry: 0
                     }
 
@@ -25,13 +25,16 @@ module.exports = function ({ parsers }) {
                 case 2: {
 
                     const length = Math.min($end - $start, 8 - $_)
-                    $buffer.copy(object.array, $_, $start, $start + length)
+                    $buffers.push($buffer.slice($start, $start + length))
                     $start += length
                     $_ += length
 
                     if ($_ != 8) {
                         return { start: $start, parse }
                     }
+
+                    object.array = $buffers.length == 1 ? $buffers[0] : Buffer.concat($buffers)
+                    $buffers = []
 
                     $step = 3
 

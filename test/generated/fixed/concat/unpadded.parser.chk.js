@@ -7,7 +7,7 @@ module.exports = function ({ parsers }) {
                 let $_, $i = [], $slice = null
 
                 let object = {
-                    array: Buffer.alloc(8),
+                    array: null,
                     sentry: 0
                 }
 

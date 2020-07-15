@@ -715,37 +715,14 @@ function generate (packet, { require = null }) {
         // **TODO** I'm going to make this a todo, not an issue, but it would be
         // nice to use `TypedArray` when we have an array of words and the
         // desired byte order matches the machine byte order.
-        //
-        // **TODO** Use `concat` instead of `copy`.
 
         //
         if (element.type == 'buffer') {
             locals['buffers'] = '[]'
-            return element.concat
-            ? $(`
-                case ${$step++}:
-
-                    $_ = 0
-
-                    $step = ${$step}
-
-                case ${$step++}: {
-
-                    const length = Math.min($end - $start, ${field.length} - $_)
-                    $buffer.copy(${path}, $_, $start, $start + length)
-                    $start += length
-                    $_ += length
-
-                    if ($_ != ${field.length}) {
-                        `, buffered.length != 0 ? buffered.join('\n') : null, `
-                        return { start: $start, parse }
-                    }
-
-                    $step = ${$step}
-
-                }
-            `)
-            : $(`
+            const assign = element.concat
+                ? `${path} = $buffers.length == 1 ? $buffers[0] : Buffer.concat($buffers)`
+                : `${path} = $buffers`
+            return $(`
                 case ${$step++}:
 
                     $_ = 0
@@ -764,7 +741,7 @@ function generate (packet, { require = null }) {
                         return { start: $start, parse }
                     }
 
-                    ${path} = $buffers
+                    `, assign, `
                     $buffers = []
 
                     $step = ${$step}
