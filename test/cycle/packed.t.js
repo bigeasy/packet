@@ -13,7 +13,6 @@ function prove (okay) {
                 sentry: 8
             }
         },
-        objects: [{ header: { one: 3, two: -4, three: 1 }, sentry: 0xaa }],
-        stopAt: 'parse.all'
+        objects: [{ header: { one: 3, two: -4, three: 1 }, sentry: 0xaa }]
     })
 }

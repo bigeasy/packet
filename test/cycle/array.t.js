@@ -57,8 +57,7 @@ function prove (okay) {
         objects: [{
             array: Buffer.from('abcdefgh'),
             sentry: 0xaa
-        }],
-        stopAt: 'serialize.chk'
+        }]
     })
     cycle(okay, {
         name: 'array/chunked',
