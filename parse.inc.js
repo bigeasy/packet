@@ -981,7 +981,7 @@ function generate (packet, { require = null }) {
     `)
 
     const signatories = {
-        packet: `${packet.name} = {}`,
+        packet: `${packet.name}`,
         step: '$step = 0',
         i: '$i = []',
         I: '$I = []',
