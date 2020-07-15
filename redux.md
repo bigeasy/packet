@@ -5,6 +5,9 @@ to count the steps in a conditional first, then pass a done property to the
 decent, or maintain a stack, so that the terminated parse would use that done
 instead of using one it calculated itself.
 
+Fun problem to consider, nested if statements so we probably have to jump to the
+outer end.
+
 ## Tue Jul 14 03:26:09 CDT 2020 ~ todo
 
 Another little thing to fix. If the size of a condition is less than or equal to
