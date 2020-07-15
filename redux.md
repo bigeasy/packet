@@ -8,6 +8,9 @@ instead of using one it calculated itself.
 Fun problem to consider, nested if statements so we probably have to jump to the
 outer end.
 
+Only nested jump that should be reset appears to be within conditionals. Nested
+termianted arrays need to jump to their terminator check.
+
 ## Tue Jul 14 03:26:09 CDT 2020 ~ todo
 
 Another little thing to fix. If the size of a condition is less than or equal to
