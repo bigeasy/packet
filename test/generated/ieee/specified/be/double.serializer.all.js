@@ -4,7 +4,7 @@ module.exports = function ({ serializers }) {
 
         return function (object) {
             return function ($buffer, $start, $end) {
-                let $i = [], $$ = []
+                let $_, $i = [], $$ = []
 
                 $$[0] = (function (value) {
                     const buffer = Buffer.alloc(8)
@@ -12,10 +12,10 @@ module.exports = function ({ serializers }) {
                     return buffer
                 })(object.value)
 
-                for ($i[0] = 0; $i[0] < $$[0].length; $i[0]++) {
-                    $buffer[$start++] = ($$[0][$i[0]] & 0xff)
-                }
-
+                $_ = 0
+                $$[0].copy($buffer, $start)
+                $start += $$[0].length
+                $_ += $$[0].length
 
                 $buffer[$start++] = (object.sentry & 0xff)
 

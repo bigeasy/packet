@@ -4,10 +4,10 @@ module.exports = function ({ parsers }) {
 
         return function () {
             return function parse ($buffer, $start, $end) {
-                let $i = []
+                let $_, $i = [], $slice = null
 
                 let object = {
-                    value: [],
+                    value: null,
                     sentry: 0
                 }
 
@@ -15,23 +15,16 @@ module.exports = function ({ parsers }) {
                     return parsers.inc.object(object, 1, $i)($buffer, $start, $end)
                 }
 
-                $i[0] = 0
-                for (;;) {
-                    object.value[$i[0]] = ($buffer[$start++])
-                    $i[0]++
-
-                    if ($i[0] == 8) {
-                        break
-                    }
-                }
-
+                $slice = $buffer.slice($start, $start + 8)
+                $start += 8
+                object.value = $slice
 
                 object.value = (function (value) {
-                    return Buffer.from(value).readDoubleLE()
+                    return value.readDoubleLE()
                 })(object.value)
 
                 if ($end - $start < 1) {
-                    return parsers.inc.object(object, 6, $i)($buffer, $start, $end)
+                    return parsers.inc.object(object, 3, $i)($buffer, $start, $end)
                 }
 
                 object.sentry = ($buffer[$start++])

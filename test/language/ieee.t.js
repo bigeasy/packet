@@ -25,7 +25,7 @@ require('proof')(1, okay => {
             }],
             fields: [{
                 type: 'fixed',
-                vivify: 'array',
+                vivify: 'variant',
                 length: 8,
                 dotted: '',
                 pad: [],
@@ -33,9 +33,10 @@ require('proof')(1, okay => {
                 align: 'left',
                 bits: 64,
                 fields: [{
-                    type: 'integer',
+                    type: 'buffer',
                     vivify: 'number',
                     dotted: '',
+                    concat: true,
                     fixed: true,
                     bits: 8,
                     endianness: 'big',
@@ -45,7 +46,7 @@ require('proof')(1, okay => {
             after: [{
                 defaulted: [],
                 properties: [],
-                source: 'function (value) {\n    return Buffer.from(value).readDoubleLE()\n}',
+                source: 'function (value) {\n    return value.readDoubleLE()\n}',
                 arity: 1,
                 vargs: []
             }],

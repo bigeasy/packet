@@ -3,26 +3,19 @@ module.exports = function ({ parsers }) {
 
 
         return function ($buffer, $start) {
-            let $i = []
+            let $_, $i = [], $slice = null
 
             let object = {
-                value: [],
+                value: null,
                 sentry: 0
             }
 
-            $i[0] = 0
-            for (;;) {
-                object.value[$i[0]] = ($buffer[$start++])
-                $i[0]++
-
-                if ($i[0] == 4) {
-                    break
-                }
-            }
-
+            $slice = $buffer.slice($start, $start + 4)
+            $start += 4
+            object.value = $slice
 
             object.value = (function (value) {
-                return Buffer.from(value).readFloatBE()
+                return value.readFloatBE()
             })(object.value)
 
             object.sentry = ($buffer[$start++])

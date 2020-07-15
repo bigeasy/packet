@@ -4,7 +4,7 @@ exports.writeDoubleBE = function (value) {
     return buffer
 }
 exports.readDoubleBE = function (value) {
-    return Buffer.from(value).readDoubleBE()
+    return value.readDoubleBE()
 }
 exports.writeFloatBE = function (value) {
     const buffer = Buffer.alloc(4)
@@ -12,7 +12,7 @@ exports.writeFloatBE = function (value) {
     return buffer
 }
 exports.readFloatBE = function (value) {
-    return Buffer.from(value).readFloatBE()
+    return value.readFloatBE()
 }
 exports.writeDoubleLE = function (value) {
     const buffer = Buffer.alloc(8)
@@ -20,7 +20,7 @@ exports.writeDoubleLE = function (value) {
     return buffer
 }
 exports.readDoubleLE = function (value) {
-    return Buffer.from(value).readDoubleLE()
+    return value.readDoubleLE()
 }
 exports.writeFloatLE = function (value) {
     const buffer = Buffer.alloc(4)
@@ -28,5 +28,5 @@ exports.writeFloatLE = function (value) {
     return buffer
 }
 exports.readFloatLE = function (value) {
-    return Buffer.from(value).readFloatLE()
+    return value.readFloatLE()
 }

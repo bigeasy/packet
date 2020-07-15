@@ -288,13 +288,13 @@ function map (definitions, packet, extra = {}, packed = false) {
                         case 64:
                             return map(definitions, [[
                                 ieee.writeDoubleLE
-                            ], [[ 8 ], [ 8 ]], [
+                            ], [[ 8 ], [ Buffer ]], [
                                 ieee.readDoubleLE
                             ]], extra)
                         case 32:
                             return map(definitions, [[
                                 ieee.writeFloatLE
-                            ], [[ 4 ], [ 8 ]], [
+                            ], [[ 4 ], [ Buffer ]], [
                                 ieee.readFloatLE
                             ]], extra)
                         }
@@ -304,13 +304,13 @@ function map (definitions, packet, extra = {}, packed = false) {
                     case 64:
                         return map(definitions, [[
                             ieee.writeDoubleBE
-                        ], [[ 8 ], [ 8 ]], [
+                        ], [[ 8 ], [ Buffer ]], [
                             ieee.readDoubleBE
                         ]], extra)
                     case 32:
                         return map(definitions, [[
                             ieee.writeFloatBE
-                        ], [[ 4 ], [ 8 ]], [
+                        ], [[ 4 ], [ Buffer ]], [
                             ieee.readFloatBE
                         ]], extra)
                     }

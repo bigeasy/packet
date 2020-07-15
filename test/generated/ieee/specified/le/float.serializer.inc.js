@@ -18,39 +18,32 @@ module.exports = function ({ serializers }) {
 
                     case 1:
 
-                        $i[0] = 0
+                        $_ = 0
+
                         $step = 2
 
-                    case 2:
+                    case 2: {
 
-                        $step = 3
-                        $bite = 0
-                        $_ = $$[0][$i[0]]
+                            const length = Math.min($end - $start, $$[0].length - $_)
+                            $$[0].copy($buffer, $start, $_, $_ + length)
+                            $start += length
+                            $_ += length
+
+                            if ($_ != $$[0].length) {
+                                return { start: $start, serialize }
+                            }
+
+                            $step = 3
+
+                        }
 
                     case 3:
 
-                        while ($bite != -1) {
-                            if ($start == $end) {
-                                return { start: $start, serialize }
-                            }
-                            $buffer[$start++] = ($_ >>> $bite * 8 & 0xff)
-                            $bite--
-                        }
-
-                        if (++$i[0] != $$[0].length) {
-                            $step = 2
-                            continue
-                        }
-
-                    $step = 4
-
-                    case 4:
-
-                        $step = 5
+                        $step = 4
                         $bite = 0
                         $_ = object.sentry
 
-                    case 5:
+                    case 4:
 
                         while ($bite != -1) {
                             if ($start == $end) {
@@ -61,9 +54,9 @@ module.exports = function ({ serializers }) {
                         }
 
 
-                        $step = 6
+                        $step = 5
 
-                    case 6:
+                    case 5:
 
                         break
 
