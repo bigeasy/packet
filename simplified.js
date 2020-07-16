@@ -219,9 +219,10 @@ function map (definitions, packet, extra = {}, packed = false) {
                     packet[1].length > 1 &&
                     packet[1].filter(value => typeof value == 'string').length == packet[1].length
                 ) {
-                    const field = map(definitions, packet[0], extra, packed).shift()
-                    field.lookup = packet[1].slice()
-                    return [ field ]
+                    return map(definitions, packet[0], {
+                        lookup: packet[1].slice(),
+                        ...extra
+                    }, packed)
                 // **Literals**: Constant value padding bytes. A type definition
                 // with a preceding or following literal or both. The preceding
                 // or following element is defined by a either string of
@@ -811,7 +812,7 @@ function map (definitions, packet, extra = {}, packed = false) {
 module.exports = function (packets) {
     const definitions = []
     for (const packet in packets) {
-        definitions.push.apply(definitions, map(definitions, packets[packet], { name: packet }))
+        definitions.push(map(definitions, packets[packet], { name: packet }).shift())
     }
     return definitions
 }
