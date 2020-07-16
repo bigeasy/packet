@@ -12,7 +12,6 @@ module.exports = function ({ serializers }) {
 
                     $buffer[$start++] = (object.value >>> 8 & 0xff)
                     $buffer[$start++] = (object.value & 0xff)
-
                 } else {
                     $buffer.write("fd", $start, $start + 1, 'hex')
                     $start += 1
@@ -20,7 +19,6 @@ module.exports = function ({ serializers }) {
                     $buffer[$start++] = (object.value >>> 16 & 0xff)
                     $buffer[$start++] = (object.value >>> 8 & 0xff)
                     $buffer[$start++] = (object.value & 0xff)
-
                 }
 
                 $buffer[$start++] = (object.sentry & 0xff)

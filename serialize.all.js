@@ -387,9 +387,9 @@ function generate (packet, { require = null, bff, chk }) {
         return $(`
             `, write(field.before), -1, `
 
-            `, map(dispatch, path, field.fields), -1, `
+            `, map(dispatch, path, field.fields), `
 
-            `, write(field.after), -1, `
+            `, -1, write(field.after), `
         `)
     }
 
@@ -548,7 +548,7 @@ function generate (packet, { require = null, bff, chk }) {
                 `, looped, `
             }
 
-            `, pad, -1, `
+            `, -1, pad, `
         `)
         $i--
         return source

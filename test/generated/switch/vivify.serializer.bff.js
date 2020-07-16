@@ -74,7 +74,6 @@ module.exports = function ({ serializers }) {
                         $buffer[$start++] = (object.value[$i[0]] & 0xff)
                     }
 
-
                     break
 
                 default:

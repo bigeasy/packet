@@ -20,7 +20,6 @@ module.exports = function ({ serializers }) {
 
                     $buffer[$start++] = (object.value >>> 8 & 0xff)
                     $buffer[$start++] = (object.value & 0xff)
-
                 } else {
                     if ($end - $start < 4) {
                         return serializers.inc.object(object, 7)($buffer, $start, $end)
@@ -32,7 +31,6 @@ module.exports = function ({ serializers }) {
                     $buffer[$start++] = (object.value >>> 16 & 0xff)
                     $buffer[$start++] = (object.value >>> 8 & 0xff)
                     $buffer[$start++] = (object.value & 0xff)
-
                 }
 
                 if ($end - $start < 1) {

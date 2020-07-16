@@ -55,7 +55,6 @@ module.exports = function ({ serializers }) {
                     for ($i[0] = 0; $i[0] < object.value.length; $i[0]++) {
                         $buffer[$start++] = (object.value[$i[0]] & 0xff)
                     }
-
                 } else {
                     if ($end - $start < 3) {
                         return serializers.inc.object(object, 20, $i)($buffer, $start, $end)

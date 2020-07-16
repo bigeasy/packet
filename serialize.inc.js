@@ -149,7 +149,7 @@ function generate (packet, { require = null }) {
 
             `, map(dispatch, path, field.fields), `
 
-            `, write(field.after), -1, `
+            `, -1, write(field.after), `
         `)
     }
 

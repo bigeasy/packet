@@ -31,7 +31,6 @@ module.exports = function ({ serializers }) {
                     for ($i[0] = 0; $i[0] < object.value.length; $i[0]++) {
                         $buffer[$start++] = (object.value[$i[0]] & 0xff)
                     }
-
                 } else {
                     $_ = 0
                     object.value.copy($buffer, $start)
