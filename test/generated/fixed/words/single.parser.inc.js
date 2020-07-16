@@ -2,7 +2,7 @@ module.exports = function ({ parsers }) {
     parsers.inc.object = function () {
 
 
-        return function (object = {}, $step = 0, $i = []) {
+        return function (object, $step = 0, $i = []) {
             let $_, $bite, $length = 0
 
             return function parse ($buffer, $start, $end) {
@@ -22,6 +22,8 @@ module.exports = function ({ parsers }) {
                         $i[0] = 0
 
                     case 2:
+
+                        $step = 2
 
                         if ($i[0] == 8) {
                             $step = 7

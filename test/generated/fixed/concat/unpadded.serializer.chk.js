@@ -16,7 +16,7 @@ module.exports = function ({ serializers }) {
                     return serializers.inc.object(object, 2, $i)($buffer, $start, $end)
                 }
 
-                $_ = $start
+                $_ = 0
                 object.array.copy($buffer, $start)
                 $start += object.array.length
                 $_ += object.array.length

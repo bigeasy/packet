@@ -2,7 +2,7 @@ require('proof')(0, prove)
 
 function prove (okay) {
     const cycle = require('./cycle')
-    /*cycle(okay, {
+    cycle(okay, {
         name: 'fixed/words/unpadded',
         define: {
             object: {
@@ -59,7 +59,7 @@ function prove (okay) {
             }
         },
         objects: [{ nudge: 0xaa, array: Buffer.from('abcdefgh'), sentry: 0xaa }]
-    }) */
+    })
     cycle(okay, {
         name: 'fixed/concat/single',
         define: {
