@@ -2,7 +2,7 @@ require('proof')(0, prove)
 
 function prove (okay) {
     const cycle = require('./cycle')
-    cycle(okay, {
+    /* cycle(okay, {
         name: 'switched/strings',
         define: {
             object: {
@@ -27,7 +27,7 @@ function prove (okay) {
             value: 0xabcdef,
             sentry: 0xaa
         }]
-    })
+    }) */
     cycle(okay, {
         name: 'switched/named',
         define: {
@@ -131,13 +131,11 @@ function prove (okay) {
         define: {
             object: {
                 type: 8,
-                value: [ $ => $.type, [[
-                    0, 8
-                ], [
-                    1, 16
-                ], [
-                    24
-                ]]],
+                value: [ $ => $.type, [
+                    { $_: 0 }, 8,
+                    { $_: 1 }, 16,
+                    {       }, 24
+                ]],
                 sentry: 8
             }
         },
@@ -161,13 +159,11 @@ function prove (okay) {
             object: {
                 header: [{
                     type: 2,
-                    value: [ $ => $.header.type, [[
-                        0, 6
-                    ], [
-                        1, [ 'a', 2 ]
-                    ], [
-                        [ { two: 2, four: 4 }, 6 ]
-                    ]]]
+                    value: [ $ => $.header.type, [
+                        { $_: 0 }, 6,
+                        { $_: 1 }, [ 'a', 2 ],
+                        {       }, [ { two: 2, four: 4 }, 6 ]
+                    ]]
                 }, 8 ],
                 sentry: 8
             }

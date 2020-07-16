@@ -123,6 +123,37 @@ const is = {
             Array.isArray(packet) && packet.length == 0
         )
     },
+    switched: {
+        variant: function (packet) {
+            return typeof packet[0] == 'function' &&
+                Array.isArray(packet[1]) &&
+                packet[1].length % 2 == 0 &&
+                packet[1].filter((value, index) => {
+                    return index % 2 == 1 ||
+                    (
+                        typeof value == 'object' &&
+                        (
+                            (
+                                Object.keys(value).length == 1 &&
+                                ('$_' in value)
+                            ) ||
+                            (
+                                Object.keys(value).length == 0 &&
+                                index == packet[1].length - 2
+                            )
+                        )
+                    )
+                }).length == packet[1].length
+        },
+        stringified: function (packet) {
+            return typeof packet[0] == 'function' &&
+                typeof packet[1] == 'object' &&
+                ! Array.isArray(packet[1]) &&
+                (
+                    packet.length == 2 || packet.length == 3
+                )
+        }
+    },
     conditional: {
         ladder: function (array) {
             if (!Array.isArray(array) || array.length % 2 != 0) {
@@ -658,32 +689,16 @@ function map (definitions, packet, extra = {}, packed = false) {
                         fields: fields,
                         ...extra
                     }]
+                // **Switch statement alternative**: Probably the final result,
+                // but it can coexist with the other for that allows variants
+                // for now.
                 // **Switch statements**.
                 } else if (
-                    typeof packet[0] == 'function' &&
-                    typeof packet[1] == 'object' &&
-                    (
-                        packet.length == 2 || packet.length == 3
-                    )
+                    is.switched.variant(packet) ||
+                    is.switched.stringified(packet)
                 ) {
                     const cases = []
-                    if (Array.isArray(packet[1])) {
-                        for (const when of packet[1]) {
-                            if (when.length == 2) {
-                                cases.push({
-                                    value: when[0],
-                                    otherwise: false,
-                                    fields: map(definitions, when[1], {})
-                                })
-                            } else {
-                                cases.push({
-                                    value: null,
-                                    otherwise: true,
-                                    fields: map(definitions, when[0], {})
-                                })
-                            }
-                        }
-                    } else {
+                    if (is.switched.stringified(packet)) {
                         for (const value in packet[1]) {
                             cases.push({
                                 value: value,
@@ -697,6 +712,24 @@ function map (definitions, packet, extra = {}, packed = false) {
                                 otherwise: true,
                                 fields: map(definitions, packet[2], {})
                             })
+                        }
+                    } else {
+                        const copy = packet[1].slice()
+                        while (copy.length != 0) {
+                            const [ when, field ] = copy.splice(0, 2)
+                            if ('$_' in when) {
+                                cases.push({
+                                    value: when.$_,
+                                    otherwise: false,
+                                    fields: map(definitions, field, {})
+                                })
+                            } else {
+                                cases.push({
+                                    value: null,
+                                    otherwise: true,
+                                    fields: map(definitions, field, {})
+                                })
+                            }
                         }
                     }
                     const bits = cases.slice(1).reduce((value, when) => {
