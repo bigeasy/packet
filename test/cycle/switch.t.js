@@ -3,7 +3,7 @@ require('proof')(0, prove)
 function prove (okay) {
     const cycle = require('./cycle')
     cycle(okay, {
-        name: 'switched/strings',
+        name: 'switch/strings',
         define: {
             object: {
                 type: 8,
@@ -29,7 +29,7 @@ function prove (okay) {
         }]
     })
     cycle(okay, {
-        name: 'switched/named',
+        name: 'switch/named',
         define: {
             object: {
                 type: 8,
@@ -55,7 +55,7 @@ function prove (okay) {
         }]
     })
     cycle(okay, {
-        name: 'switched/packed/strings',
+        name: 'switch/packed/strings',
         define: {
             object: {
                 header: [{
@@ -91,7 +91,7 @@ function prove (okay) {
         }]
     })
     cycle(okay, {
-        name: 'switched/packed/named',
+        name: 'switch/packed/named',
         define: {
             object: {
                 header: [{
@@ -127,7 +127,7 @@ function prove (okay) {
         }]
     })
     cycle(okay, {
-        name: 'switched/variant',
+        name: 'switch/variant',
         define: {
             object: {
                 type: 8,
@@ -154,7 +154,7 @@ function prove (okay) {
         }]
     })
     cycle(okay, {
-        name: 'switched/packed/variant',
+        name: 'switch/packed/variant',
         define: {
             object: {
                 header: [{
