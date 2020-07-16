@@ -5,11 +5,14 @@ const join = require('./join')
 const $ = require('programmatic')
 const { structure } = require('./vivify')
 
+// Generate inline function source.
+const inliner = require('./inliner')
+
 function _fiddle (pack) {
     return fiddle(pack.bits, pack.offset, pack.size, pack.packed)
 }
 
-function unpack (root, path, field, packed, offset = 0) {
+function unpack (accumulate, root, path, field, packed, offset = 0) {
     let bits = field.bits, bit = offset
     function advance (size) {
         const offset = bit
@@ -80,7 +83,7 @@ function unpack (root, path, field, packed, offset = 0) {
                 for (let i = 0, I = conditional.serialize.conditions.length; i < I; i++) {
                     const condition = conditional.serialize.conditions[i]
                     const vivifyed = condition.fields[0].type == 'integer' && condition.fields[0].fields
-                    const source = module.exports.call(null, root, path, {
+                    const source = module.exports.call(null, accumulate, root, path, {
                         bits: bits,
                         fields: vivifyed ? condition.fields[0].fields : condition.fields
                     }, packed, offset)
@@ -111,7 +114,7 @@ function unpack (root, path, field, packed, offset = 0) {
                 const cases = []
                 for (const when of switched.cases) {
                     const vivifyed = when.fields[0].type == 'integer' && when.fields[0].fields
-                    const source = module.exports.call(null, root, path, {
+                    const source = module.exports.call(null, accumulate, root, path, {
                         bits: bits,
                         fields: vivifyed ? when.fields[0].fields : when.fields
                     }, packed, offset)
@@ -125,11 +128,12 @@ function unpack (root, path, field, packed, offset = 0) {
                             break
                     `))
                 }
+                const inlined = inliner(accumulate, path, [ switched.select ], [])
                 const select = switched.stringify
-                    ? `String((${switched.source})(${root.name}))`
-                    : `(${switched.source})(${root.name})`
-                blocks.push($(`
-                    switch (${select}) {
+                    ? `String(${inlined.inlined.shift()})`
+                    : inlined.inlined.shift()
+                blocks.push(`switch (${select})` + $(`
+                    {
                     `, join(cases), `
                     }
                 `))

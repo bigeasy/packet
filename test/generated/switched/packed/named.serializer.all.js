@@ -1,19 +1,17 @@
 module.exports = function ({ serializers }) {
-    serializers.chk.object = function () {
+    serializers.all.object = function () {
 
 
         return function (object) {
             return function ($buffer, $start, $end) {
                 let $_
 
-                if ($end - $start < 1) {
-                    return serializers.inc.object(object, 0)($buffer, $start, $end)
-                }
-
                 $_ =
                     (object.header.type << 6 & 0xc0)
 
-                switch (String(($ => $.header.type)(object))){
+                switch (String((({ $ }) => $.header.type)({
+                    $: object
+                }))){
                 case "0":
 
                     $_ |=
@@ -39,10 +37,6 @@ module.exports = function ({ serializers }) {
                 }
 
                 $buffer[$start++] = ($_ & 0xff)
-
-                if ($end - $start < 1) {
-                    return serializers.inc.object(object, 2)($buffer, $start, $end)
-                }
 
                 $buffer[$start++] = (object.sentry & 0xff)
 

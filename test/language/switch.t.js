@@ -27,7 +27,13 @@ require('proof')(4, okay => {
         }, {
             type: 'switch',
             vivify: 'number',
-            source: '$ => $.type',
+            select: {
+                properties: [],
+                defaulted: [],
+                source: '$ => $.type',
+                arity: 1,
+                vargs: []
+            },
             bits: 0,
             fixed: false,
             stringify: true,
@@ -112,7 +118,13 @@ require('proof')(4, okay => {
             }, {
                 type: 'switch',
                 vivify: 'variant',
-                source: '$ => $.type',
+                select: {
+                    defaulted: [],
+                    properties: [],
+                    source: '$ => $.type',
+                    arity: 1,
+                    vargs: []
+                },
                 bits: 6,
                 stringify: true,
                 fixed: true,
@@ -215,7 +227,13 @@ require('proof')(4, okay => {
             type: 'switch',
             vivify: 'number',
             stringify: false,
-            source: '$ => $.type',
+            select: {
+                properties: [],
+                defaulted: [],
+                source: '$ => $.type',
+                arity: 1,
+                vargs: []
+            },
             bits: 0,
             fixed: false,
             cases: [{
@@ -301,7 +319,13 @@ require('proof')(4, okay => {
                 type: 'switch',
                 vivify: 'variant',
                 stringify: false,
-                source: '$ => $.type',
+                select: {
+                    defaulted: [],
+                    properties: [],
+                    source: '$ => $.type',
+                    arity: 1,
+                    vargs: []
+                },
                 bits: 6,
                 fixed: true,
                 cases: [{

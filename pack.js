@@ -2,6 +2,9 @@ const $ = require('programmatic')
 const snuggle = require('./snuggle')
 const join = require('./join')
 
+// Generate inline function source.
+const inliner = require('./inliner')
+
 const fiddle = require('./fiddle/pack')
 
 function _fiddle (pack) {
@@ -60,7 +63,7 @@ function flatten (flattened, path, fields, assignment = '=') {
     return flattened
 }
 
-function subPack (root, path, bits, offset, fields) {
+function subPack (accumulate, root, path, bits, offset, fields) {
     const packed = [[]]
     for (const field of fields) {
         switch (field.type) {
@@ -78,7 +81,7 @@ function subPack (root, path, bits, offset, fields) {
                 const { conditional, path, assignment } = field, ladder = []
                 for (let i = 0, I = conditional.serialize.conditions.length; i < I; i++) {
                     const condition = conditional.serialize.conditions[i]
-                    const source = module.exports.call(null, root, {
+                    const source = module.exports.call(null, accumulate, root, {
                         bits: bits,
                         fields: condition.fields[0].type == 'integer' && condition.fields[0].fields
                               ? condition.fields[0].fields
@@ -106,7 +109,7 @@ function subPack (root, path, bits, offset, fields) {
                 const { switched, path, assignment } = field, block = []
                 const cases = []
                 for (const when of switched.cases) {
-                    const source = module.exports.call(null, root, {
+                    const source = module.exports.call(null, accumulate, root, {
                         bits: bits,
                         fields: when.fields[0].type == 'integer' && when.fields[0].fields
                               ? when.fields[0].fields
@@ -120,11 +123,12 @@ function subPack (root, path, bits, offset, fields) {
                             break
                     `))
                 }
+                const inlined = inliner(accumulate, path, [ switched.select ], [])
                 const select = switched.stringify
-                    ? `String((${switched.source})(${root.name}))`
-                    : `(${switched.source})(${root.name})`
-                packed.unshift($(`
-                    switch (${select}) {
+                    ? `String(${inlined.inlined.shift()})`
+                    : inlined.inlined.shift()
+                packed.unshift(`switch (${select})` + $(`
+                    {
                     `, join(cases), `
                     }
                 `))
@@ -137,9 +141,9 @@ function subPack (root, path, bits, offset, fields) {
 
 // A recent implementation of packing, but one that is now untested and stale.
 // Removing from the `serialize.all` generator for visibility.
-module.exports = function (root, field, path, stuff, assignment = '=', offset = 0) {
+module.exports = function (accumulate, root, field, path, stuff, assignment = '=', offset = 0) {
     const block = [], flattened = flatten([], path, field.fields, assignment)
-    for (const packed of subPack(root, path, field.bits, offset, flattened)) {
+    for (const packed of subPack(accumulate, root, path, field.bits, offset, flattened)) {
         if (typeof packed == 'string') {
             block.push(packed)
         } else if (packed.length != 0) {

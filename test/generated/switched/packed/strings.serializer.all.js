@@ -9,7 +9,7 @@ module.exports = function ({ serializers }) {
                 $_ =
                     (object.header.type << 6 & 0xc0)
 
-                switch (String(($ => $.header.type)(object))) {
+                switch (String(($ => $.header.type)(object))){
                 case "0":
 
                     $_ |=

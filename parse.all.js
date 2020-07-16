@@ -334,7 +334,7 @@ function generate (packet, { require, bff, chk }) {
             return $(`
                 `, parse, `
 
-                `, unpack(packet, assignee, field, '$_'), `
+                `, unpack(accumulate, packet, assignee, field, '$_'), `
             `)
         } else if (field.lookup) {
             lookup($lookup, assignee, field.lookup.slice())
@@ -794,15 +794,12 @@ function generate (packet, { require, bff, chk }) {
                     break
             `))
         }
-        if (field.stringify) {
-            return $(`
-                switch (String((${field.source})(${packet.name}))) {
-                `, join(cases), `
-                }
-            `)
-        }
-        return $(`
-            switch ((${field.source})(${packet.name})) {
+        const inlined = inliner(accumulate, path, [ field.select ], [])
+        const select = field.stringify
+            ? `String(${inlined.inlined.shift()})`
+            : inlined.inlined.shift()
+        return `switch (${select}) ` + $(`
+            {
             `, join(cases), `
             }
         `)

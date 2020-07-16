@@ -1,5 +1,5 @@
 module.exports = function ({ parsers }) {
-    parsers.chk.object = function () {
+    parsers.bff.object = function () {
 
 
         return function () {
@@ -14,7 +14,7 @@ module.exports = function ({ parsers }) {
                     sentry: 0
                 }
 
-                if ($end - $start < 1) {
+                if ($end - $start < 2) {
                     return parsers.inc.object(object, 1)($buffer, $start, $end)
                 }
 
@@ -22,13 +22,15 @@ module.exports = function ({ parsers }) {
 
                 object.header.type = $_ >>> 6 & 0x3
 
-                switch (($ => $.header.type)(object)){
-                case 0:
+                switch (String((({ $ }) => $.header.type)({
+                    $: object
+                }))){
+                case "0":
                     object.header.value = $_ & 0x3f
 
                     break
 
-                case 1:
+                case "1":
                     object.header.value = $_ & 0x3
 
                     break
@@ -44,10 +46,6 @@ module.exports = function ({ parsers }) {
                     object.header.value.four = $_ & 0xf
 
                     break
-                }
-
-                if ($end - $start < 1) {
-                    return parsers.inc.object(object, 3)($buffer, $start, $end)
                 }
 
                 object.sentry = ($buffer[$start++])

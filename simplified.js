@@ -19,14 +19,6 @@ function vivified (field) {
     return field.vivify
 }
 
-function trim (source) {
-    const $ = /\n(.*)}$/.exec(source)
-    if ($ != null) {
-        return source.replace(new RegExp(`^${$[1]}`, 'gm'), '')
-    }
-    return source
-}
-
 // TODO It always needs to be an array of fields because we need to be able to
 // insert checkpoints, even for ostensible fixed fields like literal.
 
@@ -718,9 +710,9 @@ function map (definitions, packet, extra = {}, packed = false) {
                     return [{
                         ...extra,
                         type: 'switch',
+                        select: { ...args(packet[0]) },
                         vivify: vivify == 'object' ? 'variant' : vivify,
                         stringify: ! Array.isArray(packet[1]),
-                        source: trim(packet[0].toString()),
                         bits: bits < 0 ? 0 : bits,
                         fixed: bits > 0,
                         cases: cases

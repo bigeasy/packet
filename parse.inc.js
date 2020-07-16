@@ -115,7 +115,7 @@ function generate (packet, { require = null }) {
         const stop = field.endianness == 'big' ? -1 : bytes
         const direction = field.endianness == 'big' ?  '--' : '++'
         const assign = field.fields
-            ? unpack(packet, path, field, '$_')
+            ? unpack(accumulate, packet, path, field, '$_')
             : field.compliment
                 ? `${path} = ${unsign('$_', field.bits)}`
                 : field.lookup
@@ -899,17 +899,23 @@ function generate (packet, { require = null }) {
             `))
             steps.push(join(when.fields.map(field => dispatch(path, field))))
         }
+        const inlined = inliner(accumulate, path, [ field.select ], [])
         const select = field.stringify
-            ? `String((${field.source})(${packet.name}))`
-            : `(${field.source})(${packet.name})`
+            ? `String(${inlined.inlined.shift()})`
+            : inlined.inlined.shift()
+        // How do you deal with this common case in programmatic? Also the
+        // problem of leading indent?
+        const switched = `switch(${select})` + $(`
+                {
+                `, join(cases), `
+                }
+        `)
         // TODO Slicing here is because of who writes the next step, which seems
         // to be somewhat confused.
         return $(`
             case ${start}:
 
-                switch (${select}) {
-                `, join(cases), `
-                }
+                `, switched, `
 
             `, join([].concat(steps.slice(steps, steps.length - 1).map(step => $(`
                 `, step, `

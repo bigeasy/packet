@@ -167,11 +167,12 @@ function generate (packet, { require = null }) {
                             break
                     `))
                 }
+                const inlined = inliner(accumulate, path, [ field.select ], [])
                 const select = field.stringify
-                    ? `String((${field.source})(${packet.name}))`
-                    : `(${field.source})(${packet.name})`
-                return $(`
-                    switch (${select}) {
+                    ? `String(${inlined.inlined.shift()})`
+                    : inlined.inlined.shift()
+                return `switch (${select}) ` + $(`
+                    {
                     `, join(cases), `
                     }
                 `)

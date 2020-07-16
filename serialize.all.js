@@ -342,7 +342,7 @@ function generate (packet, { require = null, bff, chk }) {
     function integer (path, field) {
         $step += 2
         if (field.fields) {
-            const packing = pack(packet, field, path, '$_')
+            const packing = pack(accumulate, packet, field, path, '$_')
             return $(`
                 `, packing, `
 
@@ -671,15 +671,12 @@ function generate (packet, { require = null, bff, chk }) {
                     break
             `))
         }
-        if (field.stringify) {
-            return $(`
-                switch (String((${field.source})(${packet.name}))) {
-                `, join(cases), `
-                }
-            `)
-        }
-        return $(`
-            switch ((${field.source})(${packet.name})) {
+        const inlined = inliner(accumulate, path, [ field.select ], [])
+        const select = field.stringify
+            ? `String(${inlined.inlined.shift()})`
+            : inlined.inlined.shift()
+        return `switch (${select}) ` + $(`
+            {
             `, join(cases), `
             }
         `)

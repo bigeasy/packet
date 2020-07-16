@@ -33,7 +33,7 @@ module.exports = function ({ parsers }) {
 
                     case 3:
 
-                        switch (String(($ => $.type)(object))) {
+                        switch(String(($ => $.type)(object))){
                         case "0":
 
                             object.value = {

@@ -22,13 +22,15 @@ module.exports = function ({ parsers }) {
 
                 object.header.type = $_ >>> 6 & 0x3
 
-                switch (($ => $.header.type)(object)){
-                case 0:
+                switch (String((({ $ }) => $.header.type)({
+                    $: object
+                }))){
+                case "0":
                     object.header.value = $_ & 0x3f
 
                     break
 
-                case 1:
+                case "1":
                     object.header.value = $_ & 0x3
 
                     break

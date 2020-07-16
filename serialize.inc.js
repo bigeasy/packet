@@ -67,7 +67,7 @@ function generate (packet, { require = null }) {
             lookup($lookup, path, field.lookup.slice())
         }
         const assign = field.fields
-            ? pack(packet, field, path, '$_')
+            ? pack(accumulate, packet, field, path, '$_')
             : field.lookup
                 ? `$_ = $lookup.${path}.indexOf(${path})`
                 : `$_ = ${path}`
@@ -663,17 +663,21 @@ function generate (packet, { require = null }) {
             `))
             steps.push(join(when.fields.map(field => dispatch(path, field))))
         }
+        const inlined = inliner(accumulate, path, [ field.select ], [])
         const select = field.stringify
-            ? `String((${field.source})(${packet.name}))`
-            : `(${field.source})(${packet.name})`
+            ? `String(${inlined.inlined.shift()})`
+            : inlined.inlined.shift()
         // TODO Slicing here is because of who writes the next step, which seems
         // to be somewhat confused.
+        const switched = `switch(${select})` + $(`
+                {
+                `, join(cases), `
+                }
+        `)
         return $(`
             case ${start}:
 
-                switch (${select}) {
-                `, join(cases), `
-                }
+                `, switched, `
 
             `, join([].concat(steps.slice(steps, steps.length - 1).map(step => $(`
                 `, step, `
