@@ -9,6 +9,9 @@ const $ = require('programmatic')
 // Generate accumulator declaration source.
 const accumulatorer = require('./accumulator')
 
+// Generate invocations of accumulators before conditionals.
+const accumulations = require('./accumulations')
+
 // Generate inline function source.
 const inliner = require('./inliner')
 
@@ -47,26 +50,9 @@ function generate (packet, { require = null }) {
     function dispatch (path, field) {
         switch (field.type) {
         case 'conditional': {
-                const accumulators = {}
-                field.serialize.conditions.forEach(condition => {
-                    if (condition.test == null) {
-                        return
-                    }
-                    condition.test.properties.forEach(property => {
-                        if (referenced[property]) {
-                            accumulators[property] = true
-                        }
-                    })
-                })
-                const invocations = accumulate.buffered.filter(accumulator => {
-                    return accumulator.properties.filter(property => {
-                        return referenced[property]
-                    }).length != 0
-                }).map(invocation => {
-                    return $(`
-                        `, invocation.source, `
-                        $starts[${invocation.start}] = $start
-                    `)
+                const invocations = accumulations({
+                    functions: field.serialize.conditions.map(condition => condition.test),
+                    accumulate: accumulate
                 })
                 const block = []
                 for (let i = 0, I = field.serialize.conditions.length; i < I; i++) {
@@ -89,7 +75,7 @@ function generate (packet, { require = null }) {
                     }
                 }
                 return $(`
-                    `, invocations.length != 0 ? invocations.join('\n') : null, `
+                    `, invocations, `
 
                     `, snuggle(block), `
                 `)
@@ -167,12 +153,18 @@ function generate (packet, { require = null }) {
                             break
                     `))
                 }
+                const invocations = accumulations({
+                    functions: [ field.select ],
+                    accumulate: accumulate
+                })
                 const inlined = inliner(accumulate, path, [ field.select ], [])
                 const select = field.stringify
                     ? `String(${inlined.inlined.shift()})`
                     : inlined.inlined.shift()
-                return `switch (${select}) ` + $(`
-                    {
+                return $(`
+                    `, invocations, -1, `
+
+                    switch (`, select, `) {
                     `, join(cases), `
                     }
                 `)
@@ -210,6 +202,10 @@ function generate (packet, { require = null }) {
                 const accumulators = field.accumulators
                     .filter(accumulator => referenced[accumulator.name])
                     .map(accumulator => accumulatorer(accumulate, accumulator))
+                // TODO Really want to get rid of this step if the final
+                // calcualtions are not referenced, if the argument is not an
+                // external argument and if it is not referenced again in the
+                // parse or serialize or sizeof.
                 const declarations = accumulators.length != 0
                                    ? accumulators.join('\n')
                                    : null
@@ -286,6 +282,7 @@ function generate (packet, { require = null }) {
                             referenced[property] = true
                         }
                     })
+                    condition.fields.map(dependencies)
                 })
             }
             break
@@ -294,6 +291,18 @@ function generate (packet, { require = null }) {
             }
             break
         case 'switch': {
+                if (
+                    field.select.properties.filter(property => {
+                        return /^(?:\$start|\$end)$/.test(property)
+                    }).length != 0
+                ) {
+                    buffered = true
+                }
+                field.select.properties.forEach(property => {
+                    if (references.buffered[property]) {
+                        referenced[property] = true
+                    }
+                })
                 field.cases.forEach(when => {
                     when.fields.map(dependencies)
                 })

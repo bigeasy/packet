@@ -27,7 +27,7 @@ module.exports = function ({ serializers }) {
 
                     case 2:
 
-                        switch(String(($ => $.type)(object))){
+                        switch (String(($ => $.type)(object))) {
                         case "0":
 
                             $step = 3

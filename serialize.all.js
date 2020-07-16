@@ -21,6 +21,9 @@ const $ = require('programmatic')
 // Generate accumulator declaration source.
 const accumulatorer = require('./accumulator')
 
+// Generate invocations of accumulators before conditionals.
+const accumulations = require('./accumulations')
+
 // Generate inline function source.
 const inliner = require('./inliner')
 
@@ -611,26 +614,9 @@ function generate (packet, { require = null, bff, chk }) {
 
     function conditional (path, conditional) {
         const block = []
-        const accumulators = {}
-        conditional.serialize.conditions.forEach(condition => {
-            if (condition.test == null) {
-                return
-            }
-            condition.test.properties.forEach(property => {
-                if (accumulate.accumulator[property] != null) {
-                    accumulators[property] = true
-                }
-            })
-        })
-        const invocations = accumulate.buffered.filter(accumulator => {
-            return accumulator.properties.filter(property => {
-                return accumulate.accumulator[property] != null
-            }).length != 0
-        }).map(invocation => {
-            return $(`
-                `, invocation.source, `
-                $starts[${invocation.start}] = $start
-            `)
+        const invocations = accumulations({
+            functions: conditional.serialize.conditions.map(condition => condition.test),
+            accumulate: accumulate
         })
         $step++
         for (let i = 0, I = conditional.serialize.conditions.length; i < I; i++) {
@@ -653,7 +639,7 @@ function generate (packet, { require = null, bff, chk }) {
             }
         }
         return $(`
-            `, invocations.length != 0 ? invocations.join('\n') : null, -1, `
+            `, invocations, -1, `
 
             `, snuggle(block), `
         `)
@@ -671,12 +657,18 @@ function generate (packet, { require = null, bff, chk }) {
                     break
             `))
         }
+        const invocations = accumulations({
+            functions: [ field.select ],
+            accumulate: accumulate
+        })
         const inlined = inliner(accumulate, path, [ field.select ], [])
         const select = field.stringify
             ? `String(${inlined.inlined.shift()})`
             : inlined.inlined.shift()
-        return `switch (${select}) ` + $(`
-            {
+        return $(`
+            `, invocations, -1, `
+
+            switch (`, select, `) {
             `, join(cases), `
             }
         `)

@@ -51,7 +51,7 @@ function prove (okay) {
         }
     })
     cycle(okay, {
-        name: 'accumulator/counted',
+        name: 'accumulator/conditional',
         define: {
             object: {
                 counted: [{ counter: [ 0 ] }, [[[
@@ -66,6 +66,50 @@ function prove (okay) {
                         ({ $, counter }) => $.counted.length - counter[0] == 2, 16,
                         true, 32
                     ]
+                }]],
+                sentry: 8
+            }
+        },
+        objects: [{
+            counted: {
+                length: 4 + 11 + 1,
+                string: Buffer.from('abcdefghij').toJSON().data,
+                number: 1
+            },
+            sentry: 0xaa
+        }, {
+            counted: {
+                length: 4 + 11 + 2,
+                string: Buffer.from('abcdefghij').toJSON().data,
+                number: 1
+            },
+            sentry: 0xaa
+        }, {
+            counted: {
+                length: 4 + 11 + 4,
+                string: Buffer.from('abcdefghij').toJSON().data,
+                number: 1
+            },
+            sentry: 0xaa
+        }]
+    })
+    cycle(okay, {
+        name: 'accumulator/switch',
+        define: {
+            object: {
+                counted: [{ counter: [ 0 ] }, [[[
+                    function ({ $start, $end, counter }) {
+                        counter[0] += $end - $start
+                    }
+                ]], {
+                    length: 32,
+                    string: [[ 8 ], 0x0 ],
+                    // Number occupying remaining bytes.
+                    number: [ ({ $, counter }) => $.counted.length - counter[0], [
+                        { $_: 1 }, 8,
+                        { $_: 2 }, 16,
+                        {       }, 32
+                    ]]
                 }]],
                 sentry: 8
             }

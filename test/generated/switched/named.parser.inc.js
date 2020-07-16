@@ -33,9 +33,9 @@ module.exports = function ({ parsers }) {
 
                     case 3:
 
-                        switch(String((({ $ }) => $.type)({
+                        switch (String((({ $ }) => $.type)({
                             $: object
-                        }))){
+                        }))) {
                         case "0":
 
                             $step = 4

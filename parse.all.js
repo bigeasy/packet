@@ -22,6 +22,9 @@ const lookup = require('./lookup')
 // Generate accumulator declaration source.
 const accumulatorer = require('./accumulator')
 
+// Generate invocations of accumulators before conditionals.
+const accumulations = require('./accumulations')
+
 // Generate inline function source.
 const inliner = require('./inliner')
 
@@ -679,26 +682,9 @@ function generate (packet, { require, bff, chk }) {
     }
 
     function conditional (path, field) {
-        const accumulators = {}
-        field.parse.conditions.forEach(condition => {
-            if (condition.test == null) {
-                return
-            }
-            condition.test.properties.forEach(property => {
-                if (accumulate.accumulator[property] != null) {
-                    accumulators[property] = true
-                }
-            })
-        })
-        const invocations = accumulate.buffered.filter(accumulator => {
-            return accumulator.properties.filter(property => {
-                return accumulate.accumulator[property] != null
-            }).length != 0
-        }).map(invocation => {
-            return $(`
-                `, invocation.source, `
-                $starts[${invocation.start}] = $start
-            `)
+        const invocations = accumulations({
+            functions: field.parse.conditions.map(condition => condition.test),
+            accumulate: accumulate
         })
         const signature = []
         const sip = function () {
@@ -772,7 +758,7 @@ function generate (packet, { require, bff, chk }) {
             }
         }
         return $(`
-            `, invocations.length != 0 ? invocations.join('\n') : null, -1, `
+            `, invocations, -1, `
 
             `, sip, -1, `
 
@@ -798,8 +784,14 @@ function generate (packet, { require, bff, chk }) {
         const select = field.stringify
             ? `String(${inlined.inlined.shift()})`
             : inlined.inlined.shift()
-        return `switch (${select}) ` + $(`
-            {
+        const invocations = accumulations({
+            functions: [ field.select ],
+            accumulate: accumulate
+        })
+        return $(`
+            `, invocations, -1, `
+
+            switch (`, select, `) {
             `, join(cases), `
             }
         `)

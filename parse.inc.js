@@ -26,6 +26,9 @@ const lookup = require('./lookup')
 // Generate accumulator declaration source.
 const accumulatorer = require('./accumulator')
 
+// Generate invocations of accumulators before conditionals.
+const accumulations = require('./accumulations')
+
 // Generate inline function source.
 const inliner = require('./inliner')
 
@@ -630,26 +633,9 @@ function generate (packet, { require = null }) {
                 ], 0, ${bytes.length})
             `)
         } ()
-        const accumulators = {}
-        conditional.parse.conditions.forEach(condition => {
-            if (condition.test == null) {
-                return
-            }
-            condition.test.properties.forEach(property => {
-                if (accumulate.accumulator[property] != null) {
-                    accumulators[property] = true
-                }
-            })
-        })
-        const invocations = accumulate.buffered.filter(accumulator => {
-            return accumulator.properties.filter(property => {
-                return accumulate.accumulator[property] != null
-            }).length != 0
-        }).map(invocation => {
-            return $(`
-                `, invocation.source, `
-                $starts[${invocation.start}] = $start
-            `)
+        const invocations = accumulations({
+            functions: conditional.parse.conditions.map(condition => condition.test),
+            accumulate: accumulate
         })
         signature.push(packet.name)
         const start = $step++
@@ -696,7 +682,7 @@ function generate (packet, { require = null }) {
 
             case ${start}:
 
-                `, invocations.length != 0 ? invocations.join('\n') : null, -1, `
+                `, invocations, -1, `
 
                 `, snuggle(ladder), `
 
@@ -903,19 +889,20 @@ function generate (packet, { require = null }) {
         const select = field.stringify
             ? `String(${inlined.inlined.shift()})`
             : inlined.inlined.shift()
-        // How do you deal with this common case in programmatic? Also the
-        // problem of leading indent?
-        const switched = `switch(${select})` + $(`
-                {
-                `, join(cases), `
-                }
-        `)
         // TODO Slicing here is because of who writes the next step, which seems
         // to be somewhat confused.
+        const invocations = accumulations({
+            functions: [ field.test ],
+            accumulate: accumulate
+        })
         return $(`
             case ${start}:
 
-                `, switched, `
+                `, invocations, -1, `
+
+                switch (`, select, `) {
+                `, join(cases), `
+                }
 
             `, join([].concat(steps.slice(steps, steps.length - 1).map(step => $(`
                 `, step, `
