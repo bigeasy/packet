@@ -50,12 +50,12 @@ module.exports = function ({ parsers }) {
             if ((({ $, counter }) => $.counted.length - counter[0] == 1)({
                 $: object,
                 counter: $accumulator['counter']
-            })){
+            })) {
                 object.counted.number = ($buffer[$start++])
             } else if ((({ $, counter }) => $.counted.length - counter[0] == 2)({
                 $: object,
                 counter: $accumulator['counter']
-            })){
+            })) {
                 object.counted.number =
                     ($buffer[$start++]) * 0x100 +
                     ($buffer[$start++])

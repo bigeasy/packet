@@ -32,13 +32,13 @@ module.exports = function ({ parsers }) {
 
                     case 3:
 
-                        if (((sip => sip < 251)($sip))){
+                        if ((sip => sip < 251)($sip)) {
                             $step = 4
                             parse([
                                 ($sip >>> 0) & 0xff
                             ], 0, 1)
                             continue
-                        } else if (((sip => sip == 0xfc)($sip))){
+                        } else if ((sip => sip == 0xfc)($sip)) {
                             $step = 6
                             parse([
                                 ($sip >>> 0) & 0xff

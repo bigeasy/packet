@@ -135,16 +135,16 @@ module.exports = function ({ parsers }) {
                         })
                         $starts[0] = $start
 
-                        if (((({ $, counter }) => $.counted.length - counter[0] == 1)({
+                        if ((({ $, counter }) => $.counted.length - counter[0] == 1)({
                             $: object,
                             counter: $accumulator['counter']
-                        }))){
+                        })) {
                             $step = 13
                             continue
-                        } else if (((({ $, counter }) => $.counted.length - counter[0] == 2)({
+                        } else if ((({ $, counter }) => $.counted.length - counter[0] == 2)({
                             $: object,
                             counter: $accumulator['counter']
-                        }))){
+                        })) {
                             $step = 15
                             continue
                         } else {

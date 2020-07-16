@@ -36,10 +36,6 @@ const map = require('./map')
 // Format source code maintaining indentation.
 const join = require('./join')
 
-// Join an array of strings with first line of subsequent element catenated to
-// last line of previous element.
-const snuggle = require('./snuggle')
-
 function expand (fields) {
     const expanded = []
     for (const field of fields) {
@@ -695,7 +691,7 @@ function generate (packet, { require, bff, chk }) {
             return join(field.parse.sip.map(field => dispatch(`$sip`, field)))
         } ()
         $step++
-        const ladder = []
+        let ladder = '', keywords = 'if'
         for (let i = 0, I = field.parse.conditions.length; i < I; i++) {
             const condition = field.parse.conditions[i]
             const rewind = function () {
@@ -738,31 +734,30 @@ function generate (packet, { require, bff, chk }) {
             } ()
             const vivified = vivify.assignment(path, condition)
             const source = join(condition.fields.map(field => dispatch(path, field)))
-            if (condition.test != null) {
+            ladder = condition.test != null ? function () {
                 const inline = inliner(accumulate, path, [ condition.test ], signature)
-                ladder.push(`${i == 0 ? 'if' : 'else if'} (${inline.inlined.shift()})` + $(`
-                    {
+                return $(`
+                    `, ladder, `${keywords} (`, inline.inlined.shift(), `) {
                         `, vivified, -1, `
 
                         `, source, `
                     }
-                `))
-            } else {
-                ladder.push($(`
-                    else {
-                        `, vivified, -1, `
+                `)
+            } () : $(`
+                `, ladder, ` else {
+                    `, vivified, -1, `
 
-                        `, source, `
-                    }
-                `))
-            }
+                    `, source, `
+                }
+            `)
+            keywords = ' else if'
         }
         return $(`
             `, invocations, -1, `
 
             `, sip, -1, `
 
-            `, snuggle(ladder), `
+            `, ladder, `
         `)
     }
 

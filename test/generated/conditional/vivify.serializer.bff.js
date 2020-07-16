@@ -12,13 +12,13 @@ module.exports = function ({ serializers }) {
 
                 $buffer[$start++] = (object.type & 0xff)
 
-                if (($ => $.type == 0)(object)){
+                if (($ => $.type == 0)(object)) {
                     if ($end - $start < 1) {
                         return serializers.inc.object(object, 3, $i)($buffer, $start, $end)
                     }
 
                     $buffer[$start++] = (object.value.value & 0xff)
-                } else if (($ => $.type == 1)(object)){
+                } else if (($ => $.type == 1)(object)) {
                     if ($end - $start < 1 + object.value.length * 1) {
                         return serializers.inc.object(object, 5, $i)($buffer, $start, $end)
                     }
@@ -28,7 +28,7 @@ module.exports = function ({ serializers }) {
                     for ($i[0] = 0; $i[0] < object.value.length; $i[0]++) {
                         $buffer[$start++] = (object.value[$i[0]] & 0xff)
                     }
-                } else if (($ => $.type == 2)(object)){
+                } else if (($ => $.type == 2)(object)) {
                     if ($end - $start < 1 + object.value.length * 1) {
                         return serializers.inc.object(object, 9, $i)($buffer, $start, $end)
                     }
@@ -38,7 +38,7 @@ module.exports = function ({ serializers }) {
                     }
 
                     $buffer[$start++] = 0x0
-                } else if (($ => $.type == 3)(object)){
+                } else if (($ => $.type == 3)(object)) {
                     if ($end - $start < 1 + object.value.length * 1) {
                         return serializers.inc.object(object, 14, $i)($buffer, $start, $end)
                     }
@@ -47,7 +47,7 @@ module.exports = function ({ serializers }) {
 
                     object.value.copy($buffer, $start, 0, object.value.length)
                     $start += object.value.length
-                } else if (($ => $.type == 4)(object)){
+                } else if (($ => $.type == 4)(object)) {
                     if ($end - $start < 3) {
                         return serializers.inc.object(object, 17, $i)($buffer, $start, $end)
                     }

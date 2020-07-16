@@ -40,10 +40,6 @@ const join = require('./join')
 
 const map = require('./map')
 
-// Join an array of strings with first line of subsequent element catenated to
-// last line of previous element.
-const snuggle = require('./snuggle')
-
 //
 
 // Generate an incremental parser from our AST.
@@ -646,32 +642,31 @@ function generate (packet, { require = null }) {
                 source: join(condition.fields.map(field => dispatch(path, field)))
             })
         }
-        const ladder = []
+        let ladder = '', keywords = 'if'
         for (let i = 0, I = parse.conditions.length; i < I; i++) {
             const condition = parse.conditions[i]
             const vivified = vivify.assignment(path, condition)
-            if (condition.test != null) {
+            ladder = condition.test != null ? function () {
                 const inline = inliner(accumulate, path, [ condition.test ], signature)
-                ladder.push(`${i == 0 ? 'if' : 'else if'} ((${inline.inlined.shift()}))` + $(`
-                    {
+                return $(`
+                    `, ladder, `${keywords} (`, inline.inlined.shift(), `) {
                         `, vivified, -1, `
 
                         $step = ${steps[i].number}
                         `, rewind, `
                         continue
                     }
-                `))
-            } else {
-                ladder.push($(`
-                    else {
-                        `, vivified, -1, `
+                `)
+            } () : $(`
+                `, ladder, ` else {
+                    `, vivified, -1, `
 
-                        $step = ${steps[i].number}
-                        `, rewind, `
-                        continue
-                    }
-                `))
-            }
+                    $step = ${steps[i].number}
+                    `, rewind, `
+                    continue
+                }
+            `)
+            keywords = ' else if'
         }
         const done = $(`
             $step = ${$step}
@@ -684,7 +679,7 @@ function generate (packet, { require = null }) {
 
                 `, invocations, -1, `
 
-                `, snuggle(ladder), `
+                `, ladder, `
 
             `, join(steps.map((step, i) => {
                 return $(`

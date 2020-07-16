@@ -8,9 +8,9 @@ module.exports = function ({ sizeOf }) {
             $start += 1
 
 
-            if (((_, $) => $.type == 0)(object.value, object)){
+            if (((_, $) => $.type == 0)(object.value, object)) {
                 $start += 2
-            } else if (((_, $) => $.type == 1)(object.value, object)){
+            } else if (((_, $) => $.type == 1)(object.value, object)) {
                 $start += 3
             } else {
                 $start += 4

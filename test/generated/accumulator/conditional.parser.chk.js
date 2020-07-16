@@ -63,7 +63,7 @@ module.exports = function ({ parsers }) {
                 if ((({ $, counter }) => $.counted.length - counter[0] == 1)({
                     $: object,
                     counter: $accumulator['counter']
-                })){
+                })) {
                     if ($end - $start < 1) {
                         return parsers.inc.object(object, 13, $i, $accumulator, $starts)($buffer, $start, $end)
                     }
@@ -72,7 +72,7 @@ module.exports = function ({ parsers }) {
                 } else if ((({ $, counter }) => $.counted.length - counter[0] == 2)({
                     $: object,
                     counter: $accumulator['counter']
-                })){
+                })) {
                     if ($end - $start < 2) {
                         return parsers.inc.object(object, 15, $i, $accumulator, $starts)($buffer, $start, $end)
                     }

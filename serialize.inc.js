@@ -30,10 +30,6 @@ const map = require('./map')
 // Format source code maintaining indentation.
 const join = require('./join')
 
-// Join an array of strings with first line of subsequent element catenated to
-// last line of previous element.
-const snuggle = require('./snuggle')
-
 function generate (packet, { require = null }) {
     let $step = 0, $i = -1, $$ = -1, surround = false
 
@@ -590,26 +586,25 @@ function generate (packet, { require = null }) {
                 source: join(condition.fields.map(field => dispatch(path, field)))
             })
         }
-        const ladder = []
+        let ladder = '', keywords = 'if'
         for (let i = 0, I = conditional.serialize.conditions.length; i < I; i++) {
             const condition = conditional.serialize.conditions[i]
-            if (condition.test != null) {
+            ladder = condition.test != null ? function () {
                 const registers = conditional.serialize.split ? [ path ] : []
                 const f = inliner(accumulate, path, [ condition.test ], registers)
-                ladder.push( `${i == 0 ? 'if' : 'else if'} (${f.inlined.shift()})` + $(`
-                    {
+                return $(`
+                    `, ladder, `${keywords} (`, f.inlined.shift(), `) {
                         $step = ${steps[i].step}
                         continue
                     }
-                `))
-            } else {
-                ladder.push($(`
-                    else {
-                        $step = ${steps[i].step}
-                        continue
-                    }
-                `))
-            }
+                `)
+            } () : $(`
+                `, ladder, ` else {
+                    $step = ${steps[i].step}
+                    continue
+                }
+            `)
+            keywords = ' else if'
         }
         const done = $(`
             $step = ${$step}
@@ -622,7 +617,7 @@ function generate (packet, { require = null }) {
 
                 `, invocations, -1, `
 
-                `, snuggle(ladder), `
+                `, ladder, `
 
             `, join(steps.map((step, i) => {
                 return $(`

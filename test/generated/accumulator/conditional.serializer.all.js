@@ -33,12 +33,12 @@ module.exports = function ({ serializers }) {
                 if ((({ $, counter }) => $.counted.length - counter[0] == 1)({
                     $: object,
                     counter: $accumulator['counter']
-                })){
+                })) {
                     $buffer[$start++] = (object.counted.number & 0xff)
                 } else if ((({ $, counter }) => $.counted.length - counter[0] == 2)({
                     $: object,
                     counter: $accumulator['counter']
-                })){
+                })) {
                     $buffer[$start++] = (object.counted.number >>> 8 & 0xff)
                     $buffer[$start++] = (object.counted.number & 0xff)
                 } else {

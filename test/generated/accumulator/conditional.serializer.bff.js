@@ -37,7 +37,7 @@ module.exports = function ({ serializers }) {
                 if ((({ $, counter }) => $.counted.length - counter[0] == 1)({
                     $: object,
                     counter: $accumulator['counter']
-                })){
+                })) {
                     if ($end - $start < 1) {
                         return serializers.inc.object(object, 10, $i, $accumulator, $starts)($buffer, $start, $end)
                     }
@@ -46,7 +46,7 @@ module.exports = function ({ serializers }) {
                 } else if ((({ $, counter }) => $.counted.length - counter[0] == 2)({
                     $: object,
                     counter: $accumulator['counter']
-                })){
+                })) {
                     if ($end - $start < 2) {
                         return serializers.inc.object(object, 12, $i, $accumulator, $starts)($buffer, $start, $end)
                     }

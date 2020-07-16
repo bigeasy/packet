@@ -12,11 +12,11 @@ module.exports = function ({ parsers }) {
 
             $sip = ($buffer[$start++])
 
-            if ((sip => sip < 251)($sip)){
+            if ((sip => sip < 251)($sip)) {
                 $start -= 1
 
                 object.value = ($buffer[$start++])
-            } else if ((sip => sip == 0xfc)($sip)){
+            } else if ((sip => sip == 0xfc)($sip)) {
                 object.value =
                     ($buffer[$start++]) * 0x100 +
                     ($buffer[$start++])

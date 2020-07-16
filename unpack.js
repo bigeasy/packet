@@ -1,6 +1,5 @@
 const fiddle = require('./fiddle/unpack')
 const unsign = require('./fiddle/unsign')
-const snuggle = require('./snuggle')
 const join = require('./join')
 const $ = require('programmatic')
 const { structure } = require('./vivify')
@@ -79,34 +78,33 @@ function unpack (accumulate, root, path, field, packed, offset = 0) {
             }
             break
         case 'conditional': {
-                const { conditional, path, offset } = packing, ladder = []
+                const { conditional, path, offset } = packing
+                let ladder = '', keywords = 'if'
                 for (let i = 0, I = conditional.serialize.conditions.length; i < I; i++) {
                     const condition = conditional.serialize.conditions[i]
+                    // TODO Can we use the univeral vivify here? (Ugh.)
                     const vivifyed = condition.fields[0].type == 'integer' && condition.fields[0].fields
                     const source = module.exports.call(null, accumulate, root, path, {
                         bits: bits,
                         fields: vivifyed ? condition.fields[0].fields : condition.fields
                     }, packed, offset)
                     const vivify = vivifyed ? structure(path, condition.fields[0]) : null
-                    if (condition.test != null) {
-                        ladder.push($(`
-                            ${i == 0 ? 'if' : 'else if'} ((${condition.test.source})(${root.name})) {
-                                `, vivify, -1, `
+                    ladder = condition.test != null ? $(`
+                        `, ladder, `${keywords} ((${condition.test.source})(${root.name})) {
+                            `, vivify, -1, `
 
-                                `, source, `
-                            }
-                        `))
-                    } else {
-                        ladder.push($(`
-                            else {
-                                `, vivify, -1, `
+                            `, source, `
+                        }
+                    `) : $(`
+                        `, ladder, ` else {
+                            `, vivify, -1, `
 
-                                `, source, `
-                            }
-                        `))
-                    }
+                            `, source, `
+                        }
+                    `)
+                    keywords = ' else if'
                 }
-                blocks.push(snuggle(ladder))
+                blocks.push(ladder)
             }
             break
         case 'switch': {

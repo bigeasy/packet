@@ -21,10 +21,6 @@ const required = require('./required')
 // Join an array of strings separated by an empty line.
 const join = require('./join')
 
-// Join an array of strings with first line of subsequent element catenated to
-// last line of previous element.
-const snuggle = require('./snuggle')
-
 //
 
 // Generate sizeof function for a given packet definition.
@@ -54,30 +50,29 @@ function generate (packet, { require = null }) {
                     functions: field.serialize.conditions.map(condition => condition.test),
                     accumulate: accumulate
                 })
-                const block = []
+                let ladder = '', keywords = 'if'
                 for (let i = 0, I = field.serialize.conditions.length; i < I; i++) {
                     const condition = field.serialize.conditions[i]
                     const source = join(condition.fields.map(dispatch.bind(null, path)))
-                    if (condition.test != null) {
+                    ladder = condition.test != null ? function () {
                         const registers = field.serialize.split ? [ path ] : []
-                        const inlined = inliner(accumulate, path, [ condition.test ], registers)
-                        block.push(`${i == 0 ? 'if' : 'else if'} (${inlined.inlined.shift()})` + $(`
-                            {
+                        const inline = inliner(accumulate, path, [ condition.test ], registers)
+                        return $(`
+                            `, ladder, `${keywords} (`, inline.inlined.shift(), `) {
                                 `, source, `
                             }
-                        `))
-                    } else {
-                        block.push($(`
-                            else {
-                                `, source, `
-                            }
-                        `))
-                    }
+                        `)
+                    } () : $(`
+                        `, ladder, ` else {
+                            `, source, `
+                        }
+                    `)
+                    keywords = ' else if'
                 }
                 return $(`
                     `, invocations, `
 
-                    `, snuggle(block), `
+                    `, ladder, `
                 `)
             }
         case 'literal':

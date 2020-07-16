@@ -11,11 +11,11 @@ module.exports = function ({ parsers }) {
 
             object.type = ($buffer[$start++])
 
-            if (($ => $.type == 0)(object)){
+            if (($ => $.type == 0)(object)) {
                 object.value =
                     ($buffer[$start++]) * 0x100 +
                     ($buffer[$start++])
-            } else if (($ => $.type == 1)(object)){
+            } else if (($ => $.type == 1)(object)) {
                 object.value =
                     ($buffer[$start++]) * 0x10000 +
                     ($buffer[$start++]) * 0x100 +

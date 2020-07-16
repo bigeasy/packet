@@ -1,5 +1,4 @@
 const $ = require('programmatic')
-const snuggle = require('./snuggle')
 const join = require('./join')
 
 // Generate inline function source.
@@ -78,7 +77,8 @@ function subPack (accumulate, root, path, bits, offset, fields) {
             }
             break
         case 'conditional': {
-                const { conditional, path, assignment } = field, ladder = []
+                const { conditional, path, assignment } = field
+                let ladder = '', keywords = 'if'
                 for (let i = 0, I = conditional.serialize.conditions.length; i < I; i++) {
                     const condition = conditional.serialize.conditions[i]
                     const source = module.exports.call(null, accumulate, root, {
@@ -87,22 +87,19 @@ function subPack (accumulate, root, path, bits, offset, fields) {
                               ? condition.fields[0].fields
                               : condition.fields
                     }, path, '$_', assignment, offset)
-                    if (condition.test != null) {
-                        ladder.push($(`
-                            ${i == 0 ? 'if' : 'else if'} ((${condition.test.source})(${root.name})) {
-                                `, source, `
-                            }
-                        `))
-                    } else {
-                        ladder.push($(`
-                            else {
-                                `, source, `
-                            }
-                        `))
-                    }
+                    ladder = condition.test != null ? $(`
+                        `, ladder, `${keywords} ((${condition.test.source})(${root.name})) {
+                            `, source, `
+                        }
+                    `) : $(`
+                        `, ladder, ` else {
+                            `, source, `
+                        }
+                    `)
+                    keywords = ' else if'
                 }
                 offset += conditional.bits
-                packed.unshift(snuggle(ladder))
+                packed.unshift(ladder)
             }
             break
         case 'switch': {

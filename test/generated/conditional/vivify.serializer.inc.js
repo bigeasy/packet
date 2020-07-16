@@ -27,19 +27,19 @@ module.exports = function ({ serializers }) {
 
                     case 2:
 
-                        if (($ => $.type == 0)(object)){
+                        if (($ => $.type == 0)(object)) {
                             $step = 3
                             continue
-                        } else if (($ => $.type == 1)(object)){
+                        } else if (($ => $.type == 1)(object)) {
                             $step = 5
                             continue
-                        } else if (($ => $.type == 2)(object)){
+                        } else if (($ => $.type == 2)(object)) {
                             $step = 9
                             continue
-                        } else if (($ => $.type == 3)(object)){
+                        } else if (($ => $.type == 3)(object)) {
                             $step = 14
                             continue
-                        } else if (($ => $.type == 4)(object)){
+                        } else if (($ => $.type == 4)(object)) {
                             $step = 17
                             continue
                         } else {

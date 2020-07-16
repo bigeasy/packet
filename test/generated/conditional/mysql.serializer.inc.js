@@ -10,10 +10,10 @@ module.exports = function ({ serializers }) {
                     switch ($step) {
                     case 0:
 
-                        if ((value => value < 251)(object.value)){
+                        if ((value => value < 251)(object.value)) {
                             $step = 1
                             continue
-                        } else if ((value => value >= 251 && value < 2 ** 16)(object.value)){
+                        } else if ((value => value >= 251 && value < 2 ** 16)(object.value)) {
                             $step = 3
                             continue
                         } else {

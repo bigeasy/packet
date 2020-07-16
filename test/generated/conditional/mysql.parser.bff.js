@@ -17,7 +17,7 @@ module.exports = function ({ parsers }) {
 
                 $sip = ($buffer[$start++])
 
-                if ((sip => sip < 251)($sip)){
+                if ((sip => sip < 251)($sip)) {
                     if ($end - ($start - 1) < 1) {
                         return parsers.inc.object(object, 4, $sip)($buffer, $start - 1, $end)
                     }
@@ -25,7 +25,7 @@ module.exports = function ({ parsers }) {
                     $start -= 1
 
                     object.value = ($buffer[$start++])
-                } else if ((sip => sip == 0xfc)($sip)){
+                } else if ((sip => sip == 0xfc)($sip)) {
                     if ($end - ($start - 1) < 3) {
                         return parsers.inc.object(object, 6, $sip)($buffer, $start - 1, $end)
                     }

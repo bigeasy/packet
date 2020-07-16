@@ -116,13 +116,13 @@ module.exports = function ({ serializers }) {
                         if ((({ $, counter }) => $.counted.length - counter[0] == 1)({
                             $: object,
                             counter: $accumulator['counter']
-                        })){
+                        })) {
                             $step = 10
                             continue
                         } else if ((({ $, counter }) => $.counted.length - counter[0] == 2)({
                             $: object,
                             counter: $accumulator['counter']
-                        })){
+                        })) {
                             $step = 12
                             continue
                         } else {

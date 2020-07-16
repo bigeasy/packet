@@ -18,7 +18,7 @@ module.exports = function ({ parsers }) {
 
                 object.type = ($buffer[$start++])
 
-                if (($ => $.type == 0)(object)){
+                if (($ => $.type == 0)(object)) {
                     object.value = {
                         value: 0
                     }
@@ -28,7 +28,7 @@ module.exports = function ({ parsers }) {
                     }
 
                     object.value.value = ($buffer[$start++])
-                } else if (($ => $.type == 1)(object)){
+                } else if (($ => $.type == 1)(object)) {
                     object.value = []
 
                     if ($end - $start < 1) {
@@ -45,7 +45,7 @@ module.exports = function ({ parsers }) {
                     for (; $i[0] < $I[0]; $i[0]++) {
                         object.value[$i[0]] = ($buffer[$start++])
                     }
-                } else if (($ => $.type == 2)(object)){
+                } else if (($ => $.type == 2)(object)) {
                     object.value = []
 
                     $i[0] = 0
@@ -69,7 +69,7 @@ module.exports = function ({ parsers }) {
 
                         $i[0]++
                     }
-                } else if (($ => $.type == 3)(object)){
+                } else if (($ => $.type == 3)(object)) {
                     object.value = []
 
                     if ($end - $start < 1) {
@@ -84,7 +84,7 @@ module.exports = function ({ parsers }) {
 
                     object.value = $buffer.slice($start, $start + $I[0])
                     $start += $I[0]
-                } else if (($ => $.type == 4)(object)){
+                } else if (($ => $.type == 4)(object)) {
                     object.value = []
 
                     if ($end - $start < 3) {

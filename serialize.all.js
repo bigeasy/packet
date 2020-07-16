@@ -33,10 +33,6 @@ const required = require('./required')
 // Format source code maintaining indentation.
 const join = require('./join')
 
-// Join an array of strings with first line of subsequent element catenated to
-// last line of previous element.
-const snuggle = require('./snuggle')
-
 // Add implicit field definitions to the given array of field definitions.
 // Specifically, we split length-encoded arrays into separate nodes for the
 // encoding and the array body, and terminated arrays into separate nodes for
@@ -619,29 +615,29 @@ function generate (packet, { require = null, bff, chk }) {
             accumulate: accumulate
         })
         $step++
+        let ladder = '', keywords = 'if'
         for (let i = 0, I = conditional.serialize.conditions.length; i < I; i++) {
             const condition = conditional.serialize.conditions[i]
             const source = join(condition.fields.map(field => dispatch(path, field)))
-            if (condition.test != null) {
+            ladder = condition.test != null ? function () {
                 const registers = conditional.serialize.split ? [ path ] : []
                 const f = inliner(accumulate, path, [ condition.test ], registers)
-                block.push(`${i == 0 ? 'if' : 'else if'} (${f.inlined.shift()})` + $(`
-                    {
+                return $(`
+                    `, ladder, `${keywords} (`, f.inlined.shift() ,`) {
                         `, source, `
                     }
-                `))
-            } else {
-                block.push($(`
-                    else {
-                        `, source, `
-                    }
-                `))
-            }
+                `)
+            } () : $(`
+                `, ladder, ` else {
+                    `, source, `
+                }
+            `)
+            keywords = ' else if'
         }
         return $(`
             `, invocations, -1, `
 
-            `, snuggle(block), `
+            `, ladder, `
         `)
     }
 

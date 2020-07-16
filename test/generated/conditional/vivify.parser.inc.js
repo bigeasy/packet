@@ -34,29 +34,29 @@ module.exports = function ({ parsers }) {
 
                     case 3:
 
-                        if ((($ => $.type == 0)(object))){
+                        if (($ => $.type == 0)(object)) {
                             object.value = {
                                 value: 0
                             }
 
                             $step = 4
                             continue
-                        } else if ((($ => $.type == 1)(object))){
+                        } else if (($ => $.type == 1)(object)) {
                             object.value = []
 
                             $step = 6
                             continue
-                        } else if ((($ => $.type == 2)(object))){
+                        } else if (($ => $.type == 2)(object)) {
                             object.value = []
 
                             $step = 11
                             continue
-                        } else if ((($ => $.type == 3)(object))){
+                        } else if (($ => $.type == 3)(object)) {
                             object.value = []
 
                             $step = 18
                             continue
-                        } else if ((($ => $.type == 4)(object))){
+                        } else if (($ => $.type == 4)(object)) {
                             object.value = []
 
                             $step = 21

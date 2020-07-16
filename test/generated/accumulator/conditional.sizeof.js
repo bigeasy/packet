@@ -25,12 +25,12 @@ module.exports = function ({ sizeOf }) {
             if ((({ $, counter }) => $.counted.length - counter[0] == 1)({
                 $: object,
                 counter: $accumulator['counter']
-            })){
+            })) {
                 $start += 1
             } else if ((({ $, counter }) => $.counted.length - counter[0] == 2)({
                 $: object,
                 counter: $accumulator['counter']
-            })){
+            })) {
                 $start += 2
             } else {
                 $start += 4
