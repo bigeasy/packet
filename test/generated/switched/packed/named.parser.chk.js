@@ -24,7 +24,7 @@ module.exports = function ({ parsers }) {
 
                 switch (String((({ $ }) => $.header.type)({
                     $: object
-                }))){
+                }))) {
                 case "0":
                     object.header.value = $_ & 0x3f
 

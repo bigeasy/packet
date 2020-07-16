@@ -11,7 +11,7 @@ module.exports = function ({ serializers }) {
 
                 switch (String((({ $ }) => $.header.type)({
                     $: object
-                }))){
+                }))) {
                 case "0":
 
                     $_ |=

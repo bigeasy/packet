@@ -127,8 +127,8 @@ function subPack (accumulate, root, path, bits, offset, fields) {
                 const select = switched.stringify
                     ? `String(${inlined.inlined.shift()})`
                     : inlined.inlined.shift()
-                packed.unshift(`switch (${select})` + $(`
-                    {
+                packed.unshift($(`
+                    switch (`, select ,`) {
                     `, join(cases), `
                     }
                 `))

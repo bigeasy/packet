@@ -132,8 +132,8 @@ function unpack (accumulate, root, path, field, packed, offset = 0) {
                 const select = switched.stringify
                     ? `String(${inlined.inlined.shift()})`
                     : inlined.inlined.shift()
-                blocks.push(`switch (${select})` + $(`
-                    {
+                blocks.push($(`
+                    switch (`, select, `) {
                     `, join(cases), `
                     }
                 `))
