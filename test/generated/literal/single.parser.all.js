@@ -1,7 +1,5 @@
 module.exports = function ({ parsers }) {
     parsers.all.object = function () {
-
-
         return function ($buffer, $start) {
             let object = {
                 padded: 0,

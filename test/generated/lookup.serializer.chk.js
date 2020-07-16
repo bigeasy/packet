@@ -1,7 +1,5 @@
 module.exports = function ({ serializers }) {
     serializers.chk.object = function () {
-
-
         const $lookup = {
             "object": {
                 "value": [

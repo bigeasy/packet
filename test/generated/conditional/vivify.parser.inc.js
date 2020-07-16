@@ -1,7 +1,5 @@
 module.exports = function ({ parsers }) {
     parsers.inc.object = function () {
-
-
         return function (object, $step = 0, $i = [], $I = []) {
             let $_, $bite, $length = 0, $index = 0, $buffers = []
 

@@ -2,7 +2,7 @@
 const util = require('util')
 
 module.exports = function (required) {
-    return required != null
+    return Object.keys(required).length != 0
         ? Object.keys(required).map(name => {
             for (const name in required) {
                 switch (typeof required[name]) {

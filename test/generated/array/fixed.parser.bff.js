@@ -1,7 +1,5 @@
 module.exports = function ({ parsers }) {
     parsers.bff.object = function () {
-
-
         return function () {
             return function parse ($buffer, $start, $end) {
                 let $i = [], $I = []

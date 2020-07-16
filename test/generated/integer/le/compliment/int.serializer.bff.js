@@ -1,7 +1,5 @@
 module.exports = function ({ serializers }) {
     serializers.bff.object = function () {
-
-
         return function (object) {
             return function ($buffer, $start, $end) {
                 if ($end - $start < 4) {

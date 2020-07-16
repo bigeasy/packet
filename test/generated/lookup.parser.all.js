@@ -1,7 +1,5 @@
 module.exports = function ({ parsers }) {
     parsers.all.object = function () {
-
-
         const $lookup = {
             "object": {
                 "value": [

@@ -1,7 +1,5 @@
 module.exports = function ({ serializers }) {
     serializers.inc.object = function () {
-
-
         return function (object, $step = 0, $i = [], $accumulator = {}, $starts = []) {
             let $_, $bite, $restart = false
 

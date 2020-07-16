@@ -1,7 +1,5 @@
 module.exports = function ({ serializers }) {
     serializers.all.object = function () {
-
-
         return function (object) {
             return function ($buffer, $start, $end) {
                 $buffer.write("0faded", $start, $start + 3, 'hex')
