@@ -76,7 +76,7 @@ function prove (okay) {
         }]
     })
     cycle(okay, {
-        name: 'conditional/packed',
+        name: 'conditional/packed/positional',
         define: {
             object: {
                 header: [{
@@ -85,6 +85,58 @@ function prove (okay) {
                         $ => $.header.flag == 0, 6,
                         $ => $.header.flag == 1, [ 'a', 2 ],
                         $ => $.header.flag == 2, [{
+                            two: 2,
+                            four: 4
+                        }, 6 ],
+                        true, [{
+                            one: 1,
+                            five: 5
+                        }, 6 ]
+                    ]
+                }, 8 ],
+                sentry: 8
+            }
+        },
+        objects: [{
+            header: {
+                flag: 0, value: 0x2a
+            },
+            sentry: 0xaa
+        }, {
+            header: {
+                flag: 1, value: 3
+            },
+            sentry: 8
+        }, {
+            header: {
+                flag: 2,
+                value: {
+                    two: 2,
+                    four: 10
+                }
+            },
+            sentry: 0xaa
+        }, {
+            header: {
+                flag: 3,
+                value: {
+                    one: 1,
+                    five: 0x13
+                }
+            },
+            sentry: 0xaa
+        }]
+    })
+    cycle(okay, {
+        name: 'conditional/packed/named',
+        define: {
+            object: {
+                header: [{
+                    flag: 2,
+                    value: [
+                        ({ $ }) => $.header.flag == 0, 6,
+                        ({ $ }) => $.header.flag == 1, [ 'a', 2 ],
+                        ({ $ }) => $.header.flag == 2, [{
                             two: 2,
                             four: 4
                         }, 6 ],

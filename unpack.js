@@ -89,13 +89,16 @@ function unpack (accumulate, root, path, field, packed, offset = 0) {
                         fields: vivifyed ? condition.fields[0].fields : condition.fields
                     }, packed, offset)
                     const vivify = vivifyed ? structure(path, condition.fields[0]) : null
-                    ladder = condition.test != null ? $(`
-                        `, ladder, `${keywords} ((${condition.test.source})(${root.name})) {
-                            `, vivify, -1, `
+                    ladder = condition.test != null ? function () {
+                        const inline = inliner(accumulate, path, [ condition.test ], [])
+                        return $(`
+                            `, ladder, `${keywords} (`, inline.inlined.shift(), `) {
+                                `, vivify, -1, `
 
-                            `, source, `
-                        }
-                    `) : $(`
+                                `, source, `
+                            }
+                        `)
+                    } () : $(`
                         `, ladder, ` else {
                             `, vivify, -1, `
 

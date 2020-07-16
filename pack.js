@@ -87,11 +87,14 @@ function subPack (accumulate, root, path, bits, offset, fields) {
                               ? condition.fields[0].fields
                               : condition.fields
                     }, path, '$_', assignment, offset)
-                    ladder = condition.test != null ? $(`
-                        `, ladder, `${keywords} ((${condition.test.source})(${root.name})) {
-                            `, source, `
-                        }
-                    `) : $(`
+                    ladder = condition.test != null ? function () {
+                        const inline = inliner(accumulate, path, [ condition.test ], [])
+                        return $(`
+                            `, ladder, `${keywords} (`, inline.inlined.shift(), `) {
+                                `, source, `
+                            }
+                        `)
+                    } () : $(`
                         `, ladder, ` else {
                             `, source, `
                         }
