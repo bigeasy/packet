@@ -3,7 +3,7 @@ module.exports = function ({ serializers }) {
         return function (object, $step = 0, $i = []) {
             let $_, $bite, $copied = 0
 
-            return function serialize ($buffer, $start, $end) {
+            return function $serialize ($buffer, $start, $end) {
                 for (;;) {
                     switch ($step) {
                     case 0:
@@ -16,7 +16,7 @@ module.exports = function ({ serializers }) {
 
                         while ($bite != -1) {
                             if ($start == $end) {
-                                return { start: $start, serialize }
+                                return { start: $start, serialize: $serialize }
                             }
                             $buffer[$start++] = ($_ >>> $bite * 8 & 0xff)
                             $bite--
@@ -55,7 +55,7 @@ module.exports = function ({ serializers }) {
 
                         while ($bite != -1) {
                             if ($start == $end) {
-                                return { start: $start, serialize }
+                                return { start: $start, serialize: $serialize }
                             }
                             $buffer[$start++] = ($_ >>> $bite * 8 & 0xff)
                             $bite--
@@ -75,7 +75,7 @@ module.exports = function ({ serializers }) {
 
                         while ($bite != -1) {
                             if ($start == $end) {
-                                return { start: $start, serialize }
+                                return { start: $start, serialize: $serialize }
                             }
                             $buffer[$start++] = ($_ >>> $bite * 8 & 0xff)
                             $bite--
@@ -93,7 +93,7 @@ module.exports = function ({ serializers }) {
 
                         while ($bite != -1) {
                             if ($start == $end) {
-                                return { start: $start, serialize }
+                                return { start: $start, serialize: $serialize }
                             }
                             $buffer[$start++] = ($_ >>> $bite * 8 & 0xff)
                             $bite--
@@ -123,7 +123,7 @@ module.exports = function ({ serializers }) {
 
                         while ($bite != -1) {
                             if ($start == $end) {
-                                return { start: $start, serialize }
+                                return { start: $start, serialize: $serialize }
                             }
                             $buffer[$start++] = ($_ >>> $bite * 8 & 0xff)
                             $bite--
@@ -139,7 +139,7 @@ module.exports = function ({ serializers }) {
                     case 12:
 
                         if ($start == $end) {
-                            return { start: $start, serialize }
+                            return { start: $start, serialize: $serialize }
                         }
 
                         $buffer[$start++] = 0x0
@@ -161,7 +161,7 @@ module.exports = function ({ serializers }) {
 
                         while ($bite != -1) {
                             if ($start == $end) {
-                                return { start: $start, serialize }
+                                return { start: $start, serialize: $serialize }
                             }
                             $buffer[$start++] = ($_ >>> $bite * 8 & 0xff)
                             $bite--
@@ -176,7 +176,7 @@ module.exports = function ({ serializers }) {
                         $start += $bytes
 
                         if ($copied != object.value.length) {
-                            return { start: $start, serialize }
+                            return { start: $start, serialize: $serialize }
                         }
 
                         $copied = 0
@@ -203,7 +203,7 @@ module.exports = function ({ serializers }) {
 
                         while ($bite != -1) {
                             if ($start == $end) {
-                                return { start: $start, serialize }
+                                return { start: $start, serialize: $serialize }
                             }
                             $buffer[$start++] = ($_ >>> $bite * 8 & 0xff)
                             $bite--
@@ -233,7 +233,7 @@ module.exports = function ({ serializers }) {
                             $_ += length
 
                             if ($_ != object.value.length) {
-                                return { start: $start, serialize }
+                                return { start: $start, serialize: $serialize }
                             }
 
                             $step = 22
@@ -250,7 +250,7 @@ module.exports = function ({ serializers }) {
 
                         while ($bite != -1) {
                             if ($start == $end) {
-                                return { start: $start, serialize }
+                                return { start: $start, serialize: $serialize }
                             }
                             $buffer[$start++] = ($_ >>> $bite * 8 & 0xff)
                             $bite--

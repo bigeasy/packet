@@ -908,7 +908,7 @@ function generate (packet, { require, bff, chk }) {
                 `, lookups, -1, `
 
                 return function () {
-                    return function parse ($buffer, $start, $end) {
+                    return function ($buffer, $start, $end) {
                         `, lets.length ? `let ${lets.join(', ')}` : null, -1, `
 
                         `, vivify.structure(`let ${packet.name}`, packet), `

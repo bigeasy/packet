@@ -3,7 +3,7 @@ module.exports = function ({ serializers }) {
         return function (object, $step = 0) {
             let $_, $bite
 
-            return function serialize ($buffer, $start, $end) {
+            return function $serialize ($buffer, $start, $end) {
                 switch ($step) {
                 case 0:
 
@@ -15,7 +15,7 @@ module.exports = function ({ serializers }) {
 
                     while ($bite != -1n) {
                         if ($start == $end) {
-                            return { start: $start, serialize }
+                            return { start: $start, serialize: $serialize }
                         }
                         $buffer[$start++] = Number($_ >> $bite * 8n & 0xffn)
                         $bite--

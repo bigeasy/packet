@@ -3,7 +3,7 @@ module.exports = function ({ parsers }) {
         return function (object, $step = 0, $i = []) {
             let $_, $bite, $buffers = [], $length = 0
 
-            return function parse ($buffer, $start, $end) {
+            return function $parse ($buffer, $start, $end) {
                 for (;;) {
                     switch ($step) {
                     case 0:
@@ -23,7 +23,7 @@ module.exports = function ({ parsers }) {
                     case 2:
 
                         if ($start == $end) {
-                            return { start: $start, object: null, parse }
+                            return { start: $start, object: null, parse: $parse }
                         }
 
                         object.nudge = $buffer[$start++]
@@ -63,7 +63,7 @@ module.exports = function ({ parsers }) {
                         } else {
                             $_ += $end - $start
                             $buffers.push($buffer.slice($start))
-                            return { start: $end, parse }
+                            return { start: $end, object: null, parse: $parse }
                         }
 
                         $step = 5
@@ -74,7 +74,7 @@ module.exports = function ({ parsers }) {
                     case 5:
 
                         if ($start == $end) {
-                            return { start: $start, parse }
+                            return { start: $start, object: null, parse: $parse }
                         }
 
                         if ($buffer[$start++] != 0xb) {
@@ -103,7 +103,7 @@ module.exports = function ({ parsers }) {
                         $_ -= length
 
                         if ($_ != 0) {
-                            return { start: $start, parse }
+                            return { start: $start, object: null, parse: $parse }
                         }
 
                         $step = 8
@@ -117,7 +117,7 @@ module.exports = function ({ parsers }) {
                     case 9:
 
                         if ($start == $end) {
-                            return { start: $start, object: null, parse }
+                            return { start: $start, object: null, parse: $parse }
                         }
 
                         object.sentry = $buffer[$start++]

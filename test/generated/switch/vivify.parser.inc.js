@@ -3,7 +3,7 @@ module.exports = function ({ parsers }) {
         return function (object, $step = 0, $i = [], $I = []) {
             let $_, $bite, $length = 0, $index = 0, $buffers = []
 
-            return function parse ($buffer, $start, $end) {
+            return function $parse ($buffer, $start, $end) {
                 for (;;) {
                     switch ($step) {
                     case 0:
@@ -23,7 +23,7 @@ module.exports = function ({ parsers }) {
                     case 2:
 
                         if ($start == $end) {
-                            return { start: $start, object: null, parse }
+                            return { start: $start, object: null, parse: $parse }
                         }
 
                         object.type = $buffer[$start++]
@@ -82,7 +82,7 @@ module.exports = function ({ parsers }) {
                     case 5:
 
                         if ($start == $end) {
-                            return { start: $start, object: null, parse }
+                            return { start: $start, object: null, parse: $parse }
                         }
 
                         object.value.value = $buffer[$start++]
@@ -97,7 +97,7 @@ module.exports = function ({ parsers }) {
                     case 7:
 
                         if ($start == $end) {
-                            return { start: $start, object: null, parse }
+                            return { start: $start, object: null, parse: $parse }
                         }
 
                         $I[0] = $buffer[$start++]
@@ -113,7 +113,7 @@ module.exports = function ({ parsers }) {
                     case 10:
 
                         if ($start == $end) {
-                            return { start: $start, object: null, parse }
+                            return { start: $start, object: null, parse: $parse }
                         }
 
                         object.value[$i[0]] = $buffer[$start++]
@@ -134,7 +134,7 @@ module.exports = function ({ parsers }) {
                         $step = 12
 
                         if ($start == $end) {
-                            return { start: $start, parse }
+                            return { start: $start, object: null, parse: $parse }
                         }
 
                         if ($buffer[$start] == 0x0) {
@@ -155,7 +155,7 @@ module.exports = function ({ parsers }) {
                     case 15:
 
                         if ($start == $end) {
-                            return { start: $start, object: null, parse }
+                            return { start: $start, object: null, parse: $parse }
                         }
 
                         object.value[$i[0]] = $buffer[$start++]
@@ -181,7 +181,7 @@ module.exports = function ({ parsers }) {
                     case 19:
 
                         if ($start == $end) {
-                            return { start: $start, object: null, parse }
+                            return { start: $start, object: null, parse: $parse }
                         }
 
                         $I[0] = $buffer[$start++]
@@ -197,7 +197,7 @@ module.exports = function ({ parsers }) {
                         $start += $length
 
                         if ($index != $I[0]) {
-                            return { start: $start, parse }
+                            return { start: $start, parse: $parse }
                         }
 
                         object.value = $buffers.length == 1 ? $buffers[0] : Buffer.concat($buffers)
@@ -222,7 +222,7 @@ module.exports = function ({ parsers }) {
                     case 24:
 
                         if ($start == $end) {
-                            return { start: $start, object: null, parse }
+                            return { start: $start, object: null, parse: $parse }
                         }
 
                         object.value[$i[0]] = $buffer[$start++]
@@ -257,7 +257,7 @@ module.exports = function ({ parsers }) {
                         $_ += length
 
                         if ($_ != 3) {
-                            return { start: $start, parse }
+                            return { start: $start, object: null, parse: $parse }
                         }
 
                         object.value = $buffers.length == 1 ? $buffers[0] : Buffer.concat($buffers)
@@ -274,7 +274,7 @@ module.exports = function ({ parsers }) {
                     case 29:
 
                         if ($start == $end) {
-                            return { start: $start, object: null, parse }
+                            return { start: $start, object: null, parse: $parse }
                         }
 
                         object.sentry = $buffer[$start++]

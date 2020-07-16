@@ -3,7 +3,7 @@ module.exports = function ({ parsers }) {
         return function (object, $step = 0, $i = [], $accumulator = [], $starts = []) {
             let $_, $bite, $restart = false, $length = 0
 
-            return function parse ($buffer, $start, $end) {
+            return function $parse ($buffer, $start, $end) {
                 if ($restart) {
                     for (let $j = 0; $j < $starts.length; $j++) {
                         $starts[$j] = $start
@@ -51,7 +51,7 @@ module.exports = function ({ parsers }) {
                                     $end: $start,
                                     counter: $accumulator['counter']
                                 })
-                                return { start: $start, object: null, parse }
+                                return { start: $start, object: null, parse: $parse }
                             }
                             $_ += ($buffer[$start++]) << $bite * 8 >>> 0
                             $bite--
@@ -76,7 +76,7 @@ module.exports = function ({ parsers }) {
                                 $end: $start,
                                 counter: $accumulator['counter']
                             })
-                            return { start: $start, parse }
+                            return { start: $start, object: null, parse: $parse }
                         }
 
                         if ($buffer[$start] == 0x0) {
@@ -104,7 +104,7 @@ module.exports = function ({ parsers }) {
                                 $end: $start,
                                 counter: $accumulator['counter']
                             })
-                            return { start: $start, object: null, parse }
+                            return { start: $start, object: null, parse: $parse }
                         }
 
                         object.counted.string[$i[0]] = $buffer[$start++]
@@ -164,7 +164,7 @@ module.exports = function ({ parsers }) {
                                 $end: $start,
                                 counter: $accumulator['counter']
                             })
-                            return { start: $start, object: null, parse }
+                            return { start: $start, object: null, parse: $parse }
                         }
 
                         object.counted.number = $buffer[$start++]
@@ -190,7 +190,7 @@ module.exports = function ({ parsers }) {
                                     $end: $start,
                                     counter: $accumulator['counter']
                                 })
-                                return { start: $start, object: null, parse }
+                                return { start: $start, object: null, parse: $parse }
                             }
                             $_ += ($buffer[$start++]) << $bite * 8 >>> 0
                             $bite--
@@ -219,7 +219,7 @@ module.exports = function ({ parsers }) {
                                     $end: $start,
                                     counter: $accumulator['counter']
                                 })
-                                return { start: $start, object: null, parse }
+                                return { start: $start, object: null, parse: $parse }
                             }
                             $_ += ($buffer[$start++]) << $bite * 8 >>> 0
                             $bite--
@@ -242,7 +242,7 @@ module.exports = function ({ parsers }) {
                     case 20:
 
                         if ($start == $end) {
-                            return { start: $start, object: null, parse }
+                            return { start: $start, object: null, parse: $parse }
                         }
 
                         object.sentry = $buffer[$start++]

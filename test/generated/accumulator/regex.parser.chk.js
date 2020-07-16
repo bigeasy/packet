@@ -3,7 +3,7 @@ module.exports = function ({ parsers }) {
         const assert = require('assert')
 
         return function () {
-            return function parse ($buffer, $start, $end) {
+            return function ($buffer, $start, $end) {
                 let $accumulator = {}
 
                 let object = {

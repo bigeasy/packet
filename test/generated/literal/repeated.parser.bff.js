@@ -1,7 +1,7 @@
 module.exports = function ({ parsers }) {
     parsers.bff.object = function () {
         return function () {
-            return function parse ($buffer, $start, $end) {
+            return function ($buffer, $start, $end) {
                 let object = {
                     padded: 0,
                     sentry: 0

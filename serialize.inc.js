@@ -86,7 +86,7 @@ function generate (packet, { require = null }) {
                 while ($bite != ${stop}${cast.suffix}) {
                     if ($start == $end) {
                         `, buffered.length != 0 ? buffered.join('\n') : null, `
-                        return { start: $start, serialize }
+                        return { start: $start, serialize: $serialize }
                     }
                     $buffer[$start++] = ${cast.from}($_ ${cast.shift} $bite * 8${cast.suffix} & 0xff${cast.suffix})
                     $bite${direction}
@@ -117,7 +117,7 @@ function generate (packet, { require = null }) {
 
                         while ($bite != ${literal.value.length >>> 1}) {
                             if ($start == $end) {
-                                return { start: $start, serialize }
+                                return { start: $start, serialize: $serialize }
                             }
                             $buffer[$start++] = $_[$bite++]
                         }
@@ -184,7 +184,7 @@ function generate (packet, { require = null }) {
 
                     if ($copied != ${path}.length) {
                         `, buffered, `
-                        return { start: $start, serialize }
+                        return { start: $start, serialize: $serialize }
                     }
 
                     $copied = 0
@@ -212,7 +212,7 @@ function generate (packet, { require = null }) {
                         $start += $bytes
                         if ($start == $end) {
                             `, buffered, `
-                            return { start: $start, serialize }
+                            return { start: $start, serialize: $serialize }
                         }
                         if ($offset == ${path}[$index].length) {
                             $index++
@@ -267,7 +267,7 @@ function generate (packet, { require = null }) {
 
                     if ($start == $end) {
                         `, buffered.length != 0 ? buffered.join('\n') : null, `
-                        return { start: $start, serialize }
+                        return { start: $start, serialize: $serialize }
                     }
 
                     $buffer[$start++] = 0x${bite.toString(16)}
@@ -338,7 +338,7 @@ function generate (packet, { require = null }) {
 
                         if ($start == $end) {
                             `, buffered, `
-                            return { start: $start, serialize }
+                            return { start: $start, serialize: $serialize }
                         }
 
                         if ($_++ == ${field.bits >>> 3}) {
@@ -397,7 +397,7 @@ function generate (packet, { require = null }) {
 
                         if ($_ != ${path}.length) {
                             `, buffered, `
-                            return { start: $start, serialize }
+                            return { start: $start, serialize: $serialize }
                         }
 
                         $step = ${$step}
@@ -436,7 +436,7 @@ function generate (packet, { require = null }) {
                         }
 
                         `, buffered, `
-                        return { start: $start, serialize }
+                        return { start: $start, serialize: $serialize }
                     }
 
                     $step = ${$step}
@@ -472,7 +472,7 @@ function generate (packet, { require = null }) {
                         $_ -= length
 
                         if ($_ != 0) {
-                            return { start: $start, serialize }
+                            return { start: $start, serialize: $serialize }
                         }
 
                         $step = ${$step}
@@ -792,7 +792,7 @@ function generate (packet, { require = null }) {
             return function (${signature.join(', ')}) {
                 let ${lets.join(', ')}
 
-                return function serialize ($buffer, $start, $end) {
+                return function $serialize ($buffer, $start, $end) {
                     `, restart, -1, `
 
                     `, source, `

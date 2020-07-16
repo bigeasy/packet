@@ -3,7 +3,7 @@ module.exports = function ({ parsers }) {
         return function (object, $step = 0, $i = [], $I = []) {
             let $_, $bite, $index = 0, $buffers = []
 
-            return function parse ($buffer, $start, $end) {
+            return function $parse ($buffer, $start, $end) {
                 switch ($step) {
                 case 0:
 
@@ -22,7 +22,7 @@ module.exports = function ({ parsers }) {
                 case 2:
 
                     if ($start == $end) {
-                        return { start: $start, object: null, parse }
+                        return { start: $start, object: null, parse: $parse }
                     }
 
                     object.nudge = $buffer[$start++]
@@ -35,7 +35,7 @@ module.exports = function ({ parsers }) {
                 case 4:
 
                     if ($start == $end) {
-                        return { start: $start, object: null, parse }
+                        return { start: $start, object: null, parse: $parse }
                     }
 
                     $I[0] = $buffer[$start++]
@@ -51,7 +51,7 @@ module.exports = function ({ parsers }) {
                     $start += $length
 
                     if ($index != $I[0]) {
-                        return { start: $start, parse }
+                        return { start: $start, parse: $parse }
                     }
 
                     object.array = $buffers.length == 1 ? $buffers[0] : Buffer.concat($buffers)
@@ -68,7 +68,7 @@ module.exports = function ({ parsers }) {
                 case 7:
 
                     if ($start == $end) {
-                        return { start: $start, object: null, parse }
+                        return { start: $start, object: null, parse: $parse }
                     }
 
                     object.sentry = $buffer[$start++]

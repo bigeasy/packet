@@ -1,7 +1,7 @@
 module.exports = function ({ parsers }) {
     parsers.chk.object = function () {
         return function () {
-            return function parse ($buffer, $start, $end) {
+            return function ($buffer, $start, $end) {
                 let $sip = 0
 
                 let object = {

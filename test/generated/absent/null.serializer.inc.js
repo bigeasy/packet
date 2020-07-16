@@ -3,7 +3,7 @@ module.exports = function ({ serializers }) {
         return function (object, $step = 0) {
             let $_, $bite
 
-            return function serialize ($buffer, $start, $end) {
+            return function $serialize ($buffer, $start, $end) {
                 switch ($step) {
                 case 0:
 

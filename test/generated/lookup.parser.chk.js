@@ -10,7 +10,7 @@ module.exports = function ({ parsers }) {
         }
 
         return function () {
-            return function parse ($buffer, $start, $end) {
+            return function ($buffer, $start, $end) {
                 let $_
 
                 let object = {

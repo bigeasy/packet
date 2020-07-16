@@ -3,7 +3,7 @@ module.exports = function ({ serializers }) {
         return function (object, $step = 0, $i = []) {
             let $_, $bite
 
-            return function serialize ($buffer, $start, $end) {
+            return function $serialize ($buffer, $start, $end) {
                 for (;;) {
                     switch ($step) {
                     case 0:
@@ -21,7 +21,7 @@ module.exports = function ({ serializers }) {
 
                         while ($bite != -1) {
                             if ($start == $end) {
-                                return { start: $start, serialize }
+                                return { start: $start, serialize: $serialize }
                             }
                             $buffer[$start++] = ($_ >>> $bite * 8 & 0xff)
                             $bite--
@@ -39,7 +39,7 @@ module.exports = function ({ serializers }) {
                     case 3:
 
                         if ($start == $end) {
-                            return { start: $start, serialize }
+                            return { start: $start, serialize: $serialize }
                         }
 
                         if ($_++ == 16) {
@@ -56,7 +56,7 @@ module.exports = function ({ serializers }) {
                     case 4:
 
                         if ($start == $end) {
-                            return { start: $start, serialize }
+                            return { start: $start, serialize: $serialize }
                         }
 
                         if ($_++ == 16) {
@@ -83,7 +83,7 @@ module.exports = function ({ serializers }) {
 
                         while ($bite != -1) {
                             if ($start == $end) {
-                                return { start: $start, serialize }
+                                return { start: $start, serialize: $serialize }
                             }
                             $buffer[$start++] = ($_ >>> $bite * 8 & 0xff)
                             $bite--

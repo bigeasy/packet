@@ -102,7 +102,7 @@ function generate (packet, { require = null }) {
 
                     if ($start == $end) {
                         `, buffered.length != 0 ? buffered.join('\n') : null, `
-                        return { start: $start, object: null, parse }
+                        return { start: $start, object: null, parse: $parse }
                     }
 
                     ${path} = $buffer[$start++]
@@ -138,7 +138,7 @@ function generate (packet, { require = null }) {
                 while ($bite != ${stop}${cast.suffix}) {
                     if ($start == $end) {
                         `, buffered.length != 0 ? buffered.join('\n') : null, `
-                        return { start: $start, object: null, parse }
+                        return { start: $start, object: null, parse: $parse }
                     }
                     $_ += ${cast.to}($buffer[$start++]) << $bite * 8${cast.suffix}${cast.fixup}
                     $bite${direction}
@@ -167,7 +167,7 @@ function generate (packet, { require = null }) {
                     $start += $bite
 
                     if ($_ != 0) {
-                        return { start: $start, object: null, parse }
+                        return { start: $start, object: null, parse: $parse }
                     }
             `)
         }
@@ -211,7 +211,7 @@ function generate (packet, { require = null }) {
 
                     if ($index != ${I}) {
                         `, buffered, `
-                        return { start: $start, parse }
+                        return { start: $start, parse: $parse }
                     }
 
                     `, assign, `
@@ -281,7 +281,7 @@ function generate (packet, { require = null }) {
 
                     if ($_ != 0) {
                         `, buffered, `
-                        return { start: $start, parse }
+                        return { start: $start, object: null, parse: $parse }
                     }
 
                     $step = ${$step}
@@ -341,7 +341,7 @@ function generate (packet, { require = null }) {
                         $_ += $end - $start
                         $buffers.push($buffer.slice($start))
                         `, buffered, `
-                        return { start: $end, parse }
+                        return { start: $end, object: null, parse: $parse }
                     }
 
                     $step = ${$step}
@@ -367,7 +367,7 @@ function generate (packet, { require = null }) {
                     } else {
                         $buffers.push($buffer.slice($start))
                         `, buffered, `
-                        return { start: $end, parse }
+                        return { start: $end, object: null, parse: $parse }
                     }
 
                     $step = ${$step}
@@ -383,7 +383,7 @@ function generate (packet, { require = null }) {
 
                         if ($start == $end) {
                             `, buffered, `
-                            return { start: $start, parse }
+                            return { start: $start, object: null, parse: $parse }
                         }
 
                         if ($buffer[$start++] != ${hex(bytes[1])}) {
@@ -486,7 +486,7 @@ function generate (packet, { require = null }) {
 
                     if ($start == $end) {
                         `, buffered, `
-                        return { start: $start, parse }
+                        return { start: $start, object: null, parse: $parse }
                     }
 
                     if ($buffer[$start] == ${hex(bytes[0])}) {
@@ -518,7 +518,7 @@ function generate (packet, { require = null }) {
             // vary due to nesting.
             : join(bytes.map((bite, index) => {
                 const parse = index != 0
-                    ? `parse(Buffer.from(${hex(bytes.slice(0, index))}), 0, ${index})`
+                    ? `$parse(Buffer.from(${hex(bytes.slice(0, index))}), 0, ${index})`
                     : null
                 const next = index != literal.length - 1
                     ? `$step = ${redo + index + 1}`
@@ -535,7 +535,7 @@ function generate (packet, { require = null }) {
 
                         if ($start == $end) {
                             `, buffered, `
-                            return { start: $start, parse }
+                            return { start: $start, object: null, parse: $parse }
                         }
 
                         if ($buffer[$start] != ${hex(bite)}) {
@@ -624,7 +624,7 @@ function generate (packet, { require = null }) {
                 }
             }
             return $(`
-                parse([
+                $parse([
                     `, bytes.join('\n'), `
                 ], 0, ${bytes.length})
             `)
@@ -742,7 +742,7 @@ function generate (packet, { require = null }) {
 
                     if ($_ != ${field.length}) {
                         `, buffered.length != 0 ? buffered.join('\n') : null, `
-                        return { start: $start, parse }
+                        return { start: $start, object: null, parse: $parse }
                     }
 
                     `, assign, `
@@ -797,7 +797,7 @@ function generate (packet, { require = null }) {
                 $start += $bite
 
                 if ($_ != 0) {
-                    return { start: $start, object: null, parse }
+                    return { start: $start, object: null, parse: $parse }
                 }
 
                 $step = ${$step}
@@ -1026,7 +1026,7 @@ function generate (packet, { require = null }) {
             return function (${signature.join(', ')}) {
                 let ${lets.join(', ')}
 
-                return function parse ($buffer, $start, $end) {
+                return function $parse ($buffer, $start, $end) {
                     `, restart, -1, `
 
                     `, source, `

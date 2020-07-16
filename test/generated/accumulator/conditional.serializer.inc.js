@@ -3,7 +3,7 @@ module.exports = function ({ serializers }) {
         return function (object, $step = 0, $i = [], $accumulator = {}, $starts = []) {
             let $_, $bite, $restart = false
 
-            return function serialize ($buffer, $start, $end) {
+            return function $serialize ($buffer, $start, $end) {
                 if ($restart) {
                     for (let $j = 0; $j < $starts.length; $j++) {
                         $starts[$j] = $start
@@ -38,7 +38,7 @@ module.exports = function ({ serializers }) {
                                     $end: $start,
                                     counter: $accumulator['counter']
                                 })
-                                return { start: $start, serialize }
+                                return { start: $start, serialize: $serialize }
                             }
                             $buffer[$start++] = ($_ >>> $bite * 8 & 0xff)
                             $bite--
@@ -67,7 +67,7 @@ module.exports = function ({ serializers }) {
                                     $end: $start,
                                     counter: $accumulator['counter']
                                 })
-                                return { start: $start, serialize }
+                                return { start: $start, serialize: $serialize }
                             }
                             $buffer[$start++] = ($_ >>> $bite * 8 & 0xff)
                             $bite--
@@ -91,7 +91,7 @@ module.exports = function ({ serializers }) {
                                 counter: $accumulator['counter']
                             })
                             $starts[0] = $start
-                            return { start: $start, serialize }
+                            return { start: $start, serialize: $serialize }
                         }
 
                         $buffer[$start++] = 0x0
@@ -145,7 +145,7 @@ module.exports = function ({ serializers }) {
                                     $end: $start,
                                     counter: $accumulator['counter']
                                 })
-                                return { start: $start, serialize }
+                                return { start: $start, serialize: $serialize }
                             }
                             $buffer[$start++] = ($_ >>> $bite * 8 & 0xff)
                             $bite--
@@ -172,7 +172,7 @@ module.exports = function ({ serializers }) {
                                     $end: $start,
                                     counter: $accumulator['counter']
                                 })
-                                return { start: $start, serialize }
+                                return { start: $start, serialize: $serialize }
                             }
                             $buffer[$start++] = ($_ >>> $bite * 8 & 0xff)
                             $bite--
@@ -199,7 +199,7 @@ module.exports = function ({ serializers }) {
                                     $end: $start,
                                     counter: $accumulator['counter']
                                 })
-                                return { start: $start, serialize }
+                                return { start: $start, serialize: $serialize }
                             }
                             $buffer[$start++] = ($_ >>> $bite * 8 & 0xff)
                             $bite--
@@ -224,7 +224,7 @@ module.exports = function ({ serializers }) {
 
                         while ($bite != -1) {
                             if ($start == $end) {
-                                return { start: $start, serialize }
+                                return { start: $start, serialize: $serialize }
                             }
                             $buffer[$start++] = ($_ >>> $bite * 8 & 0xff)
                             $bite--

@@ -3,7 +3,7 @@ module.exports = function ({ parsers }) {
         return function (object, $step = 0, $sip = 0) {
             let $_, $bite
 
-            return function parse ($buffer, $start, $end) {
+            return function $parse ($buffer, $start, $end) {
                 for (;;) {
                     switch ($step) {
                     case 0:
@@ -22,7 +22,7 @@ module.exports = function ({ parsers }) {
                     case 2:
 
                         if ($start == $end) {
-                            return { start: $start, object: null, parse }
+                            return { start: $start, object: null, parse: $parse }
                         }
 
                         $sip = $buffer[$start++]
@@ -32,19 +32,19 @@ module.exports = function ({ parsers }) {
 
                         if ((sip => sip < 251)($sip)) {
                             $step = 4
-                            parse([
+                            $parse([
                                 ($sip >>> 0) & 0xff
                             ], 0, 1)
                             continue
                         } else if ((sip => sip == 0xfc)($sip)) {
                             $step = 6
-                            parse([
+                            $parse([
                                 ($sip >>> 0) & 0xff
                             ], 0, 1)
                             continue
                         } else {
                             $step = 10
-                            parse([
+                            $parse([
                                 ($sip >>> 0) & 0xff
                             ], 0, 1)
                             continue
@@ -57,7 +57,7 @@ module.exports = function ({ parsers }) {
                     case 5:
 
                         if ($start == $end) {
-                            return { start: $start, object: null, parse }
+                            return { start: $start, object: null, parse: $parse }
                         }
 
                         object.value = $buffer[$start++]
@@ -78,7 +78,7 @@ module.exports = function ({ parsers }) {
                         $start += $bite
 
                         if ($_ != 0) {
-                            return { start: $start, object: null, parse }
+                            return { start: $start, object: null, parse: $parse }
                         }
 
                     case 8:
@@ -91,7 +91,7 @@ module.exports = function ({ parsers }) {
 
                         while ($bite != -1) {
                             if ($start == $end) {
-                                return { start: $start, object: null, parse }
+                                return { start: $start, object: null, parse: $parse }
                             }
                             $_ += ($buffer[$start++]) << $bite * 8 >>> 0
                             $bite--
@@ -116,7 +116,7 @@ module.exports = function ({ parsers }) {
                         $start += $bite
 
                         if ($_ != 0) {
-                            return { start: $start, object: null, parse }
+                            return { start: $start, object: null, parse: $parse }
                         }
 
                     case 12:
@@ -129,7 +129,7 @@ module.exports = function ({ parsers }) {
 
                         while ($bite != -1) {
                             if ($start == $end) {
-                                return { start: $start, object: null, parse }
+                                return { start: $start, object: null, parse: $parse }
                             }
                             $_ += ($buffer[$start++]) << $bite * 8 >>> 0
                             $bite--
@@ -147,7 +147,7 @@ module.exports = function ({ parsers }) {
                     case 15:
 
                         if ($start == $end) {
-                            return { start: $start, object: null, parse }
+                            return { start: $start, object: null, parse: $parse }
                         }
 
                         object.sentry = $buffer[$start++]
