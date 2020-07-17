@@ -242,34 +242,123 @@ function generate (packet, { require = null }) {
         return source
     }
 
+    function copy (path, element, buffered) {
+        let i
+        if (!element.concat) {
+            locals['offset'] = 0
+            locals['length'] = 0
+            i = `$i[${++$i}]`
+        }
+        const source = element.concat
+        // Copy the single buffer using copy.
+        ? $(`
+            case ${$step++}:
+
+                $_ = 0
+
+            case ${$step++}: {
+
+                    $step = ${$step - 1}
+
+                    const length = Math.min($end - $start, ${path}.length - $_)
+                    ${path}.copy($buffer, $start, $_, $_ + length)
+                    $start += length
+                    $_ += length
+
+                    if ($_ != ${path}.length) {
+                        `, buffered, `
+                        return { start: $start, serialize: $serialize }
+                    }
+
+                    $step = ${$step}
+
+                }
+        `)
+        // Loop through an array of buffers copying to the serialization
+        // buffer using `Buffer.copy()`. Need to track the index of the
+        // current buffer in the array the offset in the current buffer.
+        : $(`
+            case ${$step++}:
+
+                $_ = 0
+                $offset = 0
+                $length = ${path}.reduce((sum, buffer) => sum + buffer.length, 0)
+                ${i} = 0
+
+            case ${$step++}: {
+
+                $step = ${$step - 1}
+
+                for (;;) {
+                    const length = Math.min($end - $start, ${path}[${i}].length - $offset)
+                    ${path}[${i}].copy($buffer, $start, $offset, $offset + length)
+                    $offset += length
+                    $start += length
+                    $_ += length
+
+                    if ($offset == ${path}[${i}].length) {
+                        ${i}++
+                        $offset = 0
+                    }
+
+                    if ($_ == $length) {
+                        break
+                    }
+
+                    `, buffered, `
+                    return { start: $start, serialize: $serialize }
+                }
+
+                $step = ${$step}
+
+            }
+        `)
+        if (element.concat) {
+            i--
+        }
+        return source
+    }
+
     function terminated (path, field) {
         surround = true
+        const buffered = accumulate.buffered.length != 0
+            ? accumulate.buffered.map(buffered => {
+                return $(`
+                    `, buffered.source, `
+                    $starts[${buffered.start}] = $start
+                `)
+            }).join('\n') : null
+        function terminate () {
+            return join(field.terminator.map(bite => {
+                return $(`
+                    case ${$step++}:
+
+                        if ($start == $end) {
+                            `, buffered, `
+                            return { start: $start, serialize: $serialize }
+                        }
+
+                        $buffer[$start++] = ${hex(bite)}
+
+                        $step = ${$step}
+                `)
+            }))
+        }
+        const element = field.fields[0]
+        if (element.type == 'buffer') {
+            const source = $(`
+                `, copy(path, element, buffered), `
+
+                `, terminate(), `
+            `)
+            return source
+        }
         $i++
         const init = $step
         const again = ++$step
         const i = `$i[${$i}]`
         const looped = join(field.fields.map(field => dispatch(`${path}[${i}]`, field)))
         const done = $step
-        const buffered = accumulate.buffered.map(buffered => {
-            return $(`
-                `, buffered.source, `
-                $starts[${buffered.start}] = $start
-            `)
-        })
-        const terminator = join(field.terminator.map(bite => {
-            return $(`
-                case ${$step++}:
-
-                    if ($start == $end) {
-                        `, buffered.length != 0 ? buffered.join('\n') : null, `
-                        return { start: $start, serialize: $serialize }
-                    }
-
-                    $buffer[$start++] = 0x${bite.toString(16)}
-
-                    $step = ${$step}
-            `)
-        }))
         const source = $(`
             case ${init}:
 
@@ -284,7 +373,7 @@ function generate (packet, { require = null }) {
 
                 $step = ${done}
 
-            `, terminator, `
+            `, terminate(), `
 
             case ${$step++}:
         `)

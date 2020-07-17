@@ -1,7 +1,7 @@
 module.exports = function ({ serializers, $lookup }) {
     serializers.inc.object = function () {
         return function (object, $step = 0, $i = []) {
-            let $_, $bite
+            let $_, $bite, $offset = 0, $length = 0
 
             return function $serialize ($buffer, $start, $end) {
                 for (;;) {
@@ -26,23 +26,36 @@ module.exports = function ({ serializers, $lookup }) {
                     case 2:
 
                         $_ = 0
+                        $offset = 0
+                        $length = object.array.reduce((sum, buffer) => sum + buffer.length, 0)
+                        $i[0] = 0
 
                     case 3: {
 
-                            $step = 3
+                        $step = 3
 
-                            const length = Math.min($end - $start, object.array.length - $_)
-                            object.array.copy($buffer, $start, $_, $_ + length)
+                        for (;;) {
+                            const length = Math.min($end - $start, object.array[$i[0]].length - $offset)
+                            object.array[$i[0]].copy($buffer, $start, $offset, $offset + length)
+                            $offset += length
                             $start += length
                             $_ += length
 
-                            if ($_ != object.array.length) {
-                                return { start: $start, serialize: $serialize }
+                            if ($offset == object.array[$i[0]].length) {
+                                $i[0]++
+                                $offset = 0
                             }
 
-                            $step = 4
+                            if ($_ == $length) {
+                                break
+                            }
 
+                            return { start: $start, serialize: $serialize }
                         }
+
+                        $step = 4
+
+                    }
 
                     case 4:
 

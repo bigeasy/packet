@@ -116,16 +116,21 @@ function inquisition (fields, $I = 0) {
             checked.push(field)
             break
         case 'terminated':
-            field.fields = inquisition(field.fields)
+            if (field.fields[field.fields.length - 1].type != 'buffer') {
+                field.fields = inquisition(field.fields)
+            }
             checked.push(field)
             break
         case 'terminator':
             checked.push({
                 type: 'checkpoint',
-                lengths: [ field.body.terminator.length ],
+                lengths: [ 0 ],
                 vivify: null,
                 rewind: 0
             })
+            if (field.body.fields[field.body.fields.length - 1].type != 'buffer') {
+                checked[checked.length - 1].lengths[0] += field.body.terminator.length
+            }
             checked.push(field)
             break
         case 'lengthEncoding':
@@ -248,6 +253,7 @@ function generate (packet, { require, bff, chk }) {
                 checked.push(field)
                 checkpoint.lengths[0] += field.body.terminator.length
                 break
+            // TODO Checkpoint invocation on fields in two places?
             case 'repeated':
                 // TODO If the terminator is greater than or equal to the size
                 // of the repeated part, we do not have to perform the
@@ -257,7 +263,10 @@ function generate (packet, { require, bff, chk }) {
                 break
             case 'terminated':
                 checked.push(field)
-                field.fields = checkpoints(path + `${field.dotted}[$i[${index}]]`, field.fields, index + 1)
+                const element = field.fields.slice().pop().fields.slice().pop()
+                if (element.type != 'buffer') {
+                    field.fields = checkpoints(path + `${field.dotted}[$i[${index}]]`, field.fields, index + 1)
+                }
                 checked.push(checkpoint = {
                     type: 'checkpoint', lengths: [ 0 ], vivify: null, rewind: 0
                 })
@@ -495,11 +504,14 @@ function generate (packet, { require, bff, chk }) {
         const element = field.fields.slice().pop().fields.slice().pop()
         if (element.type == 'buffer') {
             const terminator = field.terminator
+            const assign = element.concat
+                ? `${path} = $buffer.slice($start, $_)`
+                : `${path} = [ $buffer.slice($start, $_) ]`
             if (bff || chk) {
                 const source = $(`
                     $_ = $buffer.indexOf(Buffer.from(${util.inspect(terminator)}), $start)
                     if (~$_) {
-                        ${path} = $buffer.slice($start, $_)
+                        `, assign, `
                         $start = $_ + ${terminator.length}
                     } else {
                         return parsers.inc.${packet.name}(${signature().join(', ')})($buffer, $start, $end)
@@ -508,10 +520,11 @@ function generate (packet, { require, bff, chk }) {
                 $step += 2 + terminator.length
                 return source
             }
+            // TODO What if you don't find? Here we create zero buffer.
             return $(`
                 $_ = $buffer.indexOf(Buffer.from(${util.inspect(terminator)}), $start)
                 $_ = ~$_ ? $_ : $start
-                ${path} = $buffer.slice($start, $_)
+                `, assign, `
                 $start = $_ + ${terminator.length}
             `)
         }

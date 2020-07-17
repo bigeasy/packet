@@ -113,9 +113,14 @@ function generate (packet, { require = null }) {
                 return source
             }
         case 'terminated': {
+                // TODO Use AST rollup `fixed`.
                 if (field.fields.filter(field => !field.fixed).length == 0) {
                     const bits = field.fields.reduce((sum, field) => sum + field.bits, 0)
-                    return $(`
+                    return field.fields[0].type == 'buffer' && !field.fields[0].concat
+                    ? $(`
+                        $start += ${path}.reduce((sum, buffer) => sum + buffer.length, 0) +
+                            ${field.terminator.length}
+                    `) : $(`
                         $start += ${bits >>> 3} * ${path}.length + ${field.terminator.length}
                     `)
                 }

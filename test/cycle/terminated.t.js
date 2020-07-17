@@ -42,4 +42,18 @@ function prove (okay) {
             nudge: 0xaa, array: Buffer.from('abcdefghij'), sentry: 0xaa
         }]
     })
+    cycle(okay, {
+        name: 'terminated/chunked',
+        define: {
+            object: {
+                nudge: 8,
+                array: [ [[ Buffer ]], 0xd, 0xa ],
+                sentry: 8
+            }
+        },
+        objects: [{
+            nudge: 0xaa, array: [ Buffer.from('abcdefghij') ], sentry: 0xaa
+        }],
+        stopAt: 'serialize.chk'
+    })
 }

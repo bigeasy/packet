@@ -6,9 +6,8 @@ module.exports = function ({ serializers, $lookup }) {
 
                 $buffer[$start++] = (object.nudge & 0xff)
 
-                for ($i[0] = 0; $i[0] < object.array.length; $i[0]++) {
-                    $buffer[$start++] = (object.array[$i[0]] & 0xff)
-                }
+                object.array.copy($buffer, $start, 0, object.array.length)
+                $start += object.array.length
 
                 $buffer[$start++] = 0xd
                 $buffer[$start++] = 0xa

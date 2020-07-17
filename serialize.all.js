@@ -139,8 +139,14 @@ function checkpoints (path, fields, index = 0) {
             //
             checked.push(field)
             if (field.fields[0].fixed) {
-                // *Division in string templates upsets Docco JavaScript parser.*
-                checkpoint.lengths.push(`${path + field.dotted}.length * ${field.fields[0].bits >>> 3}`)
+                if (field.fields[0].type == 'buffer' && !field.fields[0].concat) {
+                    checkpoint.lengths.push($(`
+                        ${path + field.dotted}.reduce((sum, buffer) => sum + buffer.length, 0)
+                    `))
+                } else {
+                    // *Division in string templates upsets Docco JavaScript parser.*
+                    checkpoint.lengths.push(`${path + field.dotted}.length * ${field.fields[0].bits >>> 3}`)
+                }
             } else {
                 field.fields = checkpoints(`${path}${field.dotted}[$i[${index}]]`, field.fields, index + 1)
                 checked.push(checkpoint = { type: 'checkpoint', lengths: [ 0 ] })
@@ -251,11 +257,23 @@ function inquisition (path, fields) {
             checked.push(field)
             break
         case 'terminated':
-            field.fields = inquisition(path + field.dotted, field.fields)
+            if (field.fields[field.fields.length - 1].type == 'buffer') {
+                checked.push({ type: 'checkpoint', lengths: [ 0,
+                    field.fields[field.fields.length - 1].concat
+                        ? `${path + field.dotted}.length`
+                        : `${path + field.dotted}.reduce((sum, buffer) => sum + buffer.length, 0)`
+                ]})
+            } else {
+                field.fields = inquisition(path + field.dotted, field.fields)
+            }
             checked.push(field)
             break
         case 'terminator':
-            checked.push({ type: 'checkpoint', lengths: [ field.body.terminator.length ]})
+            if (field.body.fields[field.body.fields.length - 1].type == 'buffer') {
+                checked[checked.length - 2].lengths[0] += field.body.terminator.length
+            } else {
+                checked.push({ type: 'checkpoint', lengths: [ field.body.terminator.length ]})
+            }
             checked.push(field)
             break
         case 'lengthEncoding':
@@ -457,6 +475,25 @@ function generate (packet, { require = null, bff, chk }) {
     }
 
     function terminated (path, field) {
+        const element = field.fields[field.fields.length - 1]
+        if (element.type == 'buffer') {
+            $step += 2
+            if (element.concat) {
+                return $(`
+                    ${path}.copy($buffer, $start, 0, ${path}.length)
+                    $start += ${path}.length
+                `)
+            }
+            variables.register = true
+            return $(`
+                $_ = 0
+                for (let $index = 0; $index < ${path}.length; $index++) {
+                    ${path}[$index].copy($buffer, $start)
+                    $start += ${path}[$index].length
+                    $_ += ${path}[$index].length
+                }
+            `)
+        }
         $step += 1
         const i = `$i[${++$i}]`
         const looped = join(field.fields.map(field => dispatch(`${path}[${i}]`, field)))
@@ -471,9 +508,12 @@ function generate (packet, { require = null, bff, chk }) {
 
     function terminator (field) {
         const terminator = []
-        $step += field.body.terminator.length + 1
+        $step += field.body.terminator.length
+        if (field.body.fields[field.body.fields.length - 1].type != 'buffer') {
+            $step++
+        }
         for (const bite of field.body.terminator) {
-            terminator.push(`$buffer[$start++] = 0x${bite.toString(16)}`)
+            terminator.push(`$buffer[$start++] = ${hex(bite)}`)
         }
         return terminator.join('\n')
     }
