@@ -58,6 +58,6 @@
     },
     "nyc":
     {
-                            "exclude": [ "test", "ieee.js" ]
+                            "exclude": [ "test", "inlines.js" ]
     }
 }
