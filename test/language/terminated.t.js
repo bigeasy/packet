@@ -1,6 +1,6 @@
 require('proof')(3, okay => {
-    const simplified = require('../../simplified')
-    okay(simplified({ packet: {
+    const language = require('../../language')
+    okay(language({ packet: {
         value: [ [ 16 ], 0x0, 0x0 ] }
     }), [{
         name: 'packet',
@@ -28,7 +28,7 @@ require('proof')(3, okay => {
             }]
         }]
     }], 'terminated fixed')
-    okay(simplified({ packet: {
+    okay(language({ packet: {
         value: [ [ [ [ 16 ], 0x0, 0x0 ] ], 0x0, 0x0 ] }
     }), [{
         name: 'packet',
@@ -64,7 +64,7 @@ require('proof')(3, okay => {
             }]
         }]
     }], 'terminated nested')
-    okay(simplified({ packet: {
+    okay(language({ packet: {
         value: [ [ Buffer ], 0xd, 0xa ] }
     }), [{
         name: 'packet',

@@ -1,6 +1,6 @@
 require('proof')(2, okay => {
-    const simplified = require('../../simplified')
-    okay(simplified({
+    const language = require('../../language')
+    okay(language({
         packet: {
             header: [{
                 before: [[ 2, '3' ], 2 ],
@@ -72,7 +72,7 @@ require('proof')(2, okay => {
     ],
     name: 'packet'
 }], 'literal packed')
-    okay(simplified({ packet: { value: [ '0faded', 16, 'facade' ] } }), [{
+    okay(language({ packet: { value: [ '0faded', 16, 'facade' ] } }), [{
         type: 'structure',
         vivify: 'object',
         name: 'packet',

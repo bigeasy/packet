@@ -1,6 +1,6 @@
 require('proof')(1, okay => {
-    const simplified = require('../../simplified')
-    okay(simplified({
+    const language = require('../../language')
+    okay(language({
         packet: {
             header: [{
                 one: [[ 16, 'deaf' ], 1 ],

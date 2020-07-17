@@ -1,6 +1,6 @@
 require('proof')(2, okay => {
-    const simplified = require('../../simplified')
-    okay(simplified({ packet: {
+    const language = require('../../language')
+    okay(language({ packet: {
         value: [[ value => -value ], 16 , []] }
     }), [{
         name: 'packet',
@@ -35,7 +35,7 @@ require('proof')(2, okay => {
             after: []
         }]
     }], 'serialize')
-    okay(simplified({ packet: {
+    okay(language({ packet: {
         value: [[[ value => -value ]], 16 ] }
     }), [{
         name: 'packet',

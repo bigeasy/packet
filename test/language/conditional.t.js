@@ -1,6 +1,6 @@
 require('proof')(4, okay => {
-    const simplified = require('../../simplified')
-    okay(simplified({
+    const language = require('../../language')
+    okay(language({
         packet: {
             value: [
                 [
@@ -177,7 +177,7 @@ require('proof')(4, okay => {
             }
         }]
     }], 'mysql-integer')
-    okay(simplified({
+    okay(language({
         packet: {
             type: 8,
             value: [
@@ -315,7 +315,7 @@ require('proof')(4, okay => {
             }
         }]
     }], 'sipless')
-    okay(simplified({
+    okay(language({
         packet: {
             type: 8,
             value: [
@@ -447,7 +447,7 @@ require('proof')(4, okay => {
             }
         }]
     }], 'bi-directional')
-    okay(simplified({
+    okay(language({
         packet: {
             header: {
                 flag: 2,

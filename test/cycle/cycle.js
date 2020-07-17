@@ -5,7 +5,7 @@ const coalesce = require('extant')
 const $ = require('programmatic')
 const assert = require('assert')
 
-const simplified = require('../../simplified')
+const language = require('../../language')
 
 // TODO: Make compiler a function that takes a prefix, then compile the four.
 const composers = {
@@ -31,7 +31,7 @@ function compiler ({ object, file, source }) {
 module.exports = function (okay, options) {
     options.objects.forEach(function (actual, index) {
         const name = `${options.name}${options.objects.length == 1 ? '' : ` ${index + 1}`}`
-        const intermediate = simplified(options.define)
+        const intermediate = language(options.define)
         const filename = path.resolve(__filename, '../../generated/' + options.name)
         const compile = coalesce(options.compile, true)
         const required = coalesce(options.require, {})

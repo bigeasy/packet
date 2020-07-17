@@ -1,6 +1,6 @@
 require('proof')(6, okay => {
-    const simplified = require('../../simplified')
-    okay(simplified({ packet: { value: [ 16, [ 16 ] ] } }), [{
+    const language = require('../../language')
+    okay(language({ packet: { value: [ 16, [ 16 ] ] } }), [{
         type: 'structure',
         vivify: 'object',
         name: 'packet',
@@ -34,7 +34,7 @@ require('proof')(6, okay => {
             }]
         }]
     }], 'length encoded')
-    okay(simplified({ packet: { value: [ 16, [{ first: 16, second: 16 }] ] } }), [{
+    okay(language({ packet: { value: [ 16, [{ first: 16, second: 16 }] ] } }), [{
         type: 'structure',
         vivify: 'object',
         name: 'packet',
@@ -86,7 +86,7 @@ require('proof')(6, okay => {
             }]
         }]
     }], 'length encoded fixed')
-    okay(simplified({ packet: { value: [ 16, [[ 16, [ 16 ] ]] ] } }), [{
+    okay(language({ packet: { value: [ 16, [[ 16, [ 16 ] ]] ] } }), [{
         type: 'structure',
         vivify: 'object',
         name: 'packet',
@@ -136,7 +136,7 @@ require('proof')(6, okay => {
             }]
         }]
     }], 'length encoded nested')
-    okay(simplified({ packet: { value: [ 16, [{ first: [ 16, [ 16 ] ] }] ] } }), [{
+    okay(language({ packet: { value: [ 16, [{ first: [ 16, [ 16 ] ] }] ] } }), [{
         name: 'packet',
         fixed: false,
         bits: 0,
@@ -194,7 +194,7 @@ require('proof')(6, okay => {
             }]
         }]
     }], 'length encoded variable')
-    okay(simplified({
+    okay(language({
         packet: {
             value: [ 16, [ Buffer ] ]
         }
@@ -239,7 +239,7 @@ require('proof')(6, okay => {
         ],
         name: 'packet'
     }], 'length encoded catenated')
-    okay(simplified({
+    okay(language({
         packet: {
             value: [ 16, [[ Buffer ]] ]
         }

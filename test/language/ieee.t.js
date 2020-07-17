@@ -1,6 +1,6 @@
 require('proof')(1, okay => {
-    const simplified = require('../../simplified')
-    okay(simplified({ packet: { value: [ 0.64, ~64 ] } }), [{
+    const language = require('../../language')
+    okay(language({ packet: { value: [ 0.64, ~64 ] } }), [{
         type: 'structure',
         vivify: 'object',
         dotted: '',

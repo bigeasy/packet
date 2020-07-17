@@ -1,6 +1,6 @@
 require('proof')(3, okay => {
-    const simplified = require('../../simplified')
-    okay(simplified({
+    const language = require('../../language')
+    okay(language({
         packet: [{
             counter: [ 0 ]
         }, {
@@ -32,7 +32,7 @@ require('proof')(3, okay => {
         }],
         name: 'packet'
     }], 'literal accumulator')
-    okay(simplified({
+    okay(language({
         packet: [{
             regex: /^\//g
         }, {
@@ -64,7 +64,7 @@ require('proof')(3, okay => {
         }],
         name: 'packet'
     }], 'regex accumulator')
-    okay(simplified({
+    okay(language({
         packet: [{
             f: () => {}
         }, {

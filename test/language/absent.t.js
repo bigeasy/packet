@@ -1,6 +1,6 @@
 require('proof')(2, okay => {
-    const simplified = require('../../simplified')
-    okay(simplified({
+    const language = require('../../language')
+    okay(language({
         packet: {
             value: null
         }
@@ -21,7 +21,7 @@ require('proof')(2, okay => {
             fixed: true
         }]
     }], 'null')
-    okay(simplified({
+    okay(language({
         packet: {
             value: []
         }

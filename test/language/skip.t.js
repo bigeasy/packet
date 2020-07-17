@@ -1,6 +1,6 @@
 require('proof')(1, okay => {
-    const simplified = require('../../simplified')
-    okay(simplified({ packet: { value: [[ '0faded', 2 ], 16, [ 'facade', 2 ]] } }), [{
+    const language = require('../../language')
+    okay(language({ packet: { value: [[ '0faded', 2 ], 16, [ 'facade', 2 ]] } }), [{
         name: 'packet',
         fixed: true,
         bits: 112,

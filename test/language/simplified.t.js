@@ -1,6 +1,6 @@
 require('proof')(1, async (okay) => {
-    const simplified = require('../../simplified')
-    okay(simplified({ packet: { value: 16 } }), [{
+    const language = require('../../language')
+    okay(language({ packet: { value: 16 } }), [{
         type: 'structure',
         vivify: 'object',
         name: 'packet',
@@ -24,7 +24,7 @@ require('proof')(1, async (okay) => {
     ]
 
     return
-    const intermediate = simplified({
+    const intermediate = language({
         /*
         integer: {
             parse: [ 8n, [

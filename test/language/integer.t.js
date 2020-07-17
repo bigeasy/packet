@@ -1,6 +1,6 @@
 require('proof')(5, okay => {
-    const simplified = require('../../simplified')
-    okay(simplified({ packet: { value: 16 } }), [{
+    const language = require('../../language')
+    okay(language({ packet: { value: 16 } }), [{
         type: 'structure',
         vivify: 'object',
         name: 'packet',
@@ -18,7 +18,7 @@ require('proof')(5, okay => {
             compliment: false
         }]
     }], 'short')
-    okay(simplified({ packet: { value: ~16 } }), [{
+    okay(language({ packet: { value: ~16 } }), [{
         type: 'structure',
         vivify: 'object',
         name: 'packet',
@@ -36,7 +36,7 @@ require('proof')(5, okay => {
             compliment: false
         }]
     }], 'little endian')
-    okay(simplified({ packet: { value: -16 } }), [{
+    okay(language({ packet: { value: -16 } }), [{
         type: 'structure',
         vivify: 'object',
         name: 'packet',
@@ -54,7 +54,7 @@ require('proof')(5, okay => {
             compliment: true
         }]
     }], 'two\'s compliment')
-    okay(simplified({ packet: { value: -~16 } }), [{
+    okay(language({ packet: { value: -~16 } }), [{
         type: 'structure',
         vivify: 'object',
         name: 'packet',
@@ -72,7 +72,7 @@ require('proof')(5, okay => {
             compliment: true
         }]
     }], 'two\'s compliment little endian')
-    okay(simplified({ packet: { value: ~-16 } }), [{
+    okay(language({ packet: { value: ~-16 } }), [{
         type: 'structure',
         vivify: 'object',
         name: 'packet',

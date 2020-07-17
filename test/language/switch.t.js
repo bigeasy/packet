@@ -1,7 +1,7 @@
 require('proof')(4, okay => {
-    const simplified = require('../../simplified')
+    const language = require('../../language')
     // TODO Come back and complete when you've implemented nested structures.
-    okay(simplified({
+    okay(language({
         packet: {
             type: 8,
             value: [ $ => $.type, {
@@ -81,7 +81,7 @@ require('proof')(4, okay => {
         }],
         name: 'packet'
     }], 'string switch')
-    okay(simplified({
+    okay(language({
         packet: {
             header: [{
                 type: 2,
@@ -199,7 +199,7 @@ require('proof')(4, okay => {
         }],
         name: 'packet'
     }], 'string switch packed')
-    okay(simplified({
+    okay(language({
         object: {
             type: 8,
             value: [ $ => $.type, [
@@ -279,7 +279,7 @@ require('proof')(4, okay => {
         ],
         name: 'object'
     }], 'variant switch')
-    okay(simplified({
+    okay(language({
         object: {
             header: [{
                 type: 2,
