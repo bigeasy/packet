@@ -598,8 +598,8 @@ function generate (packet, { require = null }) {
         `)
     }
 
-    function conditional (path, conditional) {
-        const { parse } = conditional
+    function conditional (path, field) {
+        const { parse } = field
         surround = true
         const signature = []
         const sip = function () {
@@ -630,7 +630,7 @@ function generate (packet, { require = null }) {
             `)
         } ()
         const invocations = accumulations({
-            functions: conditional.parse.conditions.map(condition => condition.test),
+            functions: field.parse.conditions.map(condition => condition.test),
             accumulate: accumulate
         })
         signature.push(packet.name)

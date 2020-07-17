@@ -572,25 +572,25 @@ function generate (packet, { require = null }) {
         `)
     }
 
-    function conditional (path, conditional) {
+    function conditional (path, field) {
         surround = true
         const invocations = accumulations({
-            functions: conditional.serialize.conditions.map(condition => condition.test),
+            functions: field.serialize.conditions.map(condition => condition.test),
             accumulate: accumulate
         })
         const start = $step++
         const steps = []
-        for (const condition of conditional.serialize.conditions) {
+        for (const condition of field.serialize.conditions) {
             steps.push({
                 step: $step,
                 source: join(condition.fields.map(field => dispatch(path, field)))
             })
         }
         let ladder = '', keywords = 'if'
-        for (let i = 0, I = conditional.serialize.conditions.length; i < I; i++) {
-            const condition = conditional.serialize.conditions[i]
+        for (let i = 0, I = field.serialize.conditions.length; i < I; i++) {
+            const condition = field.serialize.conditions[i]
             ladder = condition.test != null ? function () {
-                const registers = conditional.split ? [ path ] : []
+                const registers = field.split ? [ path ] : []
                 const f = inliner(accumulate, path, [ condition.test ], registers)
                 return $(`
                     `, ladder, `${keywords} (`, f.inlined.shift(), `) {
