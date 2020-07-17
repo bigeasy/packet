@@ -755,9 +755,29 @@ module.exports = function (packets) {
             }]
         }
 
-        function switched () {
-            const cases = []
-            if (is.switched.stringified(packet)) {
+        const switched = {
+            node: function (cases) {
+                const bits = cases.slice(1).reduce((value, when) => {
+                    return value != -1 && value == when.fields[0].bits ? value : -1
+                }, cases[0].fields[0].bits)
+                const vivify = cases.slice(1).reduce((vivify, when) => {
+                    return vivify == 'variant' || vivify == vivified(when.fields[0])
+                        ? vivify
+                        : 'variant'
+                }, cases[0].fields[0].vivify)
+                return [{
+                    ...extra,
+                    type: 'switch',
+                    select: { ...args(packet[0]) },
+                    vivify: vivify == 'object' ? 'variant' : vivify,
+                    stringify: ! Array.isArray(packet[1]),
+                    bits: bits < 0 ? 0 : bits,
+                    fixed: bits > 0,
+                    cases: cases
+                }]
+            },
+            stringified: function () {
+                const cases = []
                 for (const value in packet[1]) {
                     cases.push({
                         value: value,
@@ -772,7 +792,10 @@ module.exports = function (packets) {
                         fields: map(packet[2], {})
                     })
                 }
-            } else {
+                return switched.node(cases)
+            },
+            variant: function () {
+                const cases = []
                 const copy = packet[1].slice()
                 while (copy.length != 0) {
                     const [ when, field ] = copy.splice(0, 2)
@@ -790,25 +813,8 @@ module.exports = function (packets) {
                         })
                     }
                 }
+                return switched.node(cases)
             }
-            const bits = cases.slice(1).reduce((value, when) => {
-                return value != -1 && value == when.fields[0].bits ? value : -1
-            }, cases[0].fields[0].bits)
-            const vivify = cases.slice(1).reduce((vivify, when) => {
-                return vivify == 'variant' || vivify == vivified(when.fields[0])
-                    ? vivify
-                    : 'variant'
-            }, cases[0].fields[0].vivify)
-            return [{
-                ...extra,
-                type: 'switch',
-                select: { ...args(packet[0]) },
-                vivify: vivify == 'object' ? 'variant' : vivify,
-                stringify: ! Array.isArray(packet[1]),
-                bits: bits < 0 ? 0 : bits,
-                fixed: bits > 0,
-                cases: cases
-            }]
         }
         //
 
@@ -851,7 +857,8 @@ module.exports = function (packets) {
             else if (is.conditional.split(packet)) return conditional.split()
             else if (is.conditional.mirrored(packet)) return conditional.mirrored()
             else if (is.accumulator(packet)) return accumulator()
-            else if (is.switched.variant(packet) || is.switched.stringified(packet)) return switched()
+            else if (is.switched.variant(packet)) return switched.variant()
+            else if (is.switched.stringified(packet)) return switched.stringified()
             else throw new Error('unknown')
         }
 
