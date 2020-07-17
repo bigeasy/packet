@@ -4,7 +4,11 @@ module.exports = function ({ serializers }) {
             return function ($buffer, $start, $end) {
                 let $_, $i = [], $$ = []
 
-                $$[0] = (function(value){cov_1d8h8zdhpb().f[4]++;const buffer=(cov_1d8h8zdhpb().s[13]++,Buffer.alloc(8));cov_1d8h8zdhpb().s[14]++;buffer.writeDoubleLE(value);cov_1d8h8zdhpb().s[15]++;return buffer;})(object.value)
+                $$[0] = (function (value) {
+                    const buffer = Buffer.alloc(8)
+                    buffer.writeDoubleLE(value)
+                    return buffer
+                })(object.value)
 
                 $_ = 0
                 $$[0].copy($buffer, $start)

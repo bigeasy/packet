@@ -603,7 +603,7 @@ module.exports = function (packets) {
                             break
                         }
                     }
-                    return { split: true, conditions }
+                    return { conditions }
                 } ()
                 const parse = function () {
                     const parse = packet[1].slice()
@@ -644,6 +644,7 @@ module.exports = function (packets) {
                     vivify: vivify == 'object' ? 'variant' : vivify,
                     bits: 0,
                     fixed: false,
+                    split: true,
                     serialize, parse, ...extra
                 })
                 return fields
@@ -695,8 +696,8 @@ module.exports = function (packets) {
                     bits: fixed == -1 ? 0 : conditions[0].bits,
                     fixed: fixed != -1,
                     vivify: vivify == 'object' ? 'variant' : vivify,
+                    split: false,
                     serialize: {
-                        split: false,
                         conditions: conditions.map(cond => cond.body)
                     },
                     parse: {

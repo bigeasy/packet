@@ -620,7 +620,7 @@ function generate (packet, { require = null, bff, chk }) {
             const condition = conditional.serialize.conditions[i]
             const source = join(condition.fields.map(field => dispatch(path, field)))
             ladder = condition.test != null ? function () {
-                const registers = conditional.serialize.split ? [ path ] : []
+                const registers = conditional.split ? [ path ] : []
                 const f = inliner(accumulate, path, [ condition.test ], registers)
                 return $(`
                     `, ladder, `${keywords} (`, f.inlined.shift() ,`) {

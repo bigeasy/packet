@@ -33,8 +33,8 @@ require('proof')(4, okay => {
             vivify: 'number',
             fixed: false,
             bits: 0,
+            split: true,
             serialize: {
-                split: true,
                 conditions: [{
                     test: {
                         defaulted: [],
@@ -215,8 +215,8 @@ require('proof')(4, okay => {
             fixed: false,
             name: 'value',
             dotted: '.value',
+            split: true,
             serialize: {
-                split: true,
                 conditions: [{
                     test: {
                         defaulted: [],
@@ -347,8 +347,8 @@ require('proof')(4, okay => {
             fixed: false,
             name: 'value',
             dotted: '.value',
+            split: false,
             serialize: {
-                split: false,
                 conditions: [{
                     test: {
                         defaulted: [],
@@ -491,8 +491,8 @@ require('proof')(4, okay => {
                 vivify: 'variant',
                 bits: 6,
                 fixed: true,
+                split: false,
                 serialize: {
-                    split: false,
                     conditions: [{
                         test: {
                             defaulted: [],
