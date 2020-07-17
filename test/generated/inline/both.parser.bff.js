@@ -1,4 +1,4 @@
-module.exports = function ({ parsers }) {
+module.exports = function ({ parsers, $lookup }) {
     parsers.bff.object = function () {
         return function () {
             return function ($buffer, $start, $end) {

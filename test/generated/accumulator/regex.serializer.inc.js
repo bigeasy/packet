@@ -1,4 +1,4 @@
-module.exports = function ({ serializers }) {
+module.exports = function ({ serializers, $lookup }) {
     serializers.inc.object = function () {
         const assert = require('assert')
 

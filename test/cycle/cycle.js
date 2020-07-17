@@ -17,12 +17,13 @@ const composers = {
         inc: require('../../serialize.inc'),
         all: require('../../serialize.all')
     },
-    sizeOf: require('../../sizeof')
+    sizeOf: require('../../sizeof'),
+    lookup: require('../../lookup')
 }
 
-function compiler ({ object, file, source }) {
+function compiler ({ objects, file, source }) {
     fs.writeFileSync(file, $(`
-        module.exports = function ({ ${object} }) {
+        module.exports = function ({ ${objects.join(', ')} }) {
             `, source, `
         }
     `) + '\n')
@@ -39,12 +40,28 @@ module.exports = function (okay, options) {
         const packet = {
             parsers: { all: {}, inc: {}, bff: {}, chk: {} },
             serializers: { all: {}, inc: {}, bff: {}, chk: {} },
-            sizeOf: {}
+            sizeOf: {},
+            $lookup: []
         }
 
         if (compile) {
             compiler({
-                object: 'sizeOf',
+                objects: [ '$lookup' ],
+                file: `${filename}.lookup.js`,
+                source: composers.lookup(intermediate)
+            })
+        }
+        require(`${filename}.lookup.js`)(packet)
+
+        if (options.stopAt == 'lookup') {
+            okay.inc(1)
+            okay(true, `${options.name} lookup`)
+            return
+        }
+
+        if (compile) {
+            compiler({
+                objects: [ 'sizeOf' ],
                 file: `${filename}.sizeof.js`,
                 source: composers.sizeOf(intermediate, { require: required })
             })
@@ -61,7 +78,7 @@ module.exports = function (okay, options) {
 
         if (compile) {
             compiler({
-                object: 'serializers',
+                objects: [ 'serializers', '$lookup' ],
                 file: `${filename}.serializer.all.js`,
                 source: composers.serializer.all(intermediate, { require: required })
             })
@@ -85,7 +102,7 @@ module.exports = function (okay, options) {
 
         if (compile) {
             compiler({
-                object: 'parsers',
+                objects: [ 'parsers', '$lookup' ],
                 file: `${filename}.parser.all.js`,
                 source: composers.parser.all(intermediate, { require: required })
             })
@@ -144,7 +161,7 @@ module.exports = function (okay, options) {
 
         if (compile) {
             compiler({
-                object: 'serializers',
+                objects: [ 'serializers', '$lookup' ],
                 file: `${filename}.serializer.inc.js`,
                 source: composers.serializer.inc(intermediate, { require: required })
             })
@@ -186,7 +203,7 @@ module.exports = function (okay, options) {
 
         if (compile) {
             compiler({
-                object: 'parsers',
+                objects: [ 'parsers', '$lookup' ],
                 file: `${filename}.parser.inc.js`,
                 source: composers.parser.inc(intermediate, { require: required })
             })
@@ -225,7 +242,7 @@ module.exports = function (okay, options) {
 
         if (compile) {
             compiler({
-                object: 'serializers',
+                objects: [ 'serializers', '$lookup' ],
                 file: `${filename}.serializer.bff.js`,
                 source: composers.serializer.all(intermediate, {
                     bff: true,
@@ -268,7 +285,7 @@ module.exports = function (okay, options) {
 
         if (compile) {
             compiler({
-                object: 'parsers',
+                objects: [ 'parsers', '$lookup' ],
                 file: `${filename}.parser.bff.js`,
                 source: composers.parser.all(intermediate, {
                     bff: true,
@@ -312,7 +329,7 @@ module.exports = function (okay, options) {
 
         if (compile) {
             compiler({
-                object: 'serializers',
+                objects: [ 'serializers', '$lookup' ],
                 file: `${filename}.serializer.chk.js`,
                 source: composers.serializer.all(intermediate, {
                     chk: true,
@@ -355,7 +372,7 @@ module.exports = function (okay, options) {
 
         if (compile) {
             compiler({
-                object: 'parsers',
+                objects: [ 'parsers', '$lookup' ],
                 file: `${filename}.parser.chk.js`,
                 source: composers.parser.all(intermediate, {
                     chk: true,

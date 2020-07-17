@@ -10,6 +10,9 @@ const inlines = require('./inlines')
 // Inline function argument parser.
 const args = require('./arguments')
 
+// Compare JSON object tree.
+const deepEqual = require('fast-deep-equal')
+
 // Determine the vivified literal of the given field, descending into the actual
 // field type for ethereal fields like inlines and literals.
 function vivified (field) {
@@ -151,9 +154,23 @@ const is = {
     mapped: function (packet) {
         return packet.length == 2 &&
             is.integer(packet[0]) &&
-            Array.isArray(packet[1]) &&
-            packet[1].length > 1 &&
-            packet[1].filter(value => typeof value == 'string').length == packet[1].length
+            (
+                Array.isArray(packet[1]) &&
+                packet[1].length > 1 &&
+                packet[1].filter(value => typeof value == 'string').length == packet[1].length
+            ) ||
+            (
+                typeof packet[1] == 'object' &&
+                Object.keys(packet[1]).length > 1 &&
+                function () {
+                    for (const key in packet[1]) {
+                        if (typeof packet[1][key] != 'string') {
+                            return false
+                        }
+                    }
+                    return true
+                } ()
+            )
     },
     // **Literals**: Constant value padding bytes. A type definition with a
     // preceding or following literal or both. The preceding or following
@@ -298,7 +315,7 @@ const is = {
 
 
 module.exports = function (packets) {
-    const definitions = []
+    const definitions = [], lookups = { values: [], index: 0 }
 
     function map (packet, extra = {}, pack = false) {
         // **References**: References to existing packet definitions.
@@ -385,7 +402,22 @@ module.exports = function (packets) {
 
         // **Mapped integers**: Integers mapped to a string value.
         function mapped () {
-            return map(packet[0], { lookup: packet[1].slice(), ...extra }, pack)
+            const lookup = function () {
+                const values = JSON.parse(JSON.stringify(packet[1]))
+                for (let i = 0, I = lookups.values.length; i < I; i++) {
+                    if (deepEqual(values, lookups.values[i])) {
+                        return {
+                            index: i,
+                            values: values
+                        }
+                        break
+                    }
+                }
+                const index = lookups.index++
+                lookups.values[index] = values
+                return { index, values }
+            } ()
+            return map(packet[0], { lookup, ...extra }, pack)
         }
 
         // **Literals**:

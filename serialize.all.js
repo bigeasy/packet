@@ -9,9 +9,6 @@ const hex = require('./hex')
 // Generate integer packing.
 const pack = require('./pack')
 
-// Maintain a set of lookup constants.
-const lookup = require('./lookup')
-
 // Determine necessary variables.
 const { serialize: declare } = require('./declare')
 
@@ -314,8 +311,6 @@ function generate (packet, { require = null, bff, chk }) {
         direction: 'serialize'
     }
 
-    const $lookup = {}
-
     function absent (path, field) {
         $step++
         return null
@@ -348,13 +343,18 @@ function generate (packet, { require = null, bff, chk }) {
                 `, word('$_', field), `
             `)
         } else if (field.lookup) {
-            lookup($lookup, path, field.lookup.slice())
+            if (Array.isArray(field.lookup.values)) {
+                return $(`
+                    $_ = $lookup[${field.lookup.index}].indexOf(${path})
+
+                    `, word('$_', field), `
+                `)
+            }
             return $(`
-                $_ = $lookup.${path}.indexOf(${path})
+                $_ = $lookup[${field.lookup.index}].reverse[${path}]
 
                 `, word('$_', field), `
             `)
-            throw new Error
         } else {
             return word(path, field)
         }
@@ -752,9 +752,6 @@ function generate (packet, { require = null, bff, chk }) {
     const lets = Object.keys(declarations)
                             .filter(key => variables[key])
                             .map(key => declarations[key])
-    const lookups = Object.keys($lookup).length != 0
-                  ? `const $lookup = ${JSON.stringify($lookup, null, 4)}`
-                  : null
 
     const requires = required(require)
 
@@ -763,8 +760,6 @@ function generate (packet, { require = null, bff, chk }) {
     return $(`
         serializers.${bff ? 'bff' : chk ? 'chk' : 'all'}.${packet.name} = function () {
             `, requires, -1, `
-
-            `, lookups, -1, `
 
             return function (${packet.name}) {
                 return function ($buffer, $start, $end) {

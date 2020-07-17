@@ -1,19 +1,24 @@
-module.exports = function ({ serializers }) {
+module.exports = function ({ serializers, $lookup }) {
     serializers.all.object = function () {
-        const $lookup = {
-            "object": {
-                "value": [
-                    "off",
-                    "on"
-                ]
-            }
-        }
-
         return function (object) {
             return function ($buffer, $start, $end) {
                 let $_
 
-                $_ = $lookup.object.value.indexOf(object.value)
+                $buffer[$start++] = (object.nudge & 0xff)
+
+                $_ = $lookup[0].indexOf(object.value)
+
+                $buffer[$start++] = ($_ & 0xff)
+
+                $_ = $lookup[1].indexOf(object.yn)
+
+                $buffer[$start++] = ($_ & 0xff)
+
+                $_ = $lookup[0].indexOf(object.binary)
+
+                $buffer[$start++] = ($_ & 0xff)
+
+                $_ = $lookup[2].reverse[object.mapped]
 
                 $buffer[$start++] = ($_ & 0xff)
 

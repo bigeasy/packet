@@ -1,4 +1,4 @@
-module.exports = function ({ parsers }) {
+module.exports = function ({ parsers, $lookup }) {
     parsers.inc.object = function () {
         const twiddle = require('../../../test/cycle/twiddle')
 

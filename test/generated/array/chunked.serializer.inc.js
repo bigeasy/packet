@@ -1,4 +1,4 @@
-module.exports = function ({ serializers }) {
+module.exports = function ({ serializers, $lookup }) {
     serializers.inc.object = function () {
         return function (object, $step = 0, $i = []) {
             let $_, $bite, $copied = 0, $offset = 0, $index = 0, $length = 0

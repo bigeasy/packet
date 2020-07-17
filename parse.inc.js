@@ -20,9 +20,6 @@ const unpack = require('./unpack')
 // Determine necessary variables.
 const { parse: declare } = require('./declare')
 
-// Maintain a set of lookup constants.
-const lookup = require('./lookup')
-
 // Generate accumulator declaration source.
 const accumulatorer = require('./accumulator')
 
@@ -76,9 +73,6 @@ function generate (packet, { require = null }) {
         direction: 'parse'
     }
 
-    // Gather up declared lookup constants.
-    const $lookup = {}
-
     function absent (path, field) {
         return $(`
             case ${$step++}:
@@ -117,15 +111,14 @@ function generate (packet, { require = null }) {
             ? unpack(accumulate, packet, path, field, '$_')
             : field.compliment
                 ? `${path} = ${unsign('$_', field.bits)}`
-                : field.lookup
-                    ? `${path} = $lookup.${path}[$_]`
+                : field.lookup != null
+                    ? Array.isArray(field.lookup.values)
+                        ? `${path} = $lookup[${field.lookup.index}][$_]`
+                        : `${path} = $lookup[${field.lookup.index}].forward[$_]`
                     : `${path} = $_`
         const cast = field.bits > 32
             ? { suffix: 'n', to: 'BigInt', fixup: '' }
             : { suffix: '', to: '', fixup: ' >>> 0' }
-        if (field.lookup) {
-            lookup($lookup, path, field.lookup.slice())
-        }
         return $(`
             case ${$step++}:
 
@@ -986,10 +979,6 @@ function generate (packet, { require = null }) {
 
     const object = `parsers.inc.${packet.name}`
 
-    const lookups = Object.keys($lookup).length != 0
-                  ? `const $lookup = ${JSON.stringify($lookup, null, 4)}`
-                  : null
-
     const requires = required(require)
 
     variables.register = true
@@ -1020,8 +1009,6 @@ function generate (packet, { require = null }) {
     return $(`
         parsers.inc.${packet.name} = function () {
             `, requires, -1, `
-
-            `, lookups, -1, `
 
             return function (${signature.join(', ')}) {
                 let ${lets.join(', ')}

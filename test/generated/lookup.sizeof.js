@@ -3,7 +3,7 @@ module.exports = function ({ sizeOf }) {
         return function (object) {
             let $start = 0
 
-            $start += 2
+            $start += 6
 
             return $start
         }

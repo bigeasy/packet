@@ -1,4 +1,4 @@
-module.exports = function ({ parsers }) {
+module.exports = function ({ parsers, $lookup }) {
     parsers.all.object = function () {
         const assert = require('assert')
 

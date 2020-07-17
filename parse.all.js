@@ -16,9 +16,6 @@ const unpack = require('./unpack')
 // Determine necessary variables.
 const { parse: declare } = require('./declare')
 
-// Maintain a set of lookup constants.
-const lookup = require('./lookup')
-
 // Generate accumulator declaration source.
 const accumulatorer = require('./accumulator')
 
@@ -196,8 +193,6 @@ function generate (packet, { require, bff, chk }) {
         direction: 'parse'
     }
 
-    const $lookup = {}
-
     // TODO You can certianly do something to make this prettier.
     // TODO Start by prepending the path I think?
     // TODO Uh, `index` is not the same as `$I`, need `$i` and `$I`.
@@ -336,11 +331,17 @@ function generate (packet, { require, bff, chk }) {
                 `, unpack(accumulate, packet, assignee, field, '$_'), `
             `)
         } else if (field.lookup) {
-            lookup($lookup, assignee, field.lookup.slice())
+            if (Array.isArray(field.lookup.values)) {
+                return $(`
+                    `, parse, `
+
+                    ${assignee} = $lookup[${field.lookup.index}][$_]
+                `)
+            }
             return $(`
                 `, parse, `
 
-                ${assignee} = $lookup.${assignee}[$_]
+                ${assignee} = $lookup[${field.lookup.index}].forward[$_]
             `)
         }
 
@@ -894,9 +895,6 @@ function generate (packet, { require, bff, chk }) {
     const lets = Object.keys(declarations)
                             .filter(key => variables[key])
                             .map(key => declarations[key])
-    const lookups = Object.keys($lookup).length != 0
-                  ? `const $lookup = ${JSON.stringify($lookup, null, 4)}`
-                  : null
 
     const requires = required(require)
 
@@ -904,8 +902,6 @@ function generate (packet, { require, bff, chk }) {
         return $(`
             parsers.${bff ? 'bff' : 'chk'}.${packet.name} = function () {
                 `, requires, -1, `
-
-                `, lookups, -1, `
 
                 return function () {
                     return function ($buffer, $start, $end) {
@@ -925,8 +921,6 @@ function generate (packet, { require, bff, chk }) {
     return $(`
         parsers.all.${packet.name} = function () {
             `, requires, -1, `
-
-            `, lookups, -1, `
 
             return function ($buffer, $start) {
                 `, lets.length ? `let ${lets.join(', ')}` : null, -1, `

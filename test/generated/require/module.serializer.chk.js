@@ -1,4 +1,4 @@
-module.exports = function ({ serializers }) {
+module.exports = function ({ serializers, $lookup }) {
     serializers.chk.object = function () {
         const twiddle = require('../../../test/cycle/twiddle')
 

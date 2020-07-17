@@ -7,9 +7,6 @@ const hex = require('./hex')
 // Generate integer packing.
 const pack = require('./pack')
 
-// Maintain a set of lookup constants.
-const lookup = require('./lookup')
-
 // Determine necessary variables.
 const { serialize: declare } = require('./declare')
 
@@ -45,7 +42,6 @@ function generate (packet, { require = null }) {
         packet: packet.name,
         direction: 'serialize'
     }
-    const $lookup = {}
 
     function absent () {
         // TODO Can we have nothing instead?
@@ -62,13 +58,12 @@ function generate (packet, { require = null }) {
         const direction = field.endianness == 'big' ? '--' : '++'
         let bite = field.endianness == 'big' ? bytes - 1 : 0
         let stop = field.endianness == 'big' ? -1 : bytes
-        if (field.lookup) {
-            lookup($lookup, path, field.lookup.slice())
-        }
         const assign = field.fields
             ? pack(accumulate, packet, field, path, '$_')
-            : field.lookup
-                ? `$_ = $lookup.${path}.indexOf(${path})`
+            : field.lookup != null
+                ? Array.isArray(field.lookup.values)
+                    ? `$_ = $lookup[${field.lookup.index}].indexOf(${path})`
+                    : `$_ = $lookup[${field.lookup.index}].reverse[${path}]`
                 : `$_ = ${path}`
         const cast = field.bits > 32
             ? { suffix: 'n', from: 'Number', shift: '>>' }
@@ -753,10 +748,6 @@ function generate (packet, { require = null }) {
                             .filter(key => variables[key])
                             .map(key => signatories[key])
 
-    const lookups = Object.keys($lookup).length != 0
-                  ? `const $lookup = ${JSON.stringify($lookup, null, 4)}`
-                  : null
-
     const requires = required(require)
 
     const restart = variables.starts ? $(`
@@ -786,8 +777,6 @@ function generate (packet, { require = null }) {
     return $(`
         serializers.inc.${packet.name} = function () {
             `, requires, -1, `
-
-            `, lookups, -1, `
 
             return function (${signature.join(', ')}) {
                 let ${lets.join(', ')}

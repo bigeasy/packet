@@ -1,4 +1,4 @@
-module.exports = function ({ parsers }) {
+module.exports = function ({ parsers, $lookup }) {
     parsers.inc.object = function () {
         return function (object, $step = 0, $sip = 0) {
             let $_, $bite
