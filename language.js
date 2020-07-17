@@ -452,26 +452,18 @@ module.exports = function (packets) {
 
         //
         const inline = {
-            inliner: function (inlined, field) {
-                if (typeof field[0] == 'function') {
-                    field = field.slice()
-                    const f = field.shift()
-                    // TODO Pass an array to `args` and have it fill `vargs`.
-                    const _inline = args(f)
-                    while (field.length != 0 && typeof field[0] != 'function') {
-                        _inline.vargs.push(field.shift())
-                    }
-                    inlined.push(_inline)
-                    inline.inliner(inlined, field)
+            inliner: function (inlined, array) {
+                while (array.length != 0) {
+                    inlined.push(args(array))
                 }
             },
             split: function () {
-                packet = packet.slice()
+                const define = packet.slice()
                 const before = []
-                inline.inliner(before, packet.shift().slice())
+                inline.inliner(before, define.shift().slice())
                 const after = []
-                inline.inliner(after, packet.pop().slice())
-                const fields = map(packet[0], {})
+                inline.inliner(after, define.pop().slice())
+                const fields = map(define[0], {})
                 return [{
                     type: 'inline',
                     // TODO Test with a structure member.
@@ -487,13 +479,12 @@ module.exports = function (packets) {
                 }]
             },
             mirrored: function () {
-                packet = packet.slice()
-                const inlines = packet.shift()[0]
+                const inlines = packet[0][0]
                 const before = []
                 inline.inliner(before, inlines.slice())
                 const after = []
                 inline.inliner(after, inlines.slice())
-                const fields = map(packet[0], {})
+                const fields = map(packet[1], {})
                 return [{
                     type: 'inline',
                     // TODO Test with a structure member.
@@ -600,7 +591,7 @@ module.exports = function (packets) {
                         switch (typeof test) {
                         case 'function':
                             conditions.push({
-                                test: { ...args(test) },
+                                test: { ...args([ test ]) },
                                 fields: map(field, {})
                             })
                             break
@@ -628,7 +619,7 @@ module.exports = function (packets) {
                         switch (typeof test) {
                         case 'function':
                             conditions.push({
-                                test: { ...args(test) },
+                                test: { ...args([ test ]) },
                                 fields: map(field, {})
                             })
                             break
@@ -668,7 +659,7 @@ module.exports = function (packets) {
                     case 'function':
                         conditions.push({
                             body: {
-                                test: { ...args(test) },
+                                test: { ...args([ test ]) },
                                 fields: fields
                             },
                             bits: fields.reduce((bits, field) => {
@@ -725,7 +716,7 @@ module.exports = function (packets) {
                     return {
                         type: 'function',
                         name: name,
-                        ...args(accumulator)
+                        ...args([ accumulator ])
                     }
                 default:
                     if (accumulator instanceof RegExp) {
@@ -768,7 +759,7 @@ module.exports = function (packets) {
                 return [{
                     ...extra,
                     type: 'switch',
-                    select: { ...args(packet[0]) },
+                    select: { ...args([ packet[0] ]) },
                     vivify: vivify == 'object' ? 'variant' : vivify,
                     stringify: ! Array.isArray(packet[1]),
                     bits: bits < 0 ? 0 : bits,

@@ -1,3 +1,6 @@
+// Node.js API.
+const assert = require('assert')
+
 function trim (source) {
     const $ = /\n(.*)}$/.exec(source)
     if ($ != null) {
@@ -6,23 +9,21 @@ function trim (source) {
     return source
 }
 
-function parse (f) {
-}
+module.exports = function (array) {
+    assert.equal(typeof array[0], 'function')
 
-module.exports = function (f) {
+    const f = array.shift()
     let source = f.toString()
 
     const properties = []
-    const defaulted = []
+    let defaulted = []
+    let arity = f.length
 
     const SKIPS = {
         '{': { regex: /^.[^"'{}]*/, end: '}' },
         '[': { regex: /^.[^"'[\]]*/, end: ']' },
         '"': { regex: /^"[^"\\]*(?:\\[\s\S][^\\"]*)*/, end: '"' },
         '\'': { regex: /^'[^'\\]*(?:\\[\s\S][^\\']*)*/, end: '\'' }
-    }
-
-    function string () {
     }
 
     function skip () {
@@ -34,8 +35,6 @@ module.exports = function (f) {
             switch (source[0]) {
             case '{':
             case '[':
-                skip()
-                break
             case '\'':
             case '"':
                 skip()
@@ -49,13 +48,9 @@ module.exports = function (f) {
         return source.replace(/^.\s*/, '')
     }
 
-    const length = source.length
-    source = source.replace(/^(?:function)?[^(]*\(\s*/, '')
-    if (source.length == length) {
-    } else if (source[0] == '{') {
-        source = next()
-        while (source[0] != '}') {
-            const identifier = /^([^=,:\s}]+)\s*(.*)/.exec(source)
+    function parameters (stop) {
+        while (source[0] != stop) {
+            const identifier = /^([^=,:\s)}]+)\s*(.*)/.exec(source)
             properties.push(identifier[1])
             source = identifier[2]
             if (source[0] == ':') {
@@ -76,42 +71,47 @@ module.exports = function (f) {
                 if ($ != null) {
                     source = $[1]
                     defaulted.push(properties[properties.length - 1])
+                } else {
+                    while (source[0] != ',' && source[0] != stop) {
+                        switch (source[0]) {
+                        case '{':
+                        case '[':
+                        case '\'':
+                        case '"':
+                            skip()
+                            break
+                        default:
+                            const regex = /^[^[(){},'"]*/
+                            source = source.replace(regex, '')
+                            break
+                        }
+                    }
                 }
             }
             if (source[0] == ',') {
                 source = next()
             }
         }
+    }
+
+    const length = source.length
+    const args = /^(?:function)?[^(]*\(\s*/
+    source = source.replace(args, '')
+    if (source.length == length) {
+    } else if (source[0] == '{') {
+        source = next()
+        parameters('}')
     } else {
-        let index = 0
-        while (source[0] != ')') {
-            const identifier = /^[^=,:)\s]+\s*(.*)/.exec(source)
-            source = identifier[1]
-            if (source[0] == ':') {
-                source = next()
-                switch (source[0]) {
-                case '{':
-                case '[':
-                    skip()
-                    break
-                default:
-                    source = source.replace(/^[^\s=,]+\s*/, '')
-                    break
-                }
-            }
-            if (source[0] == '=') {
-                source = next()
-                const $ = /^(?:0|null)\s*(.*)/.exec(source)
-                if ($ != null) {
-                    source = $[1]
-                    defaulted.push(index)
-                }
-            }
-            if (source[0] == ',') {
-                source = next()
-            }
-            index++
-        }
+        source = source.replace(/^\s*/, '')
+        parameters(')')
+        defaulted = defaulted.map(arg => properties.indexOf(arg))
+        arity = properties.length
+        properties.length = 0
+    }
+
+    const vargs = []
+    while (array.length != 0 && typeof array[0] != 'function') {
+        vargs.push(array.shift())
     }
 
     const $ = /[^(]*\(\s*{\s*(.*?)\s*}/.exec(f.toString())
@@ -119,7 +119,7 @@ module.exports = function (f) {
         defaulted,
         properties: properties,
         source: trim(f.toString()).replace(/^function\s*[^(]+\s*\(/, 'function ('),
-        arity: f.length,
-        vargs: []
+        arity: arity,
+        vargs: vargs
     }
 }
