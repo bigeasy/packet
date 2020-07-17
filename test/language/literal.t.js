@@ -7,71 +7,61 @@ require('proof')(2, okay => {
                 after: [ 2, [ 2, '3' ]],
             }, 8 ]
         }
-    }),
-[{
-    type: 'structure',
-    vivify: 'object',
-    dotted: '',
-    fixed: true,
-    bits: 8,
-    fields: [
-      {
-        type: 'integer',
+    }), [{
+        type: 'structure',
         vivify: 'object',
-        dotted: '.header',
+        dotted: '',
         fixed: true,
         bits: 8,
-        endianness: 'big',
-        compliment: false,
-        name: 'header',
-        fields: [
-          {
-            type: 'literal',
-            dotted: '.before',
-            vivify: 'descend',
+        fields: [{
+            type: 'integer',
+            vivify: 'object',
+            dotted: '.header',
             fixed: true,
-            bits: 4,
-            before: { repeat: 1, value: '3', bits: 2 },
-            fields: [
-              {
-                type: 'integer',
-                vivify: 'number',
-                dotted: '',
+            bits: 8,
+            endianness: 'big',
+            compliment: false,
+            name: 'header',
+            fields: [{
+                type: 'literal',
+                dotted: '.before',
+                vivify: 'descend',
                 fixed: true,
-                bits: 2,
-                endianness: 'big',
-                compliment: false
-              }
-            ],
-            after: { repeat: 0, value: '', bits: 0 },
-            name: 'before'
-          },
-          {
-            type: 'literal',
-            dotted: '.after',
-            vivify: 'descend',
-            fixed: true,
-            bits: 4,
-            before: { repeat: 0, value: '', bits: 0 },
-            fields: [
-              {
-                type: 'integer',
-                vivify: 'number',
-                dotted: '',
+                bits: 4,
+                before: { repeat: 1, value: '3', bits: 2 },
+                fields: [{
+                    type: 'integer',
+                    vivify: 'number',
+                    dotted: '',
+                    fixed: true,
+                    bits: 2,
+                    endianness: 'big',
+                    compliment: false
+                }],
+                after: { repeat: 0, value: '', bits: 0 },
+                name: 'before'
+            }, {
+                type: 'literal',
+                dotted: '.after',
+                vivify: 'descend',
                 fixed: true,
-                bits: 2,
-                endianness: 'big',
-                compliment: false
-              }
-            ],
-            after: { repeat: 1, value: '3', bits: 2 },
-            name: 'after'
-          }
-        ]
-      }
-    ],
-    name: 'packet'
-}], 'literal packed')
+                bits: 4,
+                before: { repeat: 0, value: '', bits: 0 },
+                fields: [{
+                    type: 'integer',
+                    vivify: 'number',
+                    dotted: '',
+                    fixed: true,
+                    bits: 2,
+                    endianness: 'big',
+                    compliment: false
+                }],
+                after: { repeat: 1, value: '3', bits: 2 },
+                name: 'after'
+            }]
+        }],
+        name: 'packet'
+    }], 'literal packed')
     okay(language({ packet: { value: [ '0faded', 16, 'facade' ] } }), [{
         type: 'structure',
         vivify: 'object',
