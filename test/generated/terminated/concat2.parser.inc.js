@@ -1,7 +1,7 @@
 module.exports = function ({ parsers, $lookup }) {
     parsers.inc.object = function () {
         return function (object, $step = 0, $i = []) {
-            let $_, $bite, $buffers = [], $length = 0
+            let $_, $bite, $buffers = []
 
             return function $parse ($buffer, $start, $end) {
                 for (;;) {
@@ -29,49 +29,31 @@ module.exports = function ({ parsers, $lookup }) {
                         object.nudge = $buffer[$start++]
 
 
-                    case 3:
+                    // TODO Here we set the step upon entry, which is why we don't
+                    // always have to set the step for an integer. Usually we have
+                    // some sort of preamble that sets the step. We should eliminate
+                    // steps where we can (why not?) and close the door behind us
+                    // when we enter a step.
+                    case 3: {
 
-                        $_ = 0
-
-                        $step = 4
-
-                    case 4: {
+                        $step = 3
 
                         const $index = $buffer.indexOf(0xa, $start)
                         if (~$index) {
-                            if ($_ + $index > 8) {
-                                const $length = 8 - $_
-                                $buffers.push($buffer.slice($start, $start + $length))
-                                $_ += $length
-                                $start += $length
-                                $step = 6
-                                continue
-                            } else {
-                                $buffers.push($buffer.slice($start, $index))
-                                $_ += ($index - $start) + 1
-                                $start = $index + 1
-                                $step = 5
-                                continue
-                            }
-                        } else if ($_ + ($end - $start) >= 8) {
-                            const $length = 8 - $_
-                            $buffers.push($buffer.slice($start, $start + $length))
-                            $_ += $length
-                            $start += $length
-                            $step = 6
+                            $buffers.push($buffer.slice($start, $index))
+                            $start = $index + 1
+                            $step = 4
                             continue
                         } else {
-                            $_ += $end - $start
                             $buffers.push($buffer.slice($start))
                             return { start: $end, object: null, parse: $parse }
                         }
 
-                        $step = 5
+                        $step = 4
 
                     }
 
-
-                    case 5:
+                    case 4:
 
                         if ($start == $end) {
                             return { start: $start, object: null, parse: $parse }
@@ -80,11 +62,25 @@ module.exports = function ({ parsers, $lookup }) {
                         if ($buffer[$start++] != 0xb) {
                             if ($buffer[$start - 1] == 0xa) {
                                 $buffers.push(Buffer.from([ 0xa ]))
-                                $step = 5
+                                $step = 4
                                 continue
                             }
-                            $buffers.push(Buffer.from([ 0xa ].concat($buffer[$start - 1])))
-                            $step = 4
+                            $buffers.push(Buffer.from([ 0xa ].concat($buffer[$start])))
+                            $step = 3
+                            continue
+                        }
+
+                        $step = 5
+
+                    case 5:
+
+                        if ($start == $end) {
+                            return { start: $start, object: null, parse: $parse }
+                        }
+
+                        if ($buffer[$start++] != 0xa) {
+                            $buffers.push(Buffer.from([ 0xa, 0xb ].concat($buffer[$start])))
+                            $step = 3
                             continue
                         }
 
@@ -92,28 +88,25 @@ module.exports = function ({ parsers, $lookup }) {
 
                     case 6:
 
-                        $_ = 8 -  Math.min($buffers.reduce((sum, buffer) => {
-                            return sum + buffer.length
-                        }, 2), 8)
+                        if ($start == $end) {
+                            return { start: $start, object: null, parse: $parse }
+                        }
+
+                        if ($buffer[$start++] != 0xb) {
+                            $buffers.push(Buffer.from([ 0xa, 0xb, 0xa ].concat($buffer[$start])))
+                            $step = 3
+                            continue
+                        }
+
+                        $step = 7
+
+                    case 7:
+
 
                         object.array = $buffers.length == 1 ? $buffers[0] : Buffer.concat($buffers)
                         $buffers.length = 0
 
-                        $step = 7
-
-                    case 7: {
-
-                        const length = Math.min($_, $end - $start)
-                        $start += length
-                        $_ -= length
-
-                        if ($_ != 0) {
-                            return { start: $start, object: null, parse: $parse }
-                        }
-
                         $step = 8
-
-                    }
 
                     case 8:
 

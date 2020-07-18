@@ -1,11 +1,13 @@
 module.exports = function ({ sizeOf }) {
     sizeOf.object = function () {
-        const twiddle = require('../../cycle/twiddle')
-
         return function (object) {
             let $start = 0
 
-            $start += 5
+            $start += 1
+
+            $start += 1 * object.array.length + 6
+
+            $start += 1
 
             return $start
         }

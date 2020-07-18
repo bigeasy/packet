@@ -294,7 +294,7 @@ function generate (packet, { require = null }) {
             if (field.fixed) {
                 locals['length'] = 0
             }
-            const redo = $step + 1
+            const redo = $step + (field.type == 'fixed' ? 1 : 0)
             // **TODO** This is off for a multi-byte terminator that occurs at
             // the last element. Would begin trying to match the terminator and
             // go past the end of the buffer.
@@ -370,7 +370,31 @@ function generate (packet, { require = null }) {
             const subsequent = []
             const done = $step + bytes.length
             for (let i = 1; i < bytes.length; i++) {
-                const sofar = util.inspect(bytes.slice(0, i))
+                const sofar = bytes.slice(0, i)
+                const rewind = sofar.slice(1)
+                const rewinds = []
+                let found = false
+                const seen = []
+                do {
+                    while (rewind.length != 0) {
+                        if (rewind.every((value, index) => bytes[index] == value)) {
+                            break
+                        }
+                        rewind.shift()
+                    }
+                    if (bytes[rewind.length] != bytes[i] && !seen.includes(bytes[rewind.length])) {
+                        seen.push(bytes[rewind.length])
+                        console.log(i, rewind.length, hex(bytes[rewind.length]))
+                        rewinds.push($(`
+                            if ($buffer[$start - 1] == ${hex(bytes[rewind.length])}) {
+                                $buffers.push(Buffer.from(${hex(bytes.slice(0, sofar.length - rewind.length))}))
+                                $step = ${redo + 1 + rewind.length}
+                                continue
+                            }
+                        `))
+                    }
+                    rewind.shift()
+                } while (rewind.length != 0)
                 subsequent.push($(`
                     case ${$step++}:
 
@@ -379,8 +403,9 @@ function generate (packet, { require = null }) {
                             return { start: $start, object: null, parse: $parse }
                         }
 
-                        if ($buffer[$start++] != ${hex(bytes[1])}) {
-                            $buffers.push(Buffer.from(${sofar}.concat($buffer[$start])))
+                        if ($buffer[$start++] != ${hex(bytes[i])}) {
+                            `, rewinds.length != 0 ? rewinds.join('\n') : null, `
+                            $buffers.push(Buffer.from(${hex(sofar)}.concat($buffer[$start - 1])))
                             $step = ${redo}
                             continue
                         }

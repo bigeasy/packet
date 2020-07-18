@@ -1,6 +1,6 @@
 module.exports = function ({ serializers, $lookup }) {
     serializers.bff.object = function () {
-        const twiddle = require('../../../test/cycle/twiddle')
+        const twiddle = require('../../cycle/twiddle')
 
         return function (object) {
             return function ($buffer, $start, $end) {

@@ -10,7 +10,7 @@ function prove (okay) {
             }
         },
         require: {
-            twiddle: '../../../test/cycle/twiddle'
+            twiddle: '../../cycle/twiddle'
         },
         objects: [{ value: 1, sentry: 0xaa }]
     })

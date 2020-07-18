@@ -1,6 +1,6 @@
 module.exports = function ({ parsers, $lookup }) {
     parsers.all.object = function () {
-        const twiddle = require('../../../test/cycle/twiddle')
+        const twiddle = require('../../cycle/twiddle')
 
         return function ($buffer, $start) {
             let object = {

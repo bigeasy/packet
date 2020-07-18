@@ -78,7 +78,12 @@ module.exports = function ({ parsers, $lookup }) {
                         }
 
                         if ($buffer[$start++] != 0xa) {
-                            $buffers.push(Buffer.from([ 13 ].concat($buffer[$start])))
+                            if ($buffer[$start - 1] == 0xd) {
+                                $buffers.push(Buffer.from([ 0xd ]))
+                                $step = 5
+                                continue
+                            }
+                            $buffers.push(Buffer.from([ 0xd ].concat($buffer[$start - 1])))
                             $step = 4
                             continue
                         }

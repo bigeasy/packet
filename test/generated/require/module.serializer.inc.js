@@ -1,6 +1,6 @@
 module.exports = function ({ serializers, $lookup }) {
     serializers.inc.object = function () {
-        const twiddle = require('../../../test/cycle/twiddle')
+        const twiddle = require('../../cycle/twiddle')
 
         return function (object, $step = 0, $$ = []) {
             let $_, $bite

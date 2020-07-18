@@ -1,6 +1,6 @@
 module.exports = function ({ parsers, $lookup }) {
     parsers.bff.object = function () {
-        const twiddle = require('../../../test/cycle/twiddle')
+        const twiddle = require('../../cycle/twiddle')
 
         return function () {
             return function ($buffer, $start, $end) {
