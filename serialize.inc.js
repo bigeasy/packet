@@ -414,8 +414,6 @@ function generate (packet, { require = null }) {
             // end of the buffer.
             const pad = join(field.pad.map(bite => {
                 return $(`
-                    x
-                        `, -1, null, `
                         $step = ${$step}
 
                     case ${$step++}:
@@ -437,8 +435,6 @@ function generate (packet, { require = null }) {
             }))
             // Repeat the padding fill if we've not filled the buffer
             return $(`
-                x
-                    `, -1, null, `
                     `, assignment, -1, `
 
                 `, pad, `
