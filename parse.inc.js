@@ -384,7 +384,6 @@ function generate (packet, { require = null }) {
                     }
                     if (bytes[rewind.length] != bytes[i] && !seen.includes(bytes[rewind.length])) {
                         seen.push(bytes[rewind.length])
-                        console.log(i, rewind.length, hex(bytes[rewind.length]))
                         rewinds.push($(`
                             if ($buffer[$start - 1] == ${hex(bytes[rewind.length])}) {
                                 $buffers.push(Buffer.from(${hex(bytes.slice(0, sofar.length - rewind.length))}))
