@@ -1,7 +1,7 @@
 module.exports = function ({ serializers, $lookup }) {
     serializers.inc.object = function () {
         return function (object, $step = 0, $i = []) {
-            let $_, $bite, $offset = 0, $length = 0
+            let $_, $bite, $offset = 0, $length = 0, $index = 0
 
             return function $serialize ($buffer, $start, $end) {
                 for (;;) {
@@ -26,23 +26,21 @@ module.exports = function ({ serializers, $lookup }) {
                     case 2:
 
                         $_ = 0
-                        $offset = 0
                         $length = object.array.reduce((sum, buffer) => sum + buffer.length, 0)
-                        $i[0] = 0
-
-                        $step = 3
 
                     case 3: {
 
-                        for (;;) {
-                            const length = Math.min($end - $start, object.array[$i[0]].length - $offset)
-                            object.array[$i[0]].copy($buffer, $start, $offset, $offset + length)
-                            $offset += length
-                            $start += length
-                            $_ += length
+                        $step = 3
 
-                            if ($offset == object.array[$i[0]].length) {
-                                $i[0]++
+                        for (;;) {
+                            const $bytes = Math.min($end - $start, object.array[$index].length - $offset)
+                            object.array[$index].copy($buffer, $start, $offset, $offset + $bytes)
+                            $offset += $bytes
+                            $start += $bytes
+                            $_ += $bytes
+
+                            if ($offset == object.array[$index].length) {
+                                $index++
                                 $offset = 0
                             }
 
@@ -50,8 +48,13 @@ module.exports = function ({ serializers, $lookup }) {
                                 break
                             }
 
-                            return { start: $start, serialize: $serialize }
+                            if ($start == $end) {
+                                return { start: $start, serialize: $serialize }
+                            }
                         }
+
+                        $index = 0
+                        $offset = 0
 
                         $step = 4
 

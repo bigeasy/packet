@@ -46,26 +46,36 @@ module.exports = function ({ serializers, $lookup }) {
                         }
 
 
+                        $_ = 0
+
                     case 5: {
 
-                        do {
+                        $step = 5
+
+                        for (;;) {
                             const $bytes = Math.min($end - $start, object.array[$index].length - $offset)
                             object.array[$index].copy($buffer, $start, $offset, $offset + $bytes)
                             $copied += $bytes
                             $offset += $bytes
                             $start += $bytes
-                            if ($start == $end) {
-                                return { start: $start, serialize: $serialize }
-                            }
+
                             if ($offset == object.array[$index].length) {
                                 $index++
                                 $offset = 0
                             }
-                        } while ($copied != $length)
+
+                            if ($copied == $length) {
+                                break
+                            }
+
+                            if ($start == $end) {
+                                return { start: $start, serialize: $serialize }
+                            }
+                        }
 
                         $index = 0
-                        $copied = 0
                         $offset = 0
+                        $copied = 0
 
                         $step = 6
 

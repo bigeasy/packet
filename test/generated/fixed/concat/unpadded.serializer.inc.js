@@ -27,9 +27,9 @@ module.exports = function ({ serializers, $lookup }) {
 
                         $_ = 0
 
-                        $step = 3
-
                     case 3: {
+
+                            $step = 3
 
                             const length = Math.min($end - $start, object.array.length - $_)
                             object.array.copy($buffer, $start, $_, $_ + length)

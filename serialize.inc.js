@@ -32,6 +32,12 @@ function generate (packet, { require = null }) {
 
     const variables = declare(packet)
 
+    // Locals are variables that are local to the switch statement's scope so
+    // that they are set between invocations of the function, but they are also
+    // local to the current serialization and do not overlap. Maybe we should
+    // call them `leaves`, because you do not need to maintain a stack of them.
+
+    //
     const locals = {}
 
     const accumulate = {
@@ -197,27 +203,37 @@ function generate (packet, { require = null }) {
 
                 `, map(dispatch, '$length', field.encoding), `
 
+                    $_ = 0
+
                 case ${$step++}: {
 
-                    do {
+                    $step = ${$step - 1}
+
+                    for (;;) {
                         const $bytes = Math.min($end - $start, ${path}[$index].length - $offset)
                         ${path}[$index].copy($buffer, $start, $offset, $offset + $bytes)
                         $copied += $bytes
                         $offset += $bytes
                         $start += $bytes
-                        if ($start == $end) {
-                            `, buffered, `
-                            return { start: $start, serialize: $serialize }
-                        }
+
                         if ($offset == ${path}[$index].length) {
                             $index++
                             $offset = 0
                         }
-                    } while ($copied != $length)
+
+                        if ($copied == $length) {
+                            break
+                        }
+
+                        if ($start == $end) {
+                            `, buffered, `
+                            return { start: $start, serialize: $serialize }
+                        }
+                    }
 
                     $index = 0
-                    $copied = 0
                     $offset = 0
+                    $copied = 0
 
                     $step = ${$step}
 
@@ -241,13 +257,19 @@ function generate (packet, { require = null }) {
         $i--
         return source
     }
+    //
 
+    // A buffer copy shared by terminated and fixed arrays.
+
+    //
     function copy (path, element, buffered) {
+        // If we have an array of buffers, we need a loop index and a variable
+        // to track the offset in the specific buffer.
         let i
         if (!element.concat) {
             locals['offset'] = 0
             locals['length'] = 0
-            i = `$i[${++$i}]`
+            locals['index'] = 0
         }
         const source = element.concat
         // Copy the single buffer using copy.
@@ -281,23 +303,21 @@ function generate (packet, { require = null }) {
             case ${$step++}:
 
                 $_ = 0
-                $offset = 0
                 $length = ${path}.reduce((sum, buffer) => sum + buffer.length, 0)
-                ${i} = 0
 
             case ${$step++}: {
 
                 $step = ${$step - 1}
 
                 for (;;) {
-                    const length = Math.min($end - $start, ${path}[${i}].length - $offset)
-                    ${path}[${i}].copy($buffer, $start, $offset, $offset + length)
-                    $offset += length
-                    $start += length
-                    $_ += length
+                    const $bytes = Math.min($end - $start, ${path}[$index].length - $offset)
+                    ${path}[$index].copy($buffer, $start, $offset, $offset + $bytes)
+                    $offset += $bytes
+                    $start += $bytes
+                    $_ += $bytes
 
-                    if ($offset == ${path}[${i}].length) {
-                        ${i}++
+                    if ($offset == ${path}[$index].length) {
+                        $index++
                         $offset = 0
                     }
 
@@ -305,9 +325,14 @@ function generate (packet, { require = null }) {
                         break
                     }
 
-                    `, buffered, `
-                    return { start: $start, serialize: $serialize }
+                    if ($start == $end) {
+                        `, buffered, `
+                        return { start: $start, serialize: $serialize }
+                    }
                 }
+
+                $index = 0
+                $offset = 0
 
                 $step = ${$step}
 
@@ -451,83 +476,7 @@ function generate (packet, { require = null }) {
 
         //
         if (element.type == 'buffer') {
-            // If we have an array of buffers, we need a loop index and a
-            // variable to track the offset in the specific buffer.
-            let i
-            if (!element.concat) {
-                locals['offset'] = 0
-                locals['length'] = 0
-                i = `$i[${++$i}]`
-            }
-            const source = element.concat
-            // Copy the single buffer using copy.
-            ? $(`
-                case ${$step++}:
-
-                    $_ = 0
-
-                    $step = ${$step}
-
-                case ${$step++}: {
-
-                        const length = Math.min($end - $start, ${path}.length - $_)
-                        ${path}.copy($buffer, $start, $_, $_ + length)
-                        $start += length
-                        $_ += length
-
-                        if ($_ != ${path}.length) {
-                            `, buffered, `
-                            return { start: $start, serialize: $serialize }
-                        }
-
-                        $step = ${$step}
-
-                    }
-            `)
-            // Loop through an array of buffers copying to the serialization
-            // buffer using `Buffer.copy()`. Need to track the index of the
-            // current buffer in the array the offset in the current buffer.
-            : $(`
-                case ${$step++}:
-
-                    $_ = 0
-                    $offset = 0
-                    $length = ${path}.reduce((sum, buffer) => sum + buffer.length, 0)
-                    ${i} = 0
-
-                    $step = ${$step}
-
-                case ${$step++}: {
-
-                    for (;;) {
-                        const length = Math.min($end - $start, ${path}[${i}].length - $offset)
-                        ${path}[${i}].copy($buffer, $start, $offset, $offset + length)
-                        $offset += length
-                        $start += length
-                        $_ += length
-
-                        if ($offset == ${path}[${i}].length) {
-                            ${i}++
-                            $offset = 0
-                        }
-
-                        if ($_ == $length) {
-                            break
-                        }
-
-                        `, buffered, `
-                        return { start: $start, serialize: $serialize }
-                    }
-
-                    $step = ${$step}
-
-                }
-            `)
-            // If we have an array of buffers, we need to release the allocated
-            // array index.
-            if (!element.concat) {
-                i--
-            }
+            const source = copy(path, element, buffered)
             // If there is no padding, we are done.
             if (field.pad.length == 0) {
                 return source

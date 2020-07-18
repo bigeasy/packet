@@ -223,9 +223,9 @@ module.exports = function ({ serializers, $lookup }) {
 
                         $_ = 0
 
-                        $step = 21
-
                     case 21: {
+
+                            $step = 21
 
                             const length = Math.min($end - $start, object.value.length - $_)
                             object.value.copy($buffer, $start, $_, $_ + length)

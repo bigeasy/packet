@@ -18,9 +18,9 @@ module.exports = function ({ serializers, $lookup }) {
 
                         $_ = 0
 
-                        $step = 2
-
                     case 2: {
+
+                            $step = 2
 
                             const length = Math.min($end - $start, $$[0].length - $_)
                             $$[0].copy($buffer, $start, $_, $_ + length)
