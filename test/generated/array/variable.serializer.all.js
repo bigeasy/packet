@@ -4,6 +4,8 @@ module.exports = function ({ serializers, $lookup }) {
             return function ($buffer, $start, $end) {
                 let $i = []
 
+                $buffer[$start++] = (object.nudge & 0xff)
+
                 $buffer[$start++] = (object.array.length >>> 8 & 0xff)
                 $buffer[$start++] = (object.array.length & 0xff)
 

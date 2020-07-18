@@ -6,11 +6,13 @@ function prove (okay) {
         name: 'fixed/words/unpadded',
         define: {
             object: {
+                nudge: 8,
                 array: [ [ 4 ], [ 16 ] ],
                 sentry: 8
             }
         },
         objects: [{
+            nudge: 0xaa,
             array: [ 0xabcd, 0xdcba, 0xabcd, 0xdbca ],
             sentry: 0xaa
         }]
@@ -19,14 +21,17 @@ function prove (okay) {
         name: 'fixed/words/single',
         define: {
             object: {
+                nudge: 8,
                 array: [ [ 8 ], [ 8 ], 0x0 ],
                 sentry: 8
             }
         },
         objects: [{
+            nudge: 0xaa,
             array: [ 0xa, 0xb, 0xc, 0xd, 0xa, 0xb, 0xc, 0xd ],
             sentry: 0xaa
         }, {
+            nudge: 0xaa,
             array: [ 0xa, 0xb, 0xc, 0xd ],
             sentry: 0xaa
         }]
@@ -37,14 +42,17 @@ function prove (okay) {
         name: 'fixed/words/multi',
         define: {
             object: {
+                nudge: 8,
                 array: [ [ 16 ], [ 8 ], 0xd, 0xa ],
                 sentry: 8
             }
         },
         objects: [{
+            nudge: 0xaa,
             array: Buffer.from('hello, world').toJSON().data,
             sentry: 0xaa
         }, {
+            nudge: 0xaa,
             array: Buffer.from('hello, world!!!!').toJSON().data,
             sentry: 0xaa
         }]

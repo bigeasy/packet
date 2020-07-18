@@ -5,16 +5,17 @@ function prove (okay) {
     cycle(okay, {
         name: 'array/words',
         define: {
-            object: { array: [ 16, [ 16 ] ], sentry: 8  }
+            object: { nudge: 8, array: [ 16, [ 16 ] ], sentry: 8  }
         },
-        objects: [{ array: [ 0x1236, 0x4567, 0x890a, 0xcdef ], sentry: 0xaa }]
+        objects: [{ nudge: 0xaa, array: [ 0x1236, 0x4567, 0x890a, 0xcdef ], sentry: 0xaa }]
     })
     cycle(okay, {
         name: 'array/fixed',
         define: {
-            object: { array: [ 16, [{ first: 16, second: 16 }] ], sentry: 8 }
+            object: { nudge: 8, array: [ 16, [{ first: 16, second: 16 }] ], sentry: 8 }
         },
         objects: [{
+            nudge: 0xaa,
             array: [{
                 first: 0x1234, second: 0x4567
             }, {
@@ -26,16 +27,17 @@ function prove (okay) {
     cycle(okay, {
         name: 'array/nested',
         define: {
-            object: { array: [ 16, [[ 16, [ 16 ] ]] ], sentry: 8 }
+            object: { nudge: 8, array: [ 16, [[ 16, [ 16 ] ]] ], sentry: 8 }
         },
-        objects: [{ array: [[ 0x1234, 0x4567 ], [ 1, 2 ]], sentry: 0xaa }]
+        objects: [{ nudge: 0xaa, array: [[ 0x1234, 0x4567 ], [ 1, 2 ]], sentry: 0xaa }]
     })
     cycle(okay, {
         name: 'array/variable',
         define: {
-            object: { array: [ 16, [{ first: [ 16, [ 16 ] ] }] ], sentry: 8 }
+            object: { nudge: 8, array: [ 16, [{ first: [ 16, [ 16 ] ] }] ], sentry: 8 }
         },
         objects: [{
+            nudge: 0xaa,
             array: [{
                 first:  [ 0x1234, 0x4567 ]
             }, {

@@ -8,16 +8,11 @@ module.exports = function ({ serializers, $lookup }) {
                     switch ($step) {
                     case 0:
 
-                        $i[0] = 0
                         $step = 1
+                        $bite = 0
+                        $_ = object.nudge
 
                     case 1:
-
-                        $step = 2
-                        $bite = 1
-                        $_ = object.array[$i[0]]
-
-                    case 2:
 
                         while ($bite != -1) {
                             if ($start == $end) {
@@ -27,18 +22,17 @@ module.exports = function ({ serializers, $lookup }) {
                             $bite--
                         }
 
-                        if (++$i[0] != object.array.length) {
-                            $step = 1
-                            continue
-                        }
 
-                    $step = 3
+                    case 2:
+
+                        $i[0] = 0
+                        $step = 3
 
                     case 3:
 
                         $step = 4
-                        $bite = 0
-                        $_ = object.sentry
+                        $bite = 1
+                        $_ = object.array[$i[0]]
 
                     case 4:
 
@@ -50,10 +44,33 @@ module.exports = function ({ serializers, $lookup }) {
                             $bite--
                         }
 
+                        if (++$i[0] != object.array.length) {
+                            $step = 3
+                            continue
+                        }
 
-                        $step = 5
+                    $step = 5
 
                     case 5:
+
+                        $step = 6
+                        $bite = 0
+                        $_ = object.sentry
+
+                    case 6:
+
+                        while ($bite != -1) {
+                            if ($start == $end) {
+                                return { start: $start, serialize: $serialize }
+                            }
+                            $buffer[$start++] = ($_ >>> $bite * 8 & 0xff)
+                            $bite--
+                        }
+
+
+                        $step = 7
+
+                    case 7:
 
                         break
 

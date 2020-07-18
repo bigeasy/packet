@@ -5,13 +5,16 @@ module.exports = function ({ parsers, $lookup }) {
                 let $i = []
 
                 let object = {
+                    nudge: 0,
                     array: [],
                     sentry: 0
                 }
 
-                if ($end - $start < 9) {
+                if ($end - $start < 10) {
                     return parsers.inc.object(object, 1, $i)($buffer, $start, $end)
                 }
+
+                object.nudge = ($buffer[$start++])
 
                 $i[0] = 0
                 for (;;) {

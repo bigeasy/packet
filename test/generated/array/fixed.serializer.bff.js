@@ -4,9 +4,11 @@ module.exports = function ({ serializers, $lookup }) {
             return function ($buffer, $start, $end) {
                 let $i = []
 
-                if ($end - $start < 3 + object.array.length * 4) {
+                if ($end - $start < 4 + object.array.length * 4) {
                     return serializers.inc.object(object, 0, $i)($buffer, $start, $end)
                 }
+
+                $buffer[$start++] = (object.nudge & 0xff)
 
                 $buffer[$start++] = (object.array.length >>> 8 & 0xff)
                 $buffer[$start++] = (object.array.length & 0xff)

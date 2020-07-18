@@ -5,18 +5,21 @@ module.exports = function ({ parsers, $lookup }) {
                 let $i = []
 
                 let object = {
+                    nudge: 0,
                     array: [],
                     sentry: 0
                 }
 
-                if ($end - $start < 17) {
+                if ($end - $start < 18) {
                     return parsers.inc.object(object, 1, $i)($buffer, $start, $end)
                 }
+
+                object.nudge = ($buffer[$start++])
 
                 $i[0] = 0
                 for (;;) {
                     if ($end - ($start - undefined) < 2) {
-                        return parsers.inc.object(object, 2, $i)($buffer, $start - undefined, $end)
+                        return parsers.inc.object(object, 4, $i)($buffer, $start - undefined, $end)
                     }
 
                     if (

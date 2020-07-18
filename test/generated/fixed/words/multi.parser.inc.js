@@ -9,6 +9,7 @@ module.exports = function ({ parsers, $lookup }) {
                     case 0:
 
                         object = {
+                            nudge: 0,
                             array: [],
                             sentry: 0
                         }
@@ -17,14 +18,27 @@ module.exports = function ({ parsers, $lookup }) {
 
                     case 1:
 
-                        $i[0] = 0
+                        $step = 2
 
                     case 2:
 
-                        $step = 2
+                        if ($start == $end) {
+                            return { start: $start, object: null, parse: $parse }
+                        }
+
+                        object.nudge = $buffer[$start++]
+
+
+                    case 3:
+
+                        $i[0] = 0
+
+                    case 4:
+
+                        $step = 4
 
                         if ($i[0] == 16) {
-                            $step = 8
+                            $step = 10
                             continue
                         }
 
@@ -33,39 +47,39 @@ module.exports = function ({ parsers, $lookup }) {
                         }
 
                         if ($buffer[$start] != 0xd) {
-                            $step = 4
+                            $step = 6
                             continue
                         }
                         $start++
 
-                        $step = 3
+                        $step = 5
 
-                    case 3:
+                    case 5:
 
-                        $step = 3
+                        $step = 5
 
                         if ($start == $end) {
                             return { start: $start, object: null, parse: $parse }
                         }
 
                         if ($buffer[$start] != 0xa) {
-                            $step = 4
+                            $step = 6
                             $parse(Buffer.from([ 0xd ]), 0, 1)
                             continue
                         }
                         $start++
 
-                        $step = 8
+                        $step = 10
                         continue
 
-                    case 4:
-
-
-                    case 5:
-
-                        $step = 6
-
                     case 6:
+
+
+                    case 7:
+
+                        $step = 8
+
+                    case 8:
 
                         if ($start == $end) {
                             return { start: $start, object: null, parse: $parse }
@@ -74,21 +88,21 @@ module.exports = function ({ parsers, $lookup }) {
                         object.array[$i[0]] = $buffer[$start++]
 
 
-                    case 7:
+                    case 9:
 
                         $i[0]++
-                        $step = 2
+                        $step = 4
                         continue
 
-                    case 8:
+                    case 10:
 
                         $_ = 16 != $i[0]
                             ? (16 - $i[0]) * 1 - 2
                             : 0
 
-                        $step = 9
+                        $step = 11
 
-                    case 9: {
+                    case 11: {
 
                         const length = Math.min($_, $end - $start)
                         $start += length
@@ -98,15 +112,15 @@ module.exports = function ({ parsers, $lookup }) {
                             return { start: $start, object: null, parse: $parse }
                         }
 
-                        $step = 10
+                        $step = 12
 
                     }
 
-                    case 10:
+                    case 12:
 
-                        $step = 11
+                        $step = 13
 
-                    case 11:
+                    case 13:
 
                         if ($start == $end) {
                             return { start: $start, object: null, parse: $parse }
@@ -115,7 +129,7 @@ module.exports = function ({ parsers, $lookup }) {
                         object.sentry = $buffer[$start++]
 
 
-                    case 12:
+                    case 14:
 
                         return { start: $start, object: object, parse: null }
                     }
