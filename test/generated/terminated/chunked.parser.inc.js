@@ -65,7 +65,7 @@ module.exports = function ({ parsers, $lookup }) {
                                 $step = 4
                                 continue
                             }
-                            $buffers.push(Buffer.from([ 0xd ].concat($buffer[$start])))
+                            $buffers.push(Buffer.from([ 0xd ].concat($buffer[$start - 1])))
                             $step = 3
                             continue
                         }

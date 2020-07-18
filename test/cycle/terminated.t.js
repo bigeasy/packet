@@ -2,7 +2,7 @@ require('proof')(0, prove)
 
 function prove (okay) {
     const cycle = require('./cycle')
-    /* cycle(okay, {
+    cycle(okay, {
         name: 'terminated/words',
         define: {
             object: {
@@ -57,7 +57,7 @@ function prove (okay) {
             nudge: 0xaa, array: [ Buffer.from('abcdefghij\r') ], sentry: 0xaa
         }],
         stopAt: 'serialize.chk'
-    }) */
+    })
     cycle(okay, {
         name: 'terminated/rewind',
         define: {
