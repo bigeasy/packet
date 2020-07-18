@@ -59,6 +59,6 @@
     },
     "nyc":
     {
-                            "exclude": [ "test", "inlines.js" ]
+                            "exclude": [ "test/**", "!test/generated", "inlines.js" ]
     }
 }
