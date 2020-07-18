@@ -21,17 +21,11 @@ module.exports = function ({ parsers, $lookup }) {
                 }
 
                 $i[0] = 0
-                for (;;) {
+                do {
                     object.array[$i[0]] =
                         ($buffer[$start++]) * 0x100 +
                         ($buffer[$start++])
-                    $i[0]++
-
-                    if ($i[0] == 4) {
-                        break
-                    }
-                }
-
+                } while (++$i[0] != 4)
 
                 if ($end - $start < 1) {
                     return parsers.inc.object(object, 8, $i)($buffer, $start, $end)

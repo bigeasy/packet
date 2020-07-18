@@ -21,7 +21,7 @@ module.exports = function ({ parsers, $lookup }) {
                 }
 
                 $i[0] = 0
-                for (;;) {
+                do {
                     if (
                         $buffer[$start] == 0x0
                     ) {
@@ -30,13 +30,7 @@ module.exports = function ({ parsers, $lookup }) {
                     }
 
                     object.array[$i[0]] = ($buffer[$start++])
-                    $i[0]++
-
-                    if ($i[0] == 8) {
-                        break
-                    }
-                }
-
+                } while (++$i[0] != 8)
 
                 $start += 8 != $i[0]
                         ? (8 - $i[0]) * 1 - 1

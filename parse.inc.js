@@ -779,7 +779,7 @@ function generate (packet, { require = null }) {
         // Obtain a next index from the index array.
         const i = `$i[${++$i}]`
         // The loop return step is after loop index initialization.
-        const redo = $step + 2
+        const redo = $step + 1
         // We sometimes have a vivification step to create an object element.
         // **TODO** Eliminate vivify step if not used.
         const width = field.bits / field.length / 8

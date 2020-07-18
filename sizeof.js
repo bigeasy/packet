@@ -84,7 +84,14 @@ function generate (packet, { require = null }) {
                         $start += ${field.bits >>> 3}
                     `)
                 } else {
-                    throw new Error
+                    variables.i = true
+                    const i = `$i[${++$i}]`
+                    return $(`
+                        for (${i} = 0; ${i} < ${path}.length; ${i}++) {
+                            `, map(dispatch, `${path}[${i}]`, field.fields), `
+                        }
+                    `)
+                    $i--
                 }
             }
             break

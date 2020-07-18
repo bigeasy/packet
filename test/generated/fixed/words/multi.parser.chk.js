@@ -21,7 +21,7 @@ module.exports = function ({ parsers, $lookup }) {
                 }
 
                 $i[0] = 0
-                for (;;) {
+                do {
                     if (
                         $buffer[$start] == 0xd &&
                         $buffer[$start + 1] == 0xa
@@ -31,13 +31,7 @@ module.exports = function ({ parsers, $lookup }) {
                     }
 
                     object.array[$i[0]] = ($buffer[$start++])
-                    $i[0]++
-
-                    if ($i[0] == 16) {
-                        break
-                    }
-                }
-
+                } while (++$i[0] != 16)
 
                 $start += 16 != $i[0]
                         ? (16 - $i[0]) * 1 - 2

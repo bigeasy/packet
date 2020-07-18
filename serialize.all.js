@@ -208,6 +208,15 @@ function checkpoints (path, fields, index = 0) {
                 checked.push(checkpoint = { type: 'checkpoint', lengths: [ 0 ] })
             }
             break
+        case 'fixed':
+            checked.push(field)
+            if (field.fixed) {
+                checkpoint.lengths[0] += field.bits / 8
+            } else {
+                field.fields = checkpoints(`${path + field.dotted}[$i[${index}]]`, field.fields, index)
+                checked.push(checkpoint = { type: 'checkpoint', lengths: [ 0 ] })
+            }
+            break
         default:
             checked.push(field)
             checkpoint.lengths[0] += field.bits / 8
@@ -302,6 +311,14 @@ function inquisition (path, fields) {
             checked.push(field)
             break
         case 'fixed':
+            if (field.fixed) {
+                checked.push({ type: 'checkpoint', lengths: [ field.bits / 8 ]})
+                checked.push(field)
+            } else {
+                field.fields = inquisition(path + field.dotted, field.fields)
+                checked.push(field)
+            }
+            break
         case 'buffer':
         case 'integer':
         case 'literal':

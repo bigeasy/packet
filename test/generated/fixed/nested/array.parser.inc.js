@@ -1,6 +1,6 @@
 module.exports = function ({ parsers, $lookup }) {
     parsers.inc.object = function () {
-        return function (object, $step = 0, $i = []) {
+        return function (object, $step = 0, $i = [], $I = []) {
             let $_, $bite
 
             return function $parse ($buffer, $start, $end) {
@@ -35,36 +35,22 @@ module.exports = function ({ parsers, $lookup }) {
 
                     case 4:
 
+                        object.array[$i[0]] = []
+
                     case 5:
 
-                        $_ = 0
                         $step = 6
-                        $bite = 1
 
                     case 6:
 
-                        while ($bite != -1) {
-                            if ($start == $end) {
-                                return { start: $start, object: null, parse: $parse }
-                            }
-                            $_ += ($buffer[$start++]) << $bite * 8 >>> 0
-                            $bite--
+                        if ($start == $end) {
+                            return { start: $start, object: null, parse: $parse }
                         }
 
-                        object.array[$i[0]] = $_
+                        $I[0] = $buffer[$start++]
 
-
+                        $i[1] = 0
                     case 7:
-
-                        $i[0]++
-
-                        if ($i[0] != 4) {
-                            $step = 4
-                            continue
-                        }
-
-                        $_ = (4 - $i[0]) * 2 - 0
-                        $step = 8
 
 
                     case 8:
@@ -77,10 +63,40 @@ module.exports = function ({ parsers, $lookup }) {
                             return { start: $start, object: null, parse: $parse }
                         }
 
+                        object.array[$i[0]][$i[1]] = $buffer[$start++]
+
+                        if (++$i[1] != $I[0]) {
+                            $step = 7
+                            continue
+                        }
+
+                    case 10:
+
+                        $i[0]++
+
+                        if ($i[0] != 2) {
+                            $step = 4
+                            continue
+                        }
+
+                        $_ = (2 - $i[0]) * 0 - 0
+                        $step = 11
+
+
+                    case 11:
+
+                        $step = 12
+
+                    case 12:
+
+                        if ($start == $end) {
+                            return { start: $start, object: null, parse: $parse }
+                        }
+
                         object.sentry = $buffer[$start++]
 
 
-                    case 10:
+                    case 13:
 
                         return { start: $start, object: object, parse: null }
                     }

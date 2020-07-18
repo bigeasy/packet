@@ -167,6 +167,19 @@ function inquisition (fields, $I = 0) {
             checked.push(field)
             break
         case 'fixed':
+            if (field.fixed) {
+                checked.push({
+                    type: 'checkpoint',
+                    lengths: [ field.bits / 8 ],
+                    vivify: null,
+                    rewind: 0
+                })
+                checked.push(field)
+            } else {
+                field.fields = inquisition(field.fields, $I)
+                checked.push(field)
+            }
+            break
         case 'integer':
         case 'literal':
             checked.push({
@@ -198,10 +211,7 @@ function generate (packet, { require, bff, chk }) {
         direction: 'parse'
     }
 
-    // TODO You can certianly do something to make this prettier.
-    // TODO Start by prepending the path I think?
-    // TODO Uh, `index` is not the same as `$I`, need `$i` and `$I`.
-    function checkpoints (path, fields, index = 0) {
+    function checkpoints (path, fields, $i = 0, $I = 0) {
         let checkpoint = { type: 'checkpoint', lengths: [ 0 ], vivify: null, rewind: 0 }
         const checked = [ checkpoint ]
         for (const field of fields) {
@@ -209,7 +219,7 @@ function generate (packet, { require, bff, chk }) {
             case 'switch':
                 checked.push(field)
                 for (const when of field.cases) {
-                    when.fields = checkpoints(path + field.dotted, when.fields, index)
+                    when.fields = checkpoints(path + field.dotted, when.fields, $i)
                 }
                 checked.push(checkpoint = {
                     type: 'checkpoint', lengths: [ 0 ], vivify: null, rewind: 0
@@ -219,10 +229,10 @@ function generate (packet, { require, bff, chk }) {
                 checked.push(field)
                 // TODO Sip belongs outside since it is generally a byte or so.
                 if (field.parse.sip != null) {
-                    field.parse.sip = checkpoints(path + field.dotted, field.parse.sip, index)
+                    field.parse.sip = checkpoints(path + field.dotted, field.parse.sip, $i, $I)
                 }
                 for (const condition of field.parse.conditions) {
-                    condition.fields = checkpoints(path + field.dotted, condition.fields, index)
+                    condition.fields = checkpoints(path + field.dotted, condition.fields, $i, $I)
                 }
                 checked.push(checkpoint = {
                     type: 'checkpoint', lengths: [ 0 ], vivify: null, rewind: 0
@@ -241,9 +251,21 @@ function generate (packet, { require, bff, chk }) {
                     // Tricky, stick the checkpoint for a fixed array at the end
                     // of the encoding fields. Let any subsequent fields use the
                     // checkpoint.
-                    checkpoint.lengths.push(`${field.fields[0].bits >>> 3} * $I[${index}]`)
+                    checkpoint.lengths.push(`${field.fields[0].bits >>> 3} * $I[${$I}]`)
                 } else {
-                    field.fields = checkpoints(path + `${field.dotted}[$i[${index}]]`, field.fields, index + 1)
+                    field.fields = checkpoints(`${path}${field.dotted}[$i[${$i}]]`, field.fields, $i + 1, $I + 1)
+                    checked.push(checkpoint = {
+                        type: 'checkpoint', lengths: [ 0 ], vivify: null, rewind: 0
+                    })
+                }
+                break
+            case 'fixed':
+                if (field.fixed) {
+                    checked.push(field)
+                    checkpoint.lengths[0] += field.bits / 8
+                } else {
+                    checked.push(field)
+                    field.fields = checkpoints(`${path}${field.dotted}[$i[${$i}]]`, field.fields, $i + 1, $I)
                     checked.push(checkpoint = {
                         type: 'checkpoint', lengths: [ 0 ], vivify: null, rewind: 0
                     })
@@ -259,13 +281,13 @@ function generate (packet, { require, bff, chk }) {
                 // of the repeated part, we do not have to perform the
                 // checkpoint.
                 checked.push(field)
-                field.fields = checkpoints(path, field.fields, index + 1)
+                field.fields = checkpoints(path, field.fields, $i, $I)
                 break
             case 'terminated':
                 checked.push(field)
                 const element = field.fields.slice().pop().fields.slice().pop()
                 if (element.type != 'buffer') {
-                    field.fields = checkpoints(path + `${field.dotted}[$i[${index}]]`, field.fields, index + 1)
+                    field.fields = checkpoints(path + `${field.dotted}[$i[${$i}]]`, field.fields, $i + 1, $I)
                 }
                 checked.push(checkpoint = {
                     type: 'checkpoint', lengths: [ 0 ], vivify: null, rewind: 0
@@ -280,7 +302,7 @@ function generate (packet, { require, bff, chk }) {
                 } else {
                     // TODO Could start from the nested checkpoint since we are
                     // are not actually looping for the structure.
-                    field.fields = checkpoints(path + field.dotted, field.fields, index)
+                    field.fields = checkpoints(path + field.dotted, field.fields, $i, $I)
                     checked.push(checkpoint = {
                         type: 'checkpoint', lengths: [ 0 ], vivify: null, rewind: 0
                     })
@@ -615,7 +637,7 @@ function generate (packet, { require, bff, chk }) {
                         : null
         const source = $(`
             ${i} = 0
-            for (;;) {
+            do {
                 `, check, -1, `
 
                 `, terminate, -1, `
@@ -623,13 +645,7 @@ function generate (packet, { require, bff, chk }) {
                 `, vivify.assignment(`${path}[${i}]`, field), -1, `
 
                 `, looped, `
-                ${i}++
-
-                if (${i} == ${field.length}) {
-                    break
-                }
-            }
-
+            } while (++${i} != ${field.length})
         `)
         $i--
         if (terminator.length) {

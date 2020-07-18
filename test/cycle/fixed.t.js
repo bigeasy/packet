@@ -58,6 +58,21 @@ function prove (okay) {
         }]
     })
     cycle(okay, {
+        name: 'fixed/nested/array',
+        define: {
+            object: {
+                nudge: 8,
+                array: [ [ 2 ], [ [ 8, [ 8 ] ] ] ],
+                sentry: 8
+            }
+        },
+        objects: [{
+            nudge: 0xaa,
+            array: [ [ 0xa, 0xb, 0xc, 0xd ], [ 0xa, 0xb, 0xc, 0xd ] ],
+            sentry: 0xaa
+        }]
+    })
+    cycle(okay, {
         name: 'fixed/concat/unpadded',
         define: {
             object: {

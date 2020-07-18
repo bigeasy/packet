@@ -17,7 +17,7 @@ module.exports = function ({ parsers, $lookup }) {
                 object.nudge = ($buffer[$start++])
 
                 $i[0] = 0
-                for (;;) {
+                do {
                     if ($end - ($start - undefined) < 1) {
                         return parsers.inc.object(object, 4, $i)($buffer, $start - undefined, $end)
                     }
@@ -30,13 +30,7 @@ module.exports = function ({ parsers, $lookup }) {
                     }
 
                     object.array[$i[0]] = ($buffer[$start++])
-                    $i[0]++
-
-                    if ($i[0] == 8) {
-                        break
-                    }
-                }
-
+                } while (++$i[0] != 8)
 
                 $start += 8 != $i[0]
                         ? (8 - $i[0]) * 1 - 1

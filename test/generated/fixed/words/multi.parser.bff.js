@@ -17,7 +17,7 @@ module.exports = function ({ parsers, $lookup }) {
                 object.nudge = ($buffer[$start++])
 
                 $i[0] = 0
-                for (;;) {
+                do {
                     if ($end - ($start - undefined) < 2) {
                         return parsers.inc.object(object, 4, $i)($buffer, $start - undefined, $end)
                     }
@@ -31,13 +31,7 @@ module.exports = function ({ parsers, $lookup }) {
                     }
 
                     object.array[$i[0]] = ($buffer[$start++])
-                    $i[0]++
-
-                    if ($i[0] == 16) {
-                        break
-                    }
-                }
-
+                } while (++$i[0] != 16)
 
                 $start += 16 != $i[0]
                         ? (16 - $i[0]) * 1 - 2
