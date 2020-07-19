@@ -4,6 +4,9 @@ const util = require('util')
 // Format source code maintaining indentation.
 const $ = require('programmatic')
 
+// Convert numbers and arrays to numbers to literals with hex literals.
+const hex = require('./hex')
+
 // Generate literal object construction.
 const vivify = require('./vivify')
 
@@ -55,6 +58,9 @@ function expand (fields) {
             expanded.push(field)
             break
         case 'fixed':
+            if (field.calculated) {
+                expanded.push({ type: 'calculation', field, vivify: null })
+            }
         case 'inline':
         case 'accumulator':
         case 'structure':
@@ -166,6 +172,19 @@ function inquisition (fields, $I = 0) {
         case 'absent':
             checked.push(field)
             break
+        case 'calculation':
+            if (field.field.fields[0].fixed) {
+                checked.push(field)
+                checked.push({
+                    type: 'checkpoint',
+                    lengths: [ `$I[${$I}] * ${field.field.fields[0].bits >>> 3}` ],
+                    vivify: null,
+                    rewind: 0
+                })
+            } else {
+                throw new Error('unimplemented')
+            }
+            break
         case 'fixed':
             if (field.fixed) {
                 checked.push({
@@ -257,6 +276,15 @@ function generate (packet, { require, bff, chk }) {
                     checked.push(checkpoint = {
                         type: 'checkpoint', lengths: [ 0 ], vivify: null, rewind: 0
                     })
+                }
+                break
+            case 'calculation':
+                if (field.field.fields[0].fixed) {
+                    checked.push(field)
+                    checked.push(checkpoint = { type: 'checkpoint', lengths: [ 0 ], vivify: null, rewind: 0 })
+                    checkpoint.lengths.push(`$I[${$I}] * ${field.field.fields[0].bits >>> 3}`)
+                } else {
+                    throw new Error('unimplemented')
                 }
                 break
             case 'fixed':
@@ -565,6 +593,15 @@ function generate (packet, { require, bff, chk }) {
         return source
     }
 
+    function calculation (path, field) {
+        field = field.field
+        const I = `$I[${++$I}]`
+        const inline = inliner(accumulate, path, [ field.length ], [])
+        return $(`
+            ${I} = `, inline.inlined.shift(), `
+        `)
+    }
+
     function fixed (path, field) {
         // Fetch the type of element.
         const element = field.fields[field.fields.length - 1]
@@ -610,7 +647,7 @@ function generate (packet, { require, bff, chk }) {
         const i = `$i[${++$i}]`
         $step += 1
         const check = bff && field.pad.length != 0
-                    ? checkpoint({ lengths: [ field.pad.length ] })
+                    ? checkpoint({ lengths: [ field.pad.length ], rewind: 0 })
                     : null
         // Advance past initialization and terminator tests.
         $step += 1 + field.pad.length
@@ -619,10 +656,9 @@ function generate (packet, { require, bff, chk }) {
         $step += 1 + (field.pad.length != 0 ? 2 : 0)
         const terminator = field.pad.map((bite, index) => {
             if (index == 0) {
-                // TODO Use `hex`.
-                return `$buffer[$start] == 0x${bite.toString(16)}`
+                return `$buffer[$start] == ${hex(bite)}`
             } else {
-                return `$buffer[$start + ${index}] == 0x${bite.toString(16)}`
+                return `$buffer[$start + ${index}] == ${hex(bite)}`
             }
         })
         const terminate = terminator.length != 0
@@ -635,26 +671,47 @@ function generate (packet, { require, bff, chk }) {
                             }
                         `)
                         : null
-        const source = $(`
-            ${i} = 0
-            do {
-                `, check, -1, `
+        let source = null, length = null
+        if (field.calculated) {
+            const inline = inliner(accumulate, path, [ field.length ], [])
+            const I = `$I[${++$I}]`
+            length = I
+            source = $(`
+                ${i} = 0
+                ${I} = `, inline.inlined.shift(), `
+                do {
+                    `, check, -1, `
 
-                `, terminate, -1, `
+                    `, terminate, -1, `
 
-                `, vivify.assignment(`${path}[${i}]`, field), -1, `
+                    `, vivify.assignment(`${path}[${i}]`, field), -1, `
 
-                `, looped, `
-            } while (++${i} != ${field.length})
-        `)
+                    `, looped, `
+                } while (++${i} != ${I})
+            `)
+        } else {
+            source = $(`
+                ${i} = 0
+                do {
+                    `, check, -1, `
+
+                    `, terminate, -1, `
+
+                    `, vivify.assignment(`${path}[${i}]`, field), -1, `
+
+                    `, looped, `
+                } while (++${i} != ${field.length})
+            `)
+            length = field.length
+        }
         $i--
         if (terminator.length) {
-            const width = field.bits / field.length / 8
+            const element = field.fields[field.fields.length - 1]
             return $(`
                 `, source, `
 
-                $start += ${field.length} != ${i}
-                        ? (${field.length} - ${i}) * ${width} - ${field.pad.length}
+                $start += ${length} != ${i}
+                        ? (${length} - ${i}) * ${element.bits >>> 3} - ${field.pad.length}
                         : 0
             `)
         }
@@ -880,6 +937,8 @@ function generate (packet, { require, bff, chk }) {
             return inline(path, field)
         case 'conditional':
             return conditional(path, field)
+        case 'calculation':
+            return calculation(path, field)
         case 'fixed':
             return fixed(path, field)
         case 'repeated':

@@ -2,7 +2,7 @@ module.exports = function ({ parsers, $lookup }) {
     parsers.bff.object = function () {
         return function () {
             return function ($buffer, $start, $end) {
-                let $i = []
+                let $i = [], $I = []
 
                 let object = {
                     nudge: 0,
@@ -10,16 +10,23 @@ module.exports = function ({ parsers, $lookup }) {
                     sentry: 0
                 }
 
-                if ($end - $start < 18) {
-                    return parsers.inc.object(object, 1, $i)($buffer, $start, $end)
+                if ($end - $start < 1) {
+                    return parsers.inc.object(object, 1, $i, $I)($buffer, $start, $end)
                 }
 
                 object.nudge = ($buffer[$start++])
 
+                $I[0] = (() => 16)()
+
+                if ($end - $start < $I[0] * 1) {
+                    return parsers.inc.object(object, 3, $i, $I)($buffer, $start, $end)
+                }
+
                 $i[0] = 0
+                $I[1] = (() => 16)()
                 do {
                     if ($end - $start < 2) {
-                        return parsers.inc.object(object, 4, $i)($buffer, $start, $end)
+                        return parsers.inc.object(object, 4, $i, $I)($buffer, $start, $end)
                     }
 
                     if (
@@ -30,12 +37,20 @@ module.exports = function ({ parsers, $lookup }) {
                         break
                     }
 
-                    object.array[$i[0]] = ($buffer[$start++])
-                } while (++$i[0] != 16)
+                    if ($end - $start < 1) {
+                        return parsers.inc.object(object, 7, $i, $I)($buffer, $start, $end)
+                    }
 
-                $start += 16 != $i[0]
-                        ? (16 - $i[0]) * 1 - 2
+                    object.array[$i[0]] = ($buffer[$start++])
+                } while (++$i[0] != $I[1])
+
+                $start += $I[1] != $i[0]
+                        ? ($I[1] - $i[0]) * 1 - 2
                         : 0
+
+                if ($end - $start < 1) {
+                    return parsers.inc.object(object, 12, $i, $I)($buffer, $start, $end)
+                }
 
                 object.sentry = ($buffer[$start++])
 

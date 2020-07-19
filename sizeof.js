@@ -79,7 +79,12 @@ function generate (packet, { require = null }) {
         case 'integer':
             return `$start += ${field.bits >>> 3}`
         case 'fixed': {
-                if (field.fixed) {
+                if (field.calculated) {
+                    const inline = inliner(accumulate, path, [ field.length ], [])
+                    return $(`
+                        $start += `, inline.inlined.shift(), `
+                    `)
+                } else if (field.fixed) {
                     return $(`
                         $start += ${field.bits >>> 3}
                     `)

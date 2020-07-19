@@ -28,7 +28,7 @@ const map = require('./map')
 const join = require('./join')
 
 function generate (packet, { require = null }) {
-    let $step = 0, $i = -1, $$ = -1, surround = false
+    let $step = 0, $i = -1, $I = -1, $$ = -1, surround = false
 
     const variables = declare(packet)
 
@@ -427,7 +427,7 @@ function generate (packet, { require = null }) {
         //
         // **TODO** Lengths seem off, array length and not byte length? I've
         // added the multiplication, let's see if it breaks.
-        function pad (assignment = null) {
+        function pad (assignment = null, full = field.bits / 8) {
             if (field.pad.length == 0) {
                 return `$step = ${$step}`
             }
@@ -448,7 +448,7 @@ function generate (packet, { require = null }) {
                             return { start: $start, serialize: $serialize }
                         }
 
-                        if ($_++ == ${field.bits >>> 3}) {
+                        if ($_++ == ${full}) {
                             $step = ${done}
                             continue
                         }
@@ -464,7 +464,7 @@ function generate (packet, { require = null }) {
 
                 `, pad, `
 
-                    if ($_ != ${field.bits >>> 3}) {
+                    if ($_ != ${full}) {
                         $step = ${redo}
                         continue
                     }
@@ -523,20 +523,47 @@ function generate (packet, { require = null }) {
         // Start of element fields, loop reset.
         const redo = $step
         // Put it all together.
-        const source = $(`
-            case ${init}:
+        let source = null
+        if (field.calculated) {
+            const inline = inliner(accumulate, path, [ field.length ], [])
+            const element = field.fields[field.fields.length - 1]
+            if (field.pad.length != 0) {
+                const I = `$I[${++$I}]`
+                source = $(`
+                    case ${init}:
 
-                ${i} = 0
-                $step = ${redo}
+                        ${i} = 0
+                        ${I} = `, inline.inlined.shift(), `
 
-            `, map(dispatch, `${path}[${i}]`, field.fields), `
-                if (++${i} != ${path}.length) {
+                        $step = ${redo}
+
+                    `, map(dispatch, `${path}[${i}]`, field.fields), `
+                        if (++${i} != ${path}.length) {
+                            $step = ${redo}
+                            continue
+                        }
+
+                    `, pad(`$_ = ${i} * ${element.bits >>> 3}`, `${I} * ${element.bits >>> 3}`), `
+                `)
+                $I--
+            } else {
+            }
+        } else {
+            source = $(`
+                case ${init}:
+
+                    ${i} = 0
                     $step = ${redo}
-                    continue
-                }
 
-            `, pad(`$_ = ${i} * ${element.bits >>> 3}`), `
-        `)
+                `, map(dispatch, `${path}[${i}]`, field.fields), `
+                    if (++${i} != ${path}.length) {
+                        $step = ${redo}
+                        continue
+                    }
+
+                `, pad(`$_ = ${i} * ${element.bits >>> 3}`), `
+            `)
+        }
         // Release the array index from the array of indices.
         $i--
         return source
@@ -773,6 +800,7 @@ function generate (packet, { require = null }) {
         packet: `${packet.name}`,
         step: '$step = 0',
         i: '$i = []',
+        I: '$I = []',
         stack: '$$ = []',
         accumulator: '$accumulator = {}',
         starts: '$starts = []'

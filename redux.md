@@ -1,3 +1,7 @@
+## Sat Jul 18 10:11:44 CDT 2020
+
+Should the calculation of accumlators be everywhere?
+
 ## Wed Jul 15 12:45:09 CDT 2020 ~ todo
 
 What about some sort of limit if there is a header length? Stop when we reach

@@ -40,8 +40,15 @@ exports.serialize = function (field) {
                 })
             }
             break
+        case 'calculation': {
+                variables.I = true
+            }
+            break
         case 'fixed': {
                 variables.i = true
+                if (field.calculated) {
+                    variables.I = true
+                }
                 field.fields.map(declare)
             }
             break
@@ -143,8 +150,15 @@ exports.parse = function (field) {
                 })
             }
             break
+        case 'calculation': {
+                variables.I = true
+            }
+            break
         case 'fixed': {
                 variables.i = true
+                if (field.calculated) {
+                    variables.I = true
+                }
                 field.fields.map(declare)
             }
             break

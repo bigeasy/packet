@@ -55,6 +55,9 @@ function expand (fields) {
             expanded.push({ type: 'terminator', body: field, vivify: null })
             break
         case 'fixed':
+            if (field.calculated) {
+                expanded.push({ type: 'calculation', field })
+            }
         case 'inline':
         case 'accumulator':
         case 'structure':
@@ -123,7 +126,7 @@ function expand (fields) {
 // element in it's `lengths` property with a value of `0`.
 
 //
-function checkpoints (path, fields, index = 0) {
+function checkpoints (path, fields, $i = 0, $I = 0) {
     let checkpoint
     const checked = [ checkpoint = { type: 'checkpoint', lengths: [ 0 ] } ]
     for (const field of fields) {
@@ -148,7 +151,7 @@ function checkpoints (path, fields, index = 0) {
                     checkpoint.lengths.push(`${path + field.dotted}.length * ${field.fields[0].bits >>> 3}`)
                 }
             } else {
-                field.fields = checkpoints(`${path}${field.dotted}[$i[${index}]]`, field.fields, index + 1)
+                field.fields = checkpoints(`${path}${field.dotted}[$i[${$i}]]`, field.fields, $i + 1, $I)
                 checked.push(checkpoint = { type: 'checkpoint', lengths: [ 0 ] })
             }
             break
@@ -166,14 +169,14 @@ function checkpoints (path, fields, index = 0) {
         case 'switch':
             checked.push(field)
             for (const when of field.cases) {
-                when.fields = checkpoints(path + field.dotted, when.fields, index)
+                when.fields = checkpoints(path + field.dotted, when.fields, $i, $I)
             }
             checked.push(checkpoint = { type: 'checkpoint', lengths: [ 0 ] })
             break
         case 'conditional':
             checked.push(field)
             for (const condition of field.serialize.conditions) {
-                condition.fields = checkpoints(path + field.dotted, condition.fields, index)
+                condition.fields = checkpoints(path + field.dotted, condition.fields, $i, $I)
             }
             checked.push(checkpoint = { type: 'checkpoint', lengths: [ 0 ] })
             break
@@ -193,7 +196,7 @@ function checkpoints (path, fields, index = 0) {
                     checkpoint.lengths.push(`${path + field.dotted}.length * ${field.fields[0].bits >>> 3}`)
                 }
             }  else {
-                field.fields = checkpoints(`${path}${field.dotted}[$i[${index}]]`, field.fields, index + 1)
+                field.fields = checkpoints(`${path}${field.dotted}[$i[${$i}]]`, field.fields, $i + 1, $I)
                 checked.push(checkpoint = { type: 'checkpoint', lengths: [ 0 ] })
             }
             break
@@ -204,16 +207,26 @@ function checkpoints (path, fields, index = 0) {
             if (field.fixed) {
                 checkpoint.lengths.push(field.bits / 8)
             }  else {
-                field.fields = checkpoints(path + field.dotted, field.fields, index + 1)
+                field.fields = checkpoints(path + field.dotted, field.fields, $i + 1, $I)
                 checked.push(checkpoint = { type: 'checkpoint', lengths: [ 0 ] })
             }
             break
-        case 'fixed':
-            checked.push(field)
-            if (field.fixed) {
-                checkpoint.lengths[0] += field.bits / 8
+        case 'calculation':
+            if (field.field.fields[0].fixed) {
+                checked.push(field)
+                checked.push(checkpoint = { type: 'checkpoint', lengths: [ 0 ] })
+                checkpoint.lengths.push(`$I[${$I}] * ${field.field.fields[0].bits >>> 3}`)
             } else {
-                field.fields = checkpoints(`${path + field.dotted}[$i[${index}]]`, field.fields, index)
+                throw new Error('unimplemented')
+            }
+            break
+        case 'fixed':
+            if (field.fixed) {
+                checked.push(field)
+                checkpoint.lengths[0] += field.bits / 8
+            } else if (field.pad.length) {
+                checked.push(field)
+                field.fields = checkpoints(`${path + field.dotted}[$i[${$i}]]`, field.fields, $i, $I)
                 checked.push(checkpoint = { type: 'checkpoint', lengths: [ 0 ] })
             }
             break
@@ -243,25 +256,25 @@ function checkpoints (path, fields, index = 0) {
 // length of the entire packet.
 
 //
-function inquisition (path, fields) {
+function inquisition (path, fields, $i = 0, $I = 0) {
     const checked = []
     for (const field of fields) {
         switch (field.type) {
         case 'accumulator':
         case 'inline':
         case 'structure':
-            field.fields = inquisition(path + field.dotted, field.fields)
+            field.fields = inquisition(path + field.dotted, field.fields, $i, $I)
             checked.push(field)
             break
         case 'conditional':
             for (const condition of field.serialize.conditions) {
-                condition.fields = inquisition(path + field.dotted, condition.fields)
+                condition.fields = inquisition(path + field.dotted, condition.fields, $i, $I)
             }
             checked.push(field)
             break
         case 'switch':
             for (const when of field.cases) {
-                when.fields = inquisition(path + field.dotted, when.fields)
+                when.fields = inquisition(path + field.dotted, when.fields, $i, $I)
             }
             checked.push(field)
             break
@@ -273,7 +286,7 @@ function inquisition (path, fields) {
                         : `${path + field.dotted}.reduce((sum, buffer) => sum + buffer.length, 0)`
                 ]})
             } else {
-                field.fields = inquisition(path + field.dotted, field.fields)
+                field.fields = inquisition(path + field.dotted, field.fields, $i + 1, $I)
             }
             checked.push(field)
             break
@@ -303,19 +316,31 @@ function inquisition (path, fields) {
                     : `${path + field.dotted}.reduce((sum, buffer) => sum + buffer.length, 0)`
                 )
             } else {
-                field.fields = inquisition(path + field.dotted, field.fields)
+                field.fields = inquisition(path + field.dotted, field.fields, $i + 1, $I + 1)
             }
             checked.push(field)
             break
         case 'absent':
             checked.push(field)
             break
+        case 'calculation':
+            if (field.field.fields[0].fixed) {
+                checked.push(field)
+                checked.push({ type: 'checkpoint', lengths: [ `$I[${$I}] * ${field.field.fields[0].bits >>> 3}` ]})
+            } else {
+                throw new Error('unimplemented')
+            }
+            break
         case 'fixed':
             if (field.fixed) {
                 checked.push({ type: 'checkpoint', lengths: [ field.bits / 8 ]})
                 checked.push(field)
             } else {
-                field.fields = inquisition(path + field.dotted, field.fields)
+                if (field.calculated) {
+                    field.fields = inquisition(path + field.dotted, field.fields, $i + 1, $I + 1)
+                } else {
+                    field.fields = inquisition(path + field.dotted, field.fields, $i + 1, $I)
+                }
                 checked.push(field)
             }
             break
@@ -333,7 +358,7 @@ function inquisition (path, fields) {
 }
 
 function generate (packet, { require = null, bff, chk }) {
-    let $step = 0, $i = -1, $$ = -1
+    let $step = 0, $i = -1, $I = -1, $$ = -1
 
     const variables = declare (packet)
 
@@ -535,6 +560,15 @@ function generate (packet, { require = null, bff, chk }) {
         return terminator.join('\n')
     }
 
+    function calculation (path, field) {
+        field = field.field
+        const I = `$I[${++$I}]`
+        const inline = inliner(accumulate, path, [ field.length ], [])
+        return $(`
+            ${I} = `, inline.inlined.shift(), `
+        `)
+    }
+
     function fixed (path, field) {
         const element = field.fields[field.fields.length - 1]
         if (element.type == 'buffer') {
@@ -586,26 +620,53 @@ function generate (packet, { require = null, bff, chk }) {
         $step += 1 + field.pad.length
         const i = `$i[${++$i}]`
         const looped = map(dispatch, `${path}[${i}]`, field.fields)
+        const length = field.calculated ? `$I[${$I}]` : field.length
         const pad = field.pad.length == 0 ? null : $(`
             for (;;) {
                 `, join(field.pad.map((bite, index) => {
                     return $(`
-                        if (${i} == ${field.length}) {
+                        if (${i} == ${length}) {
                             break
                         }
-                        $buffer[$start++] = 0x${bite.toString(16)}
+                        $buffer[$start++] = ${hex(bite)}
                         ${i}++
                     `)
                 })), `
             }
         `)
-        const source = $(`
-            for (${i} = 0; ${i} < ${path}.length; ${i}++) {
-                `, looped, `
-            }
+        let source = null
+        if (field.calculated) {
+            const inline = inliner(accumulate, path, [ field.length ], [])
+            const I = `$I[${$I}]`
+            // TODO Now have to increment `$I` in checkpoints and inquisition.
+            // Also, need to add `$I` to serialization side.
+            if (field.pad.length != 0) {
+                source = $(`
+                    for (${i} = 0; ${i} < ${path}.length; ${i}++) {
+                        `, looped, `
+                    }
 
-            `, -1, pad, `
-        `)
+                    `, -1, pad, `
+                `)
+            } else {
+                source = $(`
+                    for (${i} = 0, ${I} = `, inline.inlined.shift(), `; ${i} < ${I}; ${i}++) {
+                        `, looped, `
+                    }
+
+                    `, -1, pad, `
+                `)
+            }
+            $I--
+        } else {
+            source = $(`
+                for (${i} = 0; ${i} < ${path}.length; ${i}++) {
+                    `, looped, `
+                }
+
+                `, -1, pad, `
+            `)
+        }
         $i--
         return source
     }
@@ -774,6 +835,8 @@ function generate (packet, { require = null, bff, chk }) {
             return conditional(path, field)
         case 'inline':
             return inline(path, field)
+        case 'calculation':
+            return calculation(path, field)
         case 'fixed':
             return fixed(path, field)
         case 'terminated':
@@ -801,6 +864,7 @@ function generate (packet, { require = null, bff, chk }) {
     const declarations = {
         register: '$_',
         i: '$i = []',
+        I: '$I = []',
         stack: '$$ = []',
         sip: '$sip = []',
         accumulator: '$accumulator = {}',

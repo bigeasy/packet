@@ -485,12 +485,20 @@ function generate (packet, { require = null }) {
 
         //
         const fixed = field.type == 'fixed'
-            ? $(`
-                if (${i} == ${field.length}) {
-                    $step = ${done}
-                    continue
-                }
-            `) : null
+            ? field.calculated
+                ? $(`
+                    if (${i} == $I[${++$I}]) {
+                        $step = ${done}
+                        continue
+                    }
+                `)
+                : $(`
+                    if (${i} == ${field.length}) {
+                        $step = ${done}
+                        continue
+                    }
+                `)
+            : null
         const terminator = bytes.length == 1
             // If we have a single byte terminator, we skip over the loop if the
             // we see the byte. A multi-byte terminator is more complicated.
@@ -566,38 +574,68 @@ function generate (packet, { require = null }) {
                 `)
             }))
         // Put it all together.
-        const source = $(`
-            case ${init}:
+        let source = null
+        let I = null
+        if (field.type == 'fixed' && field.calculated) {
+            I = `$I[${$I}]`
+            const inline = inliner(accumulate, path, [ field.length ], [])
+            source = $(`
+                case ${init}:
 
-                ${i} = 0
+                    ${i} = 0
+                    ${I} = `, inline.inlined.shift(), `
 
-            `, terminator, `
+                `, terminator, `
 
-            case ${begin}:
+                case ${begin}:
 
-                `, vivify.assignment(`${path}[${i}]`, field), `
+                    `, vivify.assignment(`${path}[${i}]`, field), `
 
-            `, looped, `
+                `, looped, `
 
-            case ${$step++}:
+                case ${$step++}:
 
-                ${i}++
-                $step = ${redo}
-                continue
-        `)
+                    ${i}++
+                    $step = ${redo}
+                    continue
+            `)
+            $I--
+        } else {
+            source = $(`
+                case ${init}:
+
+                    ${i} = 0
+
+                `, terminator, `
+
+                case ${begin}:
+
+                    `, vivify.assignment(`${path}[${i}]`, field), `
+
+                `, looped, `
+
+                case ${$step++}:
+
+                    ${i}++
+                    $step = ${redo}
+                    continue
+            `)
+        }
         // Release the array index from the array of indices.
         $i--
         // If we are actually padded fixed array, we need to skip over the
         // remaining bytes in the fixed width field.
         locals['length'] = 0
+        // TODO And has padding?
         if (field.type == 'fixed') {
+            const length = field.calculated ? I : field.length
             return $(`
                 `, source, `
 
                 case ${$step++}:
 
-                    $_ = ${field.length} != ${i}
-                        ? (${field.length} - ${i}) * ${element.bits >>> 3} - ${bytes.length}
+                    $_ = ${length} != ${i}
+                        ? (${length} - ${i}) * ${element.bits >>> 3} - ${bytes.length}
                         : 0
 
                     $step = ${$step}
@@ -783,29 +821,64 @@ function generate (packet, { require = null }) {
         // We sometimes have a vivification step to create an object element.
         // **TODO** Eliminate vivify step if not used.
         const width = field.bits / field.length / 8
-        const source = $(`
-            case ${$step++}:
+        let source = null
+        if (field.calculated) {
+            const inline = inliner(accumulate, path, [ field.length ], [])
+            const element = field.fields[field.fields.length - 1]
+            const I = `$I[${++$I}]`
+            if (field.fixed) {
+                source = $(`
+                    case ${$step++}:
 
-                ${i} = 0
+                        ${i} = 0
+                        ${I} = `, inline.inlined.shift(), `
 
-            case ${$step++}:
+                    case ${$step++}:
 
-                `, vivify.assignment(`${path}[${i}]`, field), -1, `
+                        `, vivify.assignment(`${path}[${i}]`, field), -1, `
 
-            `, map(dispatch,`${path}[${i}]`, field.fields), `
+                    `, map(dispatch,`${path}[${i}]`, field.fields), `
 
-            case ${$step++}:
+                    case ${$step++}:
 
-                ${i}++
+                        ${i}++
 
-                if (${i} != ${field.length}) {
-                    $step = ${redo}
-                    continue
-                }
+                        if (${i} != ${path}.length) { // foo
+                            $step = ${redo}
+                            continue
+                        }
 
-                $_ = (${field.length} - ${i}) * ${width} - ${field.pad.length}
-                $step = ${$step}
-        `)
+                        $_ = (${I} - ${i}) * ${element.bits >>> 3} - ${field.pad.length}
+                        $step = ${$step}
+                `)
+            } else {
+            }
+            $I--
+        } else {
+            source = $(`
+                case ${$step++}:
+
+                    ${i} = 0
+
+                case ${$step++}:
+
+                    `, vivify.assignment(`${path}[${i}]`, field), -1, `
+
+                `, map(dispatch,`${path}[${i}]`, field.fields), `
+
+                case ${$step++}:
+
+                    ${i}++
+
+                    if (${i} != ${path}.length) {
+                        $step = ${redo}
+                        continue
+                    }
+
+                    $_ = (${field.length} - ${i}) * ${width} - ${field.pad.length}
+                    $step = ${$step}
+            `)
+        }
         const skip = field.pad.length != 0 ? $(`
             case ${$step++}:
 

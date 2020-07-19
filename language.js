@@ -229,8 +229,12 @@ const is = {
     // **Fixed length arrays**: Arrays of fixed length or calculated length.
     fixed: function (packet) {
         return Array.isArray(packet[0]) &&
-            typeof packet[0][0] == 'number' &&
-            Array.isArray(packet[1])
+            (
+                is.integer(packet[0][0]) ||
+                typeof packet[0][0] == 'function'
+            ) &&
+            Array.isArray(packet[1]) &&
+            packet[1].length == 1
     },
     // **Length-encoded arrays**: Length encoded by a leading integer.
     lengthEncoded: function (packet) {
@@ -576,17 +580,19 @@ module.exports = function (packets) {
             const bits = fixed
                        ? fields.reduce((bits, field) => bits + field.bits, 0)
                        : 0
+            const calculated = typeof packet[0][0] == 'function'
+            const length = calculated ? args([ packet[0][0] ]) : packet[0][0]
             return [{
                 type: 'fixed',
                 vivify: fields[0].type == 'buffer' ? 'variant' : 'array',
-                length: packet[0],
                 dotted: '',
                 ...extra,
                 pad,
-                fixed,
+                calculated,
+                fixed: !calculated,
                 align: 'left',
-                length: packet[0][0],
-                bits: bits * packet[0][0],
+                length: length,
+                bits: calculated ? 0 : bits * packet[0][0],
                 fields
             }]
         }

@@ -2,7 +2,7 @@ require('proof')(0, prove)
 
 function prove (okay) {
     const cycle = require('./cycle')
-    cycle(okay, {
+    /* cycle(okay, {
         name: 'fixed/words/unpadded',
         define: {
             object: {
@@ -55,8 +55,29 @@ function prove (okay) {
             nudge: 0xaa,
             array: Buffer.from('hello, world!!!!').toJSON().data,
             sentry: 0xaa
+        }],
+        stopAt: 'parse.bff'
+    }) */
+    cycle(okay, {
+        name: 'fixed/words/calculated',
+        define: {
+            object: {
+                nudge: 8,
+                array: [ [ () => 16 ], [ 8 ], 0xd, 0xa ],
+                sentry: 8
+            }
+        },
+        objects: [{
+            nudge: 0xaa,
+            array: Buffer.from('hello, world').toJSON().data,
+            sentry: 0xaa
+        }, {
+            nudge: 0xaa,
+            array: Buffer.from('hello, world!!!!').toJSON().data,
+            sentry: 0xaa
         }]
     })
+    return
     cycle(okay, {
         name: 'fixed/nested/array',
         define: {

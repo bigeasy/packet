@@ -1,4 +1,4 @@
-require('proof')(3, okay => {
+require('proof')(4, okay => {
     const language = require('../../language')
     okay(language({ packet: {
         value: [ [ 4 ], [ 16 ], 0x0d, 0x0a ] }
@@ -83,6 +83,42 @@ require('proof')(3, okay => {
             fields: [{
                 type: 'buffer',
                 concat: false,
+                vivify: 'number',
+                dotted: '',
+                fixed: true,
+                bits: 8,
+                endianness: 'big',
+                compliment: false
+            }]
+        }]
+    }], 'buffer arrayed')
+    okay(language({ packet: {
+        value: [ [ () => 8 ], [ 8 ] ] }
+    }), [{
+        name: 'packet',
+        fixed: false,
+        bits: 0,
+        type: 'structure',
+        vivify: 'object',
+        dotted: '',
+        fields: [{
+            name: 'value',
+            dotted: '.value',
+            type: 'fixed',
+            vivify: 'array',
+            length: {
+                defaulted: [],
+                properties: [],
+                source: '() => 8',
+                arity: 0,
+                vargs: []
+            },
+            align: 'left',
+            pad: [],
+            fixed: false,
+            bits: 0,
+            fields: [{
+                type: 'integer',
                 vivify: 'number',
                 dotted: '',
                 fixed: true,
