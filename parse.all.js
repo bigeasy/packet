@@ -86,6 +86,137 @@ function expand (fields) {
     }
     return expanded
 }
+//
+
+// Insert checkpoints for best-foot-forward search. See the detailed description
+// of checkpoint inseration in [`serialize.all.js`](serialize.all.js.html),
+// since it follows the same principle.
+
+//
+function checkpoints (path, fields, $i = 0, $I = 0) {
+    let checkpoint = { type: 'checkpoint', lengths: [ 0 ], vivify: null, rewind: 0 }
+    const checked = [ checkpoint ]
+    for (const field of fields) {
+        switch (field.type) {
+        case 'switch':
+            checked.push(field)
+            for (const when of field.cases) {
+                when.fields = checkpoints(path + field.dotted, when.fields, $i)
+            }
+            checked.push(checkpoint = {
+                type: 'checkpoint', lengths: [ 0 ], vivify: null, rewind: 0
+            })
+            break
+        case 'conditional':
+            checked.push(field)
+            // TODO Sip belongs outside since it is generally a byte or so.
+            if (field.parse.sip != null) {
+                field.parse.sip = checkpoints(path + field.dotted, field.parse.sip, $i, $I)
+            }
+            for (const condition of field.parse.conditions) {
+                condition.fields = checkpoints(path + field.dotted, condition.fields, $i, $I)
+            }
+            checked.push(checkpoint = {
+                type: 'checkpoint', lengths: [ 0 ], vivify: null, rewind: 0
+            })
+            break
+        case 'lengthEncoding':
+            checked.push(field)
+            checkpoint.lengths[0] += field.body.encoding[0].bits / 8
+            checked.push(checkpoint = {
+                type: 'checkpoint', lengths: [ 0 ], vivify: null, rewind: 0
+            })
+            break
+        case 'lengthEncoded':
+            checked.push(field)
+            if (field.fields[0].fixed) {
+                // Tricky, stick the checkpoint for a fixed array at the end
+                // of the encoding fields. Let any subsequent fields use the
+                // checkpoint.
+                checkpoint.lengths.push(`${field.fields[0].bits >>> 3} * $I[${$I}]`)
+            } else {
+                field.fields = checkpoints(`${path}${field.dotted}[$i[${$i}]]`, field.fields, $i + 1, $I + 1)
+                checked.push(checkpoint = {
+                    type: 'checkpoint', lengths: [ 0 ], vivify: null, rewind: 0
+                })
+            }
+            break
+        case 'calculation':
+            if (field.field.fields[0].fixed) {
+                checked.push(field)
+                checked.push(checkpoint = { type: 'checkpoint', lengths: [ 0 ], vivify: null, rewind: 0 })
+                checkpoint.lengths.push(`$I[${$I}] * ${field.field.fields[0].bits >>> 3}`)
+            } else {
+                throw new Error('unimplemented')
+            }
+            break
+        case 'fixed':
+            if (field.fixed) {
+                checked.push(field)
+                checkpoint.lengths[0] += field.bits / 8
+            } else {
+                checked.push(field)
+                field.fields = checkpoints(`${path}${field.dotted}[$i[${$i}]]`, field.fields, $i + 1, $I)
+                checked.push(checkpoint = {
+                    type: 'checkpoint', lengths: [ 0 ], vivify: null, rewind: 0
+                })
+            }
+            break
+        case 'terminator':
+            checked.push(field)
+            checkpoint.lengths[0] += field.body.terminator.length
+            break
+        // TODO Checkpoint invocation on fields in two places?
+        case 'repeated':
+            // TODO If the terminator is greater than or equal to the size
+            // of the repeated part, we do not have to perform the
+            // checkpoint.
+            checked.push(field)
+            field.fields = checkpoints(path, field.fields, $i, $I)
+            break
+        case 'terminated':
+            checked.push(field)
+            const element = field.fields.slice().pop().fields.slice().pop()
+            if (element.type != 'buffer') {
+                field.fields = checkpoints(path + `${field.dotted}[$i[${$i}]]`, field.fields, $i + 1, $I)
+            }
+            checked.push(checkpoint = {
+                type: 'checkpoint', lengths: [ 0 ], vivify: null, rewind: 0
+            })
+            break
+        case 'inline':
+        case 'accumulator':
+        case 'structure':
+            checked.push(field)
+            if (field.fixed) {
+                checkpoint.lengths[0] += field.bits / 8
+            } else {
+                // TODO Could start from the nested checkpoint since we are
+                // are not actually looping for the structure.
+                field.fields = checkpoints(path + field.dotted, field.fields, $i, $I)
+                checked.push(checkpoint = {
+                    type: 'checkpoint', lengths: [ 0 ], vivify: null, rewind: 0
+                })
+            }
+            break
+        default:
+            checked.push(field)
+            checkpoint.lengths[0] += field.bits / 8
+            break
+        }
+    }
+    // Remove any list of lengths that begins with a zero constant. There
+    // may still be calculated lengths following.
+    checked.forEach(field => {
+        if (field.type == 'checkpoint' && field.lengths[0] == 0) {
+            field.lengths.shift()
+        }
+    })
+    // Remove any checkpoints that only had the zero constant.
+    return checked.filter(field => {
+        return field.type != 'checkpoint' || field.lengths.length != 0
+    })
+}
 
 //
 
@@ -228,131 +359,6 @@ function generate (packet, { require, bff, chk }) {
         variables: variables,
         packet: packet.name,
         direction: 'parse'
-    }
-
-    function checkpoints (path, fields, $i = 0, $I = 0) {
-        let checkpoint = { type: 'checkpoint', lengths: [ 0 ], vivify: null, rewind: 0 }
-        const checked = [ checkpoint ]
-        for (const field of fields) {
-            switch (field.type) {
-            case 'switch':
-                checked.push(field)
-                for (const when of field.cases) {
-                    when.fields = checkpoints(path + field.dotted, when.fields, $i)
-                }
-                checked.push(checkpoint = {
-                    type: 'checkpoint', lengths: [ 0 ], vivify: null, rewind: 0
-                })
-                break
-            case 'conditional':
-                checked.push(field)
-                // TODO Sip belongs outside since it is generally a byte or so.
-                if (field.parse.sip != null) {
-                    field.parse.sip = checkpoints(path + field.dotted, field.parse.sip, $i, $I)
-                }
-                for (const condition of field.parse.conditions) {
-                    condition.fields = checkpoints(path + field.dotted, condition.fields, $i, $I)
-                }
-                checked.push(checkpoint = {
-                    type: 'checkpoint', lengths: [ 0 ], vivify: null, rewind: 0
-                })
-                break
-            case 'lengthEncoding':
-                checked.push(field)
-                checkpoint.lengths[0] += field.body.encoding[0].bits / 8
-                checked.push(checkpoint = {
-                    type: 'checkpoint', lengths: [ 0 ], vivify: null, rewind: 0
-                })
-                break
-            case 'lengthEncoded':
-                checked.push(field)
-                if (field.fields[0].fixed) {
-                    // Tricky, stick the checkpoint for a fixed array at the end
-                    // of the encoding fields. Let any subsequent fields use the
-                    // checkpoint.
-                    checkpoint.lengths.push(`${field.fields[0].bits >>> 3} * $I[${$I}]`)
-                } else {
-                    field.fields = checkpoints(`${path}${field.dotted}[$i[${$i}]]`, field.fields, $i + 1, $I + 1)
-                    checked.push(checkpoint = {
-                        type: 'checkpoint', lengths: [ 0 ], vivify: null, rewind: 0
-                    })
-                }
-                break
-            case 'calculation':
-                if (field.field.fields[0].fixed) {
-                    checked.push(field)
-                    checked.push(checkpoint = { type: 'checkpoint', lengths: [ 0 ], vivify: null, rewind: 0 })
-                    checkpoint.lengths.push(`$I[${$I}] * ${field.field.fields[0].bits >>> 3}`)
-                } else {
-                    throw new Error('unimplemented')
-                }
-                break
-            case 'fixed':
-                if (field.fixed) {
-                    checked.push(field)
-                    checkpoint.lengths[0] += field.bits / 8
-                } else {
-                    checked.push(field)
-                    field.fields = checkpoints(`${path}${field.dotted}[$i[${$i}]]`, field.fields, $i + 1, $I)
-                    checked.push(checkpoint = {
-                        type: 'checkpoint', lengths: [ 0 ], vivify: null, rewind: 0
-                    })
-                }
-                break
-            case 'terminator':
-                checked.push(field)
-                checkpoint.lengths[0] += field.body.terminator.length
-                break
-            // TODO Checkpoint invocation on fields in two places?
-            case 'repeated':
-                // TODO If the terminator is greater than or equal to the size
-                // of the repeated part, we do not have to perform the
-                // checkpoint.
-                checked.push(field)
-                field.fields = checkpoints(path, field.fields, $i, $I)
-                break
-            case 'terminated':
-                checked.push(field)
-                const element = field.fields.slice().pop().fields.slice().pop()
-                if (element.type != 'buffer') {
-                    field.fields = checkpoints(path + `${field.dotted}[$i[${$i}]]`, field.fields, $i + 1, $I)
-                }
-                checked.push(checkpoint = {
-                    type: 'checkpoint', lengths: [ 0 ], vivify: null, rewind: 0
-                })
-                break
-            case 'inline':
-            case 'accumulator':
-            case 'structure':
-                checked.push(field)
-                if (field.fixed) {
-                    checkpoint.lengths[0] += field.bits / 8
-                } else {
-                    // TODO Could start from the nested checkpoint since we are
-                    // are not actually looping for the structure.
-                    field.fields = checkpoints(path + field.dotted, field.fields, $i, $I)
-                    checked.push(checkpoint = {
-                        type: 'checkpoint', lengths: [ 0 ], vivify: null, rewind: 0
-                    })
-                }
-                break
-            default:
-                checked.push(field)
-                checkpoint.lengths[0] += field.bits / 8
-                break
-            }
-        }
-        // Remove any list of lengths that begins with a zero constant. There
-        // may still be calculated lengths following.
-        checked.forEach(field => {
-            if (field.type == 'checkpoint' && field.lengths[0] == 0) {
-                field.lengths.shift()
-            }
-        })
-        // Remove any checkpoints that only had the zero constant.
-        return checked.filter(field => {
-            return field.type != 'checkpoint' || field.lengths.length != 0
-        })
     }
 
     function absent (path, field) {

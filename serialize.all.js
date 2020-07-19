@@ -91,7 +91,7 @@ function expand (fields) {
 // Child nodes for nodes that have children &mdash; which is almost ever node except
 // for unpacked integers &mdash; are stored in fields array.
 //
-// Comeing from the AST, all nodes except for structure notes the field arrays
+// Coming from the AST, all nodes except for structure nodes the field arrays
 // always have a single child element. Structure nodes have an element for each
 // field in the structure.
 //
