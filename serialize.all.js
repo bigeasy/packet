@@ -883,18 +883,34 @@ function generate (packet, { require = null, bff, chk }) {
 
     assert.equal($i, -1)
 
+    if (bff || chk) {
+        return $(`
+            serializers.${bff ? 'bff' : 'chk'}.${packet.name} = function () {
+                `, requires, -1, `
+
+                return function (${packet.name}) {
+                    return function ($buffer, $start, $end) {
+                        `, lets.length != 0 ? `let ${lets.join(', ')}` : null, -1, `
+
+                        `, source, `
+
+                        return { start: $start, serialize: null }
+                    }
+                }
+            } ()
+        `)
+    }
+
     return $(`
-        serializers.${bff ? 'bff' : chk ? 'chk' : 'all'}.${packet.name} = function () {
+        serializers.all.${packet.name} = function () {
             `, requires, -1, `
 
-            return function (${packet.name}) {
-                return function ($buffer, $start, $end) {
-                    `, lets.length != 0 ? `let ${lets.join(', ')}` : null, -1, `
+            return function (${packet.name}, $buffer, $start) {
+                `, lets.length != 0 ? `let ${lets.join(', ')}` : null, -1, `
 
-                    `, source, `
+                `, source, `
 
-                    return { start: $start, serialize: null }
-                }
+                return { start: $start, serialize: null }
             }
         } ()
     `)

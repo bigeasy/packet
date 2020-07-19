@@ -1,36 +1,34 @@
 module.exports = function ({ serializers, $lookup }) {
     serializers.all.object = function () {
-        return function (object) {
-            return function ($buffer, $start, $end) {
-                $buffer[$start++] = (object.type & 0xff)
+        return function (object, $buffer, $start) {
+            $buffer[$start++] = (object.type & 0xff)
 
-                switch (($ => $.type)(object)) {
-                case 0:
+            switch (($ => $.type)(object)) {
+            case 0:
 
-                    $buffer[$start++] = (object.value & 0xff)
+                $buffer[$start++] = (object.value & 0xff)
 
-                    break
+                break
 
-                case 1:
+            case 1:
 
-                    $buffer[$start++] = (object.value >>> 8 & 0xff)
-                    $buffer[$start++] = (object.value & 0xff)
+                $buffer[$start++] = (object.value >>> 8 & 0xff)
+                $buffer[$start++] = (object.value & 0xff)
 
-                    break
+                break
 
-                default:
+            default:
 
-                    $buffer[$start++] = (object.value >>> 16 & 0xff)
-                    $buffer[$start++] = (object.value >>> 8 & 0xff)
-                    $buffer[$start++] = (object.value & 0xff)
+                $buffer[$start++] = (object.value >>> 16 & 0xff)
+                $buffer[$start++] = (object.value >>> 8 & 0xff)
+                $buffer[$start++] = (object.value & 0xff)
 
-                    break
-                }
-
-                $buffer[$start++] = (object.sentry & 0xff)
-
-                return { start: $start, serialize: null }
+                break
             }
+
+            $buffer[$start++] = (object.sentry & 0xff)
+
+            return { start: $start, serialize: null }
         }
     } ()
 }

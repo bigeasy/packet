@@ -87,8 +87,7 @@ module.exports = function (okay, options) {
 
         const expected = Buffer.alloc(sizeOf)
 
-        const serialize = packet.serializers.all.object(actual)
-        const cursor = serialize(expected, 0, expected.length)
+        const cursor = packet.serializers.all.object(actual, expected, 0)
         okay.inc(1)
         okay(cursor, {
             start: expected.length,
