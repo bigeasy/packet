@@ -547,6 +547,22 @@ function generate (packet, { require = null }) {
                 `)
                 $I--
             } else {
+                const I = `$I[${++$I}]`
+                source = $(`
+                    case ${init}:
+
+                        ${i} = 0
+                        ${I} = `, inline.inlined.shift(), `
+
+                        $step = ${redo}
+
+                    `, map(dispatch, `${path}[${i}]`, field.fields), `
+                        if (++${i} != ${path}.length) {
+                            $step = ${redo}
+                            continue
+                        }
+                `)
+                $I--
             }
         } else {
             source = $(`

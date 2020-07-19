@@ -843,7 +843,7 @@ function generate (packet, { require = null }) {
 
                         ${i}++
 
-                        if (${i} != ${path}.length) { // foo
+                        if (${i} != ${I}) { // foo
                             $step = ${redo}
                             continue
                         }
@@ -852,6 +852,29 @@ function generate (packet, { require = null }) {
                         $step = ${$step}
                 `)
             } else {
+                source = $(`
+                    case ${$step++}:
+
+                        ${i} = 0
+                        ${I} = `, inline.inlined.shift(), `
+
+                    case ${$step++}:
+
+                        `, vivify.assignment(`${path}[${i}]`, field), -1, `
+
+                    `, map(dispatch,`${path}[${i}]`, field.fields), `
+
+                    case ${$step++}:
+
+                        ${i}++
+
+                        if (${i} != ${I}) { // foo
+                            $step = ${redo}
+                            continue
+                        }
+
+                        $step = ${$step}
+                `)
             }
             $I--
         } else {

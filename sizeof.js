@@ -80,10 +80,21 @@ function generate (packet, { require = null }) {
             return `$start += ${field.bits >>> 3}`
         case 'fixed': {
                 if (field.calculated) {
+                    const element = field.fields[0]
                     const inline = inliner(accumulate, path, [ field.length ], [])
-                    return $(`
-                        $start += `, inline.inlined.shift(), `
+                    if (element.fixed) {
+                        return $(`
+                            $start += `, inline.inlined.shift(), ` * {element.bits >>> 3}
+                        `)
+                    }
+                    variables.i = true
+                    const i = `$i[${++$i}]`
+                    const source = $(`
+                        for (${i} = 0; ${i} < ${path}.length; ${i}++) {
+                            `, map(dispatch, `${path}[${i}]`, field.fields), `
+                        }
                     `)
+                    return source
                 } else if (field.fixed) {
                     return $(`
                         $start += ${field.bits >>> 3}

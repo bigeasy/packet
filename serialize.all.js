@@ -217,7 +217,7 @@ function checkpoints (path, fields, $i = 0, $I = 0) {
                 checked.push(checkpoint = { type: 'checkpoint', lengths: [ 0 ] })
                 checkpoint.lengths.push(`$I[${$I}] * ${field.field.fields[0].bits >>> 3}`)
             } else {
-                throw new Error('unimplemented')
+                checked.push(field)
             }
             break
         case 'fixed':
@@ -226,7 +226,11 @@ function checkpoints (path, fields, $i = 0, $I = 0) {
                 checkpoint.lengths[0] += field.bits / 8
             } else {
                 checked.push(field)
-                field.fields = checkpoints(`${path + field.dotted}[$i[${$i}]]`, field.fields, $i, $I)
+                if (field.calculated) {
+                    field.fields = checkpoints(`${path + field.dotted}[$i[${$i}]]`, field.fields, $i + 1, $I + 1)
+                } else {
+                    field.fields = checkpoints(`${path + field.dotted}[$i[${$i}]]`, field.fields, $i + 1, $I)
+                }
                 checked.push(checkpoint = { type: 'checkpoint', lengths: [ 0 ] })
             }
             break
@@ -328,7 +332,7 @@ function inquisition (path, fields, $i = 0, $I = 0) {
                 checked.push(field)
                 checked.push({ type: 'checkpoint', lengths: [ `$I[${$I}] * ${field.field.fields[0].bits >>> 3}` ]})
             } else {
-                throw new Error('unimplemented')
+                checked.push(field)
             }
             break
         case 'fixed':
@@ -650,7 +654,7 @@ function generate (packet, { require = null, bff, chk }) {
                 `)
             } else {
                 source = $(`
-                    for (${i} = 0, ${I} = `, inline.inlined.shift(), `; ${i} < ${I}; ${i}++) {
+                    for (${i} = 0; ${i} < ${I}; ${i}++) {
                         `, looped, `
                     }
 

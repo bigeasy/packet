@@ -147,7 +147,7 @@ function checkpoints (path, fields, $i = 0, $I = 0) {
                 checked.push(checkpoint = { type: 'checkpoint', lengths: [ 0 ], vivify: null, rewind: 0 })
                 checkpoint.lengths.push(`$I[${$I}] * ${field.field.fields[0].bits >>> 3}`)
             } else {
-                throw new Error('unimplemented')
+                checked.push(field)
             }
             break
         case 'fixed':
@@ -156,7 +156,11 @@ function checkpoints (path, fields, $i = 0, $I = 0) {
                 checkpoint.lengths[0] += field.bits / 8
             } else {
                 checked.push(field)
-                field.fields = checkpoints(`${path}${field.dotted}[$i[${$i}]]`, field.fields, $i + 1, $I)
+                if (field.calculated) {
+                    field.fields = checkpoints(`${path}${field.dotted}[$i[${$i}]]`, field.fields, $i + 1, $I + 1)
+                } else {
+                    field.fields = checkpoints(`${path}${field.dotted}[$i[${$i}]]`, field.fields, $i + 1, $I)
+                }
                 checked.push(checkpoint = {
                     type: 'checkpoint', lengths: [ 0 ], vivify: null, rewind: 0
                 })
@@ -313,7 +317,7 @@ function inquisition (fields, $I = 0) {
                     rewind: 0
                 })
             } else {
-                throw new Error('unimplemented')
+                checked.push(field)
             }
             break
         case 'fixed':
@@ -326,7 +330,11 @@ function inquisition (fields, $I = 0) {
                 })
                 checked.push(field)
             } else {
-                field.fields = inquisition(field.fields, $I)
+                if (field.calculated) {
+                    field.fields = inquisition(field.fields, $I + 1)
+                } else {
+                    field.fields = inquisition(field.fields, $I)
+                }
                 checked.push(field)
             }
             break
@@ -680,11 +688,10 @@ function generate (packet, { require, bff, chk }) {
         let source = null, length = null
         if (field.calculated) {
             const inline = inliner(accumulate, path, [ field.length ], [])
-            const I = `$I[${++$I}]`
+            const I = `$I[${$I}]`
             length = I
             source = $(`
                 ${i} = 0
-                ${I} = `, inline.inlined.shift(), `
                 do {
                     `, check, -1, `
 
