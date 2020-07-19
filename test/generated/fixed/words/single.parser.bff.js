@@ -18,8 +18,8 @@ module.exports = function ({ parsers, $lookup }) {
 
                 $i[0] = 0
                 do {
-                    if ($end - ($start - undefined) < 1) {
-                        return parsers.inc.object(object, 4, $i)($buffer, $start - undefined, $end)
+                    if ($end - $start < 1) {
+                        return parsers.inc.object(object, 4, $i)($buffer, $start, $end)
                     }
 
                     if (

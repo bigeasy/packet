@@ -31,6 +31,7 @@ require('proof')(1, okay => {
                 pad: [],
                 fixed: true,
                 align: 'left',
+                calculated: false,
                 bits: 64,
                 fields: [{
                     type: 'buffer',

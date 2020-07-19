@@ -870,7 +870,7 @@ function generate (packet, { require = null }) {
 
                     ${i}++
 
-                    if (${i} != ${path}.length) {
+                    if (${i} != ${field.length}) {
                         $step = ${redo}
                         continue
                     }

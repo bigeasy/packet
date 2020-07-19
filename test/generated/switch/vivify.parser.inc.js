@@ -233,7 +233,7 @@ module.exports = function ({ parsers, $lookup }) {
                         $i[0]++
 
                         if ($i[0] != 3) {
-                            $step = 23
+                            $step = 22
                             continue
                         }
 

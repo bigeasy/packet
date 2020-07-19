@@ -90,15 +90,9 @@ module.exports = function ({ parsers, $lookup }) {
                     }
 
                     $i[0] = 0
-                    for (;;) {
+                    do {
                         object.value[$i[0]] = ($buffer[$start++])
-                        $i[0]++
-
-                        if ($i[0] == 3) {
-                            break
-                        }
-                    }
-
+                    } while (++$i[0] != 3)
                 } else {
                     if ($end - $start < 3) {
                         return parsers.inc.object(object, 26, $i, $I)($buffer, $start, $end)

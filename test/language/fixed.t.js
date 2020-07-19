@@ -1,4 +1,4 @@
-require('proof')(4, okay => {
+require('proof')(5, okay => {
     const language = require('../../language')
     okay(language({ packet: {
         value: [ [ 4 ], [ 16 ], 0x0d, 0x0a ] }
@@ -17,6 +17,7 @@ require('proof')(4, okay => {
             length: 4,
             align: 'left',
             pad: [ 0xd, 0xa ],
+            calculated: false,
             fixed: true,
             bits: 64,
             fields: [{
@@ -30,8 +31,59 @@ require('proof')(4, okay => {
             }]
         }]
     }], 'fixed words')
-    okay(language({ packet: {
-        value: [ [ 8 ], [ Buffer ], 0x0d, 0x0a ] }
+    okay(language({
+        packet: {
+            value: [ [ 2 ], [ [ 8, [ 8 ] ] ] ]
+        }
+    }), [{
+        name: 'packet',
+        fixed: false,
+        bits: 0,
+        type: 'structure',
+        vivify: 'object',
+        dotted: '',
+        fields: [{
+            name: 'value',
+            dotted: '.value',
+            type: 'fixed',
+            vivify: 'array',
+            length: 2,
+            align: 'left',
+            pad: [],
+            calculated: false,
+            fixed: false,
+            bits: 0,
+            fields: [{
+                type: 'lengthEncoded',
+                vivify: 'array',
+                encoding: [{
+                    type: 'integer',
+                    vivify: 'number',
+                    dotted: '',
+                    fixed: true,
+                    bits: 8,
+                    endianness: 'big',
+                    compliment: false
+                }],
+                dotted: '',
+                fixed: false,
+                bits: 0,
+                fields: [{
+                    type: 'integer',
+                    vivify: 'number',
+                    dotted: '',
+                    fixed: true,
+                    bits: 8,
+                    endianness: 'big',
+                    compliment: false
+                }]
+            }]
+        }]
+    }], 'nested')
+    okay(language({
+        packet: {
+            value: [ [ 8 ], [ Buffer ], 0x0d, 0x0a ]
+        }
     }), [{
         name: 'packet',
         fixed: true,
@@ -48,6 +100,7 @@ require('proof')(4, okay => {
             align: 'left',
             pad: [ 0xd, 0xa ],
             fixed: true,
+            calculated: false,
             bits: 64,
             fields: [{
                 type: 'buffer',
@@ -79,6 +132,7 @@ require('proof')(4, okay => {
             align: 'left',
             pad: [ 0xd, 0xa ],
             fixed: true,
+            calculated: false,
             bits: 64,
             fields: [{
                 type: 'buffer',
@@ -106,6 +160,7 @@ require('proof')(4, okay => {
             dotted: '.value',
             type: 'fixed',
             vivify: 'array',
+            calculated: true,
             length: {
                 defaulted: [],
                 properties: [],

@@ -224,7 +224,7 @@ function checkpoints (path, fields, $i = 0, $I = 0) {
             if (field.fixed) {
                 checked.push(field)
                 checkpoint.lengths[0] += field.bits / 8
-            } else if (field.pad.length) {
+            } else {
                 checked.push(field)
                 field.fields = checkpoints(`${path + field.dotted}[$i[${$i}]]`, field.fields, $i, $I)
                 checked.push(checkpoint = { type: 'checkpoint', lengths: [ 0 ] })
