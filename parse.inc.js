@@ -767,6 +767,7 @@ function generate (packet, { require = null }) {
         }
         const element = field.fields[field.fields.length - 1]
         const buffered = accumulate.buffered.map(buffered => buffered.source)
+        const length = field.calculated  ? `$I[${++$I}]` : field.length
         //
 
         // Use `Buffer` functions when fixed array is a `Buffer`.
@@ -778,6 +779,9 @@ function generate (packet, { require = null }) {
         //
         if (element.type == 'buffer') {
             locals['buffers'] = '[]'
+            const inline = field.calculated
+                ? inliner(accumulate, path, [ field.length ], []).inlined.shift()
+                : null
             const assign = element.concat
                 ? `${path} = $buffers.length == 1 ? $buffers[0] : Buffer.concat($buffers)`
                 : `${path} = $buffers`
@@ -785,17 +789,18 @@ function generate (packet, { require = null }) {
                 case ${$step++}:
 
                     $_ = 0
+                    ${length} = `, inline, `
 
                     $step = ${$step}
 
                 case ${$step++}: {
 
-                    const length = Math.min($end - $start, ${field.length} - $_)
+                    const length = Math.min($end - $start, ${length} - $_)
                     $buffers.push($buffer.slice($start, $start + length))
                     $start += length
                     $_ += length
 
-                    if ($_ != ${field.length}) {
+                    if ($_ != ${length}) {
                         `, buffered.length != 0 ? buffered.join('\n') : null, `
                         return { start: $start, object: null, parse: $parse }
                     }
@@ -820,18 +825,16 @@ function generate (packet, { require = null }) {
         const redo = $step + 1
         // We sometimes have a vivification step to create an object element.
         // **TODO** Eliminate vivify step if not used.
-        const width = field.bits / field.length / 8
         let source = null
         if (field.calculated) {
             const inline = inliner(accumulate, path, [ field.length ], [])
             const element = field.fields[field.fields.length - 1]
-            const I = `$I[${++$I}]`
             if (field.fixed) {
                 source = $(`
                     case ${$step++}:
 
                         ${i} = 0
-                        ${I} = `, inline.inlined.shift(), `
+                        ${length} = `, inline.inlined.shift(), `
 
                     case ${$step++}:
 
@@ -856,7 +859,7 @@ function generate (packet, { require = null }) {
                     case ${$step++}:
 
                         ${i} = 0
-                        ${I} = `, inline.inlined.shift(), `
+                        ${length} = `, inline.inlined.shift(), `
 
                     case ${$step++}:
 
@@ -868,7 +871,7 @@ function generate (packet, { require = null }) {
 
                         ${i}++
 
-                        if (${i} != ${I}) { // foo
+                        if (${i} != ${length}) {
                             $step = ${redo}
                             continue
                         }
@@ -893,12 +896,12 @@ function generate (packet, { require = null }) {
 
                     ${i}++
 
-                    if (${i} != ${field.length}) {
+                    if (${i} != ${length}) {
                         $step = ${redo}
                         continue
                     }
 
-                    $_ = (${field.length} - ${i}) * ${width} - ${field.pad.length}
+                    $_ = (${length} - ${i}) * ${length} * ${element.bits >>> 3} - ${field.pad.length}
                     $step = ${$step}
             `)
         }

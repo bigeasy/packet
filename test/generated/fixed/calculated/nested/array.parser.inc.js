@@ -75,7 +75,7 @@ module.exports = function ({ parsers, $lookup }) {
 
                         $i[0]++
 
-                        if ($i[0] != $I[0]) { // foo
+                        if ($i[0] != $I[0]) {
                             $step = 4
                             continue
                         }

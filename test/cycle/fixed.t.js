@@ -120,6 +120,19 @@ function prove (okay) {
         objects: [{ nudge: 0xaa, array: Buffer.from('abcdefgh'), sentry: 0xaa }]
     })
     cycle(okay, {
+        name: 'fixed/calculated/concat/unpadded',
+        define: {
+            object: {
+                nudge: 8,
+                array: [ [ () => 8 ], [ Buffer ] ],
+                sentry: 8
+            }
+        },
+        objects: [{ nudge: 0xaa, array: Buffer.from('abcdefgh'), sentry: 0xaa }],
+        stopAt: 'parse.chk'
+    })
+    return
+    cycle(okay, {
         name: 'fixed/static/concat/single',
         define: {
             object: {

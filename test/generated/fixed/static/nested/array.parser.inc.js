@@ -79,7 +79,7 @@ module.exports = function ({ parsers, $lookup }) {
                             continue
                         }
 
-                        $_ = (2 - $i[0]) * 0 - 0
+                        $_ = (2 - $i[0]) * 2 * 0 - 0
                         $step = 11
 
 

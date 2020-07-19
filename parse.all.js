@@ -617,6 +617,7 @@ function generate (packet, { require, bff, chk }) {
     }
 
     function fixed (path, field) {
+        const length = field.calculated ? `$I[${$I}]` : field.length
         // Fetch the type of element.
         const element = field.fields[field.fields.length - 1]
         //
@@ -630,9 +631,10 @@ function generate (packet, { require, bff, chk }) {
             variables.slice = true
             // Advance past buffer read to padding skip.
             $step += field.pad.length == 0 ? 2 : 3
+            --$I
             const slice = $(`
-                $slice = $buffer.slice($start, $start + ${field.length})
-                $start += ${field.length}
+                $slice = $buffer.slice($start, $start + ${length})
+                $start += ${length}
             `)
             const assign = element.concat ? `${path} = $slice` : `${path} = [ $slice ]`
             if (field.pad.length != 0) {
@@ -685,11 +687,9 @@ function generate (packet, { require, bff, chk }) {
                             }
                         `)
                         : null
-        let source = null, length = null
+        let source = null
         if (field.calculated) {
             const inline = inliner(accumulate, path, [ field.length ], [])
-            const I = `$I[${$I}]`
-            length = I
             source = $(`
                 ${i} = 0
                 do {
@@ -700,8 +700,9 @@ function generate (packet, { require, bff, chk }) {
                     `, vivify.assignment(`${path}[${i}]`, field), -1, `
 
                     `, looped, `
-                } while (++${i} != ${I})
+                } while (++${i} != ${length})
             `)
+            $I--
         } else {
             source = $(`
                 ${i} = 0
@@ -713,9 +714,8 @@ function generate (packet, { require, bff, chk }) {
                     `, vivify.assignment(`${path}[${i}]`, field), -1, `
 
                     `, looped, `
-                } while (++${i} != ${field.length})
+                } while (++${i} != ${length})
             `)
-            length = field.length
         }
         $i--
         if (terminator.length) {
