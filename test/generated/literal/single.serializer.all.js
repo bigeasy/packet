@@ -2,6 +2,8 @@ module.exports = function ({ serializers, $lookup }) {
     serializers.all.object = function () {
         return function (object) {
             return function ($buffer, $start, $end) {
+                $buffer[$start++] = (object.nudge & 0xff)
+
                 $buffer.write("0faded", $start, $start + 3, 'hex')
                 $start += 3
 

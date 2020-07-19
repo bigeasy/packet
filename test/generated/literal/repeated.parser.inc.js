@@ -8,6 +8,7 @@ module.exports = function ({ parsers, $lookup }) {
                 case 0:
 
                     object = {
+                        nudge: 0,
                         padded: 0,
                         sentry: 0
                     }
@@ -16,10 +17,23 @@ module.exports = function ({ parsers, $lookup }) {
 
                 case 1:
 
-                    $_ = 6
                     $step = 2
 
                 case 2:
+
+                    if ($start == $end) {
+                        return { start: $start, object: null, parse: $parse }
+                    }
+
+                    object.nudge = $buffer[$start++]
+
+
+                case 3:
+
+                    $_ = 6
+                    $step = 4
+
+                case 4:
 
                     $bite = Math.min($end - $start, $_)
                     $_ -= $bite
@@ -29,13 +43,13 @@ module.exports = function ({ parsers, $lookup }) {
                         return { start: $start, object: null, parse: $parse }
                     }
 
-                case 3:
+                case 5:
 
                     $_ = 0
-                    $step = 4
+                    $step = 6
                     $bite = 1
 
-                case 4:
+                case 6:
 
                     while ($bite != -1) {
                         if ($start == $end) {
@@ -48,12 +62,12 @@ module.exports = function ({ parsers, $lookup }) {
                     object.padded = $_
 
 
-                case 5:
+                case 7:
 
                     $_ = 6
-                    $step = 6
+                    $step = 8
 
-                case 6:
+                case 8:
 
                     $bite = Math.min($end - $start, $_)
                     $_ -= $bite
@@ -63,11 +77,11 @@ module.exports = function ({ parsers, $lookup }) {
                         return { start: $start, object: null, parse: $parse }
                     }
 
-                case 7:
+                case 9:
 
-                    $step = 8
+                    $step = 10
 
-                case 8:
+                case 10:
 
                     if ($start == $end) {
                         return { start: $start, object: null, parse: $parse }
@@ -76,7 +90,7 @@ module.exports = function ({ parsers, $lookup }) {
                     object.sentry = $buffer[$start++]
 
 
-                case 9:
+                case 11:
 
                     return { start: $start, object: object, parse: null }
                 }

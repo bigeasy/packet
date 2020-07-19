@@ -3,12 +3,19 @@ module.exports = function ({ parsers, $lookup }) {
         return function () {
             return function ($buffer, $start, $end) {
                 let object = {
+                    nudge: 0,
                     padded: 0,
                     sentry: 0
                 }
 
-                if ($end - $start < 14) {
+                if ($end - $start < 1) {
                     return parsers.inc.object(object, 1)($buffer, $start, $end)
+                }
+
+                object.nudge = ($buffer[$start++])
+
+                if ($end - $start < 14) {
+                    return parsers.inc.object(object, 3)($buffer, $start, $end)
                 }
 
                 $start += 6
@@ -20,7 +27,7 @@ module.exports = function ({ parsers, $lookup }) {
                 $start += 6
 
                 if ($end - $start < 1) {
-                    return parsers.inc.object(object, 7)($buffer, $start, $end)
+                    return parsers.inc.object(object, 9)($buffer, $start, $end)
                 }
 
                 object.sentry = ($buffer[$start++])

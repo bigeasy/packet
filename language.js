@@ -452,9 +452,12 @@ module.exports = function (packets) {
                     typeof packet[index][0] == 'string'
                 ) {
                     const repeated = packet.splice(index, 1).pop()
+                    const value = repeated[1] < 0
+                        ? repeated[0].match(/.{1,2}/g).reverse().join('')
+                        : repeated[0]
                     return {
-                        repeat: repeated[1],
-                        value: repeated[0],
+                        repeat: repeated[1] < 0 ? ~repeated[1] : repeated[1],
+                        value: value,
                         bits: repeated[0].length * 4
                     }
                 } else {
