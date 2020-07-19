@@ -554,7 +554,7 @@ function generate (packet, { require, bff, chk }) {
 
     function repeated (path, field) {
         const i = `$i[${$i}]`
-        const looped = join(field.fields.map(field => dispatch(path + `[${i}]`, field)))
+        const looped = map(dispatch, `${path}[${i}]`, field.fields)
         return $(`
             `, vivify.assignment(path + `[${i}]`, field), -1, `
 
@@ -595,7 +595,7 @@ function generate (packet, { require, bff, chk }) {
         $step++
         variables.i = true
         $i++
-        const looped = join(field.fields.map(field => dispatch(path + field.dotted, field)))
+        const looped = map(dispatch, path, field.fields)
         $step += 2
         const source = $(`
             $i[${$i}] = 0
@@ -669,7 +669,7 @@ function generate (packet, { require, bff, chk }) {
                     : null
         // Advance past initialization and terminator tests.
         $step += 1 + field.pad.length
-        const looped = join(field.fields.map(field => dispatch(path + `[${i}]`, field)))
+        const looped = map(dispatch, path + `[${i}]`, field.fields)
         // Advance past end-of-loop test and fill skip.
         $step += 1 + (field.pad.length != 0 ? 2 : 0)
         const terminator = field.pad.map((bite, index) => {
@@ -789,8 +789,8 @@ function generate (packet, { require, bff, chk }) {
             if (field.parse.sip == null) {
                 return null
             }
-            signature.push(`$sip`)
-            return join(field.parse.sip.map(field => dispatch(`$sip`, field)))
+            signature.push('$sip')
+            return map(dispatch, '$sip', field.parse.sip)
         } ()
         $step++
         let ladder = '', keywords = 'if'
@@ -835,7 +835,8 @@ function generate (packet, { require, bff, chk }) {
                 }
             } ()
             const vivified = vivify.assignment(path, condition)
-            const source = join(condition.fields.map(field => dispatch(path, field)))
+            //const source = join(condition.fields.map(field => dispatch(path, field)))
+            const source = map(dispatch, path, condition.fields)
             ladder = condition.test != null ? function () {
                 const inline = inliner(accumulate, path, [ condition.test ], signature)
                 return $(`
@@ -872,7 +873,7 @@ function generate (packet, { require, bff, chk }) {
                 ${when.otherwise ? 'default' : `case ${JSON.stringify(when.value)}`}:
                     `, vivified, -1, `
 
-                    `, join(when.fields.map(field => dispatch(path + field.dotted, field))), `
+                    `, map(dispatch, path, when.fields), `
 
                     break
             `))
@@ -939,9 +940,8 @@ function generate (packet, { require, bff, chk }) {
 
     function dispatch (path, field, root = false) {
         switch (field.type) {
-        case 'structure': {
-                return map(dispatch, path, field.fields)
-            }
+        case 'structure':
+            return map(dispatch, path, field.fields)
         case 'checkpoint':
             return checkpoint(field)
         case 'accumulator':

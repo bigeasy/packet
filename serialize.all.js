@@ -829,7 +829,7 @@ function generate (packet, { require = null, bff, chk }) {
     function dispatch (path, field) {
         switch (field.type) {
         case 'structure':
-            return join(field.fields.map(field => dispatch(path + field.dotted, field)))
+            return map(dispatch, path, field.fields)
         case 'checkpoint':
             return checkpoint(field)
         case 'accumulator':

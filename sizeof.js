@@ -53,7 +53,7 @@ function generate (packet, { require = null }) {
                 let ladder = '', keywords = 'if'
                 for (let i = 0, I = field.serialize.conditions.length; i < I; i++) {
                     const condition = field.serialize.conditions[i]
-                    const source = join(condition.fields.map(dispatch.bind(null, path)))
+                    const source = map(dispatch, path, condition.fields)
                     ladder = condition.test != null ? function () {
                         const registers = field.split ? [ path ] : []
                         const inline = inliner(accumulate, path, [ condition.test ], registers)
@@ -129,7 +129,7 @@ function generate (packet, { require = null }) {
                     $start += ${field.encoding[0].bits >>> 3}
 
                     for (${i} = 0; ${i} < ${path}.length; ${i}++) {
-                        `, join(field.fields.map(field => dispatch(path + `[${i}]`, field))), `
+                        `, map(dispatch, `${path}[${i}]`, field.fields), `
                     }
                 `)
                 $i--
@@ -152,7 +152,7 @@ function generate (packet, { require = null }) {
                 const i = `$i[${$i}]`
                 const source = $(`
                     for (${i} = 0; ${i} < ${path}.length; ${i}++) {
-                        `, join(field.fields.map(field => dispatch(path + `[${i}]`, field))), `
+                        `, map(dispatch, `${path}[${i}]`, field.fields), `
                     }
                     $start += ${field.terminator.length}
                 `)
@@ -171,7 +171,7 @@ function generate (packet, { require = null }) {
                     cases.push($(`
                         ${when.otherwise ? 'default' : `case ${JSON.stringify(when.value)}`}:
 
-                            `, join(when.fields.map(dispatch.bind(null, path))), `
+                            `, map(dispatch, path, when.fields), `
 
                             break
                     `))

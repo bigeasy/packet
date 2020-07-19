@@ -174,7 +174,7 @@ function generate (packet, { require = null }) {
             // call this incremental scope versus best-foot-forward scope?
             return element.concat
             ? $(`
-                `, map(dispatch, path + '.length', field.encoding), `
+                `, map(dispatch, `${path}.length`, field.encoding), `
 
                 case ${$step++}: {
 
@@ -240,7 +240,7 @@ function generate (packet, { require = null }) {
                 }
             `)
         }
-        const encoding = map(dispatch, path + '.length', field.encoding)
+        const encoding = map(dispatch, `${path}.length`, field.encoding)
         const redo = $step
         const i = `$i[${++$i}]`
         const source = $(`
@@ -384,7 +384,7 @@ function generate (packet, { require = null }) {
         const init = $step
         const again = ++$step
         const i = `$i[${$i}]`
-        const looped = join(field.fields.map(field => dispatch(`${path}[${i}]`, field)))
+        const looped = map(dispatch, `${path}[${i}]`, field.fields)
         const done = $step
         const source = $(`
             case ${init}:
@@ -635,7 +635,7 @@ function generate (packet, { require = null }) {
         if (before.path[0] != '$') {
             $$--
         }
-        const source =  map(dispatch, before.path, field.fields)
+        const source = map(dispatch, before.path, field.fields)
         const buffered = accumulate.buffered
             .splice(0, before.buffered.end)
             .map(buffered => {
@@ -664,7 +664,7 @@ function generate (packet, { require = null }) {
         for (const condition of field.serialize.conditions) {
             steps.push({
                 step: $step,
-                source: join(condition.fields.map(field => dispatch(path, field)))
+                source: map(dispatch, path, condition.fields)
             })
         }
         let ladder = '', keywords = 'if'
@@ -723,7 +723,7 @@ function generate (packet, { require = null }) {
                     $step = ${$step}
                     continue
             `))
-            steps.push(join(when.fields.map(field => dispatch(path, field))))
+            steps.push(map(dispatch, path, when.fields))
         }
         const inlined = inliner(accumulate, path, [ field.select ], [])
         const invocations = accumulations({
@@ -762,39 +762,34 @@ function generate (packet, { require = null }) {
         `)
     }
 
-    function dispatch (path, packet) {
-        switch (packet.type) {
+    function dispatch (path, field) {
+        switch (field.type) {
         case 'structure':
-            return join(packet.fields.map(field => {
-                const source = dispatch(path + field.dotted, field)
-                return $(`
-                    `, source, `
-                `)
-            }))
+            return map(dispatch, path, field.fields)
         case 'accumulator':
-            return accumulator(path, packet)
+            return accumulator(path, field)
         case 'switch':
-            return switched(path, packet)
+            return switched(path, field)
         case 'conditional':
-            return conditional(path, packet)
+            return conditional(path, field)
         case 'inline':
-            return inline(path, packet)
+            return inline(path, field)
         case 'fixed':
-            return fixed(path, packet)
+            return fixed(path, field)
         case 'terminated':
-            return terminated(path, packet)
+            return terminated(path, field)
         case 'lengthEncoded':
-            return lengthEncoded(path, packet)
+            return lengthEncoded(path, field)
         case 'literal':
-            return literal(path, packet)
+            return literal(path, field)
         case 'buffer':
         case 'bigint':
         case 'integer':
             // TODO This will not include the final step, we keep it off for the
             // looping constructs.
-            return integer(path, packet)
+            return integer(path, field)
         case 'absent':
-            return absent(path, packet)
+            return absent(path, field)
         }
     }
 

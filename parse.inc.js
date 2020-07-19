@@ -481,7 +481,7 @@ function generate (packet, { require = null }) {
         // We will sometimes have a vivification step to an object element.
         $step++
         // Create the body of the loop.
-        const looped = join(field.fields.map(field => dispatch(`${path}[${i}]`, field)))
+        const looped = map(dispatch, `${path}[${i}]`, field.fields)
         // Step of next field is after a final loop jump step.
         const done = $step + 1
         //
@@ -666,8 +666,8 @@ function generate (packet, { require = null }) {
             if (parse.sip == null) {
                 return null
             }
-            signature.push(`$sip`)
-            return join(parse.sip.map(field => dispatch(`$sip`, field)))
+            signature.push('$sip')
+            return map(dispatch, '$sip', parse.sip)
         } ()
         const rewind = function () {
             if (parse.sip == null) {
@@ -699,7 +699,7 @@ function generate (packet, { require = null }) {
         for (const condition of parse.conditions) {
             steps.push({
                 number: $step,
-                source: join(condition.fields.map(field => dispatch(path, field)))
+                source: map(dispatch, path, condition.fields)
             })
         }
         let ladder = '', keywords = 'if'
@@ -999,7 +999,7 @@ function generate (packet, { require = null }) {
                     $step = ${$step}
                     continue
             `))
-            steps.push(join(when.fields.map(field => dispatch(path, field))))
+            steps.push(map(dispatch, path, when.fields))
         }
         const inlined = inliner(accumulate, path, [ field.select ], [])
         const select = field.stringify
