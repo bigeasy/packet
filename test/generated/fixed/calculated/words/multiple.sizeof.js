@@ -5,7 +5,7 @@ module.exports = function ({ sizeOf }) {
 
             $start += 1
 
-            $start += 1 * object.array.length + 4
+            $start += (() => 16)() * 1
 
             $start += 1
 

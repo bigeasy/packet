@@ -1,5 +1,5 @@
 module.exports = function ({ parsers, $lookup }) {
-    parsers.chk.object = function () {
+    parsers.bff.object = function () {
         return function () {
             return function ($buffer, $start, $end) {
                 let $i = [], $I = []
@@ -23,8 +23,11 @@ module.exports = function ({ parsers, $lookup }) {
                 }
 
                 $i[0] = 0
-                $I[1] = (() => 16)()
                 do {
+                    if ($end - $start < 2) {
+                        return parsers.inc.object(object, 4, $i, $I)($buffer, $start, $end)
+                    }
+
                     if (
                         $buffer[$start] == 0xd &&
                         $buffer[$start + 1] == 0xa
@@ -38,10 +41,10 @@ module.exports = function ({ parsers, $lookup }) {
                     }
 
                     object.array[$i[0]] = ($buffer[$start++])
-                } while (++$i[0] != $I[1])
+                } while (++$i[0] != $I[0])
 
-                $start += $I[1] != $i[0]
-                        ? ($I[1] - $i[0]) * 1 - 2
+                $start += $I[0] != $i[0]
+                        ? ($I[0] - $i[0]) * 1 - 2
                         : 0
 
                 if ($end - $start < 1) {

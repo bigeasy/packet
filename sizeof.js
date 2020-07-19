@@ -84,7 +84,7 @@ function generate (packet, { require = null }) {
                     const inline = inliner(accumulate, path, [ field.length ], [])
                     if (element.fixed) {
                         return $(`
-                            $start += `, inline.inlined.shift(), ` * {element.bits >>> 3}
+                            $start += `, inline.inlined.shift(), ` * ${element.bits >>> 3}
                         `)
                     }
                     variables.i = true

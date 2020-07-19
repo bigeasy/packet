@@ -14,7 +14,6 @@ module.exports = function ({ parsers, $lookup }) {
             $I[0] = (() => 16)()
 
             $i[0] = 0
-            $I[1] = (() => 16)()
             do {
                 if (
                     $buffer[$start] == 0xd &&
@@ -25,10 +24,10 @@ module.exports = function ({ parsers, $lookup }) {
                 }
 
                 object.array[$i[0]] = ($buffer[$start++])
-            } while (++$i[0] != $I[1])
+            } while (++$i[0] != $I[0])
 
-            $start += $I[1] != $i[0]
-                    ? ($I[1] - $i[0]) * 1 - 2
+            $start += $I[0] != $i[0]
+                    ? ($I[0] - $i[0]) * 1 - 2
                     : 0
 
             object.sentry = ($buffer[$start++])

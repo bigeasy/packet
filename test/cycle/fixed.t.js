@@ -2,8 +2,8 @@ require('proof')(0, prove)
 
 function prove (okay) {
     const cycle = require('./cycle')
-    /* cycle(okay, {
-        name: 'fixed/words/unpadded',
+    cycle(okay, {
+        name: 'fixed/static/words/unpadded',
         define: {
             object: {
                 nudge: 8,
@@ -18,7 +18,7 @@ function prove (okay) {
         }]
     })
     cycle(okay, {
-        name: 'fixed/words/single',
+        name: 'fixed/static/words/single',
         define: {
             object: {
                 nudge: 8,
@@ -39,7 +39,7 @@ function prove (okay) {
     // **TODO** What do you with a multi-byte terminator when there is only
     // partial room for it to fit?
     cycle(okay, {
-        name: 'fixed/words/multi',
+        name: 'fixed/static/words/multiple',
         define: {
             object: {
                 nudge: 8,
@@ -59,7 +59,7 @@ function prove (okay) {
         stopAt: 'parse.bff'
     })
     cycle(okay, {
-        name: 'fixed/words/calculated',
+        name: 'fixed/calculated/words/multiple',
         define: {
             object: {
                 nudge: 8,
@@ -78,7 +78,7 @@ function prove (okay) {
         }]
     })
     cycle(okay, {
-        name: 'fixed/nested/array',
+        name: 'fixed/static/nested/array',
         define: {
             object: {
                 nudge: 8,
@@ -91,9 +91,9 @@ function prove (okay) {
             array: [ [ 0xa, 0xb, 0xc, 0xd ], [ 0xa, 0xb, 0xc, 0xd ] ],
             sentry: 0xaa
         }],
-    }) */
+    })
     cycle(okay, {
-        name: 'fixed/nested/calculated',
+        name: 'fixed/calculated/nested/array',
         define: {
             object: {
                 nudge: 8,
@@ -110,7 +110,7 @@ function prove (okay) {
     })
     return
     cycle(okay, {
-        name: 'fixed/concat/unpadded',
+        name: 'fixed/static/concat/unpadded',
         define: {
             object: {
                 nudge: 8,
@@ -121,7 +121,7 @@ function prove (okay) {
         objects: [{ nudge: 0xaa, array: Buffer.from('abcdefgh'), sentry: 0xaa }]
     })
     cycle(okay, {
-        name: 'fixed/concat/single',
+        name: 'fixed/static/concat/single',
         define: {
             object: {
                 nudge: 8,
@@ -136,7 +136,7 @@ function prove (okay) {
         }]
     })
     cycle(okay, {
-        name: 'fixed/concat/multiple',
+        name: 'fixed/static/concat/multiple',
         define: {
             object: {
                 nudge: 8,
@@ -151,7 +151,7 @@ function prove (okay) {
         }]
     })
     cycle(okay, {
-        name: 'fixed/chunked/unpadded',
+        name: 'fixed/static/chunked/unpadded',
         define: {
             object: {
                 nudge: 8,
@@ -164,7 +164,7 @@ function prove (okay) {
         }]
     })
     cycle(okay, {
-        name: 'fixed/chunked/single',
+        name: 'fixed/static/chunked/single',
         define: {
             object: {
                 nudge: 8,
@@ -179,7 +179,7 @@ function prove (okay) {
         }]
     })
     cycle(okay, {
-        name: 'fixed/chunked/multiple',
+        name: 'fixed/static/chunked/multiple',
         define: {
             object: {
                 nudge: 8,
