@@ -108,7 +108,6 @@ function prove (okay) {
         }],
         stopAt: 'parse.chk'
     })
-    return
     cycle(okay, {
         name: 'fixed/static/concat/unpadded',
         define: {
