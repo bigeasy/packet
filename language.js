@@ -319,12 +319,12 @@ const is = {
 
 
 module.exports = function (packets) {
-    const definitions = [], lookups = { values: [], index: 0 }
+    const definitions = [], lookups = { values: [], index: 0 }, snippets = {}
 
     function map (packet, extra = {}, pack = false) {
         // **References**: References to existing packet definitions.
         function string () {
-            return [{ ...extra, ...definitions[packet] }]
+            return map(snippets[packet], extra, pack)
         }
 
         const ieee = {
@@ -907,8 +907,14 @@ module.exports = function (packets) {
 
         throw new Error
     }
+    // TODO If I'm ever able to parse from root, then I'll go ahead and add all
+    // the snippets as well.
     for (const packet in packets) {
-        definitions.push(map(packets[packet], { name: packet }).shift())
+        if (packet[0] == '$') {
+            snippets[packet] = packets[packet]
+        } else {
+            definitions.push(map(packets[packet], { name: packet }).shift())
+        }
     }
     return definitions
 }
