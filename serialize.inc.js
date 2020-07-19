@@ -1,3 +1,6 @@
+// Node.js API.
+const util = require('util')
+
 // Format source code maintaining indentation.
 const $ = require('programmatic')
 
@@ -112,7 +115,7 @@ function generate (packet, { require = null }) {
 
                         $step = ${$step}
                         $bite = 0
-                        $_ = ${JSON.stringify(bytes)}
+                        $_ = ${util.inspect(bytes)}
 
                     case ${$step++}:
 

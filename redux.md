@@ -1,3 +1,17 @@
+## Sun Jul 19 11:28:29 CDT 2020
+
+Literal and include amgibuity. Could resolve by requiring the `$`. However array
+wrapping makes the problem go away quickly, and I don't have special naming
+conventions that disambiguate yet.
+
+```
+const defintion = {
+    facade: 16,
+    literal: [ 'ab', 8, 'cd' ],
+    array: [[ 'facade' ], [ 8 ] ],
+    horrible: [ 'facade', 'facade' ]
+}
+```
 ## Sat Jul 18 10:11:44 CDT 2020
 
 Should the calculation of accumlators be everywhere?

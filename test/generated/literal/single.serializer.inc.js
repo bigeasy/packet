@@ -26,7 +26,7 @@ module.exports = function ({ serializers, $lookup }) {
 
                     $step = 3
                     $bite = 0
-                    $_ = [15,173,237]
+                    $_ = [ 15, 173, 237 ]
 
                 case 3:
 
@@ -59,7 +59,7 @@ module.exports = function ({ serializers, $lookup }) {
 
                     $step = 7
                     $bite = 0
-                    $_ = [250,202,222]
+                    $_ = [ 250, 202, 222 ]
 
                 case 7:
 

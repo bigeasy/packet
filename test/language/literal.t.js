@@ -62,7 +62,7 @@ require('proof')(3, okay => {
         }],
         name: 'packet'
     }], 'literal packed')
-    okay(language({ packet: { value: [ '0faded', 16, 'facade' ] } }), [{
+    okay(language({ packet: { value: [ '0faded' , 16, 'facade' ] } }), [{
         type: 'structure',
         vivify: 'object',
         name: 'packet',
@@ -98,39 +98,39 @@ require('proof')(3, okay => {
             bits: 64
         }]
     }], 'literal')
-        okay(language({ packet: { value: [[ '0faded', 2 ], 16, [ 'facade', ~2 ]] } }), [{
-            name: 'packet',
+    okay(language({ packet: { value: [[ '0faded', 2 ], 16, [ 'facade', ~2 ]] } }), [{
+        name: 'packet',
+        fixed: true,
+        bits: 112,
+        type: 'structure',
+        vivify: 'object',
+        dotted: '',
+        fields: [{
+            type: 'literal',
+            vivify: 'descend',
+            name: 'value',
+            dotted: '.value',
             fixed: true,
-            bits: 112,
-            type: 'structure',
-            vivify: 'object',
-            dotted: '',
+            before: {
+                value: '0faded',
+                repeat: 2,
+                bits: 24
+            },
             fields: [{
-                type: 'literal',
-                vivify: 'descend',
-                name: 'value',
-                dotted: '.value',
+                type: 'integer',
+                vivify: 'number',
+                dotted: '',
                 fixed: true,
-                before: {
-                    value: '0faded',
-                    repeat: 2,
-                    bits: 24
-                },
-                fields: [{
-                    type: 'integer',
-                    vivify: 'number',
-                    dotted: '',
-                    fixed: true,
-                    bits: 16,
-                    endianness: 'big',
-                    compliment: false
-                }],
-                after: {
-                    value: 'decafa',
-                    repeat: 2,
-                    bits: 24
-                },
-                bits: 112
-            }]
-        }], 'skip')
+                bits: 16,
+                endianness: 'big',
+                compliment: false
+            }],
+            after: {
+                value: 'decafa',
+                repeat: 2,
+                bits: 24
+            },
+            bits: 112
+        }]
+    }], 'skip')
 })

@@ -120,206 +120,252 @@ function buffered (field) {
     return null
 }
 
-// Please resist the urge to refactor based on, oh look, I'm performing this
-// test twice. A single if/else ladder will be easier to return to for
-// maintainence and expansion. Outer array.
-
-const is = {
-    integer: function (packet) {
-        return Number.isInteger(packet)
-    },
-    absent: function (packet) {
-        return packet == null || (
-            Array.isArray(packet) && packet.length == 0
-        )
-    },
-    ieee: {
-        // A floating point number whose integer part is 64 or 32.
-        shorthand: function (packet) {
-            const floor = Math.floor(packet)
-            return packet - floor != 0 && (floor == 64 || floor == 32)
-        },
-        explicit: function (packet) {
-            return packet.length == 2 &&
-                typeof packet[0] == 'number' &&
-                Math.floor(packet[0]) == 0 &&
-                (
-                    packet[0] * 100 ==  packet[1] ||
-                    packet[0] * 100 == ~packet[1]
-                )
-        }
-    },
-    // **Mapped integers**: A two element array with an integer defintion
-    // followed by an array entirely of strings with more than one element.
-    mapped: function (packet) {
-        return packet.length == 2 &&
-            is.integer(packet[0]) &&
-            (
-                Array.isArray(packet[1]) &&
-                packet[1].length > 1 &&
-                packet[1].filter(value => typeof value == 'string').length == packet[1].length
-            ) ||
-            (
-                typeof packet[1] == 'object' &&
-                Object.keys(packet[1]).length > 1 &&
-                function () {
-                    for (const key in packet[1]) {
-                        if (typeof packet[1][key] != 'string') {
-                            return false
-                        }
-                    }
-                    return true
-                } ()
-            )
-    },
-    // **Literals**: Constant value padding bytes. A type definition with a
-    // preceding or following literal or both. The preceding or following
-    // element is defined by a either string of hexidecimal or an array with a
-    // bit size as number preceding a string hexidecimal value, or a string
-    // hexdecimal value followed by a repeat count as number.
-    literal: function (packet) {
-        return packet.filter(item => typeof item == 'string').length != 0 ||
-            (
-                Array.isArray(packet[0]) &&
-                packet[0].length == 2 &&
-                packet[0].filter(item => typeof item == 'string').length != 0
-            ) ||
-            (
-                Array.isArray(packet[packet.length - 1]) &&
-                packet[packet.length - 1].length == 2 &&
-                packet[packet.length - 1].filter(item => typeof item == 'string').length != 0
-            )
-    },
-    // **Inline functions**: User defined functions that perform inline
-    // transformations and assertions.
-    inline: {
-        split: function (packet) {
-            return packet.length == 3 &&
-                Array.isArray(packet[0]) &&
-                Array.isArray(packet[packet.length - 1]) &&
-                (
-                    typeof packet[0][0] == 'function' ||
-                    typeof packet[packet.length - 1][0] == 'function'
-                )
-        },
-        // **Inline mirrored functions**: User defined functions that perform
-        // inline transformations or assertions defined once for both
-        // pre-serialization and post-parsing.
-        mirrored: function (packet) {
-            return packet.length == 2 &&
-                Array.isArray(packet[0]) &&
-                packet[0].length == 1 &&
-                Array.isArray(packet[0][0]) &&
-                typeof packet[0][0][0] == 'function'
-        }
-    },
-    // **Packed integers**: Defined by an object that is not an array followed
-    // by a number.
-    packed: function (packet) {
-        return typeof packet[0] == 'object' &&
-            ! Array.isArray(packet[0]) &&
-            typeof packet[1] == 'number'
-    },
-    // **Terminated arrays**: An array followed by one or more numbers
-    // representing termination bytes.
-    terminated: function (packet) {
-        return Array.isArray(packet[0]) &&
-            typeof packet[1] == 'number'
-    },
-    // **Fixed length arrays**: Arrays of fixed length or calculated length.
-    fixed: function (packet) {
-        return Array.isArray(packet[0]) &&
-            (
-                is.integer(packet[0][0]) ||
-                typeof packet[0][0] == 'function'
-            ) &&
-            Array.isArray(packet[1]) &&
-            packet[1].length == 1
-    },
-    // **Length-encoded arrays**: Length encoded by a leading integer.
-    lengthEncoded: function (packet) {
-        return packet.length == 2 &&
-            typeof packet[0] == 'number'
-    },
-    switched: {
-        variant: function (packet) {
-            return typeof packet[0] == 'function' &&
-                Array.isArray(packet[1]) &&
-                packet[1].length % 2 == 0 &&
-                packet[1].filter((value, index) => {
-                    return index % 2 == 1 ||
-                    (
-                        typeof value == 'object' &&
-                        (
-                            (
-                                Object.keys(value).length == 1 &&
-                                ('$_' in value)
-                            ) ||
-                            (
-                                Object.keys(value).length == 0 &&
-                                index == packet[1].length - 2
-                            )
-                        )
-                    )
-                }).length == packet[1].length
-        },
-        stringified: function (packet) {
-            return typeof packet[0] == 'function' &&
-                typeof packet[1] == 'object' &&
-                ! Array.isArray(packet[1]) &&
-                (
-                    packet.length == 2 || packet.length == 3
-                )
-        }
-    },
-    // *Accumulators*:
-    accumulator: function (packet) {
-        return packet.length == 2 &&
-            typeof packet[0] == 'object' &&
-            ! Array.isArray(packet[0][0])
-    },
-    // **Conditionals**: TODO Come back and create a set of test functions and
-    // maybe put them in an object. It would simplify this ladder. Kind of don't
-    // want them named and scattered.
-    //
-    // TODO This is a weak test. We could test that every other element is a
-    // function.
-    conditional: {
-        ladder: function (array) {
-            if (!Array.isArray(array) || array.length % 2 != 0) {
-                return false
-            }
-            if (typeof array[array.length - 2] == 'boolean') {
-                array = array.slice(0, array.length - 2)
-            } else if (array.length < 4) {
-                return false
-            }
-            return array.filter((value, index) => {
-                return index % 2 == 1 || typeof value == 'function'
-            }).length == array.length
-        },
-        sip: function (array) {
-            return typeof array[0] == 'number' &&
-                is.conditional.ladder(array[1])
-        },
-        split: function (packet) {
-            return packet.length == 2 &&
-                is.conditional.ladder(packet[0]) &&
-                (
-                    is.conditional.ladder(packet[1]) ||
-                    is.conditional.sip(packet[1])
-                )
-
-        },
-        mirrored: function (packet) {
-            return is.conditional.ladder(packet)
-        }
-    }
-}
-
-
 module.exports = function (packets) {
     const definitions = [], lookups = { values: [], index: 0 }, snippets = {}
+
+    // Please resist the urge to refactor based on, oh look, I'm performing this
+    // test twice. A single if/else ladder will be easier to return to for
+    // maintainence and expansion. Outer array.
+
+    const is = {
+        ultimately: function (packet, test) {
+            if (test(packet)) {
+                return true
+            // **TODO**: See literal ambiguities. We're going to assume we've
+            // forced them into arrays.
+            }
+            if (typeof packet == 'string') {
+                return is.ultimately(snippets[packet], test)
+            }
+            if (is.literal.field(packet)) {
+                if (Array.isArray(packet[0]) && packet[0].some(item => typeof item == 'string')) {
+                    return is.ultimately(packet[1], test)
+                }
+                return is.ultimately(packet[0], test)
+            }
+            if (is.inline.split(packet) || is.inline.mirrored(packet)) {
+                return is.ultimately(packet[1], test)
+            }
+            if (is.accumulator(packet)) {
+                return is.ultimately(packet[packet.length - 1], test)
+            }
+            return false
+        },
+        integer: function (packet) {
+            return Number.isInteger(packet)
+        },
+        absent: function (packet) {
+            return packet == null || (
+                Array.isArray(packet) && packet.length == 0
+            )
+        },
+        ieee: {
+            // A floating point number whose integer part is 64 or 32.
+            shorthand: function (packet) {
+                const floor = Math.floor(packet)
+                return packet - floor != 0 && (floor == 64 || floor == 32)
+            },
+            explicit: function (packet) {
+                return packet.length == 2 &&
+                    typeof packet[0] == 'number' &&
+                    Math.floor(packet[0]) == 0 &&
+                    (
+                        packet[0] * 100 ==  packet[1] ||
+                        packet[0] * 100 == ~packet[1]
+                    )
+            }
+        },
+        // **Mapped integers**: A two element array with an integer defintion
+        // followed by an array entirely of strings with more than one element.
+        mapped: function (packet) {
+            return packet.length == 2 &&
+                is.integer(packet[0]) &&
+                (
+                    Array.isArray(packet[1]) &&
+                    packet[1].length > 1 &&
+                    packet[1].filter(value => typeof value == 'string').length == packet[1].length
+                ) ||
+                (
+                    typeof packet[1] == 'object' &&
+                    Object.keys(packet[1]).length > 1 &&
+                    function () {
+                        for (const key in packet[1]) {
+                            if (typeof packet[1][key] != 'string') {
+                                return false
+                            }
+                        }
+                        return true
+                    } ()
+                )
+        },
+        // **Literals**: Constant value padding bytes. A type definition with a
+        // preceding or following literal or both. The preceding or following
+        // element is defined by a either string of hexidecimal or an array with
+        // a bit size as number preceding a string hexidecimal value, or a
+        // string hexdecimal value followed by a repeat count as number.
+        literal: {
+            pattern: function (part) {
+                return (
+                    typeof part == 'string' &&
+                    snippets[part[0]] == null
+                ) ||
+                (
+                    Array.isArray(part) &&
+                    (
+                        part.length == 1 &&
+                        typeof part[0] == 'string'
+                    ) ||
+                    (
+                        part.length == 2 &&
+                        part.filter(item => typeof item == 'string').length == 1 &&
+                        part.filter(item => typeof item == 'number').length == 1
+                    )
+                )
+            },
+            field: function (packet) {
+                return Array.isArray(packet) &&
+                    (
+                        packet.length == 2 &&
+                        (
+                            is.literal.pattern(packet[0]) ||
+                            is.literal.pattern(packet[1])
+                        )
+                    ) ||
+                    (
+                        packet.length == 3 &&
+                        is.literal.pattern(packet[0]) &&
+                        is.literal.pattern(packet[2])
+                    )
+            }
+        },
+        // **Inline functions**: User defined functions that perform inline
+        // transformations and assertions.
+        inline: {
+            split: function (packet) {
+                return Array.isArray(packet) &&
+                    packet.length == 3 &&
+                    Array.isArray(packet[0]) &&
+                    Array.isArray(packet[packet.length - 1]) &&
+                    (
+                        typeof packet[0][0] == 'function' ||
+                        typeof packet[packet.length - 1][0] == 'function'
+                    )
+            },
+            // **Inline mirrored functions**: User defined functions that
+            // perform inline transformations or assertions defined once for
+            // both pre-serialization and post-parsing.
+            mirrored: function (packet) {
+                return Array.isArray(packet) &&
+                    packet.length == 2 &&
+                    Array.isArray(packet[0]) &&
+                    packet[0].length == 1 &&
+                    Array.isArray(packet[0][0]) &&
+                    typeof packet[0][0][0] == 'function'
+            }
+        },
+        // **Packed integers**: Defined by an object that is not an array
+        // followed by a number.
+        packed: function (packet) {
+            return typeof packet[0] == 'object' &&
+                ! Array.isArray(packet[0]) &&
+                typeof packet[1] == 'number'
+        },
+        // **Terminated arrays**: An array followed by one or more numbers
+        // representing termination bytes.
+        terminated: function (packet) {
+            return Array.isArray(packet[0]) &&
+                typeof packet[1] == 'number'
+        },
+        // **Fixed length arrays**: Arrays of fixed length or calculated length.
+        fixed: function (packet) {
+            return Array.isArray(packet[0]) &&
+                (
+                    is.integer(packet[0][0]) ||
+                    typeof packet[0][0] == 'function'
+                ) &&
+                Array.isArray(packet[1]) &&
+                packet[1].length == 1
+        },
+        // **Length-encoded arrays**: Length encoded by a leading integer.
+        lengthEncoded: function (packet) {
+            return packet.length == 2 && is.ultimately(packet[0], is.integer)
+        },
+        switched: {
+            variant: function (packet) {
+                return typeof packet[0] == 'function' &&
+                    Array.isArray(packet[1]) &&
+                    packet[1].length % 2 == 0 &&
+                    packet[1].filter((value, index) => {
+                        return index % 2 == 1 ||
+                        (
+                            typeof value == 'object' &&
+                            (
+                                (
+                                    Object.keys(value).length == 1 &&
+                                    ('$_' in value)
+                                ) ||
+                                (
+                                    Object.keys(value).length == 0 &&
+                                    index == packet[1].length - 2
+                                )
+                            )
+                        )
+                    }).length == packet[1].length
+            },
+            stringified: function (packet) {
+                return typeof packet[0] == 'function' &&
+                    typeof packet[1] == 'object' &&
+                    ! Array.isArray(packet[1]) &&
+                    (
+                        packet.length == 2 || packet.length == 3
+                    )
+            }
+        },
+        // *Accumulators*:
+        accumulator: function (packet) {
+            return Array.isArray(packet) &&
+                packet.length == 2 &&
+                typeof packet[0] == 'object' &&
+                ! Array.isArray(packet[0][0])
+        },
+        // **Conditionals**: TODO Come back and create a set of test functions
+        // and maybe put them in an object. It would simplify this ladder. Kind
+        // of don't want them named and scattered.
+        //
+        // TODO This is a weak test. We could test that every other element is a
+        // function.
+        conditional: {
+            ladder: function (array) {
+                if (!Array.isArray(array) || array.length % 2 != 0) {
+                    return false
+                }
+                if (typeof array[array.length - 2] == 'boolean') {
+                    array = array.slice(0, array.length - 2)
+                } else if (array.length < 4) {
+                    return false
+                }
+                return array.filter((value, index) => {
+                    return index % 2 == 1 || typeof value == 'function'
+                }).length == array.length
+            },
+            sip: function (array) {
+                return typeof array[0] == 'number' &&
+                    is.conditional.ladder(array[1])
+            },
+            split: function (packet) {
+                return packet.length == 2 &&
+                    is.conditional.ladder(packet[0]) &&
+                    (
+                        is.conditional.ladder(packet[1]) ||
+                        is.conditional.sip(packet[1])
+                    )
+
+            },
+            mirrored: function (packet) {
+                return is.conditional.ladder(packet)
+            }
+        }
+    }
 
     function map (packet, extra = {}, pack = false) {
         // **References**: References to existing packet definitions.
@@ -426,9 +472,12 @@ module.exports = function (packets) {
 
         // **Literals**:
         function literal() {
-            function literal (packet, index) {
-                if (typeof packet[index] == 'string') {
-                    const value = packet.splice(index, 1).pop()
+            function literal (sliced, index) {
+                if (
+                    typeof sliced[index] == 'string' &&
+                    snippets[sliced[index]] == null
+                ) {
+                    const value = sliced.splice(index, 1).pop()
                     return {
                         repeat: 1,
                         value: value,
@@ -437,21 +486,29 @@ module.exports = function (packets) {
                 // **TODO**: Ambiguity if we have literals inside literals.
                 // Would be resolved by insisting on the array surrounding the
                 // literal definition.
+                // **TODO**: Second ambiguity. Includes can be confused with
+                // literals. May have to force literals into arrays, or else
+                // force includes into arrays. Maybe let's force literals into
+                // arrays since arrays are there already.
                 } else if (
-                    Array.isArray(packet[index]) &
-                    typeof packet[index][1] == 'string'
+                    Array.isArray(sliced[index]) &
+                    sliced[index].length == 2 &&
+                    typeof sliced[index][1] == 'string' &&
+                    snippets[sliced[index][1]] == null
                 ) {
-                    const packed = packet.splice(index, 1).pop()
+                    const packed = sliced.splice(index, 1).pop()
                     return {
                         repeat: 1,
                         value: packed[1],
                         bits: packed[0]
                     }
                 } else if (
-                    Array.isArray(packet[index]) &&
-                    typeof packet[index][0] == 'string'
+                    Array.isArray(sliced[index]) &&
+                    sliced[index].length == 2 &&
+                    typeof sliced[index][0] == 'string' &&
+                    snippets[sliced[index][1]] == null
                 ) {
-                    const repeated = packet.splice(index, 1).pop()
+                    const repeated = sliced.splice(index, 1).pop()
                     const value = repeated[1] < 0
                         ? repeated[0].match(/.{1,2}/g).reverse().join('')
                         : repeated[0]
@@ -603,13 +660,13 @@ module.exports = function (packets) {
         function lengthEncoded () {
             const fields = []
             assert(Array.isArray(packet[1]))
-            const encoding = integer(packet[0], false, {})
+            const encoding = map(packet[0], {})
             const element = buffered(packet[1][0]) || map(packet[1][0], {})
             assert.equal(element.length, 1, 'badness')
             fields.push({
                 type: 'lengthEncoded',
                 vivify: element.type == 'buffer' ? 'variant' : 'array',
-                encoding: [ encoding ],
+                encoding: encoding,
                 dotted: '',
                 bits: 0,
                 fixed: false,
@@ -879,7 +936,7 @@ module.exports = function (packets) {
         function array () {
             if (is.absent(packet)) return absent([])
             else if (is.mapped(packet)) return mapped()
-            else if (is.literal(packet)) return literal()
+            else if (is.literal.field(packet)) return literal()
             else if (is.ieee.explicit(packet)) return ieee.explicit()
             else if (is.inline.split(packet)) return inline.split()
             else if (is.inline.mirrored(packet)) return inline.mirrored()

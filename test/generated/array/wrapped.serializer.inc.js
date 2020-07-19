@@ -1,6 +1,6 @@
 module.exports = function ({ serializers, $lookup }) {
     serializers.inc.object = function () {
-        return function (object, $step = 0, $i = []) {
+        return function (object, $step = 0, $i = [], $$ = []) {
             let $_, $bite
 
             return function $serialize ($buffer, $start, $end) {
@@ -25,17 +25,13 @@ module.exports = function ({ serializers, $lookup }) {
 
                     case 2:
 
-                        $i[0] = 0
+                        $step = 3
+                        $bite = 0
+                        $_ = [ 205 ]
 
                     case 3:
 
-                        $step = 4
-                        $bite = 0
-                        $_ = [ 15, 173, 237 ]
-
-                    case 4:
-
-                        while ($bite != 3) {
+                        while ($bite != 1) {
                             if ($start == $end) {
                                 return { start: $start, serialize: $serialize }
                             }
@@ -43,20 +39,35 @@ module.exports = function ({ serializers, $lookup }) {
                         }
 
 
+                    case 4:
+
+                        $$[0] = (value => value)(object.array.length)
+
                     case 5:
 
-                        if (++$i[0] < 2) {
-                            $step = 3
-                            continue
-                        }
+                        $step = 6
+                        $bite = 0
+                        $_ = $$[0]
 
                     case 6:
 
-                        $step = 7
-                        $bite = 1
-                        $_ = object.padded
+                        while ($bite != -1) {
+                            if ($start == $end) {
+                                return { start: $start, serialize: $serialize }
+                            }
+                            $buffer[$start++] = ($_ >>> $bite * 8 & 0xff)
+                            $bite--
+                        }
+
+                        $i[0] = 0
 
                     case 7:
+
+                        $step = 8
+                        $bite = 0
+                        $_ = object.array[$i[0]]
+
+                    case 8:
 
                         while ($bite != -1) {
                             if ($start == $end) {
@@ -67,40 +78,18 @@ module.exports = function ({ serializers, $lookup }) {
                         }
 
 
-                    case 8:
-
-                        $i[0] = 0
+                        if (++$i[0] != object.array.length) {
+                            $step = 7
+                            continue
+                        }
 
                     case 9:
 
                         $step = 10
                         $bite = 0
-                        $_ = [ 222, 202, 250 ]
-
-                    case 10:
-
-                        while ($bite != 3) {
-                            if ($start == $end) {
-                                return { start: $start, serialize: $serialize }
-                            }
-                            $buffer[$start++] = $_[$bite++]
-                        }
-
-
-                    case 11:
-
-                        if (++$i[0] < 2) {
-                            $step = 9
-                            continue
-                        }
-
-                    case 12:
-
-                        $step = 13
-                        $bite = 0
                         $_ = object.sentry
 
-                    case 13:
+                    case 10:
 
                         while ($bite != -1) {
                             if ($start == $end) {
@@ -111,9 +100,9 @@ module.exports = function ({ serializers, $lookup }) {
                         }
 
 
-                        $step = 14
+                        $step = 11
 
-                    case 14:
+                    case 11:
 
                         break
 

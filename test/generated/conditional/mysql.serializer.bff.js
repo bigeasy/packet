@@ -13,7 +13,7 @@ module.exports = function ({ serializers, $lookup }) {
                         return serializers.inc.object(object, 3)($buffer, $start, $end)
                     }
 
-                    $buffer.write("fc", $start, $start + 1, 'hex')
+                    $buffer.write('fc', $start, $start + 1, 'hex')
                     $start += 1
 
                     $buffer[$start++] = (object.value >>> 8 & 0xff)
@@ -23,7 +23,7 @@ module.exports = function ({ serializers, $lookup }) {
                         return serializers.inc.object(object, 7)($buffer, $start, $end)
                     }
 
-                    $buffer.write("fd", $start, $start + 1, 'hex')
+                    $buffer.write('fd', $start, $start + 1, 'hex')
                     $start += 1
 
                     $buffer[$start++] = (object.value >>> 16 & 0xff)

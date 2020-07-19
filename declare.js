@@ -26,8 +26,14 @@ exports.serialize = function (field) {
                 field.fields.map(declare)
             }
             break
+        case 'lengthEncoding': {
+                field.body.encoding.map(declare)
+            }
         case 'lengthEncoded': {
                 variables.i = true
+                if (field.encoding) {
+                    field.encoding.map(declare)
+                }
             }
             break
         case 'terminated': {
@@ -74,7 +80,6 @@ exports.serialize = function (field) {
         case 'absent':
         case 'buffer':
         case 'checkpoint':
-        case 'lengthEncoding':
         case 'terminator':
             break
         default: throw new Error(field.type)

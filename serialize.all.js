@@ -1,5 +1,6 @@
 // Node.js API.
 const assert = require('assert')
+const util = require('util')
 
 const map = require('./map')
 
@@ -434,7 +435,7 @@ function generate (packet, { require = null, bff, chk }) {
             case 1:
                 $step += 2
                 return $(`
-                    $buffer.write(${JSON.stringify(literal.value)}, $start, $start + ${literal.value.length >>> 1}, 'hex')
+                    $buffer.write(${util.inspect(literal.value)}, $start, $start + ${literal.value.length >>> 1}, 'hex')
                     $start += ${literal.value.length >>> 1}
                 `)
             default:
