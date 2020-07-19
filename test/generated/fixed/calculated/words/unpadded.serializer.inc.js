@@ -25,33 +25,39 @@ module.exports = function ({ serializers, $lookup }) {
 
                     case 2:
 
-                        $_ = 0
-                        $I[0] = (() => 8)()
+                        $i[0] = 0
+                        $I[0] = (() => 4)()
 
-                    case 3: {
+                        $step = 3
 
-                            $step = 3
+                    case 3:
 
-                            const length = Math.min($end - $start, object.array.length - $_)
-                            object.array.copy($buffer, $start, $_, $_ + length)
-                            $start += length
-                            $_ += length
-
-                            if ($_ != object.array.length) {
-                                return { start: $start, serialize: $serialize }
-                            }
-
-                            $step = 4
-
-                        }
+                        $step = 4
+                        $bite = 1
+                        $_ = object.array[$i[0]]
 
                     case 4:
 
-                        $step = 5
+                        while ($bite != -1) {
+                            if ($start == $end) {
+                                return { start: $start, serialize: $serialize }
+                            }
+                            $buffer[$start++] = ($_ >>> $bite * 8 & 0xff)
+                            $bite--
+                        }
+
+                        if (++$i[0] != object.array.length) {
+                            $step = 3
+                            continue
+                        }
+
+                    case 5:
+
+                        $step = 6
                         $bite = 0
                         $_ = object.sentry
 
-                    case 5:
+                    case 6:
 
                         while ($bite != -1) {
                             if ($start == $end) {
@@ -62,9 +68,9 @@ module.exports = function ({ serializers, $lookup }) {
                         }
 
 
-                        $step = 6
+                        $step = 7
 
-                    case 6:
+                    case 7:
 
                         break
 

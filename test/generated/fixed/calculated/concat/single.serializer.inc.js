@@ -47,11 +47,33 @@ module.exports = function ({ serializers, $lookup }) {
 
                     case 4:
 
+                        $I[0] = (() => 8)()
+                        $_ = $I[0] - $_
+
                         $step = 5
+
+                    case 5: {
+
+                        const length = Math.min($end - $start, $_)
+                        $buffer.fill(0x0, $start, $start + length)
+                        $start += length
+                        $_ -= length
+
+                        if ($_ != 0) {
+                            return { start: $start, serialize: $serialize }
+                        }
+
+                        $step = 6
+
+                    }
+
+                    case 6:
+
+                        $step = 7
                         $bite = 0
                         $_ = object.sentry
 
-                    case 5:
+                    case 7:
 
                         while ($bite != -1) {
                             if ($start == $end) {
@@ -62,9 +84,9 @@ module.exports = function ({ serializers, $lookup }) {
                         }
 
 
-                        $step = 6
+                        $step = 8
 
-                    case 6:
+                    case 8:
 
                         break
 

@@ -250,6 +250,10 @@ function generate (packet, { require = null }) {
 
     //
     function terminated (path, field) {
+        const length = field.calculated ? `$I[${$I}]` : field.length
+        const inline = field.calculated
+            ? inliner(accumulate, path, [ field.length ], []).inlined.shift()
+            : null
         // We will be looping.
         surround = true
         // Get the element type contained by the array.
@@ -302,6 +306,7 @@ function generate (packet, { require = null }) {
                 case ${$step++}:
 
                     $_ = 0
+                    ${length} = `, inline, `
 
                     $step = ${$step}
 
@@ -309,8 +314,8 @@ function generate (packet, { require = null }) {
 
                     const $index = $buffer.indexOf(${hex(bytes[0])}, $start)
                     if (~$index) {
-                        if ($_ + $index > ${field.length}) {
-                            const $length = ${field.length} - $_
+                        if ($_ + $index > ${length}) {
+                            const $length = ${length} - $_
                             $buffers.push($buffer.slice($start, $start + $length))
                             $_ += $length
                             $start += $length
@@ -323,8 +328,8 @@ function generate (packet, { require = null }) {
                             $step = ${$step}
                             continue
                         }
-                    } else if ($_ + ($end - $start) >= ${field.length}) {
-                        const $length = ${field.length} - $_
+                    } else if ($_ + ($end - $start) >= ${length}) {
+                        const $length = ${length} - $_
                         $buffers.push($buffer.slice($start, $start + $length))
                         $_ += $length
                         $start += $length
@@ -418,15 +423,15 @@ function generate (packet, { require = null }) {
                 // **TODO** Could use the calculation of `$_` above, but would
                 // have to special case `$_` everywhere for fixed/terminated and
                 // make the code in here ugly.
-                const length = field.type == 'fixed' ? $(`
-                    $_ = ${field.length} -  Math.min($buffers.reduce((sum, buffer) => {
+                const _length = field.type == 'fixed' ? $(`
+                    $_ = ${length} -  Math.min($buffers.reduce((sum, buffer) => {
                         return sum + buffer.length
-                    }, ${bytes.length}), ${field.length})
+                    }, ${bytes.length}), ${length})
                 `) : null
                 return element.concat ? $(`
                     case ${$step++}:
 
-                        `, length, `
+                        `, _length, `
 
                         ${path} = $buffers.length == 1 ? $buffers[0] : Buffer.concat($buffers)
                         $buffers.length = 0
@@ -435,7 +440,7 @@ function generate (packet, { require = null }) {
                 `) : $(`
                     case ${$step++}:
 
-                        `, length, `
+                        `, _length, `
 
                         ${path} = $buffers
                         $buffers = []

@@ -631,7 +631,9 @@ function generate (packet, { require, bff, chk }) {
             variables.slice = true
             // Advance past buffer read to padding skip.
             $step += field.pad.length == 0 ? 2 : 3
-            --$I
+            if (field.calculated) {
+                $I--
+            }
             const slice = $(`
                 $slice = $buffer.slice($start, $start + ${length})
                 $start += ${length}

@@ -1,5 +1,5 @@
 module.exports = function ({ parsers, $lookup }) {
-    parsers.bff.object = function () {
+    parsers.chk.object = function () {
         return function () {
             return function ($buffer, $start, $end) {
                 let $_, $i = [], $I = [], $slice = null
@@ -24,10 +24,16 @@ module.exports = function ({ parsers, $lookup }) {
 
                 $slice = $buffer.slice($start, $start + $I[0])
                 $start += $I[0]
+
+                $_ = $slice.indexOf(Buffer.from([ 13, 10 ]))
+                if (~$_) {
+                    $slice = $slice.slice(0, $_)
+                }
+
                 object.array = [ $slice ]
 
                 if ($end - $start < 1) {
-                    return parsers.inc.object(object, 5, $i, $I)($buffer, $start, $end)
+                    return parsers.inc.object(object, 8, $i, $I)($buffer, $start, $end)
                 }
 
                 object.sentry = ($buffer[$start++])

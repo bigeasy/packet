@@ -575,7 +575,9 @@ function generate (packet, { require = null, bff, chk }) {
 
     function fixed (path, field) {
         const element = field.fields[field.fields.length - 1]
+        const length = field.calculated ? `$I[${$I}]` : field.length
         if (element.type == 'buffer') {
+            $I--
             $step += 2
             let source = ''
             variables.register = true
@@ -616,7 +618,7 @@ function generate (packet, { require = null, bff, chk }) {
             return $(`
                 `, source, `
 
-                $_ = ${field.length} - $_
+                $_ = ${length} - $_
                 $buffer.fill(${fill}, $start, $start + $_)
                 $start += $_
             `)
@@ -624,7 +626,6 @@ function generate (packet, { require = null, bff, chk }) {
         $step += 1 + field.pad.length
         const i = `$i[${++$i}]`
         const looped = map(dispatch, `${path}[${i}]`, field.fields)
-        const length = field.calculated ? `$I[${$I}]` : field.length
         const pad = field.pad.length == 0 ? null : $(`
             for (;;) {
                 `, join(field.pad.map((bite, index) => {

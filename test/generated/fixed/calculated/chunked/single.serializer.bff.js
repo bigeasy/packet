@@ -1,5 +1,5 @@
 module.exports = function ({ serializers, $lookup }) {
-    serializers.chk.object = function () {
+    serializers.bff.object = function () {
         return function (object) {
             return function ($buffer, $start, $end) {
                 let $_, $i = [], $I = []
@@ -23,8 +23,12 @@ module.exports = function ({ serializers, $lookup }) {
                     $_ += object.array[$i[0]].length
                 }
 
+                $_ = $I[0] - $_
+                $buffer.fill(0x0, $start, $start + $_)
+                $start += $_
+
                 if ($end - $start < 1) {
-                    return serializers.inc.object(object, 4, $i)($buffer, $start, $end)
+                    return serializers.inc.object(object, 6, $i)($buffer, $start, $end)
                 }
 
                 $buffer[$start++] = (object.sentry & 0xff)

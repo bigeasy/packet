@@ -17,14 +17,16 @@ module.exports = function ({ serializers, $lookup }) {
                 }
 
                 $_ = 0
-                for ($i[0] = 0; $i[0] < object.array.length; $i[0]++) {
-                    object.array[$i[0]].copy($buffer, $start)
-                    $start += object.array[$i[0]].length
-                    $_ += object.array[$i[0]].length
-                }
+                object.array.copy($buffer, $start)
+                $start += object.array.length
+                $_ += object.array.length
+
+                $_ = $I[0] - $_
+                $buffer.fill(Buffer.from([ 0xa, 0xb ]), $start, $start + $_)
+                $start += $_
 
                 if ($end - $start < 1) {
-                    return serializers.inc.object(object, 4, $i)($buffer, $start, $end)
+                    return serializers.inc.object(object, 6, $i)($buffer, $start, $end)
                 }
 
                 $buffer[$start++] = (object.sentry & 0xff)

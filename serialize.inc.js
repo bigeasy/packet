@@ -262,7 +262,7 @@ function generate (packet, { require = null }) {
     // A buffer copy shared by terminated and fixed arrays.
 
     //
-    function copy (path, element, buffered) {
+    function copy (path, element, buffered, inline = null) {
         // If we have an array of buffers, we need a loop index and a variable
         // to track the offset in the specific buffer.
         let i
@@ -277,6 +277,7 @@ function generate (packet, { require = null }) {
             case ${$step++}:
 
                 $_ = 0
+                $I[${$I + 1}] = `, inline, `
 
             case ${$step++}: {
 
@@ -304,6 +305,7 @@ function generate (packet, { require = null }) {
 
                 $_ = 0
                 $length = ${path}.reduce((sum, buffer) => sum + buffer.length, 0)
+                $I[${$I + 1}] = `, inline, `
 
             case ${$step++}: {
 
@@ -407,6 +409,8 @@ function generate (packet, { require = null }) {
     }
 
     function fixed (path, field) {
+        // TODO In all fixed calculated everywhere, ensure you decrement.
+        const length = field.calculated  ? `$I[${++$I}]` : field.length
         // We will be looping.
         surround = true
         // Get the element type contained by the array.
@@ -459,6 +463,7 @@ function generate (packet, { require = null }) {
                 `)
             }))
             // Repeat the padding fill if we've not filled the buffer
+            // TODO Test on redo is unnecessary, we would have jumped to done.
             return $(`
                     `, assignment, -1, `
 
@@ -476,7 +481,13 @@ function generate (packet, { require = null }) {
 
         //
         if (element.type == 'buffer') {
-            const source = copy(path, element, buffered)
+            const inline = field.calculated
+                ? inliner(accumulate, path, [ field.length ], []).inlined.shift()
+                : null
+            if (field.calculated) {
+                $I--
+            }
+            const source = copy(path, element, buffered, inline)
             // If there is no padding, we are done.
             if (field.pad.length == 0) {
                 return source
@@ -489,7 +500,8 @@ function generate (packet, { require = null }) {
 
                     case ${$step++}:
 
-                        $_ = ${field.length} - $_
+                        ${length} = `, inline, `
+                        $_ = ${length} - $_
 
                         $step = ${$step}
 
@@ -513,7 +525,7 @@ function generate (packet, { require = null }) {
             return $(`
                 `, source, `
 
-                `, pad(), `
+                `, pad(null, field.calculated ? `${length} * ${element.bits >>> 3}` : field.bits / 8), `
             `)
         }
         // Obtain a next index from the index array.
@@ -528,12 +540,11 @@ function generate (packet, { require = null }) {
             const inline = inliner(accumulate, path, [ field.length ], [])
             const element = field.fields[field.fields.length - 1]
             if (field.pad.length != 0) {
-                const I = `$I[${++$I}]`
                 source = $(`
                     case ${init}:
 
                         ${i} = 0
-                        ${I} = `, inline.inlined.shift(), `
+                        ${length} = `, inline.inlined.shift(), `
 
                         $step = ${redo}
 
@@ -543,16 +554,14 @@ function generate (packet, { require = null }) {
                             continue
                         }
 
-                    `, pad(`$_ = ${i} * ${element.bits >>> 3}`, `${I} * ${element.bits >>> 3}`), `
+                    `, pad(`$_ = ${i} * ${element.bits >>> 3}`, `${length} * ${element.bits >>> 3}`), `
                 `)
-                $I--
             } else {
-                const I = `$I[${++$I}]`
                 source = $(`
                     case ${init}:
 
                         ${i} = 0
-                        ${I} = `, inline.inlined.shift(), `
+                        ${length} = `, inline.inlined.shift(), `
 
                         $step = ${redo}
 
@@ -562,8 +571,8 @@ function generate (packet, { require = null }) {
                             continue
                         }
                 `)
-                $I--
             }
+            $I--
         } else {
             source = $(`
                 case ${init}:

@@ -1,7 +1,7 @@
 module.exports = function ({ serializers, $lookup }) {
     serializers.inc.object = function () {
         return function (object, $step = 0, $i = [], $I = []) {
-            let $_, $bite
+            let $_, $bite, $offset = 0, $length = 0, $index = 0
 
             return function $serialize ($buffer, $start, $end) {
                 for (;;) {
@@ -26,24 +26,40 @@ module.exports = function ({ serializers, $lookup }) {
                     case 2:
 
                         $_ = 0
+                        $length = object.array.reduce((sum, buffer) => sum + buffer.length, 0)
                         $I[0] = (() => 8)()
 
                     case 3: {
 
-                            $step = 3
+                        $step = 3
 
-                            const length = Math.min($end - $start, object.array.length - $_)
-                            object.array.copy($buffer, $start, $_, $_ + length)
-                            $start += length
-                            $_ += length
+                        for (;;) {
+                            const $bytes = Math.min($end - $start, object.array[$index].length - $offset)
+                            object.array[$index].copy($buffer, $start, $offset, $offset + $bytes)
+                            $offset += $bytes
+                            $start += $bytes
+                            $_ += $bytes
 
-                            if ($_ != object.array.length) {
-                                return { start: $start, serialize: $serialize }
+                            if ($offset == object.array[$index].length) {
+                                $index++
+                                $offset = 0
                             }
 
-                            $step = 4
+                            if ($_ == $length) {
+                                break
+                            }
 
+                            if ($start == $end) {
+                                return { start: $start, serialize: $serialize }
+                            }
                         }
+
+                        $index = 0
+                        $offset = 0
+
+                        $step = 4
+
+                    }
 
                     case 4:
 

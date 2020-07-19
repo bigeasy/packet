@@ -45,13 +45,52 @@ module.exports = function ({ serializers, $lookup }) {
 
                         }
 
+                        $step = 4
+
                     case 4:
 
+                        if ($start == $end) {
+                            return { start: $start, serialize: $serialize }
+                        }
+
+                        if ($_++ == $I[0] * 1) {
+                            $step = 6
+                            continue
+                        }
+
+                        $buffer[$start++] = 0xa
+
                         $step = 5
+
+                        $step = 5
+
+                    case 5:
+
+                        if ($start == $end) {
+                            return { start: $start, serialize: $serialize }
+                        }
+
+                        if ($_++ == $I[0] * 1) {
+                            $step = 6
+                            continue
+                        }
+
+                        $buffer[$start++] = 0xb
+
+                        $step = 6
+
+                        if ($_ != $I[0] * 1) {
+                            $step = 4
+                            continue
+                        }
+
+                    case 6:
+
+                        $step = 7
                         $bite = 0
                         $_ = object.sentry
 
-                    case 5:
+                    case 7:
 
                         while ($bite != -1) {
                             if ($start == $end) {
@@ -62,9 +101,9 @@ module.exports = function ({ serializers, $lookup }) {
                         }
 
 
-                        $step = 6
+                        $step = 8
 
-                    case 6:
+                    case 8:
 
                         break
 
