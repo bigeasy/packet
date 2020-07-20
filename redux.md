@@ -1,3 +1,115 @@
+## Mon Jul 20 07:15:55 CDT 2020
+
+Will not do calculated terminals.
+
+```javascript
+cycle(okay, {
+    name: 'terminated/calculated',
+    define: {
+        object: {
+            nudge: 8,
+            array: [ [ 8 ], $_ => [ 0xd, 0xa ], $_ => $_[$_.length - 2] == 0xd && $_[$_.length - 1] == 0xa ],
+            sentry: 8
+        }
+    },
+    objects: [{
+        nudge: 0xaa, array: [ Buffer.from('abcdefghij\r') ], sentry: 0xaa
+    }],
+    stopAt: 'serialize.chk'
+})
+```
+
+I'm imagining how it would be done. Could pass the array and have it fuss with
+values at the end of the array, which would mean that functions would never
+really fit inline, so you'll end up writing modules to use this feature. Could
+specify a maximum length and pass an array with that many bytes to the function,
+but do you wait for that may bytes to accumulate before you call it?
+
+Once I start to see how it will work, I want to implement it so I don't forget
+how it would work. But, these are components that I may implement in time
+anyway, so they would be available to implement this. The same logic as parsing
+a sipped integer, a byte reader object in the generator that would shift bytes
+off the integer until it was empty then fallback to incrementing the buffer.
+This same object could shift from an accumulator array. We would have a separate
+stack, imagine reading four bytes into a caculated terminator buffer, then
+terminating, sipping a 16-bit integer for a conditional, then when you enter the
+conditional branch you have a stack sources, sipped integer, terminator buffer,
+and underlying buffer.
+
+This project has been drudgery. It was a clever idea that I wanted to have a go
+at, but it has proven to be quite tedious. Every little change means walking
+through the seven different generators looking for off-by-one errors. Copious
+code is generated and it has little formatting errors, duplicated assignments,
+many little annoyances that will have to be addressed someday. The copious code
+means I just want to the tests to pass, but bugs hide. I've seen where an
+advance calculates to a retreat, but we already overran anyway to the retreat
+saves the parse. `undefined` shows up in the code, but we short circuited that
+path with best-foot-forward.
+
+Calculated terminators would add lots of complexity to an already complex part
+of the code and the legibility of the generated code would decrease. It would
+become a mass of catenated strings. (Which makes me wonder if I should add some
+sort of special handling for looping to Prolific. There, use that to get your
+mind off this set of problems.) At this point I want to get to where I'm going
+over all this generated code looking for bugs and poor formatting and
+finalizing, instead of piling on more disarray for the finalization.
+
+At this point? What is this point? The point at which it does appear to be
+complete and could parse most of the formats I'm aware of. I've addressed MySQL
+integers and those Minecraft terminated arrays of structures. I'm encountering
+ambiguities I've not considered during testing when I'd much rather encounter
+them during application so I can make choices about the priority of languages
+terms based on the frequency in which they are encountered.
+
+I sense a failure of discipline with this issue. I've been using GitHub Issues
+in order to work from a list, to give myself the game mechanics to pull me
+through the tedium. From the vantage point of this frame of mind marking an
+issue as "won't do" would appear to be an unmet challenge.
+
+Because I subject myself to the behavior modification of this game, and because
+it is effective in getting me to push through the tedium, I surrender my thought
+process to its influence. When procrastination raises its voice I dismiss it by
+reviewing the GitHub Issues, speaking over that voice by counting the remaining
+issues that I'd have to complete to get the issues down to a single page of
+issues. Procrastination, being clever and charismatic, finds new and better ways
+to make itself heard, and so when I hear a voice telling me that an issue should
+be a "won't do" I clutch my GitHub issues like a rosary.
+
+It would seem like Procrastination is trying to con me into kicking a can down
+the road, to walk away from the project by calling it done when it is not
+actually done. A "won't do" issue will resurface or duplicate. Procrastination
+has won and has done so by insinuating itself into my game, playing along with
+me, occasionally making a move on my behalf, so I don't even notice that I'm
+procrastinating.
+
+But, my procrastination is, like myself, incredibly short sighted, and really
+not altogether clever. It just wants to get me to open up YouTube now, not
+reduce the overall hours of work on the project. This nagging voice is not
+procrastination, but something else. The nagging voice of reason.
+
+What decided this for me was realizing that if I implement calculated terminals
+I'm going to have to document it. I am a bad writer, as you can see, but I am an
+absolutely terrible technical writer and this project is especially difficult to
+document as it is not a collection of classes and functions like a normal
+module, but rather an enormous language hack. The thought of having to explain
+use and function of calculated terminators settles the matter. Won't do.
+
+And this is not procrastination. It is realizing that the documentation would
+really fall apart at that point and the module would no longer be clever and
+elegant but bursting past the boundaries of the syntax bashed language.
+
+Upon further consideration, I began to see that calculated terminals actually
+mean the beginning of pattern matching, which is my well be another three months
+of my life and a has already been designated out-of-scope for the module.
+
+And so, I hereby close [issue 490](https://github.com/bigeasy/packet/issues/490)
+and if you consider reopening it, consider whether you shouldn't start
+[here](http://manual-snort-org.s3-website-us-east-1.amazonaws.com/node32.html#SECTION00451000000000000000)
+(Snort content matching rules).
+
+Do not let visions of pattern matching dance in your head, you have better
+things to do.
+
 ## Sun Jul 19 11:28:29 CDT 2020
 
 Literal and include amgibuity. Could resolve by requiring the `$`. However array
