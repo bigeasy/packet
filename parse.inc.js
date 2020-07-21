@@ -490,19 +490,12 @@ function generate (packet, { require = null }) {
 
         //
         const fixed = field.type == 'fixed'
-            ? field.calculated
-                ? $(`
-                    if (${i} == $I[${$I}]) {
-                        $step = ${done}
-                        continue
-                    }
-                `)
-                : $(`
-                    if (${i} == ${field.length}) {
-                        $step = ${done}
-                        continue
-                    }
-                `)
+            ? $(`
+                if (${i} == ${length}) {
+                    $step = ${done}
+                    continue
+                }
+            `)
             : null
         const terminator = bytes.length == 1
             // If we have a single byte terminator, we skip over the loop if the
@@ -580,15 +573,13 @@ function generate (packet, { require = null }) {
             }))
         // Put it all together.
         let source = null
-        let I = null
         if (field.type == 'fixed' && field.calculated) {
-            I = `$I[${$I}]`
             const inline = inliner(accumulate, path, [ field.length ], [])
             source = $(`
                 case ${init}:
 
                     ${i} = 0
-                    ${I} = `, inline.inlined.shift(), `
+                    ${length} = `, inline.inlined.shift(), `
 
                 `, terminator, `
 
@@ -633,7 +624,6 @@ function generate (packet, { require = null }) {
         locals['length'] = 0
         // TODO And has padding?
         if (field.type == 'fixed') {
-            const length = field.calculated ? I : field.length
             return $(`
                 `, source, `
 
