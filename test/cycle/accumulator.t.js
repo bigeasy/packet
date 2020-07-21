@@ -2,7 +2,7 @@ require('proof')(0, prove)
 
 function prove (okay) {
     const cycle = require('./cycle')
-    cycle(okay, {
+    /* cycle(okay, {
         name: 'accumulator/object',
         define: {
             object: [{ counter: [ 0 ] }, [[[ function ({ $_, counter }) {
@@ -38,6 +38,7 @@ function prove (okay) {
         name: 'accumulator/function',
         define: {
             object: [{ counter: () => [ 0 ] }, [[[ function ({ $_, counter }) {
+                console.log('>>>', counter)
                 assert.deepEqual(counter, [ 0 ])
                 return $_
             } ]], {
@@ -49,7 +50,7 @@ function prove (okay) {
         require: {
             assert: 'assert'
         }
-    })
+    }) */
     cycle(okay, {
         name: 'accumulator/conditional',
         define: {
@@ -91,8 +92,10 @@ function prove (okay) {
                 number: 1
             },
             sentry: 0xaa
-        }]
+        }],
+        stopAt: 'parse.bff'
     })
+    return
     cycle(okay, {
         name: 'accumulator/switch',
         define: {
@@ -135,6 +138,7 @@ function prove (okay) {
                 number: 1
             },
             sentry: 0xaa
-        }]
+        }],
+        stopAt: 'sizeof'
     })
 }

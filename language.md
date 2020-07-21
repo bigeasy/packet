@@ -1024,36 +1024,37 @@ define({
 })
 ```
 
+### Parameters
+
+Accumulators described in the preceding section also define parameters. Any
+accumulator declared on the top most field will create parameters to the
+generated serializes and parsers.
+
 ```javascript
 define({
-    packet: [{ counter: [ 0 ] }, {
-        header: {
-            type: 8,
-            length: [[
-                ({ $, counter }) => {
-                    return counter[0] = $sizeof.packet($) - $offsetof.packet($, 'body')
-                }
-            ], 16, [
-                ({ $_, counter }) => {
-                    return counter[0] = $_
-                }
-            ]]
-        },
-        body: [[[
-            ({ $start, $end, counter }) => counter[0] -= $end - $start
-        ]], {
-            value: 32,
-            string: [[ 8 ], 0x0 ]
-            variable: [
-                ({ counter }) => counter[0] == 4, 32
-                ({ counter }) => counter[0] == 2, 16
-                8
-            ]
-        }],
-    }]
-}, {
-    parameters: {
-        counter: []
-    }
+    packet: [{ counter: [ 0 ] }, [[[
+        ({ $start, $end, counter => }) => counter[0] += $end - $start
+    ]], {
+        number: 8,
+        string: [ [ 8 ], 0x0 ]
+    }]]
 })
+// *TK*: API call to get counter.
+```
+
+The parameters are available as both arguments that can be passed to inline
+functions as well as generally available in the program scope. Be careful not to
+careful not to hide any module declarations you've declared.
+
+```javascript
+define({
+    packet: [{ encoding: 'utf8' }, {
+        string: [[
+            value => Buffer.from(value, encoding)
+        ], [ [ Buffer ], 0x0 ], [
+            value => value.toString(encoding)
+        ]]
+    }]
+})
+// *TK*: API call to encode string ascii or something.
 ```

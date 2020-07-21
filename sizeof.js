@@ -3,6 +3,9 @@ const util = require('util')
 
 const map = require('./map')
 
+// Determine necessary variables.
+const { serialize: declare } = require('./declare')
+
 // Format source code maintaining indentation.
 const $ = require('programmatic')
 
@@ -27,6 +30,7 @@ const join = require('./join')
 
 //
 function generate (packet, { require = null }) {
+    const { parameters, accumulators } = declare(packet)
     const variables = {
         register: true
     }
@@ -222,15 +226,15 @@ function generate (packet, { require = null }) {
             break
         case 'accumulator': {
                 variables.accumulator = true
-                const accumulators = field.accumulators
+                const _accumulators = field.accumulators
                     .filter(accumulator => referenced[accumulator.name])
-                    .map(accumulator => accumulatorer(accumulate, accumulator))
+                    .map(accumulator => accumulatorer(accumulate, accumulators, parameters, accumulator))
                 // TODO Really want to get rid of this step if the final
                 // calcualtions are not referenced, if the argument is not an
                 // external argument and if it is not referenced again in the
                 // parse or serialize or sizeof.
-                const declarations = accumulators.length != 0
-                                   ? accumulators.join('\n')
+                const declarations = _accumulators.length != 0
+                                   ? _accumulators.join('\n')
                                    : null
                 const source = field.fixed
                              ? `$start += ${field.bits >>> 3}`

@@ -2,7 +2,9 @@ module.exports = function ({ parsers, $lookup }) {
     parsers.all.object = function () {
         const assert = require('assert')
 
-        return function ($buffer, $start) {
+        return function ($buffer, $start, {
+            counter = [ 0 ]
+        } = {}) {
             let $accumulator = {}
 
             let object = {
@@ -13,7 +15,7 @@ module.exports = function ({ parsers, $lookup }) {
                 sentry: 0
             }
 
-            $accumulator['counter'] = [ 0 ]
+            $accumulator['counter'] = counter
 
             object.value.first = ($buffer[$start++])
 

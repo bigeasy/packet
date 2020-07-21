@@ -358,7 +358,7 @@ function inquisition (fields, $I = 0) {
 function generate (packet, { require, bff, chk }) {
     let $i = -1, $I = -1, $step = 1
 
-    const variables = declare(packet)
+    const { variables, accumulators, parameters } = declare(packet)
 
     const accumulate = {
         accumulator: {},
@@ -899,7 +899,7 @@ function generate (packet, { require, bff, chk }) {
         $step++
         variables.accumulator = true
         return $(`
-            `, accumulatorer(accumulate, field), `
+            `, accumulatorer(accumulate, accumulators, parameters, field), `
 
             `, map(dispatch, path, field.fields), `
         `)
@@ -908,12 +908,24 @@ function generate (packet, { require, bff, chk }) {
     function signature () {
         const signatories = {
             packet: packet.name,
+            parameters: '{}',
             step: $step,
             i: '$i',
             I: '$I',
             sip: '$sip',
             accumulator: '$accumulator',
             starts: '$starts'
+        }
+        if (Object.keys(parameters).length != 0) {
+            const properties = []
+            for (const parameter in parameters) {
+                properties.push(`${parameter}: ${parameters[parameter]}`)
+            }
+            signatories.parameters = $(`
+                {
+                    `, properties.join(', '), `
+                }
+            `)
         }
         return Object.keys(signatories)
                      .filter(key => variables[key])
@@ -927,13 +939,13 @@ function generate (packet, { require, bff, chk }) {
         if (checkpoint.rewind != 0) {
             return $(`
                 if ($end - ($start - ${checkpoint.rewind}) < ${checkpoint.lengths.join(' + ')}) {
-                    return parsers.inc.${packet.name}(${signature().join(', ')})($buffer, $start - ${checkpoint.rewind}, $end)
+                    return parsers.inc.${packet.name}(`, signature().join(', '), `)($buffer, $start - ${checkpoint.rewind}, $end)
                 }
             `)
         }
         return $(`
             if ($end - $start < ${checkpoint.lengths.join(' + ')}) {
-                return parsers.inc.${packet.name}(${signature().join(', ')})($buffer, $start, $end)
+                return parsers.inc.${packet.name}(`, signature().join(', '), `)($buffer, $start, $end)
             }
         `)
     }
@@ -979,63 +991,82 @@ function generate (packet, { require, bff, chk }) {
         }
     }
 
-    if (chk) {
-        packet.fields = inquisition(packet.fields)
-    } else if (bff) {
-        packet.fields = checkpoints(packet.name, packet.fields)
-    }
+    function compile () {
+        if (chk) {
+            packet.fields = inquisition(packet.fields)
+        } else if (bff) {
+            packet.fields = checkpoints(packet.name, packet.fields)
+        }
 
-    const source = dispatch(packet.name, packet, true)
-    const declarations = {
-        register: '$_',
-        i: '$i = []',
-        I: '$I = []',
-        sip: '$sip = 0',
-        slice: '$slice = null',
-        accumulator: '$accumulator = {}',
-        starts: '$starts = []'
-    }
-    const lets = Object.keys(declarations)
-                            .filter(key => variables[key])
-                            .map(key => declarations[key])
+        const source = dispatch(packet.name, packet, true)
+        const declarations = {
+            register: '$_',
+            i: '$i = []',
+            I: '$I = []',
+            sip: '$sip = 0',
+            slice: '$slice = null',
+            accumulator: '$accumulator = {}',
+            starts: '$starts = []'
+        }
+        const lets = Object.keys(declarations)
+                                .filter(key => variables[key])
+                                .map(key => declarations[key])
 
-    const requires = required(require)
+        const requires = required(require)
 
-    if (bff || chk) {
+        const signature = []
+
+        if (Object.keys(parameters).length != 0) {
+            const properties = []
+            for (const parameter in parameters) {
+                properties.push(`${parameter} = ${parameters[parameter]}`)
+            }
+            signature.push($(`
+                {
+                    `, properties.join(', '), `
+                } = {}
+            `))
+        }
+
+        if (bff || chk) {
+            return $(`
+                parsers.${bff ? 'bff' : 'chk'}.${packet.name} = function () {
+                    `, requires, -1, `
+
+                    return function (`, signature.join(','), `) {
+                        return function ($buffer, $start, $end) {
+                            `, lets.length ? `let ${lets.join(', ')}` : null, -1, `
+
+                            `, vivify.structure(`let ${packet.name}`, packet), `
+
+                            `, source, `
+
+                            return { start: $start, object: object, parse: null }
+                        }
+                    } ()
+                }
+            `)
+        }
+
+        signature.unshift('$buffer', '$start')
         return $(`
-            parsers.${bff ? 'bff' : 'chk'}.${packet.name} = function () {
+            parsers.all.${packet.name} = function () {
                 `, requires, -1, `
 
-                return function () {
-                    return function ($buffer, $start, $end) {
-                        `, lets.length ? `let ${lets.join(', ')}` : null, -1, `
+                return function (`, signature.join(', '), `) {
+                    `, lets.length ? `let ${lets.join(', ')}` : null, -1, `
 
-                        `, vivify.structure(`let ${packet.name}`, packet), `
+                    `, 'let ' + vivify.structure(packet.name, packet), `
 
-                        `, source, `
+                    `, source, `
 
-                        return { start: $start, object: object, parse: null }
-                    }
-                } ()
-            }
+                    return ${packet.name}
+                }
+            } ()
         `)
     }
 
-    return $(`
-        parsers.all.${packet.name} = function () {
-            `, requires, -1, `
-
-            return function ($buffer, $start) {
-                `, lets.length ? `let ${lets.join(', ')}` : null, -1, `
-
-                `, 'let ' + vivify.structure(packet.name, packet), `
-
-                `, source, `
-
-                return ${packet.name}
-            }
-        } ()
-    `)
+    return compile()
 }
 
 module.exports = function (definition, options = {}) {

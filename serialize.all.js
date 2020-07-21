@@ -365,7 +365,7 @@ function inquisition (path, fields, $i = 0, $I = 0) {
 function generate (packet, { require = null, bff, chk }) {
     let $step = 0, $i = -1, $I = -1, $$ = -1
 
-    const variables = declare (packet)
+    const { variables, parameters, accumulators } = declare (packet)
 
     const accumulate = {
         accumulator: {},
@@ -797,7 +797,7 @@ function generate (packet, { require = null, bff, chk }) {
     function accumulator (path, field) {
         $step++
         return $(`
-            `, accumulatorer(accumulate, field), `
+            `, accumulatorer(accumulate, accumulators, parameters, field), `
 
             `, map(dispatch, path, field.fields), `
         `)
@@ -809,18 +809,30 @@ function generate (packet, { require = null, bff, chk }) {
         }
         const signatories = {
             packet: packet.name,
+            parameters: '{}',
             step: $step,
             i: '$i',
             stack: '$$',
             accumulator: '$accumulator',
             starts: '$starts'
         }
+        if (Object.keys(parameters).length != 0) {
+            const properties = []
+            for (const parameter in parameters) {
+                properties.push(`${parameter}: ${parameters[parameter]}`)
+            }
+            signatories.parameters = $(`
+                {
+                    `, properties.join(', '), `
+                }
+            `)
+        }
         const signature = Object.keys(signatories)
                                 .filter(key => variables[key])
                                 .map(key => signatories[key])
         return $(`
             if ($end - $start < ${checkpoint.lengths.join(' + ')}) {
-                return serializers.inc.object(${signature.join(', ')})($buffer, $start, $end)
+                return serializers.inc.object(`, signature.join(', '), `)($buffer, $start, $end)
             }
         `)
     }
@@ -882,14 +894,29 @@ function generate (packet, { require = null, bff, chk }) {
 
     const requires = required(require)
 
+    const signature = []
+
+    if (Object.keys(parameters).length != 0) {
+        const properties = []
+        for (const parameter in parameters) {
+            properties.push(`${parameter} = ${parameters[parameter]}`)
+        }
+        signature.push($(`
+            {
+                `, properties.join(', '), `
+            } = {}
+        `))
+    }
+
     assert.equal($i, -1)
 
     if (bff || chk) {
+        signature.unshift(packet.name)
         return $(`
             serializers.${bff ? 'bff' : 'chk'}.${packet.name} = function () {
                 `, requires, -1, `
 
-                return function (${packet.name}) {
+                return function (`, signature.join(', '), `) {
                     return function ($buffer, $start, $end) {
                         `, lets.length != 0 ? `let ${lets.join(', ')}` : null, -1, `
 
@@ -902,11 +929,12 @@ function generate (packet, { require = null, bff, chk }) {
         `)
     }
 
+    signature.unshift(packet.name, '$buffer', '$start')
     return $(`
         serializers.all.${packet.name} = function () {
             `, requires, -1, `
 
-            return function (${packet.name}, $buffer, $start) {
+            return function (`, signature.join(', '), `) {
                 `, lets.length != 0 ? `let ${lets.join(', ')}` : null, -1, `
 
                 `, source, `

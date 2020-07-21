@@ -33,7 +33,7 @@ const join = require('./join')
 function generate (packet, { require = null }) {
     let $step = 0, $i = -1, $I = -1, $$ = -1, surround = false
 
-    const variables = declare(packet)
+    const { variables , accumulators, parameters } = declare(packet)
 
     // Locals are variables that are local to the switch statement's scope so
     // that they are set between invocations of the function, but they are also
@@ -759,7 +759,7 @@ function generate (packet, { require = null }) {
         return $(`
             case ${$step++}:
 
-                `, accumulatorer(accumulate, field), `
+                `, accumulatorer(accumulate, accumulators, parameters, field), `
 
             `, map(dispatch, path, field.fields), `
         `)
@@ -821,12 +821,26 @@ function generate (packet, { require = null }) {
 
     const signatories = {
         packet: `${packet.name}`,
+        parameters: null,
         step: '$step = 0',
         i: '$i = []',
         I: '$I = []',
         stack: '$$ = []',
         accumulator: '$accumulator = {}',
         starts: '$starts = []'
+    }
+
+    if (Object.keys(parameters).length != 0) {
+        const properties = []
+        for (const parameter in parameters) {
+            properties.push(`${parameter} = ${parameters[parameter]}`)
+        }
+        variables.parameters = true
+        signatories.parameters = $(`
+            {
+                `, properties.join(', '), `
+            } = {}
+        `)
     }
 
     const signature = Object.keys(signatories)
@@ -863,7 +877,7 @@ function generate (packet, { require = null }) {
         serializers.inc.${packet.name} = function () {
             `, requires, -1, `
 
-            return function (${signature.join(', ')}) {
+            return function (`, signature.join(', '), `) {
                 let ${lets.join(', ')}
 
                 return function $serialize ($buffer, $start, $end) {

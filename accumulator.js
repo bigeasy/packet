@@ -1,23 +1,13 @@
 const util = require('util')
-
-module.exports = function (accumulate, field, parameterize = false) {
+const assert = require('assert')
+module.exports = function (accumulate, accumulators, parameters, field) {
     return (field.accumulators ? field.accumulators : [ field ]).map(accumulator => {
-        switch (accumulator.type) {
-        case 'object': {
-                const { name, value } = accumulator
-                accumulate.accumulator[name] = []
-                return `$accumulator[${util.inspect(name)}] = ${util.inspect(value)}`
-            }
-        case 'regex': {
-                const { name, source } = accumulator
-                accumulate.accumulator[name] = []
-                return `$accumulator[${util.inspect(name)}] = ${source}`
-            }
-        case 'function': {
-                const { name, source } = accumulator
-                accumulate.accumulator[name] = []
-                return `$accumulator[${util.inspect(name)}] = (${source})()`
-            }
+        const { name, source } = accumulator
+        accumulate.accumulator[name] = []
+        if (accumulator.type == 'function' && parameters[name] == null) {
+            return `$accumulator[${util.inspect(name)}] = (${accumulators[name]})()`
+        } else {
+            return `$accumulator[${util.inspect(name)}] = ${accumulators[name]}`
         }
     }).join('\n')
 }

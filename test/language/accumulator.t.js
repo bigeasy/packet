@@ -12,7 +12,7 @@ require('proof')(3, okay => {
         vivify: 'descend',
         bits: 32,
         fixed: true,
-        accumulators: [ { type: 'object', name: 'counter', value: [ 0 ] } ],
+        accumulators: [ { type: 'object', name: 'counter', source: '[ 0 ]' } ],
         fields: [{
             type: 'structure',
             vivify: 'object',

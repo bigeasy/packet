@@ -2,14 +2,16 @@ module.exports = function ({ serializers, $lookup }) {
     serializers.inc.object = function () {
         const assert = require('assert')
 
-        return function (object, $step = 0, $$ = [], $accumulator = {}) {
+        return function (object, {
+            regex = /^abc$/
+        } = {}, $step = 0, $$ = [], $accumulator = {}) {
             let $_, $bite
 
             return function $serialize ($buffer, $start, $end) {
                 switch ($step) {
                 case 0:
 
-                    $accumulator['regex'] = /^abc$/
+                    $accumulator['regex'] = regex
 
                 case 1:
 

@@ -2,10 +2,12 @@ module.exports = function ({ serializers, $lookup }) {
     serializers.all.object = function () {
         const assert = require('assert')
 
-        return function (object, $buffer, $start) {
+        return function (object, $buffer, $start, {
+            regex = /^abc$/
+        } = {}) {
             let $$ = [], $accumulator = {}
 
-            $accumulator['regex'] = /^abc$/
+            $accumulator['regex'] = regex
 
             $$[0] = (function ({ $_, regex }) {
                 assert(regex.test('abc'))

@@ -2,7 +2,9 @@ module.exports = function ({ parsers, $lookup }) {
     parsers.chk.object = function () {
         const assert = require('assert')
 
-        return function () {
+        return function ({
+            counter = (() => [ 0 ])()
+        } = {}) {
             return function ($buffer, $start, $end) {
                 let $accumulator = {}
 
@@ -14,27 +16,34 @@ module.exports = function ({ parsers, $lookup }) {
                     sentry: 0
                 }
 
-                $accumulator['counter'] = (() => [ 0 ])()
+                $accumulator['counter'] = counter
 
                 if ($end - $start < 1) {
-                    return parsers.inc.object(object, 2, $accumulator)($buffer, $start, $end)
+                    return parsers.inc.object(object, $accumulator, 2, {
+                        counter: (() => [ 0 ])()
+                    })($buffer, $start, $end)
                 }
 
                 object.value.first = ($buffer[$start++])
 
                 if ($end - $start < 1) {
-                    return parsers.inc.object(object, 4, $accumulator)($buffer, $start, $end)
+                    return parsers.inc.object(object, $accumulator, 4, {
+                        counter: (() => [ 0 ])()
+                    })($buffer, $start, $end)
                 }
 
                 object.value.second = ($buffer[$start++])
 
                 if ($end - $start < 1) {
-                    return parsers.inc.object(object, 6, $accumulator)($buffer, $start, $end)
+                    return parsers.inc.object(object, $accumulator, 6, {
+                        counter: (() => [ 0 ])()
+                    })($buffer, $start, $end)
                 }
 
                 object.sentry = ($buffer[$start++])
 
                 object = (function ({ $_, counter }) {
+                    console.log('>>>', counter)
                     assert.deepEqual(counter, [ 0 ])
                     return $_
                 })({

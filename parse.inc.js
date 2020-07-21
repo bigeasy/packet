@@ -61,7 +61,7 @@ function generate (packet, { require = null }) {
 
     // Determine which variables will be passed into in this parser from a
     // best-foot-forward parse.
-    const variables = declare(packet)
+    const { variables, accumulators, parameters } = declare(packet)
 
     // An object that tracks the declaration of accumulators.
     const accumulate = {
@@ -1032,7 +1032,7 @@ function generate (packet, { require = null }) {
         return $(`
             case ${$step++}:
 
-                `, accumulatorer(accumulate, field), `
+                `, accumulatorer(accumulate, accumulators, parameters, field), `
 
             `, map(dispatch, path, field.fields), `
         `)
@@ -1085,6 +1085,7 @@ function generate (packet, { require = null }) {
 
     const signatories = {
         packet: `${packet.name}`,
+        parameters: null,
         step: '$step = 0',
         i: '$i = []',
         I: '$I = []',
@@ -1092,6 +1093,20 @@ function generate (packet, { require = null }) {
         accumulator: '$accumulator = []',
         starts: '$starts = []'
     }
+
+    if (Object.keys(parameters).length != 0) {
+        const properties = []
+        for (const parameter in parameters) {
+            properties.push(`${parameter} = ${parameters[parameter]}`)
+        }
+        variables.parameters = true
+        signatories.parameters = $(`
+            {
+                `, properties.join(', '), `
+            } = {}
+        `)
+    }
+
     const signature = Object.keys(signatories)
                             .filter(key => variables[key])
                             .map(key => signatories[key])
@@ -1138,7 +1153,7 @@ function generate (packet, { require = null }) {
         parsers.inc.${packet.name} = function () {
             `, requires, -1, `
 
-            return function (${signature.join(', ')}) {
+            return function (`, signature.join(', '), `) {
                 let ${lets.join(', ')}
 
                 return function $parse ($buffer, $start, $end) {

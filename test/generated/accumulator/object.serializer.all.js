@@ -2,10 +2,12 @@ module.exports = function ({ serializers, $lookup }) {
     serializers.all.object = function () {
         const assert = require('assert')
 
-        return function (object, $buffer, $start) {
+        return function (object, $buffer, $start, {
+            counter = [ 0 ]
+        } = {}) {
             let $$ = [], $accumulator = {}
 
-            $accumulator['counter'] = [ 0 ]
+            $accumulator['counter'] = counter
 
             $$[0] = (function ({ $_, counter }) {
                 assert.deepEqual(counter, [ 0 ])

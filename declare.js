@@ -1,6 +1,10 @@
+const $ = require('programmatic')
+
 exports.serialize = function (field) {
-    const variables = { packet: true, step: true }
+    const variables = { packet: true, step: true }, accumulators = {}, parameters = {}
+    let depth = 0
     function declare (field) {
+        depth++
         switch (field.type) {
         case 'inline': {
                 const buffered = field.before.filter(inline => {
@@ -18,6 +22,21 @@ exports.serialize = function (field) {
             }
             break
         case 'accumulator': {
+                for (const accumulator of field.accumulators) {
+                    if (depth == 1) {
+                        variables.parameters = true
+                        accumulators[accumulator.name] = accumulator.name
+                        if (accumulator.type == 'function') {
+                            parameters[accumulator.name] = $(`
+                                (`, accumulator.source, `)()
+                            `)
+                        } else {
+                            parameters[accumulator.name] = accumulator.source
+                        }
+                    } else {
+                        accumulators[accumulator.name] = accumulator.source
+                    }
+                }
                 variables.accumulator = true
                 field.fields.map(declare)
             }
@@ -84,14 +103,17 @@ exports.serialize = function (field) {
             break
         default: throw new Error(field.type)
         }
+        depth--
     }
     declare(field)
-    return variables
+    return { variables, accumulators, parameters }
 }
 
 exports.parse = function (field) {
-    const variables = { packet: true, step: true }
+    const variables = { packet: true, step: true }, accumulators = {}, parameters = {}
+    let depth = 0
     function declare (field) {
+        depth++
         switch (field.type) {
         case 'inline': {
                 const buffered = field.before.filter(inline => {
@@ -109,6 +131,24 @@ exports.parse = function (field) {
             }
             break
         case 'accumulator': {
+                for (const accumulator of field.accumulators) {
+                    if (depth == 1) {
+                        variables.parameters = true
+                        if (accumulators.type == 'function') {
+                        } else {
+                        }
+                        accumulators[accumulator.name] = accumulator.name
+                        if (accumulator.type == 'function') {
+                            parameters[accumulator.name] = $(`
+                                (`, accumulator.source, `)()
+                            `)
+                        } else {
+                            parameters[accumulator.name] = accumulator.source
+                        }
+                    } else {
+                        accumulators[accumulator.name] = accumulator.source
+                    }
+                }
                 variables.accumulator = true
                 field.fields.map(declare)
             }
@@ -182,7 +222,8 @@ exports.parse = function (field) {
             break
         default: throw new Error(field.type)
         }
+        depth--
     }
     declare(field)
-    return variables
+    return { variables, accumulators, parameters }
 }

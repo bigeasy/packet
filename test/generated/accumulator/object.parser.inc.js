@@ -2,7 +2,9 @@ module.exports = function ({ parsers, $lookup }) {
     parsers.inc.object = function () {
         const assert = require('assert')
 
-        return function (object, $step = 0, $accumulator = []) {
+        return function (object, {
+            counter = [ 0 ]
+        } = {}, $step = 0, $accumulator = []) {
             let $_, $bite
 
             return function $parse ($buffer, $start, $end) {
@@ -21,7 +23,7 @@ module.exports = function ({ parsers, $lookup }) {
 
                 case 1:
 
-                    $accumulator['counter'] = [ 0 ]
+                    $accumulator['counter'] = counter
 
                 case 2:
 

@@ -2,14 +2,18 @@ module.exports = function ({ serializers, $lookup }) {
     serializers.bff.object = function () {
         const assert = require('assert')
 
-        return function (object) {
+        return function (object, {
+            regex = /^abc$/
+        } = {}) {
             return function ($buffer, $start, $end) {
                 let $$ = [], $accumulator = {}
 
-                $accumulator['regex'] = /^abc$/
+                $accumulator['regex'] = regex
 
                 if ($end - $start < 3) {
-                    return serializers.inc.object(object, 1, $$, $accumulator)($buffer, $start, $end)
+                    return serializers.inc.object(object, $accumulator, 1, $$, {
+                        regex: /^abc$/
+                    })($buffer, $start, $end)
                 }
 
                 $$[0] = (function ({ $_, regex }) {

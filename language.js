@@ -1,5 +1,6 @@
 // Node.js API.
 const assert = require('assert')
+const util = require('util')
 
 // Return the first non-null value.
 const coalesce = require('extant')
@@ -828,7 +829,7 @@ module.exports = function (packets) {
                     return {
                         type: 'object',
                         name: name,
-                        value: accumulator
+                        source: util.inspect(accumulator, { depth: null })
                     }
                 }
             })

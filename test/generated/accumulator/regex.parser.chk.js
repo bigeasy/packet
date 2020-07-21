@@ -2,7 +2,9 @@ module.exports = function ({ parsers, $lookup }) {
     parsers.chk.object = function () {
         const assert = require('assert')
 
-        return function () {
+        return function ({
+            regex = /^abc$/
+        } = {}) {
             return function ($buffer, $start, $end) {
                 let $accumulator = {}
 
@@ -14,22 +16,28 @@ module.exports = function ({ parsers, $lookup }) {
                     sentry: 0
                 }
 
-                $accumulator['regex'] = /^abc$/
+                $accumulator['regex'] = regex
 
                 if ($end - $start < 1) {
-                    return parsers.inc.object(object, 2, $accumulator)($buffer, $start, $end)
+                    return parsers.inc.object(object, $accumulator, 2, {
+                        regex: /^abc$/
+                    })($buffer, $start, $end)
                 }
 
                 object.value.first = ($buffer[$start++])
 
                 if ($end - $start < 1) {
-                    return parsers.inc.object(object, 4, $accumulator)($buffer, $start, $end)
+                    return parsers.inc.object(object, $accumulator, 4, {
+                        regex: /^abc$/
+                    })($buffer, $start, $end)
                 }
 
                 object.value.second = ($buffer[$start++])
 
                 if ($end - $start < 1) {
-                    return parsers.inc.object(object, 6, $accumulator)($buffer, $start, $end)
+                    return parsers.inc.object(object, $accumulator, 6, {
+                        regex: /^abc$/
+                    })($buffer, $start, $end)
                 }
 
                 object.sentry = ($buffer[$start++])
