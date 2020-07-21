@@ -250,7 +250,7 @@ function generate (packet, { require = null }) {
 
     //
     function terminated (path, field) {
-        const length = field.calculated ? `$I[${$I}]` : field.length
+        const length = field.calculated ? `$I[${++$I}]` : field.length
         const inline = field.calculated
             ? inliner(accumulate, path, [ field.length ], []).inlined.shift()
             : null
@@ -492,7 +492,7 @@ function generate (packet, { require = null }) {
         const fixed = field.type == 'fixed'
             ? field.calculated
                 ? $(`
-                    if (${i} == $I[${++$I}]) {
+                    if (${i} == $I[${$I}]) {
                         $step = ${done}
                         continue
                     }

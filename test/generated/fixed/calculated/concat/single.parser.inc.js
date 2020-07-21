@@ -32,7 +32,7 @@ module.exports = function ({ parsers, $lookup }) {
                     case 3:
 
                         $_ = 0
-                        $I[-1] = (() => 8)()
+                        $I[0] = (() => 8)()
 
                         $step = 4
 
@@ -40,8 +40,8 @@ module.exports = function ({ parsers, $lookup }) {
 
                         const $index = $buffer.indexOf(0x0, $start)
                         if (~$index) {
-                            if ($_ + $index > $I[-1]) {
-                                const $length = $I[-1] - $_
+                            if ($_ + $index > $I[0]) {
+                                const $length = $I[0] - $_
                                 $buffers.push($buffer.slice($start, $start + $length))
                                 $_ += $length
                                 $start += $length
@@ -54,8 +54,8 @@ module.exports = function ({ parsers, $lookup }) {
                                 $step = 5
                                 continue
                             }
-                        } else if ($_ + ($end - $start) >= $I[-1]) {
-                            const $length = $I[-1] - $_
+                        } else if ($_ + ($end - $start) >= $I[0]) {
+                            const $length = $I[0] - $_
                             $buffers.push($buffer.slice($start, $start + $length))
                             $_ += $length
                             $start += $length
@@ -74,9 +74,9 @@ module.exports = function ({ parsers, $lookup }) {
 
                     case 5:
 
-                        $_ = $I[-1] -  Math.min($buffers.reduce((sum, buffer) => {
+                        $_ = $I[0] -  Math.min($buffers.reduce((sum, buffer) => {
                             return sum + buffer.length
-                        }, 1), $I[-1])
+                        }, 1), $I[0])
 
                         object.array = $buffers.length == 1 ? $buffers[0] : Buffer.concat($buffers)
                         $buffers.length = 0
