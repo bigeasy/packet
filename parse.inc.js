@@ -770,6 +770,9 @@ function generate (packet, { require = null }) {
         if (field.pad.length != 0) {
             return terminated(path, field)
         }
+        const inline = field.calculated
+            ? inliner(accumulate, path, [ field.length ], []).inlined.shift()
+            : null
         const element = field.fields[field.fields.length - 1]
         const buffered = accumulate.buffered.map(buffered => buffered.source)
         const length = field.calculated  ? `$I[${++$I}]` : field.length
@@ -784,9 +787,6 @@ function generate (packet, { require = null }) {
         //
         if (element.type == 'buffer') {
             locals['buffers'] = '[]'
-            const inline = field.calculated
-                ? inliner(accumulate, path, [ field.length ], []).inlined.shift()
-                : null
             const assign = element.concat
                 ? `${path} = $buffers.length == 1 ? $buffers[0] : Buffer.concat($buffers)`
                 : `${path} = $buffers`
@@ -830,86 +830,38 @@ function generate (packet, { require = null }) {
         const redo = $step + 1
         // We sometimes have a vivification step to create an object element.
         // **TODO** Eliminate vivify step if not used.
-        let source = null
+        const remaining = field.calculated && field.fixed
+            ? `$_ = (${length} - ${i}) * ${element.bits >>> 3} - ${field.pad.length}`
+            : null
+        const source = $(`
+            case ${$step++}:
+
+                ${i} = 0
+                ${length} = `, inline, `
+
+            case ${$step++}:
+
+                `, vivify.assignment(`${path}[${i}]`, field), -1, `
+
+            `, map(dispatch,`${path}[${i}]`, field.fields), `
+
+            case ${$step++}:
+
+                ${i}++
+
+                if (${i} != ${length}) {
+                    $step = ${redo}
+                    continue
+                }
+
+                `, remaining, `
+                $step = ${$step}
+        `)
+        // Release the length index from the array of lengths if calculated.
         if (field.calculated) {
-            const inline = inliner(accumulate, path, [ field.length ], [])
-            const element = field.fields[field.fields.length - 1]
-            if (field.fixed) {
-                source = $(`
-                    case ${$step++}:
-
-                        ${i} = 0
-                        ${length} = `, inline.inlined.shift(), `
-
-                    case ${$step++}:
-
-                        `, vivify.assignment(`${path}[${i}]`, field), -1, `
-
-                    `, map(dispatch,`${path}[${i}]`, field.fields), `
-
-                    case ${$step++}:
-
-                        ${i}++
-
-                        if (${i} != ${I}) { // foo
-                            $step = ${redo}
-                            continue
-                        }
-
-                        $_ = (${I} - ${i}) * ${element.bits >>> 3} - ${field.pad.length}
-                        $step = ${$step}
-                `)
-            } else {
-                source = $(`
-                    case ${$step++}:
-
-                        ${i} = 0
-                        ${length} = `, inline.inlined.shift(), `
-
-                    case ${$step++}:
-
-                        `, vivify.assignment(`${path}[${i}]`, field), -1, `
-
-                    `, map(dispatch,`${path}[${i}]`, field.fields), `
-
-                    case ${$step++}:
-
-                        ${i}++
-
-                        if (${i} != ${length}) {
-                            $step = ${redo}
-                            continue
-                        }
-
-                        $step = ${$step}
-                `)
-            }
             $I--
-        } else {
-            source = $(`
-                case ${$step++}:
-
-                    ${i} = 0
-
-                case ${$step++}:
-
-                    `, vivify.assignment(`${path}[${i}]`, field), -1, `
-
-                `, map(dispatch,`${path}[${i}]`, field.fields), `
-
-                case ${$step++}:
-
-                    ${i}++
-
-                    if (${i} != ${length}) {
-                        $step = ${redo}
-                        continue
-                    }
-
-                    $_ = (${length} - ${i}) * ${length} * ${element.bits >>> 3} - ${field.pad.length}
-                    $step = ${$step}
-            `)
         }
+        // Generate skip logic if we are fixed width.
         const skip = field.pad.length != 0 ? $(`
             case ${$step++}:
 

@@ -237,7 +237,6 @@ module.exports = function ({ parsers, $lookup }) {
                             continue
                         }
 
-                        $_ = (3 - $i[0]) * 3 * 1 - 0
                         $step = 26
 
                         $step = 28
