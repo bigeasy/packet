@@ -482,6 +482,10 @@ function generate (packet, { require = null }) {
         $step++
         // Create the body of the loop.
         const looped = map(dispatch, `${path}[${i}]`, field.fields)
+        // Release the length index from the array of lengths if calculated.
+        if (field.calculated) {
+            $I--
+        }
         // Step of next field is after a final loop jump step.
         const done = $step + 1
         //
@@ -572,51 +576,26 @@ function generate (packet, { require = null }) {
                 `)
             }))
         // Put it all together.
-        let source = null
-        if (field.type == 'fixed' && field.calculated) {
-            const inline = inliner(accumulate, path, [ field.length ], [])
-            source = $(`
-                case ${init}:
+        const source = $(`
+            case ${init}:
 
-                    ${i} = 0
-                    ${length} = `, inline.inlined.shift(), `
+                ${i} = 0
+                ${length} = `, inline, `
 
-                `, terminator, `
+            `, terminator, `
 
-                case ${begin}:
+            case ${begin}:
 
-                    `, vivify.assignment(`${path}[${i}]`, field), `
+                `, vivify.assignment(`${path}[${i}]`, field), `
 
-                `, looped, `
+            `, looped, `
 
-                case ${$step++}:
+            case ${$step++}:
 
-                    ${i}++
-                    $step = ${redo}
-                    continue
-            `)
-            $I--
-        } else {
-            source = $(`
-                case ${init}:
-
-                    ${i} = 0
-
-                `, terminator, `
-
-                case ${begin}:
-
-                    `, vivify.assignment(`${path}[${i}]`, field), `
-
-                `, looped, `
-
-                case ${$step++}:
-
-                    ${i}++
-                    $step = ${redo}
-                    continue
-            `)
-        }
+                ${i}++
+                $step = ${redo}
+                continue
+        `)
         // Release the array index from the array of indices.
         $i--
         // If we are actually padded fixed array, we need to skip over the
