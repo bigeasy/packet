@@ -90,7 +90,6 @@ module.exports = function ({ serializers, $lookup }) {
                                 $end: $start,
                                 counter: $accumulator['counter']
                             })
-                            $starts[0] = $start
                             return { start: $start, serialize: $serialize }
                         }
 

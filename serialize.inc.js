@@ -77,7 +77,9 @@ function generate (packet, { require = null }) {
         const cast = field.bits > 32
             ? { suffix: 'n', from: 'Number', shift: '>>' }
             : { suffix: '', from: '', shift: '>>>' }
-        const buffered = accumulate.buffered.map(buffered => buffered.source)
+        const buffered = accumulate.buffered.length != 0
+            ? accumulate.buffered.map(buffered => buffered.source).join('\n')
+            : null
         const source = $(`
             case ${$step++}:
 
@@ -89,7 +91,7 @@ function generate (packet, { require = null }) {
 
                 while ($bite != ${stop}${cast.suffix}) {
                     if ($start == $end) {
-                        `, buffered.length != 0 ? buffered.join('\n') : null, `
+                        `, buffered, `
                         return { start: $start, serialize: $serialize }
                     }
                     $buffer[$start++] = ${cast.from}($_ ${cast.shift} $bite * 8${cast.suffix} & 0xff${cast.suffix})
@@ -228,12 +230,9 @@ function generate (packet, { require = null }) {
     function lengthEncoded (path, field) {
         const element = field.fields[0]
         surround = true
-        const buffered = accumulate.buffered.length != 0 ? accumulate.buffered.map(buffered => {
-            return $(`
-                `, buffered.source, `
-                $starts[${buffered.start}] = $start
-            `)
-        }).join('\n') : null
+        const buffered = accumulate.buffered.length != 0
+            ? accumulate.buffered.map(buffered => buffered.source).join('\n')
+            : null
         if (element.type == 'buffer') {
             locals['copied'] = 0
             if (!element.concat) {
@@ -421,12 +420,8 @@ function generate (packet, { require = null }) {
     function terminated (path, field) {
         surround = true
         const buffered = accumulate.buffered.length != 0
-            ? accumulate.buffered.map(buffered => {
-                return $(`
-                    `, buffered.source, `
-                    $starts[${buffered.start}] = $start
-                `)
-            }).join('\n') : null
+            ? accumulate.buffered.map(buffered => buffered.source).join('\n')
+            : null
         function terminate () {
             return join(field.terminator.map(bite => {
                 return $(`

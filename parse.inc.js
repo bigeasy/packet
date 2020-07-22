@@ -55,15 +55,18 @@ function generate (packet, { require = null }) {
     // Current array length for length encoded arrays.
     let $I = -1
 
-    // An map of parser scoped variable definitions to their initialization
-    // values.
+    // Map of parser scoped variable definitions to their initialization values.
     const locals = {}
 
-    // Determine which variables will be passed into in this parser from a
-    // best-foot-forward parse.
+    // Traverse the AST looking for all the variables that will be passed into
+    // in this parser from a best-foot-forward parse, all the accumulators that
+    // will be decalared, and the set of named parameters passed to the parser
+    // from outside the parser on construction.
     const { variables, accumulators, parameters } = declare(packet)
 
-    // An object that tracks the declaration of accumulators.
+    // An object that tracks the declaration of accumulators, whether or not
+    // they are accumulating buffer contents, as well providing the `inliner`
+    // function with the state necessary to generate named function invocations.
     const accumulate = {
         accumulator: {},
         accumulated: [],
@@ -72,7 +75,12 @@ function generate (packet, { require = null }) {
         packet: packet.name,
         direction: 'parse'
     }
+    //
 
+    // Generate an *absent* field by setting the property to `null` or an empty
+    // array `[]`.
+
+    //
     function absent (path, field) {
         return $(`
             case ${$step++}:
@@ -82,10 +90,17 @@ function generate (packet, { require = null }) {
                 $step = ${$step}
         `)
     }
+    //
 
+    // Parse an integer.
+
+    //
     function integer (path, field) {
         const bytes = field.bits / 8
-        const buffered = accumulate.buffered.map(buffered => buffered.source)
+        const buffered = accumulate.buffered.length != 0
+            ? accumulate.buffered.map(buffered => buffered.source).join('\n')
+            : null
+        // Special case for single byte which is a single step.
         if (bytes == 1 && field.fields == null && field.lookup == null) {
             return $(`
                 case ${$step++}:
@@ -95,7 +110,7 @@ function generate (packet, { require = null }) {
                 case ${$step++}:
 
                     if ($start == $end) {
-                        `, buffered.length != 0 ? buffered.join('\n') : null, `
+                        `, buffered, `
                         return { start: $start, object: null, parse: $parse }
                     }
 
@@ -103,10 +118,12 @@ function generate (packet, { require = null }) {
 
             `)
         }
-        //
         const start = field.endianness == 'big' ? bytes - 1 : 0
         const stop = field.endianness == 'big' ? -1 : bytes
         const direction = field.endianness == 'big' ?  '--' : '++'
+        // **TODO** This appears to proibit using a two's compliment value as a
+        // lookup value, which is probably okay, since how would you lookup
+        // negative values. Well, you could use a map, so...
         const assign = field.fields
             ? unpack(accumulate, packet, path, field, '$_')
             : field.compliment
@@ -130,7 +147,7 @@ function generate (packet, { require = null }) {
 
                 while ($bite != ${stop}${cast.suffix}) {
                     if ($start == $end) {
-                        `, buffered.length != 0 ? buffered.join('\n') : null, `
+                        `, buffered, `
                         return { start: $start, object: null, parse: $parse }
                     }
                     $_ += ${cast.to}($buffer[$start++]) << $bite * 8${cast.suffix}${cast.fixup}
@@ -212,6 +229,8 @@ function generate (packet, { require = null }) {
             }
         }
         const source = map(dispatch, path, field.fields)
+        // Final run of any buffered functions that are about to go out of
+        // scope.
         const buffered = accumulate.buffered
             .splice(0, after.buffered.end)
             .map(buffered => {
@@ -230,12 +249,9 @@ function generate (packet, { require = null }) {
         const I = `$I[${++$I}]`
         const encoding = map(dispatch, I, field.encoding)
         if (element.type == 'buffer') {
-            const buffered = accumulate.buffered.length != 0 ? accumulate.buffered.map(buffered => {
-                return $(`
-                    `, buffered.source, `
-                    $starts[${buffered.start}] = $start
-                `)
-            }).join('\n') : null
+            const buffered = accumulate.buffered.length != 0
+                ? accumulate.buffered.map(buffered => buffered.source).join('\n')
+                : null
             locals['index'] = 0
             locals['buffers'] = '[]'
             $I--
@@ -725,7 +741,9 @@ function generate (packet, { require = null }) {
             ? inliner(accumulate, path, [ field.length ], []).inlined.shift()
             : null
         const element = field.fields[field.fields.length - 1]
-        const buffered = accumulate.buffered.map(buffered => buffered.source)
+        const buffered = accumulate.buffered.length != 0
+            ? accumulate.buffered.map(buffered => buffered.source).join('\n')
+            : null
         const length = field.calculated  ? `$I[${++$I}]` : field.length
         //
 
@@ -757,7 +775,7 @@ function generate (packet, { require = null }) {
                     $_ += length
 
                     if ($_ != ${length}) {
-                        `, buffered.length != 0 ? buffered.join('\n') : null, `
+                        `, buffered, `
                         return { start: $start, object: null, parse: $parse }
                     }
 
