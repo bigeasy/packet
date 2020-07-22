@@ -43,28 +43,6 @@ function expand (fields) {
     const expanded = []
     for (const field of fields) {
         switch (field.type) {
-        case 'lengthEncoded':
-            field.fields = expand(field.fields)
-            expanded.push({
-                type: 'lengthEncoding', body: field, dotted: field.dotted, vivify: null
-            })
-            expanded.push(field)
-            break
-        case 'terminated':
-            field.fields = expand(field.fields)
-            expanded.push(field)
-            expanded.push({ type: 'terminator', body: field, vivify: null })
-            break
-        case 'fixed':
-            if (field.calculated) {
-                expanded.push({ type: 'calculation', field })
-            }
-        case 'inline':
-        case 'accumulator':
-        case 'structure':
-            field.fields = expand(field.fields)
-            expanded.push(field)
-            break
         case 'conditional':
             for (const condition of field.serialize.conditions) {
                 condition.fields = expand(condition.fields)
@@ -75,6 +53,31 @@ function expand (fields) {
             for (const when of field.cases) {
                 when.fields = expand(when.fields)
             }
+            expanded.push(field)
+            break
+        case 'structure':
+        case 'accumulator':
+        case 'inline':
+            field.fields = expand(field.fields)
+            expanded.push(field)
+            break
+        case 'fixed':
+            if (field.calculated) {
+                expanded.push({ type: 'calculation', field })
+            }
+            field.fields = expand(field.fields)
+            expanded.push(field)
+            break
+        case 'terminated':
+            field.fields = expand(field.fields)
+            expanded.push(field)
+            expanded.push({ type: 'terminator', body: field, vivify: null })
+            break
+        case 'lengthEncoded':
+            field.fields = expand(field.fields)
+            expanded.push({
+                type: 'lengthEncoding', body: field, dotted: field.dotted, vivify: null
+            })
             expanded.push(field)
             break
         default:
@@ -132,12 +135,64 @@ function checkpoints (path, fields, $i = 0, $I = 0) {
     const checked = [ checkpoint = { type: 'checkpoint', lengths: [ 0 ] } ]
     for (const field of fields) {
         switch (field.type) {
-        case 'literal':
+        case 'structure':
+        case 'accumulator':
+        case 'inline':
             checked.push(field)
-            // **TODO** Unfixed fields padded with literals.
             if (field.fixed) {
-                checkpoint.lengths[0] += field.bits / 8
+                checkpoint.lengths.push(field.bits / 8)
+            }  else {
+                field.fields = checkpoints(path + field.dotted, field.fields, $i + 1, $I)
+                checked.push(checkpoint = { type: 'checkpoint', lengths: [ 0 ] })
             }
+            break
+        case 'conditional':
+            checked.push(field)
+            for (const condition of field.serialize.conditions) {
+                condition.fields = checkpoints(path + field.dotted, condition.fields, $i, $I)
+            }
+            checked.push(checkpoint = { type: 'checkpoint', lengths: [ 0 ] })
+            break
+        // Checkpoints are evaluated within each specific case.
+        //
+        // **TODO** If a switch statement resolves all entries to a fixed value
+        // with the same bit size, make the switch statement fixed width. This
+        // is likely in the case of packed integers, but moot since the integer
+        // will itself be fixed. Still likely, however, but not as likely
+        // outside of packed integers.
+        case 'switch':
+            checked.push(field)
+            for (const when of field.cases) {
+                when.fields = checkpoints(path + field.dotted, when.fields, $i, $I)
+            }
+            checked.push(checkpoint = { type: 'checkpoint', lengths: [ 0 ] })
+            break
+        case 'fixed':
+            if (field.fixed) {
+                checked.push(field)
+                checkpoint.lengths[0] += field.bits / 8
+            } else {
+                checked.push(field)
+                if (field.calculated) {
+                    field.fields = checkpoints(`${path + field.dotted}[$i[${$i}]]`, field.fields, $i + 1, $I + 1)
+                } else {
+                    field.fields = checkpoints(`${path + field.dotted}[$i[${$i}]]`, field.fields, $i + 1, $I)
+                }
+                checked.push(checkpoint = { type: 'checkpoint', lengths: [ 0 ] })
+            }
+            break
+        case 'calculation':
+            if (field.field.fields[0].fixed) {
+                checked.push(field)
+                checked.push(checkpoint = { type: 'checkpoint', lengths: [ 0 ] })
+                checkpoint.lengths.push(`$I[${$I}] * ${field.field.fields[0].bits >>> 3}`)
+            } else {
+                checked.push(field)
+            }
+            break
+        case 'terminator':
+            checked.push(field)
+            checkpoint.lengths[0] += field.body.terminator.length
             break
         case 'terminated':
             //
@@ -156,35 +211,6 @@ function checkpoints (path, fields, $i = 0, $I = 0) {
                 checked.push(checkpoint = { type: 'checkpoint', lengths: [ 0 ] })
             }
             break
-        case 'terminator':
-            checked.push(field)
-            checkpoint.lengths[0] += field.body.terminator.length
-            break
-        // Checkpoints are evaluated within each specific case.
-        //
-        // **TODO** If a switch statement resolves all entries to a fixed value
-        // with the same bit size, make the switch statement fixed width. This
-        // is likely in the case of packed integers, but moot since the integer
-        // will itself be fixed. Still likely, however, but not as likely
-        // outside of packed integers.
-        case 'switch':
-            checked.push(field)
-            for (const when of field.cases) {
-                when.fields = checkpoints(path + field.dotted, when.fields, $i, $I)
-            }
-            checked.push(checkpoint = { type: 'checkpoint', lengths: [ 0 ] })
-            break
-        case 'conditional':
-            checked.push(field)
-            for (const condition of field.serialize.conditions) {
-                condition.fields = checkpoints(path + field.dotted, condition.fields, $i, $I)
-            }
-            checked.push(checkpoint = { type: 'checkpoint', lengths: [ 0 ] })
-            break
-        case 'lengthEncoding':
-            checked.push(field)
-            checkpoint.lengths[0] += field.body.encoding[0].bits / 8
-            break
         case 'lengthEncoded':
             checked.push(field)
             if (field.fields[0].fixed) {
@@ -201,38 +227,15 @@ function checkpoints (path, fields, $i = 0, $I = 0) {
                 checked.push(checkpoint = { type: 'checkpoint', lengths: [ 0 ] })
             }
             break
-        case 'accumulator':
-        case 'inline':
-        case 'structure':
+        case 'lengthEncoding':
             checked.push(field)
-            if (field.fixed) {
-                checkpoint.lengths.push(field.bits / 8)
-            }  else {
-                field.fields = checkpoints(path + field.dotted, field.fields, $i + 1, $I)
-                checked.push(checkpoint = { type: 'checkpoint', lengths: [ 0 ] })
-            }
+            checkpoint.lengths[0] += field.body.encoding[0].bits / 8
             break
-        case 'calculation':
-            if (field.field.fields[0].fixed) {
-                checked.push(field)
-                checked.push(checkpoint = { type: 'checkpoint', lengths: [ 0 ] })
-                checkpoint.lengths.push(`$I[${$I}] * ${field.field.fields[0].bits >>> 3}`)
-            } else {
-                checked.push(field)
-            }
-            break
-        case 'fixed':
+        case 'literal':
+            checked.push(field)
+            // **TODO** Unfixed fields padded with literals.
             if (field.fixed) {
-                checked.push(field)
                 checkpoint.lengths[0] += field.bits / 8
-            } else {
-                checked.push(field)
-                if (field.calculated) {
-                    field.fields = checkpoints(`${path + field.dotted}[$i[${$i}]]`, field.fields, $i + 1, $I + 1)
-                } else {
-                    field.fields = checkpoints(`${path + field.dotted}[$i[${$i}]]`, field.fields, $i + 1, $I)
-                }
-                checked.push(checkpoint = { type: 'checkpoint', lengths: [ 0 ] })
             }
             break
         default:
@@ -241,12 +244,14 @@ function checkpoints (path, fields, $i = 0, $I = 0) {
             break
         }
     }
-    // **TODO** Merge these two functions.
+    // Remove any list of lengths that begins with a zero constant. There may
+    // still be calculated lengths following.
     checked.forEach(field => {
         if (field.type == 'checkpoint' && field.lengths[0] == 0) {
             field.lengths.shift()
         }
     })
+    // Remove any checkpoints that only had the zero constant.
     return checked.filter(field => {
         return field.type != 'checkpoint' || field.lengths.length != 0
     })
@@ -376,29 +381,62 @@ function generate (packet, { require = null, bff, chk }) {
         direction: 'serialize'
     }
 
+    function checkpoint (checkpoint) {
+        if (checkpoint.lengths.length == 0) {
+            return null
+        }
+        const signatories = {
+            packet: packet.name,
+            parameters: '{}',
+            step: $step,
+            i: '$i',
+            stack: '$$',
+            accumulator: '$accumulator',
+            starts: '$starts'
+        }
+        if (Object.keys(parameters).length != 0) {
+            const properties = []
+            for (const parameter in parameters) {
+                properties.push(`${parameter}: ${parameters[parameter]}`)
+            }
+            signatories.parameters = $(`
+                {
+                    `, properties.join(', '), `
+                }
+            `)
+        }
+        const signature = Object.keys(signatories)
+                                .filter(key => variables[key])
+                                .map(key => signatories[key])
+        return $(`
+            if ($end - $start < ${checkpoint.lengths.join(' + ')}) {
+                return serializers.inc.object(`, signature.join(', '), `)($buffer, $start, $end)
+            }
+        `)
+    }
+
     function absent (path, field) {
         $step++
         return null
     }
 
-    function word (assignee, field) {
-        const bytes = field.bits / 8
-        let bite = field.endianness == 'big' ? bytes - 1 : 0
-        const stop = field.endianness == 'big' ? -1 : bytes
-        const direction = field.endianness == 'big' ? -1 : 1
-        const shifts = []
-        const cast = field.bits > 32
-            ? { to: 'n', from: 'Number', shift: '>>' }
-            : { to: '', from: '', shift: '>>>' }
-        while (bite != stop) {
-            const shift = bite ? `${assignee} ${cast.shift} ${bite * 8}${cast.to}` : assignee
-            shifts.push(`$buffer[$start++] = ${cast.from}(${shift} & 0xff${cast.to})`)
-            bite += direction
-        }
-        return shifts.join('\n')
-    }
-
     function integer (path, field) {
+        function word (assignee, field) {
+            const bytes = field.bits / 8
+            let bite = field.endianness == 'big' ? bytes - 1 : 0
+            const stop = field.endianness == 'big' ? -1 : bytes
+            const direction = field.endianness == 'big' ? -1 : 1
+            const shifts = []
+            const cast = field.bits > 32
+                ? { to: 'n', from: 'Number', shift: '>>' }
+                : { to: '', from: '', shift: '>>>' }
+            while (bite != stop) {
+                const shift = bite ? `${assignee} ${cast.shift} ${bite * 8}${cast.to}` : assignee
+                shifts.push(`$buffer[$start++] = ${cast.from}(${shift} & 0xff${cast.to})`)
+                bite += direction
+            }
+            return shifts.join('\n')
+        }
         $step += 2
         if (field.fields) {
             const packing = pack(accumulate, packet, field, path, '$_')
@@ -454,6 +492,70 @@ function generate (packet, { require = null, bff, chk }) {
             `, map(dispatch, path, field.fields), `
 
             `, -1, write(field.after), `
+        `)
+    }
+
+    function inline (path, field) {
+        const before = field.before.length != 0 ? function () {
+            const register = `$$[${++$$}]`
+            const inline = inliner(accumulate, path, field.before, [
+                path, register
+            ], register)
+            if (inline.buffered.start != inline.buffered.end) {
+                $step++
+            }
+            if (inline.inlined.length == 0) {
+                return { path: path, source: null, buffered: inline.buffered }
+            }
+            return {
+                path: inline.register,
+                source: join(inline.inlined),
+                buffered: inline.buffered
+            }
+        } () : {
+            path: path,
+            source: null,
+            buffered: {
+                start: accumulate.buffered.length,
+                end: accumulate.buffered.length
+            }
+        }
+        if (before.path[0] != '$') {
+            $$--
+        }
+        const starts = []
+        for (let i = before.buffered.start, I = before.buffered.end; i < I; i++) {
+            starts.push(`$starts[${i}] = $start`)
+        }
+        if (before.source != null) {
+            $step++
+        }
+        const source = map(dispatch, before.path, field.fields)
+        const buffered = accumulate.buffered
+            .splice(0, before.buffered.end)
+            .map(buffered => {
+                return buffered.source
+            })
+        if (before.path[0] == '$') {
+            $$--
+        }
+        return  $(`
+            `, starts.length != 0 ? starts.join('\n') : null, -1, `
+
+            `, before.source, -1, `
+
+            `, source, `
+
+            `, -1, buffered.length != 0 ? buffered.join('\n') : null, `
+        `)
+    }
+
+    function accumulator (path, field) {
+        $step++
+        return $(`
+            `, accumulatorer(accumulate, accumulators, parameters, field), `
+
+            `, map(dispatch, path, field.fields), `
         `)
     }
 
@@ -677,58 +779,32 @@ function generate (packet, { require = null, bff, chk }) {
         return source
     }
 
-    function inline (path, field) {
-        const before = field.before.length != 0 ? function () {
-            const register = `$$[${++$$}]`
-            const inline = inliner(accumulate, path, field.before, [
-                path, register
-            ], register)
-            if (inline.buffered.start != inline.buffered.end) {
-                $step++
-            }
-            if (inline.inlined.length == 0) {
-                return { path: path, source: null, buffered: inline.buffered }
-            }
-            return {
-                path: inline.register,
-                source: join(inline.inlined),
-                buffered: inline.buffered
-            }
-        } () : {
-            path: path,
-            source: null,
-            buffered: {
-                start: accumulate.buffered.length,
-                end: accumulate.buffered.length
-            }
-        }
-        if (before.path[0] != '$') {
-            $$--
-        }
-        const starts = []
-        for (let i = before.buffered.start, I = before.buffered.end; i < I; i++) {
-            starts.push(`$starts[${i}] = $start`)
-        }
-        if (before.source != null) {
-            $step++
-        }
-        const source = map(dispatch, before.path, field.fields)
-        const buffered = accumulate.buffered
-            .splice(0, before.buffered.end)
-            .map(buffered => {
-                return buffered.source
-            })
-        if (before.path[0] == '$') {
-            $$--
-        }
-        return  $(`
-            `, starts.length != 0 ? starts.join('\n') : null, -1, `
+    function switched (path, field) {
+        $step++
+        const cases = []
+        for (const when of field.cases) {
+            cases.push($(`
+                ${when.otherwise ? 'default' : `case ${JSON.stringify(when.value)}`}:
 
-            `, before.source, -1, `
+                    `, join(when.fields.map(field => dispatch(path + field.dotted, field))), `
 
-            `, source, `
+                    break
+            `))
+        }
+        const invocations = accumulations({
+            functions: [ field.select ],
+            accumulate: accumulate
+        })
+        const inlined = inliner(accumulate, path, [ field.select ], [])
+        const select = field.stringify
+            ? `String(${inlined.inlined.shift()})`
+            : inlined.inlined.shift()
+        return $(`
+            `, invocations, -1, `
 
-            `, -1, buffered.length != 0 ? buffered.join('\n') : null, `
+            switch (`, select, `) {
+            `, join(cases), `
+            }
         `)
     }
 
@@ -764,78 +840,6 @@ function generate (packet, { require = null, bff, chk }) {
             `, ladder, `
         `)
     }
-
-    function switched (path, field) {
-        $step++
-        const cases = []
-        for (const when of field.cases) {
-            cases.push($(`
-                ${when.otherwise ? 'default' : `case ${JSON.stringify(when.value)}`}:
-
-                    `, join(when.fields.map(field => dispatch(path + field.dotted, field))), `
-
-                    break
-            `))
-        }
-        const invocations = accumulations({
-            functions: [ field.select ],
-            accumulate: accumulate
-        })
-        const inlined = inliner(accumulate, path, [ field.select ], [])
-        const select = field.stringify
-            ? `String(${inlined.inlined.shift()})`
-            : inlined.inlined.shift()
-        return $(`
-            `, invocations, -1, `
-
-            switch (`, select, `) {
-            `, join(cases), `
-            }
-        `)
-    }
-
-    function accumulator (path, field) {
-        $step++
-        return $(`
-            `, accumulatorer(accumulate, accumulators, parameters, field), `
-
-            `, map(dispatch, path, field.fields), `
-        `)
-    }
-
-    function checkpoint (checkpoint) {
-        if (checkpoint.lengths.length == 0) {
-            return null
-        }
-        const signatories = {
-            packet: packet.name,
-            parameters: '{}',
-            step: $step,
-            i: '$i',
-            stack: '$$',
-            accumulator: '$accumulator',
-            starts: '$starts'
-        }
-        if (Object.keys(parameters).length != 0) {
-            const properties = []
-            for (const parameter in parameters) {
-                properties.push(`${parameter}: ${parameters[parameter]}`)
-            }
-            signatories.parameters = $(`
-                {
-                    `, properties.join(', '), `
-                }
-            `)
-        }
-        const signature = Object.keys(signatories)
-                                .filter(key => variables[key])
-                                .map(key => signatories[key])
-        return $(`
-            if ($end - $start < ${checkpoint.lengths.join(' + ')}) {
-                return serializers.inc.object(`, signature.join(', '), `)($buffer, $start, $end)
-            }
-        `)
-    }
     //
 
     // Dispatch based on field type.
@@ -843,106 +847,108 @@ function generate (packet, { require = null, bff, chk }) {
         switch (field.type) {
         case 'structure':
             return map(dispatch, path, field.fields)
-        case 'checkpoint':
-            return checkpoint(field)
-        case 'accumulator':
-            return accumulator(path, field)
-        case 'switch':
-            return switched(path, field)
         case 'conditional':
             return conditional(path, field)
-        case 'inline':
-            return inline(path, field)
-        case 'calculation':
-            return calculation(path, field)
+        case 'switch':
+            return switched(path, field)
         case 'fixed':
             return fixed(path, field)
-        case 'terminated':
-            return terminated(path, field)
+        case 'calculation':
+            return calculation(path, field)
         case 'terminator':
             return terminator(field)
-        case 'lengthEncoding':
-            return lengthEncoding(path, field)
+        case 'terminated':
+            return terminated(path, field)
         case 'lengthEncoded':
             return lengthEncoded(path, field)
-        case 'buffer':
-        case 'bigint':
-        case 'integer':
-            return integer(path, field)
+        case 'lengthEncoding':
+            return lengthEncoding(path, field)
+        case 'accumulator':
+            return accumulator(path, field)
+        case 'inline':
+            return inline(path, field)
         case 'literal':
             return literal(path, field)
+        case 'integer':
+            return integer(path, field)
         case 'absent':
             return absent(path, field)
+        case 'checkpoint':
+            return checkpoint(field)
         default:
             throw new Error
         }
     }
 
-    const source = dispatch(packet.name, packet)
-    const declarations = {
-        register: '$_',
-        i: '$i = []',
-        I: '$I = []',
-        stack: '$$ = []',
-        sip: '$sip = []',
-        accumulator: '$accumulator = {}',
-        starts: '$starts = []'
-    }
-    const lets = Object.keys(declarations)
-                            .filter(key => variables[key])
-                            .map(key => declarations[key])
-
-    const requires = required(require)
-
-    const signature = []
-
-    if (Object.keys(parameters).length != 0) {
-        const properties = []
-        for (const parameter in parameters) {
-            properties.push(`${parameter} = ${parameters[parameter]}`)
+    function generate () {
+        const source = dispatch(packet.name, packet)
+        const declarations = {
+            register: '$_',
+            i: '$i = []',
+            I: '$I = []',
+            stack: '$$ = []',
+            sip: '$sip = []',
+            accumulator: '$accumulator = {}',
+            starts: '$starts = []'
         }
-        signature.push($(`
-            {
-                `, properties.join(', '), `
-            } = {}
-        `))
-    }
+        const lets = Object.keys(declarations)
+                                .filter(key => variables[key])
+                                .map(key => declarations[key])
 
-    assert.equal($i, -1)
+        const requires = required(require)
 
-    if (bff || chk) {
-        signature.unshift(packet.name)
+        const signature = []
+
+        if (Object.keys(parameters).length != 0) {
+            const properties = []
+            for (const parameter in parameters) {
+                properties.push(`${parameter} = ${parameters[parameter]}`)
+            }
+            signature.push($(`
+                {
+                    `, properties.join(', '), `
+                } = {}
+            `))
+        }
+
+        assert.equal($i, -1)
+
+        if (bff || chk) {
+            signature.unshift(packet.name)
+            return $(`
+                serializers.${bff ? 'bff' : 'chk'}.${packet.name} = function () {
+                    `, requires, -1, `
+
+                    return function (`, signature.join(', '), `) {
+                        return function ($buffer, $start, $end) {
+                            `, lets.length != 0 ? `let ${lets.join(', ')}` : null, -1, `
+
+                            `, source, `
+
+                            return { start: $start, serialize: null }
+                        }
+                    }
+                } ()
+            `)
+        }
+
+        signature.unshift(packet.name, '$buffer', '$start')
         return $(`
-            serializers.${bff ? 'bff' : 'chk'}.${packet.name} = function () {
+            serializers.all.${packet.name} = function () {
                 `, requires, -1, `
 
                 return function (`, signature.join(', '), `) {
-                    return function ($buffer, $start, $end) {
-                        `, lets.length != 0 ? `let ${lets.join(', ')}` : null, -1, `
+                    `, lets.length != 0 ? `let ${lets.join(', ')}` : null, -1, `
 
-                        `, source, `
+                    `, source, `
 
-                        return { start: $start, serialize: null }
-                    }
+                    return { start: $start, serialize: null }
                 }
             } ()
         `)
     }
 
-    signature.unshift(packet.name, '$buffer', '$start')
-    return $(`
-        serializers.all.${packet.name} = function () {
-            `, requires, -1, `
-
-            return function (`, signature.join(', '), `) {
-                `, lets.length != 0 ? `let ${lets.join(', ')}` : null, -1, `
-
-                `, source, `
-
-                return { start: $start, serialize: null }
-            }
-        } ()
-    `)
+    return generate()
 }
 
 module.exports = function (definition, options = {}) {

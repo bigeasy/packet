@@ -49,6 +49,13 @@ function generate (packet, { require = null }) {
     // TODO Fold constants, you're doing `$_ += 1; $_ += 2` which won't fold.
     function dispatch (path, field) {
         switch (field.type) {
+        case 'structure': {
+                if (field.fixed) {
+                    return `$start += ${field.bits >>> 3}`
+                }
+                return map(dispatch, path, field.fields)
+            }
+            break
         case 'conditional': {
                 const invocations = accumulations({
                     functions: field.serialize.conditions.map(condition => condition.test),
@@ -79,91 +86,6 @@ function generate (packet, { require = null }) {
                     `, ladder, `
                 `)
             }
-        case 'literal':
-        case 'integer':
-            return `$start += ${field.bits >>> 3}`
-        case 'fixed': {
-                if (field.calculated) {
-                    const element = field.fields[0]
-                    const inline = inliner(accumulate, path, [ field.length ], [])
-                    if (element.fixed) {
-                        return $(`
-                            $start += `, inline.inlined.shift(), ` * ${element.bits >>> 3}
-                        `)
-                    }
-                    variables.i = true
-                    const i = `$i[${++$i}]`
-                    const source = $(`
-                        for (${i} = 0; ${i} < ${path}.length; ${i}++) {
-                            `, map(dispatch, `${path}[${i}]`, field.fields), `
-                        }
-                    `)
-                    return source
-                } else if (field.fixed) {
-                    return $(`
-                        $start += ${field.bits >>> 3}
-                    `)
-                } else {
-                    variables.i = true
-                    const i = `$i[${++$i}]`
-                    return $(`
-                        for (${i} = 0; ${i} < ${path}.length; ${i}++) {
-                            `, map(dispatch, `${path}[${i}]`, field.fields), `
-                        }
-                    `)
-                    $i--
-                }
-            }
-            break
-        case 'lengthEncoded':
-            if (field.fields[0].fixed) {
-                return field.fields[0].type == 'buffer' && !field.fields[0].concat
-                ? $(`
-                    $start += ${path}.reduce((sum, buffer) => sum + buffer.length, 0) +
-                        ${field.fields[0].bits >>> 3} * ${path}.length
-                `) : $(`
-                    $start += ${field.encoding[0].bits >>> 3} +
-                        ${field.fields[0].bits >>> 3} * ${path}.length
-                `)
-            } else {
-                variables.i = true
-                $i++
-                const i = `$i[${$i}]`
-                const source = $(`
-                    $start += ${field.encoding[0].bits >>> 3}
-
-                    for (${i} = 0; ${i} < ${path}.length; ${i}++) {
-                        `, map(dispatch, `${path}[${i}]`, field.fields), `
-                    }
-                `)
-                $i--
-                return source
-            }
-        case 'terminated': {
-                // TODO Use AST rollup `fixed`.
-                if (field.fields.filter(field => !field.fixed).length == 0) {
-                    const bits = field.fields.reduce((sum, field) => sum + field.bits, 0)
-                    return field.fields[0].type == 'buffer' && !field.fields[0].concat
-                    ? $(`
-                        $start += ${path}.reduce((sum, buffer) => sum + buffer.length, 0) +
-                            ${field.terminator.length}
-                    `) : $(`
-                        $start += ${bits >>> 3} * ${path}.length + ${field.terminator.length}
-                    `)
-                }
-                variables.i = true
-                $i++
-                const i = `$i[${$i}]`
-                const source = $(`
-                    for (${i} = 0; ${i} < ${path}.length; ${i}++) {
-                        `, map(dispatch, `${path}[${i}]`, field.fields), `
-                    }
-                    $start += ${field.terminator.length}
-                `)
-                $i--
-                return source
-            }
-            break
         case 'switch': {
                 if (field.fixed) {
                     return $(`
@@ -197,6 +119,110 @@ function generate (packet, { require = null }) {
                 `)
             }
             break
+        case 'fixed': {
+                if (field.calculated) {
+                    const element = field.fields[0]
+                    const inline = inliner(accumulate, path, [ field.length ], [])
+                    if (element.fixed) {
+                        return $(`
+                            $start += `, inline.inlined.shift(), ` * ${element.bits >>> 3}
+                        `)
+                    }
+                    variables.i = true
+                    const i = `$i[${++$i}]`
+                    const source = $(`
+                        for (${i} = 0; ${i} < ${path}.length; ${i}++) {
+                            `, map(dispatch, `${path}[${i}]`, field.fields), `
+                        }
+                    `)
+                    return source
+                } else if (field.fixed) {
+                    return $(`
+                        $start += ${field.bits >>> 3}
+                    `)
+                } else {
+                    variables.i = true
+                    const i = `$i[${++$i}]`
+                    return $(`
+                        for (${i} = 0; ${i} < ${path}.length; ${i}++) {
+                            `, map(dispatch, `${path}[${i}]`, field.fields), `
+                        }
+                    `)
+                    $i--
+                }
+            }
+            break
+        case 'terminated': {
+                // TODO Use AST rollup `fixed`.
+                if (field.fields.filter(field => !field.fixed).length == 0) {
+                    const bits = field.fields.reduce((sum, field) => sum + field.bits, 0)
+                    return field.fields[0].type == 'buffer' && !field.fields[0].concat
+                    ? $(`
+                        $start += ${path}.reduce((sum, buffer) => sum + buffer.length, 0) +
+                            ${field.terminator.length}
+                    `) : $(`
+                        $start += ${bits >>> 3} * ${path}.length + ${field.terminator.length}
+                    `)
+                }
+                variables.i = true
+                $i++
+                const i = `$i[${$i}]`
+                const source = $(`
+                    for (${i} = 0; ${i} < ${path}.length; ${i}++) {
+                        `, map(dispatch, `${path}[${i}]`, field.fields), `
+                    }
+                    $start += ${field.terminator.length}
+                `)
+                $i--
+                return source
+            }
+            break
+        case 'lengthEncoded':
+            if (field.fields[0].fixed) {
+                return field.fields[0].type == 'buffer' && !field.fields[0].concat
+                ? $(`
+                    $start += ${path}.reduce((sum, buffer) => sum + buffer.length, 0) +
+                        ${field.fields[0].bits >>> 3} * ${path}.length
+                `) : $(`
+                    $start += ${field.encoding[0].bits >>> 3} +
+                        ${field.fields[0].bits >>> 3} * ${path}.length
+                `)
+            } else {
+                variables.i = true
+                $i++
+                const i = `$i[${$i}]`
+                const source = $(`
+                    $start += ${field.encoding[0].bits >>> 3}
+
+                    for (${i} = 0; ${i} < ${path}.length; ${i}++) {
+                        `, map(dispatch, `${path}[${i}]`, field.fields), `
+                    }
+                `)
+                $i--
+                return source
+            }
+        case 'accumulator': {
+                variables.accumulator = true
+                const _accumulators = field.accumulators
+                    .filter(accumulator => referenced[accumulator.name])
+                    .map(accumulator => accumulatorer(accumulate, accumulators, parameters, accumulator))
+                // TODO Really want to get rid of this step if the final
+                // calcualtions are not referenced, if the argument is not an
+                // external argument and if it is not referenced again in the
+                // parse or serialize or sizeof.
+                const declarations = _accumulators.length != 0
+                                   ? _accumulators.join('\n')
+                                   : null
+                const source = field.fixed
+                             ? `$start += ${field.bits >>> 3}`
+                             : map(dispatch, path, field.fields)
+                return  $(`
+                    `, declarations, -1, `
+
+                    `, source, `
+                `)
+            }
+            break
         case 'inline': {
                 const inlines = field.before.filter(inline => {
                     return inline.properties.filter(property => {
@@ -224,35 +250,9 @@ function generate (packet, { require = null }) {
                 `)
             }
             break
-        case 'accumulator': {
-                variables.accumulator = true
-                const _accumulators = field.accumulators
-                    .filter(accumulator => referenced[accumulator.name])
-                    .map(accumulator => accumulatorer(accumulate, accumulators, parameters, accumulator))
-                // TODO Really want to get rid of this step if the final
-                // calcualtions are not referenced, if the argument is not an
-                // external argument and if it is not referenced again in the
-                // parse or serialize or sizeof.
-                const declarations = _accumulators.length != 0
-                                   ? _accumulators.join('\n')
-                                   : null
-                const source = field.fixed
-                             ? `$start += ${field.bits >>> 3}`
-                             : map(dispatch, path, field.fields)
-                return  $(`
-                    `, declarations, -1, `
-
-                    `, source, `
-                `)
-            }
-            break
-        case 'structure': {
-                if (field.fixed) {
-                    return `$start += ${field.bits >>> 3}`
-                }
-                return map(dispatch, path, field.fields)
-            }
-            break
+        case 'literal':
+        case 'integer':
+            return `$start += ${field.bits >>> 3}`
         }
     }
 
@@ -260,35 +260,7 @@ function generate (packet, { require = null }) {
 
     function dependencies (field) {
         switch (field.type) {
-        case 'accumulator': {
-                field.accumulators.forEach(accumulator => {
-                    references.accumulators.push(accumulator.name)
-                })
-                field.fields.map(dependencies)
-            }
-            break
         case 'structure': {
-                field.fields.map(dependencies)
-            }
-            break
-        case 'fixed': {
-                field.fields.map(dependencies)
-            }
-            break
-        case 'inline': {
-                field.before.forEach(inline => {
-                    if (
-                        inline.properties.filter(property => {
-                            return /^(?:\$start|\$end)$/.test(property)
-                        }).length != 0
-                    ) {
-                        references.accumulators.forEach(accumulator => {
-                            if (inline.properties.includes(accumulator)) {
-                                references.buffered[accumulator] = true
-                            }
-                        })
-                    }
-                })
                 field.fields.map(dependencies)
             }
             break
@@ -313,10 +285,6 @@ function generate (packet, { require = null }) {
                 })
             }
             break
-        case 'literal': {
-                field.fields.map(dependencies)
-            }
-            break
         case 'switch': {
                 if (
                     field.select.properties.filter(property => {
@@ -335,14 +303,49 @@ function generate (packet, { require = null }) {
                 })
             }
             break
+        case 'fixed': {
+                field.fields.map(dependencies)
+            }
+            break
+        case 'terminated': {
+                field.fields.map(dependencies)
+            }
+            break
         case 'lengthEncoded': {
                 field.fields.map(dependencies)
             }
             break
-        case 'terminated':
+        case 'accumulator': {
+                field.accumulators.forEach(accumulator => {
+                    references.accumulators.push(accumulator.name)
+                })
+                field.fields.map(dependencies)
+            }
+            break
+        case 'inline': {
+                field.before.forEach(inline => {
+                    if (
+                        inline.properties.filter(property => {
+                            return /^(?:\$start|\$end)$/.test(property)
+                        }).length != 0
+                    ) {
+                        references.accumulators.forEach(accumulator => {
+                            if (inline.properties.includes(accumulator)) {
+                                references.buffered[accumulator] = true
+                            }
+                        })
+                    }
+                })
+                field.fields.map(dependencies)
+            }
+            break
+        case 'literal': {
+                field.fields.map(dependencies)
+            }
+            break
+        case 'buffer':
         case 'integer':
         case 'absent':
-        case 'buffer':
             break
         default: {
                 throw new Error(field.type)

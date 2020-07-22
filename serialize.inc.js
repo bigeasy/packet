@@ -156,6 +156,75 @@ function generate (packet, { require = null }) {
         `)
     }
 
+    function inline (path, field) {
+        const before = field.before.length != 0 ? function () {
+            const register = `$$[${++$$}]`
+            const inline = inliner(accumulate, path, field.before, [
+                path, register
+            ], register)
+            if (
+                inline.inlined.length == 0 &&
+                inline.buffered.start == inline.buffered.end
+            ) {
+                return {
+                    path: path,
+                    source: null,
+                    buffered: inline.buffered
+                }
+            }
+            const starts = []
+            for (let i = inline.buffered.start, I = inline.buffered.end; i < I; i++) {
+                starts.push(`$starts[${i}] = $start`)
+            }
+            return {
+                path: inline.register,
+                source: $(`
+                    case ${$step++}:
+
+                        `, join(inline.inlined), `
+                        `, starts.length != 0 ? starts.join('\n') : null, `
+                `),
+                buffered: inline.buffered
+            }
+        } () : {
+            path: path,
+            source: null,
+            buffered: {
+                start: accumulate.buffered.length,
+                end: accumulate.buffered.length
+            }
+        }
+        if (before.path[0] != '$') {
+            $$--
+        }
+        const source = map(dispatch, before.path, field.fields)
+        const buffered = accumulate.buffered
+            .splice(0, before.buffered.end)
+            .map(buffered => {
+                return buffered.source
+            })
+        if (before.path[0] == '$') {
+            $$--
+        }
+        return $(`
+            `, before.source, -1, `
+
+            `, source, `
+
+                `, -1, buffered.length != 0 ? buffered.join('\n') : null, `
+        `)
+    }
+
+    function accumulator (path, field) {
+        return $(`
+            case ${$step++}:
+
+                `, accumulatorer(accumulate, accumulators, parameters, field), `
+
+            `, map(dispatch, path, field.fields), `
+        `)
+    }
+
     function lengthEncoded (path, field) {
         const element = field.fields[0]
         surround = true
@@ -597,62 +666,44 @@ function generate (packet, { require = null }) {
         return source
     }
 
-    function inline (path, field) {
-        const before = field.before.length != 0 ? function () {
-            const register = `$$[${++$$}]`
-            const inline = inliner(accumulate, path, field.before, [
-                path, register
-            ], register)
-            if (
-                inline.inlined.length == 0 &&
-                inline.buffered.start == inline.buffered.end
-            ) {
-                return {
-                    path: path,
-                    source: null,
-                    buffered: inline.buffered
-                }
-            }
-            const starts = []
-            for (let i = inline.buffered.start, I = inline.buffered.end; i < I; i++) {
-                starts.push(`$starts[${i}] = $start`)
-            }
-            return {
-                path: inline.register,
-                source: $(`
-                    case ${$step++}:
+    function switched (path, field) {
+        surround = true
+        const start = $step++
+        const cases = []
+        const steps = []
+        for (const when of field.cases) {
+            cases.push($(`
+                ${when.otherwise ? 'default' : `case ${JSON.stringify(when.value)}`}:
 
-                        `, join(inline.inlined), `
-                        `, starts.length != 0 ? starts.join('\n') : null, `
-                `),
-                buffered: inline.buffered
-            }
-        } () : {
-            path: path,
-            source: null,
-            buffered: {
-                start: accumulate.buffered.length,
-                end: accumulate.buffered.length
-            }
+                    $step = ${$step}
+                    continue
+            `))
+            steps.push(map(dispatch, path, when.fields))
         }
-        if (before.path[0] != '$') {
-            $$--
-        }
-        const source = map(dispatch, before.path, field.fields)
-        const buffered = accumulate.buffered
-            .splice(0, before.buffered.end)
-            .map(buffered => {
-                return buffered.source
-            })
-        if (before.path[0] == '$') {
-            $$--
-        }
+        const inlined = inliner(accumulate, path, [ field.select ], [])
+        const invocations = accumulations({
+            functions: [ field.select ],
+            accumulate: accumulate
+        })
+        const select = field.stringify
+            ? `String(${inlined.inlined.shift()})`
+            : inlined.inlined.shift()
+        // TODO Slicing here is because of who writes the next step, which seems
+        // to be somewhat confused.
         return $(`
-            `, before.source, -1, `
+            case ${start}:
 
-            `, source, `
+                `, invocations, -1, `
 
-                `, -1, buffered.length != 0 ? buffered.join('\n') : null, `
+                switch (`, select, `) {
+                `, join(cases), `
+                }
+
+            `, join([].concat(steps.slice(steps, steps.length - 1).map(step => $(`
+                `, step, `
+                    $step = ${$step}
+                    continue
+            `)), steps.slice(steps.length -1))), `
         `)
     }
 
@@ -714,79 +765,26 @@ function generate (packet, { require = null }) {
         return source
     }
 
-    function switched (path, field) {
-        surround = true
-        const start = $step++
-        const cases = []
-        const steps = []
-        for (const when of field.cases) {
-            cases.push($(`
-                ${when.otherwise ? 'default' : `case ${JSON.stringify(when.value)}`}:
-
-                    $step = ${$step}
-                    continue
-            `))
-            steps.push(map(dispatch, path, when.fields))
-        }
-        const inlined = inliner(accumulate, path, [ field.select ], [])
-        const invocations = accumulations({
-            functions: [ field.select ],
-            accumulate: accumulate
-        })
-        const select = field.stringify
-            ? `String(${inlined.inlined.shift()})`
-            : inlined.inlined.shift()
-        // TODO Slicing here is because of who writes the next step, which seems
-        // to be somewhat confused.
-        return $(`
-            case ${start}:
-
-                `, invocations, -1, `
-
-                switch (`, select, `) {
-                `, join(cases), `
-                }
-
-            `, join([].concat(steps.slice(steps, steps.length - 1).map(step => $(`
-                `, step, `
-                    $step = ${$step}
-                    continue
-            `)), steps.slice(steps.length -1))), `
-        `)
-    }
-
-    function accumulator (path, field) {
-        return $(`
-            case ${$step++}:
-
-                `, accumulatorer(accumulate, accumulators, parameters, field), `
-
-            `, map(dispatch, path, field.fields), `
-        `)
-    }
-
     function dispatch (path, field) {
         switch (field.type) {
         case 'structure':
             return map(dispatch, path, field.fields)
-        case 'accumulator':
-            return accumulator(path, field)
-        case 'switch':
-            return switched(path, field)
         case 'conditional':
             return conditional(path, field)
-        case 'inline':
-            return inline(path, field)
+        case 'switch':
+            return switched(path, field)
         case 'fixed':
             return fixed(path, field)
         case 'terminated':
             return terminated(path, field)
         case 'lengthEncoded':
             return lengthEncoded(path, field)
+        case 'accumulator':
+            return accumulator(path, field)
+        case 'inline':
+            return inline(path, field)
         case 'literal':
             return literal(path, field)
-        case 'buffer':
-        case 'bigint':
         case 'integer':
             // TODO This will not include the final step, we keep it off for the
             // looping constructs.
@@ -796,100 +794,104 @@ function generate (packet, { require = null }) {
         }
     }
 
-    let source = $(`
-        switch ($step) {
-        `, dispatch(packet.name, packet), `
+    function generate () {
+        let source = $(`
+            switch ($step) {
+            `, dispatch(packet.name, packet), `
 
-            $step = ${$step}
+                $step = ${$step}
 
-        case ${$step}:
-
-            break
-
-        }
-    `)
-
-    if (surround) {
-        source = $(`
-            for (;;) {
-                `, source, `
+            case ${$step}:
 
                 break
+
             }
         `)
-    }
 
-    const signatories = {
-        packet: `${packet.name}`,
-        parameters: null,
-        step: '$step = 0',
-        i: '$i = []',
-        I: '$I = []',
-        stack: '$$ = []',
-        accumulator: '$accumulator = {}',
-        starts: '$starts = []'
-    }
-
-    if (Object.keys(parameters).length != 0) {
-        const properties = []
-        for (const parameter in parameters) {
-            properties.push(`${parameter} = ${parameters[parameter]}`)
-        }
-        variables.parameters = true
-        signatories.parameters = $(`
-            {
-                `, properties.join(', '), `
-            } = {}
-        `)
-    }
-
-    const signature = Object.keys(signatories)
-                            .filter(key => variables[key])
-                            .map(key => signatories[key])
-
-    const requires = required(require)
-
-    const restart = variables.starts ? $(`
-        if ($restart) {
-            for (let $j = 0; $j < $starts.length; $j++) {
-                $starts[$j] = $start
-            }
-        }
-        $restart = true
-    `) : null
-
-    const declarations = {
-        register: '$_',
-        bite: '$bite',
-        starts: '$restart = false',
-        length: '$length = 0'
-    }
-
-    variables.register = true
-    variables.bite = true
-
-    const lets = Object.keys(declarations)
-                       .filter(key => variables[key])
-                       .map(key => declarations[key])
-                       .concat(Object.keys(locals).map(name => `$${name} = ${locals[name]}`))
-
-    return $(`
-        serializers.inc.${packet.name} = function () {
-            `, requires, -1, `
-
-            return function (`, signature.join(', '), `) {
-                let ${lets.join(', ')}
-
-                return function $serialize ($buffer, $start, $end) {
-                    `, restart, -1, `
-
+        if (surround) {
+            source = $(`
+                for (;;) {
                     `, source, `
 
-                    return { start: $start, serialize: null }
+                    break
+                }
+            `)
+        }
+
+        const signatories = {
+            packet: `${packet.name}`,
+            parameters: null,
+            step: '$step = 0',
+            i: '$i = []',
+            I: '$I = []',
+            stack: '$$ = []',
+            accumulator: '$accumulator = {}',
+            starts: '$starts = []'
+        }
+
+        if (Object.keys(parameters).length != 0) {
+            const properties = []
+            for (const parameter in parameters) {
+                properties.push(`${parameter} = ${parameters[parameter]}`)
+            }
+            variables.parameters = true
+            signatories.parameters = $(`
+                {
+                    `, properties.join(', '), `
+                } = {}
+            `)
+        }
+
+        const signature = Object.keys(signatories)
+                                .filter(key => variables[key])
+                                .map(key => signatories[key])
+
+        const requires = required(require)
+
+        const restart = variables.starts ? $(`
+            if ($restart) {
+                for (let $j = 0; $j < $starts.length; $j++) {
+                    $starts[$j] = $start
                 }
             }
-        } ()
-    `)
+            $restart = true
+        `) : null
+
+        const declarations = {
+            register: '$_',
+            bite: '$bite',
+            starts: '$restart = false',
+            length: '$length = 0'
+        }
+
+        variables.register = true
+        variables.bite = true
+
+        const lets = Object.keys(declarations)
+                           .filter(key => variables[key])
+                           .map(key => declarations[key])
+                           .concat(Object.keys(locals).map(name => `$${name} = ${locals[name]}`))
+
+        return $(`
+            serializers.inc.${packet.name} = function () {
+                `, requires, -1, `
+
+                return function (`, signature.join(', '), `) {
+                    let ${lets.join(', ')}
+
+                    return function $serialize ($buffer, $start, $end) {
+                        `, restart, -1, `
+
+                        `, source, `
+
+                        return { start: $start, serialize: null }
+                    }
+                }
+            } ()
+        `)
+    }
+
+    return generate()
 }
 
 module.exports = function (definition, options) {

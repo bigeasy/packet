@@ -40,9 +40,29 @@ function expand (fields) {
     const expanded = []
     for (const field of fields) {
         switch (field.type) {
-        case 'lengthEncoded':
+        case 'structure':
+        case 'inline':
+        case 'accumulator':
             field.fields = expand(field.fields)
-            expanded.push({ type: 'lengthEncoding', body: field, vivify: null })
+            expanded.push(field)
+            break
+        case 'conditional':
+            for (const condition of field.parse.conditions) {
+                condition.fields = expand(condition.fields)
+            }
+            expanded.push(field)
+            break
+        case 'switch':
+            for (const when of field.cases) {
+                when.fields = expand(when.fields)
+            }
+            expanded.push(field)
+            break
+        case 'fixed':
+            if (field.calculated) {
+                expanded.push({ type: 'calculation', field, vivify: null })
+            }
+            field.fields = expand(field.fields)
             expanded.push(field)
             break
         case 'terminated':
@@ -57,26 +77,9 @@ function expand (fields) {
             }]
             expanded.push(field)
             break
-        case 'fixed':
-            if (field.calculated) {
-                expanded.push({ type: 'calculation', field, vivify: null })
-            }
-        case 'inline':
-        case 'accumulator':
-        case 'structure':
+        case 'lengthEncoded':
             field.fields = expand(field.fields)
-            expanded.push(field)
-            break
-        case 'conditional':
-            for (const condition of field.parse.conditions) {
-                condition.fields = expand(condition.fields)
-            }
-            expanded.push(field)
-            break
-        case 'switch':
-            for (const when of field.cases) {
-                when.fields = expand(when.fields)
-            }
+            expanded.push({ type: 'lengthEncoding', body: field, vivify: null })
             expanded.push(field)
             break
         default:
@@ -98,6 +101,22 @@ function checkpoints (path, fields, $i = 0, $I = 0) {
     const checked = [ checkpoint ]
     for (const field of fields) {
         switch (field.type) {
+        case 'structure':
+        case 'accumulator':
+        case 'inline':
+        case 'inline':
+            checked.push(field)
+            if (field.fixed) {
+                checkpoint.lengths[0] += field.bits / 8
+            } else {
+                // TODO Could start from the nested checkpoint since we are are
+                // not actually looping for the structure.
+                field.fields = checkpoints(path + field.dotted, field.fields, $i, $I)
+                checked.push(checkpoint = {
+                    type: 'checkpoint', lengths: [ 0 ], vivify: null, rewind: 0
+                })
+            }
+            break
         case 'switch':
             checked.push(field)
             for (const when of field.cases) {
@@ -120,36 +139,6 @@ function checkpoints (path, fields, $i = 0, $I = 0) {
                 type: 'checkpoint', lengths: [ 0 ], vivify: null, rewind: 0
             })
             break
-        case 'lengthEncoding':
-            checked.push(field)
-            checkpoint.lengths[0] += field.body.encoding[0].bits / 8
-            checked.push(checkpoint = {
-                type: 'checkpoint', lengths: [ 0 ], vivify: null, rewind: 0
-            })
-            break
-        case 'lengthEncoded':
-            checked.push(field)
-            if (field.fields[0].fixed) {
-                // Tricky, stick the checkpoint for a fixed array at the end
-                // of the encoding fields. Let any subsequent fields use the
-                // checkpoint.
-                checkpoint.lengths.push(`${field.fields[0].bits >>> 3} * $I[${$I}]`)
-            } else {
-                field.fields = checkpoints(`${path}${field.dotted}[$i[${$i}]]`, field.fields, $i + 1, $I + 1)
-                checked.push(checkpoint = {
-                    type: 'checkpoint', lengths: [ 0 ], vivify: null, rewind: 0
-                })
-            }
-            break
-        case 'calculation':
-            if (field.field.fields[0].fixed) {
-                checked.push(field)
-                checked.push(checkpoint = { type: 'checkpoint', lengths: [ 0 ], vivify: null, rewind: 0 })
-                checkpoint.lengths.push(`$I[${$I}] * ${field.field.fields[0].bits >>> 3}`)
-            } else {
-                checked.push(field)
-            }
-            break
         case 'fixed':
             if (field.fixed) {
                 checked.push(field)
@@ -166,15 +155,23 @@ function checkpoints (path, fields, $i = 0, $I = 0) {
                 })
             }
             break
+        case 'calculation':
+            if (field.field.fields[0].fixed) {
+                checked.push(field)
+                checked.push(checkpoint = { type: 'checkpoint', lengths: [ 0 ], vivify: null, rewind: 0 })
+                checkpoint.lengths.push(`$I[${$I}] * ${field.field.fields[0].bits >>> 3}`)
+            } else {
+                checked.push(field)
+            }
+            break
         case 'terminator':
             checked.push(field)
             checkpoint.lengths[0] += field.body.terminator.length
             break
         // TODO Checkpoint invocation on fields in two places?
         case 'repeated':
-            // TODO If the terminator is greater than or equal to the size
-            // of the repeated part, we do not have to perform the
-            // checkpoint.
+            // TODO If the terminator is greater than or equal to the size of
+            // the repeated part, we do not have to perform the checkpoint.
             checked.push(field)
             field.fields = checkpoints(path, field.fields, $i, $I)
             break
@@ -188,20 +185,26 @@ function checkpoints (path, fields, $i = 0, $I = 0) {
                 type: 'checkpoint', lengths: [ 0 ], vivify: null, rewind: 0
             })
             break
-        case 'inline':
-        case 'accumulator':
-        case 'structure':
+        case 'lengthEncoded':
             checked.push(field)
-            if (field.fixed) {
-                checkpoint.lengths[0] += field.bits / 8
+            if (field.fields[0].fixed) {
+                // Tricky, stick the checkpoint for a fixed array at the end of
+                // the encoding fields. Let any subsequent fields use the
+                // checkpoint.
+                checkpoint.lengths.push(`${field.fields[0].bits >>> 3} * $I[${$I}]`)
             } else {
-                // TODO Could start from the nested checkpoint since we are
-                // are not actually looping for the structure.
-                field.fields = checkpoints(path + field.dotted, field.fields, $i, $I)
+                field.fields = checkpoints(`${path}${field.dotted}[$i[${$i}]]`, field.fields, $i + 1, $I + 1)
                 checked.push(checkpoint = {
                     type: 'checkpoint', lengths: [ 0 ], vivify: null, rewind: 0
                 })
             }
+            break
+        case 'lengthEncoding':
+            checked.push(field)
+            checkpoint.lengths[0] += field.body.encoding[0].bits / 8
+            checked.push(checkpoint = {
+                type: 'checkpoint', lengths: [ 0 ], vivify: null, rewind: 0
+            })
             break
         default:
             checked.push(field)
@@ -209,8 +212,8 @@ function checkpoints (path, fields, $i = 0, $I = 0) {
             break
         }
     }
-    // Remove any list of lengths that begins with a zero constant. There
-    // may still be calculated lengths following.
+    // Remove any list of lengths that begins with a zero constant. There may
+    // still be calculated lengths following.
     checked.forEach(field => {
         if (field.type == 'checkpoint' && field.lengths[0] == 0) {
             field.lengths.shift()
@@ -235,9 +238,9 @@ function inquisition (fields, $I = 0) {
     const checked = []
     for (const field of fields) {
         switch (field.type) {
+        case 'structure':
         case 'accumulator':
         case 'inline':
-        case 'structure':
             field.fields = inquisition(field.fields)
             checked.push(field)
             break
@@ -255,70 +258,6 @@ function inquisition (fields, $I = 0) {
                 when.fields = inquisition(when.fields)
             }
             checked.push(field)
-            break
-        case 'terminated':
-            if (field.fields[field.fields.length - 1].type != 'buffer') {
-                field.fields = inquisition(field.fields)
-            }
-            checked.push(field)
-            break
-        case 'terminator':
-            checked.push({
-                type: 'checkpoint',
-                lengths: [ 0 ],
-                vivify: null,
-                rewind: 0
-            })
-            if (field.body.fields[field.body.fields.length - 1].type != 'buffer') {
-                checked[checked.length - 1].lengths[0] += field.body.terminator.length
-            }
-            checked.push(field)
-            break
-        case 'lengthEncoding':
-            checked.push({
-                type: 'checkpoint',
-                lengths: [ field.body.encoding[0].bits / 8 ],
-                vivify: null,
-                rewind: 0
-            })
-            checked.push(field)
-            break
-        case 'lengthEncoded': {
-                const element = field.fields[field.fields.length - 1]
-                if (element.fixed) {
-                    const bytes = element.bits / 8
-                    checked.push({
-                        type: 'checkpoint',
-                        lengths: [ `${bytes} * $I[${$I}]` ],
-                        vivify: null,
-                        rewind: 0
-                    })
-                } else {
-                    field.fields = inquisition(field.fields, $I + 1)
-                }
-                checked.push(field)
-            }
-            break
-        case 'repeated':
-            field.fields = inquisition(field.fields)
-            checked.push(field)
-            break
-        case 'buffer':
-        case 'absent':
-            checked.push(field)
-            break
-        case 'calculation':
-            if (field.field.fields[0].fixed) {
-                checked.push(field)
-                checked.push({
-                    type: 'checkpoint',
-                    lengths: [ `$I[${$I}] * ${field.field.fields[0].bits >>> 3}` ],
-                    vivify: null,
-                    rewind: 0
-                })
-            } else {
-                checked.push(field)
-            }
             break
         case 'fixed':
             if (field.fixed) {
@@ -338,14 +277,78 @@ function inquisition (fields, $I = 0) {
                 checked.push(field)
             }
             break
-        case 'integer':
+        case 'calculation':
+            if (field.field.fields[0].fixed) {
+                checked.push(field)
+                checked.push({
+                    type: 'checkpoint',
+                    lengths: [ `$I[${$I}] * ${field.field.fields[0].bits >>> 3}` ],
+                    vivify: null,
+                    rewind: 0
+                })
+            } else {
+                checked.push(field)
+            }
+            break
+        case 'terminator':
+            checked.push({
+                type: 'checkpoint',
+                lengths: [ 0 ],
+                vivify: null,
+                rewind: 0
+            })
+            if (field.body.fields[field.body.fields.length - 1].type != 'buffer') {
+                checked[checked.length - 1].lengths[0] += field.body.terminator.length
+            }
+            checked.push(field)
+            break
+        case 'repeated':
+            field.fields = inquisition(field.fields)
+            checked.push(field)
+            break
+        case 'terminated':
+            if (field.fields[field.fields.length - 1].type != 'buffer') {
+                field.fields = inquisition(field.fields)
+            }
+            checked.push(field)
+            break
+        case 'lengthEncoded': {
+                const element = field.fields[field.fields.length - 1]
+                if (element.fixed) {
+                    const bytes = element.bits / 8
+                    checked.push({
+                        type: 'checkpoint',
+                        lengths: [ `${bytes} * $I[${$I}]` ],
+                        vivify: null,
+                        rewind: 0
+                    })
+                } else {
+                    field.fields = inquisition(field.fields, $I + 1)
+                }
+                checked.push(field)
+            }
+            break
+        case 'lengthEncoding':
+            checked.push({
+                type: 'checkpoint',
+                lengths: [ field.body.encoding[0].bits / 8 ],
+                vivify: null,
+                rewind: 0
+            })
+            checked.push(field)
+            break
         case 'literal':
+        case 'integer':
             checked.push({
                 type: 'checkpoint',
                 lengths: [ field.bits / 8 ],
                 vivify: null,
                 rewind: 0
             })
+            checked.push(field)
+            break
+        case 'buffer':
+        case 'absent':
             checked.push(field)
             break
         default:
@@ -367,6 +370,51 @@ function generate (packet, { require, bff, chk }) {
         variables: variables,
         packet: packet.name,
         direction: 'parse'
+    }
+
+    function signature () {
+        const signatories = {
+            packet: packet.name,
+            parameters: '{}',
+            step: $step,
+            i: '$i',
+            I: '$I',
+            sip: '$sip',
+            accumulator: '$accumulator',
+            starts: '$starts'
+        }
+        if (Object.keys(parameters).length != 0) {
+            const properties = []
+            for (const parameter in parameters) {
+                properties.push(`${parameter}: ${parameters[parameter]}`)
+            }
+            signatories.parameters = $(`
+                {
+                    `, properties.join(', '), `
+                }
+            `)
+        }
+        return Object.keys(signatories)
+                     .filter(key => variables[key])
+                     .map(key => signatories[key])
+    }
+
+    function checkpoint (checkpoint, depth) {
+        if (checkpoint.lengths.length == 0) {
+            return null
+        }
+        if (checkpoint.rewind != 0) {
+            return $(`
+                if ($end - ($start - ${checkpoint.rewind}) < ${checkpoint.lengths.join(' + ')}) {
+                    return parsers.inc.${packet.name}(`, signature().join(', '), `)($buffer, $start - ${checkpoint.rewind}, $end)
+                }
+            `)
+        }
+        return $(`
+            if ($end - $start < ${checkpoint.lengths.join(' + ')}) {
+                return parsers.inc.${packet.name}(`, signature().join(', '), `)($buffer, $start, $end)
+            }
+        `)
     }
 
     function absent (path, field) {
@@ -429,12 +477,6 @@ function generate (packet, { require, bff, chk }) {
         return parse
     }
 
-    function rewind (field) {
-        return $(`
-            $start -= ${field.bytes}
-        `)
-    }
-
     function literal (path, field) {
         function write (literal) {
             if (literal.value.length != 0) {
@@ -453,6 +495,62 @@ function generate (packet, { require, bff, chk }) {
             `, map(dispatch, path, field.fields), `
 
             `, -1, write(field.after), `
+        `)
+    }
+
+    function inline (path, field) {
+        const after = field.after.length != 0 ? function () {
+            const inline = inliner(accumulate, path, field.after, [ path ], path)
+            if (inline.buffered.start != inline.buffered.end) {
+                $step++
+                variables.starts = true
+            }
+            if (inline.inlined.length == 0) {
+                return {
+                    source: null,
+                    buffered: inline.buffered
+                }
+            }
+            return {
+                source: join(inline.inlined),
+                buffered: inline.buffered
+            }
+        } () : {
+            path: path,
+            source: null,
+            buffered: {
+                start: accumulate.buffered.length,
+                end: accumulate.buffered.length
+            }
+        }
+        const starts = []
+        for (let i = after.buffered.start, I = after.buffered.end; i < I; i++) {
+            starts.push(`$starts[${i}] = $start`)
+        }
+        const source = map(dispatch, path, field.fields)
+        const buffered = accumulate.buffered
+            .splice(0, after.buffered.end)
+            .map(buffered => {
+                return buffered.source
+            })
+        return $(`
+            `, starts.length != 0 ? starts.join('\n') : null, -1, `
+
+            `, source, `
+
+            `, -1, after.source, `
+
+            `, -1, buffered.length != 0 ? buffered.join('\n') : null, `
+        `)
+    }
+
+    function accumulator (path, field) {
+        $step++
+        variables.accumulator = true
+        return $(`
+            `, accumulatorer(accumulate, accumulators, parameters, field), `
+
+            `, map(dispatch, path, field.fields), `
         `)
     }
 
@@ -514,56 +612,6 @@ function generate (packet, { require, bff, chk }) {
         return source
     }
 
-    function terminator (field) {
-        $step += field.body.terminator.length + 1
-        // TODO We really do not want to go beyond the end of the buffer in a
-        // whole parser and loop forever, so we still need the checkpoints. The
-        // same goes for length encoded. We don't want a malformed packet to
-        // cause an enormous loop. Checkpoints for loops only?
-        //
-        // TODO The above is for documentation. You can have the essence of a
-        // serializer, but you should always use a best-foot-forward parser to
-        // guard against evil coming in from the outside.
-        //
-        // TODO When the type is integer and the same size as the terminator
-        // lets create an integer sentry.
-        //
-        // TODO No, it's simple really. We don't need checked whole serializers,
-        // but all parsers should be checked somehow. You don't have to worry
-        // about running forever, because you can limit the file size, buffer
-        // size. Perhaps we have upper limits on arrays, sure. Add that to the
-        // langauge somehow, but we shouldn't have unchecked parsers. We use the
-        // `bff` logic and return an error if it doesn't fit.
-        const terminator = field.body.terminator.map((bite, index) => {
-            if (index == 0) {
-                return `$buffer[$start] == 0x${bite.toString(16)}`
-            } else {
-                return `$buffer[$start + ${index}] == 0x${bite.toString(16)}`
-            }
-        })
-
-        return $(`
-            if (
-                `, terminator.join(' &&\n'), `
-            ) {
-                $start += ${terminator.length}
-                break
-            }
-        `)
-    }
-
-    function repeated (path, field) {
-        const i = `$i[${$i}]`
-        const looped = map(dispatch, `${path}[${i}]`, field.fields)
-        return $(`
-            `, vivify.assignment(path + `[${i}]`, field), -1, `
-
-            `, looped, `
-
-            ${i}++
-        `)
-    }
-
     function terminated (path, field) {
         const element = field.fields.slice().pop().fields.slice().pop()
         if (element.type == 'buffer') {
@@ -605,6 +653,56 @@ function generate (packet, { require, bff, chk }) {
         `)
         $i--
         return source
+    }
+
+    function repeated (path, field) {
+        const i = `$i[${$i}]`
+        const looped = map(dispatch, `${path}[${i}]`, field.fields)
+        return $(`
+            `, vivify.assignment(path + `[${i}]`, field), -1, `
+
+            `, looped, `
+
+            ${i}++
+        `)
+    }
+
+    function terminator (field) {
+        $step += field.body.terminator.length + 1
+        // TODO We really do not want to go beyond the end of the buffer in a
+        // whole parser and loop forever, so we still need the checkpoints. The
+        // same goes for length encoded. We don't want a malformed packet to
+        // cause an enormous loop. Checkpoints for loops only?
+        //
+        // TODO The above is for documentation. You can have the essence of a
+        // serializer, but you should always use a best-foot-forward parser to
+        // guard against evil coming in from the outside.
+        //
+        // TODO When the type is integer and the same size as the terminator
+        // lets create an integer sentry.
+        //
+        // TODO No, it's simple really. We don't need checked whole serializers,
+        // but all parsers should be checked somehow. You don't have to worry
+        // about running forever, because you can limit the file size, buffer
+        // size. Perhaps we have upper limits on arrays, sure. Add that to the
+        // langauge somehow, but we shouldn't have unchecked parsers. We use the
+        // `bff` logic and return an error if it doesn't fit.
+        const terminator = field.body.terminator.map((bite, index) => {
+            if (index == 0) {
+                return `$buffer[$start] == 0x${bite.toString(16)}`
+            } else {
+                return `$buffer[$start + ${index}] == 0x${bite.toString(16)}`
+            }
+        })
+
+        return $(`
+            if (
+                `, terminator.join(' &&\n'), `
+            ) {
+                $start += ${terminator.length}
+                break
+            }
+        `)
     }
 
     function calculation (path, field) {
@@ -733,49 +831,40 @@ function generate (packet, { require, bff, chk }) {
         return source
     }
 
-    function inline (path, field) {
-        const after = field.after.length != 0 ? function () {
-            const inline = inliner(accumulate, path, field.after, [ path ], path)
-            if (inline.buffered.start != inline.buffered.end) {
-                $step++
-                variables.starts = true
-            }
-            if (inline.inlined.length == 0) {
-                return {
-                    source: null,
-                    buffered: inline.buffered
-                }
-            }
-            return {
-                source: join(inline.inlined),
-                buffered: inline.buffered
-            }
-        } () : {
-            path: path,
-            source: null,
-            buffered: {
-                start: accumulate.buffered.length,
-                end: accumulate.buffered.length
-            }
-        }
-        const starts = []
-        for (let i = after.buffered.start, I = after.buffered.end; i < I; i++) {
-            starts.push(`$starts[${i}] = $start`)
-        }
-        const source = map(dispatch, path, field.fields)
-        const buffered = accumulate.buffered
-            .splice(0, after.buffered.end)
-            .map(buffered => {
-                return buffered.source
-            })
+    function rewind (field) {
         return $(`
-            `, starts.length != 0 ? starts.join('\n') : null, -1, `
+            $start -= ${field.bytes}
+        `)
+    }
 
-            `, source, `
+    function switched (path, field) {
+        $step++
+        const cases = []
+        for (const when of field.cases) {
+            const vivified = vivify.assignment(path, when)
+            cases.push($(`
+                ${when.otherwise ? 'default' : `case ${JSON.stringify(when.value)}`}:
+                    `, vivified, -1, `
 
-            `, -1, after.source, `
+                    `, map(dispatch, path, when.fields), `
 
-            `, -1, buffered.length != 0 ? buffered.join('\n') : null, `
+                    break
+            `))
+        }
+        const inlined = inliner(accumulate, path, [ field.select ], [])
+        const select = field.stringify
+            ? `String(${inlined.inlined.shift()})`
+            : inlined.inlined.shift()
+        const invocations = accumulations({
+            functions: [ field.select ],
+            accumulate: accumulate
+        })
+        return $(`
+            `, invocations, -1, `
+
+            switch (`, select, `) {
+            `, join(cases), `
+            }
         `)
     }
 
@@ -864,134 +953,48 @@ function generate (packet, { require, bff, chk }) {
         `)
     }
 
-    function switched (path, field) {
-        $step++
-        const cases = []
-        for (const when of field.cases) {
-            const vivified = vivify.assignment(path, when)
-            cases.push($(`
-                ${when.otherwise ? 'default' : `case ${JSON.stringify(when.value)}`}:
-                    `, vivified, -1, `
-
-                    `, map(dispatch, path, when.fields), `
-
-                    break
-            `))
-        }
-        const inlined = inliner(accumulate, path, [ field.select ], [])
-        const select = field.stringify
-            ? `String(${inlined.inlined.shift()})`
-            : inlined.inlined.shift()
-        const invocations = accumulations({
-            functions: [ field.select ],
-            accumulate: accumulate
-        })
-        return $(`
-            `, invocations, -1, `
-
-            switch (`, select, `) {
-            `, join(cases), `
-            }
-        `)
-    }
-
-    function accumulator (path, field) {
-        $step++
-        variables.accumulator = true
-        return $(`
-            `, accumulatorer(accumulate, accumulators, parameters, field), `
-
-            `, map(dispatch, path, field.fields), `
-        `)
-    }
-
-    function signature () {
-        const signatories = {
-            packet: packet.name,
-            parameters: '{}',
-            step: $step,
-            i: '$i',
-            I: '$I',
-            sip: '$sip',
-            accumulator: '$accumulator',
-            starts: '$starts'
-        }
-        if (Object.keys(parameters).length != 0) {
-            const properties = []
-            for (const parameter in parameters) {
-                properties.push(`${parameter}: ${parameters[parameter]}`)
-            }
-            signatories.parameters = $(`
-                {
-                    `, properties.join(', '), `
-                }
-            `)
-        }
-        return Object.keys(signatories)
-                     .filter(key => variables[key])
-                     .map(key => signatories[key])
-    }
-
-    function checkpoint (checkpoint, depth) {
-        if (checkpoint.lengths.length == 0) {
-            return null
-        }
-        if (checkpoint.rewind != 0) {
-            return $(`
-                if ($end - ($start - ${checkpoint.rewind}) < ${checkpoint.lengths.join(' + ')}) {
-                    return parsers.inc.${packet.name}(`, signature().join(', '), `)($buffer, $start - ${checkpoint.rewind}, $end)
-                }
-            `)
-        }
-        return $(`
-            if ($end - $start < ${checkpoint.lengths.join(' + ')}) {
-                return parsers.inc.${packet.name}(`, signature().join(', '), `)($buffer, $start, $end)
-            }
-        `)
-    }
-
     function dispatch (path, field, root = false) {
         switch (field.type) {
         case 'structure':
             return map(dispatch, path, field.fields)
-        case 'checkpoint':
-            return checkpoint(field)
-        case 'accumulator':
-            return accumulator(path, field)
-        case 'switch':
-            return switched(path, field)
-        case 'inline':
-            return inline(path, field)
         case 'conditional':
             return conditional(path, field)
-        case 'calculation':
-            return calculation(path, field)
-        case 'fixed':
-            return fixed(path, field)
-        case 'repeated':
-            return repeated(path, field)
-        case 'terminator':
-            return terminator(field)
-        case 'terminated':
-            return terminated(path, field)
-        case 'lengthEncoding':
-            return lengthEncoding(path, field)
-        case 'lengthEncoded':
-            return lengthEncoded(path, field)
+        case 'switch':
+            return switched(path, field)
         case 'rewind':
             return rewind(field)
+        case 'fixed':
+            return fixed(path, field)
+        case 'calculation':
+            return calculation(path, field)
+        case 'terminator':
+            return terminator(field)
+        case 'repeated':
+            return repeated(path, field)
+        case 'terminated':
+            return terminated(path, field)
+        case 'lengthEncoded':
+            return lengthEncoded(path, field)
+        case 'lengthEncoding':
+            return lengthEncoding(path, field)
+        case 'accumulator':
+            return accumulator(path, field)
+        case 'inline':
+            return inline(path, field)
         case 'literal':
             return literal(path, field)
         case 'integer':
             return integer(path, field)
         case 'absent':
             return absent(path, field)
+        case 'checkpoint':
+            return checkpoint(field)
         default:
             throw new Error(field.type)
         }
     }
 
-    function compile () {
+    function generate () {
         if (chk) {
             packet.fields = inquisition(packet.fields)
         } else if (bff) {
@@ -1066,7 +1069,7 @@ function generate (packet, { require, bff, chk }) {
         `)
     }
 
-    return compile()
+    return generate()
 }
 
 module.exports = function (definition, options = {}) {

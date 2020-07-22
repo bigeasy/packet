@@ -173,6 +173,58 @@ function generate (packet, { require = null }) {
         `)
     }
 
+    function inline (path, field) {
+        const after = field.after.length != 0 ? function () {
+            const inline = inliner(accumulate, path, field.after, [ path ], path)
+            if (
+                inline.inlined.length == 0 &&
+                inline.buffered.start == inline.buffered.end
+            ) {
+                return {
+                    before: null,
+                    after: null,
+                    buffered: {
+                        start: accumulate.buffered.length,
+                        end: accumulate.buffered.length
+                    }
+                }
+            }
+            const starts = []
+            for (let i = inline.buffered.start, I = inline.buffered.end; i < I; i++) {
+                starts.push(`$starts[${i}] = $start`)
+            }
+            return {
+                before: starts.length != 0 ? $(`
+                    case ${$step++}:
+
+                        `, starts.join('\n'), `
+
+                `) : null,
+                after: join(inline.inlined),
+                buffered: inline.buffered
+            }
+        } () : {
+            before: null,
+            after: null,
+            buffered: {
+                start: accumulate.buffered.length,
+                end: accumulate.buffered.length
+            }
+        }
+        const source = map(dispatch, path, field.fields)
+        const buffered = accumulate.buffered
+            .splice(0, after.buffered.end)
+            .map(buffered => {
+                return buffered.source
+            })
+        return $(`
+            `, after.before, `
+            `, source, `
+                `, -1, after.after, `
+                `, buffered.length != 0 ? buffered.join('\n') : null, `
+        `)
+    }
+
     function lengthEncoded (path, field) {
         const element = field.fields[0]
         const I = `$I[${++$I}]`
@@ -234,6 +286,16 @@ function generate (packet, { require = null }) {
         $I--
         $i--
         return source
+    }
+
+    function accumulator (path, field) {
+        return $(`
+            case ${$step++}:
+
+                `, accumulatorer(accumulate, accumulators, parameters, field), `
+
+            `, map(dispatch, path, field.fields), `
+        `)
     }
 
     // We will have a special case for bite arrays where we can use index of to
@@ -627,99 +689,6 @@ function generate (packet, { require = null }) {
         `)
     }
 
-    function conditional (path, field) {
-        const { parse } = field
-        surround = true
-        const signature = []
-        const sip = function () {
-            if (parse.sip == null) {
-                return null
-            }
-            signature.push('$sip')
-            return map(dispatch, '$sip', parse.sip)
-        } ()
-        const rewind = function () {
-            if (parse.sip == null) {
-                return null
-            }
-            const bytes = []
-            if (parse.sip[0].endianness == 'big') {
-                for (let i = 0, I = parse.sip[0].bits / 8; i < I; i++) {
-                    bytes.push(`($sip >>> ${i * 8}) & 0xff`)
-                }
-            } else {
-                for (let i = parse.sip[0].bits / 8 - 1, I = -1; i > I; i--) {
-                    bytes.push(`($sip >>> ${i * 8}) & 0xff`)
-                }
-            }
-            return $(`
-                $parse([
-                    `, bytes.join('\n'), `
-                ], 0, ${bytes.length})
-            `)
-        } ()
-        const invocations = accumulations({
-            functions: field.parse.conditions.map(condition => condition.test),
-            accumulate: accumulate
-        })
-        signature.push(packet.name)
-        const start = $step++
-        const steps = []
-        for (const condition of parse.conditions) {
-            steps.push({
-                number: $step,
-                source: map(dispatch, path, condition.fields)
-            })
-        }
-        let ladder = '', keywords = 'if'
-        for (let i = 0, I = parse.conditions.length; i < I; i++) {
-            const condition = parse.conditions[i]
-            const vivified = vivify.assignment(path, condition)
-            ladder = condition.test != null ? function () {
-                const inline = inliner(accumulate, path, [ condition.test ], signature)
-                return $(`
-                    `, ladder, `${keywords} (`, inline.inlined.shift(), `) {
-                        `, vivified, -1, `
-
-                        $step = ${steps[i].number}
-                        `, rewind, `
-                        continue
-                    }
-                `)
-            } () : $(`
-                `, ladder, ` else {
-                    `, vivified, -1, `
-
-                    $step = ${steps[i].number}
-                    `, rewind, `
-                    continue
-                }
-            `)
-            keywords = ' else if'
-        }
-        const done = $(`
-            $step = ${$step}
-            continue
-        `)
-        return $(`
-            `, sip, `
-
-            case ${start}:
-
-                `, invocations, -1, `
-
-                `, ladder, `
-
-            `, join(steps.map((step, i) => {
-                return $(`
-                    `, step.source, `
-
-                        `, steps.length - 1 != i ? done : null, `
-                `)
-            })), `
-        `)
-    }
-
     // TODO: Folling is notes on things to come.
 
     // We will have a special case for bite arrays where we can use index of to
@@ -853,55 +822,96 @@ function generate (packet, { require = null }) {
         `)
     }
 
-    function inline (path, field) {
-        const after = field.after.length != 0 ? function () {
-            const inline = inliner(accumulate, path, field.after, [ path ], path)
-            if (
-                inline.inlined.length == 0 &&
-                inline.buffered.start == inline.buffered.end
-            ) {
-                return {
-                    before: null,
-                    after: null,
-                    buffered: {
-                        start: accumulate.buffered.length,
-                        end: accumulate.buffered.length
-                    }
+    function conditional (path, field) {
+        const { parse } = field
+        surround = true
+        const signature = []
+        const sip = function () {
+            if (parse.sip == null) {
+                return null
+            }
+            signature.push('$sip')
+            return map(dispatch, '$sip', parse.sip)
+        } ()
+        const rewind = function () {
+            if (parse.sip == null) {
+                return null
+            }
+            const bytes = []
+            if (parse.sip[0].endianness == 'big') {
+                for (let i = 0, I = parse.sip[0].bits / 8; i < I; i++) {
+                    bytes.push(`($sip >>> ${i * 8}) & 0xff`)
+                }
+            } else {
+                for (let i = parse.sip[0].bits / 8 - 1, I = -1; i > I; i--) {
+                    bytes.push(`($sip >>> ${i * 8}) & 0xff`)
                 }
             }
-            const starts = []
-            for (let i = inline.buffered.start, I = inline.buffered.end; i < I; i++) {
-                starts.push(`$starts[${i}] = $start`)
-            }
-            return {
-                before: starts.length != 0 ? $(`
-                    case ${$step++}:
-
-                        `, starts.join('\n'), `
-
-                `) : null,
-                after: join(inline.inlined),
-                buffered: inline.buffered
-            }
-        } () : {
-            before: null,
-            after: null,
-            buffered: {
-                start: accumulate.buffered.length,
-                end: accumulate.buffered.length
-            }
-        }
-        const source = map(dispatch, path, field.fields)
-        const buffered = accumulate.buffered
-            .splice(0, after.buffered.end)
-            .map(buffered => {
-                return buffered.source
+            return $(`
+                $parse([
+                    `, bytes.join('\n'), `
+                ], 0, ${bytes.length})
+            `)
+        } ()
+        const invocations = accumulations({
+            functions: field.parse.conditions.map(condition => condition.test),
+            accumulate: accumulate
+        })
+        signature.push(packet.name)
+        const start = $step++
+        const steps = []
+        for (const condition of parse.conditions) {
+            steps.push({
+                number: $step,
+                source: map(dispatch, path, condition.fields)
             })
+        }
+        let ladder = '', keywords = 'if'
+        for (let i = 0, I = parse.conditions.length; i < I; i++) {
+            const condition = parse.conditions[i]
+            const vivified = vivify.assignment(path, condition)
+            ladder = condition.test != null ? function () {
+                const inline = inliner(accumulate, path, [ condition.test ], signature)
+                return $(`
+                    `, ladder, `${keywords} (`, inline.inlined.shift(), `) {
+                        `, vivified, -1, `
+
+                        $step = ${steps[i].number}
+                        `, rewind, `
+                        continue
+                    }
+                `)
+            } () : $(`
+                `, ladder, ` else {
+                    `, vivified, -1, `
+
+                    $step = ${steps[i].number}
+                    `, rewind, `
+                    continue
+                }
+            `)
+            keywords = ' else if'
+        }
+        const done = $(`
+            $step = ${$step}
+            continue
+        `)
         return $(`
-            `, after.before, `
-            `, source, `
-                `, -1, after.after, `
-                `, buffered.length != 0 ? buffered.join('\n') : null, `
+            `, sip, `
+
+            case ${start}:
+
+                `, invocations, -1, `
+
+                `, ladder, `
+
+            `, join(steps.map((step, i) => {
+                return $(`
+                    `, step.source, `
+
+                        `, steps.length - 1 != i ? done : null, `
+                `)
+            })), `
         `)
     }
 
@@ -949,142 +959,134 @@ function generate (packet, { require = null }) {
         `)
     }
 
-    function accumulator (path, field) {
-        return $(`
-            case ${$step++}:
-
-                `, accumulatorer(accumulate, accumulators, parameters, field), `
-
-            `, map(dispatch, path, field.fields), `
-        `)
-    }
-
     function dispatch (path, packet, depth) {
         switch (packet.type) {
         case 'structure':
             return map(dispatch, path, packet.fields)
-        case 'accumulator':
-            return accumulator(path, packet)
-        case 'switch':
-            return switched(path, packet)
         case 'conditional':
             return conditional(path, packet)
-        case 'inline':
-            return inline(path, packet)
+        case 'switch':
+            return switched(path, packet)
         case 'fixed':
             return fixed(path, packet)
         case 'terminated':
             return terminated(path, packet)
         case 'lengthEncoded':
             return lengthEncoded(path, packet)
-        case 'buffer':
-        case 'bigint':
+        case 'accumulator':
+            return accumulator(path, packet)
+        case 'inline':
+            return inline(path, packet)
+        case 'literal':
+            return literal(path, packet)
         case 'integer':
             return integer(path, packet)
         case 'absent':
             return absent(path, packet)
-        case 'literal':
-            return literal(path, packet)
         }
     }
 
-    let source = $(`
-        switch ($step) {
-        case ${$step++}:
+    function generate () {
+        let source = $(`
+            switch ($step) {
+            case ${$step++}:
 
-            `, vivify.structure(packet.name, packet), `
+                `, vivify.structure(packet.name, packet), `
 
-            $step = ${$step}
+                $step = ${$step}
 
-        `, dispatch(packet.name, packet, 0), `
+            `, dispatch(packet.name, packet, 0), `
 
-        case ${$step}:
+            case ${$step}:
 
-            return { start: $start, object: ${packet.name}, parse: null }
-        }
-    `)
-
-    const signatories = {
-        packet: `${packet.name}`,
-        parameters: null,
-        step: '$step = 0',
-        i: '$i = []',
-        I: '$I = []',
-        sip: '$sip = 0',
-        accumulator: '$accumulator = []',
-        starts: '$starts = []'
-    }
-
-    if (Object.keys(parameters).length != 0) {
-        const properties = []
-        for (const parameter in parameters) {
-            properties.push(`${parameter} = ${parameters[parameter]}`)
-        }
-        variables.parameters = true
-        signatories.parameters = $(`
-            {
-                `, properties.join(', '), `
-            } = {}
-        `)
-    }
-
-    const signature = Object.keys(signatories)
-                            .filter(key => variables[key])
-                            .map(key => signatories[key])
-
-    if (surround) {
-        source = $(`
-            for (;;) {
-                `, source, `
-                break
+                return { start: $start, object: ${packet.name}, parse: null }
             }
         `)
-    }
 
-    const object = `parsers.inc.${packet.name}`
-
-    const requires = required(require)
-
-    variables.register = true
-    variables.bite = true
-
-    const declarations = {
-        register: '$_',
-        bite: '$bite',
-        starts: '$restart = false',
-        buffers: '$buffers = []',
-        begin: '$begin = 0'
-    }
-
-    const lets = Object.keys(declarations)
-                       .filter(key => variables[key])
-                       .map(key => declarations[key])
-                       .concat(Object.keys(locals).map(name => `$${name} = ${locals[name]}`))
-
-    const restart = variables.starts ? $(`
-        if ($restart) {
-            for (let $j = 0; $j < $starts.length; $j++) {
-                $starts[$j] = $start
-            }
+        const signatories = {
+            packet: `${packet.name}`,
+            parameters: null,
+            step: '$step = 0',
+            i: '$i = []',
+            I: '$I = []',
+            sip: '$sip = 0',
+            accumulator: '$accumulator = []',
+            starts: '$starts = []'
         }
-        $restart = true
-    `) : null
 
-    return $(`
-        parsers.inc.${packet.name} = function () {
-            `, requires, -1, `
+        if (Object.keys(parameters).length != 0) {
+            const properties = []
+            for (const parameter in parameters) {
+                properties.push(`${parameter} = ${parameters[parameter]}`)
+            }
+            variables.parameters = true
+            signatories.parameters = $(`
+                {
+                    `, properties.join(', '), `
+                } = {}
+            `)
+        }
 
-            return function (`, signature.join(', '), `) {
-                let ${lets.join(', ')}
+        const signature = Object.keys(signatories)
+                                .filter(key => variables[key])
+                                .map(key => signatories[key])
 
-                return function $parse ($buffer, $start, $end) {
-                    `, restart, -1, `
-
+        if (surround) {
+            source = $(`
+                for (;;) {
                     `, source, `
+                    break
+                }
+            `)
+        }
+
+        const object = `parsers.inc.${packet.name}`
+
+        const requires = required(require)
+
+        variables.register = true
+        variables.bite = true
+
+        const declarations = {
+            register: '$_',
+            bite: '$bite',
+            starts: '$restart = false',
+            buffers: '$buffers = []',
+            begin: '$begin = 0'
+        }
+
+        const lets = Object.keys(declarations)
+                           .filter(key => variables[key])
+                           .map(key => declarations[key])
+                           .concat(Object.keys(locals).map(name => `$${name} = ${locals[name]}`))
+
+        const restart = variables.starts ? $(`
+            if ($restart) {
+                for (let $j = 0; $j < $starts.length; $j++) {
+                    $starts[$j] = $start
                 }
             }
-        } ()
-    `)
+            $restart = true
+        `) : null
+
+        return $(`
+            parsers.inc.${packet.name} = function () {
+                `, requires, -1, `
+
+                return function (`, signature.join(', '), `) {
+                    let ${lets.join(', ')}
+
+                    return function $parse ($buffer, $start, $end) {
+                        `, restart, -1, `
+
+                        `, source, `
+                    }
+                }
+            } ()
+        `)
+    }
+
+    return generate()
 }
 
 module.exports = function (definition, options) {
