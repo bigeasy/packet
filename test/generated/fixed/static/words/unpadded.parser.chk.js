@@ -28,7 +28,7 @@ module.exports = function ({ parsers, $lookup }) {
                 } while (++$i[0] != 4)
 
                 if ($end - $start < 1) {
-                    return parsers.inc.object(object, 8, $i)($buffer, $start, $end)
+                    return parsers.inc.object(object, 7, $i)($buffer, $start, $end)
                 }
 
                 object.sentry = ($buffer[$start++])

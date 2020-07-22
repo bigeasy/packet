@@ -644,7 +644,10 @@ function generate (packet, { require, bff, chk }) {
         variables.i = true
         $i++
         const looped = map(dispatch, path, field.fields)
-        $step += 2
+        $step++
+        if (false && vivified != null) {
+            $step++
+        }
         const source = $(`
             $i[${$i}] = 0
             for (;;) {
@@ -658,8 +661,12 @@ function generate (packet, { require, bff, chk }) {
     function repeated (path, field) {
         const i = `$i[${$i}]`
         const looped = map(dispatch, `${path}[${i}]`, field.fields)
+        const vivified = vivify.assignment(path + `[${i}]`, field)
+        if (vivified != null) {
+            $step++
+        }
         return $(`
-            `, vivify.assignment(path + `[${i}]`, field), -1, `
+            `, vivified, -1, `
 
             `, looped, `
 
@@ -769,7 +776,11 @@ function generate (packet, { require, bff, chk }) {
         $step += 1 + field.pad.length
         const looped = map(dispatch, path + `[${i}]`, field.fields)
         // Advance past end-of-loop test and fill skip.
-        $step += 1 + (field.pad.length != 0 ? 2 : 0)
+        const vivified = vivify.assignment(`${path}[${i}]`, field)
+        if (vivified != null) {
+            $step++
+        }
+        $step += (field.pad.length != 0 ? 2 : 0)
         const terminator = field.pad.map((bite, index) => {
             if (index == 0) {
                 return `$buffer[$start] == ${hex(bite)}`

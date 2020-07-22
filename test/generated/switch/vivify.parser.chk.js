@@ -81,13 +81,13 @@ module.exports = function ({ parsers, $lookup }) {
                     object.value = []
 
                     if ($end - $start < 1) {
-                        return parsers.inc.object(object, 18, $i, $I)($buffer, $start, $end)
+                        return parsers.inc.object(object, 17, $i, $I)($buffer, $start, $end)
                     }
 
                     $I[0] = ($buffer[$start++])
 
                     if ($end - $start < 1 * $I[0]) {
-                        return parsers.inc.object(object, 20, $i, $I)($buffer, $start, $end)
+                        return parsers.inc.object(object, 19, $i, $I)($buffer, $start, $end)
                     }
 
                     object.value = $buffer.slice($start, $start + $I[0])
@@ -99,7 +99,7 @@ module.exports = function ({ parsers, $lookup }) {
                     object.value = []
 
                     if ($end - $start < 3) {
-                        return parsers.inc.object(object, 21, $i, $I)($buffer, $start, $end)
+                        return parsers.inc.object(object, 20, $i, $I)($buffer, $start, $end)
                     }
 
                     $i[0] = 0
@@ -111,7 +111,7 @@ module.exports = function ({ parsers, $lookup }) {
 
                 default:
                     if ($end - $start < 3) {
-                        return parsers.inc.object(object, 26, $i, $I)($buffer, $start, $end)
+                        return parsers.inc.object(object, 24, $i, $I)($buffer, $start, $end)
                     }
 
                     $slice = $buffer.slice($start, $start + 3)
@@ -122,7 +122,7 @@ module.exports = function ({ parsers, $lookup }) {
                 }
 
                 if ($end - $start < 1) {
-                    return parsers.inc.object(object, 28, $i, $I)($buffer, $start, $end)
+                    return parsers.inc.object(object, 26, $i, $I)($buffer, $start, $end)
                 }
 
                 object.sentry = ($buffer[$start++])

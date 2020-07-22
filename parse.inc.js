@@ -535,13 +535,16 @@ function generate (packet, { require = null }) {
         // Obtain a next index from the index array.
         const i = `$i[${++$i}]`
         // Initialization step.
-        const init = $step
+        const init = $step++
         // Start of element fields, loop reset.
-        const redo = ++$step
+        const redo = $step
         // We need a step for each byte in the terminator.
         const begin = $step += bytes.length
         // We will sometimes have a vivification step to an object element.
-        $step++
+        const vivified = vivify.assignment(`${path}[${i}]`, field)
+        if (vivified != null) {
+            $step++
+        }
         // Create the body of the loop.
         const looped = map(dispatch, `${path}[${i}]`, field.fields)
         // Release the length index from the array of lengths if calculated.
@@ -637,8 +640,14 @@ function generate (packet, { require = null }) {
                         `, next, `
                 `)
             }))
-        // Put it all together.
-        const source = $(`
+        const initialize = vivified == null ? $(`
+            case ${init}:
+
+                ${i} = 0
+                ${length} = `, inline, `
+
+            `, terminator, `
+        `) : $(`
             case ${init}:
 
                 ${i} = 0
@@ -649,6 +658,10 @@ function generate (packet, { require = null }) {
             case ${begin}:
 
                 `, vivify.assignment(`${path}[${i}]`, field), `
+        `)
+        // Put it all together.
+        const source = $(`
+            `, initialize, `
 
             `, looped, `
 
@@ -771,7 +784,14 @@ function generate (packet, { require = null }) {
         const remaining = field.calculated && field.fixed
             ? `$_ = (${length} - ${i}) * ${element.bits >>> 3} - ${field.pad.length}`
             : null
-        const source = $(`
+
+        const vivified = vivify.assignment(`${path}[${i}]`, field)
+        const initialization = vivified == null ? $(`
+            case ${$step++}:
+
+                ${i} = 0
+                ${length} = `, inline, `
+        `) : $(`
             case ${$step++}:
 
                 ${i} = 0
@@ -779,7 +799,10 @@ function generate (packet, { require = null }) {
 
             case ${$step++}:
 
-                `, vivify.assignment(`${path}[${i}]`, field), -1, `
+                `, vivified, `
+        `)
+        const source = $(`
+            `, initialization, `
 
             `, map(dispatch,`${path}[${i}]`, field.fields), `
 

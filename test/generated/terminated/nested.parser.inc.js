@@ -64,7 +64,7 @@ module.exports = function ({ parsers, $lookup }) {
                         }
                         $start++
 
-                        $step = 16
+                        $step = 15
                         continue
 
                     case 6:
@@ -106,19 +106,16 @@ module.exports = function ({ parsers, $lookup }) {
                         }
                         $start++
 
-                        $step = 14
+                        $step = 13
                         continue
 
                     case 10:
 
-
-                    case 11:
-
                         $_ = 0
-                        $step = 12
+                        $step = 11
                         $bite = 1
 
-                    case 12:
+                    case 11:
 
                         while ($bite != -1) {
                             if ($start == $end) {
@@ -131,33 +128,33 @@ module.exports = function ({ parsers, $lookup }) {
                         object.array[$i[0]][$i[1]] = $_
 
 
-                    case 13:
+                    case 12:
 
                         $i[1]++
                         $step = 8
                         continue
 
-                    case 14:
+                    case 13:
 
                         // Here
-                        $step = 14
+                        $step = 13
 
-                    case 15:
+                    case 14:
 
                         $i[0]++
                         $step = 4
                         continue
 
-                    case 16:
+                    case 15:
 
                         // Here
-                        $step = 16
+                        $step = 15
+
+                    case 16:
+
+                        $step = 17
 
                     case 17:
-
-                        $step = 18
-
-                    case 18:
 
                         if ($start == $end) {
                             return { start: $start, object: null, parse: $parse }
@@ -166,7 +163,7 @@ module.exports = function ({ parsers, $lookup }) {
                         object.sentry = $buffer[$start++]
 
 
-                    case 19:
+                    case 18:
 
                         return { start: $start, object: object, parse: null }
                     }

@@ -2,7 +2,7 @@ require('proof')(0, prove)
 
 function prove (okay) {
     const cycle = require('./cycle')
-    cycle(okay, {
+    /* cycle(okay, {
         name: 'switch/strings',
         define: {
             object: {
@@ -190,7 +190,7 @@ function prove (okay) {
             },
             sentry: 0xaa
         }]
-    })
+    })*/
     cycle(okay, {
         name: 'switch/vivify',
         define: {
