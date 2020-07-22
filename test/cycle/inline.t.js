@@ -43,6 +43,19 @@ function prove (okay) {
         objects: [{ value: 1, sentry: 0xaa }]
     })
     cycle(okay, {
+        name: 'inline/array',
+        define: {
+            object: {
+                nudge: 8,
+                value: [[[ function ($_) {
+                    return $_.slice().reverse()
+                } ]], [ 8, [ 8 ] ] ],
+                sentry: 8
+            }
+        },
+        objects: [{ nudge: 0xaa, value: [ 0xa, 0xb, 0xc, 0xd ], sentry: 0xaa }]
+    })
+    cycle(okay, {
         name: 'inline/named',
         define: {
             object: {
