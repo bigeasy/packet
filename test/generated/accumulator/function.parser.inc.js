@@ -63,6 +63,7 @@ module.exports = function ({ parsers, $lookup }) {
 
                     object.sentry = $buffer[$start++]
 
+
                     object = (function ({ $_, counter }) {
                         console.log('>>>', counter)
                         assert.deepEqual(counter, [ 0 ])

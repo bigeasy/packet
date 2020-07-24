@@ -26,6 +26,7 @@ module.exports = function ({ parsers, $lookup }) {
 
                     object.value = $buffer[$start++]
 
+
                     ; (({ $_ = 0 }) => require('assert').equal($_, 1))({
                         $_: object.value
                     })

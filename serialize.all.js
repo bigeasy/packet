@@ -16,14 +16,7 @@ const { serialize: declare } = require('./declare')
 // Format source code maintaining indentation.
 const $ = require('programmatic')
 
-// Generate accumulator declaration source.
-const accumulatorer = require('./accumulator')
-
-// Generate invocations of accumulators before conditionals.
-const accumulations = require('./accumulations')
-
-// Generate inline function source.
-const inliner = require('./inliner')
+const Inliner = require('./inline_')
 
 // Generate required modules and functions.
 const required = require('./required')
@@ -372,14 +365,10 @@ function generate (packet, { require = null, bff, chk }) {
 
     const { variables, parameters, accumulators } = declare (packet)
 
-    const accumulate = {
-        accumulator: {},
-        accumulated: [],
-        buffered: [],
-        variables: variables,
-        packet: packet.name,
+    const inliner = new Inliner({
+        variables, parameters, accumulators, packet,
         direction: 'serialize'
-    }
+    })
 
     function checkpoint (checkpoint) {
         if (checkpoint.lengths.length == 0) {
@@ -439,7 +428,7 @@ function generate (packet, { require = null, bff, chk }) {
         }
         $step += 2
         if (field.fields) {
-            const packing = pack(accumulate, packet, field, path, '$_')
+            const packing = pack(inliner, packet, field, path, '$_')
             return $(`
                 `, packing, `
 
@@ -496,64 +485,25 @@ function generate (packet, { require = null, bff, chk }) {
     }
 
     function inline (path, field) {
-        const before = field.before.length != 0 ? function () {
-            const register = `$$[${++$$}]`
-            const inline = inliner(accumulate, path, field.before, [
-                path, register
-            ], register)
-            if (inline.buffered.start != inline.buffered.end) {
-                $step++
-            }
-            if (inline.inlined.length == 0) {
-                return { path: path, source: null, buffered: inline.buffered }
-            }
-            return {
-                path: inline.register,
-                source: join(inline.inlined),
-                buffered: inline.buffered
-            }
-        } () : {
-            path: path,
-            source: null,
-            buffered: {
-                start: accumulate.buffered.length,
-                end: accumulate.buffered.length
-            }
-        }
-        if (before.path[0] != '$') {
-            $$--
-        }
-        const starts = []
-        for (let i = before.buffered.start, I = before.buffered.end; i < I; i++) {
-            starts.push(`$starts[${i}] = $start`)
-        }
-        if (before.source != null) {
+        const inline = inliner.inline_(path, field.before)
+        if (inline.inlined != null || inline.starts != null) {
             $step++
         }
-        const source = map(dispatch, before.path, field.fields)
-        const buffered = accumulate.buffered
-            .splice(0, before.buffered.end)
-            .map(buffered => {
-                return buffered.source
-            })
-        if (before.path[0] == '$') {
-            $$--
-        }
-        return  $(`
-            `, starts.length != 0 ? starts.join('\n') : null, -1, `
+        return $(`
+            `, inline.inlined, -1, `
 
-            `, before.source, -1, `
+            `, inline.starts, -1, `
 
-            `, source, `
+            `, map(dispatch, inline.path, field.fields), `
 
-            `, -1, buffered.length != 0 ? buffered.join('\n') : null, `
+            `, -1, inliner.pop(), `
         `)
     }
 
     function accumulator (path, field) {
         $step++
         return $(`
-            `, accumulatorer(accumulate, accumulators, parameters, field), `
+            `, inliner.accumulator(field), `
 
             `, map(dispatch, path, field.fields), `
         `)
@@ -670,7 +620,7 @@ function generate (packet, { require = null, bff, chk }) {
     function calculation (path, field) {
         field = field.field
         const I = `$I[${++$I}]`
-        const inline = inliner(accumulate, path, [ field.length ], [])
+        const inline = inliner.inline(path, [ field.length ], [])
         return $(`
             ${I} = `, inline.inlined.shift(), `
         `)
@@ -744,7 +694,7 @@ function generate (packet, { require = null, bff, chk }) {
         `)
         let source = null
         if (field.calculated) {
-            const inline = inliner(accumulate, path, [ field.length ], [])
+            const inline = inliner.inline(path, [ field.length ], [])
             const I = `$I[${$I}]`
             // TODO Now have to increment `$I` in checkpoints and inquisition.
             // Also, need to add `$I` to serialization side.
@@ -791,11 +741,8 @@ function generate (packet, { require = null, bff, chk }) {
                     break
             `))
         }
-        const invocations = accumulations({
-            functions: [ field.select ],
-            accumulate: accumulate
-        })
-        const inlined = inliner(accumulate, path, [ field.select ], [])
+        const invocations = inliner.accumulations([ field.select ])
+        const inlined = inliner.inline(path, [ field.select ], [])
         const select = field.stringify
             ? `String(${inlined.inlined.shift()})`
             : inlined.inlined.shift()
@@ -810,10 +757,8 @@ function generate (packet, { require = null, bff, chk }) {
 
     function conditional (path, field) {
         const block = []
-        const invocations = accumulations({
-            functions: field.serialize.conditions.map(condition => condition.test),
-            accumulate: accumulate
-        })
+        const invocations =
+        inliner.accumulations(field.serialize.conditions.map(condition => condition.test))
         $step++
         let ladder = '', keywords = 'if'
         for (let i = 0, I = field.serialize.conditions.length; i < I; i++) {
@@ -821,7 +766,7 @@ function generate (packet, { require = null, bff, chk }) {
             const source = join(condition.fields.map(field => dispatch(path, field)))
             ladder = condition.test != null ? function () {
                 const registers = field.split ? [ path ] : []
-                const f = inliner(accumulate, path, [ condition.test ], registers)
+                const f = inliner.inline(path, [ condition.test ], registers)
                 return $(`
                     `, ladder, `${keywords} (`, f.inlined.shift() ,`) {
                         `, source, `

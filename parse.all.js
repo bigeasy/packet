@@ -10,6 +10,8 @@ const hex = require('./hex')
 // Generate literal object construction.
 const vivify = require('./vivify')
 
+const Inliner = require('./inline_')
+
 // Generate two's compliment conversion.
 const unsign = require('./fiddle/unsign')
 
@@ -18,15 +20,6 @@ const unpack = require('./unpack')
 
 // Determine necessary variables.
 const { parse: declare } = require('./declare')
-
-// Generate accumulator declaration source.
-const accumulatorer = require('./accumulator')
-
-// Generate invocations of accumulators before conditionals.
-const accumulations = require('./accumulations')
-
-// Generate inline function source.
-const inliner = require('./inliner')
 
 // Generate required modules and functions.
 const required = require('./required')
@@ -363,14 +356,10 @@ function generate (packet, { require, bff, chk }) {
 
     const { variables, accumulators, parameters } = declare(packet)
 
-    const accumulate = {
-        accumulator: {},
-        accumulated: [],
-        buffered: [],
-        variables: variables,
-        packet: packet.name,
+    const accumulate = new Inliner({
+        variables, accumulators, parameters, packet,
         direction: 'parse'
-    }
+    })
 
     function signature () {
         const signatories = {
@@ -499,48 +488,19 @@ function generate (packet, { require, bff, chk }) {
     }
 
     function inline (path, field) {
-        const after = field.after.length != 0 ? function () {
-            const inline = inliner(accumulate, path, field.after, [ path ], path)
-            if (inline.buffered.start != inline.buffered.end) {
-                $step++
-                variables.starts = true
-            }
-            if (inline.inlined.length == 0) {
-                return {
-                    source: null,
-                    buffered: inline.buffered
-                }
-            }
-            return {
-                source: join(inline.inlined),
-                buffered: inline.buffered
-            }
-        } () : {
-            path: path,
-            source: null,
-            buffered: {
-                start: accumulate.buffered.length,
-                end: accumulate.buffered.length
-            }
+        const inline = accumulate.inline_(path, field.after)
+        if (inline.starts != null) {
+            $step++
+            variables.starts = true
         }
-        const starts = []
-        for (let i = after.buffered.start, I = after.buffered.end; i < I; i++) {
-            starts.push(`$starts[${i}] = $start`)
-        }
-        const source = map(dispatch, path, field.fields)
-        const buffered = accumulate.buffered
-            .splice(0, after.buffered.end)
-            .map(buffered => {
-                return buffered.source
-            })
         return $(`
-            `, starts.length != 0 ? starts.join('\n') : null, -1, `
+            `, inline.starts, -1, `
 
-            `, source, `
+            `, map(dispatch, path, field.fields), `
 
-            `, -1, after.source, `
+            `, -1, inline.inlined, `
 
-            `, -1, buffered.length != 0 ? buffered.join('\n') : null, `
+            `, -1, accumulate.pop(), `
         `)
     }
 
@@ -548,7 +508,7 @@ function generate (packet, { require, bff, chk }) {
         $step++
         variables.accumulator = true
         return $(`
-            `, accumulatorer(accumulate, accumulators, parameters, field), `
+            `, accumulate.accumulator(field), `
 
             `, map(dispatch, path, field.fields), `
         `)
@@ -715,7 +675,7 @@ function generate (packet, { require, bff, chk }) {
     function calculation (path, field) {
         field = field.field
         const I = `$I[${++$I}]`
-        const inline = inliner(accumulate, path, [ field.length ], [])
+        const inline = accumulate.inline(path, [ field.length ], [])
         return $(`
             ${I} = `, inline.inlined.shift(), `
         `)
@@ -800,7 +760,7 @@ function generate (packet, { require, bff, chk }) {
                         : null
         let source = null
         if (field.calculated) {
-            const inline = inliner(accumulate, path, [ field.length ], [])
+            const inline = accumulate.inline(path, [ field.length ], [])
             source = $(`
                 ${i} = 0
                 do {
@@ -862,14 +822,11 @@ function generate (packet, { require, bff, chk }) {
                     break
             `))
         }
-        const inlined = inliner(accumulate, path, [ field.select ], [])
+        const inlined = accumulate.inline(path, [ field.select ], [])
         const select = field.stringify
             ? `String(${inlined.inlined.shift()})`
             : inlined.inlined.shift()
-        const invocations = accumulations({
-            functions: [ field.select ],
-            accumulate: accumulate
-        })
+        const invocations = accumulate.accumulations([ field.select ])
         return $(`
             `, invocations, -1, `
 
@@ -880,10 +837,7 @@ function generate (packet, { require, bff, chk }) {
     }
 
     function conditional (path, field) {
-        const invocations = accumulations({
-            functions: field.parse.conditions.map(condition => condition.test),
-            accumulate: accumulate
-        })
+        const invocations = accumulate.accumulations(field.parse.conditions.map(condition => condition.test))
         const signature = []
         const sip = function () {
             if (field.parse.sip == null) {
@@ -938,7 +892,7 @@ function generate (packet, { require, bff, chk }) {
             //const source = join(condition.fields.map(field => dispatch(path, field)))
             const source = map(dispatch, path, condition.fields)
             ladder = condition.test != null ? function () {
-                const inline = inliner(accumulate, path, [ condition.test ], signature)
+                const inline = accumulate.inline(path, [ condition.test ], signature)
                 return $(`
                     `, ladder, `${keywords} (`, inline.inlined.shift(), `) {
                         `, vivified, -1, `

@@ -1,6 +1,8 @@
 // Node.js API.
 const util = require('util')
 
+const Inliner = require('./inline_.js')
+
 // Format source code maintaining indentation.
 const $ = require('programmatic')
 
@@ -15,12 +17,6 @@ const { serialize: declare } = require('./declare')
 
 // Generate accumulator declaration source.
 const accumulatorer = require('./accumulator')
-
-// Generate invocations of accumulators before conditionals.
-const accumulations = require('./accumulations')
-
-// Generate inline function source.
-const inliner = require('./inliner')
 
 // Generate required modules and functions.
 const required = require('./required')
@@ -43,14 +39,10 @@ function generate (packet, { require = null }) {
     //
     const locals = {}
 
-    const accumulate = {
-        accumulator: {},
-        accumulated: [],
-        buffered: [],
-        variables: variables,
-        packet: packet.name,
+    const inliner = new Inliner({
+        packet, variables, accumulators, parameters,
         direction: 'serialize'
-    }
+    })
 
     function absent () {
         // TODO Can we have nothing instead?
@@ -68,7 +60,7 @@ function generate (packet, { require = null }) {
         let bite = field.endianness == 'big' ? bytes - 1 : 0
         let stop = field.endianness == 'big' ? -1 : bytes
         const assign = field.fields
-            ? pack(accumulate, packet, field, path, '$_')
+            ? pack(inliner, packet, field, path, '$_')
             : field.lookup != null
                 ? Array.isArray(field.lookup.values)
                     ? `$_ = $lookup[${field.lookup.index}].indexOf(${path})`
@@ -77,9 +69,6 @@ function generate (packet, { require = null }) {
         const cast = field.bits > 32
             ? { suffix: 'n', from: 'Number', shift: '>>' }
             : { suffix: '', from: '', shift: '>>>' }
-        const buffered = accumulate.buffered.length != 0
-            ? accumulate.buffered.map(buffered => buffered.source).join('\n')
-            : null
         const source = $(`
             case ${$step++}:
 
@@ -91,7 +80,7 @@ function generate (packet, { require = null }) {
 
                 while ($bite != ${stop}${cast.suffix}) {
                     if ($start == $end) {
-                        `, buffered, `
+                        `, inliner.exit(), `
                         return { start: $start, serialize: $serialize }
                     }
                     $buffer[$start++] = ${cast.from}($_ ${cast.shift} $bite * 8${cast.suffix} & 0xff${cast.suffix})
@@ -159,61 +148,21 @@ function generate (packet, { require = null }) {
     }
 
     function inline (path, field) {
-        const before = field.before.length != 0 ? function () {
-            const register = `$$[${++$$}]`
-            const inline = inliner(accumulate, path, field.before, [
-                path, register
-            ], register)
-            if (
-                inline.inlined.length == 0 &&
-                inline.buffered.start == inline.buffered.end
-            ) {
-                return {
-                    path: path,
-                    source: null,
-                    buffered: inline.buffered
-                }
-            }
-            const starts = []
-            for (let i = inline.buffered.start, I = inline.buffered.end; i < I; i++) {
-                starts.push(`$starts[${i}] = $start`)
-            }
-            return {
-                path: inline.register,
-                source: $(`
-                    case ${$step++}:
+        const inline = inliner.inline_(path, field.before, 'serialize')
+        const inlined = inline.inlined != null || inline.starts != null
+            ? $(`
+                case ${$step++}:
 
-                        `, join(inline.inlined), `
-                        `, starts.length != 0 ? starts.join('\n') : null, `
-                `),
-                buffered: inline.buffered
-            }
-        } () : {
-            path: path,
-            source: null,
-            buffered: {
-                start: accumulate.buffered.length,
-                end: accumulate.buffered.length
-            }
-        }
-        if (before.path[0] != '$') {
-            $$--
-        }
-        const source = map(dispatch, before.path, field.fields)
-        const buffered = accumulate.buffered
-            .splice(0, before.buffered.end)
-            .map(buffered => {
-                return buffered.source
-            })
-        if (before.path[0] == '$') {
-            $$--
-        }
+                    `, inline.inlined, `
+                    `, inline.starts, `
+            `)
+            : null
         return $(`
-            `, before.source, -1, `
+            `, inlined, -1, `
 
-            `, source, `
+            `, map(dispatch, inline.path, field.fields), `
 
-                `, -1, buffered.length != 0 ? buffered.join('\n') : null, `
+                `, -1, inliner.pop(), `
         `)
     }
 
@@ -221,7 +170,7 @@ function generate (packet, { require = null }) {
         return $(`
             case ${$step++}:
 
-                `, accumulatorer(accumulate, accumulators, parameters, field), `
+                `, inliner.accumulator(field), `
 
             `, map(dispatch, path, field.fields), `
         `)
@@ -230,9 +179,6 @@ function generate (packet, { require = null }) {
     function lengthEncoded (path, field) {
         const element = field.fields[0]
         surround = true
-        const buffered = accumulate.buffered.length != 0
-            ? accumulate.buffered.map(buffered => buffered.source).join('\n')
-            : null
         if (element.type == 'buffer') {
             locals['copied'] = 0
             if (!element.concat) {
@@ -255,7 +201,7 @@ function generate (packet, { require = null }) {
                     $start += $bytes
 
                     if ($copied != ${path}.length) {
-                        `, buffered, `
+                        `, inliner.exit(), `
                         return { start: $start, serialize: $serialize }
                     }
 
@@ -297,7 +243,7 @@ function generate (packet, { require = null }) {
                         }
 
                         if ($start == $end) {
-                            `, buffered, `
+                            `, inliner.exit(), `
                             return { start: $start, serialize: $serialize }
                         }
                     }
@@ -333,7 +279,7 @@ function generate (packet, { require = null }) {
     // A buffer copy shared by terminated and fixed arrays.
 
     //
-    function copy (path, element, buffered, inline = null) {
+    function copy (path, element, inline = null) {
         // If we have an array of buffers, we need a loop index and a variable
         // to track the offset in the specific buffer.
         let i
@@ -360,7 +306,7 @@ function generate (packet, { require = null }) {
                     $_ += length
 
                     if ($_ != ${path}.length) {
-                        `, buffered, `
+                        `, inliner.exit(), `
                         return { start: $start, serialize: $serialize }
                     }
 
@@ -399,7 +345,7 @@ function generate (packet, { require = null }) {
                     }
 
                     if ($start == $end) {
-                        `, buffered, `
+                        `, inliner.exit(), `
                         return { start: $start, serialize: $serialize }
                     }
                 }
@@ -419,16 +365,13 @@ function generate (packet, { require = null }) {
 
     function terminated (path, field) {
         surround = true
-        const buffered = accumulate.buffered.length != 0
-            ? accumulate.buffered.map(buffered => buffered.source).join('\n')
-            : null
         function terminate () {
             return join(field.terminator.map(bite => {
                 return $(`
                     case ${$step++}:
 
                         if ($start == $end) {
-                            `, buffered, `
+                            `, inliner.exit(), `
                             return { start: $start, serialize: $serialize }
                         }
 
@@ -441,7 +384,7 @@ function generate (packet, { require = null }) {
         const element = field.fields[0]
         if (element.type == 'buffer') {
             const source = $(`
-                `, copy(path, element, buffered), `
+                `, copy(path, element), `
 
                 `, terminate(), `
             `)
@@ -482,11 +425,6 @@ function generate (packet, { require = null }) {
         surround = true
         // Get the element type contained by the array.
         const element = field.fields[field.fields.length - 1]
-        // Generate any buffered function calls to process the buffer if we
-        // reach the end of the buffer.
-        const buffered = accumulate.buffered.length != 0
-                       ? accumulate.buffered.map(buffered => buffered.source).join('\n')
-                       : null
         // The byte-by-byte implementation of pad is used by byte-by-byte, of
         // course, and buffers when the terminator is multi-byte.
         //
@@ -515,7 +453,7 @@ function generate (packet, { require = null }) {
                     case ${$step++}:
 
                         if ($start == $end) {
-                            `, buffered, `
+                            `, inliner.exit(), `
                             return { start: $start, serialize: $serialize }
                         }
 
@@ -549,12 +487,12 @@ function generate (packet, { require = null }) {
         //
         if (element.type == 'buffer') {
             const inline = field.calculated
-                ? inliner(accumulate, path, [ field.length ], []).inlined.shift()
+                ? inliner.inline(path, [ field.length ], []).inlined.shift()
                 : null
             if (field.calculated) {
                 $I--
             }
-            const source = copy(path, element, buffered, inline)
+            const source = copy(path, element, inline)
             // If there is no padding, we are done.
             if (field.pad.length == 0) {
                 return source
@@ -604,7 +542,7 @@ function generate (packet, { require = null }) {
         // Put it all together.
         let source = null
         if (field.calculated) {
-            const inline = inliner(accumulate, path, [ field.length ], [])
+            const inline = inliner.inline(path, [ field.length ], [])
             const element = field.fields[field.fields.length - 1]
             if (field.pad.length != 0) {
                 source = $(`
@@ -675,11 +613,8 @@ function generate (packet, { require = null }) {
             `))
             steps.push(map(dispatch, path, when.fields))
         }
-        const inlined = inliner(accumulate, path, [ field.select ], [])
-        const invocations = accumulations({
-            functions: [ field.select ],
-            accumulate: accumulate
-        })
+        const inlined = inliner.inline(path, [ field.select ], [])
+        const invocations = inliner.accumulations([ field.select ])
         const select = field.stringify
             ? `String(${inlined.inlined.shift()})`
             : inlined.inlined.shift()
@@ -704,10 +639,7 @@ function generate (packet, { require = null }) {
 
     function conditional (path, field) {
         surround = true
-        const invocations = accumulations({
-            functions: field.serialize.conditions.map(condition => condition.test),
-            accumulate: accumulate
-        })
+        const invocations = inliner.accumulations(field.serialize.conditions.map(condition => condition.test))
         const start = $step++
         const steps = []
         for (const condition of field.serialize.conditions) {
@@ -721,7 +653,7 @@ function generate (packet, { require = null }) {
             const condition = field.serialize.conditions[i]
             ladder = condition.test != null ? function () {
                 const registers = field.split ? [ path ] : []
-                const f = inliner(accumulate, path, [ condition.test ], registers)
+                const f = inliner.inline(path, [ condition.test ], registers)
                 return $(`
                     `, ladder, `${keywords} (`, f.inlined.shift(), `) {
                         $step = ${steps[i].step}

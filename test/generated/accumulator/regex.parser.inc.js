@@ -63,6 +63,7 @@ module.exports = function ({ parsers, $lookup }) {
 
                     object.sentry = $buffer[$start++]
 
+
                     object = (function ({ $_, regex }) {
                         assert(regex.test('abc'))
                         return $_

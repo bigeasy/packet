@@ -14,10 +14,7 @@ const $ = require('programmatic')
 //
 module.exports = function (accumulate, path, inlines, registers, assignee = null) {
     const inlined = [], accumulated = []
-    const buffered = {
-        start: accumulate.buffered.length,
-        end: accumulate.buffered.length
-    }
+    const buffered = { offset: accumulate.buffered.length, length: 0 }
     accumulate.accumulated.unshift(function () {
         const accumulated = {}
         for (const name in accumulate.accumulator) {
@@ -74,7 +71,7 @@ module.exports = function (accumulate, path, inlines, registers, assignee = null
                     properties[property] = property
                 } else if (property == '$start') {
                     is.buffered = true
-                    properties[property] = `$starts[${buffered.end++}]`
+                    properties[property] = `$starts[${accumulate.buffered.length}]`
                 } else if (property == '$end') {
                     is.buffered = true
                     properties[property] = '$start'
@@ -128,5 +125,6 @@ module.exports = function (accumulate, path, inlines, registers, assignee = null
             }
         }
     }
+    buffered.length = accumulate.buffered.length
     return { inlined, buffered, accumulated, register: registers[0] }
 }

@@ -56,6 +56,7 @@ module.exports = function ({ parsers, $lookup }) {
 
                         $I[0] = $buffer[$start++]
 
+
                         $I[0] = (value => value)($I[0])
 
                         $i[0] = 0

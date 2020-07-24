@@ -19,25 +19,25 @@ module.exports = function ({ parsers, $lookup }) {
                 $accumulator['counter'] = counter
 
                 if ($end - $start < 1) {
-                    return parsers.inc.object(object, $accumulator, 2, {
+                    return parsers.inc.object(object, {
                         counter: [ 0 ]
-                    })($buffer, $start, $end)
+                    }, 2, $accumulator)($buffer, $start, $end)
                 }
 
                 object.value.first = ($buffer[$start++])
 
                 if ($end - $start < 1) {
-                    return parsers.inc.object(object, $accumulator, 4, {
+                    return parsers.inc.object(object, {
                         counter: [ 0 ]
-                    })($buffer, $start, $end)
+                    }, 4, $accumulator)($buffer, $start, $end)
                 }
 
                 object.value.second = ($buffer[$start++])
 
                 if ($end - $start < 1) {
-                    return parsers.inc.object(object, $accumulator, 6, {
+                    return parsers.inc.object(object, {
                         counter: [ 0 ]
-                    })($buffer, $start, $end)
+                    }, 6, $accumulator)($buffer, $start, $end)
                 }
 
                 object.sentry = ($buffer[$start++])

@@ -20,14 +20,8 @@ const unpack = require('./unpack')
 // Determine necessary variables.
 const { parse: declare } = require('./declare')
 
-// Generate accumulator declaration source.
-const accumulatorer = require('./accumulator')
-
-// Generate invocations of accumulators before conditionals.
-const accumulations = require('./accumulations')
-
 // Generate inline function source.
-const inliner = require('./inliner')
+const Inliner = require('./inline_')
 
 // Generate required modules and functions.
 const required = require('./required')
@@ -67,14 +61,10 @@ function generate (packet, { require = null }) {
     // An object that tracks the declaration of accumulators, whether or not
     // they are accumulating buffer contents, as well providing the `inliner`
     // function with the state necessary to generate named function invocations.
-    const accumulate = {
-        accumulator: {},
-        accumulated: [],
-        buffered: [],
-        variables: variables,
-        packet: packet.name,
+    const inliner = new Inliner({
+        packet, variables, accumulators, parameters,
         direction: 'parse'
-    }
+    })
     //
 
     // Generate an *absent* field by setting the property to `null` or an empty
@@ -97,9 +87,6 @@ function generate (packet, { require = null }) {
     //
     function integer (path, field) {
         const bytes = field.bits / 8
-        const buffered = accumulate.buffered.length != 0
-            ? accumulate.buffered.map(buffered => buffered.source).join('\n')
-            : null
         // Special case for single byte which is a single step.
         if (bytes == 1 && field.fields == null && field.lookup == null) {
             return $(`
@@ -110,7 +97,7 @@ function generate (packet, { require = null }) {
                 case ${$step++}:
 
                     if ($start == $end) {
-                        `, buffered, `
+                        `, inliner.exit(), `
                         return { start: $start, object: null, parse: $parse }
                     }
 
@@ -125,7 +112,7 @@ function generate (packet, { require = null }) {
         // lookup value, which is probably okay, since how would you lookup
         // negative values. Well, you could use a map, so...
         const assign = field.fields
-            ? unpack(accumulate, packet, path, field, '$_')
+            ? unpack(inliner, packet, path, field, '$_')
             : field.compliment
                 ? `${path} = ${unsign('$_', field.bits)}`
                 : field.lookup != null
@@ -147,7 +134,7 @@ function generate (packet, { require = null }) {
 
                 while ($bite != ${stop}${cast.suffix}) {
                     if ($start == $end) {
-                        `, buffered, `
+                        `, inliner.exit(), `
                         return { start: $start, object: null, parse: $parse }
                     }
                     $_ += ${cast.to}($buffer[$start++]) << $bite * 8${cast.suffix}${cast.fixup}
@@ -191,56 +178,22 @@ function generate (packet, { require = null }) {
     }
 
     function inline (path, field) {
-        const after = field.after.length != 0 ? function () {
-            const inline = inliner(accumulate, path, field.after, [ path ], path)
-            if (
-                inline.inlined.length == 0 &&
-                inline.buffered.start == inline.buffered.end
-            ) {
-                return {
-                    before: null,
-                    after: null,
-                    buffered: {
-                        start: accumulate.buffered.length,
-                        end: accumulate.buffered.length
-                    }
-                }
-            }
-            const starts = []
-            for (let i = inline.buffered.start, I = inline.buffered.end; i < I; i++) {
-                starts.push(`$starts[${i}] = $start`)
-            }
-            return {
-                before: starts.length != 0 ? $(`
-                    case ${$step++}:
+        const inline = inliner.inline_(path, field.after)
+        const before = inline.starts != null
+            ? $(`
+                case ${$step++}:
 
-                        `, starts.join('\n'), `
-
-                `) : null,
-                after: join(inline.inlined),
-                buffered: inline.buffered
-            }
-        } () : {
-            before: null,
-            after: null,
-            buffered: {
-                start: accumulate.buffered.length,
-                end: accumulate.buffered.length
-            }
-        }
-        const source = map(dispatch, path, field.fields)
-        // Final run of any buffered functions that are about to go out of
-        // scope.
-        const buffered = accumulate.buffered
-            .splice(0, after.buffered.end)
-            .map(buffered => {
-                return buffered.source
-            })
+                    `, inline.starts, `
+            `)
+            : null
         return $(`
-            `, after.before, `
-            `, source, `
-                `, -1, after.after, `
-                `, buffered.length != 0 ? buffered.join('\n') : null, `
+            `, before, -1, `
+
+            `, map(dispatch, inline.path, field.fields), `
+
+                `, -1, inline.inlined, `
+
+                `, -1, inliner.pop(),`
         `)
     }
 
@@ -249,9 +202,6 @@ function generate (packet, { require = null }) {
         const I = `$I[${++$I}]`
         const encoding = map(dispatch, I, field.encoding)
         if (element.type == 'buffer') {
-            const buffered = accumulate.buffered.length != 0
-                ? accumulate.buffered.map(buffered => buffered.source).join('\n')
-                : null
             locals['index'] = 0
             locals['buffers'] = '[]'
             $I--
@@ -271,7 +221,7 @@ function generate (packet, { require = null }) {
                     $start += $length
 
                     if ($index != ${I}) {
-                        `, buffered, `
+                        `, inliner.exit(), `
                         return { start: $start, parse: $parse }
                     }
 
@@ -308,7 +258,7 @@ function generate (packet, { require = null }) {
         return $(`
             case ${$step++}:
 
-                `, accumulatorer(accumulate, accumulators, parameters, field), `
+                `, inliner.accumulator(field), `
 
             `, map(dispatch, path, field.fields), `
         `)
@@ -330,7 +280,7 @@ function generate (packet, { require = null }) {
     function terminated (path, field) {
         const length = field.calculated ? `$I[${++$I}]` : field.length
         const inline = field.calculated
-            ? inliner(accumulate, path, [ field.length ], []).inlined.shift()
+            ? inliner.inline(path, [ field.length ], []).inlined.join('\n')
             : null
         // We will be looping.
         surround = true
@@ -340,9 +290,6 @@ function generate (packet, { require = null }) {
         const bytes = field.terminator || field.pad
         // Generate any buffered function calls to process the buffer if we
         // reach the end of the buffer.
-        const buffered = accumulate.buffered.length != 0
-                       ? accumulate.buffered.map(buffered => buffered.source).join('\n')
-                       : null
         // Skip the remainder for of a fixed padded buffer. Common to buffered
         // and byte-by-byte fixed arrays, not used for terminated. Note that
         // it's a function because of the `$step++`.
@@ -355,7 +302,7 @@ function generate (packet, { require = null }) {
                     $_ -= length
 
                     if ($_ != 0) {
-                        `, buffered, `
+                        `, inliner.exit(), `
                         return { start: $start, object: null, parse: $parse }
                     }
 
@@ -416,7 +363,7 @@ function generate (packet, { require = null }) {
                     } else {
                         $_ += $end - $start
                         $buffers.push($buffer.slice($start))
-                        `, buffered, `
+                        `, inliner.exit(), `
                         return { start: $end, object: null, parse: $parse }
                     }
 
@@ -442,7 +389,7 @@ function generate (packet, { require = null }) {
                         continue
                     } else {
                         $buffers.push($buffer.slice($start))
-                        `, buffered, `
+                        `, inliner.exit(), `
                         return { start: $end, object: null, parse: $parse }
                     }
 
@@ -481,7 +428,7 @@ function generate (packet, { require = null }) {
                     case ${$step++}:
 
                         if ($start == $end) {
-                            `, buffered, `
+                            `, inliner.exit(), `
                             return { start: $start, object: null, parse: $parse }
                         }
 
@@ -593,7 +540,7 @@ function generate (packet, { require = null }) {
                     `, fixed, -1, `
 
                     if ($start == $end) {
-                        `, buffered, `
+                        `, inliner.exit(), `
                         return { start: $start, object: null, parse: $parse }
                     }
 
@@ -642,7 +589,7 @@ function generate (packet, { require = null }) {
                         `, index == 0 ? fixed : null, -1, `
 
                         if ($start == $end) {
-                            `, buffered, `
+                            `, inliner.exit(), `
                             return { start: $start, object: null, parse: $parse }
                         }
 
@@ -738,12 +685,9 @@ function generate (packet, { require = null }) {
             return terminated(path, field)
         }
         const inline = field.calculated
-            ? inliner(accumulate, path, [ field.length ], []).inlined.shift()
+            ? inliner.inline(path, [ field.length ], []).inlined.shift()
             : null
         const element = field.fields[field.fields.length - 1]
-        const buffered = accumulate.buffered.length != 0
-            ? accumulate.buffered.map(buffered => buffered.source).join('\n')
-            : null
         const length = field.calculated  ? `$I[${++$I}]` : field.length
         //
 
@@ -775,7 +719,7 @@ function generate (packet, { require = null }) {
                     $_ += length
 
                     if ($_ != ${length}) {
-                        `, buffered, `
+                        `, inliner.exit(), `
                         return { start: $start, object: null, parse: $parse }
                     }
 
@@ -894,10 +838,7 @@ function generate (packet, { require = null }) {
                 ], 0, ${bytes.length})
             `)
         } ()
-        const invocations = accumulations({
-            functions: field.parse.conditions.map(condition => condition.test),
-            accumulate: accumulate
-        })
+        const invocations = inliner.accumulations(field.parse.conditions.map(condition => condition.test))
         signature.push(packet.name)
         const start = $step++
         const steps = []
@@ -912,7 +853,7 @@ function generate (packet, { require = null }) {
             const condition = parse.conditions[i]
             const vivified = vivify.assignment(path, condition)
             ladder = condition.test != null ? function () {
-                const inline = inliner(accumulate, path, [ condition.test ], signature)
+                const inline = inliner.inline(path, [ condition.test ], signature)
                 return $(`
                     `, ladder, `${keywords} (`, inline.inlined.shift(), `) {
                         `, vivified, -1, `
@@ -973,16 +914,13 @@ function generate (packet, { require = null }) {
             `))
             steps.push(map(dispatch, path, when.fields))
         }
-        const inlined = inliner(accumulate, path, [ field.select ], [])
+        const inlined = inliner.inline(path, [ field.select ], [])
         const select = field.stringify
             ? `String(${inlined.inlined.shift()})`
             : inlined.inlined.shift()
         // TODO Slicing here is because of who writes the next step, which seems
         // to be somewhat confused.
-        const invocations = accumulations({
-            functions: [ field.test ],
-            accumulate: accumulate
-        })
+        const invocations = inliner.accumulations([ field.test ])
         return $(`
             case ${start}:
 

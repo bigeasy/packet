@@ -37,6 +37,7 @@ module.exports = function ({ parsers, $lookup }) {
                     $step = 3
 
                 }
+
                     object.value = (function (value) {
                         return value.readFloatLE()
                     })(object.value)

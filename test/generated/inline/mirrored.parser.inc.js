@@ -32,6 +32,7 @@ module.exports = function ({ parsers, $lookup }) {
 
                     object.value = $_
 
+
                     object.value = (value => ~value)(object.value)
 
                 case 3:

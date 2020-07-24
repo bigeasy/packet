@@ -34,6 +34,7 @@ module.exports = function ({ parsers, $lookup }) {
 
                     object.value = $_
 
+
                     object.value = (value => twiddle(value))(object.value)
 
                 case 3:

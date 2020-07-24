@@ -8,7 +8,7 @@ const { structure } = require('./vivify')
 const inliner = require('./inliner')
 
 function unpack (accumulate, root, path, field, packed, offset = 0) {
-    function generate (accumulate, root, path, field, packed, offset) {
+    function generate (path, field, packed, offset) {
         let bits = field.bits, bit = offset
         function advance (size) {
             const offset = bit
@@ -82,7 +82,7 @@ function unpack (accumulate, root, path, field, packed, offset = 0) {
                         const condition = conditional.serialize.conditions[i]
                         // TODO Can we use the univeral vivify here? (Ugh.)
                         const vivifyed = condition.fields[0].type == 'integer' && condition.fields[0].fields
-                        const source = generate.call(null, accumulate, root, path, {
+                        const source = generate(path, {
                             bits: bits,
                             fields: vivifyed ? condition.fields[0].fields : condition.fields
                         }, packed, offset)
@@ -113,7 +113,7 @@ function unpack (accumulate, root, path, field, packed, offset = 0) {
                     const cases = []
                     for (const when of switched.cases) {
                         const vivifyed = when.fields[0].type == 'integer' && when.fields[0].fields
-                        const source = module.exports.call(null, accumulate, root, path, {
+                        const source = generate(path, {
                             bits: bits,
                             fields: vivifyed ? when.fields[0].fields : when.fields
                         }, packed, offset)
@@ -143,7 +143,7 @@ function unpack (accumulate, root, path, field, packed, offset = 0) {
         }
         return join(blocks)
     }
-    return generate(accumulate, root, path, field, packed, offset)
+    return generate(path, field, packed, offset)
 }
 
 module.exports = unpack

@@ -19,9 +19,9 @@ module.exports = function ({ parsers, $lookup }) {
                 $accumulator['regex'] = regex
 
                 if ($end - $start < 3) {
-                    return parsers.inc.object(object, $accumulator, 2, {
+                    return parsers.inc.object(object, {
                         regex: /^abc$/
-                    })($buffer, $start, $end)
+                    }, 2, $accumulator)($buffer, $start, $end)
                 }
 
                 object.value.first = ($buffer[$start++])

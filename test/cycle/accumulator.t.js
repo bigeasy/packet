@@ -2,7 +2,7 @@ require('proof')(0, prove)
 
 function prove (okay) {
     const cycle = require('./cycle')
-    /* cycle(okay, {
+    cycle(okay, {
         name: 'accumulator/object',
         define: {
             object: [{ counter: [ 0 ] }, [[[ function ({ $_, counter }) {
@@ -50,7 +50,7 @@ function prove (okay) {
         require: {
             assert: 'assert'
         }
-    }) */
+    })
     cycle(okay, {
         name: 'accumulator/conditional',
         define: {
@@ -93,9 +93,8 @@ function prove (okay) {
             },
             sentry: 0xaa
         }],
-        stopAt: 'parse.bff'
+        stopAt: 'serialize.inc'
     })
-    return
     cycle(okay, {
         name: 'accumulator/switch',
         define: {
@@ -138,7 +137,6 @@ function prove (okay) {
                 number: 1
             },
             sentry: 0xaa
-        }],
-        stopAt: 'sizeof'
+        }]
     })
 }

@@ -1,3 +1,8 @@
+## Thu Jul 23 13:15:23 CDT 2020
+
+ * [What's Up with Monomorphism](https://mrale.ph/blog/2015/01/11/whats-up-with-monomorphism.html).
+ * [Performance Through Elegant JavaScript](https://medium.com/wolfram-developers/performance-through-elegant-javascript-15b98f0904de)>
+
 ## Mon Jul 20 07:15:55 CDT 2020
 
 Will not do calculated terminals.

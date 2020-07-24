@@ -32,6 +32,7 @@ module.exports = function ({ parsers, $lookup }) {
 
                     object.value = $_ & 0x8000 ? (0xffff - $_ + 1) * -1 : $_
 
+
                     object.value = (value => -value)(object.value)
 
                 case 3:

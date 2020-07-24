@@ -32,6 +32,7 @@ module.exports = function ({ parsers, $lookup }) {
 
                     object.value = $_
 
+
                 case 3:
 
                     $step = 4

@@ -20,25 +20,25 @@ module.exports = function ({ serializers, $lookup }) {
                 })
 
                 if ($end - $start < 1) {
-                    return serializers.inc.object(object, $accumulator, 2, $$, {
+                    return serializers.inc.object(object, {
                         counter: (() => [ 0 ])()
-                    })($buffer, $start, $end)
+                    }, 2, $$, $accumulator)($buffer, $start, $end)
                 }
 
                 $buffer[$start++] = ($$[0].value.first & 0xff)
 
                 if ($end - $start < 1) {
-                    return serializers.inc.object(object, $accumulator, 4, $$, {
+                    return serializers.inc.object(object, {
                         counter: (() => [ 0 ])()
-                    })($buffer, $start, $end)
+                    }, 4, $$, $accumulator)($buffer, $start, $end)
                 }
 
                 $buffer[$start++] = ($$[0].value.second & 0xff)
 
                 if ($end - $start < 1) {
-                    return serializers.inc.object(object, $accumulator, 6, $$, {
+                    return serializers.inc.object(object, {
                         counter: (() => [ 0 ])()
-                    })($buffer, $start, $end)
+                    }, 6, $$, $accumulator)($buffer, $start, $end)
                 }
 
                 $buffer[$start++] = ($$[0].sentry & 0xff)

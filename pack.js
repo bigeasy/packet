@@ -62,7 +62,7 @@ function flatten (flattened, path, fields, assignment = '=') {
 // A recent implementation of packing, but one that is now untested and stale.
 // Removing from the `serialize.all` generator for visibility.
 module.exports = function (accumulate, root, field, path, stuff, assignment = '=', offset = 0) {
-    function pack (accumulate, root, path, bits, offset, fields) {
+    function pack (path, bits, offset, fields) {
         const packed = [[]]
         for (const field of fields) {
             switch (field.type) {
@@ -81,7 +81,7 @@ module.exports = function (accumulate, root, field, path, stuff, assignment = '=
                     let ladder = '', keywords = 'if'
                     for (let i = 0, I = conditional.serialize.conditions.length; i < I; i++) {
                         const condition = conditional.serialize.conditions[i]
-                        const source = generate(accumulate, root, {
+                        const source = generate({
                             bits: bits,
                             fields: condition.fields[0].type == 'integer' && condition.fields[0].fields
                                   ? condition.fields[0].fields
@@ -109,7 +109,7 @@ module.exports = function (accumulate, root, field, path, stuff, assignment = '=
                     const { switched, path, assignment } = field, block = []
                     const cases = []
                     for (const when of switched.cases) {
-                        const source = generate(accumulate, root, {
+                        const source = generate({
                             bits: bits,
                             fields: when.fields[0].type == 'integer' && when.fields[0].fields
                                   ? when.fields[0].fields
@@ -139,9 +139,9 @@ module.exports = function (accumulate, root, field, path, stuff, assignment = '=
         return packed.reverse()
     }
 
-    function generate (accumulate, root, field, path, stuff, assignment = '=', offset = 0) {
+    function generate (field, path, stuff, assignment = '=', offset = 0) {
         const block = [], flattened = flatten([], path, field.fields, assignment)
-        for (const packed of pack(accumulate, root, path, field.bits, offset, flattened)) {
+        for (const packed of pack(path, field.bits, offset, flattened)) {
             if (typeof packed == 'string') {
                 block.push(packed)
             } else if (packed.length != 0) {
@@ -158,5 +158,5 @@ module.exports = function (accumulate, root, field, path, stuff, assignment = '=
         return join(block)
     }
 
-    return generate(accumulate, root, field, path, stuff, assignment, offset)
+    return generate(field, path, stuff, assignment, offset)
 }

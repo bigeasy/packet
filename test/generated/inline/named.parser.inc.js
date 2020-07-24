@@ -32,6 +32,7 @@ module.exports = function ({ parsers, $lookup }) {
 
                     object.value = $_
 
+
                     object.value = (function ({ $_, $, $path, $i, $direction }) {
                         const assert = require('assert')
                         if ($direction == 'serialize') {

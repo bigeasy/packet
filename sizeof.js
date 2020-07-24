@@ -10,6 +10,9 @@ const { serialize: declare } = require('./declare')
 const $ = require('programmatic')
 
 // Generate accumulator declaration source.
+const Inliner = require('./inline_')
+
+// Generate accumulator declaration source.
 const accumulatorer = require('./accumulator')
 
 // Generate invocations of accumulators before conditionals.
@@ -34,15 +37,10 @@ function generate (packet, { require = null }) {
     const variables = {
         register: true
     }
-    const accumulate = {
-        accumulator: {},
-        accumulated: [],
-        buffered: [],
-        start: 0,
-        variables: variables,
-        packet: packet.name,
+    const accumulate = new Inliner({
+        packet, variables, accumulators, parameters,
         direction: 'serialize'
-    }
+    })
 
     let $i = -1
 
@@ -231,13 +229,13 @@ function generate (packet, { require = null }) {
                 })
                 const inlined = inliner(accumulate, path, inlines, [ path ], '')
                 const starts = []
-                for (let i = inlined.buffered.start, I = inlined.buffered.end; i < I; i++) {
+                for (let i = inlined.buffered.offset, I = inlined.buffered.length; i < I; i++) {
                     starts.push(`$starts[${i}] = $start`)
                 }
                 const source = map(dispatch, path, field.fields)
                 // TODO Exclude if not externally referenced.
                 const buffered = accumulate.buffered
-                    .splice(0, inlined.buffered.end)
+                    .splice(inlined.buffered.offset, inlined.buffered.length)
                     .map(buffered => {
                         return buffered.source
                     })

@@ -61,6 +61,7 @@ module.exports = function ({ parsers, $lookup }) {
                             $step = 5
                             continue
                         }
+
                         object.value = (function ($_) {
                             return $_.slice().reverse()
                         })(object.value)

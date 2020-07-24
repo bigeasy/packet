@@ -11,9 +11,9 @@ module.exports = function ({ serializers, $lookup }) {
                 $accumulator['counter'] = counter
 
                 if ($end - $start < 3) {
-                    return serializers.inc.object(object, $accumulator, 1, $$, {
+                    return serializers.inc.object(object, {
                         counter: [ 0 ]
-                    })($buffer, $start, $end)
+                    }, 1, $$, $accumulator)($buffer, $start, $end)
                 }
 
                 $$[0] = (function ({ $_, counter }) {
