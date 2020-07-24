@@ -20,8 +20,14 @@ class Inliner {
         return accumulations({ functions, accumulate: this })
     }
 
-    accumulator (field) {
-        return _accumulator(this, this.accumulators, this.parameters, field)
+    accumulator (field, referenced) {
+        const accumulators = referenced != null
+            ? field.accumulators.filter(accumulator => referenced[accumulator.name])
+            : field.accumulators
+        if (accumulators.length == 0) {
+            return null
+        }
+        return _accumulator(this, this.accumulators, this.parameters, accumulators)
     }
 
     inline_ (path, inlines) {

@@ -12,15 +12,6 @@ const $ = require('programmatic')
 // Generate accumulator declaration source.
 const Inliner = require('./inline_')
 
-// Generate accumulator declaration source.
-const accumulatorer = require('./accumulator')
-
-// Generate invocations of accumulators before conditionals.
-const accumulations = require('./accumulations')
-
-// Generate inline function source.
-const inliner = require('./inliner')
-
 // Generate required modules and functions.
 const required = require('./required')
 
@@ -37,7 +28,7 @@ function generate (packet, { require = null }) {
     const variables = {
         register: true
     }
-    const accumulate = new Inliner({
+    const inliner = new Inliner({
         packet, variables, accumulators, parameters,
         direction: 'serialize'
     })
@@ -55,17 +46,15 @@ function generate (packet, { require = null }) {
             }
             break
         case 'conditional': {
-                const invocations = accumulations({
-                    functions: field.serialize.conditions.map(condition => condition.test),
-                    accumulate: accumulate
-                })
+                // TODO Only referenced, right?
+                const invocations = inliner.accumulations(field.serialize.conditions.map(condition => condition.test))
                 let ladder = '', keywords = 'if'
                 for (let i = 0, I = field.serialize.conditions.length; i < I; i++) {
                     const condition = field.serialize.conditions[i]
                     const source = map(dispatch, path, condition.fields)
                     ladder = condition.test != null ? function () {
                         const registers = field.split ? [ path ] : []
-                        const inline = inliner(accumulate, path, [ condition.test ], registers)
+                        const inline = inliner.inline(path, [ condition.test ], registers)
                         return $(`
                             `, ladder, `${keywords} (`, inline.inlined.shift(), `) {
                                 `, source, `
@@ -100,11 +89,8 @@ function generate (packet, { require = null }) {
                             break
                     `))
                 }
-                const invocations = accumulations({
-                    functions: [ field.select ],
-                    accumulate: accumulate
-                })
-                const inlined = inliner(accumulate, path, [ field.select ], [])
+                const invocations = inliner.accumulations([ field.select ])
+                const inlined = inliner.inline(path, [ field.select ], [])
                 const select = field.stringify
                     ? `String(${inlined.inlined.shift()})`
                     : inlined.inlined.shift()
@@ -120,7 +106,7 @@ function generate (packet, { require = null }) {
         case 'fixed': {
                 if (field.calculated) {
                     const element = field.fields[0]
-                    const inline = inliner(accumulate, path, [ field.length ], [])
+                    const inline = inliner.inline(path, [ field.length ], [])
                     if (element.fixed) {
                         return $(`
                             $start += `, inline.inlined.shift(), ` * ${element.bits >>> 3}
@@ -201,21 +187,16 @@ function generate (packet, { require = null }) {
             }
         case 'accumulator': {
                 variables.accumulator = true
-                const _accumulators = field.accumulators
-                    .filter(accumulator => referenced[accumulator.name])
-                    .map(accumulator => accumulatorer(accumulate, accumulators, parameters, accumulator))
+                const _accumulators = inliner.accumulator(field, referenced)
                 // TODO Really want to get rid of this step if the final
                 // calcualtions are not referenced, if the argument is not an
                 // external argument and if it is not referenced again in the
                 // parse or serialize or sizeof.
-                const declarations = _accumulators.length != 0
-                                   ? _accumulators.join('\n')
-                                   : null
                 const source = field.fixed
                              ? `$start += ${field.bits >>> 3}`
                              : map(dispatch, path, field.fields)
                 return  $(`
-                    `, declarations, -1, `
+                    `, _accumulators, -1, `
 
                     `, source, `
                 `)
@@ -227,14 +208,14 @@ function generate (packet, { require = null }) {
                         return referenced[property]
                     }).length != 0
                 })
-                const inlined = inliner(accumulate, path, inlines, [ path ], '')
+                const inlined = inliner.inline(path, inlines, [ path ], '')
                 const starts = []
                 for (let i = inlined.buffered.offset, I = inlined.buffered.length; i < I; i++) {
                     starts.push(`$starts[${i}] = $start`)
                 }
                 const source = map(dispatch, path, field.fields)
                 // TODO Exclude if not externally referenced.
-                const buffered = accumulate.buffered
+                const buffered = inliner.buffered
                     .splice(inlined.buffered.offset, inlined.buffered.length)
                     .map(buffered => {
                         return buffered.source
