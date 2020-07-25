@@ -1,5 +1,5 @@
+const $ = require('programmatic')
 const join = require('./join')
-const accumulations = require('./accumulations')
 const inliner = require('./inliner')
 const _accumulator = require('./accumulator')
 
@@ -16,14 +16,30 @@ class Inliner {
         this.stack = []
     }
 
-    accumulations (functions) {
-        return accumulations({ functions, accumulate: this })
+    accumulations (functions, seen = {}) {
+        const invocations = this.buffered.filter(accumulator => {
+            return accumulator.properties.some(property => {
+                return this.accumulator[property] != null && !seen[property]
+            })
+        })
+        for (const invocation of invocations) {
+            for (const property of invocation.properties) {
+                seen[property] = true
+            }
+        }
+        return invocations.length != 0
+            ? invocations.map(invocation => {
+                return $(`
+                    `, invocation.source, `
+                    $starts[${invocation.start}] = $start
+                `)
+            }).join('\n')
+            : null
+        return invocations.length != 0 ? invocations.join('\n') : null
     }
 
-    accumulator (field, referenced) {
-        const accumulators = referenced != null
-            ? field.accumulators.filter(accumulator => referenced[accumulator.name])
-            : field.accumulators
+    accumulator (field, filter = () => true) {
+        const accumulators = field.accumulators.filter(accumulator => filter(accumulator.name))
         if (accumulators.length == 0) {
             return null
         }
@@ -48,6 +64,10 @@ class Inliner {
             inlined: inline.inlined.length != 0 ? join(inline.inlined) : null,
             starts: starts.length != 0 ? starts.join('\n') : null,
         }
+    }
+
+    test (path, test, seen = {}) {
+        const inline = inliner(this, path, [ test ], [])
     }
 
     inline (path, inlines, registers, assignee = null) {

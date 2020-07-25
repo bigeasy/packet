@@ -47,7 +47,10 @@ function generate (packet, { require = null }) {
             break
         case 'conditional': {
                 // TODO Only referenced, right?
-                const invocations = inliner.accumulations(field.serialize.conditions.map(condition => condition.test))
+                const tests = field.serialize.conditions
+                                             .filter(condition => condition.test != null)
+                                             .map(condition => condition.test)
+                const invocations = inliner.accumulations(tests)
                 let ladder = '', keywords = 'if'
                 for (let i = 0, I = field.serialize.conditions.length; i < I; i++) {
                     const condition = field.serialize.conditions[i]
@@ -187,7 +190,6 @@ function generate (packet, { require = null }) {
             }
         case 'accumulator': {
                 variables.accumulator = true
-                const _accumulators = inliner.accumulator(field, referenced)
                 // TODO Really want to get rid of this step if the final
                 // calcualtions are not referenced, if the argument is not an
                 // external argument and if it is not referenced again in the
@@ -196,7 +198,7 @@ function generate (packet, { require = null }) {
                              ? `$start += ${field.bits >>> 3}`
                              : map(dispatch, path, field.fields)
                 return  $(`
-                    `, _accumulators, -1, `
+                    `, inliner.accumulator(field, name => referenced[name]), -1, `
 
                     `, source, `
                 `)

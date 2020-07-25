@@ -4,9 +4,6 @@ const join = require('./join')
 const $ = require('programmatic')
 const { structure } = require('./vivify')
 
-// Generate inline function source.
-const inliner = require('./inliner')
-
 function unpack (accumulate, root, path, field, packed, offset = 0) {
     function generate (path, field, packed, offset) {
         let bits = field.bits, bit = offset
@@ -88,7 +85,7 @@ function unpack (accumulate, root, path, field, packed, offset = 0) {
                         }, packed, offset)
                         const vivify = vivifyed ? structure(path, condition.fields[0]) : null
                         ladder = condition.test != null ? function () {
-                            const inline = inliner(accumulate, path, [ condition.test ], [])
+                            const inline = accumulate.inline(path, [ condition.test ], [])
                             return $(`
                                 `, ladder, `${keywords} (`, inline.inlined.shift(), `) {
                                     `, vivify, -1, `
@@ -127,7 +124,7 @@ function unpack (accumulate, root, path, field, packed, offset = 0) {
                                 break
                         `))
                     }
-                    const inlined = inliner(accumulate, path, [ switched.select ], [])
+                    const inlined = accumulate.inline(path, [ switched.select ], [])
                     const select = switched.stringify
                         ? `String(${inlined.inlined.shift()})`
                         : inlined.inlined.shift()

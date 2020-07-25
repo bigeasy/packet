@@ -428,7 +428,7 @@ function generate (packet, { require = null, bff, chk }) {
         }
         $step += 2
         if (field.fields) {
-            const packing = pack(inliner, packet, field, path, '$_')
+            const packing = pack(inliner, field, path)
             return $(`
                 `, packing, `
 
@@ -757,8 +757,9 @@ function generate (packet, { require = null, bff, chk }) {
 
     function conditional (path, field) {
         const block = []
-        const invocations =
-        inliner.accumulations(field.serialize.conditions.map(condition => condition.test))
+        const tests = field.serialize.conditions.filter(condition => condition.test != null)
+                                                .map(condition => condition.test)
+        const invocations = inliner.accumulations(tests)
         $step++
         let ladder = '', keywords = 'if'
         for (let i = 0, I = field.serialize.conditions.length; i < I; i++) {

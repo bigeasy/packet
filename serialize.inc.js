@@ -60,7 +60,7 @@ function generate (packet, { require = null }) {
         let bite = field.endianness == 'big' ? bytes - 1 : 0
         let stop = field.endianness == 'big' ? -1 : bytes
         const assign = field.fields
-            ? pack(inliner, packet, field, path, '$_')
+            ? pack(inliner, field, path)
             : field.lookup != null
                 ? Array.isArray(field.lookup.values)
                     ? `$_ = $lookup[${field.lookup.index}].indexOf(${path})`
@@ -639,7 +639,9 @@ function generate (packet, { require = null }) {
 
     function conditional (path, field) {
         surround = true
-        const invocations = inliner.accumulations(field.serialize.conditions.map(condition => condition.test))
+        const tests = field.serialize.conditions.filter(condition => condition.test != null)
+                                                .map(condition => condition.test)
+        const invocations = inliner.accumulations(tests)
         const start = $step++
         const steps = []
         for (const condition of field.serialize.conditions) {

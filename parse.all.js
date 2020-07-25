@@ -837,7 +837,9 @@ function generate (packet, { require, bff, chk }) {
     }
 
     function conditional (path, field) {
-        const invocations = accumulate.accumulations(field.parse.conditions.map(condition => condition.test))
+        const tests = field.parse.conditions.filter(condition => condition.test != null)
+                                             .map(condition => condition.test)
+        const invocations = accumulate.accumulations(tests)
         const signature = []
         const sip = function () {
             if (field.parse.sip == null) {

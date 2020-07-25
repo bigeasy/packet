@@ -13,16 +13,13 @@ const $ = require('programmatic')
 
 //
 module.exports = function (accumulate, path, inlines, registers, assignee = null) {
-    const inlined = [], accumulated = []
+    const inlined = [], accumulators = {}
+    // Array of functions that operate on the underlying buffer.
     const buffered = { offset: accumulate.buffered.length, length: 0 }
-    accumulate.accumulated.unshift(function () {
-        const accumulated = {}
-        for (const name in accumulate.accumulator) {
-            accumulated[name] = []
-        }
-        return accumulated
-    } ())
+    // For each function defined by an inline, always one function for a select
+    // or conditional test.
     for (const inline of inlines) {
+        // Collection of function properties.
         const is = {
             conditional: assignee == null,
             accumulated: false,
@@ -30,7 +27,10 @@ module.exports = function (accumulate, path, inlines, registers, assignee = null
             buffered: false,
             assertion: false
         }
+        // Read the initial register definition.
         const $_ = registers[0]
+        // Positional arguments are simplified, less analysis because special
+        // features are indicated by named functions.
         if (inline.properties.length == 0) {
             if (inline.defaulted[0] == 0) {
                 is.assertion = true
@@ -64,7 +64,6 @@ module.exports = function (accumulate, path, inlines, registers, assignee = null
                 } else if (property == accumulate.packet || property == '$') {
                     properties[property] = accumulate.packet
                 } else if (accumulate.accumulator[property]) {
-                    accumulated.push(property)
                     properties[property] = `$accumulator[${util.inspect(property)}]`
                 } else if (property == '$buffer') {
                     is.buffered = true
@@ -88,13 +87,8 @@ module.exports = function (accumulate, path, inlines, registers, assignee = null
                 `))
             } else if (is.buffered) {
                 if (is.transform) {
+                    throw new Error
                 } else {
-                    accumulated.map(property => {
-                        if (!(property in accumulate.accumulated[0])) {
-                            accumulate.accumulated[0] = {}
-                        }
-                        accumulate.accumulated[0][property] = accumulate.buffered.length
-                    })
                     accumulate.buffered.push({
                         start: accumulate.buffered.length,
                         properties: inline.properties,
@@ -126,5 +120,5 @@ module.exports = function (accumulate, path, inlines, registers, assignee = null
         }
     }
     buffered.length = accumulate.buffered.length
-    return { inlined, buffered, accumulated, register: registers[0] }
+    return { inlined, buffered, register: registers[0] }
 }

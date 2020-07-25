@@ -838,7 +838,10 @@ function generate (packet, { require = null }) {
                 ], 0, ${bytes.length})
             `)
         } ()
-        const invocations = inliner.accumulations(field.parse.conditions.map(condition => condition.test))
+        const tests = field.parse.conditions
+                                 .filter(condition => condition.test != null)
+                                 .map(condition => condition.test)
+        const invocations = inliner.accumulations(tests)
         signature.push(packet.name)
         const start = $step++
         const steps = []
@@ -920,7 +923,7 @@ function generate (packet, { require = null }) {
             : inlined.inlined.shift()
         // TODO Slicing here is because of who writes the next step, which seems
         // to be somewhat confused.
-        const invocations = inliner.accumulations([ field.test ])
+        const invocations = inliner.accumulations([ field.select ])
         return $(`
             case ${start}:
 

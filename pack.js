@@ -61,7 +61,8 @@ function flatten (flattened, path, fields, assignment = '=') {
 
 // A recent implementation of packing, but one that is now untested and stale.
 // Removing from the `serialize.all` generator for visibility.
-module.exports = function (accumulate, root, field, path, stuff, assignment = '=', offset = 0) {
+module.exports = function (inliner, field, path) {
+    const seen = {}
     function pack (path, bits, offset, fields) {
         const packed = [[]]
         for (const field of fields) {
@@ -77,8 +78,16 @@ module.exports = function (accumulate, root, field, path, stuff, assignment = '=
                 }
                 break
             case 'conditional': {
-                    const { conditional, path, assignment } = field
-                    let ladder = '', keywords = 'if'
+                    const {
+                        conditional, path, assignment, conditional: { serialize: { conditions } }
+                    } = field
+                    const tests = conditions.filter(condition => condition.test != null)
+                                            .map(condition => condition.test)
+                    const invocations = inliner.accumulations(tests)
+                    let ladder = $(`
+                        `, invocations, -1, `
+
+                    `), keywords = 'if'
                     for (let i = 0, I = conditional.serialize.conditions.length; i < I; i++) {
                         const condition = conditional.serialize.conditions[i]
                         const source = generate({
@@ -88,7 +97,7 @@ module.exports = function (accumulate, root, field, path, stuff, assignment = '=
                                   : condition.fields
                         }, path, '$_', assignment, offset)
                         ladder = condition.test != null ? function () {
-                            const inline = inliner(accumulate, path, [ condition.test ], [])
+                            const inline = inliner.inline(path, [ condition.test ], [])
                             return $(`
                                 `, ladder, `${keywords} (`, inline.inlined.shift(), `) {
                                     `, source, `
@@ -107,6 +116,7 @@ module.exports = function (accumulate, root, field, path, stuff, assignment = '=
                 break
             case 'switch': {
                     const { switched, path, assignment } = field, block = []
+                    const invocations = inliner.accumulations([ switched.select ])
                     const cases = []
                     for (const when of switched.cases) {
                         const source = generate({
@@ -123,11 +133,13 @@ module.exports = function (accumulate, root, field, path, stuff, assignment = '=
                                 break
                         `))
                     }
-                    const inlined = inliner(accumulate, path, [ switched.select ], [])
+                    const inlined = inliner.inline(path, [ switched.select ], [])
                     const select = switched.stringify
                         ? `String(${inlined.inlined.shift()})`
                         : inlined.inlined.shift()
                     packed.unshift($(`
+                        `, invocations, -1, `
+
                         switch (`, select ,`) {
                         `, join(cases), `
                         }
@@ -158,5 +170,5 @@ module.exports = function (accumulate, root, field, path, stuff, assignment = '=
         return join(block)
     }
 
-    return generate(field, path, stuff, assignment, offset)
+    return generate(field, path, '$_', '=', 0)
 }
