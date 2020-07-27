@@ -691,7 +691,6 @@ function generate (packet, { require = null, bff, chk }) {
         `)
         let source = null
         if (field.calculated) {
-            const inline = inliner.inline(path, [ field.length ], [])
             const I = `$I[${$I}]`
             // TODO Now have to increment `$I` in checkpoints and inquisition.
             // Also, need to add `$I` to serialization side.

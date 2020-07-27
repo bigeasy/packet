@@ -279,9 +279,7 @@ function generate (packet, { require = null }) {
     //
     function terminated (path, field) {
         const length = field.calculated ? `$I[${++$I}]` : field.length
-        const inline = field.calculated
-            ? inliner.inline(path, [ field.length ], []).inlined.join('\n')
-            : null
+        const calculated = field.calculated ? inliner.test(path, field.length) : null
         // We will be looping.
         surround = true
         // Get the element type contained by the array.
@@ -331,7 +329,7 @@ function generate (packet, { require = null }) {
                 case ${$step++}:
 
                     $_ = 0
-                    ${length} = `, inline, `
+                    ${length} = `, calculated, `
 
                     $step = ${$step}
 
@@ -607,14 +605,14 @@ function generate (packet, { require = null }) {
             case ${init}:
 
                 ${i} = 0
-                ${length} = `, inline, `
+                ${length} = `, calculated, `
 
             `, terminator, `
         `) : $(`
             case ${init}:
 
                 ${i} = 0
-                ${length} = `, inline, `
+                ${length} = `, calculated, `
 
             `, terminator, `
 

@@ -97,9 +97,9 @@ module.exports = function (inliner, field, path) {
                                   : condition.fields
                         }, path, '$_', assignment, offset)
                         ladder = condition.test != null ? function () {
-                            const inline = inliner.inline(path, [ condition.test ], [])
+                            const test = inliner.test(path, condition.test)
                             return $(`
-                                `, ladder, `${keywords} (`, inline.inlined.shift(), `) {
+                                `, ladder, `${keywords} (`, test, `) {
                                     `, source, `
                                 }
                             `)

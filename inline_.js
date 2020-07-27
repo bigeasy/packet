@@ -4,9 +4,9 @@ const util = require('util')
 const $ = require('programmatic')
 const join = require('./join')
 const inliner = require('./inliner')
-const _accumulator = require('./accumulator')
 
 module.exports = function ({ variables, packet, direction, accumulators, parameters }) {
+    // TODO Just use the scope.
     const accumulate = {
         accumulators: accumulators,
         parameters: parameters,
@@ -19,10 +19,8 @@ module.exports = function ({ variables, packet, direction, accumulators, paramet
         stack: [],
         accumulations: accumulations,
         accumulator: accumulator,
-        _properties: _properties,
         test: test,
         inline_: inline_,
-        inline: inline,
         exit: exit,
         pop: pop
     }
@@ -50,11 +48,16 @@ module.exports = function ({ variables, packet, direction, accumulators, paramet
     }
 
     function accumulator (field, filter = () => true) {
-        const accumulators = field.accumulators.filter(accumulator => filter(accumulator.name))
-        if (accumulators.length == 0) {
-            return null
-        }
-        return _accumulator(accumulate, accumulate.accumulators, accumulate.parameters, accumulators)
+        const filtered = field.accumulators.filter(accumulator => filter(accumulator.name))
+        return filtered.length != 0 ? filtered.map(accumulator => {
+            const { name, source } = accumulator
+            accumulate.accumulated[name] = []
+            if (accumulator.type == 'function' && parameters[name] == null) {
+                return `$accumulator[${util.inspect(name)}] = (${accumulators[name]})()`
+            } else {
+                return `$accumulator[${util.inspect(name)}] = ${accumulators[name]}`
+            }
+        }).join('\n') : null
     }
 
     function _properties (path, source) {
@@ -74,21 +77,21 @@ module.exports = function ({ variables, packet, direction, accumulators, paramet
                 is.transform = true
                 properties[property] = $_
             } else if (property == '$direction') {
-                properties[property] = util.inspect(this.direction)
+                properties[property] = util.inspect(accumulate.direction)
             } else if (property == '$i') {
-                properties[property] = this.variables.i ? property : '[]'
+                properties[property] = variables.i ? property : '[]'
             } else if (property == '$path') {
                 properties[property] = util.inspect(path.split('.'))
-            } else if (property == this.packet || property == '$') {
-                properties[property] = this.packet
-            } else if (this.accumulated[property]) {
+            } else if (property == accumulate.packet || property == '$') {
+                properties[property] = accumulate.packet
+            } else if (accumulate.accumulated[property]) {
                 properties[property] = `$accumulator[${util.inspect(property)}]`
             } else if (property == '$buffer') {
                 is.buffered = true
                 properties[property] = property
             } else if (property == '$start') {
                 is.buffered = true
-                properties[property] = `$starts[${this.buffered.length}]`
+                properties[property] = `$starts[${accumulate.buffered.length}]`
             } else if (property == '$end') {
                 is.buffered = true
                 properties[property] = '$start'
@@ -113,7 +116,7 @@ module.exports = function ({ variables, packet, direction, accumulators, paramet
                 (`, test.source, `)(${sliced.join(', ')})
             `)
         }
-        const { properties } = accumulate._properties(path, test)
+        const { properties } = _properties(path, test)
         return $(`
             (`, test.source, `)(`, properties, `)
         `)
@@ -144,7 +147,7 @@ module.exports = function ({ variables, packet, direction, accumulators, paramet
                     inlined.push(`${assignee} = (${inline.source})(${$_})`)
                 }
             } else {
-                const { is, properties } = this._properties(path)
+                const { is, properties } = _properties(path)
                 if (is.buffered) {
                     if (is.transform) {
                         throw new Error
@@ -190,7 +193,7 @@ module.exports = function ({ variables, packet, direction, accumulators, paramet
             ? [ path, `$$[${++accumulate.$$}]` ]
             : [ path ]
         const assign = registers[registers.length - 1]
-        const inline = accumulate.inline(path, inlines, registers, assign)
+        const inline = inliner(accumulate, path, inlines, registers, assign)
         const starts = []
         for (let i = inline.buffered.offset, I = inline.buffered.length; i < I; i++) {
             starts.push(`$starts[${i}] = $start`)
@@ -201,10 +204,6 @@ module.exports = function ({ variables, packet, direction, accumulators, paramet
             inlined: inline.inlined.length != 0 ? join(inline.inlined) : null,
             starts: starts.length != 0 ? starts.join('\n') : null,
         }
-    }
-
-    function inline (path, inlines, registers, assignee = null) {
-        return inliner(accumulate, path, inlines, registers, assignee)
     }
 
     function exit () {

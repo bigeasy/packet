@@ -15,9 +15,6 @@ const pack = require('./pack')
 // Determine necessary variables.
 const { serialize: declare } = require('./declare')
 
-// Generate accumulator declaration source.
-const accumulatorer = require('./accumulator')
-
 // Generate required modules and functions.
 const required = require('./required')
 
@@ -542,14 +539,14 @@ function generate (packet, { require = null }) {
         // Put it all together.
         let source = null
         if (field.calculated) {
-            const inline = inliner.inline(path, [ field.length ], [])
+            const test = inliner.test(path, field.length)
             const element = field.fields[field.fields.length - 1]
             if (field.pad.length != 0) {
                 source = $(`
                     case ${init}:
 
                         ${i} = 0
-                        ${length} = `, inline.inlined.shift(), `
+                        ${length} = `, test, `
 
                         $step = ${redo}
 
@@ -566,7 +563,7 @@ function generate (packet, { require = null }) {
                     case ${init}:
 
                         ${i} = 0
-                        ${length} = `, inline.inlined.shift(), `
+                        ${length} = `, test, `
 
                         $step = ${redo}
 

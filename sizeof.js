@@ -209,24 +209,16 @@ function generate (packet, { require = null }) {
                         return referenced[property]
                     }).length != 0
                 })
-                const inlined = inliner.inline(path, inlines, [ path ], '')
-                const starts = []
-                for (let i = inlined.buffered.offset, I = inlined.buffered.length; i < I; i++) {
-                    starts.push(`$starts[${i}] = $start`)
-                }
+                const inlined = inliner.inline_(path, inlines)
+                console.log(inlined)
                 const source = map(dispatch, path, field.fields)
                 // TODO Exclude if not externally referenced.
-                const buffered = inliner.buffered
-                    .splice(inlined.buffered.offset, inlined.buffered.length)
-                    .map(buffered => {
-                        return buffered.source
-                    })
                 return $(`
-                    `, starts.length != 0 ? starts.join('\n') : null, -1, `
+                    `, inlined.starts, -1, `
 
                     `, source, `
 
-                    `, -1, buffered.length != 0 ? buffered.join('\n') : null, `
+                    `, -1, inliner.pop(), `
                 `)
             }
             break

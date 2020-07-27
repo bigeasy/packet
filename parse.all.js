@@ -757,7 +757,6 @@ function generate (packet, { require, bff, chk }) {
                         : null
         let source = null
         if (field.calculated) {
-            const inline = inliner.inline(path, [ field.length ], [])
             source = $(`
                 ${i} = 0
                 do {
