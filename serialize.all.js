@@ -365,7 +365,7 @@ function generate (packet, { require = null, bff, chk }) {
 
     const { variables, parameters, accumulators } = declare (packet)
 
-    const inliner = new Inliner({
+    const inliner = Inliner({
         variables, parameters, accumulators, packet,
         direction: 'serialize'
     })

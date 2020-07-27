@@ -61,7 +61,7 @@ function generate (packet, { require = null }) {
     // An object that tracks the declaration of accumulators, whether or not
     // they are accumulating buffer contents, as well providing the `inliner`
     // function with the state necessary to generate named function invocations.
-    const inliner = new Inliner({
+    const inliner = Inliner({
         packet, variables, accumulators, parameters,
         direction: 'parse'
     })

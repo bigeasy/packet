@@ -39,7 +39,7 @@ function generate (packet, { require = null }) {
     //
     const locals = {}
 
-    const inliner = new Inliner({
+    const inliner = Inliner({
         packet, variables, accumulators, parameters,
         direction: 'serialize'
     })

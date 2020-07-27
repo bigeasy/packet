@@ -6,20 +6,28 @@ const join = require('./join')
 const inliner = require('./inliner')
 const _accumulator = require('./accumulator')
 
-class Inliner {
-    constructor ({ variables, packet, direction, accumulators, parameters }) {
-        this.accumulators = accumulators
-        this.parameters = parameters
-        this.accumulated = {}
-        this.buffered = []
-        this.variables = variables
-        this.packet = packet.name
-        this.direction = direction
-        this.$$ = -1
-        this.stack = []
+module.exports = function ({ variables, packet, direction, accumulators, parameters }) {
+    const accumulate = {
+        accumulators: accumulators,
+        parameters: parameters,
+        variables: variables,
+        accumulated: {},
+        buffered: [],
+        packet: packet.name,
+        direction: direction,
+        $$: -1,
+        stack: [],
+        accumulations: accumulations,
+        accumulator: accumulator,
+        _properties: _properties,
+        test: test,
+        inline_: inline_,
+        inline: inline,
+        exit: exit,
+        pop: pop
     }
 
-    accumulations (functions, seen = {}) {
+    function accumulations (functions, seen = {}) {
         const invocations = this.buffered.filter(accumulator => {
             return accumulator.properties.some(property => {
                 return this.accumulated[property] != null && !seen[property]
@@ -41,15 +49,15 @@ class Inliner {
         return invocations.length != 0 ? invocations.join('\n') : null
     }
 
-    accumulator (field, filter = () => true) {
+    function accumulator (field, filter = () => true) {
         const accumulators = field.accumulators.filter(accumulator => filter(accumulator.name))
         if (accumulators.length == 0) {
             return null
         }
-        return _accumulator(this, this.accumulators, this.parameters, accumulators)
+        return _accumulator(accumulate, accumulate.accumulators, accumulate.parameters, accumulators)
     }
 
-    _properties (path, source) {
+    function _properties (path, source) {
         // Collection of function properties.
         const is = {
             transform: false,
@@ -98,20 +106,20 @@ class Inliner {
         }
     }
 
-    test (path, test, signature = []) {
+    function test (path, test, signature = []) {
         if (test.properties.length == 0) {
-            const sliced = signature.concat([ this.packet ]).slice(0, test.arity)
+            const sliced = signature.concat([ accumulate.packet ]).slice(0, test.arity)
             return $(`
                 (`, test.source, `)(${sliced.join(', ')})
             `)
         }
-        const { properties } = this._properties(path, test)
+        const { properties } = accumulate._properties(path, test)
         return $(`
             (`, test.source, `)(`, properties, `)
         `)
     }
 
-    _inline ({ path, inlines, signature = null, assignee = null }) {
+    function _inline ({ path, inlines, signature = null, assignee = null }) {
         const inlined = [], accumulators = {}
         // Array of functions that operate on the underlying buffer.
         const buffered = { offset: accumulate.buffered.length, length: 0 }
@@ -173,19 +181,21 @@ class Inliner {
         return { inlined, buffered, register: registers[0] }
     }
 
-    inline_ (path, inlines) {
+    function inline_ (path, inlines) {
         if (inlines.length == 0) {
-            this.stack.push({ offset: 0, length: 0 })
+            accumulate.stack.push({ offset: 0, length: 0 })
             return { path: path, inlined: null, starts: null }
         }
-        const registers = this.direction == 'serialize' ? [ path, `$$[${++this.$$}]` ] : [ path ]
+        const registers = accumulate.direction == 'serialize'
+            ? [ path, `$$[${++accumulate.$$}]` ]
+            : [ path ]
         const assign = registers[registers.length - 1]
-        const inline = this.inline(path, inlines, registers, assign)
+        const inline = accumulate.inline(path, inlines, registers, assign)
         const starts = []
         for (let i = inline.buffered.offset, I = inline.buffered.length; i < I; i++) {
             starts.push(`$starts[${i}] = $start`)
         }
-        this.stack.push({ ...inline.buffered })
+        accumulate.stack.push({ ...inline.buffered })
         return {
             path: inline.register,
             inlined: inline.inlined.length != 0 ? join(inline.inlined) : null,
@@ -193,26 +203,26 @@ class Inliner {
         }
     }
 
-    inline (path, inlines, registers, assignee = null) {
-        return inliner(this, path, inlines, registers, assignee)
+    function inline (path, inlines, registers, assignee = null) {
+        return inliner(accumulate, path, inlines, registers, assignee)
     }
 
-    exit () {
-        return this.buffered.length != 0
-            ? this.buffered.map(buffered => buffered.source).join('\n')
+    function exit () {
+        return accumulate.buffered.length != 0
+            ? accumulate.buffered.map(buffered => buffered.source).join('\n')
             : null
     }
 
-    pop () {
-        const popped = this.stack.pop()
-        if (this.direction == 'serialize') {
-            this.$$--
+    function pop () {
+        const popped = accumulate.stack.pop()
+        if (accumulate.direction == 'serialize') {
+            accumulate.$$--
         }
-        const buffered = this.buffered
+        const buffered = accumulate.buffered
             .splice(popped.offset, popped.length)
             .map(buffered => buffered.source)
         return buffered.length != 0 ? buffered.join('\n') : null
     }
-}
 
-module.exports = Inliner
+    return accumulate
+}
