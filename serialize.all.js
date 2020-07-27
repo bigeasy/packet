@@ -617,12 +617,9 @@ function generate (packet, { require = null, bff, chk }) {
         return terminator.join('\n')
     }
 
-    function calculation (path, field) {
-        field = field.field
-        const I = `$I[${++$I}]`
-        const inline = inliner.inline(path, [ field.length ], [])
+    function calculation (path, { field }) {
         return $(`
-            ${I} = `, inline.inlined.shift(), `
+            $I[${++$I}] = `, inliner.test(path, field.length), `
         `)
     }
 
@@ -742,10 +739,8 @@ function generate (packet, { require = null, bff, chk }) {
             `))
         }
         const invocations = inliner.accumulations([ field.select ])
-        const inlined = inliner.inline(path, [ field.select ], [])
-        const select = field.stringify
-            ? `String(${inlined.inlined.shift()})`
-            : inlined.inlined.shift()
+        const test = inliner.test(path, field.select)
+        const select = field.stringify ? `String(${test})` : test
         return $(`
             `, invocations, -1, `
 
@@ -766,10 +761,10 @@ function generate (packet, { require = null, bff, chk }) {
             const condition = field.serialize.conditions[i]
             const source = join(condition.fields.map(field => dispatch(path, field)))
             ladder = condition.test != null ? function () {
-                const registers = field.split ? [ path ] : []
-                const f = inliner.inline(path, [ condition.test ], registers)
+                const signature = field.split ? [ path ] : []
+                const test = inliner.test(path, condition.test, signature)
                 return $(`
-                    `, ladder, `${keywords} (`, f.inlined.shift() ,`) {
+                    `, ladder, `${keywords} (`, test ,`) {
                         `, source, `
                     }
                 `)

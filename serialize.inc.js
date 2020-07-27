@@ -279,7 +279,7 @@ function generate (packet, { require = null }) {
     // A buffer copy shared by terminated and fixed arrays.
 
     //
-    function copy (path, element, inline = null) {
+    function copy (path, element, calculation = null) {
         // If we have an array of buffers, we need a loop index and a variable
         // to track the offset in the specific buffer.
         let i
@@ -294,7 +294,7 @@ function generate (packet, { require = null }) {
             case ${$step++}:
 
                 $_ = 0
-                $I[${$I + 1}] = `, inline, `
+                $I[${$I + 1}] = `, calculation, `
 
             case ${$step++}: {
 
@@ -322,7 +322,7 @@ function generate (packet, { require = null }) {
 
                 $_ = 0
                 $length = ${path}.reduce((sum, buffer) => sum + buffer.length, 0)
-                $I[${$I + 1}] = `, inline, `
+                $I[${$I + 1}] = `, calculation, `
 
             case ${$step++}: {
 
@@ -486,17 +486,17 @@ function generate (packet, { require = null }) {
 
         //
         if (element.type == 'buffer') {
-            const inline = field.calculated
-                ? inliner.inline(path, [ field.length ], []).inlined.shift()
-                : null
+            const calculation = field.calculated ? inliner.test(path, field.length) : null
             if (field.calculated) {
                 $I--
             }
-            const source = copy(path, element, inline)
+            const source = copy(path, element, calculation)
             // If there is no padding, we are done.
             if (field.pad.length == 0) {
                 return source
             }
+            // TODO Oh, no! We're running calculation twice! Once in `copy` and
+            // once here. That ain't right.
             // We can use `Buffer.fill()` for single-byte padding.
             // TODO Unnecessary `$_` assignment.
             if (field.pad.length == 1) {
@@ -505,7 +505,7 @@ function generate (packet, { require = null }) {
 
                     case ${$step++}:
 
-                        ${length} = `, inline, `
+                        ${length} = `, calculation, `
                         $_ = ${length} - $_
 
                         $step = ${$step}
@@ -613,11 +613,9 @@ function generate (packet, { require = null }) {
             `))
             steps.push(map(dispatch, path, when.fields))
         }
-        const inlined = inliner.inline(path, [ field.select ], [])
         const invocations = inliner.accumulations([ field.select ])
-        const select = field.stringify
-            ? `String(${inlined.inlined.shift()})`
-            : inlined.inlined.shift()
+        const test = inliner.test(path, field.select, [])
+        const select = field.stringify ? `String(${test})` : test
         // TODO Slicing here is because of who writes the next step, which seems
         // to be somewhat confused.
         return $(`
@@ -654,10 +652,10 @@ function generate (packet, { require = null }) {
         for (let i = 0, I = field.serialize.conditions.length; i < I; i++) {
             const condition = field.serialize.conditions[i]
             ladder = condition.test != null ? function () {
-                const registers = field.split ? [ path ] : []
-                const f = inliner.inline(path, [ condition.test ], registers)
+                const signature = field.split ? [ path ] : []
+                const test = inliner.test(path, condition.test, signature)
                 return $(`
-                    `, ladder, `${keywords} (`, f.inlined.shift(), `) {
+                    `, ladder, `${keywords} (`, test, `) {
                         $step = ${steps[i].step}
                         continue
                     }

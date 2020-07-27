@@ -356,7 +356,7 @@ function generate (packet, { require, bff, chk }) {
 
     const { variables, accumulators, parameters } = declare(packet)
 
-    const accumulate = new Inliner({
+    const inliner = new Inliner({
         variables, accumulators, parameters, packet,
         direction: 'parse'
     })
@@ -438,7 +438,7 @@ function generate (packet, { require, bff, chk }) {
             return $(`
                 `, parse, `
 
-                `, unpack(accumulate, packet, assignee, field, '$_'), `
+                `, unpack(inliner, packet, assignee, field, '$_'), `
             `)
         } else if (field.lookup) {
             if (Array.isArray(field.lookup.values)) {
@@ -488,7 +488,7 @@ function generate (packet, { require, bff, chk }) {
     }
 
     function inline (path, field) {
-        const inline = accumulate.inline_(path, field.after)
+        const inline = inliner.inline_(path, field.after)
         if (inline.starts != null) {
             $step++
             variables.starts = true
@@ -500,7 +500,7 @@ function generate (packet, { require, bff, chk }) {
 
             `, -1, inline.inlined, `
 
-            `, -1, accumulate.pop(), `
+            `, -1, inliner.pop(), `
         `)
     }
 
@@ -508,7 +508,7 @@ function generate (packet, { require, bff, chk }) {
         $step++
         variables.accumulator = true
         return $(`
-            `, accumulate.accumulator(field), `
+            `, inliner.accumulator(field), `
 
             `, map(dispatch, path, field.fields), `
         `)
@@ -672,12 +672,9 @@ function generate (packet, { require, bff, chk }) {
         `)
     }
 
-    function calculation (path, field) {
-        field = field.field
-        const I = `$I[${++$I}]`
-        const inline = accumulate.inline(path, [ field.length ], [])
+    function calculation (path, { field }) {
         return $(`
-            ${I} = `, inline.inlined.shift(), `
+            $I[${++$I}] = `, inliner.test(path, field.length), `
         `)
     }
 
@@ -760,7 +757,7 @@ function generate (packet, { require, bff, chk }) {
                         : null
         let source = null
         if (field.calculated) {
-            const inline = accumulate.inline(path, [ field.length ], [])
+            const inline = inliner.inline(path, [ field.length ], [])
             source = $(`
                 ${i} = 0
                 do {
@@ -822,11 +819,9 @@ function generate (packet, { require, bff, chk }) {
                     break
             `))
         }
-        const inlined = accumulate.inline(path, [ field.select ], [])
-        const select = field.stringify
-            ? `String(${inlined.inlined.shift()})`
-            : inlined.inlined.shift()
-        const invocations = accumulate.accumulations([ field.select ])
+        const invocations = inliner.accumulations([ field.select ])
+        const test = inliner.test(path, field.select)
+        const select = field.stringify ? `String(${test})` : test
         return $(`
             `, invocations, -1, `
 
@@ -839,7 +834,7 @@ function generate (packet, { require, bff, chk }) {
     function conditional (path, field) {
         const tests = field.parse.conditions.filter(condition => condition.test != null)
                                              .map(condition => condition.test)
-        const invocations = accumulate.accumulations(tests)
+        const invocations = inliner.accumulations(tests)
         const signature = []
         const sip = function () {
             if (field.parse.sip == null) {
@@ -894,9 +889,9 @@ function generate (packet, { require, bff, chk }) {
             //const source = join(condition.fields.map(field => dispatch(path, field)))
             const source = map(dispatch, path, condition.fields)
             ladder = condition.test != null ? function () {
-                const inline = accumulate.inline(path, [ condition.test ], signature)
+                const test = inliner.test(path, condition.test, signature)
                 return $(`
-                    `, ladder, `${keywords} (`, inline.inlined.shift(), `) {
+                    `, ladder, `${keywords} (`, test, `) {
                         `, vivified, -1, `
 
                         `, source, `

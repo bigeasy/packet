@@ -57,9 +57,9 @@ function generate (packet, { require = null }) {
                     const source = map(dispatch, path, condition.fields)
                     ladder = condition.test != null ? function () {
                         const registers = field.split ? [ path ] : []
-                        const inline = inliner.inline(path, [ condition.test ], registers)
+                        const test = inliner.test(path, condition.test, registers)
                         return $(`
-                            `, ladder, `${keywords} (`, inline.inlined.shift(), `) {
+                            `, ladder, `${keywords} (`, test, `) {
                                 `, source, `
                             }
                         `)
@@ -93,10 +93,8 @@ function generate (packet, { require = null }) {
                     `))
                 }
                 const invocations = inliner.accumulations([ field.select ])
-                const inlined = inliner.inline(path, [ field.select ], [])
-                const select = field.stringify
-                    ? `String(${inlined.inlined.shift()})`
-                    : inlined.inlined.shift()
+                const test = inliner.test(path, field.select)
+                const select = field.stringify ? `String(${test})` : test
                 return $(`
                     `, invocations, -1, `
 
@@ -109,10 +107,10 @@ function generate (packet, { require = null }) {
         case 'fixed': {
                 if (field.calculated) {
                     const element = field.fields[0]
-                    const inline = inliner.inline(path, [ field.length ], [])
+                    const calculation = inliner.test(path, field.length)
                     if (element.fixed) {
                         return $(`
-                            $start += `, inline.inlined.shift(), ` * ${element.bits >>> 3}
+                            $start += `, calculation, ` * ${element.bits >>> 3}
                         `)
                     }
                     variables.i = true

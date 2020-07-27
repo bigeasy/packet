@@ -22,7 +22,6 @@ module.exports = function (accumulate, path, inlines, registers, assignee = null
         // Collection of function properties.
         const is = {
             conditional: assignee == null,
-            accumulated: false,
             transform: false,
             buffered: false,
             assertion: false

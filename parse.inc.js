@@ -684,9 +684,7 @@ function generate (packet, { require = null }) {
         if (field.pad.length != 0) {
             return terminated(path, field)
         }
-        const inline = field.calculated
-            ? inliner.inline(path, [ field.length ], []).inlined.shift()
-            : null
+        const calculation = field.calculated ? inliner.test(path, field.length) : null
         const element = field.fields[field.fields.length - 1]
         const length = field.calculated  ? `$I[${++$I}]` : field.length
         //
@@ -707,7 +705,7 @@ function generate (packet, { require = null }) {
                 case ${$step++}:
 
                     $_ = 0
-                    ${length} = `, inline, `
+                    ${length} = `, calculation, `
 
                     $step = ${$step}
 
@@ -752,12 +750,12 @@ function generate (packet, { require = null }) {
             case ${$step++}:
 
                 ${i} = 0
-                ${length} = `, inline, `
+                ${length} = `, calculation, `
         `) : $(`
             case ${$step++}:
 
                 ${i} = 0
-                ${length} = `, inline, `
+                ${length} = `, calculation, `
 
             case ${$step++}:
 
@@ -856,9 +854,9 @@ function generate (packet, { require = null }) {
             const condition = parse.conditions[i]
             const vivified = vivify.assignment(path, condition)
             ladder = condition.test != null ? function () {
-                const inline = inliner.inline(path, [ condition.test ], signature)
+                const test = inliner.test(path, condition.test, signature)
                 return $(`
-                    `, ladder, `${keywords} (`, inline.inlined.shift(), `) {
+                    `, ladder, `${keywords} (`, test, `) {
                         `, vivified, -1, `
 
                         $step = ${steps[i].number}
@@ -917,13 +915,11 @@ function generate (packet, { require = null }) {
             `))
             steps.push(map(dispatch, path, when.fields))
         }
-        const inlined = inliner.inline(path, [ field.select ], [])
-        const select = field.stringify
-            ? `String(${inlined.inlined.shift()})`
-            : inlined.inlined.shift()
+        const invocations = inliner.accumulations([ field.select ])
+        const test = inliner.test(path, field.select, [])
+        const select = field.stringify ? `String(${test})` : test
         // TODO Slicing here is because of who writes the next step, which seems
         // to be somewhat confused.
-        const invocations = inliner.accumulations([ field.select ])
         return $(`
             case ${start}:
 

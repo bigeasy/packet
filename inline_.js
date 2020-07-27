@@ -46,6 +46,126 @@ class Inliner {
         return _accumulator(this, this.accumulators, this.parameters, accumulators)
     }
 
+    _properties (path) {
+        // Collection of function properties.
+        const is = {
+            transform: false,
+            buffered: false,
+            assertion: false
+        }
+        const properties = {}, name = path.split('.').pop()
+        let type = 'transform'
+        for (const property of inline.properties) {
+            if (property == '$_' || property == name) {
+                if (inline.defaulted.includes(property)) {
+                    is.assertion = true
+                }
+                is.transform = true
+                properties[property] = $_
+            } else if (property == '$direction') {
+                properties[property] = util.inspect(this.direction)
+            } else if (property == '$i') {
+                properties[property] = this.variables.i ? property : '[]'
+            } else if (property == '$path') {
+                properties[property] = util.inspect(path.split('.'))
+            } else if (property == this.packet || property == '$') {
+                properties[property] = this.packet
+            } else if (this.accumulator[property]) {
+                properties[property] = `$accumulator[${util.inspect(property)}]`
+            } else if (property == '$buffer') {
+                is.buffered = true
+                properties[property] = property
+            } else if (property == '$start') {
+                is.buffered = true
+                properties[property] = `$starts[${this.buffered.length}]`
+            } else if (property == '$end') {
+                is.buffered = true
+                properties[property] = '$start'
+            }
+        }
+        return {
+            is: is,
+            properties: Object.keys(properties).map(property => {
+                return `${property}: ${properties[property]}`
+            }).join('\n')
+        }
+    }
+
+    test (path, test, signature = []) {
+        if (test.properties.length == 0) {
+            const sliced = signature.concat([ this.packet ]).slice(0, test.arity)
+            return $(`
+                (`, test.source, `)(${sliced.join(', ')})
+            `)
+        }
+        const { properties } = this._properties()
+        return $(`
+            (`, inline.source, `)(`, properties, `)
+        `)
+    }
+
+    _inline ({ path, inlines, signature = null, assignee = null }) {
+        const inlined = [], accumulators = {}
+        // Array of functions that operate on the underlying buffer.
+        const buffered = { offset: accumulate.buffered.length, length: 0 }
+        // For each function defined by an inline, always one function for a select
+        // or conditional test.
+        for (const inline of inlines) {
+            // Read the initial register definition.
+            const $_ = registers[0]
+            // Positional arguments are simplified, less analysis because special
+            // features are indicated by named functions.
+            if (inline.properties.length == 0) {
+                if (inline.defaulted[0] == 0) {
+                    is.assertion = true
+                }
+                if (is.assertion) {
+                    inlined.push(`; (${inline.source})(${$_})`)
+                } else {
+                    if (registers.length != 1) {
+                        registers.shift()
+                    }
+                    // TODO I documented other possible parameters.
+                    inlined.push(`${assignee} = (${inline.source})(${$_})`)
+                }
+            } else {
+                const { is, properties } = this._properties(path)
+                if (is.buffered) {
+                    if (is.transform) {
+                        throw new Error
+                    } else {
+                        accumulate.buffered.push({
+                            start: accumulate.buffered.length,
+                            properties: inline.properties,
+                            source: `; (${inline.source})(` + $(`
+                                {
+                                    `, body.join(',\n'), `
+                                })
+                            `)
+                        })
+                    }
+                } else if (is.assertion) {
+                    inlined.push(`; (${inline.source})(` + $(`
+                        {
+                            `, body.join(',\n'), `
+                        })
+                    `))
+                } else {
+                    if (registers.length != 1) {
+                        registers.shift()
+                    }
+                    inlined.push(`${assignee} = (${inline.source})(` + $(`
+                        {
+                            `, body.join(',\n'), `
+                        })
+                    `))
+                }
+            }
+        }
+        buffered.length = accumulate.buffered.length
+        return { inlined, buffered, register: registers[0] }
+    }
+
     inline_ (path, inlines) {
         if (inlines.length == 0) {
             this.stack.push({ offset: 0, length: 0 })
@@ -64,10 +184,6 @@ class Inliner {
             inlined: inline.inlined.length != 0 ? join(inline.inlined) : null,
             starts: starts.length != 0 ? starts.join('\n') : null,
         }
-    }
-
-    test (path, test, seen = {}) {
-        const inline = inliner(this, path, [ test ], [])
     }
 
     inline (path, inlines, registers, assignee = null) {
