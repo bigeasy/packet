@@ -1,3 +1,6 @@
+// Node.js API.
+const util = require('util')
+
 const $ = require('programmatic')
 const join = require('./join')
 const inliner = require('./inliner')
@@ -46,7 +49,7 @@ class Inliner {
         return _accumulator(this, this.accumulators, this.parameters, accumulators)
     }
 
-    _properties (path) {
+    _properties (path, source) {
         // Collection of function properties.
         const is = {
             transform: false,
@@ -55,7 +58,7 @@ class Inliner {
         }
         const properties = {}, name = path.split('.').pop()
         let type = 'transform'
-        for (const property of inline.properties) {
+        for (const property of source.properties) {
             if (property == '$_' || property == name) {
                 if (inline.defaulted.includes(property)) {
                     is.assertion = true
@@ -85,9 +88,13 @@ class Inliner {
         }
         return {
             is: is,
-            properties: Object.keys(properties).map(property => {
-                return `${property}: ${properties[property]}`
-            }).join('\n')
+            properties: $(`
+                {
+                    `, Object.keys(properties).map(property => {
+                        return `${property}: ${properties[property]}`
+                    }).join(',\n'), `
+                }
+            `)
         }
     }
 
@@ -98,9 +105,9 @@ class Inliner {
                 (`, test.source, `)(${sliced.join(', ')})
             `)
         }
-        const { properties } = this._properties()
+        const { properties } = this._properties(path, test)
         return $(`
-            (`, inline.source, `)(`, properties, `)
+            (`, test.source, `)(`, properties, `)
         `)
     }
 
