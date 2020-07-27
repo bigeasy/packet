@@ -10,7 +10,7 @@ class Inliner {
     constructor ({ variables, packet, direction, accumulators, parameters }) {
         this.accumulators = accumulators
         this.parameters = parameters
-        this.accumulated = []
+        this.accumulated = {}
         this.buffered = []
         this.variables = variables
         this.packet = packet.name
@@ -22,7 +22,7 @@ class Inliner {
     accumulations (functions, seen = {}) {
         const invocations = this.buffered.filter(accumulator => {
             return accumulator.properties.some(property => {
-                return this.accumulator[property] != null && !seen[property]
+                return this.accumulated[property] != null && !seen[property]
             })
         })
         for (const invocation of invocations) {
@@ -73,7 +73,7 @@ class Inliner {
                 properties[property] = util.inspect(path.split('.'))
             } else if (property == this.packet || property == '$') {
                 properties[property] = this.packet
-            } else if (this.accumulator[property]) {
+            } else if (this.accumulated[property]) {
                 properties[property] = `$accumulator[${util.inspect(property)}]`
             } else if (property == '$buffer') {
                 is.buffered = true

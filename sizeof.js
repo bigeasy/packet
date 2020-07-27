@@ -192,11 +192,12 @@ function generate (packet, { require = null }) {
                 // calcualtions are not referenced, if the argument is not an
                 // external argument and if it is not referenced again in the
                 // parse or serialize or sizeof.
+                const accumulator = inliner.accumulator(field, name => referenced[name])
                 const source = field.fixed
                              ? `$start += ${field.bits >>> 3}`
                              : map(dispatch, path, field.fields)
                 return  $(`
-                    `, inliner.accumulator(field, name => referenced[name]), -1, `
+                    `, accumulator, -1, `
 
                     `, source, `
                 `)

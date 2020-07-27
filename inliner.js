@@ -62,7 +62,7 @@ module.exports = function (accumulate, path, inlines, registers, assignee = null
                     properties[property] = util.inspect(path.split('.'))
                 } else if (property == accumulate.packet || property == '$') {
                     properties[property] = accumulate.packet
-                } else if (accumulate.accumulator[property]) {
+                } else if (accumulate.accumulated[property]) {
                     properties[property] = `$accumulator[${util.inspect(property)}]`
                 } else if (property == '$buffer') {
                     is.buffered = true
