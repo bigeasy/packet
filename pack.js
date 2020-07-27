@@ -1,9 +1,6 @@
 const $ = require('programmatic')
 const join = require('./join')
 
-// Generate inline function source.
-const inliner = require('./inliner')
-
 const fiddle = require('./fiddle/pack')
 
 function flatten (flattened, path, fields, assignment = '=') {

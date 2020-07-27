@@ -1,9 +1,11 @@
 // Node.js API.
 const util = require('util')
 
+// Format source code maintaining indentation.
 const $ = require('programmatic')
+
+// Join an array of strings separated by an empty line.
 const join = require('./join')
-const inliner = require('./inliner')
 
 module.exports = function ({ variables, packet, direction, accumulators, parameters }) {
     // TODO Just use the scope.
@@ -60,7 +62,7 @@ module.exports = function ({ variables, packet, direction, accumulators, paramet
         }).join('\n') : null
     }
 
-    function _properties (path, source) {
+    function _properties (path, source, $_) {
         // Collection of function properties.
         const is = {
             transform: false,
@@ -71,7 +73,7 @@ module.exports = function ({ variables, packet, direction, accumulators, paramet
         let type = 'transform'
         for (const property of source.properties) {
             if (property == '$_' || property == name) {
-                if (inline.defaulted.includes(property)) {
+                if (source.defaulted.includes(property)) {
                     is.assertion = true
                 }
                 is.transform = true
@@ -116,74 +118,18 @@ module.exports = function ({ variables, packet, direction, accumulators, paramet
                 (`, test.source, `)(${sliced.join(', ')})
             `)
         }
-        const { properties } = _properties(path, test)
+        const { properties } = _properties(path, test, null)
         return $(`
             (`, test.source, `)(`, properties, `)
         `)
     }
+    //
 
-    function _inline ({ path, inlines, signature = null, assignee = null }) {
-        const inlined = [], accumulators = {}
-        // Array of functions that operate on the underlying buffer.
-        const buffered = { offset: accumulate.buffered.length, length: 0 }
-        // For each function defined by an inline, always one function for a select
-        // or conditional test.
-        for (const inline of inlines) {
-            // Read the initial register definition.
-            const $_ = registers[0]
-            // Positional arguments are simplified, less analysis because special
-            // features are indicated by named functions.
-            if (inline.properties.length == 0) {
-                if (inline.defaulted[0] == 0) {
-                    is.assertion = true
-                }
-                if (is.assertion) {
-                    inlined.push(`; (${inline.source})(${$_})`)
-                } else {
-                    if (registers.length != 1) {
-                        registers.shift()
-                    }
-                    // TODO I documented other possible parameters.
-                    inlined.push(`${assignee} = (${inline.source})(${$_})`)
-                }
-            } else {
-                const { is, properties } = _properties(path)
-                if (is.buffered) {
-                    if (is.transform) {
-                        throw new Error
-                    } else {
-                        accumulate.buffered.push({
-                            start: accumulate.buffered.length,
-                            properties: inline.properties,
-                            source: `; (${inline.source})(` + $(`
-                                {
-                                    `, body.join(',\n'), `
-                                })
-                            `)
-                        })
-                    }
-                } else if (is.assertion) {
-                    inlined.push(`; (${inline.source})(` + $(`
-                        {
-                            `, body.join(',\n'), `
-                        })
-                    `))
-                } else {
-                    if (registers.length != 1) {
-                        registers.shift()
-                    }
-                    inlined.push(`${assignee} = (${inline.source})(` + $(`
-                        {
-                            `, body.join(',\n'), `
-                        })
-                    `))
-                }
-            }
-        }
-        buffered.length = accumulate.buffered.length
-        return { inlined, buffered, register: registers[0] }
-    }
+    // Generate one or more inline user defined functions. We need to generate
+    // functions with both positional and named arguments, lookup up those
+    // arguments in the context supplied by the generator.
 
+    //
     function inline_ (path, inlines) {
         if (inlines.length == 0) {
             accumulate.stack.push({ offset: 0, length: 0 })
@@ -192,16 +138,68 @@ module.exports = function ({ variables, packet, direction, accumulators, paramet
         const registers = accumulate.direction == 'serialize'
             ? [ path, `$$[${++accumulate.$$}]` ]
             : [ path ]
-        const assign = registers[registers.length - 1]
-        const inline = inliner(accumulate, path, inlines, registers, assign)
+        // Array of functions that operate on the underlying buffer.
+        const offset = accumulate.buffered.length
+        const assignee = registers[registers.length - 1]
+        const inlined = []
+        // For each function defined by an inline.
+        for (const inline of inlines) {
+            // Read the initial register definition.
+            const $_ = registers[0]
+            // Positional arguments are simplified, less analysis because special
+            // features are indicated by named functions.
+            if (inline.properties.length == 0) {
+                if (inline.defaulted[0] == 0) {
+                    inlined.push($(`
+                        ; (`, inline.source, `)(${$_})
+                    `))
+                } else {
+                    if (registers.length != 1) {
+                        registers.shift()
+                    }
+                    inlined.push($(`
+                        ${assignee} = (`, inline.source, `)(${$_})
+                    `))
+                }
+            } else {
+                const { properties, is } = _properties(path, inline, $_)
+                if (is.buffered) {
+                    if (is.transform) {
+                        throw new Error
+                    } else {
+                        accumulate.buffered.push({
+                            start: accumulate.buffered.length,
+                            properties: inline.properties,
+                            source: $(`
+                                ; (`, inline.source, `)(`, properties, `)
+                            `)
+                        })
+                    }
+                } else {
+                    if (is.assertion) {
+                        inlined.push($(`
+                            ; (`, inline.source, `)(`, properties, `)
+                        `))
+                    } else {
+                        if (registers.length != 1) {
+                            registers.shift()
+                        }
+                        inlined.push($(`
+                            ${assignee} = (`, inline.source, `)(`, properties, `)
+                        `))
+                    }
+                }
+            }
+        }
+        const entry = { offset: offset, length: accumulate.buffered.length - offset }
         const starts = []
-        for (let i = inline.buffered.offset, I = inline.buffered.length; i < I; i++) {
+        for (let i = entry.offset, I = entry.offset + entry.length; i < I; i++) {
             starts.push(`$starts[${i}] = $start`)
         }
-        accumulate.stack.push({ ...inline.buffered })
+        accumulate.stack.push(entry)
         return {
-            path: inline.register,
-            inlined: inline.inlined.length != 0 ? join(inline.inlined) : null,
+            path: registers[0],
+            inlined: inlined.length != 0 ? join(inlined) : null,
             starts: starts.length != 0 ? starts.join('\n') : null,
         }
     }
