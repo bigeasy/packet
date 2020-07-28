@@ -16,7 +16,7 @@ const { serialize: declare } = require('./declare')
 // Format source code maintaining indentation.
 const $ = require('programmatic')
 
-const Inliner = require('./inline_')
+const Inliner = require('./inline')
 
 // Generate required modules and functions.
 const required = require('./required')

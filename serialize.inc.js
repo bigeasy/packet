@@ -1,7 +1,8 @@
 // Node.js API.
 const util = require('util')
 
-const Inliner = require('./inline_.js')
+// Generate user functions and accumulators.
+const Inline = require('./inline.js')
 
 // Format source code maintaining indentation.
 const $ = require('programmatic')
@@ -36,7 +37,7 @@ function generate (packet, { require = null }) {
     //
     const locals = {}
 
-    const inliner = Inliner({
+    const inliner = Inline({
         packet, variables, accumulators, parameters,
         direction: 'serialize'
     })

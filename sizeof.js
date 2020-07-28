@@ -10,7 +10,7 @@ const { serialize: declare } = require('./declare')
 const $ = require('programmatic')
 
 // Generate accumulator declaration source.
-const Inliner = require('./inline_')
+const Inline = require('./inline')
 
 // Generate required modules and functions.
 const required = require('./required')
@@ -25,10 +25,12 @@ const join = require('./join')
 //
 function generate (packet, { require = null }) {
     const { parameters, accumulators } = declare(packet)
+
     const variables = {
         register: true
     }
-    const inliner = Inliner({
+
+    const inliner = Inline({
         packet, variables, accumulators, parameters,
         direction: 'serialize'
     })

@@ -21,7 +21,7 @@ const unpack = require('./unpack')
 const { parse: declare } = require('./declare')
 
 // Generate inline function source.
-const Inliner = require('./inline_')
+const Inliner = require('./inline')
 
 // Generate required modules and functions.
 const required = require('./required')

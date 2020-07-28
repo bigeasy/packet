@@ -10,7 +10,7 @@ const hex = require('./hex')
 // Generate literal object construction.
 const vivify = require('./vivify')
 
-const Inliner = require('./inline_')
+const Inliner = require('./inline')
 
 // Generate two's compliment conversion.
 const unsign = require('./fiddle/unsign')
