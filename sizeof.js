@@ -211,7 +211,7 @@ function generate (packet, { require = null }) {
                         return referenced[property]
                     }).length != 0
                 })
-                const inlined = inliner.inline_(path, inlines)
+                const inlined = inliner.inline(path, inlines)
                 console.log(inlined)
                 const source = map(dispatch, path, field.fields)
                 // TODO Exclude if not externally referenced.

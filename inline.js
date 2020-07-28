@@ -119,7 +119,7 @@ module.exports = function ({ variables, packet, direction, accumulators, paramet
     // arguments in the context supplied by the generator.
 
     //
-    function inline_ (path, inlines) {
+    function inline (path, inlines) {
         if (inlines.length == 0) {
             stack.push({ offset: 0, length: 0 })
             return { path: path, inlined: null, starts: null }
@@ -214,7 +214,7 @@ module.exports = function ({ variables, packet, direction, accumulators, paramet
         accumulations: accumulations,
         accumulator: accumulator,
         test: test,
-        inline_: inline_,
+        inline: inline,
         exit: exit,
         pop: pop
     }

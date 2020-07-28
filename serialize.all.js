@@ -485,7 +485,7 @@ function generate (packet, { require = null, bff, chk }) {
     }
 
     function inline (path, field) {
-        const inline = inliner.inline_(path, field.before)
+        const inline = inliner.inline(path, field.before)
         if (inline.inlined != null || inline.starts != null) {
             $step++
         }

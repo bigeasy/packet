@@ -146,7 +146,7 @@ function generate (packet, { require = null }) {
     }
 
     function inline (path, field) {
-        const inline = inliner.inline_(path, field.before, 'serialize')
+        const inline = inliner.inline(path, field.before, 'serialize')
         const inlined = inline.inlined != null || inline.starts != null
             ? $(`
                 case ${$step++}:
