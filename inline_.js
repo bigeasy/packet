@@ -8,29 +8,18 @@ const $ = require('programmatic')
 const join = require('./join')
 
 module.exports = function ({ variables, packet, direction, accumulators, parameters }) {
-    // TODO Just use the scope.
-    const accumulate = {
-        accumulators: accumulators,
-        parameters: parameters,
-        variables: variables,
-        accumulated: {},
-        buffered: [],
-        packet: packet.name,
-        direction: direction,
-        $$: -1,
-        stack: [],
-        accumulations: accumulations,
-        accumulator: accumulator,
-        test: test,
-        inline_: inline_,
-        exit: exit,
-        pop: pop
-    }
+    const accumulated = {}
+
+    const buffered = []
+
+    const stack = []
+
+    let $$ = -1
 
     function accumulations (functions, seen = {}) {
-        const invocations = this.buffered.filter(accumulator => {
+        const invocations = buffered.filter(accumulator => {
             return accumulator.properties.some(property => {
-                return this.accumulated[property] != null && !seen[property]
+                return accumulated[property] != null && !seen[property]
             })
         })
         for (const invocation of invocations) {
@@ -53,7 +42,7 @@ module.exports = function ({ variables, packet, direction, accumulators, paramet
         const filtered = field.accumulators.filter(accumulator => filter(accumulator.name))
         return filtered.length != 0 ? filtered.map(accumulator => {
             const { name, source } = accumulator
-            accumulate.accumulated[name] = []
+            accumulated[name] = []
             if (accumulator.type == 'function' && parameters[name] == null) {
                 return `$accumulator[${util.inspect(name)}] = (${accumulators[name]})()`
             } else {
@@ -79,21 +68,21 @@ module.exports = function ({ variables, packet, direction, accumulators, paramet
                 is.transform = true
                 properties[property] = $_
             } else if (property == '$direction') {
-                properties[property] = util.inspect(accumulate.direction)
+                properties[property] = util.inspect(direction)
             } else if (property == '$i') {
                 properties[property] = variables.i ? property : '[]'
             } else if (property == '$path') {
                 properties[property] = util.inspect(path.split('.'))
-            } else if (property == accumulate.packet || property == '$') {
-                properties[property] = accumulate.packet
-            } else if (accumulate.accumulated[property]) {
+            } else if (property == packet.name || property == '$') {
+                properties[property] = packet.name
+            } else if (accumulated[property]) {
                 properties[property] = `$accumulator[${util.inspect(property)}]`
             } else if (property == '$buffer') {
                 is.buffered = true
                 properties[property] = property
             } else if (property == '$start') {
                 is.buffered = true
-                properties[property] = `$starts[${accumulate.buffered.length}]`
+                properties[property] = `$starts[${buffered.length}]`
             } else if (property == '$end') {
                 is.buffered = true
                 properties[property] = '$start'
@@ -113,7 +102,7 @@ module.exports = function ({ variables, packet, direction, accumulators, paramet
 
     function test (path, test, signature = []) {
         if (test.properties.length == 0) {
-            const sliced = signature.concat([ accumulate.packet ]).slice(0, test.arity)
+            const sliced = signature.concat([ packet.name ]).slice(0, test.arity)
             return $(`
                 (`, test.source, `)(${sliced.join(', ')})
             `)
@@ -132,14 +121,14 @@ module.exports = function ({ variables, packet, direction, accumulators, paramet
     //
     function inline_ (path, inlines) {
         if (inlines.length == 0) {
-            accumulate.stack.push({ offset: 0, length: 0 })
+            stack.push({ offset: 0, length: 0 })
             return { path: path, inlined: null, starts: null }
         }
-        const registers = accumulate.direction == 'serialize'
-            ? [ path, `$$[${++accumulate.$$}]` ]
+        const registers = direction == 'serialize'
+            ? [ path, `$$[${++$$}]` ]
             : [ path ]
         // Array of functions that operate on the underlying buffer.
-        const offset = accumulate.buffered.length
+        const offset = buffered.length
         const assignee = registers[registers.length - 1]
         const inlined = []
         // For each function defined by an inline.
@@ -167,8 +156,8 @@ module.exports = function ({ variables, packet, direction, accumulators, paramet
                     if (is.transform) {
                         throw new Error
                     } else {
-                        accumulate.buffered.push({
-                            start: accumulate.buffered.length,
+                        buffered.push({
+                            start: buffered.length,
                             properties: inline.properties,
                             source: $(`
                                 ; (`, inline.source, `)(`, properties, `)
@@ -191,12 +180,12 @@ module.exports = function ({ variables, packet, direction, accumulators, paramet
                 }
             }
         }
-        const entry = { offset: offset, length: accumulate.buffered.length - offset }
+        const entry = { offset: offset, length: buffered.length - offset }
         const starts = []
         for (let i = entry.offset, I = entry.offset + entry.length; i < I; i++) {
             starts.push(`$starts[${i}] = $start`)
         }
-        accumulate.stack.push(entry)
+        stack.push(entry)
         return {
             path: registers[0],
             inlined: inlined.length != 0 ? join(inlined) : null,
@@ -205,21 +194,28 @@ module.exports = function ({ variables, packet, direction, accumulators, paramet
     }
 
     function exit () {
-        return accumulate.buffered.length != 0
-            ? accumulate.buffered.map(buffered => buffered.source).join('\n')
+        return buffered.length != 0
+            ? buffered.map(buffered => buffered.source).join('\n')
             : null
     }
 
     function pop () {
-        const popped = accumulate.stack.pop()
-        if (accumulate.direction == 'serialize') {
-            accumulate.$$--
+        const popped = stack.pop()
+        if (direction == 'serialize') {
+            $$--
         }
-        const buffered = accumulate.buffered
+        const spliced = buffered
             .splice(popped.offset, popped.length)
             .map(buffered => buffered.source)
-        return buffered.length != 0 ? buffered.join('\n') : null
+        return spliced.length != 0 ? spliced.join('\n') : null
     }
 
-    return accumulate
+    return {
+        accumulations: accumulations,
+        accumulator: accumulator,
+        test: test,
+        inline_: inline_,
+        exit: exit,
+        pop: pop
+    }
 }
