@@ -424,7 +424,7 @@ function generate (packet, { require, bff, chk }) {
         while (bite != stop) {
             reads.unshift(`${cast.to}($buffer[$start++])`)
             if (bite) {
-                reads[0] += ` * 0x${(256n ** BigInt(bite)).toString(16)}${cast.suffix}`
+                reads[0] += ` * ${hex(1n << BigInt(bite) * 8n)}${cast.suffix}`
             }
             bite += direction
         }

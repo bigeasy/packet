@@ -1,5 +1,6 @@
 function hex (value) {
     switch (typeof value) {
+    case 'bigint':
     case 'number':
         return `0x${value.toString(16)}`
     case 'object':
