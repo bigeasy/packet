@@ -10,11 +10,11 @@ function prove (okay) {
                     value => value < 251, 8,
                     value => value >= 251 && value < 2 ** 16, [ 'fc', 16 ],
                     true, [ 'fd', 24 ]
-                ], [ 8, [
+                ], [ 8,
                     sip => sip < 251, 8,
                     sip => sip == 0xfc, [ 'fc', 16 ],
                     true, [ 'fd', 24 ]
-                ]]],
+                ]],
                 sentry: 8
             }
         },

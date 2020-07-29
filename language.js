@@ -372,7 +372,7 @@ module.exports = function (packets) {
             },
             sip: function (array) {
                 return typeof array[0] == 'number' &&
-                    is.conditional.ladder(array[1])
+                    is.conditional.ladder(array.slice(1))
             },
             split: function (packet) {
                 return packet.length == 2 &&
@@ -740,7 +740,6 @@ module.exports = function (packets) {
                     const sip = []
                     if (typeof parse[0] == 'number') {
                         sip.push(map(parse.shift(), {}).shift())
-                        parse.push.apply(parse, parse.shift())
                     }
                     const conditions = []
                     while (parse.length) {

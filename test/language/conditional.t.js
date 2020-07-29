@@ -5,18 +5,14 @@ require('proof')(4, okay => {
             value: [
                 [
                     value => value < 251, 8,
-                    // TODO Why isn't this `[ 'fc', [ 16 ] ]`? That way we can pad
-                    // anything?
                     value => value >= 251, [ 'fc', 16 ],
                     true, [ 'fd', 24 ]
                 ],
-                // TODO Here is the pure function, so maybe we need pure
-                // functions in general.
-                [ 8, [
+                [ 8,
                     sip => sip < 251, 8,
                     sip => sip == 0xfc, [ 'fc', 16 ],
                     true, [ 'fd', 24 ]
-                ]]
+                ]
             ]
         }
     }), [{
