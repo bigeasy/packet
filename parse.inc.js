@@ -123,27 +123,43 @@ function generate (packet, { require = null }) {
         const cast = field.bits > 32
             ? { suffix: 'n', to: 'BigInt', fixup: '' }
             : { suffix: '', to: '', fixup: ' >>> 0' }
-        return $(`
-            case ${$step++}:
-
-                $_ = 0${cast.suffix}
-                $step = ${$step}
-                $bite = ${start}${cast.suffix}
-
-            case ${$step++}:
-
-                while ($bite != ${stop}${cast.suffix}) {
-                    if ($start == $end) {
-                        `, inliner.exit(), `
-                        return { start: $start, object: null, parse: $parse }
-                    }
-                    $_ += ${cast.to}($buffer[$start++]) << $bite * 8${cast.suffix}${cast.fixup}
-                    $bite${direction}
+        const spread = function () {
+            if (field.spread == null) {
+                const spread = []
+                for (let i = 0, I = field.bits / 8; i < I; i++) {
+                    spread.push(8)
                 }
+                return spread
+            }
+            return field.spread
+        } ()
+        const unrolled = ! spread.every(number => number == spread[0])
+        if (unrolled) {
+            throw new Error
+        } else {
+            const multiplier = spread[0]
+            return $(`
+                case ${$step++}:
 
-                `, assign, `
+                    $_ = 0${cast.suffix}
+                    $step = ${$step}
+                    $bite = ${start}${cast.suffix}
 
-        `)
+                case ${$step++}:
+
+                    while ($bite != ${stop}${cast.suffix}) {
+                        if ($start == $end) {
+                            `, inliner.exit(), `
+                            return { start: $start, object: null, parse: $parse }
+                        }
+                        $_ += ${cast.to}($buffer[$start++]) << $bite * ${multiplier}${cast.suffix}${cast.fixup}
+                        $bite${direction}
+                    }
+
+                    `, assign, `
+
+            `)
+        }
     }
 
     function literal (path, field) {

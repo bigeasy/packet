@@ -152,8 +152,29 @@ module.exports = function (packets) {
             }
             return false
         },
+        spread: function (packet) {
+            if (
+                Array.isArray(packet) &&
+                packet.every(number => Number.isInteger(number)) &&
+                packet.slice(1).every(number => number > 0)
+            ) {
+                const spread = packet.slice(1)
+                const abs = Math.abs(packet[0] % 8)
+                const bits = abs != 0
+                    ? abs == 1
+                        ? Math.abs(~packet[0])
+                        : -~packet[0]
+                    : Math.abs(packet[0])
+                return bits > packet.slice(1).reduce((sum, number) => {
+                    return sum + number
+                }, 0)
+            }
+            return false
+        },
         integer: function (packet) {
-            return Number.isInteger(packet)
+            if (Number.isInteger(packet)) {
+                return true
+            }
         },
         absent: function (packet) {
             return packet == null || (
@@ -448,6 +469,16 @@ module.exports = function (packets) {
                 bits: 0,
                 fixed: true
             }]
+        }
+        //
+
+        // **Spread**: An integer spread out across multiple bytes that may or
+        // may not use every bit in that byte.
+        function spread () {
+            const spread = packet.slice(1)
+            if (Math.abs(packet[0] % 8) == 0) {
+                return [ integer(packet[0], false, { ...extra, spread }) ]
+            }
         }
         //
 
@@ -936,6 +967,7 @@ module.exports = function (packets) {
 
         function array () {
             if (is.absent(packet)) return absent([])
+            else if (is.spread(packet)) return spread()
             else if (is.mapped(packet)) return mapped()
             else if (is.literal.field(packet)) return literal()
             else if (is.ieee.explicit(packet)) return ieee.explicit()

@@ -413,27 +413,41 @@ function generate (packet, { require, bff, chk }) {
 
     function integer (assignee, field) {
         const variable = field.lookup || field.fields || field.compliment ? '$_' : assignee
-        const bytes = field.bits / 8
-        let bite = field.endianness == 'little' ? 0 : bytes - 1
-        const stop = field.endianness == 'little' ? bytes : -1
-        const direction = field.endianness == 'little' ? 1 : -1
-        const reads = []
         const cast = field.bits > 32
             ? { suffix: 'n', to: 'BigInt' }
             : { suffix: '', to: '' }
-        while (bite != stop) {
-            reads.unshift(`${cast.to}($buffer[$start++])`)
-            if (bite) {
-                reads[0] += ` * ${hex(1n << BigInt(bite) * 8n)}${cast.suffix}`
+        // TODO Define spread in language?
+        const spread = function () {
+            if (field.spread != null) {
+                return field.spread
             }
-            bite += direction
+            const spread = []
+            for (let i = 0, I = field.bits / 8; i < I; i++) {
+                spread.push(8)
+            }
+            return spread
+        } ()
+        const shifts = spread.map((bits, index) => {
+            return spread.slice(index + 1).reduce((sum, number) => sum + number, 0)
+        })
+        if (field.endianness == 'little') {
+            shifts.reverse()
+        }
+        const reads = []
+        for (let i = 0, I = field.bits / 8; i < I; i++) {
+            reads.unshift(`${cast.to}($buffer[$start++])`)
+            const shift = BigInt(shifts.shift())
+            if (shift != 0n) {
+                reads[0] += ` * ${hex(1n << shift)}${cast.suffix}`
+            }
         }
         $step += 2
-        const parse = bytes == 1 ? `${variable} = ${reads.join('')}`
-                                 : $(`
-                                        ${variable} =
-                                            `, reads.reverse().join(' +\n'), `
-                                    `)
+        const parse = field.bits == 8
+            ? `${variable} = ${reads[0]}`
+            : $(`
+                ${variable} =
+                    `, reads.reverse().join(' +\n'), `
+            `)
         if (field.fields) {
             return $(`
                 `, parse, `

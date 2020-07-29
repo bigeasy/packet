@@ -67,26 +67,42 @@ function generate (packet, { require = null }) {
         const cast = field.bits > 32
             ? { suffix: 'n', from: 'Number', shift: '>>' }
             : { suffix: '', from: '', shift: '>>>' }
-        const source = $(`
-            case ${$step++}:
-
-                $step = ${$step}
-                $bite = ${bite}${cast.suffix}
-                `, assign, `
-
-            case ${$step++}:
-
-                while ($bite != ${stop}${cast.suffix}) {
-                    if ($start == $end) {
-                        `, inliner.exit(), `
-                        return { start: $start, serialize: $serialize }
-                    }
-                    $buffer[$start++] = ${cast.from}($_ ${cast.shift} $bite * 8${cast.suffix} & 0xff${cast.suffix})
-                    $bite${direction}
+        const spread = function () {
+            if (field.spread == null) {
+                const spread = []
+                for (let i = 0, I = field.bits / 8; i < I; i++) {
+                    spread.push(8)
                 }
+                return spread
+            }
+            return field.spread
+        } ()
+        const unrolled = ! spread.every(number => number == spread[0])
+        if (unrolled) {
+            throw new Error
+        } else {
+            const multiplier = spread[0]
+            const mask = 0xff >>> 8 - spread[0]
+            return $(`
+                case ${$step++}:
 
-        `)
-        return source
+                    $step = ${$step}
+                    $bite = ${bite}${cast.suffix}
+                    `, assign, `
+
+                case ${$step++}:
+
+                    while ($bite != ${stop}${cast.suffix}) {
+                        if ($start == $end) {
+                            `, inliner.exit(), `
+                            return { start: $start, serialize: $serialize }
+                        }
+                        $buffer[$start++] = ${cast.from}($_ ${cast.shift} $bite * ${multiplier}${cast.suffix} & ${hex(mask)}${cast.suffix})
+                        $bite${direction}
+                    }
+
+            `)
+        }
     }
 
     function literal (path, field) {

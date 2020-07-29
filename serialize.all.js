@@ -410,21 +410,39 @@ function generate (packet, { require = null, bff, chk }) {
     }
 
     function integer (path, field) {
-        function word (assignee, field) {
-            const bytes = field.bits / 8
-            let bite = field.endianness == 'big' ? bytes - 1 : 0
-            const stop = field.endianness == 'big' ? -1 : bytes
-            const direction = field.endianness == 'big' ? -1 : 1
-            const shifts = []
+        const spread = function () {
+            if (field.spread == null) {
+                const spread = []
+                for (let i = 0, I = field.bits / 8; i < I; i++) {
+                    spread.push(8)
+                }
+                return spread
+            }
+            return field.spread
+        } ()
+        function word (value, field) {
+            const writes = []
+            // TODO Ugly, expand and remove parens when not cast.
             const cast = field.bits > 32
                 ? { to: 'n', from: 'Number', shift: '>>' }
                 : { to: '', from: '', shift: '>>>' }
-            while (bite != stop) {
-                const shift = bite ? `${assignee} ${cast.shift} ${bite * 8}${cast.to}` : assignee
-                shifts.push(`$buffer[$start++] = ${cast.from}(${shift} & 0xff${cast.to})`)
-                bite += direction
+            const combined = spread.map((number, index) => {
+                return {
+                    shift: spread.slice(index + 1).reduce((sum, number) => sum + number, 0),
+                    mask: 0xff >>> 8 - number
+                }
+            })
+            if (field.endianness == 'little') {
+                combined.reverse()
             }
-            return shifts.join('\n')
+            for (let i = 0, I = field.bits / 8; i < I; i++) {
+                const { shift, mask } = combined.shift()
+                const shifted = shift != 0
+                    ? `${value} ${cast.shift} ${shift}${cast.to}`
+                    : value
+                writes.push(`$buffer[$start++] = ${cast.from}(${shifted} & ${hex(mask)}${cast.to})`)
+            }
+            return writes.join('\n')
         }
         $step += 2
         if (field.fields) {
