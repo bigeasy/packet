@@ -120,9 +120,11 @@ function generate (packet, { require = null }) {
                         ? `${path} = $lookup[${field.lookup.index}][$_]`
                         : `${path} = $lookup[${field.lookup.index}].forward[$_]`
                     : `${path} = $_`
+        // TODO Make these functions.
         const cast = field.bits > 32
             ? { suffix: 'n', to: 'BigInt', fixup: '' }
             : { suffix: '', to: '', fixup: ' >>> 0' }
+        // TODO Move this into the language, maybe even set the endianness.
         const spread = function () {
             if (field.spread == null) {
                 const spread = []
@@ -133,9 +135,52 @@ function generate (packet, { require = null }) {
             }
             return field.spread
         } ()
-        const unrolled = ! spread.every(number => number == spread[0])
+        const upper = function () {
+            if (field.upper != null) {
+                return field.upper
+            }
+            return spread.map(() => 0)
+        } ()
+        const unrolled = ! (
+            spread.every(number => number == spread[0]) &&
+            upper.every(number => number == upper[0])
+        )
         if (unrolled) {
-            throw new Error
+            const combined = spread.map((bits, index) => {
+                return {
+                    mask: 0xff >>> 8 - bits,
+                    shift: spread.slice(index + 1).reduce((sum, number) => sum + number, 0),
+                    upper: upper[index]
+                }
+            })
+            const initialize = $(`
+                case ${$step++}:
+
+                    $_ = 0${cast.suffix}
+            `)
+            const steps = join(combined.map(({ mask, shift, upper }) => {
+                const bits = upper != 0
+                    ? `${cast.to}($buffer[$start++] & ${mask}) << ${shift}`
+                    : `${cast.to}($buffer[$start++]) << ${shift}`
+                return $(`
+                    case ${$step++}:
+
+                        if ($start == $end) {
+                            $step = ${$step - 1}
+                            `, inliner.exit(), `
+                            return { start: $start, object: null, parse: $parse }
+                        }
+
+                        $_ += ${bits}
+                `)
+            }))
+            return $(`
+                `, initialize, `
+
+                `, steps, `
+
+                    `, assign, `
+            `)
         } else {
             const multiplier = spread[0]
             return $(`

@@ -427,18 +427,33 @@ function generate (packet, { require, bff, chk }) {
             }
             return spread
         } ()
-        const shifts = spread.map((bits, index) => {
-            return spread.slice(index + 1).reduce((sum, number) => sum + number, 0)
+        const upper = function () {
+            if (field.upper != null) {
+                return field.upper
+            }
+            return spread.map(() => 0)
+        } ()
+        const combined = spread.map((bits, index) => {
+            return {
+                mask: 0xff >>> 8 - bits,
+                shift: BigInt(spread.slice(index + 1).reduce((sum, number) => sum + number, 0)),
+                upper: upper[index]
+            }
         })
-        if (field.endianness == 'little') {
-            shifts.reverse()
+        if (field.endianness == 'big') {
+            combined.reverse()
         }
         const reads = []
         for (let i = 0, I = field.bits / 8; i < I; i++) {
-            reads.unshift(`${cast.to}($buffer[$start++])`)
-            const shift = BigInt(shifts.shift())
-            if (shift != 0n) {
-                reads[0] += ` * ${hex(1n << shift)}${cast.suffix}`
+            const { shift, upper, mask } = combined.shift()
+            const bits = `${cast.to}($buffer[$start++])`
+            const masked = upper != 0
+                ? `(${bits} & ${hex(mask)}${cast.suffix})`
+                : bits
+            if (shift == 0n) {
+                reads.push(`${masked}`)
+            } else {
+                reads.push(`${masked} * ${hex(1n << shift)}${cast.suffix}`)
             }
         }
         $step += 2

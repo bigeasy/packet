@@ -3,7 +3,23 @@ require('proof')(0, prove)
 function prove (okay) {
     const cycle = require('./cycle')
     cycle(okay, {
-        name: 'integer/spread/short',
+        name: 'integer/spread/set/short',
+        define: {
+            object: {
+                nudge: 8,
+                value: [ 16, 0x80, 7, 0x0, 7 ],
+                sentry: 8
+            }
+        },
+        objects: [{
+            nudge: 0xaa,
+            value: 0x81,
+            sentry: 0xaa
+        }],
+        stopAt: 'parse.bff'
+    })
+    cycle(okay, {
+        name: 'integer/spread/unset/short',
         define: {
             object: {
                 nudge: 8,

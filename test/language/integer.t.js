@@ -1,4 +1,4 @@
-require('proof')(6, okay => {
+require('proof')(7, okay => {
     const language = require('../../language')
     okay(language({ packet: { value: 16 } }), [{
         type: 'structure',
@@ -105,8 +105,29 @@ require('proof')(6, okay => {
             fixed: true,
             bits: 16,
             spread: [ 7, 7 ],
+            upper: null,
             endianness: 'big',
             compliment: false
         }]
     }], 'spread')
+    okay(language({ packet: { value: [ 16, 0x80, 7, 0x0, 7 ] } }), [{
+        type: 'structure',
+        vivify: 'object',
+        name: 'packet',
+        fixed: true,
+        bits: 16,
+        dotted: '',
+        fields: [{
+            type: 'integer',
+            vivify: 'number',
+            name: 'value',
+            dotted: '.value',
+            fixed: true,
+            bits: 16,
+            spread: [ 7, 7 ],
+            upper: [ 128, 0 ],
+            endianness: 'big',
+            compliment: false
+        }]
+    }], 'spread set')
 })

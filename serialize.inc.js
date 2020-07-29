@@ -77,12 +77,58 @@ function generate (packet, { require = null }) {
             }
             return field.spread
         } ()
-        const unrolled = ! spread.every(number => number == spread[0])
+        const upper = function () {
+            if (field.upper != null) {
+                return field.upper
+            }
+            return spread.map(() => 0)
+        } ()
+        const unrolled = ! (
+            spread.every(number => number == spread[0]) &&
+            upper.every(number => number == upper[0])
+        )
         if (unrolled) {
-            throw new Error
+            const combined = spread.map((bits, index) => {
+                return {
+                    mask: 0xff >>> 8 - bits,
+                    shift: spread.slice(index + 1).reduce((sum, number) => sum + number, 0),
+                    upper: upper[index]
+                }
+            })
+            const initialize = $(`
+                case ${$step++}:
+
+                    `, assign, `
+            `)
+            const steps = join(combined.map(({ mask, shift, upper }) => {
+                const shifted = `${cast.from}($_ ${cast.shift} ${shift} & ${hex(mask)}${cast.suffix})`
+                const bits = upper != 0
+                    ? `${shifted} | ${hex(upper)}`
+                    : shifted
+                return $(`
+                    case ${$step++}:
+
+                        if ($start == $end) {
+                            $step = ${$step - 1}
+                            `, inliner.exit(), `
+                            return { start: $start, serialize: $serialize }
+                        }
+
+                        $buffer[$start++] = ${bits}
+                `)
+            }))
+            return $(`
+                `, initialize, `
+
+                `, steps, `
+            `)
         } else {
             const multiplier = spread[0]
             const mask = 0xff >>> 8 - spread[0]
+            const shifted = `${cast.from}($_ ${cast.shift} $bite * ${multiplier}${cast.suffix} & ${hex(mask)}${cast.suffix})`
+            const masked = upper[0] != 0
+                ? `(${shifted}) | ${hex(upper[0])}`
+                : shifted
             return $(`
                 case ${$step++}:
 
@@ -97,7 +143,7 @@ function generate (packet, { require = null }) {
                             `, inliner.exit(), `
                             return { start: $start, serialize: $serialize }
                         }
-                        $buffer[$start++] = ${cast.from}($_ ${cast.shift} $bite * ${multiplier}${cast.suffix} & ${hex(mask)}${cast.suffix})
+                        $buffer[$start++] = ${masked}
                         $bite${direction}
                     }
 

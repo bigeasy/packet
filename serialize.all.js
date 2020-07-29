@@ -420,6 +420,12 @@ function generate (packet, { require = null, bff, chk }) {
             }
             return field.spread
         } ()
+        const upper = function () {
+            if (field.upper == null) {
+                return spread.map(() => 0)
+            }
+            return field.upper
+        } ()
         function word (value, field) {
             const writes = []
             // TODO Ugly, expand and remove parens when not cast.
@@ -429,18 +435,24 @@ function generate (packet, { require = null, bff, chk }) {
             const combined = spread.map((number, index) => {
                 return {
                     shift: spread.slice(index + 1).reduce((sum, number) => sum + number, 0),
-                    mask: 0xff >>> 8 - number
+                    mask: 0xff >>> 8 - number,
+                    upper: upper[index]
                 }
             })
             if (field.endianness == 'little') {
                 combined.reverse()
             }
-            for (let i = 0, I = field.bits / 8; i < I; i++) {
-                const { shift, mask } = combined.shift()
+            for (let i = 0, I = field.bits / 8; i< I; i++) {
+                const { shift, mask, upper } = combined.shift()
                 const shifted = shift != 0
                     ? `${value} ${cast.shift} ${shift}${cast.to}`
                     : value
-                writes.push(`$buffer[$start++] = ${cast.from}(${shifted} & ${hex(mask)}${cast.to})`)
+                const lower = `${cast.from}(${shifted} & ${hex(mask)}${cast.to})`
+                if (upper == 0) {
+                    writes.push(`$buffer[$start++] = ${lower}`)
+                } else {
+                    writes.push(`$buffer[$start++] = ${lower} | ${upper}`)
+                }
             }
             return writes.join('\n')
         }

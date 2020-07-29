@@ -156,7 +156,7 @@ module.exports = function (packets) {
             if (
                 Array.isArray(packet) &&
                 packet.every(number => Number.isInteger(number)) &&
-                packet.slice(1).every(number => number > 0)
+                packet.slice(1).every(number => number >= 0)
             ) {
                 const spread = packet.slice(1)
                 const abs = Math.abs(packet[0] % 8)
@@ -165,9 +165,15 @@ module.exports = function (packets) {
                         ? Math.abs(~packet[0])
                         : -~packet[0]
                     : Math.abs(packet[0])
-                return bits > packet.slice(1).reduce((sum, number) => {
-                    return sum + number
-                }, 0)
+                const bytes = bits / 8
+                if (bytes == spread.length) {
+                    return bits > packet.slice(1)
+                        .reduce((sum, number) => sum + number, 0)
+                } else if (bytes == spread.length / 2) {
+                    return bits > packet.slice(1)
+                        .filter((number, index) => index % 2 == 1)
+                        .reduce((sum, number) => sum + number, 0)
+                }
             }
             return false
         },
@@ -475,10 +481,19 @@ module.exports = function (packets) {
         // **Spread**: An integer spread out across multiple bytes that may or
         // may not use every bit in that byte.
         function spread () {
-            const spread = packet.slice(1)
-            if (Math.abs(packet[0] % 8) == 0) {
-                return [ integer(packet[0], false, { ...extra, spread }) ]
-            }
+            const abs = Math.abs(packet[0] % 8)
+            const bits = abs != 0
+                ? abs == 1
+                    ? Math.abs(~packet[0])
+                    : -~packet[0]
+                : Math.abs(packet[0])
+            const { spread, upper } = bits / 8 * 2 == packet.length - 1
+                ? {
+                    spread: packet.slice(1).filter((_, index) => index % 2 == 1),
+                    upper: packet.slice(1).filter((_, index) => index % 2 == 0)
+                }
+                : { spread: packet.slice(1), upper: null }
+            return [ integer(packet[0], false, { ...extra, spread, upper }) ]
         }
         //
 
