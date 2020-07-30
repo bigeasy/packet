@@ -124,42 +124,18 @@ function generate (packet, { require = null }) {
         const cast = field.bits > 32
             ? { suffix: 'n', to: 'BigInt', fixup: '' }
             : { suffix: '', to: '', fixup: ' >>> 0' }
-        // TODO Move this into the language, maybe even set the endianness.
-        const spread = function () {
-            if (field.spread == null) {
-                const spread = []
-                for (let i = 0, I = field.bits / 8; i < I; i++) {
-                    spread.push(8)
-                }
-                return spread
-            }
-            return field.spread
-        } ()
-        const upper = function () {
-            if (field.upper != null) {
-                return field.upper
-            }
-            return spread.map(() => 0)
-        } ()
         const unrolled = ! (
-            spread.every(number => number == spread[0]) &&
-            upper.every(number => number == upper[0])
+            field.bytes.every(({ size }) => size == field.bytes[0].size) &&
+            field.bytes.every(({ set }) => set == field.bytes[0].set)
         )
         if (unrolled) {
-            const combined = spread.map((bits, index) => {
-                return {
-                    mask: 0xff >>> 8 - bits,
-                    shift: spread.slice(index + 1).reduce((sum, number) => sum + number, 0),
-                    upper: upper[index]
-                }
-            })
             const initialize = $(`
                 case ${$step++}:
 
                     $_ = 0${cast.suffix}
             `)
-            const steps = join(combined.map(({ mask, shift, upper }) => {
-                const bits = upper != 0
+            const steps = join(field.bytes.map(({ mask, shift, set }) => {
+                const bits = set != 0
                     ? `${cast.to}($buffer[$start++] & ${mask}) << ${shift}`
                     : `${cast.to}($buffer[$start++]) << ${shift}`
                 return $(`
@@ -182,7 +158,7 @@ function generate (packet, { require = null }) {
                     `, assign, `
             `)
         } else {
-            const multiplier = spread[0]
+            const multiplier = field.bytes[0].size
             return $(`
                 case ${$step++}:
 

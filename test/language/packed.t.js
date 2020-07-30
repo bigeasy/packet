@@ -24,6 +24,15 @@ require('proof')(1, okay => {
             bits: 32,
             name: 'header',
             dotted: '.header',
+            bytes: [{
+                mask: 255, size: 8, shift: 24, set: 0
+            }, {
+                mask: 255, size: 8, shift: 16, set: 0
+            }, {
+                mask: 255, size: 8, shift: 8, set: 0
+            }, {
+                mask: 255, size: 8, shift: 0, set: 0
+            }],
             fields: [{
                 type: 'literal',
                 name: 'one',

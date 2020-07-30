@@ -20,6 +20,9 @@ require('proof')(1, okay => {
             dotted: '.value',
             fixed: true,
             bits: 8,
+            bytes: [{
+                mask: 255, size: 8, shift: 0, set: 0
+            }],
             endianness: 'big',
             compliment: false,
             name: 'value',
@@ -33,6 +36,9 @@ require('proof')(1, okay => {
             dotted: '.yn',
             fixed: true,
             bits: 8,
+            bytes: [{
+                mask: 255, size: 8, shift: 0, set: 0
+            }],
             endianness: 'big',
             compliment: false,
             name: 'yn',
@@ -46,6 +52,9 @@ require('proof')(1, okay => {
             dotted: '.binary',
             fixed: true,
             bits: 8,
+            bytes: [{
+                mask: 255, size: 8, shift: 0, set: 0
+            }],
             endianness: 'big',
             compliment: false,
             name: 'binary',
@@ -59,6 +68,9 @@ require('proof')(1, okay => {
             dotted: '.mapped',
             fixed: true,
             bits: 8,
+            bytes: [{
+                mask: 255, size: 8, shift: 0, set: 0
+            }],
             endianness: 'big',
             compliment: false,
             name: 'mapped',
@@ -72,6 +84,9 @@ require('proof')(1, okay => {
             dotted: '.hashed',
             fixed: true,
             bits: 8,
+            bytes: [{
+                mask: 255, size: 8, shift: 0, set: 0
+            }],
             endianness: 'big',
             compliment: false,
             name: 'hashed',

@@ -38,6 +38,23 @@ function integer (value, pack, extra = {}) {
     // NOT to get the bit length. Two's compliment is indicated by a positive
     // value for bit length instead of a negative value.
     if (!pack) {
+        const abs = Math.abs(value % 8)
+        const bits = abs != 0
+            ? abs == 1
+                ? value < 0
+                    ? ~value
+                    : ~-value
+                : -~value
+            : Math.abs(value)
+        const bytes = []
+        for (let i = 0, I = bits / 8; i < I; i++) {
+            bytes.push({
+                mask: 0xff,
+                size: 8,
+                shift: (I - i - 1) * 8,
+                set: 0x0
+            })
+        }
         if (Math.abs(value % 8) == 1) {
             if (value < 0) {
                 return {
@@ -46,6 +63,7 @@ function integer (value, pack, extra = {}) {
                     dotted: '',
                     fixed: true,
                     bits: ~value,
+                    bytes: bytes.reverse(),
                     endianness: 'little',
                     compliment: false,
                     ...extra
@@ -56,6 +74,7 @@ function integer (value, pack, extra = {}) {
                 vivify: 'number',
                 dotted: '',
                 fixed: true,
+                bytes: bytes.reverse(),
                 bits: ~-value,
                 endianness: 'little',
                 compliment: true,
@@ -68,11 +87,24 @@ function integer (value, pack, extra = {}) {
                 vivify: 'number',
                 dotted: '',
                 fixed: true,
+                bytes: bytes.reverse(),
                 bits: -~value,
                 endianness: 'little',
                 compliment: true,
                 ...extra
             }
+        }
+        // Big-endian integer. Two's compliment if the bit length is negative.
+        return {
+            type: 'integer',
+            vivify: 'number',
+            dotted: '',
+            fixed: true,
+            bytes: bytes,
+            bits: Math.abs(value),
+            endianness: 'big',
+            compliment: value < 0,
+            ...extra
         }
     }
     // Big-endian integer. Two's compliment if the bit length is negative.
@@ -162,7 +194,9 @@ module.exports = function (packets) {
                 const abs = Math.abs(packet[0] % 8)
                 const bits = abs != 0
                     ? abs == 1
-                        ? Math.abs(~packet[0])
+                        ? packet[0] < 0
+                            ? ~packet[0]
+                            : ~-packet[0]
                         : -~packet[0]
                     : Math.abs(packet[0])
                 const bytes = bits / 8
@@ -487,13 +521,24 @@ module.exports = function (packets) {
                     ? Math.abs(~packet[0])
                     : -~packet[0]
                 : Math.abs(packet[0])
-            const { spread, upper } = bits / 8 * 2 == packet.length - 1
+            const { spread, set } = bits / 8 * 2 == packet.length - 1
                 ? {
                     spread: packet.slice(1).filter((_, index) => index % 2 == 1),
-                    upper: packet.slice(1).filter((_, index) => index % 2 == 0)
+                    set: packet.slice(1).filter((_, index) => index % 2 == 0)
                 }
-                : { spread: packet.slice(1), upper: null }
-            return [ integer(packet[0], false, { ...extra, spread, upper }) ]
+                : {
+                    spread: packet.slice(1),
+                    set: packet.slice(1).map(() => 0)
+                }
+            const bytes = spread.map((number, index) => {
+                return {
+                    shift: spread.slice(index + 1).reduce((sum, number) => sum + number, 0),
+                    size: number,
+                    mask: 0xff >>> 8 - number,
+                    set: set[index]
+                }
+            })
+            return [ integer(packet[0], false, { ...extra, bytes }) ]
         }
         //
 
@@ -651,7 +696,7 @@ module.exports = function (packets) {
                     name: name, dotted: `.${name}`
                 }, true))
             }
-            const into = integer(packet[1], true, {
+            const into = integer(packet[1], pack, {
                 vivify: 'object',
                 ...extra
             })
@@ -737,13 +782,13 @@ module.exports = function (packets) {
                         case 'function':
                             conditions.push({
                                 test: { ...args([ test ]) },
-                                fields: map(field, {})
+                                fields: map(field, {}, pack)
                             })
                             break
                         case 'boolean':
                             conditions.push({
                                 test: null,
-                                fields: map(field, {})
+                                fields: map(field, {}, pack)
                             })
                             break
                         }
@@ -764,13 +809,13 @@ module.exports = function (packets) {
                         case 'function':
                             conditions.push({
                                 test: { ...args([ test ]) },
-                                fields: map(field, {})
+                                fields: map(field, {}, pack)
                             })
                             break
                         case 'boolean':
                             conditions.push({
                                 test: null,
-                                fields: map(field, {})
+                                fields: map(field, {}, pack)
                             })
                             break
                         }
@@ -799,7 +844,7 @@ module.exports = function (packets) {
                 const conditions = []
                 while (packet.length) {
                     const test = packet.shift()
-                    const fields = map(packet.shift(), {})
+                    const fields = map(packet.shift(), {}, pack)
                     switch (typeof test) {
                     case 'function':
                         conditions.push({
@@ -918,14 +963,14 @@ module.exports = function (packets) {
                     cases.push({
                         value: value,
                         otherwise: false,
-                        fields: map(packet[1][value], {})
+                        fields: map(packet[1][value], {}, pack)
                     })
                 }
                 if (packet.length > 2) {
                     cases.push({
                         value: null,
                         otherwise: true,
-                        fields: map(packet[2], {})
+                        fields: map(packet[2], {}, pack)
                     })
                 }
                 return switched.node(cases)
@@ -939,13 +984,13 @@ module.exports = function (packets) {
                         cases.push({
                             value: when.$_,
                             otherwise: false,
-                            fields: map(field, {})
+                            fields: map(field, {}, pack)
                         })
                     } else {
                         cases.push({
                             value: null,
                             otherwise: true,
-                            fields: map(field, {})
+                            fields: map(field, {}, pack)
                         })
                     }
                 }

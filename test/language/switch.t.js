@@ -21,6 +21,9 @@ require('proof')(4, okay => {
             dotted: '.type',
             fixed: true,
             bits: 8,
+            bytes: [{
+                mask: 255, size: 8, shift: 0, set: 0
+            }],
             endianness: 'big',
             compliment: false,
             name: 'type'
@@ -47,6 +50,9 @@ require('proof')(4, okay => {
                     dotted: '',
                     fixed: true,
                     bits: 8,
+                    bytes: [{
+                        mask: 255, size: 8, shift: 0, set: 0
+                    }],
                     endianness: 'big',
                     compliment: false
                   }
@@ -60,6 +66,11 @@ require('proof')(4, okay => {
                     dotted: '',
                     fixed: true,
                     bits: 16,
+                    bytes: [{
+                        mask: 255, size: 8, shift: 8, set: 0
+                    }, {
+                        mask: 255, size: 8, shift: 0, set: 0
+                    }],
                     endianness: 'big',
                     compliment: false
                 }]
@@ -72,6 +83,15 @@ require('proof')(4, okay => {
                     dotted: '',
                     fixed: true,
                     bits: 32,
+                    bytes: [{
+                        mask: 255, size: 8, shift: 24, set: 0
+                    }, {
+                        mask: 255, size: 8, shift: 16, set: 0
+                    }, {
+                        mask: 255, size: 8, shift: 8, set: 0
+                    }, {
+                        mask: 255, size: 8, shift: 0, set: 0
+                    }],
                     endianness: 'big',
                     compliment: false
                 }],
@@ -103,6 +123,9 @@ require('proof')(4, okay => {
             dotted: '.header',
             fixed: true,
             bits: 8,
+            bytes: [{
+                mask: 255, size: 8, shift: 0, set: 0
+            }],
             endianness: 'big',
             compliment: false,
             name: 'header',
@@ -220,6 +243,9 @@ require('proof')(4, okay => {
             dotted: '.type',
             fixed: true,
             bits: 8,
+            bytes: [{
+                mask: 255, size: 8, shift: 0, set: 0
+            }],
             endianness: 'big',
             compliment: false,
             name: 'type'
@@ -245,6 +271,9 @@ require('proof')(4, okay => {
                     dotted: '',
                     fixed: true,
                     bits: 8,
+                    bytes: [{
+                        mask: 255, size: 8, shift: 0, set: 0
+                    }],
                     endianness: 'big',
                     compliment: false
                 }]
@@ -257,6 +286,11 @@ require('proof')(4, okay => {
                     dotted: '',
                     fixed: true,
                     bits: 16,
+                    bytes: [{
+                        mask: 255, size: 8, shift: 8, set: 0
+                    }, {
+                        mask: 255, size: 8, shift: 0, set: 0
+                    }],
                     endianness: 'big',
                     compliment: false
                 }]
@@ -269,6 +303,13 @@ require('proof')(4, okay => {
                     dotted: '',
                     fixed: true,
                     bits: 24,
+                    bytes: [{
+                        mask: 255, size: 8, shift: 16, set: 0
+                    }, {
+                        mask: 255, size: 8, shift: 8, set: 0
+                    }, {
+                        mask: 255, size: 8, shift: 0, set: 0
+                    }],
                     endianness: 'big',
                     compliment: false
                 }]
@@ -303,6 +344,9 @@ require('proof')(4, okay => {
             dotted: '.header',
             fixed: true,
             bits: 8,
+            bytes: [{
+                mask: 255, size: 8, shift: 0, set: 0
+            }],
             endianness: 'big',
             compliment: false,
             name: 'header',

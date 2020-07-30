@@ -25,6 +25,9 @@ require('proof')(1, okay => {
                 dotted: '.first',
                 fixed: true,
                 bits: 8,
+                bytes: [{
+                    mask: 255, size: 8, shift: 0, set: 0
+                }],
                 endianness: 'big',
                 compliment: false,
                 name: 'first'
@@ -34,6 +37,9 @@ require('proof')(1, okay => {
                 dotted: '.second',
                 fixed: true,
                 bits: 8,
+                bytes: [{
+                    mask: 255, size: 8, shift: 0, set: 0
+                }],
                 endianness: 'big',
                 compliment: false,
                 name: 'second'

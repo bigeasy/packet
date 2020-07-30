@@ -416,46 +416,40 @@ function generate (packet, { require, bff, chk }) {
         const cast = field.bits > 32
             ? { suffix: 'n', to: 'BigInt' }
             : { suffix: '', to: '' }
-        // TODO Define spread in language?
-        const spread = function () {
-            if (field.spread != null) {
-                return field.spread
-            }
-            const spread = []
+
+        function bigint () {
+            const reads = []
             for (let i = 0, I = field.bits / 8; i < I; i++) {
-                spread.push(8)
+                const { shift, set, mask } = field.bytes[i]
+                const bits = `($buffer[$start++])`
+                const masked = set != 0
+                    ? `(${bits} & ${hex(mask)})`
+                    : bits
+                if (shift == 0n) {
+                    reads.push(`BigInt${masked}`)
+                } else {
+                    reads.push(`(BigInt${masked} << ${shift}${cast.suffix})`)
+                }
             }
-            return spread
-        } ()
-        const upper = function () {
-            if (field.upper != null) {
-                return field.upper
-            }
-            return spread.map(() => 0)
-        } ()
-        const combined = spread.map((bits, index) => {
-            return {
-                mask: 0xff >>> 8 - bits,
-                shift: BigInt(spread.slice(index + 1).reduce((sum, number) => sum + number, 0)),
-                upper: upper[index]
-            }
-        })
-        if (field.endianness == 'big') {
-            combined.reverse()
+            return reads.reverse()
         }
-        const reads = []
-        for (let i = 0, I = field.bits / 8; i < I; i++) {
-            const { shift, upper, mask } = combined.shift()
-            const bits = `${cast.to}($buffer[$start++])`
-            const masked = upper != 0
-                ? `(${bits} & ${hex(mask)}${cast.suffix})`
-                : bits
-            if (shift == 0n) {
-                reads.push(`${masked}`)
-            } else {
-                reads.push(`${masked} * ${hex(1n << shift)}${cast.suffix}`)
+        function number () {
+            const reads = []
+            for (let i = 0, I = field.bits / 8; i < I; i++) {
+                const { shift, set, mask } = field.bytes[i]
+                const bits = `($buffer[$start++])`
+                const masked = set != 0
+                    ? `(${bits} & ${hex(mask)})`
+                    : bits
+                if (shift == 0n) {
+                    reads.push(`${masked}`)
+                } else {
+                    reads.push(`${masked} * ${hex(1 << shift)}${cast.suffix}`)
+                }
             }
+            return reads.reverse()
         }
+        const reads = field.bits <= 32 ? number() : bigint()
         $step += 2
         const parse = field.bits == 8
             ? `${variable} = ${reads[0]}`

@@ -410,75 +410,62 @@ function generate (packet, { require = null, bff, chk }) {
     }
 
     function integer (path, field) {
-        const spread = function () {
-            if (field.spread == null) {
-                const spread = []
-                for (let i = 0, I = field.bits / 8; i < I; i++) {
-                    spread.push(8)
-                }
-                return spread
-            }
-            return field.spread
-        } ()
-        const upper = function () {
-            if (field.upper == null) {
-                return spread.map(() => 0)
-            }
-            return field.upper
-        } ()
-        function word (value, field) {
+        const value = field.lookup != null || field.fields != null ? '$_' : path
+        function bigint (path, field) {
             const writes = []
-            // TODO Ugly, expand and remove parens when not cast.
-            const cast = field.bits > 32
-                ? { to: 'n', from: 'Number', shift: '>>' }
-                : { to: '', from: '', shift: '>>>' }
-            const combined = spread.map((number, index) => {
-                return {
-                    shift: spread.slice(index + 1).reduce((sum, number) => sum + number, 0),
-                    mask: 0xff >>> 8 - number,
-                    upper: upper[index]
-                }
-            })
-            if (field.endianness == 'little') {
-                combined.reverse()
-            }
             for (let i = 0, I = field.bits / 8; i< I; i++) {
-                const { shift, mask, upper } = combined.shift()
-                const shifted = shift != 0
-                    ? `${value} ${cast.shift} ${shift}${cast.to}`
-                    : value
-                const lower = `${cast.from}(${shifted} & ${hex(mask)}${cast.to})`
-                if (upper == 0) {
-                    writes.push(`$buffer[$start++] = ${lower}`)
+                const { shift, mask, set } = field.bytes[i]
+                const shifted = shift != 0 ? `${value} >> ${shift}n` : value
+                const lower = `Number(${shifted} & ${hex(mask)}n)`
+                if (set != 0) {
+                    writes.push(`$buffer[$start++] = ${lower} | ${hex(set)}`)
                 } else {
-                    writes.push(`$buffer[$start++] = ${lower} | ${upper}`)
+                    writes.push(`$buffer[$start++] = ${lower}`)
                 }
             }
             return writes.join('\n')
         }
+        function number (value, field) {
+            const writes = []
+            for (let i = 0, I = field.bits / 8; i< I; i++) {
+                const { shift, mask, set } = field.bytes[i]
+                const shifted = shift != 0 ? `${value} >>> ${shift}` : value
+                const lower = `${shifted} & ${hex(mask)}`
+                if (set != 0) {
+                    writes.push(`$buffer[$start++] = (${lower}) | ${hex(set)}`)
+                } else {
+                    writes.push(`$buffer[$start++] = (${lower})`)
+                }
+            }
+            return writes.join('\n')
+        }
+        function word (value, field) {
+            return field.bits > 32 ? bigint(value, field) : number(value, field)
+        }
+        const write = word(value, field)
         $step += 2
         if (field.fields) {
             const packing = pack(inliner, field, path)
             return $(`
                 `, packing, `
 
-                `, word('$_', field), `
+                `, write, `
             `)
         } else if (field.lookup) {
             if (Array.isArray(field.lookup.values)) {
                 return $(`
                     $_ = $lookup[${field.lookup.index}].indexOf(${path})
 
-                    `, word('$_', field), `
+                    `, write, `
                 `)
             }
             return $(`
                 $_ = $lookup[${field.lookup.index}].reverse[${path}]
 
-                `, word('$_', field), `
+                `, write, `
             `)
         } else {
-            return word(path, field)
+            return write
         }
     }
 

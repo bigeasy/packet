@@ -25,6 +25,15 @@ require('proof')(3, okay => {
                 dotted: '.value',
                 fixed: true,
                 bits: 32,
+                bytes: [{
+                    mask: 255, size: 8, shift: 24, set: 0
+                }, {
+                    mask: 255, size: 8, shift: 16, set: 0
+                }, {
+                    mask: 255, size: 8, shift: 8, set: 0
+                }, {
+                    mask: 255, size: 8, shift: 0, set: 0
+                }],
                 endianness: 'big',
                 compliment: false,
                 name: 'value'
@@ -57,6 +66,15 @@ require('proof')(3, okay => {
                 dotted: '.value',
                 fixed: true,
                 bits: 32,
+                bytes: [{
+                    mask: 255, size: 8, shift: 24, set: 0
+                }, {
+                    mask: 255, size: 8, shift: 16, set: 0
+                }, {
+                    mask: 255, size: 8, shift: 8, set: 0
+                }, {
+                    mask: 255, size: 8, shift: 0, set: 0
+                }],
                 endianness: 'big',
                 compliment: false,
                 name: 'value'
@@ -97,6 +115,15 @@ require('proof')(3, okay => {
                 dotted: '.value',
                 fixed: true,
                 bits: 32,
+                bytes: [{
+                    mask: 255, size: 8, shift: 24, set: 0
+                }, {
+                    mask: 255, size: 8, shift: 16, set: 0
+                }, {
+                    mask: 255, size: 8, shift: 8, set: 0
+                }, {
+                    mask: 255, size: 8, shift: 0, set: 0
+                }],
                 endianness: 'big',
                 compliment: false,
                 name: 'value'

@@ -16,7 +16,7 @@ function prove (okay) {
             value: 0x81,
             sentry: 0xaa
         }],
-        stopAt: 'parse.bff'
+        stopAt: 'parse.inc'
     })
     cycle(okay, {
         name: 'integer/spread/unset/short',
