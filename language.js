@@ -52,7 +52,7 @@ function integer (value, pack, extra = {}) {
                 mask: 0xff,
                 size: 8,
                 shift: (I - i - 1) * 8,
-                set: 0x0
+                upper: 0x0
             })
         }
         if (Math.abs(value % 8) == 1) {
@@ -495,6 +495,13 @@ module.exports = function (packets) {
             if (is.ieee.shorthand(packet)) return ieee.shorthand()
             else return [ integer(packet, pack, extra) ]
         }
+
+        //
+
+        // **BigtInt**
+        function bigint () {
+            return [ integer(Number(packet), pack, { ...extra, type: 'bigint', vivify: 'bigint' }) ]
+        }
         //
 
         // **Absent**: A `null` or empty array `[]` on parse, ignored on
@@ -521,21 +528,21 @@ module.exports = function (packets) {
                     ? Math.abs(~packet[0])
                     : -~packet[0]
                 : Math.abs(packet[0])
-            const { spread, set } = bits / 8 * 2 == packet.length - 1
+            const { spread, upper } = bits / 8 * 2 == packet.length - 1
                 ? {
                     spread: packet.slice(1).filter((_, index) => index % 2 == 1),
-                    set: packet.slice(1).filter((_, index) => index % 2 == 0)
+                    upper: packet.slice(1).filter((_, index) => index % 2 == 0)
                 }
                 : {
                     spread: packet.slice(1),
-                    set: packet.slice(1).map(() => 0)
+                    upper: packet.slice(1).map(() => 0)
                 }
             const bytes = spread.map((number, index) => {
                 return {
                     shift: spread.slice(index + 1).reduce((sum, number) => sum + number, 0),
                     size: number,
                     mask: 0xff >>> 8 - number,
-                    set: set[index]
+                    upper: upper[index]
                 }
             })
             return [ integer(packet[0], false, { ...extra, bytes }) ]
@@ -1054,6 +1061,7 @@ module.exports = function (packets) {
         switch (typeof packet) {
         case 'string': return string()
         case 'number': return number()
+        case 'bigint': return bigint()
         case 'object': return object()
         }
 

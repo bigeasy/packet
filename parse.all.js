@@ -331,6 +331,7 @@ function inquisition (fields, $I = 0) {
             checked.push(field)
             break
         case 'literal':
+        case 'bigint':
         case 'integer':
             checked.push({
                 type: 'checkpoint',
@@ -410,46 +411,14 @@ function generate (packet, { require, bff, chk }) {
         $step++
         return `${path} = ${util.inspect(field.value)}`
     }
+    //
 
-    function integer (assignee, field) {
-        const variable = field.lookup || field.fields || field.compliment ? '$_' : assignee
-        const cast = field.bits > 32
-            ? { suffix: 'n', to: 'BigInt' }
-            : { suffix: '', to: '' }
-
-        function bigint () {
-            const reads = []
-            for (let i = 0, I = field.bits / 8; i < I; i++) {
-                const { shift, set, mask } = field.bytes[i]
-                const bits = `($buffer[$start++])`
-                const masked = set != 0
-                    ? `(${bits} & ${hex(mask)})`
-                    : bits
-                if (shift == 0n) {
-                    reads.push(`BigInt${masked}`)
-                } else {
-                    reads.push(`(BigInt${masked} << ${shift}${cast.suffix})`)
-                }
-            }
-            return reads.reverse()
-        }
-        function number () {
-            const reads = []
-            for (let i = 0, I = field.bits / 8; i < I; i++) {
-                const { shift, set, mask } = field.bytes[i]
-                const bits = `($buffer[$start++])`
-                const masked = set != 0
-                    ? `(${bits} & ${hex(mask)})`
-                    : bits
-                if (shift == 0n) {
-                    reads.push(`${masked}`)
-                } else {
-                    reads.push(`${masked} * ${hex(1 << shift)}${cast.suffix}`)
-                }
-            }
-            return reads.reverse()
-        }
-        const reads = field.bits <= 32 ? number() : bigint()
+    // Assign an integer value to a member of the parsed object. This is the
+    // generated source common to `number` and `BigInt`. First read the bits
+    // from the underlying byte buffer, then transform the value if it is a
+    // lookup value, packed integer or two's compliment.
+    function read (path, field, reads) {
+        const variable = field.lookup || field.fields || field.compliment ? '$_' : path
         $step += 2
         const parse = field.bits == 8
             ? `${variable} = ${reads[0]}`
@@ -461,32 +430,67 @@ function generate (packet, { require, bff, chk }) {
             return $(`
                 `, parse, `
 
-                `, unpack(inliner, packet, assignee, field, '$_'), `
+                `, unpack(inliner, packet, path, field, '$_'), `
             `)
         } else if (field.lookup) {
             if (Array.isArray(field.lookup.values)) {
                 return $(`
                     `, parse, `
 
-                    ${assignee} = $lookup[${field.lookup.index}][$_]
+                    ${path} = $lookup[${field.lookup.index}][$_]
                 `)
             }
             return $(`
                 `, parse, `
 
-                ${assignee} = $lookup[${field.lookup.index}].forward[$_]
+                ${path} = $lookup[${field.lookup.index}].forward[$_]
             `)
         }
-
         if (field.compliment) {
             variables.register = true
             return $(`
                 `, parse, `
-                ${assignee} = ${unsign(variable, field.bits)}
+                ${path} = ${unsign(variable, field.bits)}
             `)
         }
 
         return parse
+    }
+    //
+
+    // Read a `number` from the underlying buffer. Will create a standard
+    // JavaScript `number` in the constructed object.
+    function integer (path, field) {
+        const reads = []
+        for (let i = 0, I = field.bits / 8; i < I; i++) {
+            const { shift, upper, mask } = field.bytes[i]
+            const bits = '($buffer[$start++])'
+            const masked = upper != 0 ? `(${bits} & ${hex(mask)})` : bits
+            if (shift == 0n) {
+                reads.push(`${masked}`)
+            } else {
+                reads.push(`${masked} * ${hex(1 << shift)}`)
+            }
+        }
+        return read(path, field, reads.reverse())
+    }
+    //
+
+    // Read a `BigInt` from the underlying buffer. Will create a `BigInt`
+    // variable in the constructed object.
+    function bigint (path, field) {
+        const reads = []
+        for (let i = 0, I = field.bits / 8; i < I; i++) {
+            const { shift, upper, mask } = field.bytes[i]
+            const bits = `($buffer[$start++])`
+            const masked = upper != 0 ? `(${bits} & ${hex(mask)})` : bits
+            if (shift == 0n) {
+                reads.push(`BigInt${masked}`)
+            } else {
+                reads.push(`(BigInt${masked} << ${shift}n)`)
+            }
+        }
+        return read(path, field, reads.reverse())
     }
 
     function literal (path, field) {
@@ -967,6 +971,8 @@ function generate (packet, { require, bff, chk }) {
             return inline(path, field)
         case 'literal':
             return literal(path, field)
+        case 'bigint':
+            return bigint(path, field)
         case 'integer':
             return integer(path, field)
         case 'absent':

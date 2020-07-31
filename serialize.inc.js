@@ -50,82 +50,128 @@ function generate (packet, { require = null }) {
                 $step = ${$step}
         `)
     }
+    //
 
-    function integer (path, field) {
-        const endianness = field.endianness || 'big'
-        const bytes = field.bits / 8
-        const direction = field.endianness == 'big' ? '--' : '++'
-        let bite = field.endianness == 'big' ? bytes - 1 : 0
-        let stop = field.endianness == 'big' ? -1 : bytes
-        const assign = field.fields
+    // Convert an object property to value to an integer. This generated source
+    // is common to both rolled and unrolled `number` and `BigInt`
+    // serialization. Convert the object property value if it is a lookup value
+    // or a packed integer.
+    function convert (path, field) {
+        return field.fields
             ? pack(inliner, field, path)
             : field.lookup != null
                 ? Array.isArray(field.lookup.values)
                     ? `$_ = $lookup[${field.lookup.index}].indexOf(${path})`
                     : `$_ = $lookup[${field.lookup.index}].reverse[${path}]`
                 : `$_ = ${path}`
-        const cast = field.bits > 32
-            ? { suffix: 'n', from: 'Number', shift: '>>' }
-            : { suffix: '', from: '', shift: '>>>' }
-        const unrolled = ! (
-            field.bytes.every(({ size }) => size == field.bytes[0].size) &&
-            field.bytes.every(({ set }) => set == field.bytes[0].set)
-        )
-        if (unrolled) {
-            const initialize = $(`
-                case ${$step++}:
+    }
+    //
 
-                    `, assign, `
-            `)
-            const steps = join(field.bytes.map(({ mask, shift, set }) => {
-                const shifted = `${cast.from}($_ ${cast.shift} ${shift} & ${hex(mask)}${cast.suffix})`
-                const bits = set != 0
-                    ? `${shifted} | ${hex(set)}`
-                    : shifted
-                return $(`
-                    case ${$step++}:
+    // Serialize a `number` or `BigInt` integer using a loop to advance to the
+    // next byte. We use this when the bit size and upper bits are the same for
+    // each byte which is the common case &mdash; use all 8 bits, set no bytes.
+    function rolled (path, field, bite, stop, write) {
+        const direction = field.endianness == 'big' ? '--' : '++'
+        return $(`
+            case ${$step++}:
 
-                        if ($start == $end) {
-                            $step = ${$step - 1}
-                            `, inliner.exit(), `
-                            return { start: $start, serialize: $serialize }
-                        }
+                $step = ${$step}
+                $bite = ${bite}
+                `, convert(path, field), `
 
-                        $buffer[$start++] = ${bits}
-                `)
-            }))
+            case ${$step++}:
+
+                while ($bite != ${stop}) {
+                    if ($start == $end) {
+                        `, inliner.exit(), `
+                        return { start: $start, serialize: $serialize }
+                    }
+                    $buffer[$start++] = ${write}
+                    $bite${direction}
+                }
+
+        `)
+    }
+    //
+
+    // Serialize an integer or `BigInt` using a step for each byte. We use this
+    // when the bit size and upper bits are **not** the same for each byte, when
+    // we are packing an integer into bytes that might use the upper bytes as
+    // flags as in the case some variable length integer encodings.
+    function unrolled (path, field, writes) {
+        const initialize = $(`
+            case ${$step++}:
+
+                `, convert(path, field), `
+        `)
+        const steps = join(writes.map(write => {
             return $(`
-                `, initialize, `
-
-                `, steps, `
-            `)
-        } else {
-            const multiplier = field.bytes[0].size
-            const mask = field.bytes[0].mask
-            const shifted = `${cast.from}($_ ${cast.shift} $bite * ${multiplier}${cast.suffix} & ${hex(mask)}${cast.suffix})`
-            const masked = field.bytes[0].set != 0
-                ? `(${shifted}) | ${hex(field.bytes[0].set)}`
-                : shifted
-            return $(`
                 case ${$step++}:
 
-                    $step = ${$step}
-                    $bite = ${bite}${cast.suffix}
-                    `, assign, `
-
-                case ${$step++}:
-
-                    while ($bite != ${stop}${cast.suffix}) {
-                        if ($start == $end) {
-                            `, inliner.exit(), `
-                            return { start: $start, serialize: $serialize }
-                        }
-                        $buffer[$start++] = ${masked}
-                        $bite${direction}
+                    if ($start == $end) {
+                        $step = ${$step - 1}
+                        `, inliner.exit(), `
+                        return { start: $start, serialize: $serialize }
                     }
 
+                    $buffer[$start++] = ${write}
             `)
+        }))
+        return $(`
+            `, initialize, `
+
+            `, steps, `
+        `)
+    }
+    //
+
+    // Serialize a `number` as an integer.
+    function integer (path, field) {
+        const homogeneous = (
+            field.bytes.every(({ size }) => size == field.bytes[0].size) &&
+            field.bytes.every(({ upper }) => upper == field.bytes[0].upper)
+        )
+        if (homogeneous) {
+            const bytes = field.bits / 8
+            const bite = field.endianness == 'big' ? bytes - 1 : 0
+            const stop = field.endianness == 'big' ? -1 : bytes
+            const { size, mask, upper } = field.bytes[0]
+            const shifted = $(`
+                ($_ >>> $bite * ${size} & ${hex(mask)})
+            `)
+            const write = field.bytes[0].upper != 0 ? `(${shifted}) | ${hex(upper)}` : shifted
+            return rolled(path, field, bite, stop, write)
         }
+        return unrolled(path, field, field.bytes.map(({ mask, shift, upper }) => {
+            const shifted = `($_ >>> ${shift} & ${hex(mask)})`
+            return upper != 0 ? `${shifted} | ${hex(upper)}` : shifted
+        }))
+    }
+    //
+
+    // Serialize a `BigInt` as an integer. We need a separate implementation for
+    // `BigInt` because `BigInt` math works only with `BigInt` values with no
+    // implicit conversions.
+    function bigint (path, field) {
+        const homogeneous = (
+            field.bytes.every(({ size }) => size == field.bytes[0].size) &&
+            field.bytes.every(({ upper }) => upper == field.bytes[0].upper)
+        )
+        if (homogeneous) {
+            const bytes = field.bits / 8
+            const bite = field.endianness == 'big' ? bytes - 1 : 0
+            const stop = field.endianness == 'big' ? -1 : bytes
+            const { size, mask, upper } = field.bytes[0]
+            const shifted = $(`
+                Number($_ >> $bite * ${size}n & ${hex(mask)}n)
+            `)
+            const write = field.bytes[0].upper != 0 ? `(${shifted}) | ${hex(upper)}` : shifted
+            return rolled(path, field, `${bite}n`, `${stop}n`, write)
+        }
+        return unrolled(path, field, field.bytes.map(({ mask, shift, upper }) => {
+            const shifted = `Number($_ >> ${shift}n & ${hex(mask)}n)`
+            return upper != 0 ? `${shifted} | ${hex(upper)}` : shifted
+        }))
     }
 
     function literal (path, field) {
@@ -749,9 +795,9 @@ function generate (packet, { require = null }) {
             return inline(path, field)
         case 'literal':
             return literal(path, field)
+        case 'bigint':
+            return bigint(path, field)
         case 'integer':
-            // TODO This will not include the final step, we keep it off for the
-            // looping constructs.
             return integer(path, field)
         case 'absent':
             return absent(path, field)

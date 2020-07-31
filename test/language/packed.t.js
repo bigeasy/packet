@@ -25,13 +25,13 @@ require('proof')(1, okay => {
             name: 'header',
             dotted: '.header',
             bytes: [{
-                mask: 255, size: 8, shift: 24, set: 0
+                mask: 255, size: 8, shift: 24, upper: 0
             }, {
-                mask: 255, size: 8, shift: 16, set: 0
+                mask: 255, size: 8, shift: 16, upper: 0
             }, {
-                mask: 255, size: 8, shift: 8, set: 0
+                mask: 255, size: 8, shift: 8, upper: 0
             }, {
-                mask: 255, size: 8, shift: 0, set: 0
+                mask: 255, size: 8, shift: 0, upper: 0
             }],
             fields: [{
                 type: 'literal',

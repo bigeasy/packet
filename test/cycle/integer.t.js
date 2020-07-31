@@ -64,13 +64,6 @@ function prove (okay) {
         objects: [{ value: 0xabcdef01 }]
     })
     cycle(okay, {
-        name: 'integer/be/word/long',
-        define: {
-            object: { value: 64 }
-        },
-        objects: [{ value: 0xaaaaaaaaaaaaaaaan }]
-    })
-    cycle(okay, {
         name: 'integer/be/compliment/short',
         define: {
             object: { value: -16 }
@@ -83,13 +76,6 @@ function prove (okay) {
             object: { value: -32 }
         },
         objects: [{ value: 0x7bcdef01 }]
-    })
-    cycle(okay, {
-        name: 'integer/be/compliment/long',
-        define: {
-            object: { value: -64 }
-        },
-        objects: [{ value: -0x7aaaaaaaaaaaaaaan }]
     })
     cycle(okay, {
         name: 'integer/le/word/short',
@@ -106,13 +92,6 @@ function prove (okay) {
         objects: [{ value: 0xabcdef01 }]
     })
     cycle(okay, {
-        name: 'integer/le/word/long',
-        define: {
-            object: { value: ~64 }
-        },
-        objects: [{ value: 0xaaaaaaaaaaaaaaaan }]
-    })
-    cycle(okay, {
         name: 'integer/le/compliment/short',
         define: {
             object: { value: -~16 }
@@ -125,12 +104,5 @@ function prove (okay) {
             object: { value: -~32 }
         },
         objects: [{ value: -0x7bcdef01 }]
-    })
-    cycle(okay, {
-        name: 'integer/le/compliment/long',
-        define: {
-            object: { value: -~64 }
-        },
-        objects: [{ value: -0x7aaaaaaaaaaaaaaan }]
     })
 }

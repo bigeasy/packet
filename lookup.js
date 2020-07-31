@@ -9,6 +9,7 @@ module.exports = function (definition) {
 
     function seek (field) {
         switch (field.type) {
+        case 'bigint':
         case 'integer':
             if (field.lookup != null) {
                 if (lookup.length == field.lookup.index) {

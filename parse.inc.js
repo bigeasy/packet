@@ -82,12 +82,89 @@ function generate (packet, { require = null }) {
     }
     //
 
-    // Parse an integer.
-
+    // Assign an integer extracted from the underlying buffer to an object
+    // property in the constructed object. This generated source is common to
+    // both rolled and unrolled `number` and `BigInt` serialization. Convert the
+    // object property value if it is a lookup value or a packed integer.
+    function assign (path, field) {
+        // **TODO** This appears to proibit using a two's compliment value as a
+        // lookup value, which is probably okay, since how would you lookup
+        // negative values. Well, you could use a map, so...
+        return field.fields != null
+            ? unpack(inliner, packet, path, field, '$_')
+            : field.compliment
+                ? `${path} = ${unsign('$_', field.bits)}`
+                : field.lookup != null
+                    ? Array.isArray(field.lookup.values)
+                        ? `${path} = $lookup[${field.lookup.index}][$_]`
+                        : `${path} = $lookup[${field.lookup.index}].forward[$_]`
+                    : `${path} = $_`
+    }
     //
+
+    // Parse a `number' or `BigInt` integer using a loop to advance to the next
+    // byte. We use this when the bit size and upper bits are the same for each
+    // byte which is the common case &mdash; use all 8 bits, set no bytes.
+    function rolled (path, field, write, $_, bite, stop) {
+        const direction = field.endianness == 'big' ?  '--' : '++'
+        const { size } = field.bytes[0]
+        return $(`
+            case ${$step++}:
+
+                $_ = ${$_}
+                $step = ${$step}
+                $bite = ${bite}
+
+            case ${$step++}:
+
+                while ($bite != ${stop}) {
+                    if ($start == $end) {
+                        `, inliner.exit(), `
+                        return { start: $start, object: null, parse: $parse }
+                    }
+                    $_ += ${write}
+                    $bite${direction}
+                }
+
+                `, assign(path, field), `
+
+        `)
+    }
+    function unrolled (path, field, writes, $_) {
+        const initialize = $(`
+            case ${$step++}:
+
+                $_ = ${$_}
+        `)
+        const steps = join(writes.map(write => {
+            return $(`
+                case ${$step++}:
+
+                    if ($start == $end) {
+                        $step = ${$step - 1}
+                        `, inliner.exit(), `
+                        return { start: $start, object: null, parse: $parse }
+                    }
+
+                    $_ += ${write}
+            `)
+        }))
+        console.log(steps)
+        return $(`
+            `, initialize, `
+
+            `, steps, `
+
+                `, assign(path, field), `
+        `)
+    }
+    //
+
+    // Parse a `number` as an integer.
     function integer (path, field) {
         const bytes = field.bits / 8
         // Special case for single byte which is a single step.
+        // This special case an probably be just unrolled?
         if (bytes == 1 && field.fields == null && field.lookup == null) {
             return $(`
                 case ${$step++}:
@@ -105,82 +182,47 @@ function generate (packet, { require = null }) {
 
             `)
         }
-        const start = field.endianness == 'big' ? bytes - 1 : 0
-        const stop = field.endianness == 'big' ? -1 : bytes
-        const direction = field.endianness == 'big' ?  '--' : '++'
-        // **TODO** This appears to proibit using a two's compliment value as a
-        // lookup value, which is probably okay, since how would you lookup
-        // negative values. Well, you could use a map, so...
-        const assign = field.fields
-            ? unpack(inliner, packet, path, field, '$_')
-            : field.compliment
-                ? `${path} = ${unsign('$_', field.bits)}`
-                : field.lookup != null
-                    ? Array.isArray(field.lookup.values)
-                        ? `${path} = $lookup[${field.lookup.index}][$_]`
-                        : `${path} = $lookup[${field.lookup.index}].forward[$_]`
-                    : `${path} = $_`
-        // TODO Make these functions.
-        const cast = field.bits > 32
-            ? { suffix: 'n', to: 'BigInt', fixup: '' }
-            : { suffix: '', to: '', fixup: ' >>> 0' }
-        const unrolled = ! (
+        const homogeneous = (
             field.bytes.every(({ size }) => size == field.bytes[0].size) &&
-            field.bytes.every(({ set }) => set == field.bytes[0].set)
+            field.bytes.every(({ upper }) => upper == field.bytes[0].upper)
         )
-        if (unrolled) {
-            const initialize = $(`
-                case ${$step++}:
-
-                    $_ = 0${cast.suffix}
-            `)
-            const steps = join(field.bytes.map(({ mask, shift, set }) => {
-                const bits = set != 0
-                    ? `${cast.to}($buffer[$start++] & ${mask}) << ${shift}`
-                    : `${cast.to}($buffer[$start++]) << ${shift}`
-                return $(`
-                    case ${$step++}:
-
-                        if ($start == $end) {
-                            $step = ${$step - 1}
-                            `, inliner.exit(), `
-                            return { start: $start, object: null, parse: $parse }
-                        }
-
-                        $_ += ${bits}
-                `)
-            }))
-            return $(`
-                `, initialize, `
-
-                `, steps, `
-
-                    `, assign, `
-            `)
-        } else {
-            const multiplier = field.bytes[0].size
-            return $(`
-                case ${$step++}:
-
-                    $_ = 0${cast.suffix}
-                    $step = ${$step}
-                    $bite = ${start}${cast.suffix}
-
-                case ${$step++}:
-
-                    while ($bite != ${stop}${cast.suffix}) {
-                        if ($start == $end) {
-                            `, inliner.exit(), `
-                            return { start: $start, object: null, parse: $parse }
-                        }
-                        $_ += ${cast.to}($buffer[$start++]) << $bite * ${multiplier}${cast.suffix}${cast.fixup}
-                        $bite${direction}
-                    }
-
-                    `, assign, `
-
-            `)
+        if (homogeneous) {
+            const bytes = field.bits / 8
+            const bite = field.endianness == 'big' ? bytes - 1 : 0
+            const stop = field.endianness == 'big' ? -1 : bytes
+            const { size } = field.bytes[0]
+            const write = `($buffer[$start++]) << $bite * ${size} >>> 0`
+            return rolled(path, field, write, '0', bite, stop)
         }
+        return unrolled(path, field, field.bytes.map(({ shift, mask, upper }) => {
+            return upper != 0
+                ? `($buffer[$start++] & ${mask}) << ${shift}`
+                : `($buffer[$start++]) << ${shift}`
+        }), 0)
+    }
+    //
+
+    // Parse a `BigInt` as an integer.
+    function bigint (path, field ) {
+        const homogeneous = (
+            field.bytes.every(({ size }) => size == field.bytes[0].size) &&
+            field.bytes.every(({ upper }) => upper == field.bytes[0].upper)
+        )
+        if (homogeneous) {
+            const bytes = field.bits / 8
+            const bite = field.endianness == 'big' ? bytes - 1 : 0
+            const stop = field.endianness == 'big' ? -1 : bytes
+            const { size, upper, mask } = field.bytes[0]
+            const write = upper != 0
+                ? `BigInt($buffer[$start++] & ${mask}) << $bite * ${size}n`
+                : `BigInt($buffer[$start++]) << $bite * ${size}n`
+            return rolled(path, field, write, '0n', `${bite}n`, `${stop}n`)
+        }
+        return unrolled(path, field, field.bytes.map(({ shift, mask, upper }) => {
+            return bits = upper != 0
+                ? `BitInt($buffer[$start++] & ${mask}) << ${shift}`
+                : `BitInt($buffer[$start++]) << ${shift}`
+        }))
     }
 
     function literal (path, field) {
@@ -992,6 +1034,8 @@ function generate (packet, { require = null }) {
             return inline(path, packet)
         case 'literal':
             return literal(path, packet)
+        case 'bigint':
+            return bigint(path, packet)
         case 'integer':
             return integer(path, packet)
         case 'absent':

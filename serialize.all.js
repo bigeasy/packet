@@ -348,6 +348,7 @@ function inquisition (path, fields, $i = 0, $I = 0) {
             }
             break
         case 'buffer':
+        case 'bigint':
         case 'integer':
         case 'literal':
             checked.push({ type: 'checkpoint', lengths: [ field.bits / 8 ]})
@@ -408,41 +409,13 @@ function generate (packet, { require = null, bff, chk }) {
         $step++
         return null
     }
+    //
 
-    function integer (path, field) {
-        const value = field.lookup != null || field.fields != null ? '$_' : path
-        function bigint (path, field) {
-            const writes = []
-            for (let i = 0, I = field.bits / 8; i< I; i++) {
-                const { shift, mask, set } = field.bytes[i]
-                const shifted = shift != 0 ? `${value} >> ${shift}n` : value
-                const lower = `Number(${shifted} & ${hex(mask)}n)`
-                if (set != 0) {
-                    writes.push(`$buffer[$start++] = ${lower} | ${hex(set)}`)
-                } else {
-                    writes.push(`$buffer[$start++] = ${lower}`)
-                }
-            }
-            return writes.join('\n')
-        }
-        function number (value, field) {
-            const writes = []
-            for (let i = 0, I = field.bits / 8; i< I; i++) {
-                const { shift, mask, set } = field.bytes[i]
-                const shifted = shift != 0 ? `${value} >>> ${shift}` : value
-                const lower = `${shifted} & ${hex(mask)}`
-                if (set != 0) {
-                    writes.push(`$buffer[$start++] = (${lower}) | ${hex(set)}`)
-                } else {
-                    writes.push(`$buffer[$start++] = (${lower})`)
-                }
-            }
-            return writes.join('\n')
-        }
-        function word (value, field) {
-            return field.bits > 32 ? bigint(value, field) : number(value, field)
-        }
-        const write = word(value, field)
+    // Write an integer value converting the object property value to an integer
+    // if necessary. This is the generated source common to `number` and
+    // `BigInt`. Convert the object property value if it is a lookup value or a
+    // packed integer. No conversion is necessary for two's compliment.
+    function write (path, field, write) {
         $step += 2
         if (field.fields) {
             const packing = pack(inliner, field, path)
@@ -467,6 +440,42 @@ function generate (packet, { require = null, bff, chk }) {
         } else {
             return write
         }
+    }
+    //
+
+    // Write a `number` to the underlying buffer.
+    function integer (path, field) {
+        const value = field.lookup != null || field.fields != null ? '$_' : path
+        const writes = []
+        for (let i = 0, I = field.bits / 8; i< I; i++) {
+            const { shift, mask, upper } = field.bytes[i]
+            const shifted = shift != 0 ? `${value} >>> ${shift}` : value
+            const lower = `${shifted} & ${hex(mask)}`
+            if (upper != 0) {
+                writes.push(`$buffer[$start++] = (${lower}) | ${hex(upper)}`)
+            } else {
+                writes.push(`$buffer[$start++] = (${lower})`)
+            }
+        }
+        return write(path, field, writes.join('\n'))
+    }
+    //
+
+    // Write a `BigInt` to the underlying buffer.
+    function bigint (path, field) {
+        const value = field.lookup != null || field.fields != null ? '$_' : path
+        const writes = []
+        for (let i = 0, I = field.bits / 8; i< I; i++) {
+            const { shift, mask, upper } = field.bytes[i]
+            const shifted = shift != 0 ? `${value} >> ${shift}n` : value
+            const lower = `Number(${shifted} & ${hex(mask)}n)`
+            if (upper != 0) {
+                writes.push(`$buffer[$start++] = ${lower} | ${hex(upper)}`)
+            } else {
+                writes.push(`$buffer[$start++] = ${lower}`)
+            }
+        }
+        return write(path, field, writes.join('\n'))
     }
 
     // TODO You need to test incrementing step correctly when contained variable
@@ -826,6 +835,8 @@ function generate (packet, { require = null, bff, chk }) {
             return inline(path, field)
         case 'literal':
             return literal(path, field)
+        case 'bigint':
+            return bigint(path, field)
         case 'integer':
             return integer(path, field)
         case 'absent':

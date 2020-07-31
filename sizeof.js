@@ -226,6 +226,7 @@ function generate (packet, { require = null }) {
             break
         case 'literal':
         case 'integer':
+        case 'bigint':
             return `$start += ${field.bits >>> 3}`
         }
     }
@@ -318,6 +319,7 @@ function generate (packet, { require = null }) {
             }
             break
         case 'buffer':
+        case 'bigint':
         case 'integer':
         case 'absent':
             break

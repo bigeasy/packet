@@ -90,6 +90,7 @@ exports.serialize = function (field) {
                 field.fields.map(declare)
             }
             break
+        case 'bigint':
         case 'integer': {
                 if (field.fields != null || field.lookup != null) {
                     variables.register = true
@@ -207,6 +208,7 @@ exports.parse = function (field) {
                 field.fields.map(declare)
             }
             break
+        case 'bigint':
         case 'integer': {
                 if (field.fields != null || field.lookup != null) {
                     variables.register = true

@@ -16,6 +16,8 @@ function structure (path, field, assignment = ' = ') {
                 return structure((path + field.dotted).split('.').pop(), field, ': ')
             case 'array':
                 return `${name}: []`
+            case 'bigint':
+                return `${name}: 0n`
             case 'number':
                 return `${name}: 0`
             case 'variant':

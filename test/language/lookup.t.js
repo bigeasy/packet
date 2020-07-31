@@ -21,7 +21,7 @@ require('proof')(1, okay => {
             fixed: true,
             bits: 8,
             bytes: [{
-                mask: 255, size: 8, shift: 0, set: 0
+                mask: 255, size: 8, shift: 0, upper: 0
             }],
             endianness: 'big',
             compliment: false,
@@ -37,7 +37,7 @@ require('proof')(1, okay => {
             fixed: true,
             bits: 8,
             bytes: [{
-                mask: 255, size: 8, shift: 0, set: 0
+                mask: 255, size: 8, shift: 0, upper: 0
             }],
             endianness: 'big',
             compliment: false,
@@ -53,7 +53,7 @@ require('proof')(1, okay => {
             fixed: true,
             bits: 8,
             bytes: [{
-                mask: 255, size: 8, shift: 0, set: 0
+                mask: 255, size: 8, shift: 0, upper: 0
             }],
             endianness: 'big',
             compliment: false,
@@ -69,7 +69,7 @@ require('proof')(1, okay => {
             fixed: true,
             bits: 8,
             bytes: [{
-                mask: 255, size: 8, shift: 0, set: 0
+                mask: 255, size: 8, shift: 0, upper: 0
             }],
             endianness: 'big',
             compliment: false,
@@ -85,7 +85,7 @@ require('proof')(1, okay => {
             fixed: true,
             bits: 8,
             bytes: [{
-                mask: 255, size: 8, shift: 0, set: 0
+                mask: 255, size: 8, shift: 0, upper: 0
             }],
             endianness: 'big',
             compliment: false,
