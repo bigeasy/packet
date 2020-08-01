@@ -1,6 +1,5 @@
 // Node.js API.
 const util = require('util')
-const { inspect } = require('util')
 
 // Convert numbers and arrays to numbers to literals with hex literals.
 const hex = require('./hex')
