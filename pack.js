@@ -130,10 +130,8 @@ module.exports = function (inliner, field, path) {
                                 break
                         `))
                     }
-                    const inlined = inliner.inline(path, [ switched.select ], [])
-                    const select = switched.stringify
-                        ? `String(${inlined.inlined.shift()})`
-                        : inlined.inlined.shift()
+                    const test = inliner.test(path, switched.select)
+                    const select = switched.stringify ? `String(${test})` : test
                     packed.unshift($(`
                         `, invocations, -1, `
 

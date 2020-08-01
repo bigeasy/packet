@@ -124,10 +124,8 @@ function unpack (accumulate, root, path, field, packed, offset = 0) {
                                 break
                         `))
                     }
-                    const inlined = accumulate.inline(path, [ switched.select ], [])
-                    const select = switched.stringify
-                        ? `String(${inlined.inlined.shift()})`
-                        : inlined.inlined.shift()
+                    const test = accumulate.test(path, switched.select)
+                    const select = switched.stringify ? `String(${test})` : test
                     blocks.push($(`
                         switch (`, select, `) {
                         `, join(cases), `
