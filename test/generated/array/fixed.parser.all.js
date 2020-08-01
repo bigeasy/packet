@@ -9,11 +9,11 @@ module.exports = function ({ parsers, $lookup }) {
                 sentry: 0
             }
 
-            object.nudge = ($buffer[$start++])
+            object.nudge = $buffer[$start++]
 
             $I[0] =
-                ($buffer[$start++]) * 0x100 +
-                ($buffer[$start++])
+                $buffer[$start++] * 0x100 +
+                $buffer[$start++]
             $i[0] = 0
 
             for (; $i[0] < $I[0]; $i[0]++) {
@@ -23,15 +23,15 @@ module.exports = function ({ parsers, $lookup }) {
                 }
 
                 object.array[$i[0]].first =
-                    ($buffer[$start++]) * 0x100 +
-                    ($buffer[$start++])
+                    $buffer[$start++] * 0x100 +
+                    $buffer[$start++]
 
                 object.array[$i[0]].second =
-                    ($buffer[$start++]) * 0x100 +
-                    ($buffer[$start++])
+                    $buffer[$start++] * 0x100 +
+                    $buffer[$start++]
             }
 
-            object.sentry = ($buffer[$start++])
+            object.sentry = $buffer[$start++]
 
             return object
         }

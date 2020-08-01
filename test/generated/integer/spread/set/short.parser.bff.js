@@ -12,13 +12,13 @@ module.exports = function ({ parsers, $lookup }) {
                     return parsers.inc.object(object, 1)($buffer, $start, $end)
                 }
 
-                object.nudge = ($buffer[$start++])
+                object.nudge = $buffer[$start++]
 
                 object.value =
-                    (($buffer[$start++]) & 0x7f) * 0x80 +
-                    ($buffer[$start++])
+                    ($buffer[$start++] & 0x7f) * 0x80 +
+                    $buffer[$start++]
 
-                object.sentry = ($buffer[$start++])
+                object.sentry = $buffer[$start++]
 
                 return { start: $start, object: object, parse: null }
             }

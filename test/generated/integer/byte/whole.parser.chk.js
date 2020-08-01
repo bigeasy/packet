@@ -10,7 +10,7 @@ module.exports = function ({ parsers, $lookup }) {
                     return parsers.inc.object(object, 1)($buffer, $start, $end)
                 }
 
-                object.word = ($buffer[$start++])
+                object.word = $buffer[$start++]
 
                 return { start: $start, object: object, parse: null }
             }

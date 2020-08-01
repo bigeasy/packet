@@ -40,7 +40,7 @@ module.exports = function ({ parsers, $lookup }) {
                         if ($start == $end) {
                             return { start: $start, object: null, parse: $parse }
                         }
-                        $_ += ($buffer[$start++]) << $bite * 7 >>> 0
+                        $_ += $buffer[$start++] << $bite * 7 >>> 0
                         $bite--
                     }
 

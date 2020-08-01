@@ -11,11 +11,11 @@ module.exports = function ({ parsers, $lookup }) {
                     return parsers.inc.object(object, 1)($buffer, $start, $end)
                 }
 
-                object.value = ($buffer[$start++])
+                object.value = $buffer[$start++]
 
                 ; (($_ = 0) => require('assert').equal($_, 1))(object.value)
 
-                object.sentry = ($buffer[$start++])
+                object.sentry = $buffer[$start++]
 
                 return { start: $start, object: object, parse: null }
             }

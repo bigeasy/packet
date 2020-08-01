@@ -24,7 +24,7 @@ module.exports = function ({ serializers, $lookup }) {
                     }, 2, $$, $accumulator)($buffer, $start, $end)
                 }
 
-                $buffer[$start++] = ($$[0].value.first & 0xff)
+                $buffer[$start++] = $$[0].value.first & 0xff
 
                 if ($end - $start < 1) {
                     return serializers.inc.object(object, {
@@ -32,7 +32,7 @@ module.exports = function ({ serializers, $lookup }) {
                     }, 4, $$, $accumulator)($buffer, $start, $end)
                 }
 
-                $buffer[$start++] = ($$[0].value.second & 0xff)
+                $buffer[$start++] = $$[0].value.second & 0xff
 
                 if ($end - $start < 1) {
                     return serializers.inc.object(object, {
@@ -40,7 +40,7 @@ module.exports = function ({ serializers, $lookup }) {
                     }, 6, $$, $accumulator)($buffer, $start, $end)
                 }
 
-                $buffer[$start++] = ($$[0].sentry & 0xff)
+                $buffer[$start++] = $$[0].sentry & 0xff
 
                 return { start: $start, serialize: null }
             }

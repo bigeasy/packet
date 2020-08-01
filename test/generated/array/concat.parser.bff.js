@@ -14,9 +14,9 @@ module.exports = function ({ parsers, $lookup }) {
                     return parsers.inc.object(object, 1, $i, $I)($buffer, $start, $end)
                 }
 
-                object.nudge = ($buffer[$start++])
+                object.nudge = $buffer[$start++]
 
-                $I[0] = ($buffer[$start++])
+                $I[0] = $buffer[$start++]
 
                 if ($end - $start < 1 + 1 * $I[0]) {
                     return parsers.inc.object(object, 5, $i, $I)($buffer, $start, $end)
@@ -25,7 +25,7 @@ module.exports = function ({ parsers, $lookup }) {
                 object.array = $buffer.slice($start, $start + $I[0])
                 $start += $I[0]
 
-                object.sentry = ($buffer[$start++])
+                object.sentry = $buffer[$start++]
 
                 return { start: $start, object: object, parse: null }
             }

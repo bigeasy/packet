@@ -12,7 +12,7 @@ module.exports = function ({ parsers, $lookup }) {
                     return parsers.inc.object(object, 1)($buffer, $start, $end)
                 }
 
-                object.nudge = ($buffer[$start++])
+                object.nudge = $buffer[$start++]
 
                 object.value =
                     BigInt($buffer[$start++]) +
@@ -24,7 +24,7 @@ module.exports = function ({ parsers, $lookup }) {
                     (BigInt($buffer[$start++]) << 48n) +
                     (BigInt($buffer[$start++]) << 56n)
 
-                object.sentry = ($buffer[$start++])
+                object.sentry = $buffer[$start++]
 
                 return { start: $start, object: object, parse: null }
             }

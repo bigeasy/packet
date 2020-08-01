@@ -9,14 +9,14 @@ module.exports = function ({ parsers, $lookup }) {
                 sentry: 0
             }
 
-            object.nudge = ($buffer[$start++])
+            object.nudge = $buffer[$start++]
 
             $_ = $buffer.indexOf(Buffer.from([ 13, 10 ]), $start)
             $_ = ~$_ ? $_ : $start
             object.array = $buffer.slice($start, $_)
             $start = $_ + 2
 
-            object.sentry = ($buffer[$start++])
+            object.sentry = $buffer[$start++]
 
             return object
         }

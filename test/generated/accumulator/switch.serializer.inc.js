@@ -40,7 +40,7 @@ module.exports = function ({ serializers, $lookup }) {
                                 })
                                 return { start: $start, serialize: $serialize }
                             }
-                            $buffer[$start++] = ($_ >>> $bite * 8 & 0xff)
+                            $buffer[$start++] = $_ >>> $bite * 8 & 0xff
                             $bite--
                         }
 
@@ -69,7 +69,7 @@ module.exports = function ({ serializers, $lookup }) {
                                 })
                                 return { start: $start, serialize: $serialize }
                             }
-                            $buffer[$start++] = ($_ >>> $bite * 8 & 0xff)
+                            $buffer[$start++] = $_ >>> $bite * 8 & 0xff
                             $bite--
                         }
 
@@ -149,7 +149,7 @@ module.exports = function ({ serializers, $lookup }) {
                                 })
                                 return { start: $start, serialize: $serialize }
                             }
-                            $buffer[$start++] = ($_ >>> $bite * 8 & 0xff)
+                            $buffer[$start++] = $_ >>> $bite * 8 & 0xff
                             $bite--
                         }
 
@@ -175,7 +175,7 @@ module.exports = function ({ serializers, $lookup }) {
                                 })
                                 return { start: $start, serialize: $serialize }
                             }
-                            $buffer[$start++] = ($_ >>> $bite * 8 & 0xff)
+                            $buffer[$start++] = $_ >>> $bite * 8 & 0xff
                             $bite--
                         }
 
@@ -201,7 +201,7 @@ module.exports = function ({ serializers, $lookup }) {
                                 })
                                 return { start: $start, serialize: $serialize }
                             }
-                            $buffer[$start++] = ($_ >>> $bite * 8 & 0xff)
+                            $buffer[$start++] = $_ >>> $bite * 8 & 0xff
                             $bite--
                         }
 
@@ -226,7 +226,7 @@ module.exports = function ({ serializers, $lookup }) {
                             if ($start == $end) {
                                 return { start: $start, serialize: $serialize }
                             }
-                            $buffer[$start++] = ($_ >>> $bite * 8 & 0xff)
+                            $buffer[$start++] = $_ >>> $bite * 8 & 0xff
                             $bite--
                         }
 

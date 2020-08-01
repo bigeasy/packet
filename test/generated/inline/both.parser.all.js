@@ -9,13 +9,13 @@ module.exports = function ({ parsers, $lookup }) {
             }
 
             $_ =
-                ($buffer[$start++]) * 0x100 +
-                ($buffer[$start++])
+                $buffer[$start++] * 0x100 +
+                $buffer[$start++]
             object.value = $_ & 0x8000 ? (0xffff - $_ + 1) * -1 : $_
 
             object.value = (value => -value)(object.value)
 
-            object.sentry = ($buffer[$start++])
+            object.sentry = $buffer[$start++]
 
             return object
         }

@@ -6,10 +6,10 @@ module.exports = function ({ serializers, $lookup }) {
                     return serializers.inc.object(object, 0)($buffer, $start, $end)
                 }
 
-                $buffer[$start++] = (object.value & 0xff)
-                $buffer[$start++] = (object.value >>> 8 & 0xff)
-                $buffer[$start++] = (object.value >>> 16 & 0xff)
-                $buffer[$start++] = (object.value >>> 24 & 0xff)
+                $buffer[$start++] = object.value & 0xff
+                $buffer[$start++] = object.value >>> 8 & 0xff
+                $buffer[$start++] = object.value >>> 16 & 0xff
+                $buffer[$start++] = object.value >>> 24 & 0xff
 
                 return { start: $start, serialize: null }
             }

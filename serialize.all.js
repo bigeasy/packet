@@ -459,9 +459,9 @@ function generate (packet, { require = null, bff, chk }) {
             const shifted = shift != 0 ? `${value} >>> ${shift}` : value
             const lower = `${shifted} & ${hex(mask)}`
             if (upper != 0) {
-                writes.push(`$buffer[$start++] = (${lower}) | ${hex(upper)}`)
+                writes.push(`$buffer[$start++] = ${lower} | ${hex(upper)}`)
             } else {
-                writes.push(`$buffer[$start++] = (${lower})`)
+                writes.push(`$buffer[$start++] = ${lower}`)
             }
         }
         return write(path, field, writes.join('\n'))

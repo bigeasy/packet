@@ -3,11 +3,11 @@ module.exports = function ({ serializers, $lookup }) {
         return function (object, $buffer, $start) {
             let $i = []
 
-            $buffer[$start++] = (object.nudge & 0xff)
+            $buffer[$start++] = object.nudge & 0xff
 
             {
                 const length = object.array.reduce((sum, buffer) => sum + buffer.length, 0)
-                $buffer[$start++] = (length & 0xff)
+                $buffer[$start++] = length & 0xff
             }
 
             {
@@ -17,7 +17,7 @@ module.exports = function ({ serializers, $lookup }) {
                 }
             }
 
-            $buffer[$start++] = (object.sentry & 0xff)
+            $buffer[$start++] = object.sentry & 0xff
 
             return { start: $start, serialize: null }
         }

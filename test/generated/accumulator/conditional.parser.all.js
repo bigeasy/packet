@@ -17,10 +17,10 @@ module.exports = function ({ parsers, $lookup }) {
             $starts[0] = $start
 
             object.counted.length =
-                ($buffer[$start++]) * 0x1000000 +
-                ($buffer[$start++]) * 0x10000 +
-                ($buffer[$start++]) * 0x100 +
-                ($buffer[$start++])
+                $buffer[$start++] * 0x1000000 +
+                $buffer[$start++] * 0x10000 +
+                $buffer[$start++] * 0x100 +
+                $buffer[$start++]
 
             $i[0] = 0
             for (;;) {
@@ -31,7 +31,7 @@ module.exports = function ({ parsers, $lookup }) {
                     break
                 }
 
-                object.counted.string[$i[0]] = ($buffer[$start++])
+                object.counted.string[$i[0]] = $buffer[$start++]
 
                 $i[0]++
             }
@@ -49,20 +49,20 @@ module.exports = function ({ parsers, $lookup }) {
                 $: object,
                 counter: $accumulator['counter']
             })) {
-                object.counted.number = ($buffer[$start++])
+                object.counted.number = $buffer[$start++]
             } else if ((({ $, counter }) => $.counted.length - counter[0] == 2)({
                 $: object,
                 counter: $accumulator['counter']
             })) {
                 object.counted.number =
-                    ($buffer[$start++]) * 0x100 +
-                    ($buffer[$start++])
+                    $buffer[$start++] * 0x100 +
+                    $buffer[$start++]
             } else {
                 object.counted.number =
-                    ($buffer[$start++]) * 0x1000000 +
-                    ($buffer[$start++]) * 0x10000 +
-                    ($buffer[$start++]) * 0x100 +
-                    ($buffer[$start++])
+                    $buffer[$start++] * 0x1000000 +
+                    $buffer[$start++] * 0x10000 +
+                    $buffer[$start++] * 0x100 +
+                    $buffer[$start++]
             }
 
             ; (function ({ $start, $end, counter }) {
@@ -73,7 +73,7 @@ module.exports = function ({ parsers, $lookup }) {
                 counter: $accumulator['counter']
             })
 
-            object.sentry = ($buffer[$start++])
+            object.sentry = $buffer[$start++]
 
             return object
         }

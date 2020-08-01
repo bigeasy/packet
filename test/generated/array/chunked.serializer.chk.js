@@ -8,7 +8,7 @@ module.exports = function ({ serializers, $lookup }) {
                     return serializers.inc.object(object, 0, $i)($buffer, $start, $end)
                 }
 
-                $buffer[$start++] = (object.nudge & 0xff)
+                $buffer[$start++] = object.nudge & 0xff
 
                 if ($end - $start < 1 + object.array.reduce((sum, buffer) => sum + buffer.length, 0)) {
                     return serializers.inc.object(object, 2, $i)($buffer, $start, $end)
@@ -16,7 +16,7 @@ module.exports = function ({ serializers, $lookup }) {
 
                 {
                     const length = object.array.reduce((sum, buffer) => sum + buffer.length, 0)
-                    $buffer[$start++] = (length & 0xff)
+                    $buffer[$start++] = length & 0xff
                 }
 
                 {
@@ -30,7 +30,7 @@ module.exports = function ({ serializers, $lookup }) {
                     return serializers.inc.object(object, 6, $i)($buffer, $start, $end)
                 }
 
-                $buffer[$start++] = (object.sentry & 0xff)
+                $buffer[$start++] = object.sentry & 0xff
 
                 return { start: $start, serialize: null }
             }

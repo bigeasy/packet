@@ -12,10 +12,10 @@ module.exports = function ({ parsers, $lookup }) {
                 }
 
                 object.value =
-                    ($buffer[$start++]) * 0x1000000 +
-                    ($buffer[$start++]) * 0x10000 +
-                    ($buffer[$start++]) * 0x100 +
-                    ($buffer[$start++])
+                    $buffer[$start++] * 0x1000000 +
+                    $buffer[$start++] * 0x10000 +
+                    $buffer[$start++] * 0x100 +
+                    $buffer[$start++]
 
                 object.value = (function ({ $_, $, $path, $i, $direction }) {
                     const assert = require('assert')
@@ -45,7 +45,7 @@ module.exports = function ({ parsers, $lookup }) {
                     $direction: 'parse'
                 })
 
-                object.sentry = ($buffer[$start++])
+                object.sentry = $buffer[$start++]
 
                 return { start: $start, object: object, parse: null }
             }

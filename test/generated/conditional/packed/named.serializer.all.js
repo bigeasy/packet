@@ -29,9 +29,9 @@ module.exports = function ({ serializers, $lookup }) {
                     (object.header.value.five & 0x1f)
             }
 
-            $buffer[$start++] = ($_ & 0xff)
+            $buffer[$start++] = $_ & 0xff
 
-            $buffer[$start++] = (object.sentry & 0xff)
+            $buffer[$start++] = object.sentry & 0xff
 
             return { start: $start, serialize: null }
         }

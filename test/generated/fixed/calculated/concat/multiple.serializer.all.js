@@ -3,7 +3,7 @@ module.exports = function ({ serializers, $lookup }) {
         return function (object, $buffer, $start) {
             let $_, $i = [], $I = []
 
-            $buffer[$start++] = (object.nudge & 0xff)
+            $buffer[$start++] = object.nudge & 0xff
 
             $I[0] = (() => 8)()
 
@@ -16,7 +16,7 @@ module.exports = function ({ serializers, $lookup }) {
             $buffer.fill(Buffer.from([ 0xa, 0xb ]), $start, $start + $_)
             $start += $_
 
-            $buffer[$start++] = (object.sentry & 0xff)
+            $buffer[$start++] = object.sentry & 0xff
 
             return { start: $start, serialize: null }
         }

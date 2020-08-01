@@ -12,13 +12,13 @@ module.exports = function ({ serializers, $lookup }) {
                     return serializers.inc.object(object, 2, $i, $accumulator, $starts)($buffer, $start, $end)
                 }
 
-                $buffer[$start++] = (object.counted.length >>> 24 & 0xff)
-                $buffer[$start++] = (object.counted.length >>> 16 & 0xff)
-                $buffer[$start++] = (object.counted.length >>> 8 & 0xff)
-                $buffer[$start++] = (object.counted.length & 0xff)
+                $buffer[$start++] = object.counted.length >>> 24 & 0xff
+                $buffer[$start++] = object.counted.length >>> 16 & 0xff
+                $buffer[$start++] = object.counted.length >>> 8 & 0xff
+                $buffer[$start++] = object.counted.length & 0xff
 
                 for ($i[0] = 0; $i[0] < object.counted.string.length; $i[0]++) {
-                    $buffer[$start++] = (object.counted.string[$i[0]] & 0xff)
+                    $buffer[$start++] = object.counted.string[$i[0]] & 0xff
                 }
 
                 $buffer[$start++] = 0x0
@@ -42,7 +42,7 @@ module.exports = function ({ serializers, $lookup }) {
                         return serializers.inc.object(object, 10, $i, $accumulator, $starts)($buffer, $start, $end)
                     }
 
-                    $buffer[$start++] = (object.counted.number & 0xff)
+                    $buffer[$start++] = object.counted.number & 0xff
 
                     break
 
@@ -52,8 +52,8 @@ module.exports = function ({ serializers, $lookup }) {
                         return serializers.inc.object(object, 12, $i, $accumulator, $starts)($buffer, $start, $end)
                     }
 
-                    $buffer[$start++] = (object.counted.number >>> 8 & 0xff)
-                    $buffer[$start++] = (object.counted.number & 0xff)
+                    $buffer[$start++] = object.counted.number >>> 8 & 0xff
+                    $buffer[$start++] = object.counted.number & 0xff
 
                     break
 
@@ -63,10 +63,10 @@ module.exports = function ({ serializers, $lookup }) {
                         return serializers.inc.object(object, 14, $i, $accumulator, $starts)($buffer, $start, $end)
                     }
 
-                    $buffer[$start++] = (object.counted.number >>> 24 & 0xff)
-                    $buffer[$start++] = (object.counted.number >>> 16 & 0xff)
-                    $buffer[$start++] = (object.counted.number >>> 8 & 0xff)
-                    $buffer[$start++] = (object.counted.number & 0xff)
+                    $buffer[$start++] = object.counted.number >>> 24 & 0xff
+                    $buffer[$start++] = object.counted.number >>> 16 & 0xff
+                    $buffer[$start++] = object.counted.number >>> 8 & 0xff
+                    $buffer[$start++] = object.counted.number & 0xff
 
                     break
                 }
@@ -83,7 +83,7 @@ module.exports = function ({ serializers, $lookup }) {
                     return serializers.inc.object(object, 16, $i, $accumulator, $starts)($buffer, $start, $end)
                 }
 
-                $buffer[$start++] = (object.sentry & 0xff)
+                $buffer[$start++] = object.sentry & 0xff
 
                 return { start: $start, serialize: null }
             }

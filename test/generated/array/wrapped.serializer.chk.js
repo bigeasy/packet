@@ -8,7 +8,7 @@ module.exports = function ({ serializers, $lookup }) {
                     return serializers.inc.object(object, 0, $i, $$)($buffer, $start, $end)
                 }
 
-                $buffer[$start++] = (object.nudge & 0xff)
+                $buffer[$start++] = object.nudge & 0xff
 
                 if ($end - $start < 2) {
                     return serializers.inc.object(object, 2, $i, $$)($buffer, $start, $end)
@@ -19,21 +19,21 @@ module.exports = function ({ serializers, $lookup }) {
 
                 $$[0] = (value => value)(object.array.length)
 
-                $buffer[$start++] = ($$[0] & 0xff)
+                $buffer[$start++] = $$[0] & 0xff
 
                 for ($i[0] = 0; $i[0] < object.array.length; $i[0]++) {
                     if ($end - $start < 1) {
                         return serializers.inc.object(object, 7, $i, $$)($buffer, $start, $end)
                     }
 
-                    $buffer[$start++] = (object.array[$i[0]] & 0xff)
+                    $buffer[$start++] = object.array[$i[0]] & 0xff
                 }
 
                 if ($end - $start < 1) {
                     return serializers.inc.object(object, 9, $i, $$)($buffer, $start, $end)
                 }
 
-                $buffer[$start++] = (object.sentry & 0xff)
+                $buffer[$start++] = object.sentry & 0xff
 
                 return { start: $start, serialize: null }
             }

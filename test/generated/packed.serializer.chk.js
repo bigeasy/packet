@@ -14,16 +14,16 @@ module.exports = function ({ serializers, $lookup }) {
                     (object.header.two << 12 & 0x7000) |
                     (object.header.three & 0xfff)
 
-                $buffer[$start++] = ($_ >>> 24 & 0xff)
-                $buffer[$start++] = ($_ >>> 16 & 0xff)
-                $buffer[$start++] = ($_ >>> 8 & 0xff)
-                $buffer[$start++] = ($_ & 0xff)
+                $buffer[$start++] = $_ >>> 24 & 0xff
+                $buffer[$start++] = $_ >>> 16 & 0xff
+                $buffer[$start++] = $_ >>> 8 & 0xff
+                $buffer[$start++] = $_ & 0xff
 
                 if ($end - $start < 1) {
                     return serializers.inc.object(object, 2)($buffer, $start, $end)
                 }
 
-                $buffer[$start++] = (object.sentry & 0xff)
+                $buffer[$start++] = object.sentry & 0xff
 
                 return { start: $start, serialize: null }
             }

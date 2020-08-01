@@ -24,11 +24,11 @@ module.exports = function ({ parsers, $lookup }) {
                     }, 2, $accumulator)($buffer, $start, $end)
                 }
 
-                object.value.first = ($buffer[$start++])
+                object.value.first = $buffer[$start++]
 
-                object.value.second = ($buffer[$start++])
+                object.value.second = $buffer[$start++]
 
-                object.sentry = ($buffer[$start++])
+                object.sentry = $buffer[$start++]
 
                 object = (function ({ $_, counter }) {
                     assert.deepEqual(counter, [ 0 ])

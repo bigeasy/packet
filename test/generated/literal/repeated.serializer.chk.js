@@ -8,7 +8,7 @@ module.exports = function ({ serializers, $lookup }) {
                     return serializers.inc.object(object, 0, $i)($buffer, $start, $end)
                 }
 
-                $buffer[$start++] = (object.nudge & 0xff)
+                $buffer[$start++] = object.nudge & 0xff
 
                 if ($end - $start < 14) {
                     return serializers.inc.object(object, 2, $i)($buffer, $start, $end)
@@ -19,8 +19,8 @@ module.exports = function ({ serializers, $lookup }) {
                     $start += 3
                 }
 
-                $buffer[$start++] = (object.padded >>> 8 & 0xff)
-                $buffer[$start++] = (object.padded & 0xff)
+                $buffer[$start++] = object.padded >>> 8 & 0xff
+                $buffer[$start++] = object.padded & 0xff
 
                 for ($i[0] = 0; $i[0] < 2; $i[0]++) {
                     $buffer.write("decafa", $start, $start + 3, 'hex')
@@ -31,7 +31,7 @@ module.exports = function ({ serializers, $lookup }) {
                     return serializers.inc.object(object, 12, $i)($buffer, $start, $end)
                 }
 
-                $buffer[$start++] = (object.sentry & 0xff)
+                $buffer[$start++] = object.sentry & 0xff
 
                 return { start: $start, serialize: null }
             }

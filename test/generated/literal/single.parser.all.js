@@ -7,17 +7,17 @@ module.exports = function ({ parsers, $lookup }) {
                 sentry: 0
             }
 
-            object.nudge = ($buffer[$start++])
+            object.nudge = $buffer[$start++]
 
             $start += 3
 
             object.padded =
-                ($buffer[$start++]) * 0x100 +
-                ($buffer[$start++])
+                $buffer[$start++] * 0x100 +
+                $buffer[$start++]
 
             $start += 3
 
-            object.sentry = ($buffer[$start++])
+            object.sentry = $buffer[$start++]
 
             return object
         }

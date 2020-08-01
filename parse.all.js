@@ -471,7 +471,7 @@ function generate (packet, { require, bff, chk }) {
         const reads = []
         for (let i = 0, I = field.bits / 8; i < I; i++) {
             const { shift, upper, mask } = field.bytes[i]
-            const bits = '($buffer[$start++])'
+            const bits = '$buffer[$start++]'
             const masked = upper != 0 ? `(${bits} & ${hex(mask)})` : bits
             if (shift == 0n) {
                 reads.push(`${masked}`)

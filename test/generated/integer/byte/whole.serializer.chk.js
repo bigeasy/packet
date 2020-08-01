@@ -6,7 +6,7 @@ module.exports = function ({ serializers, $lookup }) {
                     return serializers.inc.object(object, 0)($buffer, $start, $end)
                 }
 
-                $buffer[$start++] = (object.word & 0xff)
+                $buffer[$start++] = object.word & 0xff
 
                 return { start: $start, serialize: null }
             }

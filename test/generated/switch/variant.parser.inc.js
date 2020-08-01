@@ -75,7 +75,7 @@ module.exports = function ({ parsers, $lookup }) {
                             if ($start == $end) {
                                 return { start: $start, object: null, parse: $parse }
                             }
-                            $_ += ($buffer[$start++]) << $bite * 8 >>> 0
+                            $_ += $buffer[$start++] << $bite * 8 >>> 0
                             $bite--
                         }
 
@@ -96,7 +96,7 @@ module.exports = function ({ parsers, $lookup }) {
                             if ($start == $end) {
                                 return { start: $start, object: null, parse: $parse }
                             }
-                            $_ += ($buffer[$start++]) << $bite * 8 >>> 0
+                            $_ += $buffer[$start++] << $bite * 8 >>> 0
                             $bite--
                         }
 

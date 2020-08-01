@@ -136,13 +136,13 @@ function generate (packet, { require = null }) {
             const stop = field.endianness == 'big' ? -1 : bytes
             const { size, mask, upper } = field.bytes[0]
             const shifted = $(`
-                ($_ >>> $bite * ${size} & ${hex(mask)})
+                $_ >>> $bite * ${size} & ${hex(mask)}
             `)
             const write = field.bytes[0].upper != 0 ? `(${shifted}) | ${hex(upper)}` : shifted
             return rolled(path, field, bite, stop, write)
         }
         return unrolled(path, field, field.bytes.map(({ mask, shift, upper }) => {
-            const shifted = `($_ >>> ${shift} & ${hex(mask)})`
+            const shifted = `$_ >>> ${shift} & ${hex(mask)}`
             return upper != 0 ? `${shifted} | ${hex(upper)}` : shifted
         }))
     }

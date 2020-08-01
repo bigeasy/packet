@@ -9,16 +9,16 @@ module.exports = function ({ parsers, $lookup }) {
                 sentry: 0
             }
 
-            object.nudge = ($buffer[$start++])
+            object.nudge = $buffer[$start++]
 
             $i[0] = 0
             do {
                 object.array[$i[0]] =
-                    ($buffer[$start++]) * 0x100 +
-                    ($buffer[$start++])
+                    $buffer[$start++] * 0x100 +
+                    $buffer[$start++]
             } while (++$i[0] != 4)
 
-            object.sentry = ($buffer[$start++])
+            object.sentry = $buffer[$start++]
 
             return object
         }

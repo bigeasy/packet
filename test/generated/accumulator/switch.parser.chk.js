@@ -22,10 +22,10 @@ module.exports = function ({ parsers, $lookup }) {
                 }
 
                 object.counted.length =
-                    ($buffer[$start++]) * 0x1000000 +
-                    ($buffer[$start++]) * 0x10000 +
-                    ($buffer[$start++]) * 0x100 +
-                    ($buffer[$start++])
+                    $buffer[$start++] * 0x1000000 +
+                    $buffer[$start++] * 0x10000 +
+                    $buffer[$start++] * 0x100 +
+                    $buffer[$start++]
 
                 $i[0] = 0
                 for (;;) {
@@ -44,7 +44,7 @@ module.exports = function ({ parsers, $lookup }) {
                         return parsers.inc.object(object, 8, $i, $accumulator, $starts)($buffer, $start, $end)
                     }
 
-                    object.counted.string[$i[0]] = ($buffer[$start++])
+                    object.counted.string[$i[0]] = $buffer[$start++]
 
                     $i[0]++
                 }
@@ -67,7 +67,7 @@ module.exports = function ({ parsers, $lookup }) {
                         return parsers.inc.object(object, 12, $i, $accumulator, $starts)($buffer, $start, $end)
                     }
 
-                    object.counted.number = ($buffer[$start++])
+                    object.counted.number = $buffer[$start++]
 
                     break
 
@@ -77,8 +77,8 @@ module.exports = function ({ parsers, $lookup }) {
                     }
 
                     object.counted.number =
-                        ($buffer[$start++]) * 0x100 +
-                        ($buffer[$start++])
+                        $buffer[$start++] * 0x100 +
+                        $buffer[$start++]
 
                     break
 
@@ -88,10 +88,10 @@ module.exports = function ({ parsers, $lookup }) {
                     }
 
                     object.counted.number =
-                        ($buffer[$start++]) * 0x1000000 +
-                        ($buffer[$start++]) * 0x10000 +
-                        ($buffer[$start++]) * 0x100 +
-                        ($buffer[$start++])
+                        $buffer[$start++] * 0x1000000 +
+                        $buffer[$start++] * 0x10000 +
+                        $buffer[$start++] * 0x100 +
+                        $buffer[$start++]
 
                     break
                 }
@@ -108,7 +108,7 @@ module.exports = function ({ parsers, $lookup }) {
                     return parsers.inc.object(object, 18, $i, $accumulator, $starts)($buffer, $start, $end)
                 }
 
-                object.sentry = ($buffer[$start++])
+                object.sentry = $buffer[$start++]
 
                 return { start: $start, object: object, parse: null }
             }

@@ -21,7 +21,7 @@ module.exports = function ({ parsers, $lookup }) {
                     return value.readFloatBE()
                 })(object.value)
 
-                object.sentry = ($buffer[$start++])
+                object.sentry = $buffer[$start++]
 
                 return { start: $start, object: object, parse: null }
             }

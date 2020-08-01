@@ -3,30 +3,30 @@ module.exports = function ({ serializers, $lookup }) {
         return function (object, $buffer, $start) {
             let $_, $i = []
 
-            $buffer[$start++] = (object.type & 0xff)
+            $buffer[$start++] = object.type & 0xff
 
             if (($ => $.type == 0)(object)) {
-                $buffer[$start++] = (object.value.value & 0xff)
+                $buffer[$start++] = object.value.value & 0xff
             } else if (($ => $.type == 1)(object)) {
-                $buffer[$start++] = (object.value.length & 0xff)
+                $buffer[$start++] = object.value.length & 0xff
 
                 for ($i[0] = 0; $i[0] < object.value.length; $i[0]++) {
-                    $buffer[$start++] = (object.value[$i[0]] & 0xff)
+                    $buffer[$start++] = object.value[$i[0]] & 0xff
                 }
             } else if (($ => $.type == 2)(object)) {
                 for ($i[0] = 0; $i[0] < object.value.length; $i[0]++) {
-                    $buffer[$start++] = (object.value[$i[0]] & 0xff)
+                    $buffer[$start++] = object.value[$i[0]] & 0xff
                 }
 
                 $buffer[$start++] = 0x0
             } else if (($ => $.type == 3)(object)) {
-                $buffer[$start++] = (object.value.length & 0xff)
+                $buffer[$start++] = object.value.length & 0xff
 
                 object.value.copy($buffer, $start, 0, object.value.length)
                 $start += object.value.length
             } else if (($ => $.type == 4)(object)) {
                 for ($i[0] = 0; $i[0] < object.value.length; $i[0]++) {
-                    $buffer[$start++] = (object.value[$i[0]] & 0xff)
+                    $buffer[$start++] = object.value[$i[0]] & 0xff
                 }
             } else {
                 $_ = 0
@@ -35,7 +35,7 @@ module.exports = function ({ serializers, $lookup }) {
                 $_ += object.value.length
             }
 
-            $buffer[$start++] = (object.sentry & 0xff)
+            $buffer[$start++] = object.sentry & 0xff
 
             return { start: $start, serialize: null }
         }

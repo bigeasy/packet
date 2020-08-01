@@ -17,10 +17,10 @@ module.exports = function ({ parsers, $lookup }) {
             $starts[0] = $start
 
             object.counted.length =
-                ($buffer[$start++]) * 0x1000000 +
-                ($buffer[$start++]) * 0x10000 +
-                ($buffer[$start++]) * 0x100 +
-                ($buffer[$start++])
+                $buffer[$start++] * 0x1000000 +
+                $buffer[$start++] * 0x10000 +
+                $buffer[$start++] * 0x100 +
+                $buffer[$start++]
 
             $i[0] = 0
             for (;;) {
@@ -31,7 +31,7 @@ module.exports = function ({ parsers, $lookup }) {
                     break
                 }
 
-                object.counted.string[$i[0]] = ($buffer[$start++])
+                object.counted.string[$i[0]] = $buffer[$start++]
 
                 $i[0]++
             }
@@ -50,23 +50,23 @@ module.exports = function ({ parsers, $lookup }) {
                 counter: $accumulator['counter']
             })) {
             case 1:
-                object.counted.number = ($buffer[$start++])
+                object.counted.number = $buffer[$start++]
 
                 break
 
             case 2:
                 object.counted.number =
-                    ($buffer[$start++]) * 0x100 +
-                    ($buffer[$start++])
+                    $buffer[$start++] * 0x100 +
+                    $buffer[$start++]
 
                 break
 
             default:
                 object.counted.number =
-                    ($buffer[$start++]) * 0x1000000 +
-                    ($buffer[$start++]) * 0x10000 +
-                    ($buffer[$start++]) * 0x100 +
-                    ($buffer[$start++])
+                    $buffer[$start++] * 0x1000000 +
+                    $buffer[$start++] * 0x10000 +
+                    $buffer[$start++] * 0x100 +
+                    $buffer[$start++]
 
                 break
             }
@@ -79,7 +79,7 @@ module.exports = function ({ parsers, $lookup }) {
                 counter: $accumulator['counter']
             })
 
-            object.sentry = ($buffer[$start++])
+            object.sentry = $buffer[$start++]
 
             return object
         }

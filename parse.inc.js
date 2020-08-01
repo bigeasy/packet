@@ -188,13 +188,13 @@ function generate (packet, { require = null }) {
             const bite = field.endianness == 'big' ? bytes - 1 : 0
             const stop = field.endianness == 'big' ? -1 : bytes
             const { size } = field.bytes[0]
-            const write = `($buffer[$start++]) << $bite * ${size} >>> 0`
+            const write = `$buffer[$start++] << $bite * ${size} >>> 0`
             return rolled(path, field, write, '0', bite, stop)
         }
         return unrolled(path, field, field.bytes.map(({ shift, mask, upper }) => {
             return upper != 0
-                ? `($buffer[$start++] & ${mask}) << ${shift}`
-                : `($buffer[$start++]) << ${shift}`
+                ? `$buffer[$start++] & ${mask} << ${shift}`
+                : `$buffer[$start++] << ${shift}`
         }), 0)
     }
     //

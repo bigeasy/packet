@@ -7,12 +7,12 @@ module.exports = function ({ parsers, $lookup }) {
             }
 
             object.value =
-                ($buffer[$start++]) * 0x100 +
-                ($buffer[$start++])
+                $buffer[$start++] * 0x100 +
+                $buffer[$start++]
 
             object.value = (value => value)(object.value)
 
-            object.sentry = ($buffer[$start++])
+            object.sentry = $buffer[$start++]
 
             return object
         }

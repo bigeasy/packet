@@ -6,8 +6,8 @@ module.exports = function ({ parsers, $lookup }) {
             }
 
             object.value =
-                ($buffer[$start++]) +
-                ($buffer[$start++]) * 0x100
+                $buffer[$start++] +
+                $buffer[$start++] * 0x100
 
             return object
         }

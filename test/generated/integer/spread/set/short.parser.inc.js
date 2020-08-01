@@ -39,7 +39,7 @@ module.exports = function ({ parsers, $lookup }) {
                         return { start: $start, object: null, parse: $parse }
                     }
 
-                    $_ += ($buffer[$start++] & 127) << 7
+                    $_ += $buffer[$start++] & 127 << 7
 
                 case 5:
 
@@ -48,7 +48,7 @@ module.exports = function ({ parsers, $lookup }) {
                         return { start: $start, object: null, parse: $parse }
                     }
 
-                    $_ += ($buffer[$start++]) << 0
+                    $_ += $buffer[$start++] << 0
 
                     object.value = $_
 

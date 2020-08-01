@@ -23,7 +23,7 @@ module.exports = function ({ serializers, $lookup }) {
                     return serializers.inc.object(object, 3, $i, $$)($buffer, $start, $end)
                 }
 
-                $buffer[$start++] = (object.sentry & 0xff)
+                $buffer[$start++] = object.sentry & 0xff
 
                 return { start: $start, serialize: null }
             }

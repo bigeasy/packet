@@ -12,7 +12,7 @@ module.exports = function ({ parsers, $lookup }) {
                     return parsers.inc.object(object, 1)($buffer, $start, $end)
                 }
 
-                object.nudge = ($buffer[$start++])
+                object.nudge = $buffer[$start++]
 
                 if ($end - $start < 8) {
                     return parsers.inc.object(object, 3)($buffer, $start, $end)
@@ -21,8 +21,8 @@ module.exports = function ({ parsers, $lookup }) {
                 $start += 3
 
                 object.padded =
-                    ($buffer[$start++]) * 0x100 +
-                    ($buffer[$start++])
+                    $buffer[$start++] * 0x100 +
+                    $buffer[$start++]
 
                 $start += 3
 
@@ -30,7 +30,7 @@ module.exports = function ({ parsers, $lookup }) {
                     return parsers.inc.object(object, 9)($buffer, $start, $end)
                 }
 
-                object.sentry = ($buffer[$start++])
+                object.sentry = $buffer[$start++]
 
                 return { start: $start, object: object, parse: null }
             }
