@@ -4,7 +4,7 @@ const util = require('util')
 // Convert numbers and arrays to numbers to literals with hex literals.
 const hex = require('./hex')
 
-// Determine if an integer serialization should be unrolled.
+// Determine if an integer parse should be unrolled.
 const { parse: homogeneous } = require('./homogeneous')
 
 // Format source code maintaining indentation.
@@ -151,7 +151,6 @@ function generate (packet, { require = null }) {
                     $_ += ${write}
             `)
         }))
-        console.log(steps)
         return $(`
             `, initialize, `
 

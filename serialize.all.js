@@ -2,6 +2,9 @@
 const assert = require('assert')
 const util = require('util')
 
+// Determine if an integer serialization should be unrolled.
+const { serialize: homogeneous } = require('./homogeneous')
+
 const map = require('./map')
 
 // Convert numbers and arrays to numbers to literals with hex literals.
@@ -416,7 +419,11 @@ function generate (packet, { require = null, bff, chk }) {
     // `BigInt`. Convert the object property value if it is a lookup value or a
     // packed integer. No conversion is necessary for two's compliment.
     function write (path, field, write) {
-        $step += 2
+        if (homogeneous(field)) {
+            $step += 2
+        } else {
+            $step += 1 + field.bytes.length
+        }
         if (field.fields) {
             const packing = pack(inliner, field, path)
             return $(`

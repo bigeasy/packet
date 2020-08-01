@@ -15,8 +15,7 @@ function prove (okay) {
             nudge: 0xaa,
             value: 0x81,
             sentry: 0xaa
-        }],
-        stopAt: 'parse.inc'
+        }]
     })
     cycle(okay, {
         name: 'integer/spread/unset/short',

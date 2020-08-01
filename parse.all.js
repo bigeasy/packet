@@ -1,6 +1,9 @@
 // Node.js API.
 const util = require('util')
 
+// Determine if an integer parse should be unrolled.
+const { parse: homogeneous } = require('./homogeneous')
+
 // Format source code maintaining indentation.
 const $ = require('programmatic')
 
@@ -418,8 +421,12 @@ function generate (packet, { require, bff, chk }) {
     // from the underlying byte buffer, then transform the value if it is a
     // lookup value, packed integer or two's compliment.
     function read (path, field, reads) {
+        if (homogeneous(field)) {
+            $step += 2
+        } else {
+            $step += 1 + field.bytes.length
+        }
         const variable = field.lookup || field.fields || field.compliment ? '$_' : path
-        $step += 2
         const parse = field.bits == 8
             ? `${variable} = ${reads[0]}`
             : $(`
