@@ -4,6 +4,9 @@ const util = require('util')
 // Generate user functions and accumulators.
 const Inline = require('./inline.js')
 
+// Determine if an integer serialization should be unrolled.
+const { serialize: homogeneous } = require('./homogeneous')
+
 // Format source code maintaining indentation.
 const $ = require('programmatic')
 
@@ -127,11 +130,7 @@ function generate (packet, { require = null }) {
 
     // Serialize a `number` as an integer.
     function integer (path, field) {
-        const homogeneous = (
-            field.bytes.every(({ size }) => size == field.bytes[0].size) &&
-            field.bytes.every(({ upper }) => upper == field.bytes[0].upper)
-        )
-        if (homogeneous) {
+        if (homogeneous(field)) {
             const bytes = field.bits / 8
             const bite = field.endianness == 'big' ? bytes - 1 : 0
             const stop = field.endianness == 'big' ? -1 : bytes
@@ -153,11 +152,7 @@ function generate (packet, { require = null }) {
     // `BigInt` because `BigInt` math works only with `BigInt` values with no
     // implicit conversions.
     function bigint (path, field) {
-        const homogeneous = (
-            field.bytes.every(({ size }) => size == field.bytes[0].size) &&
-            field.bytes.every(({ upper }) => upper == field.bytes[0].upper)
-        )
-        if (homogeneous) {
+        if (homogeneous(field)) {
             const bytes = field.bits / 8
             const bite = field.endianness == 'big' ? bytes - 1 : 0
             const stop = field.endianness == 'big' ? -1 : bytes

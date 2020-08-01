@@ -5,6 +5,9 @@ const { inspect } = require('util')
 // Convert numbers and arrays to numbers to literals with hex literals.
 const hex = require('./hex')
 
+// Determine if an integer serialization should be unrolled.
+const { parse: homogeneous } = require('./homogeneous')
+
 // Format source code maintaining indentation.
 const $ = require('programmatic')
 
@@ -182,11 +185,7 @@ function generate (packet, { require = null }) {
 
             `)
         }
-        const homogeneous = (
-            field.bytes.every(({ size }) => size == field.bytes[0].size) &&
-            field.bytes.every(({ upper }) => upper == field.bytes[0].upper)
-        )
-        if (homogeneous) {
+        if (homogeneous(field)) {
             const bytes = field.bits / 8
             const bite = field.endianness == 'big' ? bytes - 1 : 0
             const stop = field.endianness == 'big' ? -1 : bytes
@@ -204,11 +203,7 @@ function generate (packet, { require = null }) {
 
     // Parse a `BigInt` as an integer.
     function bigint (path, field ) {
-        const homogeneous = (
-            field.bytes.every(({ size }) => size == field.bytes[0].size) &&
-            field.bytes.every(({ upper }) => upper == field.bytes[0].upper)
-        )
-        if (homogeneous) {
+        if (homogeneous(field)) {
             const bytes = field.bits / 8
             const bite = field.endianness == 'big' ? bytes - 1 : 0
             const stop = field.endianness == 'big' ? -1 : bytes
