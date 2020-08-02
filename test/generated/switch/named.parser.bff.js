@@ -12,7 +12,9 @@ module.exports = function ({ parsers, $lookup }) {
                     return parsers.inc.object(object, 1)($buffer, $start, $end)
                 }
 
-                object.type = $buffer[$start++]
+                object.type = (
+                    $buffer[$start++]
+                ) >>> 0
 
                 switch (String((({ $ }) => $.type)({
                     $: object
@@ -22,7 +24,9 @@ module.exports = function ({ parsers, $lookup }) {
                         return parsers.inc.object(object, 4)($buffer, $start, $end)
                     }
 
-                    object.value = $buffer[$start++]
+                    object.value = (
+                        $buffer[$start++]
+                    ) >>> 0
 
                     break
 
@@ -31,9 +35,10 @@ module.exports = function ({ parsers, $lookup }) {
                         return parsers.inc.object(object, 6)($buffer, $start, $end)
                     }
 
-                    object.value =
-                        $buffer[$start++] * 0x100 +
+                    object.value = (
+                        $buffer[$start++] << 8 |
                         $buffer[$start++]
+                    ) >>> 0
 
                     break
 
@@ -42,10 +47,11 @@ module.exports = function ({ parsers, $lookup }) {
                         return parsers.inc.object(object, 8)($buffer, $start, $end)
                     }
 
-                    object.value =
-                        $buffer[$start++] * 0x10000 +
-                        $buffer[$start++] * 0x100 +
+                    object.value = (
+                        $buffer[$start++] << 16 |
+                        $buffer[$start++] << 8 |
                         $buffer[$start++]
+                    ) >>> 0
 
                     break
                 }
@@ -54,7 +60,9 @@ module.exports = function ({ parsers, $lookup }) {
                     return parsers.inc.object(object, 10)($buffer, $start, $end)
                 }
 
-                object.sentry = $buffer[$start++]
+                object.sentry = (
+                    $buffer[$start++]
+                ) >>> 0
 
                 return { start: $start, object: object, parse: null }
             }

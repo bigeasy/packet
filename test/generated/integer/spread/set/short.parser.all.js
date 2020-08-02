@@ -9,9 +9,10 @@ module.exports = function ({ parsers, $lookup }) {
 
             object.nudge = $buffer[$start++]
 
-            object.value =
-                ($buffer[$start++] & 0x7f) * 0x80 +
+            object.value = (
+                ($buffer[$start++] & 0x7f) << 7 |
                 $buffer[$start++]
+            ) >>> 0
 
             object.sentry = $buffer[$start++]
 

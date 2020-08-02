@@ -7,11 +7,12 @@ module.exports = function ({ parsers, $lookup }) {
                 value: 0
             }
 
-            $_ =
-                $buffer[$start++] * 0x1000000 +
-                $buffer[$start++] * 0x10000 +
-                $buffer[$start++] * 0x100 +
+            $_ = (
+                $buffer[$start++] << 24 |
+                $buffer[$start++] << 16 |
+                $buffer[$start++] << 8 |
                 $buffer[$start++]
+            ) >>> 0
             object.value = $_ & 0x80000000 ? (0xffffffff - $_ + 1) * -1 : $_
 
             return object

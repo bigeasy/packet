@@ -16,7 +16,9 @@ module.exports = function ({ parsers, $lookup }) {
                 return value.readDoubleLE()
             })(object.value)
 
-            object.sentry = $buffer[$start++]
+            object.sentry = (
+                $buffer[$start++]
+            ) >>> 0
 
             return object
         }

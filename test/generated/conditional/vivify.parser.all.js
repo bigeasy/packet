@@ -9,22 +9,30 @@ module.exports = function ({ parsers, $lookup }) {
                 sentry: 0
             }
 
-            object.type = $buffer[$start++]
+            object.type = (
+                $buffer[$start++]
+            ) >>> 0
 
             if (($ => $.type == 0)(object)) {
                 object.value = {
                     value: 0
                 }
 
-                object.value.value = $buffer[$start++]
+                object.value.value = (
+                    $buffer[$start++]
+                ) >>> 0
             } else if (($ => $.type == 1)(object)) {
                 object.value = []
 
-                $I[0] = $buffer[$start++]
+                $I[0] = (
+                    $buffer[$start++]
+                ) >>> 0
                 $i[0] = 0
 
                 for (; $i[0] < $I[0]; $i[0]++) {
-                    object.value[$i[0]] = $buffer[$start++]
+                    object.value[$i[0]] = (
+                        $buffer[$start++]
+                    ) >>> 0
                 }
             } else if (($ => $.type == 2)(object)) {
                 object.value = []
@@ -38,14 +46,18 @@ module.exports = function ({ parsers, $lookup }) {
                         break
                     }
 
-                    object.value[$i[0]] = $buffer[$start++]
+                    object.value[$i[0]] = (
+                        $buffer[$start++]
+                    ) >>> 0
 
                     $i[0]++
                 }
             } else if (($ => $.type == 3)(object)) {
                 object.value = []
 
-                $I[0] = $buffer[$start++]
+                $I[0] = (
+                    $buffer[$start++]
+                ) >>> 0
 
                 object.value = $buffer.slice($start, $start + $I[0])
                 $start += $I[0]
@@ -54,7 +66,9 @@ module.exports = function ({ parsers, $lookup }) {
 
                 $i[0] = 0
                 do {
-                    object.value[$i[0]] = $buffer[$start++]
+                    object.value[$i[0]] = (
+                        $buffer[$start++]
+                    ) >>> 0
                 } while (++$i[0] != 3)
             } else {
                 $slice = $buffer.slice($start, $start + 3)
@@ -62,7 +76,9 @@ module.exports = function ({ parsers, $lookup }) {
                 object.value = $slice
             }
 
-            object.sentry = $buffer[$start++]
+            object.sentry = (
+                $buffer[$start++]
+            ) >>> 0
 
             return object
         }

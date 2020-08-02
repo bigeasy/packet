@@ -5,9 +5,10 @@ module.exports = function ({ parsers, $lookup }) {
                 value: 0
             }
 
-            object.value =
-                $buffer[$start++] * 0x100 +
+            object.value = (
+                $buffer[$start++] << 8 |
                 $buffer[$start++]
+            ) >>> 0
 
             return object
         }

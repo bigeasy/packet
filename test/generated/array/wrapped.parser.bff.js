@@ -14,11 +14,15 @@ module.exports = function ({ parsers, $lookup }) {
                     return parsers.inc.object(object, 1, $i, $I)($buffer, $start, $end)
                 }
 
-                object.nudge = $buffer[$start++]
+                object.nudge = (
+                    $buffer[$start++]
+                ) >>> 0
 
                 $start += 1
 
-                $I[0] = $buffer[$start++]
+                $I[0] = (
+                    $buffer[$start++]
+                ) >>> 0
 
                 $I[0] = (value => value)($I[0])
                 $i[0] = 0
@@ -28,10 +32,14 @@ module.exports = function ({ parsers, $lookup }) {
                 }
 
                 for (; $i[0] < $I[0]; $i[0]++) {
-                    object.array[$i[0]] = $buffer[$start++]
+                    object.array[$i[0]] = (
+                        $buffer[$start++]
+                    ) >>> 0
                 }
 
-                object.sentry = $buffer[$start++]
+                object.sentry = (
+                    $buffer[$start++]
+                ) >>> 0
 
                 return { start: $start, object: object, parse: null }
             }

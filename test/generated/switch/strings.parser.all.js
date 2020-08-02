@@ -7,31 +7,39 @@ module.exports = function ({ parsers, $lookup }) {
                 sentry: 0
             }
 
-            object.type = $buffer[$start++]
+            object.type = (
+                $buffer[$start++]
+            ) >>> 0
 
             switch (String(($ => $.type)(object))) {
             case "0":
-                object.value = $buffer[$start++]
+                object.value = (
+                    $buffer[$start++]
+                ) >>> 0
 
                 break
 
             case "1":
-                object.value =
-                    $buffer[$start++] * 0x100 +
+                object.value = (
+                    $buffer[$start++] << 8 |
                     $buffer[$start++]
+                ) >>> 0
 
                 break
 
             default:
-                object.value =
-                    $buffer[$start++] * 0x10000 +
-                    $buffer[$start++] * 0x100 +
+                object.value = (
+                    $buffer[$start++] << 16 |
+                    $buffer[$start++] << 8 |
                     $buffer[$start++]
+                ) >>> 0
 
                 break
             }
 
-            object.sentry = $buffer[$start++]
+            object.sentry = (
+                $buffer[$start++]
+            ) >>> 0
 
             return object
         }

@@ -7,26 +7,33 @@ module.exports = function ({ parsers, $lookup }) {
                 sentry: 0
             }
 
-            object.type = $buffer[$start++]
+            object.type = (
+                $buffer[$start++]
+            ) >>> 0
 
             if (($ => $.type == 0)(object)) {
-                object.value =
-                    $buffer[$start++] * 0x100 +
+                object.value = (
+                    $buffer[$start++] << 8 |
                     $buffer[$start++]
+                ) >>> 0
             } else if (($ => $.type == 1)(object)) {
-                object.value =
-                    $buffer[$start++] * 0x10000 +
-                    $buffer[$start++] * 0x100 +
+                object.value = (
+                    $buffer[$start++] << 16 |
+                    $buffer[$start++] << 8 |
                     $buffer[$start++]
+                ) >>> 0
             } else {
-                object.value =
-                    $buffer[$start++] * 0x1000000 +
-                    $buffer[$start++] * 0x10000 +
-                    $buffer[$start++] * 0x100 +
+                object.value = (
+                    $buffer[$start++] << 24 |
+                    $buffer[$start++] << 16 |
+                    $buffer[$start++] << 8 |
                     $buffer[$start++]
+                ) >>> 0
             }
 
-            object.sentry = $buffer[$start++]
+            object.sentry = (
+                $buffer[$start++]
+            ) >>> 0
 
             return object
         }

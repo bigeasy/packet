@@ -17,25 +17,37 @@ module.exports = function ({ parsers, $lookup }) {
                     return parsers.inc.object(object, 1)($buffer, $start, $end)
                 }
 
-                object.nudge = $buffer[$start++]
+                object.nudge = (
+                    $buffer[$start++]
+                ) >>> 0
 
-                $_ = $buffer[$start++]
+                $_ = (
+                    $buffer[$start++]
+                ) >>> 0
 
                 object.value = $lookup[0][$_]
 
-                $_ = $buffer[$start++]
+                $_ = (
+                    $buffer[$start++]
+                ) >>> 0
 
                 object.yn = $lookup[1][$_]
 
-                $_ = $buffer[$start++]
+                $_ = (
+                    $buffer[$start++]
+                ) >>> 0
 
                 object.binary = $lookup[0][$_]
 
-                $_ = $buffer[$start++]
+                $_ = (
+                    $buffer[$start++]
+                ) >>> 0
 
                 object.mapped = $lookup[2].forward[$_]
 
-                object.sentry = $buffer[$start++]
+                object.sentry = (
+                    $buffer[$start++]
+                ) >>> 0
 
                 return { start: $start, object: object, parse: null }
             }

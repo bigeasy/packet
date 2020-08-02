@@ -17,11 +17,12 @@ module.exports = function ({ parsers, $lookup }) {
                     return parsers.inc.object(object, 1)($buffer, $start, $end)
                 }
 
-                $_ =
-                    $buffer[$start++] * 0x1000000 +
-                    $buffer[$start++] * 0x10000 +
-                    $buffer[$start++] * 0x100 +
+                $_ = (
+                    $buffer[$start++] << 24 |
+                    $buffer[$start++] << 16 |
+                    $buffer[$start++] << 8 |
                     $buffer[$start++]
+                ) >>> 0
 
                 object.header.one = $_ >>> 15 & 0x3
 
@@ -31,7 +32,9 @@ module.exports = function ({ parsers, $lookup }) {
 
                 object.header.three = $_ & 0xfff
 
-                object.sentry = $buffer[$start++]
+                object.sentry = (
+                    $buffer[$start++]
+                ) >>> 0
 
                 return { start: $start, object: object, parse: null }
             }

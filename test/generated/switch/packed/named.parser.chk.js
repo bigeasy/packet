@@ -16,7 +16,9 @@ module.exports = function ({ parsers, $lookup }) {
                     return parsers.inc.object(object, 1)($buffer, $start, $end)
                 }
 
-                $_ = $buffer[$start++]
+                $_ = (
+                    $buffer[$start++]
+                ) >>> 0
 
                 object.header.type = $_ >>> 6 & 0x3
 
@@ -50,7 +52,9 @@ module.exports = function ({ parsers, $lookup }) {
                     return parsers.inc.object(object, 3)($buffer, $start, $end)
                 }
 
-                object.sentry = $buffer[$start++]
+                object.sentry = (
+                    $buffer[$start++]
+                ) >>> 0
 
                 return { start: $start, object: object, parse: null }
             }

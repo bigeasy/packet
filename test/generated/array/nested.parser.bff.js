@@ -14,11 +14,14 @@ module.exports = function ({ parsers, $lookup }) {
                     return parsers.inc.object(object, 1, $i, $I)($buffer, $start, $end)
                 }
 
-                object.nudge = $buffer[$start++]
-
-                $I[0] =
-                    $buffer[$start++] * 0x100 +
+                object.nudge = (
                     $buffer[$start++]
+                ) >>> 0
+
+                $I[0] = (
+                    $buffer[$start++] << 8 |
+                    $buffer[$start++]
+                ) >>> 0
                 $i[0] = 0
 
                 for (; $i[0] < $I[0]; $i[0]++) {
@@ -28,9 +31,10 @@ module.exports = function ({ parsers, $lookup }) {
                         return parsers.inc.object(object, 6, $i, $I)($buffer, $start, $end)
                     }
 
-                    $I[1] =
-                        $buffer[$start++] * 0x100 +
+                    $I[1] = (
+                        $buffer[$start++] << 8 |
                         $buffer[$start++]
+                    ) >>> 0
                     $i[1] = 0
 
                     if ($end - $start < 2 * $I[1]) {
@@ -38,9 +42,10 @@ module.exports = function ({ parsers, $lookup }) {
                     }
 
                     for (; $i[1] < $I[1]; $i[1]++) {
-                        object.array[$i[0]][$i[1]] =
-                            $buffer[$start++] * 0x100 +
+                        object.array[$i[0]][$i[1]] = (
+                            $buffer[$start++] << 8 |
                             $buffer[$start++]
+                        ) >>> 0
                     }
                 }
 
@@ -48,7 +53,9 @@ module.exports = function ({ parsers, $lookup }) {
                     return parsers.inc.object(object, 11, $i, $I)($buffer, $start, $end)
                 }
 
-                object.sentry = $buffer[$start++]
+                object.sentry = (
+                    $buffer[$start++]
+                ) >>> 0
 
                 return { start: $start, object: object, parse: null }
             }

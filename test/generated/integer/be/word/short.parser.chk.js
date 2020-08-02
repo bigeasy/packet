@@ -10,9 +10,10 @@ module.exports = function ({ parsers, $lookup }) {
                     return parsers.inc.object(object, 1)($buffer, $start, $end)
                 }
 
-                object.value =
-                    $buffer[$start++] * 0x100 +
+                object.value = (
+                    $buffer[$start++] << 8 |
                     $buffer[$start++]
+                ) >>> 0
 
                 return { start: $start, object: object, parse: null }
             }

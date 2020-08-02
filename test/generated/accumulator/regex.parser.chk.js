@@ -24,7 +24,9 @@ module.exports = function ({ parsers, $lookup }) {
                     }, 2, $accumulator)($buffer, $start, $end)
                 }
 
-                object.value.first = $buffer[$start++]
+                object.value.first = (
+                    $buffer[$start++]
+                ) >>> 0
 
                 if ($end - $start < 1) {
                     return parsers.inc.object(object, {
@@ -32,7 +34,9 @@ module.exports = function ({ parsers, $lookup }) {
                     }, 4, $accumulator)($buffer, $start, $end)
                 }
 
-                object.value.second = $buffer[$start++]
+                object.value.second = (
+                    $buffer[$start++]
+                ) >>> 0
 
                 if ($end - $start < 1) {
                     return parsers.inc.object(object, {
@@ -40,7 +44,9 @@ module.exports = function ({ parsers, $lookup }) {
                     }, 6, $accumulator)($buffer, $start, $end)
                 }
 
-                object.sentry = $buffer[$start++]
+                object.sentry = (
+                    $buffer[$start++]
+                ) >>> 0
 
                 object = (function ({ $_, regex }) {
                     assert(regex.test('abc'))

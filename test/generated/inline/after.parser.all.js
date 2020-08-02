@@ -6,13 +6,16 @@ module.exports = function ({ parsers, $lookup }) {
                 sentry: 0
             }
 
-            object.value =
-                $buffer[$start++] * 0x100 +
+            object.value = (
+                $buffer[$start++] << 8 |
                 $buffer[$start++]
+            ) >>> 0
 
             object.value = (value => value)(object.value)
 
-            object.sentry = $buffer[$start++]
+            object.sentry = (
+                $buffer[$start++]
+            ) >>> 0
 
             return object
         }

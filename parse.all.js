@@ -420,19 +420,16 @@ function generate (packet, { require, bff, chk }) {
     // generated source common to `number` and `BigInt`. First read the bits
     // from the underlying byte buffer, then transform the value if it is a
     // lookup value, packed integer or two's compliment.
-    function read (path, field, reads) {
+    function read (path, field, read) {
         if (homogeneous(field)) {
             $step += 2
         } else {
             $step += 1 + field.bytes.length
         }
         const variable = field.lookup || field.fields || field.compliment ? '$_' : path
-        const parse = field.bits == 8
-            ? `${variable} = ${reads[0]}`
-            : $(`
-                ${variable} =
-                    `, reads.reverse().join(' +\n'), `
-            `)
+        const parse = $(`
+            ${variable} `, read, `
+        `)
         if (field.fields) {
             return $(`
                 `, parse, `
@@ -476,10 +473,17 @@ function generate (packet, { require, bff, chk }) {
             if (shift == 0n) {
                 reads.push(`${masked}`)
             } else {
-                reads.push(`${masked} * ${hex(1 << shift)}`)
+                reads.push(`${masked} << ${shift}`)
             }
         }
-        return read(path, field, reads.reverse())
+        if (reads.length != 1) {
+            return read(path, field, $(`
+                = (
+                    `,reads.join(' |\n') , `
+                ) >>> 0
+            `))
+        }
+        return read(path, field, `= ${reads[0]}`)
     }
     //
 
@@ -494,10 +498,16 @@ function generate (packet, { require, bff, chk }) {
             if (shift == 0n) {
                 reads.push(`BigInt${masked}`)
             } else {
-                reads.push(`(BigInt${masked} << ${shift}n)`)
+                reads.push(`BigInt${masked} << ${shift}n`)
             }
         }
-        return read(path, field, reads.reverse())
+        if (reads.length != 1) {
+            return read(path, field, $(`
+                =
+                    `, reads.join(' |\n'), `
+            `))
+        }
+        return read(path, field, `= ${reads[0]}`)
     }
 
     function literal (path, field) {

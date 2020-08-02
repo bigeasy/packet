@@ -9,7 +9,9 @@ module.exports = function ({ parsers, $lookup }) {
                 sentry: 0
             }
 
-            object.type = $buffer[$start++]
+            object.type = (
+                $buffer[$start++]
+            ) >>> 0
 
             switch (String(($ => $.type)(object))) {
             case "0":
@@ -17,18 +19,24 @@ module.exports = function ({ parsers, $lookup }) {
                     value: 0
                 }
 
-                object.value.value = $buffer[$start++]
+                object.value.value = (
+                    $buffer[$start++]
+                ) >>> 0
 
                 break
 
             case "1":
                 object.value = []
 
-                $I[0] = $buffer[$start++]
+                $I[0] = (
+                    $buffer[$start++]
+                ) >>> 0
                 $i[0] = 0
 
                 for (; $i[0] < $I[0]; $i[0]++) {
-                    object.value[$i[0]] = $buffer[$start++]
+                    object.value[$i[0]] = (
+                        $buffer[$start++]
+                    ) >>> 0
                 }
 
                 break
@@ -45,7 +53,9 @@ module.exports = function ({ parsers, $lookup }) {
                         break
                     }
 
-                    object.value[$i[0]] = $buffer[$start++]
+                    object.value[$i[0]] = (
+                        $buffer[$start++]
+                    ) >>> 0
 
                     $i[0]++
                 }
@@ -55,7 +65,9 @@ module.exports = function ({ parsers, $lookup }) {
             case "3":
                 object.value = []
 
-                $I[0] = $buffer[$start++]
+                $I[0] = (
+                    $buffer[$start++]
+                ) >>> 0
 
                 object.value = $buffer.slice($start, $start + $I[0])
                 $start += $I[0]
@@ -67,7 +79,9 @@ module.exports = function ({ parsers, $lookup }) {
 
                 $i[0] = 0
                 do {
-                    object.value[$i[0]] = $buffer[$start++]
+                    object.value[$i[0]] = (
+                        $buffer[$start++]
+                    ) >>> 0
                 } while (++$i[0] != 3)
 
                 break
@@ -80,7 +94,9 @@ module.exports = function ({ parsers, $lookup }) {
                 break
             }
 
-            object.sentry = $buffer[$start++]
+            object.sentry = (
+                $buffer[$start++]
+            ) >>> 0
 
             return object
         }

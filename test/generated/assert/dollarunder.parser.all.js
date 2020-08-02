@@ -6,13 +6,17 @@ module.exports = function ({ parsers, $lookup }) {
                 sentry: 0
             }
 
-            object.value = $buffer[$start++]
+            object.value = (
+                $buffer[$start++]
+            ) >>> 0
 
             ; (({ $_ = 0 }) => require('assert').equal($_, 1))({
                 $_: object.value
             })
 
-            object.sentry = $buffer[$start++]
+            object.sentry = (
+                $buffer[$start++]
+            ) >>> 0
 
             return object
         }
