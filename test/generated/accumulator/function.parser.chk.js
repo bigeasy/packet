@@ -24,9 +24,7 @@ module.exports = function ({ parsers, $lookup }) {
                     }, 2, $accumulator)($buffer, $start, $end)
                 }
 
-                object.value.first = (
-                    $buffer[$start++]
-                ) >>> 0
+                object.value.first = $buffer[$start++]
 
                 if ($end - $start < 1) {
                     return parsers.inc.object(object, {
@@ -34,9 +32,7 @@ module.exports = function ({ parsers, $lookup }) {
                     }, 4, $accumulator)($buffer, $start, $end)
                 }
 
-                object.value.second = (
-                    $buffer[$start++]
-                ) >>> 0
+                object.value.second = $buffer[$start++]
 
                 if ($end - $start < 1) {
                     return parsers.inc.object(object, {
@@ -44,9 +40,7 @@ module.exports = function ({ parsers, $lookup }) {
                     }, 6, $accumulator)($buffer, $start, $end)
                 }
 
-                object.sentry = (
-                    $buffer[$start++]
-                ) >>> 0
+                object.sentry = $buffer[$start++]
 
                 object = (function ({ $_, counter }) {
                     console.log('>>>', counter)

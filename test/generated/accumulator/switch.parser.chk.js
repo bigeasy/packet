@@ -45,9 +45,7 @@ module.exports = function ({ parsers, $lookup }) {
                         return parsers.inc.object(object, 8, $i, $accumulator, $starts)($buffer, $start, $end)
                     }
 
-                    object.counted.string[$i[0]] = (
-                        $buffer[$start++]
-                    ) >>> 0
+                    object.counted.string[$i[0]] = $buffer[$start++]
 
                     $i[0]++
                 }
@@ -70,9 +68,7 @@ module.exports = function ({ parsers, $lookup }) {
                         return parsers.inc.object(object, 12, $i, $accumulator, $starts)($buffer, $start, $end)
                     }
 
-                    object.counted.number = (
-                        $buffer[$start++]
-                    ) >>> 0
+                    object.counted.number = $buffer[$start++]
 
                     break
 
@@ -115,9 +111,7 @@ module.exports = function ({ parsers, $lookup }) {
                     return parsers.inc.object(object, 18, $i, $accumulator, $starts)($buffer, $start, $end)
                 }
 
-                object.sentry = (
-                    $buffer[$start++]
-                ) >>> 0
+                object.sentry = $buffer[$start++]
 
                 return { start: $start, object: object, parse: null }
             }

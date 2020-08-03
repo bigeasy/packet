@@ -11,9 +11,7 @@ module.exports = function ({ parsers, $lookup }) {
                 $buffer[$start++]
             ) >>> 0
 
-            object.sentry = (
-                $buffer[$start++]
-            ) >>> 0
+            object.sentry = $buffer[$start++]
 
             return object
         }

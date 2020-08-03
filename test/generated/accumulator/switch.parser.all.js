@@ -32,9 +32,7 @@ module.exports = function ({ parsers, $lookup }) {
                     break
                 }
 
-                object.counted.string[$i[0]] = (
-                    $buffer[$start++]
-                ) >>> 0
+                object.counted.string[$i[0]] = $buffer[$start++]
 
                 $i[0]++
             }
@@ -53,9 +51,7 @@ module.exports = function ({ parsers, $lookup }) {
                 counter: $accumulator['counter']
             })) {
             case 1:
-                object.counted.number = (
-                    $buffer[$start++]
-                ) >>> 0
+                object.counted.number = $buffer[$start++]
 
                 break
 
@@ -86,9 +82,7 @@ module.exports = function ({ parsers, $lookup }) {
                 counter: $accumulator['counter']
             })
 
-            object.sentry = (
-                $buffer[$start++]
-            ) >>> 0
+            object.sentry = $buffer[$start++]
 
             return object
         }

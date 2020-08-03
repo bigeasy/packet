@@ -9,9 +9,7 @@ module.exports = function ({ parsers, $lookup }) {
                 sentry: 0
             }
 
-            object.nudge = (
-                $buffer[$start++]
-            ) >>> 0
+            object.nudge = $buffer[$start++]
 
             $I[0] = (() => 4)()
 
@@ -23,9 +21,7 @@ module.exports = function ({ parsers, $lookup }) {
                 ) >>> 0
             } while (++$i[0] != $I[0])
 
-            object.sentry = (
-                $buffer[$start++]
-            ) >>> 0
+            object.sentry = $buffer[$start++]
 
             return object
         }

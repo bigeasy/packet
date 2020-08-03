@@ -14,9 +14,7 @@ module.exports = function ({ parsers, $lookup }) {
                     return parsers.inc.object(object, 1, $i, $I)($buffer, $start, $end)
                 }
 
-                object.nudge = (
-                    $buffer[$start++]
-                ) >>> 0
+                object.nudge = $buffer[$start++]
 
                 $I[0] = (() => 8)()
 
@@ -37,9 +35,7 @@ module.exports = function ({ parsers, $lookup }) {
                         return parsers.inc.object(object, 6, $i, $I)($buffer, $start, $end)
                     }
 
-                    object.array[$i[0]] = (
-                        $buffer[$start++]
-                    ) >>> 0
+                    object.array[$i[0]] = $buffer[$start++]
                 } while (++$i[0] != $I[0])
 
                 $start += $I[0] != $i[0]
@@ -50,9 +46,7 @@ module.exports = function ({ parsers, $lookup }) {
                     return parsers.inc.object(object, 10, $i, $I)($buffer, $start, $end)
                 }
 
-                object.sentry = (
-                    $buffer[$start++]
-                ) >>> 0
+                object.sentry = $buffer[$start++]
 
                 return { start: $start, object: object, parse: null }
             }

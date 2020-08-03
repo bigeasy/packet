@@ -50,9 +50,7 @@ module.exports = function ({ parsers, $lookup }) {
                     return parsers.inc.object(object, 3)($buffer, $start, $end)
                 }
 
-                object.sentry = (
-                    $buffer[$start++]
-                ) >>> 0
+                object.sentry = $buffer[$start++]
 
                 return { start: $start, object: object, parse: null }
             }

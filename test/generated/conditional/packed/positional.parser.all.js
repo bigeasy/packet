@@ -11,9 +11,7 @@ module.exports = function ({ parsers, $lookup }) {
                 sentry: 0
             }
 
-            $_ = (
-                $buffer[$start++]
-            ) >>> 0
+            $_ = $buffer[$start++]
 
             object.header.flag = $_ >>> 6 & 0x3
 
@@ -41,9 +39,7 @@ module.exports = function ({ parsers, $lookup }) {
                 object.header.value.five = $_ & 0x1f
             }
 
-            object.sentry = (
-                $buffer[$start++]
-            ) >>> 0
+            object.sentry = $buffer[$start++]
 
             return object
         }

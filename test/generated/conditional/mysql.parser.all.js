@@ -8,16 +8,12 @@ module.exports = function ({ parsers, $lookup }) {
                 sentry: 0
             }
 
-            $sip = (
-                $buffer[$start++]
-            ) >>> 0
+            $sip = $buffer[$start++]
 
             if ((sip => sip < 251)($sip)) {
                 $start -= 1
 
-                object.value = (
-                    $buffer[$start++]
-                ) >>> 0
+                object.value = $buffer[$start++]
             } else if ((sip => sip == 0xfc)($sip)) {
                 object.value = (
                     $buffer[$start++] << 8 |
@@ -31,9 +27,7 @@ module.exports = function ({ parsers, $lookup }) {
                 ) >>> 0
             }
 
-            object.sentry = (
-                $buffer[$start++]
-            ) >>> 0
+            object.sentry = $buffer[$start++]
 
             return object
         }

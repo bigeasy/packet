@@ -17,17 +17,11 @@ module.exports = function ({ parsers, $lookup }) {
 
             $accumulator['counter'] = counter
 
-            object.value.first = (
-                $buffer[$start++]
-            ) >>> 0
+            object.value.first = $buffer[$start++]
 
-            object.value.second = (
-                $buffer[$start++]
-            ) >>> 0
+            object.value.second = $buffer[$start++]
 
-            object.sentry = (
-                $buffer[$start++]
-            ) >>> 0
+            object.sentry = $buffer[$start++]
 
             object = (function ({ $_, counter }) {
                 console.log('>>>', counter)

@@ -24,17 +24,11 @@ module.exports = function ({ parsers, $lookup }) {
                     }, 2, $accumulator)($buffer, $start, $end)
                 }
 
-                object.value.first = (
-                    $buffer[$start++]
-                ) >>> 0
+                object.value.first = $buffer[$start++]
 
-                object.value.second = (
-                    $buffer[$start++]
-                ) >>> 0
+                object.value.second = $buffer[$start++]
 
-                object.sentry = (
-                    $buffer[$start++]
-                ) >>> 0
+                object.sentry = $buffer[$start++]
 
                 object = (function ({ $_, regex }) {
                     assert(regex.test('abc'))

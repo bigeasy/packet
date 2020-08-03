@@ -7,17 +7,13 @@ module.exports = function ({ parsers, $lookup }) {
                 sentry: 0
             }
 
-            object.type = (
-                $buffer[$start++]
-            ) >>> 0
+            object.type = $buffer[$start++]
 
             switch (String((({ $ }) => $.type)({
                 $: object
             }))) {
             case "0":
-                object.value = (
-                    $buffer[$start++]
-                ) >>> 0
+                object.value = $buffer[$start++]
 
                 break
 
@@ -39,9 +35,7 @@ module.exports = function ({ parsers, $lookup }) {
                 break
             }
 
-            object.sentry = (
-                $buffer[$start++]
-            ) >>> 0
+            object.sentry = $buffer[$start++]
 
             return object
         }

@@ -14,9 +14,7 @@ module.exports = function ({ parsers, $lookup }) {
                     return parsers.inc.object(object, 1, $i)($buffer, $start, $end)
                 }
 
-                object.nudge = (
-                    $buffer[$start++]
-                ) >>> 0
+                object.nudge = $buffer[$start++]
 
                 if ($end - $start < 8) {
                     return parsers.inc.object(object, 3, $i)($buffer, $start, $end)
@@ -30,9 +28,7 @@ module.exports = function ({ parsers, $lookup }) {
                     return parsers.inc.object(object, 5, $i)($buffer, $start, $end)
                 }
 
-                object.sentry = (
-                    $buffer[$start++]
-                ) >>> 0
+                object.sentry = $buffer[$start++]
 
                 return { start: $start, object: object, parse: null }
             }

@@ -14,9 +14,7 @@ module.exports = function ({ parsers, $lookup }) {
                     return parsers.inc.object(object, 1, $i, $I)($buffer, $start, $end)
                 }
 
-                object.type = (
-                    $buffer[$start++]
-                ) >>> 0
+                object.type = $buffer[$start++]
 
                 switch (String(($ => $.type)(object))) {
                 case "0":
@@ -28,9 +26,7 @@ module.exports = function ({ parsers, $lookup }) {
                         return parsers.inc.object(object, 4, $i, $I)($buffer, $start, $end)
                     }
 
-                    object.value.value = (
-                        $buffer[$start++]
-                    ) >>> 0
+                    object.value.value = $buffer[$start++]
 
                     break
 
@@ -41,9 +37,7 @@ module.exports = function ({ parsers, $lookup }) {
                         return parsers.inc.object(object, 6, $i, $I)($buffer, $start, $end)
                     }
 
-                    $I[0] = (
-                        $buffer[$start++]
-                    ) >>> 0
+                    $I[0] = $buffer[$start++]
                     $i[0] = 0
 
                     if ($end - $start < 1 * $I[0]) {
@@ -51,9 +45,7 @@ module.exports = function ({ parsers, $lookup }) {
                     }
 
                     for (; $i[0] < $I[0]; $i[0]++) {
-                        object.value[$i[0]] = (
-                            $buffer[$start++]
-                        ) >>> 0
+                        object.value[$i[0]] = $buffer[$start++]
                     }
 
                     break
@@ -78,9 +70,7 @@ module.exports = function ({ parsers, $lookup }) {
                             return parsers.inc.object(object, 14, $i, $I)($buffer, $start, $end)
                         }
 
-                        object.value[$i[0]] = (
-                            $buffer[$start++]
-                        ) >>> 0
+                        object.value[$i[0]] = $buffer[$start++]
 
                         $i[0]++
                     }
@@ -94,9 +84,7 @@ module.exports = function ({ parsers, $lookup }) {
                         return parsers.inc.object(object, 17, $i, $I)($buffer, $start, $end)
                     }
 
-                    $I[0] = (
-                        $buffer[$start++]
-                    ) >>> 0
+                    $I[0] = $buffer[$start++]
 
                     if ($end - $start < 1 * $I[0]) {
                         return parsers.inc.object(object, 19, $i, $I)($buffer, $start, $end)
@@ -116,9 +104,7 @@ module.exports = function ({ parsers, $lookup }) {
 
                     $i[0] = 0
                     do {
-                        object.value[$i[0]] = (
-                            $buffer[$start++]
-                        ) >>> 0
+                        object.value[$i[0]] = $buffer[$start++]
                     } while (++$i[0] != 3)
 
                     break
@@ -139,9 +125,7 @@ module.exports = function ({ parsers, $lookup }) {
                     return parsers.inc.object(object, 26, $i, $I)($buffer, $start, $end)
                 }
 
-                object.sentry = (
-                    $buffer[$start++]
-                ) >>> 0
+                object.sentry = $buffer[$start++]
 
                 return { start: $start, object: object, parse: null }
             }

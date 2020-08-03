@@ -7,9 +7,7 @@ module.exports = function ({ parsers, $lookup }) {
                 sentry: 0
             }
 
-            object.type = (
-                $buffer[$start++]
-            ) >>> 0
+            object.type = $buffer[$start++]
 
             if (($ => $.type == 0)(object)) {
                 object.value = (
@@ -31,9 +29,7 @@ module.exports = function ({ parsers, $lookup }) {
                 ) >>> 0
             }
 
-            object.sentry = (
-                $buffer[$start++]
-            ) >>> 0
+            object.sentry = $buffer[$start++]
 
             return object
         }

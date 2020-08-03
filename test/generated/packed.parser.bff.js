@@ -32,9 +32,7 @@ module.exports = function ({ parsers, $lookup }) {
 
                 object.header.three = $_ & 0xfff
 
-                object.sentry = (
-                    $buffer[$start++]
-                ) >>> 0
+                object.sentry = $buffer[$start++]
 
                 return { start: $start, object: object, parse: null }
             }

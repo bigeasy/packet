@@ -17,9 +17,7 @@ module.exports = function ({ parsers, $lookup }) {
 
             object.value = (value => twiddle(value))(object.value)
 
-            object.sentry = (
-                $buffer[$start++]
-            ) >>> 0
+            object.sentry = $buffer[$start++]
 
             return object
         }
