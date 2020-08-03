@@ -31,7 +31,7 @@ function prove (okay) {
         objects: [{
             nudge: 0xaa, value: 0x81, sentry: 0xaa
         }],
-        stopAt: 'parse.inc'
+        stopAt: 'parse.bff'
     })
     return
     cycle(okay, {

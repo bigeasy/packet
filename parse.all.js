@@ -42,6 +42,12 @@ function expand (fields) {
             field.fields = expand(field.fields)
             expanded.push(field)
             break
+        case 'parse':
+            for (const condition of field.conditions) {
+                condition.fields = expand(condition.fields)
+            }
+            expanded.push(field)
+            break
         case 'conditional':
             for (const condition of field.parse.conditions) {
                 condition.fields = expand(condition.fields)
@@ -121,6 +127,17 @@ function checkpoints (path, fields, $i = 0, $I = 0) {
             checked.push(checkpoint = {
                 type: 'checkpoint', lengths: [ 0 ], vivify: null, rewind: 0
             })
+            break
+        case 'parse': {
+                checked.push(field)
+                field.sip = checkpoints(path + field.dotted, field.sip, $i, $I)
+                for (const condition of field.conditions) {
+                    condition.fields = checkpoints(path + field.dotted, condition.fields, $i, $I)
+                }
+                checked.push(checkpoint = {
+                    type: 'checkpoint', lengths: [ 0 ], vivify: null, rewind: 0
+                })
+            }
             break
         case 'conditional':
             checked.push(field)
@@ -927,7 +944,7 @@ function generate (packet, { require, bff, chk }) {
                     })
                 }
                 if (checkpoint) {
-                    condition.fields[0].rewind = sip.bits / 8
+                    condition.fields[0].rewind = sip.bits / 8 + rewound
                 }
             } ()
             const vivified = vivify.assignment(path, condition)
@@ -939,16 +956,13 @@ function generate (packet, { require, bff, chk }) {
             } else {
                 source = map(dispatch, path, condition.fields)
             }
-            ladder = condition.test != null ? function () {
-                const test = inliner.test(path, condition.test, signature)
-                return $(`
-                    `, ladder, `${keywords} (`, test, `) {
-                        `, vivified, -1, `
+            ladder = condition.test != null ? $(`
+                `, ladder, `${keywords} (`, inliner.test(path, condition.test, signature), `) {
+                    `, vivified, -1, `
 
-                        `, source, `
-                    }
-                `)
-            } () : $(`
+                    `, source, `
+                }
+            `) : $(`
                 `, ladder, ` else {
                     `, vivified, -1, `
 
