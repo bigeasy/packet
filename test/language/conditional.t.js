@@ -1,4 +1,4 @@
-require('proof')(4, okay => {
+require('proof')(5, okay => {
     const language = require('../../language')
     okay(language({
         packet: {
@@ -110,6 +110,8 @@ require('proof')(4, okay => {
                 }]
             },
             parse: {
+                type: 'parse',
+                vivify: 'number',
                 sip: [{
                     type: 'integer',
                     vivify: 'number',
@@ -317,6 +319,8 @@ require('proof')(4, okay => {
             },
             parse: {
                 sip: null,
+                type: 'parse',
+                vivify: 'number',
                 conditions: [{
                     test: {
                         defaulted: [],
@@ -847,4 +851,274 @@ require('proof')(4, okay => {
         }],
         name: 'packet'
     }], 'packed')
+    okay(language({
+        object: {
+            value: [
+                [
+                    value => value <= 0x7f, 8,
+                    value => value <= 0x3fff, [ 16, 0x80, 7, 0x0, 7 ],
+                    value => value <= 0x1fffff, [ 24, 0x80, 7, 0x80, 7, 0x0, 7 ],
+                    true, [ 32, 0x80, 7, 0x80, 7, 0x80, 7, 0x0, 7 ]
+                ],
+                [ 8,
+                    sip => sip & 0x80 == 0, 8,
+                    true, [ 8,
+                        sip => sip & 0x80 == 0, [ 16, 0x80, 7, 0x0, 7 ],
+                        true, [ 8,
+                            sip => sip & 0x80 == 0, [ 24, 0x80, 7, 0x80, 7, 0x0, 7 ],
+                            // TODO Maybe we always mask since we mask anyway?
+                            true, [ 32, 0x80, 7, 0x80, 7, 0x80, 7, 0x0, 7 ]
+                        ]
+                    ]
+                ]
+            ]
+        }
+    }), [{
+    type: 'structure',
+    vivify: 'object',
+    dotted: '',
+    fixed: false,
+    bits: 0,
+    fields: [{
+        type: 'conditional',
+        vivify: 'number',
+        bits: 0,
+        fixed: false,
+        split: true,
+        serialize: {
+            conditions: [{
+                test: {
+                    defaulted: [],
+                    properties: [],
+                    source: 'value => value <= 0x7f',
+                    arity: 1,
+                    vargs: []
+                },
+                fields: [{
+                    type: 'integer',
+                    vivify: 'number',
+                    dotted: '',
+                    fixed: true,
+                    bits: 8,
+                    bytes: [{
+                        upper: 0, mask: 255, shift: 0, size: 8
+                    }],
+                    endianness: 'big',
+                    compliment: false
+                }]
+            }, {
+                test: {
+                    defaulted: [],
+                    properties: [],
+                    source: 'value => value <= 0x3fff',
+                    arity: 1,
+                    vargs: []
+                },
+                fields: [{
+                    type: 'integer',
+                    vivify: 'number',
+                    dotted: '',
+                    fixed: true,
+                    bits: 16,
+                    bytes: [{
+                        upper: 128, mask: 127, shift: 7, size: 7
+                    }, {
+                        upper: 0, mask: 127, shift: 0, size: 7
+                    }],
+                    endianness: 'big',
+                    compliment: false
+                }]
+            }, {
+                test: {
+                    defaulted: [],
+                    properties: [],
+                    source: 'value => value <= 0x1fffff',
+                    arity: 1,
+                    vargs: []
+                },
+                fields: [{
+                    type: 'integer',
+                    vivify: 'number',
+                    dotted: '',
+                    fixed: true,
+                    bits: 24,
+                    bytes: [{
+                        upper: 128, mask: 127, shift: 14, size: 7
+                    }, {
+                        upper: 128, mask: 127, shift: 7, size: 7
+                    }, {
+                        upper: 0, mask: 127, shift: 0, size: 7
+                    }],
+                    endianness: 'big',
+                    compliment: false
+                }]
+            }, {
+                test: null,
+                fields: [{
+                    type: 'integer',
+                    vivify: 'number',
+                    dotted: '',
+                    fixed: true,
+                    bits: 32,
+                    bytes: [{
+                        upper: 128, mask: 127, shift: 21, size: 7
+                    }, {
+                        upper: 128, mask: 127, shift: 14, size: 7
+                    }, {
+                        upper: 128, mask: 127, shift: 7, size: 7
+                    }, {
+                        upper: 0, mask: 127, shift: 0, size: 7
+                    }],
+                    endianness: 'big',
+                    compliment: false
+                }]
+            }]
+        },
+        parse: {
+            type: 'parse',
+            sip: [{
+                type: 'integer',
+                vivify: 'number',
+                dotted: '',
+                fixed: true,
+                bits: 8,
+                bytes: [{
+                    upper: 0, mask: 255, shift: 0, size: 8
+                }],
+                endianness: 'big',
+                compliment: false
+            }],
+            vivify: 'number',
+            conditions: [{
+                test: {
+                    defaulted: [],
+                    properties: [],
+                    source: 'sip => sip & 0x80 == 0',
+                    arity: 1,
+                    vargs: []
+                },
+                fields: [{
+                    type: 'integer',
+                    vivify: 'number',
+                    dotted: '',
+                    fixed: true,
+                    bits: 8,
+                    bytes: [{
+                        upper: 0, mask: 255, shift: 0, size: 8
+                    }],
+                    endianness: 'big',
+                    compliment: false
+                }]
+            }, {
+                test: null,
+                fields: [{
+                    type: 'parse',
+                    sip: [{
+                        type: 'integer',
+                        vivify: 'number',
+                        dotted: '',
+                        fixed: true,
+                        bits: 8,
+                        bytes: [{
+                            upper: 0, mask: 255, shift: 0, size: 8
+                        }],
+                        endianness: 'big',
+                        compliment: false
+                    }],
+                    vivify: 'number',
+                    conditions: [{
+                        test: {
+                            defaulted: [],
+                            properties: [],
+                            source: 'sip => sip & 0x80 == 0',
+                            arity: 1,
+                            vargs: []
+                        },
+                        fields: [{
+                            type: 'integer',
+                            vivify: 'number',
+                            dotted: '',
+                            fixed: true,
+                            bits: 16,
+                            bytes: [{
+                                upper: 128, mask: 127, shift: 7, size: 7
+                            }, {
+                                upper: 0, mask: 127, shift: 0, size: 7
+                            }],
+                            endianness: 'big',
+                            compliment: false
+                        }]
+                    }, {
+                        test: null,
+                        fields: [{
+                            type: 'parse',
+                            sip: [{
+                                type: 'integer',
+                                vivify: 'number',
+                                dotted: '',
+                                fixed: true,
+                                bits: 8,
+                                bytes: [{
+                                    upper: 0, mask: 255, shift: 0, size: 8
+                                }],
+                                endianness: 'big',
+                                compliment: false
+                            }],
+                            vivify: 'number',
+                            conditions: [{
+                                test: {
+                                    defaulted: [],
+                                    properties: [],
+                                    source: 'sip => sip & 0x80 == 0',
+                                    arity: 1,
+                                    vargs: []
+                                },
+                                fields: [{
+                                    type: 'integer',
+                                    vivify: 'number',
+                                    dotted: '',
+                                    fixed: true,
+                                    bits: 24,
+                                    bytes: [{
+                                        upper: 128, mask: 127, shift: 14, size: 7
+                                    }, {
+                                        upper: 128, mask: 127, shift: 7, size: 7
+                                    }, {
+                                        upper: 0, mask: 127, shift: 0, size: 7
+                                    }],
+                                    endianness: 'big',
+                                    compliment: false
+                                }]
+                            }, {
+                                test: null,
+                                fields: [{
+                                    type: 'integer',
+                                    vivify: 'number',
+                                    dotted: '',
+                                    fixed: true,
+                                    bits: 32,
+                                    bytes: [{
+                                        upper: 128, mask: 127, shift: 21, size: 7
+                                    }, {
+                                        upper: 128, mask: 127, shift: 14, size: 7
+                                    }, {
+                                        upper: 128, mask: 127, shift: 7, size: 7
+                                    }, {
+                                        upper: 0, mask: 127, shift: 0, size: 7
+                                    }],
+                                    endianness: 'big',
+                                    compliment: false
+                                  }]
+                              }
+                          ]}
+                      ]}
+                  ]}
+              ]}
+              ]
+        },
+        name: 'value',
+        dotted: '.value'
+    }],
+    name: 'object'
+}], 'nested sip')
 })

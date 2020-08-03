@@ -802,8 +802,7 @@ module.exports = function (packets) {
                     }
                     return { conditions }
                 } ()
-                const parse = function () {
-                    const parse = packet[1].slice()
+                function descend (parse) {
                     const sip = []
                     if (typeof parse[0] == 'number') {
                         sip.push(map(parse.shift(), {}).shift())
@@ -812,32 +811,35 @@ module.exports = function (packets) {
                     while (parse.length) {
                         const test = parse.shift()
                         const field = parse.shift()
+                        const fields = is.conditional.sip(field)
+                            ? [ descend(field.slice(0)) ]
+                            : map(field, {}, pack)
                         switch (typeof test) {
                         case 'function':
-                            conditions.push({
-                                test: { ...args([ test ]) },
-                                fields: map(field, {}, pack)
-                            })
+                            conditions.push({ test: { ...args([ test ]) }, fields: fields })
                             break
                         case 'boolean':
-                            conditions.push({
-                                test: null,
-                                fields: map(field, {}, pack)
-                            })
+                            conditions.push({ test: null, fields: fields })
                             break
                         }
                     }
-                    return { sip: sip.length ? sip : null, conditions }
-                } ()
-                const vivify = parse.conditions.slice(1).reduce((vivify, condition) => {
-                    return vivify == 'variant' || vivify == vivified(condition.fields[0])
-                        ? vivify
-                        : 'variant'
-                }, parse.conditions[0].fields[0].vivify)
+                    const vivify = conditions.slice(1).reduce((vivify, condition) => {
+                        return vivify == 'variant' || vivify == vivified(condition.fields[0])
+                            ? vivify
+                            : 'variant'
+                    }, conditions[0].fields[0].vivify)
+                    return {
+                        type: 'parse',
+                        sip: sip.length ? sip : null,
+                        vivify: vivify,
+                        conditions: conditions
+                    }
+                }
+                const parse = descend(packet[1].slice())
                 // TODO Is fixed if all the alternations are the same length.
                 fields.push({
                     type: 'conditional',
-                    vivify: vivify == 'object' ? 'variant' : vivify,
+                    vivify: parse.vivify == 'object' ? 'variant' : parse.vivify,
                     bits: 0,
                     fixed: false,
                     split: true,

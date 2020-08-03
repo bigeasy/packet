@@ -356,7 +356,7 @@ function inquisition (fields, $I = 0) {
 }
 
 function generate (packet, { require, bff, chk }) {
-    let $i = -1, $I = -1, $step = 1
+    let $i = -1, $I = -1, $step = 1, $sip = -1
 
     const { variables, accumulators, parameters } = declare(packet)
 
@@ -874,7 +874,7 @@ function generate (packet, { require, bff, chk }) {
         `)
     }
 
-    function conditional (path, field) {
+    function conditional (path, field, rewound = 0) {
         const tests = field.parse.conditions.filter(condition => condition.test != null)
                                              .map(condition => condition.test)
         const invocations = inliner.accumulations(tests)
@@ -883,8 +883,10 @@ function generate (packet, { require, bff, chk }) {
             if (field.parse.sip == null) {
                 return null
             }
-            signature.push('$sip')
-            return map(dispatch, '$sip', field.parse.sip)
+            // TODO Decrement `$sip[]`.
+            const sip = `$sip[${++$sip}]`
+            signature.push(sip)
+            return map(dispatch, sip, field.parse.sip)
         } ()
         $step++
         let ladder = '', keywords = 'if'
@@ -921,7 +923,7 @@ function generate (packet, { require, bff, chk }) {
                 const checkpoint = condition.fields[0].type == 'checkpoint'
                 if (sipped != 0) {
                     condition.fields.splice(checkpoint ? 1 : 0, 0, {
-                        type: 'rewind', bytes: sipped
+                        type: 'rewind', bytes: sipped + rewound
                     })
                 }
                 if (checkpoint) {
@@ -929,8 +931,14 @@ function generate (packet, { require, bff, chk }) {
                 }
             } ()
             const vivified = vivify.assignment(path, condition)
-            //const source = join(condition.fields.map(field => dispatch(path, field)))
-            const source = map(dispatch, path, condition.fields)
+            let source = null
+            if (condition.fields[condition.fields.length - 1].type == 'parse') {
+                const parse = condition.fields.pop()
+                const rewind = condition.fields.pop()
+                source = conditional(path, { parse }, rewind.bytes)
+            } else {
+                source = map(dispatch, path, condition.fields)
+            }
             ladder = condition.test != null ? function () {
                 const test = inliner.test(path, condition.test, signature)
                 return $(`
@@ -1013,7 +1021,7 @@ function generate (packet, { require, bff, chk }) {
             register: '$_',
             i: '$i = []',
             I: '$I = []',
-            sip: '$sip = 0',
+            sip: '$sip = []',
             slice: '$slice = null',
             accumulator: '$accumulator = {}',
             starts: '$starts = []'

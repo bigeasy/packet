@@ -51,6 +51,8 @@ function generate (packet, { require = null }) {
     // Current array length for length encoded arrays.
     let $I = -1
 
+    let $sip = -1
+
     // Map of parser scoped variable definitions to their initialization values.
     const locals = {}
 
@@ -875,71 +877,89 @@ function generate (packet, { require = null }) {
         `)
     }
 
+
     function conditional (path, field) {
-        const { parse } = field
+        return conditions(path, field.parse, [])
+    }
+
+    function conditions (path, parse, rewound) {
         surround = true
         const signature = []
         const sip = function () {
             if (parse.sip == null) {
                 return null
             }
-            signature.push('$sip')
-            return map(dispatch, '$sip', parse.sip)
+            rewound.push(parse.sip)
+            // TODO Decrement `$sip[]`.
+            const sip = `$sip[${++$sip}]`
+            signature.push(sip)
+            return map(dispatch, sip, parse.sip)
         } ()
         const rewind = function () {
-            if (parse.sip == null) {
+            if (rewound.length == 0) {
                 return null
             }
             const bytes = []
-            if (parse.sip[0].endianness == 'big') {
-                for (let i = 0, I = parse.sip[0].bits / 8; i < I; i++) {
-                    bytes.push(`($sip >>> ${i * 8}) & 0xff`)
-                }
-            } else {
-                for (let i = parse.sip[0].bits / 8 - 1, I = -1; i > I; i--) {
-                    bytes.push(`($sip >>> ${i * 8}) & 0xff`)
+            // If the sip is a spread integer, then the collected value is
+            // missing data from the buffer. For this we would have to have
+            // another array tracking the bitten bytes.
+            // ```
+            // $sip[0] |= ($store[0] = $buffer[$start++]) & 0x7f << 7
+            // ```
+            for (let i = 0, I = rewound.length; i < I; i++) {
+                if (rewound[i][0].endianness == 'big') {
+                    for (let j = 0, J = rewound[i][0].bits / 8; j < J; j++) {
+                        if (j == 0) {
+                            bytes.push(`$sip[${i}] & 0xff`)
+                        } else {
+                            bytes.push(`$sip[${i}] >>> ${j * 8} & 0xff`)
+                        }
+                    }
+                } else {
+                    for (let i = sip[0].bits / 8 - 1, I = -1; i > I; i--) {
+                        bytes.push(`$sip >>> ${i * 8} & 0xff`)
+                    }
                 }
             }
             return $(`
-                $parse([
-                    `, bytes.join('\n'), `
-                ], 0, ${bytes.length})
+                $parse(Buffer.from([
+                    `, bytes.join(',\n'), `
+                ]), 0, ${bytes.length})
             `)
         } ()
-        const tests = field.parse.conditions
-                                 .filter(condition => condition.test != null)
-                                 .map(condition => condition.test)
+        const tests = parse.conditions
+                           .filter(condition => condition.test != null)
+                           .map(condition => condition.test)
         const invocations = inliner.accumulations(tests)
         signature.push(packet.name)
         const start = $step++
-        const steps = []
-        for (const condition of parse.conditions) {
-            steps.push({
-                number: $step,
-                source: map(dispatch, path, condition.fields)
-            })
-        }
+        const steps = parse.conditions.map(({ test, fields }) =>  {
+            const step = $step
+            const sip = fields[0].type == 'parse'
+            const source = sip
+                ? conditions(path, fields[0], rewound)
+                : map(dispatch, path, fields)
+            return {
+                step, source, sip, fields, test
+            }
+        })
         let ladder = '', keywords = 'if'
-        for (let i = 0, I = parse.conditions.length; i < I; i++) {
-            const condition = parse.conditions[i]
-            const vivified = vivify.assignment(path, condition)
-            ladder = condition.test != null ? function () {
-                const test = inliner.test(path, condition.test, signature)
-                return $(`
-                    `, ladder, `${keywords} (`, test, `) {
-                        `, vivified, -1, `
+        for (const { test, fields, sip, source, step } of steps) {
+            const vivified = vivify.assignment(path, { vivify: 'descend', fields })
+            ladder = test != null ? $(`
+                `, ladder, `${keywords} (`, inliner.test(path, test, signature), `) {
+                    `, vivified, -1, `
 
-                        $step = ${steps[i].number}
-                        `, rewind, `
-                        continue
-                    }
-                `)
-            } () : $(`
+                    $step = ${step}
+                    `, sip ? null : rewind, `
+                    continue
+                }
+            `) : $(`
                 `, ladder, ` else {
                     `, vivified, -1, `
 
-                    $step = ${steps[i].number}
-                    `, rewind, `
+                    $step = ${step}
+                    `, sip ? null : rewind, `
                     continue
                 }
             `)
@@ -1059,7 +1079,7 @@ function generate (packet, { require = null }) {
             step: '$step = 0',
             i: '$i = []',
             I: '$I = []',
-            sip: '$sip = 0',
+            sip: '$sip = []',
             accumulator: '$accumulator = []',
             starts: '$starts = []'
         }

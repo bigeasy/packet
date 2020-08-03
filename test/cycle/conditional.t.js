@@ -3,6 +3,38 @@ require('proof')(0, prove)
 function prove (okay) {
     const cycle = require('./cycle')
     cycle(okay, {
+        name: 'conditional/mqtt',
+        define: {
+            object: {
+                nudge: 8,
+                value: [
+                    [
+                        value => value <= 0x7f, 8,
+                        value => value <= 0x3fff, [ 16, 0x80, 7, 0x0, 7 ],
+                        value => value <= 0x1fffff, [ 24, 0x80, 7, 0x80, 7, 0x0, 7 ],
+                        true, [ 32, 0x80, 7, 0x80, 7, 0x80, 7, 0x0, 7 ]
+                    ],
+                    [ 8,
+                        sip => (sip & 0x80) == 0, 8,
+                        true, [ 8,
+                            sip => (sip & 0x80) == 0, [ 16, 0x80, 7, 0x0, 7 ],
+                            true, [ 8,
+                                sip => (sip & 0x80) == 0, [ 24, 0x80, 7, 0x80, 7, 0x0, 7 ],
+                                true, [ 32, 0x80, 7, 0x80, 7, 0x80, 7, 0x0, 7 ]
+                            ]
+                        ]
+                    ]
+                ],
+                sentry: 8
+            }
+        },
+        objects: [{
+            nudge: 0xaa, value: 0x81, sentry: 0xaa
+        }],
+        stopAt: 'parse.inc'
+    })
+    return
+    cycle(okay, {
         name: 'conditional/mysql',
         define: {
             object: {

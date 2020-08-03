@@ -1,3 +1,41 @@
+## Sun Aug  2 02:40:15 CDT 2020
+
+Regarding unsipping in incremental parser. Upon sip, we have all the values in
+memory and it doesn't seem to make sense to make a call to the parser to parse a
+buffer constructed from the sips. For the common case, those values will be read
+into an integer, the common case of sipping to determine the length of an
+encoded integer. If the sip results somehow in a decision to read a variable
+length field, then we can't unsip from the registers we've used to gather the
+sip, it would be no more or less complicated than an incremental parse.
+
+But, how is that supposed to work? Who is going to encode a zero terminated
+string that might also be a 32-bit integer? Who wants to document that certain
+string values are going to be misinterpreted as an integer?
+
+If the only time we ever unsip is into integers, then it does make sense to
+build the integer from the sip. If we don't see an integer as the first value
+that can consume the sip, we can recurse. This is frightfully complicated
+though. It wouldn't be so daunting if there was a function you could write on
+the tree that would tell you the number of fixed bits that are consumed by
+integers of any sort starting from a node in the tree. If it consumes the sip,
+then procede with unwinding the sip.
+
+If we do unwind the sip, we now have to pass the sip in from the
+best-foot-forward parser.
+
+Then there is the case where a branch of a sip conditional may sip itself. Also,
+we now start keeping the sip stack around until the sip is consumed, and a sip
+can be consumed by a sip, since a sip is always an integer.
+
+But, really, the common case is length encoded integers, so sips of sips are a
+bridge to cross when we get there. At first we could simply ensure that the
+resolved field is an integer that consume the entire sip and do an unsip, then
+we can advance to more complicated conditions like a structure that nests
+integers, an array whose length encoding or first word if terminated consumes
+the sip, etc.
+
+Unsip will have to be a stretch goal.
+
 ## Thu Jul 23 13:15:23 CDT 2020
 
  * [What's Up with Monomorphism](https://mrale.ph/blog/2015/01/11/whats-up-with-monomorphism.html).
