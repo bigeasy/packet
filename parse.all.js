@@ -257,6 +257,16 @@ function inquisition (fields, $I = 0) {
             field.fields = inquisition(field.fields)
             checked.push(field)
             break
+        // TODO Make the type 'sip' and have it be similar.
+        case 'parse':
+            if (field.sip != null) {
+                field.sip = inquisition(field.sip)
+            }
+            for (const condition of field.conditions) {
+                condition.fields = inquisition(condition.fields)
+            }
+            checked.push(field)
+            break
         case 'conditional':
             if (field.parse.sip != null) {
                 field.parse.sip = inquisition(field.parse.sip)
