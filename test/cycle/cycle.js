@@ -22,11 +22,17 @@ const composers = {
 }
 
 function compiler ({ objects, file, source }) {
-    fs.writeFileSync(file, $(`
-        module.exports = function ({ ${objects.join(', ')} }) {
-            `, source, `
-        }
-    `) + '\n')
+    if (objects.length != 0) {
+        fs.writeFileSync(file, $(`
+            module.exports = function ({ ${objects.join(', ')} }) {
+                return `, source, `
+            }
+        `) + '\n')
+    } else {
+        fs.writeFileSync(file, $(`
+            module.exports = `, source, `
+        `) + '\n')
+    }
 }
 
 module.exports = function (okay, options) {
@@ -41,17 +47,17 @@ module.exports = function (okay, options) {
             parsers: { all: {}, inc: {}, bff: {}, chk: {} },
             serializers: { all: {}, inc: {}, bff: {}, chk: {} },
             sizeOf: {},
-            $lookup: []
+            lookup: []
         }
 
         if (compile) {
             compiler({
-                objects: [ '$lookup' ],
+                objects: [],
                 file: `${filename}.lookup.js`,
                 source: composers.lookup(intermediate)
             })
         }
-        require(`${filename}.lookup.js`)(packet)
+        packet.$lookup = require(`${filename}.lookup.js`)
 
         if (options.stopAt == 'lookup') {
             okay.inc(1)
@@ -61,12 +67,12 @@ module.exports = function (okay, options) {
 
         if (compile) {
             compiler({
-                objects: [ 'sizeOf' ],
+                objects: [],
                 file: `${filename}.sizeof.js`,
                 source: composers.sizeOf(intermediate, { require: required })
             })
         }
-        require(`${filename}.sizeof.js`)(packet)
+        packet.sizeOf = require(`${filename}.sizeof.js`)
         const sizeOf = packet.sizeOf.object(actual)
 
         if (options.stopAt == 'sizeof') {
@@ -78,12 +84,12 @@ module.exports = function (okay, options) {
 
         if (compile) {
             compiler({
-                objects: [ 'serializers', '$lookup' ],
+                objects: [ '$lookup' ],
                 file: `${filename}.serializer.all.js`,
                 source: composers.serializer.all(intermediate, { require: required })
             })
         }
-        require(`${filename}.serializer.all.js`)(packet)
+        packet.serializers.all = require(`${filename}.serializer.all.js`)(packet)
 
         const expected = Buffer.alloc(sizeOf)
 
@@ -101,12 +107,12 @@ module.exports = function (okay, options) {
 
         if (compile) {
             compiler({
-                objects: [ 'parsers', '$lookup' ],
+                objects: [ '$lookup' ],
                 file: `${filename}.parser.all.js`,
                 source: composers.parser.all(intermediate, { require: required })
             })
         }
-        require(`${filename}.parser.all.js`)(packet)
+        packet.parsers.all = require(`${filename}.parser.all.js`)(packet)
 
         okay.inc(1)
 
@@ -160,12 +166,12 @@ module.exports = function (okay, options) {
 
         if (compile) {
             compiler({
-                objects: [ 'serializers', '$lookup' ],
+                objects: [ '$lookup' ],
                 file: `${filename}.serializer.inc.js`,
                 source: composers.serializer.inc(intermediate, { require: required })
             })
         }
-        require(`${filename}.serializer.inc.js`)(packet)
+        packet.serializers.inc = require(`${filename}.serializer.inc.js`)(packet)
 
         okay.inc(sizeOf + 1)
 
@@ -202,12 +208,12 @@ module.exports = function (okay, options) {
 
         if (compile) {
             compiler({
-                objects: [ 'parsers', '$lookup' ],
+                objects: [ '$lookup' ],
                 file: `${filename}.parser.inc.js`,
                 source: composers.parser.inc(intermediate, { require: required })
             })
         }
-        require(`${filename}.parser.inc.js`)(packet)
+        packet.parsers.inc = require(`${filename}.parser.inc.js`)(packet)
 
         try {
             for (let i = 0; i <= expected.length; i++) {
@@ -241,7 +247,7 @@ module.exports = function (okay, options) {
 
         if (compile) {
             compiler({
-                objects: [ 'serializers', '$lookup' ],
+                objects: [ '$incremental', '$lookup' ],
                 file: `${filename}.serializer.bff.js`,
                 source: composers.serializer.all(intermediate, {
                     bff: true,
@@ -249,7 +255,9 @@ module.exports = function (okay, options) {
                 })
             })
         }
-        require(`${filename}.serializer.bff.js`)(packet)
+        packet.serializers.bff = require(`${filename}.serializer.bff.js`)({
+            $lookup: packet.$lookup, $incremental: packet.serializers.inc
+        })
 
         okay.inc(sizeOf + 1)
 
@@ -284,7 +292,7 @@ module.exports = function (okay, options) {
 
         if (compile) {
             compiler({
-                objects: [ 'parsers', '$lookup' ],
+                objects: [ '$incremental', '$lookup' ],
                 file: `${filename}.parser.bff.js`,
                 source: composers.parser.all(intermediate, {
                     bff: true,
@@ -292,7 +300,9 @@ module.exports = function (okay, options) {
                 })
             })
         }
-        require(`${filename}.parser.bff.js`)(packet)
+        packet.parsers.bff = require(`${filename}.parser.bff.js`)({
+            $lookup: packet.$lookup, $incremental: packet.parsers.inc
+        })
 
         okay.inc(sizeOf + 1)
 
@@ -328,7 +338,7 @@ module.exports = function (okay, options) {
 
         if (compile) {
             compiler({
-                objects: [ 'serializers', '$lookup' ],
+                objects: [ '$incremental', '$lookup' ],
                 file: `${filename}.serializer.chk.js`,
                 source: composers.serializer.all(intermediate, {
                     chk: true,
@@ -336,7 +346,9 @@ module.exports = function (okay, options) {
                 })
             })
         }
-        require(`${filename}.serializer.chk.js`)(packet)
+        packet.serializers.chk = require(`${filename}.serializer.chk.js`)({
+            $lookup: packet.$lookup, $incremental: packet.serializers.inc
+        })
 
         okay.inc(sizeOf + 1)
 
@@ -371,7 +383,7 @@ module.exports = function (okay, options) {
 
         if (compile) {
             compiler({
-                objects: [ 'parsers', '$lookup' ],
+                objects: [ '$incremental', '$lookup' ],
                 file: `${filename}.parser.chk.js`,
                 source: composers.parser.all(intermediate, {
                     chk: true,
@@ -379,7 +391,9 @@ module.exports = function (okay, options) {
                 })
             })
         }
-        require(`${filename}.parser.chk.js`)(packet)
+        packet.parsers.chk = require(`${filename}.parser.chk.js`)({
+            $lookup: packet.$lookup, $incremental: packet.parsers.inc
+        })
 
         okay.inc(sizeOf + 1)
 

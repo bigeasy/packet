@@ -1,37 +1,39 @@
-module.exports = function ({ serializers, $lookup }) {
-    serializers.inc.object = function () {
-        return function (object, $step = 0) {
-            let $_, $bite
+module.exports = function ({ $lookup }) {
+    return {
+        object: function () {
+            return function (object, $step = 0) {
+                let $_, $bite
 
-            return function $serialize ($buffer, $start, $end) {
-                switch ($step) {
-                case 0:
+                return function $serialize ($buffer, $start, $end) {
+                    switch ($step) {
+                    case 0:
 
-                    $step = 1
-                    $bite = 3
-                    $_ = object.value
+                        $step = 1
+                        $bite = 3
+                        $_ = object.value
 
-                case 1:
+                    case 1:
 
-                    while ($bite != -1) {
-                        if ($start == $end) {
-                            return { start: $start, serialize: $serialize }
+                        while ($bite != -1) {
+                            if ($start == $end) {
+                                return { start: $start, serialize: $serialize }
+                            }
+                            $buffer[$start++] = $_ >>> $bite * 8 & 0xff
+                            $bite--
                         }
-                        $buffer[$start++] = $_ >>> $bite * 8 & 0xff
-                        $bite--
+
+
+                        $step = 2
+
+                    case 2:
+
+                        break
+
                     }
 
-
-                    $step = 2
-
-                case 2:
-
-                    break
-
+                    return { start: $start, serialize: null }
                 }
-
-                return { start: $start, serialize: null }
             }
-        }
-    } ()
+        } ()
+    }
 }

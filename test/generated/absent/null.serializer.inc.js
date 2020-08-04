@@ -1,24 +1,26 @@
-module.exports = function ({ serializers, $lookup }) {
-    serializers.inc.object = function () {
-        return function (object, $step = 0) {
-            let $_, $bite
+module.exports = function ({ $lookup }) {
+    return {
+        object: function () {
+            return function (object, $step = 0) {
+                let $_, $bite
 
-            return function $serialize ($buffer, $start, $end) {
-                switch ($step) {
-                case 0:
+                return function $serialize ($buffer, $start, $end) {
+                    switch ($step) {
+                    case 0:
 
-                    $step = 1
+                        $step = 1
 
-                    $step = 1
+                        $step = 1
 
-                case 1:
+                    case 1:
 
-                    break
+                        break
 
+                    }
+
+                    return { start: $start, serialize: null }
                 }
-
-                return { start: $start, serialize: null }
             }
-        }
-    } ()
+        } ()
+    }
 }

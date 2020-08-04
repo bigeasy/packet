@@ -1,5 +1,5 @@
-module.exports = function ({ sizeOf }) {
-    sizeOf.object = function () {
+module.exports = {
+    object: function () {
         return function (object) {
             let $start = 0, $starts = [], $accumulator = {}
 

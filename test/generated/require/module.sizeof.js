@@ -1,5 +1,5 @@
-module.exports = function ({ sizeOf }) {
-    sizeOf.object = function () {
+module.exports = {
+    object: function () {
         const twiddle = require('../../cycle/twiddle')
 
         return function (object) {

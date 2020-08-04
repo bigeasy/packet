@@ -878,7 +878,7 @@ function generate (packet, { require = null }) {
                            .concat(Object.keys(locals).map(name => `$${name} = ${locals[name]}`))
 
         return $(`
-            serializers.inc.${packet.name} = function () {
+            function () {
                 `, requires, -1, `
 
                 return function (`, signature.join(', '), `) {
@@ -900,5 +900,16 @@ function generate (packet, { require = null }) {
 }
 
 module.exports = function (definition, options) {
-    return join(JSON.parse(JSON.stringify(definition)).map(packet => generate(packet, options)))
+    // TODO Is the defensive copy still necessary?
+    const source = JSON.parse(JSON.stringify(definition)).map(packet => {
+        const source = generate(packet, options)
+        return $(`
+            ${packet.name}: `, source, `
+        `)
+    })
+    return $(`
+        {
+            `, source.join(',\n'), `
+        }
+    `)
 }

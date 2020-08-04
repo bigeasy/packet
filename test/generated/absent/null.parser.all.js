@@ -1,13 +1,15 @@
-module.exports = function ({ parsers, $lookup }) {
-    parsers.all.object = function () {
-        return function ($buffer, $start) {
-            let object = {
-                value: null
+module.exports = function ({ $lookup }) {
+    return {
+        object: function () {
+            return function ($buffer, $start) {
+                let object = {
+                    value: null
+                }
+
+                object.value = null
+
+                return object
             }
-
-            object.value = null
-
-            return object
-        }
-    } ()
+        } ()
+    }
 }

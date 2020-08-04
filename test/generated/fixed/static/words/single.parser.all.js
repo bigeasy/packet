@@ -1,35 +1,37 @@
-module.exports = function ({ parsers, $lookup }) {
-    parsers.all.object = function () {
-        return function ($buffer, $start) {
-            let $i = []
+module.exports = function ({ $lookup }) {
+    return {
+        object: function () {
+            return function ($buffer, $start) {
+                let $i = []
 
-            let object = {
-                nudge: 0,
-                array: [],
-                sentry: 0
-            }
-
-            object.nudge = $buffer[$start++]
-
-            $i[0] = 0
-            do {
-                if (
-                    $buffer[$start] == 0x0
-                ) {
-                    $start += 1
-                    break
+                let object = {
+                    nudge: 0,
+                    array: [],
+                    sentry: 0
                 }
 
-                object.array[$i[0]] = $buffer[$start++]
-            } while (++$i[0] != 8)
+                object.nudge = $buffer[$start++]
 
-            $start += 8 != $i[0]
-                    ? (8 - $i[0]) * 1 - 1
-                    : 0
+                $i[0] = 0
+                do {
+                    if (
+                        $buffer[$start] == 0x0
+                    ) {
+                        $start += 1
+                        break
+                    }
 
-            object.sentry = $buffer[$start++]
+                    object.array[$i[0]] = $buffer[$start++]
+                } while (++$i[0] != 8)
 
-            return object
-        }
-    } ()
+                $start += 8 != $i[0]
+                        ? (8 - $i[0]) * 1 - 1
+                        : 0
+
+                object.sentry = $buffer[$start++]
+
+                return object
+            }
+        } ()
+    }
 }

@@ -1,10 +1,12 @@
-module.exports = function ({ serializers, $lookup }) {
-    serializers.chk.object = function () {
-        return function (object) {
-            return function ($buffer, $start, $end) {
+module.exports = function ({ $incremental, $lookup }) {
+    return {
+        object: function () {
+            return function (object) {
+                return function ($buffer, $start, $end) {
 
-                return { start: $start, serialize: null }
+                    return { start: $start, serialize: null }
+                }
             }
-        }
-    } ()
+        } ()
+    }
 }

@@ -57,7 +57,5 @@ module.exports = function (definition) {
         seek(definition[name])
     }
 
-    return $(`
-        $lookup.push.apply($lookup, `, util.inspect(lookup, { depth: null }), `)
-    `)
+    return util.inspect(lookup, { depth: null })
 }

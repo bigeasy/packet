@@ -1140,7 +1140,7 @@ function generate (packet, { require = null }) {
         `) : null
 
         return $(`
-            parsers.inc.${packet.name} = function () {
+            function () {
                 `, requires, -1, `
 
                 return function (`, signature.join(', '), `) {
@@ -1160,5 +1160,15 @@ function generate (packet, { require = null }) {
 }
 
 module.exports = function (definition, options) {
-    return join(JSON.parse(JSON.stringify(definition)).map(packet => generate(packet, options)))
+    const source = JSON.parse(JSON.stringify(definition)).map(packet => {
+        const source = generate(packet, options)
+        return $(`
+            ${packet.name}: `, source, `
+        `)
+    })
+    return $(`
+        {
+            `, source.join(',\n'), `
+        }
+    `)
 }

@@ -426,13 +426,13 @@ function generate (packet, { require, bff, chk }) {
         if (checkpoint.rewind != 0) {
             return $(`
                 if ($end - ($start - ${checkpoint.rewind}) < ${checkpoint.lengths.join(' + ')}) {
-                    return parsers.inc.${packet.name}(`, signature().join(', '), `)($buffer, $start - ${checkpoint.rewind}, $end)
+                    return $incremental.${packet.name}(`, signature().join(', '), `)($buffer, $start - ${checkpoint.rewind}, $end)
                 }
             `)
         }
         return $(`
             if ($end - $start < ${checkpoint.lengths.join(' + ')}) {
-                return parsers.inc.${packet.name}(`, signature().join(', '), `)($buffer, $start, $end)
+                return $incremental.${packet.name}(`, signature().join(', '), `)($buffer, $start, $end)
             }
         `)
     }
@@ -657,7 +657,7 @@ function generate (packet, { require, bff, chk }) {
                         `, assign, `
                         $start = $_ + ${terminator.length}
                     } else {
-                        return parsers.inc.${packet.name}(${signature().join(', ')})($buffer, $start, $end)
+                        return $incremental.${packet.name}(${signature().join(', ')})($buffer, $start, $end)
                     }
                 `)
                 $step += 2 + terminator.length
@@ -1072,7 +1072,7 @@ function generate (packet, { require, bff, chk }) {
 
         if (bff || chk) {
             return $(`
-                parsers.${bff ? 'bff' : 'chk'}.${packet.name} = function () {
+                function () {
                     `, requires, -1, `
 
                     return function (`, signature.join(','), `) {
@@ -1092,7 +1092,7 @@ function generate (packet, { require, bff, chk }) {
 
         signature.unshift('$buffer', '$start')
         return $(`
-            parsers.all.${packet.name} = function () {
+            function () {
                 `, requires, -1, `
 
                 return function (`, signature.join(', '), `) {
@@ -1113,5 +1113,15 @@ function generate (packet, { require, bff, chk }) {
 
 module.exports = function (definition, options = {}) {
     const expanded = expand(JSON.parse(JSON.stringify(definition)))
-    return join(expanded.map(packet => generate(packet, options)))
+    const source =  expanded.map(packet => {
+        const source = generate(packet, options)
+        return $(`
+            ${packet.name}: `, source, `
+        `)
+    })
+    return $(`
+        {
+            `, source.join(',\n'), `
+        }
+    `)
 }

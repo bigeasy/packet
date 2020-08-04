@@ -1,29 +1,31 @@
-module.exports = function ({ serializers, $lookup }) {
-    serializers.all.object = function () {
-        const assert = require('assert')
+module.exports = function ({ $lookup }) {
+    return {
+        object: function () {
+            const assert = require('assert')
 
-        return function (object, $buffer, $start, {
-            regex = /^abc$/
-        } = {}) {
-            let $$ = [], $accumulator = {}
+            return function (object, $buffer, $start, {
+                regex = /^abc$/
+            } = {}) {
+                let $$ = [], $accumulator = {}
 
-            $accumulator['regex'] = regex
+                $accumulator['regex'] = regex
 
-            $$[0] = (function ({ $_, regex }) {
-                assert(regex.test('abc'))
-                return $_
-            })({
-                $_: object,
-                regex: $accumulator['regex']
-            })
+                $$[0] = (function ({ $_, regex }) {
+                    assert(regex.test('abc'))
+                    return $_
+                })({
+                    $_: object,
+                    regex: $accumulator['regex']
+                })
 
-            $buffer[$start++] = $$[0].value.first & 0xff
+                $buffer[$start++] = $$[0].value.first & 0xff
 
-            $buffer[$start++] = $$[0].value.second & 0xff
+                $buffer[$start++] = $$[0].value.second & 0xff
 
-            $buffer[$start++] = $$[0].sentry & 0xff
+                $buffer[$start++] = $$[0].sentry & 0xff
 
-            return { start: $start, serialize: null }
-        }
-    } ()
+                return { start: $start, serialize: null }
+            }
+        } ()
+    }
 }

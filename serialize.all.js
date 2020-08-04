@@ -403,7 +403,7 @@ function generate (packet, { require = null, bff, chk }) {
                                 .map(key => signatories[key])
         return $(`
             if ($end - $start < ${checkpoint.lengths.join(' + ')}) {
-                return serializers.inc.object(`, signature.join(', '), `)($buffer, $start, $end)
+                return $incremental.${packet.name}(`, signature.join(', '), `)($buffer, $start, $end)
             }
         `)
     }
@@ -891,7 +891,7 @@ function generate (packet, { require = null, bff, chk }) {
         if (bff || chk) {
             signature.unshift(packet.name)
             return $(`
-                serializers.${bff ? 'bff' : 'chk'}.${packet.name} = function () {
+                function () {
                     `, requires, -1, `
 
                     return function (`, signature.join(', '), `) {
@@ -909,7 +909,7 @@ function generate (packet, { require = null, bff, chk }) {
 
         signature.unshift(packet.name, '$buffer', '$start')
         return $(`
-            serializers.all.${packet.name} = function () {
+            function () {
                 `, requires, -1, `
 
                 return function (`, signature.join(', '), `) {
@@ -928,12 +928,20 @@ function generate (packet, { require = null, bff, chk }) {
 
 module.exports = function (definition, options = {}) {
     const expanded = expand(JSON.parse(JSON.stringify(definition)))
-    return join(expanded.map(function (packet) {
+    const source = expanded.map(function (packet) {
         if (options.chk) {
             packet.fields = inquisition(packet.name, packet.fields)
         } else if (options.bff) {
             packet.fields = checkpoints(packet.name, packet.fields)
         }
-        return generate(packet, options)
-    }))
+        const source = generate(packet, options)
+        return $(`
+            ${packet.name}: `, source, `
+        `)
+    })
+    return $(`
+        {
+            `, source.join(',\n'), `
+        }
+    `)
 }

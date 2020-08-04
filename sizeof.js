@@ -352,7 +352,7 @@ function generate (packet, { require = null }) {
     const requires = required(require)
 
     return  $(`
-        sizeOf.${packet.name} = function () {
+        function () {
             `, requires, -1, `
 
             return function (${packet.name}) {
@@ -367,5 +367,15 @@ function generate (packet, { require = null }) {
 }
 
 module.exports = function (packets, options = {}) {
-    return join(packets.map(packet => generate(packet, options)))
+    const source = packets.map(packet => {
+        const source = generate(packet, options)
+        return $(`
+            ${packet.name}: `, source, `
+        `)
+    })
+    return $(`
+        {
+            `, source.join(',\n'), `
+        }
+    `)
 }
