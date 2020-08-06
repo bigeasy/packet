@@ -21,7 +21,7 @@ module.exports = function ({ $incremental, $lookup }) {
 
                     if ($end - $start < 1) {
                         return $incremental.object(object, {
-                            counter: [ 0 ]
+                            counter: counter
                         }, 2, $accumulator)($buffer, $start, $end)
                     }
 
@@ -29,7 +29,7 @@ module.exports = function ({ $incremental, $lookup }) {
 
                     if ($end - $start < 1) {
                         return $incremental.object(object, {
-                            counter: [ 0 ]
+                            counter: counter
                         }, 4, $accumulator)($buffer, $start, $end)
                     }
 
@@ -37,7 +37,7 @@ module.exports = function ({ $incremental, $lookup }) {
 
                     if ($end - $start < 1) {
                         return $incremental.object(object, {
-                            counter: [ 0 ]
+                            counter: counter
                         }, 6, $accumulator)($buffer, $start, $end)
                     }
 

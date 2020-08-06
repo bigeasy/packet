@@ -21,7 +21,7 @@ module.exports = function ({ $incremental, $lookup }) {
 
                     if ($end - $start < 3) {
                         return $incremental.object(object, {
-                            regex: /^abc$/
+                            regex: regex
                         }, 2, $accumulator)($buffer, $start, $end)
                     }
 

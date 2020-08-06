@@ -390,7 +390,7 @@ function generate (packet, { require = null, bff, chk }) {
         if (Object.keys(parameters).length != 0) {
             const properties = []
             for (const parameter in parameters) {
-                properties.push(`${parameter}: ${parameters[parameter]}`)
+                properties.push(`${parameter}: ${parameter}`)
             }
             signatories.parameters = $(`
                 {

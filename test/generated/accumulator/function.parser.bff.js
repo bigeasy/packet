@@ -21,7 +21,7 @@ module.exports = function ({ $incremental, $lookup }) {
 
                     if ($end - $start < 3) {
                         return $incremental.object(object, {
-                            counter: (() => [ 0 ])()
+                            counter: counter
                         }, 2, $accumulator)($buffer, $start, $end)
                     }
 
