@@ -7,17 +7,17 @@ module.exports = function ({ $lookup }) {
                 $_ =
                     (object.header.type << 6 & 0xc0)
 
-                switch (String((({ $ }) => $.header.type)({
+                switch ((({ $ }) => $.header.type)({
                     $: object
-                }))) {
-                case "0":
+                })) {
+                case 0:
 
                     $_ |=
                         (object.header.value & 0x3f)
 
                     break
 
-                case "1":
+                case 1:
 
                     $_ |=
                         (0xa << 2 & 0x3c) |

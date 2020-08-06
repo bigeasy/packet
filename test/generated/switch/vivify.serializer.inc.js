@@ -26,28 +26,28 @@ module.exports = function ({ $lookup }) {
 
                         case 2:
 
-                            switch (String(($ => $.type)(object))) {
-                            case "0":
+                            switch (($ => $.type)(object)) {
+                            case 0:
 
                                 $step = 3
                                 continue
 
-                            case "1":
+                            case 1:
 
                                 $step = 5
                                 continue
 
-                            case "2":
+                            case 2:
 
                                 $step = 9
                                 continue
 
-                            case "3":
+                            case 3:
 
                                 $step = 14
                                 continue
 
-                            case "4":
+                            case 4:
 
                                 $step = 17
                                 continue

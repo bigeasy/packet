@@ -763,7 +763,7 @@ function generate (packet, { require = null, bff, chk }) {
         const cases = []
         for (const when of field.cases) {
             cases.push($(`
-                ${when.otherwise ? 'default' : `case ${JSON.stringify(when.value)}`}:
+                ${when.otherwise ? 'default' : `case ${util.inspect(when.value)}`}:
 
                     `, join(when.fields.map(field => dispatch(path + field.dotted, field))), `
 
@@ -771,12 +771,10 @@ function generate (packet, { require = null, bff, chk }) {
             `))
         }
         const invocations = inliner.accumulations([ field.select ])
-        const test = inliner.test(path, field.select)
-        const select = field.stringify ? `String(${test})` : test
         return $(`
             `, invocations, -1, `
 
-            switch (`, select, `) {
+            switch (`, inliner.test(path, field.select), `) {
             `, join(cases), `
             }
         `)

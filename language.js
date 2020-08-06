@@ -352,36 +352,26 @@ module.exports = function (packets) {
         lengthEncoded: function (packet) {
             return packet.length == 2 && is.ultimately(packet[0], is.integer)
         },
-        switched: {
-            variant: function (packet) {
-                return typeof packet[0] == 'function' &&
-                    Array.isArray(packet[1]) &&
-                    packet[1].length % 2 == 0 &&
-                    packet[1].filter((value, index) => {
-                        return index % 2 == 1 ||
+        switched: function (packet) {
+            return typeof packet[0] == 'function' &&
+                Array.isArray(packet[1]) &&
+                packet[1].length % 2 == 0 &&
+                packet[1].filter((value, index) => {
+                    return index % 2 == 1 ||
+                    (
+                        typeof value == 'object' &&
                         (
-                            typeof value == 'object' &&
                             (
-                                (
-                                    Object.keys(value).length == 1 &&
-                                    ('$_' in value)
-                                ) ||
-                                (
-                                    Object.keys(value).length == 0 &&
-                                    index == packet[1].length - 2
-                                )
+                                Object.keys(value).length == 1 &&
+                                ('$_' in value)
+                            ) ||
+                            (
+                                Object.keys(value).length == 0 &&
+                                index == packet[1].length - 2
                             )
                         )
-                    }).length == packet[1].length
-            },
-            stringified: function (packet) {
-                return typeof packet[0] == 'function' &&
-                    typeof packet[1] == 'object' &&
-                    ! Array.isArray(packet[1]) &&
-                    (
-                        packet.length == 2 || packet.length == 3
                     )
-            }
+                }).length == packet[1].length
         },
         // *Accumulators*:
         accumulator: function (packet) {
@@ -945,76 +935,53 @@ module.exports = function (packets) {
             }]
         }
 
-        const switched = {
-            node: function (cases) {
-                const bits = cases.slice(1).reduce((value, when) => {
-                    return value != -1 && value == when.fields[0].bits ? value : -1
-                }, cases[0].fields[0].bits)
-                const vivify = cases.slice(1).reduce((vivify, when) => {
-                    return vivify == 'variant' || vivify == vivified(when.fields[0])
-                        ? vivify
-                        : 'variant'
-                }, cases[0].fields[0].vivify)
-                return [{
-                    ...extra,
-                    type: 'switch',
-                    select: { ...args([ packet[0] ]) },
-                    vivify: vivify == 'object' ? 'variant' : vivify,
-                    stringify: ! Array.isArray(packet[1]),
-                    bits: bits < 0 ? 0 : bits,
-                    fixed: bits > 0,
-                    cases: cases
-                }]
-            },
-            stringified: function () {
-                const cases = []
-                for (const value in packet[1]) {
-                    cases.push({
-                        value: value,
-                        otherwise: false,
-                        fields: map(packet[1][value], {}, pack)
-                    })
-                }
-                if (packet.length > 2) {
-                    cases.push({
-                        value: null,
-                        otherwise: true,
-                        fields: map(packet[2], {}, pack)
-                    })
-                }
-                return switched.node(cases)
-            },
-            variant: function () {
-                const cases = []
-                const copy = packet[1].slice()
-                while (copy.length != 0) {
-                    const [ when, field ] = copy.splice(0, 2)
-                    if (Array.isArray(when.$_)) {
-                        if (when.$_.length == 0) {
-                            cases.push({
-                                value: null,
-                                otherwise: true,
-                                fields: map(field, {}, pack)
-                            })
-                        } else {
-                            for (const value of when.$_) {
-                                cases.push({
-                                    value: value,
-                                    otherwise: false,
-                                    fields: map(field, {}, pack)
-                                })
-                            }
-                        }
-                    } else {
+        function switched () {
+            const cases = []
+            const copy = packet[1].slice()
+            while (copy.length != 0) {
+                const [ when, field ] = copy.splice(0, 2)
+                if (Array.isArray(when.$_)) {
+                    if (when.$_.length == 0) {
                         cases.push({
-                            value: when.$_,
-                            otherwise: false,
+                            value: null,
+                            otherwise: true,
                             fields: map(field, {}, pack)
                         })
+                    } else {
+                        for (const value of when.$_) {
+                            cases.push({
+                                value: value,
+                                otherwise: false,
+                                fields: map(field, {}, pack)
+                            })
+                        }
                     }
+                } else {
+                    cases.push({
+                        value: when.$_,
+                        otherwise: false,
+                        fields: map(field, {}, pack)
+                    })
                 }
-                return switched.node(cases)
             }
+            const bits = cases.slice(1).reduce((value, when) => {
+                return value != -1 && value == when.fields[0].bits ? value : -1
+            }, cases[0].fields[0].bits)
+            const vivify = cases.slice(1).reduce((vivify, when) => {
+                return vivify == 'variant' || vivify == vivified(when.fields[0])
+                    ? vivify
+                    : 'variant'
+            }, cases[0].fields[0].vivify)
+            return [{
+                ...extra,
+                type: 'switch',
+                select: { ...args([ packet[0] ]) },
+                vivify: vivify == 'object' ? 'variant' : vivify,
+                stringify: ! Array.isArray(packet[1]),
+                bits: bits < 0 ? 0 : bits,
+                fixed: bits > 0,
+                cases: cases
+            }]
         }
         //
 
@@ -1058,8 +1025,7 @@ module.exports = function (packets) {
             else if (is.conditional.split(packet)) return conditional.split()
             else if (is.conditional.mirrored(packet)) return conditional.mirrored()
             else if (is.accumulator(packet)) return accumulator()
-            else if (is.switched.variant(packet)) return switched.variant()
-            else if (is.switched.stringified(packet)) return switched.stringified()
+            else if (is.switched(packet)) return switched()
             else throw new Error('unknown')
         }
 

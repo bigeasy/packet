@@ -12,8 +12,8 @@ module.exports = function ({ $lookup }) {
 
                 object.type = $buffer[$start++]
 
-                switch (String(($ => $.type)(object))) {
-                case "0":
+                switch (($ => $.type)(object)) {
+                case 0:
                     object.value = {
                         value: 0
                     }
@@ -22,7 +22,7 @@ module.exports = function ({ $lookup }) {
 
                     break
 
-                case "1":
+                case 1:
                     object.value = []
 
                     $I[0] = $buffer[$start++]
@@ -34,7 +34,7 @@ module.exports = function ({ $lookup }) {
 
                     break
 
-                case "2":
+                case 2:
                     object.value = []
 
                     $i[0] = 0
@@ -53,7 +53,7 @@ module.exports = function ({ $lookup }) {
 
                     break
 
-                case "3":
+                case 3:
                     object.value = []
 
                     $I[0] = $buffer[$start++]
@@ -63,7 +63,7 @@ module.exports = function ({ $lookup }) {
 
                     break
 
-                case "4":
+                case 4:
                     object.value = []
 
                     $i[0] = 0

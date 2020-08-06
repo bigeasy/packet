@@ -11,8 +11,8 @@ module.exports = function ({ $incremental, $lookup }) {
 
                     $buffer[$start++] = object.type & 0xff
 
-                    switch (String(($ => $.type)(object))) {
-                    case "0":
+                    switch (($ => $.type)(object)) {
+                    case 0:
 
                         if ($end - $start < 1) {
                             return $incremental.object(object, 3, $i)($buffer, $start, $end)
@@ -22,7 +22,7 @@ module.exports = function ({ $incremental, $lookup }) {
 
                         break
 
-                    case "1":
+                    case 1:
 
                         if ($end - $start < 1) {
                             return $incremental.object(object, 5, $i)($buffer, $start, $end)
@@ -40,7 +40,7 @@ module.exports = function ({ $incremental, $lookup }) {
 
                         break
 
-                    case "2":
+                    case 2:
 
                         for ($i[0] = 0; $i[0] < object.value.length; $i[0]++) {
                             if ($end - $start < 1) {
@@ -58,7 +58,7 @@ module.exports = function ({ $incremental, $lookup }) {
 
                         break
 
-                    case "3":
+                    case 3:
 
                         if ($end - $start < 1 + object.value.length) {
                             return $incremental.object(object, 14, $i)($buffer, $start, $end)
@@ -71,7 +71,7 @@ module.exports = function ({ $incremental, $lookup }) {
 
                         break
 
-                    case "4":
+                    case 4:
 
                         if ($end - $start < 3) {
                             return $incremental.object(object, 17, $i)($buffer, $start, $end)

@@ -5,16 +5,16 @@ module.exports = {
 
             $start += 1
 
-            switch (String((({ $ }) => $.type)({
+            switch ((({ $ }) => $.type)({
                 $: object
-            }))) {
-            case "0":
+            })) {
+            case 0:
 
                 $start += 1
 
                 break
 
-            case "1":
+            case 1:
 
                 $start += 2
 

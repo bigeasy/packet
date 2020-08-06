@@ -26,15 +26,15 @@ module.exports = function ({ $lookup }) {
 
                         case 2:
 
-                            switch (String((({ $ }) => $.type)({
+                            switch ((({ $ }) => $.type)({
                                 $: object
-                            }))) {
-                            case "0":
+                            })) {
+                            case 0:
 
                                 $step = 3
                                 continue
 
-                            case "1":
+                            case 1:
 
                                 $step = 5
                                 continue

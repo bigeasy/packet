@@ -32,8 +32,8 @@ module.exports = function ({ $lookup }) {
 
                         case 3:
 
-                            switch (String(($ => $.type)(object))) {
-                            case "0":
+                            switch (($ => $.type)(object)) {
+                            case 0:
 
                                 object.value = {
                                     value: 0
@@ -42,28 +42,28 @@ module.exports = function ({ $lookup }) {
                                 $step = 4
                                 continue
 
-                            case "1":
+                            case 1:
 
                                 object.value = []
 
                                 $step = 6
                                 continue
 
-                            case "2":
+                            case 2:
 
                                 object.value = []
 
                                 $step = 11
                                 continue
 
-                            case "3":
+                            case 3:
 
                                 object.value = []
 
                                 $step = 17
                                 continue
 
-                            case "4":
+                            case 4:
 
                                 object.value = []
 

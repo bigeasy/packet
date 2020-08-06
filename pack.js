@@ -1,3 +1,6 @@
+// Node.js API.
+const util = require('util')
+
 const $ = require('programmatic')
 const join = require('./join')
 
@@ -123,19 +126,17 @@ module.exports = function (inliner, field, path) {
                                   : when.fields
                         }, path, '$_', assignment, offset)
                         cases.push($(`
-                            ${when.otherwise ? 'default' : `case ${JSON.stringify(when.value)}`}:
+                            ${when.otherwise ? 'default' : `case ${util.inspect(when.value)}`}:
 
                                 `, source, `
 
                                 break
                         `))
                     }
-                    const test = inliner.test(path, switched.select)
-                    const select = switched.stringify ? `String(${test})` : test
                     packed.unshift($(`
                         `, invocations, -1, `
 
-                        switch (`, select ,`) {
+                        switch (`, inliner.test(path, switched.select) ,`) {
                         `, join(cases), `
                         }
                     `))

@@ -1,10 +1,13 @@
+// Node.js API.
+const util = require('util')
+
 const fiddle = require('./fiddle/unpack')
 const unsign = require('./fiddle/unsign')
 const join = require('./join')
 const $ = require('programmatic')
 const { structure } = require('./vivify')
 
-function unpack (accumulate, root, path, field, packed, offset = 0) {
+function unpack (inliner, root, path, field, packed, offset = 0) {
     function generate (path, field, packed, offset) {
         let bits = field.bits, bit = offset
         function advance (size) {
@@ -85,7 +88,7 @@ function unpack (accumulate, root, path, field, packed, offset = 0) {
                         }, packed, offset)
                         const vivify = vivifyed ? structure(path, condition.fields[0]) : null
                         ladder = condition.test != null ? function () {
-                            const test = accumulate.test(path, condition.test)
+                            const test = inliner.test(path, condition.test)
                             return $(`
                                 `, ladder, `${keywords} (`, test, `) {
                                     `, vivify, -1, `
@@ -116,7 +119,7 @@ function unpack (accumulate, root, path, field, packed, offset = 0) {
                         }, packed, offset)
                         const vivify = vivifyed ? structure(path, when.fields[0]) : null
                         cases.push($(`
-                            ${when.otherwise ? 'default' : `case ${JSON.stringify(when.value)}`}:
+                            ${when.otherwise ? 'default' : `case ${util.inspect(when.value)}`}:
                                 `, vivify, -1, `
 
                                 `, source, `
@@ -124,10 +127,8 @@ function unpack (accumulate, root, path, field, packed, offset = 0) {
                                 break
                         `))
                     }
-                    const test = accumulate.test(path, switched.select)
-                    const select = switched.stringify ? `String(${test})` : test
                     blocks.push($(`
-                        switch (`, select, `) {
+                        switch (`, inliner.test(path, switched.select), `) {
                         `, join(cases), `
                         }
                     `))

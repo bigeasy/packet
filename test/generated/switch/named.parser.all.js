@@ -10,15 +10,15 @@ module.exports = function ({ $lookup }) {
 
                 object.type = $buffer[$start++]
 
-                switch (String((({ $ }) => $.type)({
+                switch ((({ $ }) => $.type)({
                     $: object
-                }))) {
-                case "0":
+                })) {
+                case 0:
                     object.value = $buffer[$start++]
 
                     break
 
-                case "1":
+                case 1:
                     object.value = (
                         $buffer[$start++] << 8 |
                         $buffer[$start++]

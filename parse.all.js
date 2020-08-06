@@ -881,7 +881,7 @@ function generate (packet, { require, bff, chk }) {
         for (const when of field.cases) {
             const vivified = vivify.assignment(path, when)
             cases.push($(`
-                ${when.otherwise ? 'default' : `case ${JSON.stringify(when.value)}`}:
+                ${when.otherwise ? 'default' : `case ${util.inspect(when.value)}`}:
                     `, vivified, -1, `
 
                     `, map(dispatch, path, when.fields), `
@@ -890,12 +890,10 @@ function generate (packet, { require, bff, chk }) {
             `))
         }
         const invocations = inliner.accumulations([ field.select ])
-        const test = inliner.test(path, field.select)
-        const select = field.stringify ? `String(${test})` : test
         return $(`
             `, invocations, -1, `
 
-            switch (`, select, `) {
+            switch (`, inliner.test(path, field.select), `) {
             `, join(cases), `
             }
         `)

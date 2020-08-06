@@ -996,7 +996,7 @@ function generate (packet, { require = null }) {
         for (const when of field.cases) {
             const vivified = vivify.assignment(path, when)
             cases.push($(`
-                ${when.otherwise ? 'default' : `case ${JSON.stringify(when.value)}`}:
+                ${when.otherwise ? 'default' : `case ${util.inspect(when.value)}`}:
 
                     `, vivified, -1, `
 
@@ -1006,8 +1006,6 @@ function generate (packet, { require = null }) {
             steps.push(map(dispatch, path, when.fields))
         }
         const invocations = inliner.accumulations([ field.select ])
-        const test = inliner.test(path, field.select, [])
-        const select = field.stringify ? `String(${test})` : test
         // TODO Slicing here is because of who writes the next step, which seems
         // to be somewhat confused.
         return $(`
@@ -1015,7 +1013,7 @@ function generate (packet, { require = null }) {
 
                 `, invocations, -1, `
 
-                switch (`, select, `) {
+                switch (`, inliner.test(path, field.select), `) {
                 `, join(cases), `
                 }
 
