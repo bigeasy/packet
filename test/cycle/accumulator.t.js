@@ -110,7 +110,7 @@ function prove (okay) {
                     number: [ ({ $, counter }) => $.counted.length - counter[0], [
                         { $_: 1 }, 8,
                         { $_: 2 }, 16,
-                        {       }, 32
+                        { $_: [] }, 32
                     ]]
                 }]],
                 sentry: 8

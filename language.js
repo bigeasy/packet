@@ -989,16 +989,26 @@ module.exports = function (packets) {
                 const copy = packet[1].slice()
                 while (copy.length != 0) {
                     const [ when, field ] = copy.splice(0, 2)
-                    if ('$_' in when) {
+                    if (Array.isArray(when.$_)) {
+                        if (when.$_.length == 0) {
+                            cases.push({
+                                value: null,
+                                otherwise: true,
+                                fields: map(field, {}, pack)
+                            })
+                        } else {
+                            for (const value of when.$_) {
+                                cases.push({
+                                    value: value,
+                                    otherwise: false,
+                                    fields: map(field, {}, pack)
+                                })
+                            }
+                        }
+                    } else {
                         cases.push({
                             value: when.$_,
                             otherwise: false,
-                            fields: map(field, {}, pack)
-                        })
-                    } else {
-                        cases.push({
-                            value: null,
-                            otherwise: true,
                             fields: map(field, {}, pack)
                         })
                     }
