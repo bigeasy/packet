@@ -68,13 +68,6 @@ module.exports = function ({ $lookup }) {
                                 $bite--
                             }
 
-
-                            $step = 7
-
-                        case 7:
-
-                            break
-
                         }
 
                         break

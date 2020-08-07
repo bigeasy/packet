@@ -25,7 +25,6 @@ module.exports = function ({ $lookup }) {
 
                     case 2:
 
-                        $step = 3
                         $bite = 0
                         $_ = [ 15, 173, 237 ]
 
@@ -33,6 +32,7 @@ module.exports = function ({ $lookup }) {
 
                         while ($bite != 3) {
                             if ($start == $end) {
+                                $step = 3
                                 return { start: $start, serialize: $serialize }
                             }
                             $buffer[$start++] = $_[$bite++]
@@ -58,7 +58,6 @@ module.exports = function ({ $lookup }) {
 
                     case 6:
 
-                        $step = 7
                         $bite = 0
                         $_ = [ 250, 202, 222 ]
 
@@ -66,6 +65,7 @@ module.exports = function ({ $lookup }) {
 
                         while ($bite != 3) {
                             if ($start == $end) {
+                                $step = 7
                                 return { start: $start, serialize: $serialize }
                             }
                             $buffer[$start++] = $_[$bite++]
@@ -87,13 +87,6 @@ module.exports = function ({ $lookup }) {
                             $buffer[$start++] = $_ >>> $bite * 8 & 0xff
                             $bite--
                         }
-
-
-                        $step = 10
-
-                    case 10:
-
-                        break
 
                     }
 

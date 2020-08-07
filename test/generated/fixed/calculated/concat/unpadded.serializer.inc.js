@@ -31,18 +31,15 @@ module.exports = function ({ $lookup }) {
 
                         case 3: {
 
-                                $step = 3
-
                                 const length = Math.min($end - $start, object.array.length - $_)
                                 object.array.copy($buffer, $start, $_, $_ + length)
                                 $start += length
                                 $_ += length
 
                                 if ($_ != object.array.length) {
+                                    $step = 3
                                     return { start: $start, serialize: $serialize }
                                 }
-
-                                $step = 4
 
                             }
 
@@ -61,13 +58,6 @@ module.exports = function ({ $lookup }) {
                                 $buffer[$start++] = $_ >>> $bite * 8 & 0xff
                                 $bite--
                             }
-
-
-                            $step = 6
-
-                        case 6:
-
-                            break
 
                         }
 

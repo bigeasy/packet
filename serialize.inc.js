@@ -178,7 +178,6 @@ function generate (packet, { require = null }) {
                 return $(`
                     case ${$step++}:
 
-                        $step = ${$step}
                         $bite = 0
                         $_ = ${util.inspect(bytes)}
 
@@ -186,6 +185,7 @@ function generate (packet, { require = null }) {
 
                         while ($bite != ${literal.value.length >>> 1}) {
                             if ($start == $end) {
+                                $step = ${$step - 1}
                                 return { start: $start, serialize: $serialize }
                             }
                             $buffer[$start++] = $_[$bite++]
@@ -282,8 +282,6 @@ function generate (packet, { require = null }) {
 
                     $copied = 0
 
-                    $step = ${$step}
-
                 }
             `)
             : $(`
@@ -291,15 +289,11 @@ function generate (packet, { require = null }) {
 
                     $length = ${path}.reduce((sum, buffer) => sum + buffer.length, 0)
 
-                    $step = ${$step}
-
                 `, map(dispatch, '$length', field.encoding), `
 
                     $_ = 0
 
                 case ${$step++}: {
-
-                    $step = ${$step - 1}
 
                     for (;;) {
                         const $bytes = Math.min($end - $start, ${path}[$index].length - $offset)
@@ -327,8 +321,6 @@ function generate (packet, { require = null }) {
                     $index = 0
                     $offset = 0
                     $copied = 0
-
-                    $step = ${$step}
 
                 }
             `)
@@ -374,19 +366,16 @@ function generate (packet, { require = null }) {
 
             case ${$step++}: {
 
-                    $step = ${$step - 1}
-
                     const length = Math.min($end - $start, ${path}.length - $_)
                     ${path}.copy($buffer, $start, $_, $_ + length)
                     $start += length
                     $_ += length
 
                     if ($_ != ${path}.length) {
+                        $step = ${$step - 1}
                         `, inliner.exit(), `
                         return { start: $start, serialize: $serialize }
                     }
-
-                    $step = ${$step}
 
                 }
         `)
@@ -401,8 +390,6 @@ function generate (packet, { require = null }) {
                 $I[${$I + 1}] = `, calculation, `
 
             case ${$step++}: {
-
-                $step = ${$step - 1}
 
                 for (;;) {
                     const $bytes = Math.min($end - $start, ${path}[$index].length - $offset)
@@ -421,6 +408,7 @@ function generate (packet, { require = null }) {
                     }
 
                     if ($start == $end) {
+                        $step = ${$step - 1}
                         `, inliner.exit(), `
                         return { start: $start, serialize: $serialize }
                     }
@@ -428,8 +416,6 @@ function generate (packet, { require = null }) {
 
                 $index = 0
                 $offset = 0
-
-                $step = ${$step}
 
             }
         `)
@@ -447,13 +433,12 @@ function generate (packet, { require = null }) {
                     case ${$step++}:
 
                         if ($start == $end) {
+                            $step = ${$step - 1}
                             `, inliner.exit(), `
                             return { start: $start, serialize: $serialize }
                         }
 
                         $buffer[$start++] = ${hex(bite)}
-
-                        $step = ${$step}
                 `)
             }))
         }
@@ -514,7 +499,7 @@ function generate (packet, { require = null }) {
         // added the multiplication, let's see if it breaks.
         function pad (assignment = null, full = field.bits / 8) {
             if (field.pad.length == 0) {
-                return `$step = ${$step}`
+                return null
             }
             // First step of padding.
             const redo = $step
@@ -524,11 +509,10 @@ function generate (packet, { require = null }) {
             // end of the buffer.
             const pad = join(field.pad.map(bite => {
                 return $(`
-                        $step = ${$step}
-
                     case ${$step++}:
 
                         if ($start == $end) {
+                            $step = ${$step - 1}
                             `, inliner.exit(), `
                             return { start: $start, serialize: $serialize }
                         }
@@ -539,8 +523,6 @@ function generate (packet, { require = null }) {
                         }
 
                         $buffer[$start++] = ${hex(bite)}
-
-                        $step = ${$step}
                 `)
             }))
             // Repeat the padding fill if we've not filled the buffer
@@ -584,8 +566,6 @@ function generate (packet, { require = null }) {
                         ${length} = `, calculation, `
                         $_ = ${length} - $_
 
-                        $step = ${$step}
-
                     case ${$step++}: {
 
                         const length = Math.min($end - $start, $_)
@@ -594,10 +574,9 @@ function generate (packet, { require = null }) {
                         $_ -= length
 
                         if ($_ != 0) {
+                            $step = ${$step - 1}
                             return { start: $start, serialize: $serialize }
                         }
-
-                        $step = ${$step}
 
                     }
                 `)
@@ -606,7 +585,7 @@ function generate (packet, { require = null }) {
             return $(`
                 `, source, `
 
-                `, pad(null, field.calculated ? `${length} * ${element.bits >>> 3}` : field.bits / 8), `
+                `, -1, pad(null, field.calculated ? `${length} * ${element.bits >>> 3}` : field.bits / 8), `
             `)
         }
         // Obtain a next index from the index array.
@@ -635,7 +614,7 @@ function generate (packet, { require = null }) {
                             continue
                         }
 
-                    `, pad(`$_ = ${i} * ${element.bits >>> 3}`, `${length} * ${element.bits >>> 3}`), `
+                    `, -1, pad(`$_ = ${i} * ${element.bits >>> 3}`, `${length} * ${element.bits >>> 3}`), `
                 `)
             } else {
                 source = $(`
@@ -667,7 +646,7 @@ function generate (packet, { require = null }) {
                         continue
                     }
 
-                `, pad(`$_ = ${i} * ${element.bits >>> 3}`), `
+                `, -1, pad(`$_ = ${i} * ${element.bits >>> 3}`), `
             `)
         }
         // Release the array index from the array of indices.
@@ -799,13 +778,6 @@ function generate (packet, { require = null }) {
         let source = $(`
             switch ($step) {
             `, dispatch(packet.name, packet), `
-
-                $step = ${$step}
-
-            case ${$step}:
-
-                break
-
             }
         `)
 

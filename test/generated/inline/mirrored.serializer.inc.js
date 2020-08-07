@@ -43,13 +43,6 @@ module.exports = function ({ $lookup }) {
                             $bite--
                         }
 
-
-                        $step = 5
-
-                    case 5:
-
-                        break
-
                     }
 
                     return { start: $start, serialize: null }

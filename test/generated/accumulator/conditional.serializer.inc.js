@@ -84,6 +84,7 @@ module.exports = function ({ $lookup }) {
                         case 7:
 
                             if ($start == $end) {
+                                $step = 7
                                 ; (function ({ $start, $end, counter }) {
                                     counter[0] += $end - $start
                                 })({
@@ -95,8 +96,6 @@ module.exports = function ({ $lookup }) {
                             }
 
                             $buffer[$start++] = 0x0
-
-                            $step = 8
 
                         case 8:
 
@@ -229,13 +228,6 @@ module.exports = function ({ $lookup }) {
                                 $buffer[$start++] = $_ >>> $bite * 8 & 0xff
                                 $bite--
                             }
-
-
-                            $step = 18
-
-                        case 18:
-
-                            break
 
                         }
 

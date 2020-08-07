@@ -91,13 +91,6 @@ module.exports = function ({ $lookup }) {
                                 $bite--
                             }
 
-
-                            $step = 9
-
-                        case 9:
-
-                            break
-
                         }
 
                         break

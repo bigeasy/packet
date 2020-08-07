@@ -52,11 +52,10 @@ module.exports = function ({ $lookup }) {
 
                             $_ = $i[0] * 1
 
-                            $step = 5
-
                         case 5:
 
                             if ($start == $end) {
+                                $step = 5
                                 return { start: $start, serialize: $serialize }
                             }
 
@@ -67,13 +66,10 @@ module.exports = function ({ $lookup }) {
 
                             $buffer[$start++] = 0xd
 
-                            $step = 6
-
-                            $step = 6
-
                         case 6:
 
                             if ($start == $end) {
+                                $step = 6
                                 return { start: $start, serialize: $serialize }
                             }
 
@@ -83,8 +79,6 @@ module.exports = function ({ $lookup }) {
                             }
 
                             $buffer[$start++] = 0xa
-
-                            $step = 7
 
                             if ($_ != 16) {
                                 $step = 5
@@ -106,13 +100,6 @@ module.exports = function ({ $lookup }) {
                                 $buffer[$start++] = $_ >>> $bite * 8 & 0xff
                                 $bite--
                             }
-
-
-                            $step = 9
-
-                        case 9:
-
-                            break
 
                         }
 

@@ -22,13 +22,6 @@ module.exports = function ({ $lookup }) {
                             $bite--
                         }
 
-
-                        $step = 2
-
-                    case 2:
-
-                        break
-
                     }
 
                     return { start: $start, serialize: null }

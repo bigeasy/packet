@@ -7,13 +7,6 @@ module.exports = function ({ $lookup }) {
                 return function $serialize ($buffer, $start, $end) {
                     switch ($step) {
                     case 0:
-
-                        $step = 1
-
-                    case 1:
-
-                        break
-
                     }
 
                     return { start: $start, serialize: null }

@@ -32,8 +32,6 @@ module.exports = function ({ $lookup }) {
 
                         case 3: {
 
-                            $step = 3
-
                             for (;;) {
                                 const $bytes = Math.min($end - $start, object.array[$index].length - $offset)
                                 object.array[$index].copy($buffer, $start, $offset, $offset + $bytes)
@@ -51,6 +49,7 @@ module.exports = function ({ $lookup }) {
                                 }
 
                                 if ($start == $end) {
+                                    $step = 3
                                     return { start: $start, serialize: $serialize }
                                 }
                             }
@@ -58,16 +57,12 @@ module.exports = function ({ $lookup }) {
                             $index = 0
                             $offset = 0
 
-                            $step = 4
-
                         }
 
                         case 4:
 
                             $I[0] = (() => 8)()
                             $_ = $I[0] - $_
-
-                            $step = 5
 
                         case 5: {
 
@@ -77,10 +72,9 @@ module.exports = function ({ $lookup }) {
                             $_ -= length
 
                             if ($_ != 0) {
+                                $step = 5
                                 return { start: $start, serialize: $serialize }
                             }
-
-                            $step = 6
 
                         }
 
@@ -99,13 +93,6 @@ module.exports = function ({ $lookup }) {
                                 $buffer[$start++] = $_ >>> $bite * 8 & 0xff
                                 $bite--
                             }
-
-
-                            $step = 8
-
-                        case 8:
-
-                            break
 
                         }
 

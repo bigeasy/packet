@@ -30,80 +30,71 @@ module.exports = function ({ $lookup }) {
 
                         case 3: {
 
-                                $step = 3
-
                                 const length = Math.min($end - $start, object.array.length - $_)
                                 object.array.copy($buffer, $start, $_, $_ + length)
                                 $start += length
                                 $_ += length
 
                                 if ($_ != object.array.length) {
+                                    $step = 3
                                     return { start: $start, serialize: $serialize }
                                 }
-
-                                $step = 4
 
                             }
 
                         case 4:
 
                             if ($start == $end) {
+                                $step = 4
                                 return { start: $start, serialize: $serialize }
                             }
 
                             $buffer[$start++] = 0x61
 
-                            $step = 5
-
                         case 5:
 
                             if ($start == $end) {
+                                $step = 5
                                 return { start: $start, serialize: $serialize }
                             }
 
                             $buffer[$start++] = 0x62
 
-                            $step = 6
-
                         case 6:
 
                             if ($start == $end) {
+                                $step = 6
                                 return { start: $start, serialize: $serialize }
                             }
 
                             $buffer[$start++] = 0x63
 
-                            $step = 7
-
                         case 7:
 
                             if ($start == $end) {
+                                $step = 7
                                 return { start: $start, serialize: $serialize }
                             }
 
                             $buffer[$start++] = 0x61
 
-                            $step = 8
-
                         case 8:
 
                             if ($start == $end) {
+                                $step = 8
                                 return { start: $start, serialize: $serialize }
                             }
 
                             $buffer[$start++] = 0x62
 
-                            $step = 9
-
                         case 9:
 
                             if ($start == $end) {
+                                $step = 9
                                 return { start: $start, serialize: $serialize }
                             }
 
                             $buffer[$start++] = 0x64
-
-                            $step = 10
 
                         case 10:
 
@@ -120,13 +111,6 @@ module.exports = function ({ $lookup }) {
                                 $buffer[$start++] = $_ >>> $bite * 8 & 0xff
                                 $bite--
                             }
-
-
-                            $step = 12
-
-                        case 12:
-
-                            break
 
                         }
 

@@ -50,8 +50,6 @@ module.exports = function ({ $lookup }) {
                                 continue
                             }
 
-                        $step = 5
-
                         case 5:
 
                             $bite = 0
@@ -67,13 +65,6 @@ module.exports = function ({ $lookup }) {
                                 $buffer[$start++] = $_ >>> $bite * 8 & 0xff
                                 $bite--
                             }
-
-
-                            $step = 7
-
-                        case 7:
-
-                            break
 
                         }
 

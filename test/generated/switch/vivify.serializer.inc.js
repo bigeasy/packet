@@ -150,12 +150,11 @@ module.exports = function ({ $lookup }) {
                         case 12:
 
                             if ($start == $end) {
+                                $step = 12
                                 return { start: $start, serialize: $serialize }
                             }
 
                             $buffer[$start++] = 0x0
-
-                            $step = 13
 
                         case 13:
                             $step = 22
@@ -192,8 +191,6 @@ module.exports = function ({ $lookup }) {
 
                             $copied = 0
 
-                            $step = 17
-
                         }
                             $step = 22
                             continue
@@ -223,8 +220,6 @@ module.exports = function ({ $lookup }) {
                                 $step = 18
                                 continue
                             }
-
-                        $step = 20
                             $step = 22
                             continue
 
@@ -234,18 +229,15 @@ module.exports = function ({ $lookup }) {
 
                         case 21: {
 
-                                $step = 21
-
                                 const length = Math.min($end - $start, object.value.length - $_)
                                 object.value.copy($buffer, $start, $_, $_ + length)
                                 $start += length
                                 $_ += length
 
                                 if ($_ != object.value.length) {
+                                    $step = 21
                                     return { start: $start, serialize: $serialize }
                                 }
-
-                                $step = 22
 
                             }
 
@@ -264,13 +256,6 @@ module.exports = function ({ $lookup }) {
                                 $buffer[$start++] = $_ >>> $bite * 8 & 0xff
                                 $bite--
                             }
-
-
-                            $step = 24
-
-                        case 24:
-
-                            break
 
                         }
 
