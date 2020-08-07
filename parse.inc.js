@@ -169,6 +169,7 @@ function generate (packet, { require = null }) {
         // Special case for single byte which is a single step.
         // This special case an probably be just unrolled?
         if (bytes == 1 && field.fields == null && field.lookup == null) {
+            // TODO Remove setup set when you set step on return.
             return $(`
                 case ${$step++}:
 

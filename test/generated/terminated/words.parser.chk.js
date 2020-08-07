@@ -32,7 +32,7 @@ module.exports = function ({ $incremental, $lookup }) {
                         }
 
                         if ($end - $start < 2) {
-                            return $incremental.object(object, 7, $i)($buffer, $start, $end)
+                            return $incremental.object(object, 6, $i)($buffer, $start, $end)
                         }
 
                         object.array[$i[0]] = (

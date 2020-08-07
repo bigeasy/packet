@@ -671,14 +671,11 @@ function generate (packet, { require, bff, chk }) {
                 $start = $_ + ${terminator.length}
             `)
         }
+        // Skip initialization of index.
         $step++
         variables.i = true
         $i++
         const looped = map(dispatch, path, field.fields)
-        $step++
-        if (false && vivified != null) {
-            $step++
-        }
         const source = $(`
             $i[${$i}] = 0
             for (;;) {
@@ -688,14 +685,21 @@ function generate (packet, { require, bff, chk }) {
         $i--
         return source
     }
+    //
 
+    // Generate the body of a terminated array.
+    //
+    // We skip skip vivification on best-foot-forward because we perform it in
+    // the synchronous parser. We also skip the final step which is an empty
+    // step that the incremental parse uses as an exit target.
     function repeated (path, field) {
         const i = `$i[${$i}]`
-        const looped = map(dispatch, `${path}[${i}]`, field.fields)
         const vivified = vivify.assignment(path + `[${i}]`, field)
         if (vivified != null) {
             $step++
         }
+        const looped = map(dispatch, `${path}[${i}]`, field.fields)
+        $step += 2
         return $(`
             `, vivified, -1, `
 
@@ -706,7 +710,7 @@ function generate (packet, { require, bff, chk }) {
     }
 
     function terminator (field) {
-        $step += field.body.terminator.length + 1
+        $step += field.body.terminator.length
         // TODO We really do not want to go beyond the end of the buffer in a
         // whole parser and loop forever, so we still need the checkpoints. The
         // same goes for length encoded. We don't want a malformed packet to

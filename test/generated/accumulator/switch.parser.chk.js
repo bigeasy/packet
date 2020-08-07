@@ -43,7 +43,7 @@ module.exports = function ({ $incremental, $lookup }) {
                         }
 
                         if ($end - $start < 1) {
-                            return $incremental.object(object, 8, $i, $accumulator, $starts)($buffer, $start, $end)
+                            return $incremental.object(object, 7, $i, $accumulator, $starts)($buffer, $start, $end)
                         }
 
                         object.counted.string[$i[0]] = $buffer[$start++]

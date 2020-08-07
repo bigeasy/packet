@@ -63,6 +63,25 @@ function assignment (path, field) {
     return vivify(path, field.fields)
 }
 
+function step (field) {
+    function vivify (fields) {
+        const field = fields[fields.length - 1]
+        switch (field.vivify) {
+        case 'descend':
+            return vivify(field.fields)
+        case 'object':
+        case 'array':
+            return true
+        case 'variant':
+        case 'number':
+            return false
+        default: throw new Error
+        }
+    }
+    return vivify(field.fields)
+}
+
 // TODO Rename declaration.
 exports.structure = structure
 exports.assignment = assignment
+exports.step = step
