@@ -53,26 +53,26 @@ module.exports = function ({ $lookup }) {
 
                                 object.value = []
 
-                                $step = 11
+                                $step = 10
                                 continue
 
                             case 3:
 
                                 object.value = []
 
-                                $step = 17
+                                $step = 16
                                 continue
 
                             case 4:
 
                                 object.value = []
 
-                                $step = 20
+                                $step = 19
                                 continue
 
                             default:
 
-                                $step = 24
+                                $step = 23
                                 continue
                             }
 
@@ -88,7 +88,7 @@ module.exports = function ({ $lookup }) {
 
                             object.value.value = $buffer[$start++]
 
-                            $step = 26
+                            $step = 25
                             continue
 
                         case 6:
@@ -106,12 +106,9 @@ module.exports = function ({ $lookup }) {
                             $i[0] = 0
                         case 8:
 
+                            $step = 9
 
                         case 9:
-
-                            $step = 10
-
-                        case 10:
 
                             if ($start == $end) {
                                 return { start: $start, object: null, parse: $parse }
@@ -123,16 +120,16 @@ module.exports = function ({ $lookup }) {
                                 $step = 8
                                 continue
                             }
-                            $step = 26
+                            $step = 25
                             continue
 
-                        case 11:
+                        case 10:
 
                             $i[0] = 0
 
-                        case 12:
+                        case 11:
 
-                            $step = 12
+                            $step = 11
 
                             if ($start == $end) {
                                 return { start: $start, object: null, parse: $parse }
@@ -140,17 +137,17 @@ module.exports = function ({ $lookup }) {
 
                             if ($buffer[$start] == 0x0) {
                                 $start++
-                                $step = 16
+                                $step = 15
                                 continue
                             }
+
+                            $step = 12
+
+                        case 12:
 
                             $step = 13
 
                         case 13:
-
-                            $step = 14
-
-                        case 14:
 
                             if ($start == $end) {
                                 return { start: $start, object: null, parse: $parse }
@@ -159,24 +156,24 @@ module.exports = function ({ $lookup }) {
                             object.value[$i[0]] = $buffer[$start++]
 
 
-                        case 15:
+                        case 14:
 
                             $i[0]++
-                            $step = 12
+                            $step = 11
+                            continue
+
+                        case 15:
+
+                            // Here
+                            $step = 15
+                            $step = 25
                             continue
 
                         case 16:
 
-                            // Here
-                            $step = 16
-                            $step = 26
-                            continue
+                            $step = 17
 
                         case 17:
-
-                            $step = 18
-
-                        case 18:
 
                             if ($start == $end) {
                                 return { start: $start, object: null, parse: $parse }
@@ -185,9 +182,9 @@ module.exports = function ({ $lookup }) {
                             $I[0] = $buffer[$start++]
 
 
-                            $step = 19
+                            $step = 18
 
-                        case 19:
+                        case 18:
 
                             const $length = Math.min($I[0] - $index, $end - $start)
                             $buffers.push($buffer.slice($start, $start + $length))
@@ -203,19 +200,19 @@ module.exports = function ({ $lookup }) {
                             $index = 0
                             $buffers = []
 
-                            $step = 20
-                            $step = 26
+                            $step = 19
+                            $step = 25
                             continue
 
-                        case 20:
+                        case 19:
 
                             $i[0] = 0
 
+                        case 20:
+
+                            $step = 21
+
                         case 21:
-
-                            $step = 22
-
-                        case 22:
 
                             if ($start == $end) {
                                 return { start: $start, object: null, parse: $parse }
@@ -224,27 +221,27 @@ module.exports = function ({ $lookup }) {
                             object.value[$i[0]] = $buffer[$start++]
 
 
-                        case 23:
+                        case 22:
 
                             $i[0]++
 
                             if ($i[0] != 3) {
-                                $step = 21
+                                $step = 20
                                 continue
                             }
 
-                            $step = 24
+                            $step = 23
 
-                            $step = 26
+                            $step = 25
                             continue
 
-                        case 24:
+                        case 23:
 
                             $_ = 0
 
-                            $step = 25
+                            $step = 24
 
-                        case 25: {
+                        case 24: {
 
                             const length = Math.min($end - $start, 3 - $_)
                             $buffers.push($buffer.slice($start, $start + length))
@@ -258,15 +255,15 @@ module.exports = function ({ $lookup }) {
                             object.value = $buffers.length == 1 ? $buffers[0] : Buffer.concat($buffers)
                             $buffers = []
 
-                            $step = 26
+                            $step = 25
 
                         }
 
+                        case 25:
+
+                            $step = 26
+
                         case 26:
-
-                            $step = 27
-
-                        case 27:
 
                             if ($start == $end) {
                                 return { start: $start, object: null, parse: $parse }
@@ -275,7 +272,7 @@ module.exports = function ({ $lookup }) {
                             object.sentry = $buffer[$start++]
 
 
-                        case 28:
+                        case 27:
 
                             return { start: $start, object: object, parse: null }
                         }

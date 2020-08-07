@@ -63,12 +63,9 @@ module.exports = function ({ $lookup }) {
                             $i[0] = 0
                         case 7:
 
+                            $step = 8
 
                         case 8:
-
-                            $step = 9
-
-                        case 9:
 
                             if ($start == $end) {
                                 return { start: $start, object: null, parse: $parse }
@@ -81,11 +78,11 @@ module.exports = function ({ $lookup }) {
                                 continue
                             }
 
+                        case 9:
+
+                            $step = 10
+
                         case 10:
-
-                            $step = 11
-
-                        case 11:
 
                             if ($start == $end) {
                                 return { start: $start, object: null, parse: $parse }
@@ -94,7 +91,7 @@ module.exports = function ({ $lookup }) {
                             object.sentry = $buffer[$start++]
 
 
-                        case 12:
+                        case 11:
 
                             return { start: $start, object: object, parse: null }
                         }

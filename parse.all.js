@@ -629,11 +629,14 @@ function generate (packet, { require, bff, chk }) {
         // create each element. Indices can be passed to an incremental during
         // best-foot-forward parsing.
         const i = `$i[${$i}]`
+        const vivification = vivify.assignment(`${path}[${i}]`, field)
         // Step to skip incremental parser's vivification of the array element.
-        $step++
+        if (vivification != null) {
+            $step++
+        }
         const source = $(`
             for (; ${i} < ${I}; ${i}++) {
-                `, vivify.assignment(`${path}[${i}]`, field), -1, `
+                `, vivification, -1, `
 
                 `, map(dispatch, `${path}[${i}]`, field.fields), `
             }

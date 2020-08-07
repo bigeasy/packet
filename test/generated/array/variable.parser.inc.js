@@ -76,14 +76,11 @@ module.exports = function ({ $lookup }) {
                             $i[1] = 0
                         case 8:
 
-
-                        case 9:
-
                             $_ = 0
-                            $step = 10
+                            $step = 9
                             $bite = 1
 
-                        case 10:
+                        case 9:
 
                             while ($bite != -1) {
                                 if ($start == $end) {
@@ -104,11 +101,11 @@ module.exports = function ({ $lookup }) {
                                 continue
                             }
 
+                        case 10:
+
+                            $step = 11
+
                         case 11:
-
-                            $step = 12
-
-                        case 12:
 
                             if ($start == $end) {
                                 return { start: $start, object: null, parse: $parse }
@@ -117,7 +114,7 @@ module.exports = function ({ $lookup }) {
                             object.sentry = $buffer[$start++]
 
 
-                        case 13:
+                        case 12:
 
                             return { start: $start, object: object, parse: null }
                         }
