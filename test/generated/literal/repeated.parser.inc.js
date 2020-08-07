@@ -14,25 +14,20 @@ module.exports = function ({ $lookup }) {
                             sentry: 0
                         }
 
-                        $step = 1
-
                     case 1:
-
-                        $step = 2
 
                     case 2:
 
                         if ($start == $end) {
+                            $step = 2
                             return { start: $start, object: null, parse: $parse }
                         }
 
                         object.nudge = $buffer[$start++]
 
-
                     case 3:
 
                         $_ = 6
-                        $step = 4
 
                     case 4:
 
@@ -41,19 +36,20 @@ module.exports = function ({ $lookup }) {
                         $start += $bite
 
                         if ($_ != 0) {
+                            $step = 4
                             return { start: $start, object: null, parse: $parse }
                         }
 
                     case 5:
 
                         $_ = 0
-                        $step = 6
                         $bite = 1
 
                     case 6:
 
                         while ($bite != -1) {
                             if ($start == $end) {
+                                $step = 6
                                 return { start: $start, object: null, parse: $parse }
                             }
                             $_ += $buffer[$start++] << $bite * 8 >>> 0
@@ -62,11 +58,9 @@ module.exports = function ({ $lookup }) {
 
                         object.padded = $_
 
-
                     case 7:
 
                         $_ = 6
-                        $step = 8
 
                     case 8:
 
@@ -75,26 +69,23 @@ module.exports = function ({ $lookup }) {
                         $start += $bite
 
                         if ($_ != 0) {
+                            $step = 8
                             return { start: $start, object: null, parse: $parse }
                         }
 
                     case 9:
 
-                        $step = 10
-
                     case 10:
 
                         if ($start == $end) {
+                            $step = 10
                             return { start: $start, object: null, parse: $parse }
                         }
 
                         object.sentry = $buffer[$start++]
 
-
-                    case 11:
-
-                        return { start: $start, object: object, parse: null }
                     }
+                    return { start: $start, object: object, parse: null }
                 }
             }
         } ()

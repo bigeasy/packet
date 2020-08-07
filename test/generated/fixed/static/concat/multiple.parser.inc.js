@@ -15,26 +15,20 @@ module.exports = function ({ $lookup }) {
                                 sentry: 0
                             }
 
-                            $step = 1
-
                         case 1:
-
-                            $step = 2
 
                         case 2:
 
                             if ($start == $end) {
+                                $step = 2
                                 return { start: $start, object: null, parse: $parse }
                             }
 
                             object.nudge = $buffer[$start++]
 
-
                         case 3:
 
                             $_ = 0
-
-                            $step = 4
 
                         case 4: {
 
@@ -62,12 +56,11 @@ module.exports = function ({ $lookup }) {
                                 $step = 6
                                 continue
                             } else {
+                                $step = 4
                                 $_ += $end - $start
                                 $buffers.push($buffer.slice($start))
                                 return { start: $end, object: null, parse: $parse }
                             }
-
-                            $step = 5
 
                         }
 
@@ -75,6 +68,7 @@ module.exports = function ({ $lookup }) {
                         case 5:
 
                             if ($start == $end) {
+                                $step = 5
                                 return { start: $start, object: null, parse: $parse }
                             }
 
@@ -89,8 +83,6 @@ module.exports = function ({ $lookup }) {
                                 continue
                             }
 
-                            $step = 6
-
                         case 6:
 
                             $_ = 8 -  Math.min($buffers.reduce((sum, buffer) => {
@@ -100,8 +92,6 @@ module.exports = function ({ $lookup }) {
                             object.array = $buffers.length == 1 ? $buffers[0] : Buffer.concat($buffers)
                             $buffers.length = 0
 
-                            $step = 7
-
                         case 7: {
 
                             const length = Math.min($_, $end - $start)
@@ -109,30 +99,25 @@ module.exports = function ({ $lookup }) {
                             $_ -= length
 
                             if ($_ != 0) {
+                                $step = 7
                                 return { start: $start, object: null, parse: $parse }
                             }
-
-                            $step = 8
 
                         }
 
                         case 8:
 
-                            $step = 9
-
                         case 9:
 
                             if ($start == $end) {
+                                $step = 9
                                 return { start: $start, object: null, parse: $parse }
                             }
 
                             object.sentry = $buffer[$start++]
 
-
-                        case 10:
-
-                            return { start: $start, object: object, parse: null }
                         }
+                        return { start: $start, object: object, parse: null }
                         break
                     }
                 }

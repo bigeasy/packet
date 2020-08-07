@@ -15,29 +15,18 @@ module.exports = function ({ $lookup }) {
                                 sentry: 0
                             }
 
-                            $step = 1
-
                         case 1:
-
-                            $step = 2
 
                         case 2:
 
                             if ($start == $end) {
+                                $step = 2
                                 return { start: $start, object: null, parse: $parse }
                             }
 
                             object.nudge = $buffer[$start++]
 
-
-                        // TODO Here we set the step upon entry, which is why we don't
-                        // always have to set the step for an integer. Usually we have
-                        // some sort of preamble that sets the step. We should eliminate
-                        // steps where we can (why not?) and close the door behind us
-                        // when we enter a step.
                         case 3: {
-
-                            $step = 3
 
                             const $index = $buffer.indexOf(0x61, $start)
                             if (~$index) {
@@ -46,17 +35,17 @@ module.exports = function ({ $lookup }) {
                                 $step = 4
                                 continue
                             } else {
+                                $step = 3
                                 $buffers.push($buffer.slice($start))
                                 return { start: $end, object: null, parse: $parse }
                             }
-
-                            $step = 4
 
                         }
 
                         case 4:
 
                             if ($start == $end) {
+                                $step = 4
                                 return { start: $start, object: null, parse: $parse }
                             }
 
@@ -71,11 +60,10 @@ module.exports = function ({ $lookup }) {
                                 continue
                             }
 
-                            $step = 5
-
                         case 5:
 
                             if ($start == $end) {
+                                $step = 5
                                 return { start: $start, object: null, parse: $parse }
                             }
 
@@ -90,11 +78,10 @@ module.exports = function ({ $lookup }) {
                                 continue
                             }
 
-                            $step = 6
-
                         case 6:
 
                             if ($start == $end) {
+                                $step = 6
                                 return { start: $start, object: null, parse: $parse }
                             }
 
@@ -104,11 +91,10 @@ module.exports = function ({ $lookup }) {
                                 continue
                             }
 
-                            $step = 7
-
                         case 7:
 
                             if ($start == $end) {
+                                $step = 7
                                 return { start: $start, object: null, parse: $parse }
                             }
 
@@ -118,11 +104,10 @@ module.exports = function ({ $lookup }) {
                                 continue
                             }
 
-                            $step = 8
-
                         case 8:
 
                             if ($start == $end) {
+                                $step = 8
                                 return { start: $start, object: null, parse: $parse }
                             }
 
@@ -142,33 +127,25 @@ module.exports = function ({ $lookup }) {
                                 continue
                             }
 
-                            $step = 9
-
                         case 9:
 
 
                             object.array = $buffers.length == 1 ? $buffers[0] : Buffer.concat($buffers)
                             $buffers.length = 0
 
-                            $step = 10
-
                         case 10:
-
-                            $step = 11
 
                         case 11:
 
                             if ($start == $end) {
+                                $step = 11
                                 return { start: $start, object: null, parse: $parse }
                             }
 
                             object.sentry = $buffer[$start++]
 
-
-                        case 12:
-
-                            return { start: $start, object: object, parse: null }
                         }
+                        return { start: $start, object: object, parse: null }
                         break
                     }
                 }

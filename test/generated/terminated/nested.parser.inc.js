@@ -15,20 +15,16 @@ module.exports = function ({ $lookup }) {
                                 sentry: 0
                             }
 
-                            $step = 1
-
                         case 1:
-
-                            $step = 2
 
                         case 2:
 
                             if ($start == $end) {
+                                $step = 2
                                 return { start: $start, object: null, parse: $parse }
                             }
 
                             object.nudge = $buffer[$start++]
-
 
                         case 3:
 
@@ -113,13 +109,13 @@ module.exports = function ({ $lookup }) {
                         case 10:
 
                             $_ = 0
-                            $step = 11
                             $bite = 1
 
                         case 11:
 
                             while ($bite != -1) {
                                 if ($start == $end) {
+                                    $step = 11
                                     return { start: $start, object: null, parse: $parse }
                                 }
                                 $_ += $buffer[$start++] << $bite * 8 >>> 0
@@ -127,7 +123,6 @@ module.exports = function ({ $lookup }) {
                             }
 
                             object.array[$i[0]][$i[1]] = $_
-
 
                         case 12:
 
@@ -137,9 +132,6 @@ module.exports = function ({ $lookup }) {
 
                         case 13:
 
-                            // Here
-                            $step = 13
-
                         case 14:
 
                             $i[0]++
@@ -148,26 +140,19 @@ module.exports = function ({ $lookup }) {
 
                         case 15:
 
-                            // Here
-                            $step = 15
-
                         case 16:
-
-                            $step = 17
 
                         case 17:
 
                             if ($start == $end) {
+                                $step = 17
                                 return { start: $start, object: null, parse: $parse }
                             }
 
                             object.sentry = $buffer[$start++]
 
-
-                        case 18:
-
-                            return { start: $start, object: object, parse: null }
                         }
+                        return { start: $start, object: object, parse: null }
                         break
                     }
                 }

@@ -12,18 +12,12 @@ module.exports = function ({ $lookup }) {
                             value: []
                         }
 
-                        $step = 1
-
                     case 1:
 
                         object.value = []
 
-                        $step = 2
-
-                    case 2:
-
-                        return { start: $start, object: object, parse: null }
                     }
+                    return { start: $start, object: object, parse: null }
                 }
             }
         } ()

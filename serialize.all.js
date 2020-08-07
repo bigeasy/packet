@@ -896,7 +896,7 @@ function generate (packet, { require = null, bff, chk }) {
                         return function ($buffer, $start, $end) {
                             `, lets.length != 0 ? `let ${lets.join(', ')}` : null, -1, `
 
-                            `, source, `
+                            `, source, -1, `
 
                             return { start: $start, serialize: null }
                         }
@@ -913,7 +913,7 @@ function generate (packet, { require = null, bff, chk }) {
                 return function (`, signature.join(', '), `) {
                     `, lets.length != 0 ? `let ${lets.join(', ')}` : null, -1, `
 
-                    `, source, `
+                    `, source, -1, `
 
                     return { start: $start, serialize: null }
                 }

@@ -15,18 +15,16 @@ module.exports = function ({ $lookup }) {
                             sentry: 0
                         }
 
-                        $step = 1
-
                     case 1:
 
                         $_ = 0
-                        $step = 2
                         $bite = 3
 
                     case 2:
 
                         while ($bite != -1) {
                             if ($start == $end) {
+                                $step = 2
                                 return { start: $start, object: null, parse: $parse }
                             }
                             $_ += $buffer[$start++] << $bite * 8 >>> 0
@@ -35,26 +33,21 @@ module.exports = function ({ $lookup }) {
 
                         object.value = $_
 
-
                         object.value = (value => twiddle(value))(object.value)
 
                     case 3:
 
-                        $step = 4
-
                     case 4:
 
                         if ($start == $end) {
+                            $step = 4
                             return { start: $start, object: null, parse: $parse }
                         }
 
                         object.sentry = $buffer[$start++]
 
-
-                    case 5:
-
-                        return { start: $start, object: object, parse: null }
                     }
+                    return { start: $start, object: object, parse: null }
                 }
             }
         } ()

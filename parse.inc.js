@@ -80,8 +80,6 @@ function generate (packet, { require = null }) {
             case ${$step++}:
 
                 ${path} = ${util.inspect(field.value)}
-
-                $step = ${$step}
         `)
     }
     //
@@ -116,13 +114,13 @@ function generate (packet, { require = null }) {
             case ${$step++}:
 
                 $_ = ${$_}
-                $step = ${$step}
                 $bite = ${bite}
 
             case ${$step++}:
 
                 while ($bite != ${stop}) {
                     if ($start == $end) {
+                        $step = ${$step - 1}
                         `, inliner.exit(), `
                         return { start: $start, object: null, parse: $parse }
                     }
@@ -131,7 +129,6 @@ function generate (packet, { require = null }) {
                 }
 
                 `, assign(path, field), `
-
         `)
     }
     function unrolled (path, field, writes, $_) {
@@ -173,17 +170,15 @@ function generate (packet, { require = null }) {
             return $(`
                 case ${$step++}:
 
-                    $step = ${$step}
-
                 case ${$step++}:
 
                     if ($start == $end) {
+                        $step = ${$step - 1}
                         `, inliner.exit(), `
                         return { start: $start, object: null, parse: $parse }
                     }
 
                     ${path} = $buffer[$start++]
-
             `)
         }
         if (homogeneous(field)) {
@@ -230,7 +225,6 @@ function generate (packet, { require = null }) {
                 case ${$step++}:
 
                     $_ = ${(literal.value.length >>> 1) * literal.repeat}
-                    $step = ${$step}
 
                 case ${$step++}:
 
@@ -239,6 +233,7 @@ function generate (packet, { require = null }) {
                     $start += $bite
 
                     if ($_ != 0) {
+                        $step = ${$step - 1}
                         return { start: $start, object: null, parse: $parse }
                     }
             `)
@@ -286,8 +281,6 @@ function generate (packet, { require = null }) {
             return $(`
                 `, encoding, `
 
-                    $step = ${$step}
-
                 case ${$step++}:
 
                     const $length = Math.min(${I} - $index, $end - $start)
@@ -296,6 +289,7 @@ function generate (packet, { require = null }) {
                     $start += $length
 
                     if ($index != ${I}) {
+                        $step = ${$step - 1}
                         `, inliner.exit(), `
                         return { start: $start, parse: $parse }
                     }
@@ -304,8 +298,6 @@ function generate (packet, { require = null }) {
 
                     $index = 0
                     $buffers = []
-
-                    $step = ${$step}
             `)
         }
         const i = `$i[${++$i}]`
@@ -384,11 +376,10 @@ function generate (packet, { require = null }) {
                     $_ -= length
 
                     if ($_ != 0) {
+                        $step = ${$step - 1}
                         `, inliner.exit(), `
                         return { start: $start, object: null, parse: $parse }
                     }
-
-                    $step = ${$step}
 
                 }
             `)
@@ -414,8 +405,6 @@ function generate (packet, { require = null }) {
 
                     $_ = 0
                     ${length} = `, calculated, `
-
-                    $step = ${$step}
 
                 case ${$step++}: {
 
@@ -443,25 +432,17 @@ function generate (packet, { require = null }) {
                         $step = ${$step + field.pad.length - 1}
                         continue
                     } else {
+                        $step = ${$step - 1}
                         $_ += $end - $start
                         $buffers.push($buffer.slice($start))
                         `, inliner.exit(), `
                         return { start: $end, object: null, parse: $parse }
                     }
 
-                    $step = ${$step}
-
                 }
 
             `) : $(`
-                // TODO Here we set the step upon entry, which is why we don't
-                // always have to set the step for an integer. Usually we have
-                // some sort of preamble that sets the step. We should eliminate
-                // steps where we can (why not?) and close the door behind us
-                // when we enter a step.
                 case ${$step++}: {
-
-                    $step = ${$step - 1}
 
                     const $index = $buffer.indexOf(${hex(bytes[0])}, $start)
                     if (~$index) {
@@ -470,12 +451,11 @@ function generate (packet, { require = null }) {
                         $step = ${$step}
                         continue
                     } else {
+                        $step = ${$step - 1}
                         $buffers.push($buffer.slice($start))
                         `, inliner.exit(), `
                         return { start: $end, object: null, parse: $parse }
                     }
-
-                    $step = ${$step}
 
                 }
             `)
@@ -510,6 +490,7 @@ function generate (packet, { require = null }) {
                     case ${$step++}:
 
                         if ($start == $end) {
+                            $step = ${$step - 1}
                             `, inliner.exit(), `
                             return { start: $start, object: null, parse: $parse }
                         }
@@ -520,8 +501,6 @@ function generate (packet, { require = null }) {
                             $step = ${redo}
                             continue
                         }
-
-                        $step = ${$step}
                 `))
             }
             // Assignment buffer with a possible recording of length so far if
@@ -542,8 +521,6 @@ function generate (packet, { require = null }) {
 
                         ${path} = $buffers.length == 1 ? $buffers[0] : Buffer.concat($buffers)
                         $buffers.length = 0
-
-                        $step = ${$step}
                 `) : $(`
                     case ${$step++}:
 
@@ -551,8 +528,6 @@ function generate (packet, { require = null }) {
 
                         ${path} = $buffers
                         $buffers = []
-
-                        $step = ${$step}
                 `)
             }
             if (field.type == 'terminated') {
@@ -732,18 +707,13 @@ function generate (packet, { require = null }) {
                         ? (${length} - ${i}) * ${element.bits >>> 3} - ${bytes.length}
                         : 0
 
-                    $step = ${$step}
-
                 `, skip(`(${i} + ${bytes.length})`), `
             `)
         }
         return $(`
             `, source, `
 
-            case ${$step}:
-
-                // Here
-                $step = ${$step++}
+            case ${$step++}:
         `)
     }
 
@@ -789,8 +759,6 @@ function generate (packet, { require = null }) {
                     $_ = 0
                     ${length} = `, calculation, `
 
-                    $step = ${$step}
-
                 case ${$step++}: {
 
                     const length = Math.min($end - $start, ${length} - $_)
@@ -799,14 +767,13 @@ function generate (packet, { require = null }) {
                     $_ += length
 
                     if ($_ != ${length}) {
+                        $step = ${$step - 1}
                         `, inliner.exit(), `
                         return { start: $start, object: null, parse: $parse }
                     }
 
                     `, assign, `
                     $buffers = []
-
-                    $step = ${$step}
 
                 }
             `)
@@ -858,7 +825,6 @@ function generate (packet, { require = null }) {
                 }
 
                 `, remaining, `
-                $step = ${$step}
         `)
         // Release the length index from the array of lengths if calculated.
         if (field.calculated) {
@@ -873,10 +839,9 @@ function generate (packet, { require = null }) {
                 $start += $bite
 
                 if ($_ != 0) {
+                    $step = ${$step - 1}
                     return { start: $start, object: null, parse: $parse }
                 }
-
-                $step = ${$step}
         `) : null
         // Release the array index from the array of indices.
         $i--
@@ -1071,14 +1036,10 @@ function generate (packet, { require = null }) {
 
                 `, vivify.structure(packet.name, packet), `
 
-                $step = ${$step}
-
             `, dispatch(packet.name, packet, 0), `
 
-            case ${$step}:
-
-                return { start: $start, object: ${packet.name}, parse: null }
             }
+            return { start: $start, object: ${packet.name}, parse: null }
         `)
 
         const signatories = {

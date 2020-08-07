@@ -12,25 +12,19 @@ module.exports = function ({ $lookup }) {
                             word: 0
                         }
 
-                        $step = 1
-
                     case 1:
-
-                        $step = 2
 
                     case 2:
 
                         if ($start == $end) {
+                            $step = 2
                             return { start: $start, object: null, parse: $parse }
                         }
 
                         object.word = $buffer[$start++]
 
-
-                    case 3:
-
-                        return { start: $start, object: object, parse: null }
                     }
+                    return { start: $start, object: object, parse: null }
                 }
             }
         } ()

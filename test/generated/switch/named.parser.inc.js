@@ -15,20 +15,16 @@ module.exports = function ({ $lookup }) {
                                 sentry: 0
                             }
 
-                            $step = 1
-
                         case 1:
-
-                            $step = 2
 
                         case 2:
 
                             if ($start == $end) {
+                                $step = 2
                                 return { start: $start, object: null, parse: $parse }
                             }
 
                             object.type = $buffer[$start++]
-
 
                         case 3:
 
@@ -53,29 +49,27 @@ module.exports = function ({ $lookup }) {
 
                         case 4:
 
-                            $step = 5
-
                         case 5:
 
                             if ($start == $end) {
+                                $step = 5
                                 return { start: $start, object: null, parse: $parse }
                             }
 
                             object.value = $buffer[$start++]
-
                             $step = 10
                             continue
 
                         case 6:
 
                             $_ = 0
-                            $step = 7
                             $bite = 1
 
                         case 7:
 
                             while ($bite != -1) {
                                 if ($start == $end) {
+                                    $step = 7
                                     return { start: $start, object: null, parse: $parse }
                                 }
                                 $_ += $buffer[$start++] << $bite * 8 >>> 0
@@ -83,20 +77,19 @@ module.exports = function ({ $lookup }) {
                             }
 
                             object.value = $_
-
                             $step = 10
                             continue
 
                         case 8:
 
                             $_ = 0
-                            $step = 9
                             $bite = 2
 
                         case 9:
 
                             while ($bite != -1) {
                                 if ($start == $end) {
+                                    $step = 9
                                     return { start: $start, object: null, parse: $parse }
                                 }
                                 $_ += $buffer[$start++] << $bite * 8 >>> 0
@@ -105,24 +98,19 @@ module.exports = function ({ $lookup }) {
 
                             object.value = $_
 
-
                         case 10:
-
-                            $step = 11
 
                         case 11:
 
                             if ($start == $end) {
+                                $step = 11
                                 return { start: $start, object: null, parse: $parse }
                             }
 
                             object.sentry = $buffer[$start++]
 
-
-                        case 12:
-
-                            return { start: $start, object: object, parse: null }
                         }
+                        return { start: $start, object: object, parse: null }
                         break
                     }
                 }

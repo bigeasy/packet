@@ -15,33 +15,27 @@ module.exports = function ({ $lookup }) {
                                 sentry: 0
                             }
 
-                            $step = 1
-
                         case 1:
-
-                            $step = 2
 
                         case 2:
 
                             if ($start == $end) {
+                                $step = 2
                                 return { start: $start, object: null, parse: $parse }
                             }
 
                             object.nudge = $buffer[$start++]
 
-
                         case 3:
-
-                            $step = 4
 
                         case 4:
 
                             if ($start == $end) {
+                                $step = 4
                                 return { start: $start, object: null, parse: $parse }
                             }
 
                             $sip[0] = $buffer[$start++]
-
 
                         case 5:
 
@@ -58,32 +52,28 @@ module.exports = function ({ $lookup }) {
 
                         case 6:
 
-                            $step = 7
-
                         case 7:
 
                             if ($start == $end) {
+                                $step = 7
                                 return { start: $start, object: null, parse: $parse }
                             }
 
                             object.value = $buffer[$start++]
-
 
                             $step = 26
                             continue
 
                         case 8:
 
-                            $step = 9
-
                         case 9:
 
                             if ($start == $end) {
+                                $step = 9
                                 return { start: $start, object: null, parse: $parse }
                             }
 
                             $sip[1] = $buffer[$start++]
-
 
                         case 10:
 
@@ -128,16 +118,14 @@ module.exports = function ({ $lookup }) {
 
                         case 14:
 
-                            $step = 15
-
                         case 15:
 
                             if ($start == $end) {
+                                $step = 15
                                 return { start: $start, object: null, parse: $parse }
                             }
 
                             $sip[2] = $buffer[$start++]
-
 
                         case 16:
 
@@ -242,21 +230,17 @@ module.exports = function ({ $lookup }) {
 
                         case 26:
 
-                            $step = 27
-
                         case 27:
 
                             if ($start == $end) {
+                                $step = 27
                                 return { start: $start, object: null, parse: $parse }
                             }
 
                             object.sentry = $buffer[$start++]
 
-
-                        case 28:
-
-                            return { start: $start, object: object, parse: null }
                         }
+                        return { start: $start, object: object, parse: null }
                         break
                     }
                 }

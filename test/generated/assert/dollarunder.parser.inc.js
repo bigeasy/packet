@@ -13,20 +13,16 @@ module.exports = function ({ $lookup }) {
                             sentry: 0
                         }
 
-                        $step = 1
-
                     case 1:
-
-                        $step = 2
 
                     case 2:
 
                         if ($start == $end) {
+                            $step = 2
                             return { start: $start, object: null, parse: $parse }
                         }
 
                         object.value = $buffer[$start++]
-
 
                         ; (({ $_ = 0 }) => require('assert').equal($_, 1))({
                             $_: object.value
@@ -34,21 +30,17 @@ module.exports = function ({ $lookup }) {
 
                     case 3:
 
-                        $step = 4
-
                     case 4:
 
                         if ($start == $end) {
+                            $step = 4
                             return { start: $start, object: null, parse: $parse }
                         }
 
                         object.sentry = $buffer[$start++]
 
-
-                    case 5:
-
-                        return { start: $start, object: object, parse: null }
                     }
+                    return { start: $start, object: object, parse: null }
                 }
             }
         } ()
