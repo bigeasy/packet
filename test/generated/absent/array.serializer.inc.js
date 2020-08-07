@@ -10,8 +10,6 @@ module.exports = function ({ $lookup }) {
 
                         $step = 1
 
-                        $step = 1
-
                     case 1:
 
                         break

@@ -47,11 +47,7 @@ function generate (packet, { require = null }) {
 
     function absent () {
         // TODO Can we have nothing instead?
-        return $(`
-            case ${$step++}:
-
-                $step = ${$step}
-        `)
+        return `case ${$step++}:`
     }
     //
 
