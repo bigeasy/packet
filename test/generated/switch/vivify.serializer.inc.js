@@ -9,7 +9,6 @@ module.exports = function ({ $lookup }) {
                         switch ($step) {
                         case 0:
 
-                            $step = 1
                             $bite = 0
                             $_ = object.type
 
@@ -17,6 +16,7 @@ module.exports = function ({ $lookup }) {
 
                             while ($bite != -1) {
                                 if ($start == $end) {
+                                    $step = 1
                                     return { start: $start, serialize: $serialize }
                                 }
                                 $buffer[$start++] = $_ >>> $bite * 8 & 0xff
@@ -60,7 +60,6 @@ module.exports = function ({ $lookup }) {
 
                         case 3:
 
-                            $step = 4
                             $bite = 0
                             $_ = object.value.value
 
@@ -68,6 +67,7 @@ module.exports = function ({ $lookup }) {
 
                             while ($bite != -1) {
                                 if ($start == $end) {
+                                    $step = 4
                                     return { start: $start, serialize: $serialize }
                                 }
                                 $buffer[$start++] = $_ >>> $bite * 8 & 0xff
@@ -79,7 +79,6 @@ module.exports = function ({ $lookup }) {
 
                         case 5:
 
-                            $step = 6
                             $bite = 0
                             $_ = object.value.length
 
@@ -87,6 +86,7 @@ module.exports = function ({ $lookup }) {
 
                             while ($bite != -1) {
                                 if ($start == $end) {
+                                    $step = 6
                                     return { start: $start, serialize: $serialize }
                                 }
                                 $buffer[$start++] = $_ >>> $bite * 8 & 0xff
@@ -97,7 +97,6 @@ module.exports = function ({ $lookup }) {
 
                         case 7:
 
-                            $step = 8
                             $bite = 0
                             $_ = object.value[$i[0]]
 
@@ -105,6 +104,7 @@ module.exports = function ({ $lookup }) {
 
                             while ($bite != -1) {
                                 if ($start == $end) {
+                                    $step = 8
                                     return { start: $start, serialize: $serialize }
                                 }
                                 $buffer[$start++] = $_ >>> $bite * 8 & 0xff
@@ -126,7 +126,6 @@ module.exports = function ({ $lookup }) {
 
                         case 10:
 
-                            $step = 11
                             $bite = 0
                             $_ = object.value[$i[0]]
 
@@ -134,6 +133,7 @@ module.exports = function ({ $lookup }) {
 
                             while ($bite != -1) {
                                 if ($start == $end) {
+                                    $step = 11
                                     return { start: $start, serialize: $serialize }
                                 }
                                 $buffer[$start++] = $_ >>> $bite * 8 & 0xff
@@ -163,7 +163,6 @@ module.exports = function ({ $lookup }) {
 
                         case 14:
 
-                            $step = 15
                             $bite = 0
                             $_ = object.value.length
 
@@ -171,6 +170,7 @@ module.exports = function ({ $lookup }) {
 
                             while ($bite != -1) {
                                 if ($start == $end) {
+                                    $step = 15
                                     return { start: $start, serialize: $serialize }
                                 }
                                 $buffer[$start++] = $_ >>> $bite * 8 & 0xff
@@ -186,6 +186,7 @@ module.exports = function ({ $lookup }) {
                             $start += $bytes
 
                             if ($copied != object.value.length) {
+                                $step = 16
                                 return { start: $start, serialize: $serialize }
                             }
 
@@ -204,7 +205,6 @@ module.exports = function ({ $lookup }) {
 
                         case 18:
 
-                            $step = 19
                             $bite = 0
                             $_ = object.value[$i[0]]
 
@@ -212,6 +212,7 @@ module.exports = function ({ $lookup }) {
 
                             while ($bite != -1) {
                                 if ($start == $end) {
+                                    $step = 19
                                     return { start: $start, serialize: $serialize }
                                 }
                                 $buffer[$start++] = $_ >>> $bite * 8 & 0xff
@@ -250,7 +251,6 @@ module.exports = function ({ $lookup }) {
 
                         case 22:
 
-                            $step = 23
                             $bite = 0
                             $_ = object.sentry
 
@@ -258,6 +258,7 @@ module.exports = function ({ $lookup }) {
 
                             while ($bite != -1) {
                                 if ($start == $end) {
+                                    $step = 23
                                     return { start: $start, serialize: $serialize }
                                 }
                                 $buffer[$start++] = $_ >>> $bite * 8 & 0xff

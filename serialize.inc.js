@@ -74,7 +74,6 @@ function generate (packet, { require = null }) {
         return $(`
             case ${$step++}:
 
-                $step = ${$step}
                 $bite = ${bite}
                 `, convert(path, field), `
 
@@ -82,6 +81,7 @@ function generate (packet, { require = null }) {
 
                 while ($bite != ${stop}) {
                     if ($start == $end) {
+                        $step = ${$step - 1}
                         `, inliner.exit(), `
                         return { start: $start, serialize: $serialize }
                     }
@@ -275,6 +275,7 @@ function generate (packet, { require = null }) {
                     $start += $bytes
 
                     if ($copied != ${path}.length) {
+                        $step = ${$step - 1}
                         `, inliner.exit(), `
                         return { start: $start, serialize: $serialize }
                     }
@@ -317,6 +318,7 @@ function generate (packet, { require = null }) {
                         }
 
                         if ($start == $end) {
+                            $step = ${$step - 1}
                             `, inliner.exit(), `
                             return { start: $start, serialize: $serialize }
                         }

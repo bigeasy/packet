@@ -38,7 +38,6 @@ module.exports = function ({ $lookup }) {
 
                         case 3:
 
-                            $step = 4
                             $bite = 0
                             $_ = object.sentry
 
@@ -46,6 +45,7 @@ module.exports = function ({ $lookup }) {
 
                             while ($bite != -1) {
                                 if ($start == $end) {
+                                    $step = 4
                                     return { start: $start, serialize: $serialize }
                                 }
                                 $buffer[$start++] = $_ >>> $bite * 8 & 0xff

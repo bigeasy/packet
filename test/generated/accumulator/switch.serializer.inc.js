@@ -24,7 +24,6 @@ module.exports = function ({ $lookup }) {
 
                         case 2:
 
-                            $step = 3
                             $bite = 3
                             $_ = object.counted.length
 
@@ -32,6 +31,7 @@ module.exports = function ({ $lookup }) {
 
                             while ($bite != -1) {
                                 if ($start == $end) {
+                                    $step = 3
                                     ; (function ({ $start, $end, counter }) {
                                         counter[0] += $end - $start
                                     })({
@@ -53,7 +53,6 @@ module.exports = function ({ $lookup }) {
 
                         case 5:
 
-                            $step = 6
                             $bite = 0
                             $_ = object.counted.string[$i[0]]
 
@@ -61,6 +60,7 @@ module.exports = function ({ $lookup }) {
 
                             while ($bite != -1) {
                                 if ($start == $end) {
+                                    $step = 6
                                     ; (function ({ $start, $end, counter }) {
                                         counter[0] += $end - $start
                                     })({
@@ -133,7 +133,6 @@ module.exports = function ({ $lookup }) {
 
                         case 10:
 
-                            $step = 11
                             $bite = 0
                             $_ = object.counted.number
 
@@ -141,6 +140,7 @@ module.exports = function ({ $lookup }) {
 
                             while ($bite != -1) {
                                 if ($start == $end) {
+                                    $step = 11
                                     ; (function ({ $start, $end, counter }) {
                                         counter[0] += $end - $start
                                     })({
@@ -159,7 +159,6 @@ module.exports = function ({ $lookup }) {
 
                         case 12:
 
-                            $step = 13
                             $bite = 1
                             $_ = object.counted.number
 
@@ -167,6 +166,7 @@ module.exports = function ({ $lookup }) {
 
                             while ($bite != -1) {
                                 if ($start == $end) {
+                                    $step = 13
                                     ; (function ({ $start, $end, counter }) {
                                         counter[0] += $end - $start
                                     })({
@@ -185,7 +185,6 @@ module.exports = function ({ $lookup }) {
 
                         case 14:
 
-                            $step = 15
                             $bite = 3
                             $_ = object.counted.number
 
@@ -193,6 +192,7 @@ module.exports = function ({ $lookup }) {
 
                             while ($bite != -1) {
                                 if ($start == $end) {
+                                    $step = 15
                                     ; (function ({ $start, $end, counter }) {
                                         counter[0] += $end - $start
                                     })({
@@ -217,7 +217,6 @@ module.exports = function ({ $lookup }) {
 
                         case 16:
 
-                            $step = 17
                             $bite = 0
                             $_ = object.sentry
 
@@ -225,6 +224,7 @@ module.exports = function ({ $lookup }) {
 
                             while ($bite != -1) {
                                 if ($start == $end) {
+                                    $step = 17
                                     return { start: $start, serialize: $serialize }
                                 }
                                 $buffer[$start++] = $_ >>> $bite * 8 & 0xff

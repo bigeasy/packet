@@ -9,7 +9,6 @@ module.exports = function ({ $lookup }) {
                         switch ($step) {
                         case 0:
 
-                            $step = 1
                             $bite = 0
                             $_ = object.nudge
 
@@ -17,6 +16,7 @@ module.exports = function ({ $lookup }) {
 
                             while ($bite != -1) {
                                 if ($start == $end) {
+                                    $step = 1
                                     return { start: $start, serialize: $serialize }
                                 }
                                 $buffer[$start++] = $_ >>> $bite * 8 & 0xff
@@ -33,7 +33,6 @@ module.exports = function ({ $lookup }) {
 
                         case 3:
 
-                            $step = 4
                             $bite = 0
                             $_ = object.array[$i[0]]
 
@@ -41,6 +40,7 @@ module.exports = function ({ $lookup }) {
 
                             while ($bite != -1) {
                                 if ($start == $end) {
+                                    $step = 4
                                     return { start: $start, serialize: $serialize }
                                 }
                                 $buffer[$start++] = $_ >>> $bite * 8 & 0xff
@@ -78,7 +78,6 @@ module.exports = function ({ $lookup }) {
 
                         case 6:
 
-                            $step = 7
                             $bite = 0
                             $_ = object.sentry
 
@@ -86,6 +85,7 @@ module.exports = function ({ $lookup }) {
 
                             while ($bite != -1) {
                                 if ($start == $end) {
+                                    $step = 7
                                     return { start: $start, serialize: $serialize }
                                 }
                                 $buffer[$start++] = $_ >>> $bite * 8 & 0xff
