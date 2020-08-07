@@ -32,7 +32,6 @@ function prove (okay) {
             nudge: 0xaa, value: 0x81, sentry: 0xaa
         }]
     })
-    return
     cycle(okay, {
         name: 'conditional/mysql',
         define: {

@@ -1,35 +1,37 @@
-module.exports = function ({ parsers, $lookup }) {
-    parsers.all.object = function () {
-        return function ($buffer, $start) {
-            let $sip = 0
+module.exports = function ({ $lookup }) {
+    return {
+        object: function () {
+            return function ($buffer, $start) {
+                let $sip = []
 
-            let object = {
-                value: 0,
-                sentry: 0
+                let object = {
+                    value: 0,
+                    sentry: 0
+                }
+
+                $sip[0] = $buffer[$start++]
+
+                if ((sip => sip < 251)($sip[0])) {
+                    $start -= 1
+
+                    object.value = $buffer[$start++]
+                } else if ((sip => sip == 0xfc)($sip[0])) {
+                    object.value = (
+                        $buffer[$start++] << 8 |
+                        $buffer[$start++]
+                    ) >>> 0
+                } else {
+                    object.value = (
+                        $buffer[$start++] << 16 |
+                        $buffer[$start++] << 8 |
+                        $buffer[$start++]
+                    ) >>> 0
+                }
+
+                object.sentry = $buffer[$start++]
+
+                return object
             }
-
-            $sip = $buffer[$start++]
-
-            if ((sip => sip < 251)($sip)) {
-                $start -= 1
-
-                object.value = $buffer[$start++]
-            } else if ((sip => sip == 0xfc)($sip)) {
-                object.value = (
-                    $buffer[$start++] << 8 |
-                    $buffer[$start++]
-                ) >>> 0
-            } else {
-                object.value = (
-                    $buffer[$start++] << 16 |
-                    $buffer[$start++] << 8 |
-                    $buffer[$start++]
-                ) >>> 0
-            }
-
-            object.sentry = $buffer[$start++]
-
-            return object
-        }
-    } ()
+        } ()
+    }
 }

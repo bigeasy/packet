@@ -1,143 +1,145 @@
-module.exports = function ({ serializers, $lookup }) {
-    serializers.inc.object = function () {
-        return function (object, $step = 0) {
-            let $_, $bite
+module.exports = function ({ $lookup }) {
+    return {
+        object: function () {
+            return function (object, $step = 0) {
+                let $_, $bite
 
-            return function $serialize ($buffer, $start, $end) {
-                for (;;) {
-                    switch ($step) {
-                    case 0:
+                return function $serialize ($buffer, $start, $end) {
+                    for (;;) {
+                        switch ($step) {
+                        case 0:
 
-                        if ((value => value < 251)(object.value)) {
-                            $step = 1
+                            if ((value => value < 251)(object.value)) {
+                                $step = 1
+                                continue
+                            } else if ((value => value >= 251 && value < 2 ** 16)(object.value)) {
+                                $step = 3
+                                continue
+                            } else {
+                                $step = 7
+                                continue
+                            }
+
+                        case 1:
+
+                            $step = 2
+                            $bite = 0
+                            $_ = object.value
+
+                        case 2:
+
+                            while ($bite != -1) {
+                                if ($start == $end) {
+                                    return { start: $start, serialize: $serialize }
+                                }
+                                $buffer[$start++] = $_ >>> $bite * 8 & 0xff
+                                $bite--
+                            }
+
+
+                            $step = 11
                             continue
-                        } else if ((value => value >= 251 && value < 2 ** 16)(object.value)) {
-                            $step = 3
+
+                        case 3:
+
+                            $step = 4
+                            $bite = 0
+                            $_ = [ 252 ]
+
+                        case 4:
+
+                            while ($bite != 1) {
+                                if ($start == $end) {
+                                    return { start: $start, serialize: $serialize }
+                                }
+                                $buffer[$start++] = $_[$bite++]
+                            }
+
+
+                        case 5:
+
+                            $step = 6
+                            $bite = 1
+                            $_ = object.value
+
+                        case 6:
+
+                            while ($bite != -1) {
+                                if ($start == $end) {
+                                    return { start: $start, serialize: $serialize }
+                                }
+                                $buffer[$start++] = $_ >>> $bite * 8 & 0xff
+                                $bite--
+                            }
+
+
+                            $step = 11
                             continue
-                        } else {
-                            $step = 7
-                            continue
-                        }
 
-                    case 1:
+                        case 7:
 
-                        $step = 2
-                        $bite = 0
-                        $_ = object.value
+                            $step = 8
+                            $bite = 0
+                            $_ = [ 253 ]
 
-                    case 2:
+                        case 8:
 
-                        while ($bite != -1) {
-                            if ($start == $end) {
-                                return { start: $start, serialize: $serialize }
+                            while ($bite != 1) {
+                                if ($start == $end) {
+                                    return { start: $start, serialize: $serialize }
+                                }
+                                $buffer[$start++] = $_[$bite++]
                             }
-                            $buffer[$start++] = $_ >>> $bite * 8 & 0xff
-                            $bite--
-                        }
 
 
-                        $step = 11
-                        continue
+                        case 9:
 
-                    case 3:
+                            $step = 10
+                            $bite = 2
+                            $_ = object.value
 
-                        $step = 4
-                        $bite = 0
-                        $_ = [ 252 ]
+                        case 10:
 
-                    case 4:
-
-                        while ($bite != 1) {
-                            if ($start == $end) {
-                                return { start: $start, serialize: $serialize }
+                            while ($bite != -1) {
+                                if ($start == $end) {
+                                    return { start: $start, serialize: $serialize }
+                                }
+                                $buffer[$start++] = $_ >>> $bite * 8 & 0xff
+                                $bite--
                             }
-                            $buffer[$start++] = $_[$bite++]
-                        }
 
 
-                    case 5:
+                        case 11:
 
-                        $step = 6
-                        $bite = 1
-                        $_ = object.value
+                            $step = 12
+                            $bite = 0
+                            $_ = object.sentry
 
-                    case 6:
+                        case 12:
 
-                        while ($bite != -1) {
-                            if ($start == $end) {
-                                return { start: $start, serialize: $serialize }
+                            while ($bite != -1) {
+                                if ($start == $end) {
+                                    return { start: $start, serialize: $serialize }
+                                }
+                                $buffer[$start++] = $_ >>> $bite * 8 & 0xff
+                                $bite--
                             }
-                            $buffer[$start++] = $_ >>> $bite * 8 & 0xff
-                            $bite--
+
+
+                            $step = 13
+
+                        case 13:
+
+                            break
+
                         }
-
-
-                        $step = 11
-                        continue
-
-                    case 7:
-
-                        $step = 8
-                        $bite = 0
-                        $_ = [ 253 ]
-
-                    case 8:
-
-                        while ($bite != 1) {
-                            if ($start == $end) {
-                                return { start: $start, serialize: $serialize }
-                            }
-                            $buffer[$start++] = $_[$bite++]
-                        }
-
-
-                    case 9:
-
-                        $step = 10
-                        $bite = 2
-                        $_ = object.value
-
-                    case 10:
-
-                        while ($bite != -1) {
-                            if ($start == $end) {
-                                return { start: $start, serialize: $serialize }
-                            }
-                            $buffer[$start++] = $_ >>> $bite * 8 & 0xff
-                            $bite--
-                        }
-
-
-                    case 11:
-
-                        $step = 12
-                        $bite = 0
-                        $_ = object.sentry
-
-                    case 12:
-
-                        while ($bite != -1) {
-                            if ($start == $end) {
-                                return { start: $start, serialize: $serialize }
-                            }
-                            $buffer[$start++] = $_ >>> $bite * 8 & 0xff
-                            $bite--
-                        }
-
-
-                        $step = 13
-
-                    case 13:
 
                         break
-
                     }
 
-                    break
+                    return { start: $start, serialize: null }
                 }
-
-                return { start: $start, serialize: null }
             }
-        }
-    } ()
+        } ()
+    }
 }
