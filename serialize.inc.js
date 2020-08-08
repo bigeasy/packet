@@ -88,7 +88,6 @@ function generate (packet, { require = null }) {
                     $buffer[$start++] = ${write}
                     $bite${direction}
                 }
-
         `)
     }
     //
@@ -778,6 +777,7 @@ function generate (packet, { require = null }) {
         let source = $(`
             switch ($step) {
             `, dispatch(packet.name, packet), `
+
             }
         `)
 

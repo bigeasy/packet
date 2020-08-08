@@ -23,7 +23,6 @@ module.exports = function ({ $lookup }) {
                                 $bite--
                             }
 
-
                         case 2:
 
                             switch (($ => $.type)(object)) {
@@ -58,7 +57,6 @@ module.exports = function ({ $lookup }) {
                                 $buffer[$start++] = $_ >>> $bite * 8 & 0xff
                                 $bite--
                             }
-
                             $step = 9
                             continue
 
@@ -77,7 +75,6 @@ module.exports = function ({ $lookup }) {
                                 $buffer[$start++] = $_ >>> $bite * 8 & 0xff
                                 $bite--
                             }
-
                             $step = 9
                             continue
 
@@ -96,7 +93,6 @@ module.exports = function ({ $lookup }) {
                                 $buffer[$start++] = $_ >>> $bite * 8 & 0xff
                                 $bite--
                             }
-
 
                         case 9:
 

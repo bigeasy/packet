@@ -23,7 +23,6 @@ module.exports = function ({ $lookup }) {
                                 $bite--
                             }
 
-
                         case 2:
 
                             $_ = 0

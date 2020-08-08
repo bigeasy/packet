@@ -23,7 +23,6 @@ module.exports = function ({ $lookup }) {
                                 $bite--
                             }
 
-
                         case 2:
 
                             if ((value => value <= 0x7f)(object.value)) {
@@ -55,7 +54,6 @@ module.exports = function ({ $lookup }) {
                                 $buffer[$start++] = $_ >>> $bite * 8 & 0xff
                                 $bite--
                             }
-
 
                             $step = 17
                             continue

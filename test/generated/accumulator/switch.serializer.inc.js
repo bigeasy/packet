@@ -45,7 +45,6 @@ module.exports = function ({ $lookup }) {
                                 $bite--
                             }
 
-
                         case 4:
 
                             $i[0] = 0
@@ -73,7 +72,6 @@ module.exports = function ({ $lookup }) {
                                 $buffer[$start++] = $_ >>> $bite * 8 & 0xff
                                 $bite--
                             }
-
                             if (++$i[0] != object.counted.string.length) {
                                 $step = 5
                                 continue
@@ -152,7 +150,6 @@ module.exports = function ({ $lookup }) {
                                 $buffer[$start++] = $_ >>> $bite * 8 & 0xff
                                 $bite--
                             }
-
                             $step = 16
                             continue
 
@@ -178,7 +175,6 @@ module.exports = function ({ $lookup }) {
                                 $buffer[$start++] = $_ >>> $bite * 8 & 0xff
                                 $bite--
                             }
-
                             $step = 16
                             continue
 
@@ -204,7 +200,6 @@ module.exports = function ({ $lookup }) {
                                 $buffer[$start++] = $_ >>> $bite * 8 & 0xff
                                 $bite--
                             }
-
 
                             ; (function ({ $start, $end, counter }) {
                                 counter[0] += $end - $start

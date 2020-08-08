@@ -23,7 +23,6 @@ module.exports = function ({ $lookup }) {
                                 $bite--
                             }
 
-
                         case 2:
 
                             if (((_, $) => $.type == 0)(object.value, object)) {
@@ -53,7 +52,6 @@ module.exports = function ({ $lookup }) {
                                 $bite--
                             }
 
-
                             $step = 9
                             continue
 
@@ -73,7 +71,6 @@ module.exports = function ({ $lookup }) {
                                 $bite--
                             }
 
-
                             $step = 9
                             continue
 
@@ -92,7 +89,6 @@ module.exports = function ({ $lookup }) {
                                 $buffer[$start++] = $_ >>> $bite * 8 & 0xff
                                 $bite--
                             }
-
 
                         case 9:
 

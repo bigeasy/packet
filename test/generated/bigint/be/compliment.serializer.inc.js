@@ -22,7 +22,6 @@ module.exports = function ({ $lookup }) {
                             $bite--
                         }
 
-
                     case 2:
 
                         $bite = 7n
@@ -38,7 +37,6 @@ module.exports = function ({ $lookup }) {
                             $buffer[$start++] = Number($_ >> $bite * 8n & 0xffn)
                             $bite--
                         }
-
 
                     case 4:
 

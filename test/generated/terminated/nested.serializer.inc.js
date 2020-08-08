@@ -23,7 +23,6 @@ module.exports = function ({ $lookup }) {
                                 $bite--
                             }
 
-
                         case 2:
 
                             $i[0] = 0
@@ -49,7 +48,6 @@ module.exports = function ({ $lookup }) {
                                 $buffer[$start++] = $_ >>> $bite * 8 & 0xff
                                 $bite--
                             }
-
                             if (++$i[1] != object.array[$i[0]].length) {
                                 $step = 4
                                 continue

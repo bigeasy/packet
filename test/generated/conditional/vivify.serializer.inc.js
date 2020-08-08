@@ -23,7 +23,6 @@ module.exports = function ({ $lookup }) {
                                 $bite--
                             }
 
-
                         case 2:
 
                             if (($ => $.type == 0)(object)) {
@@ -62,7 +61,6 @@ module.exports = function ({ $lookup }) {
                                 $bite--
                             }
 
-
                             $step = 22
                             continue
 
@@ -81,7 +79,6 @@ module.exports = function ({ $lookup }) {
                                 $buffer[$start++] = $_ >>> $bite * 8 & 0xff
                                 $bite--
                             }
-
                             $i[0] = 0
 
                         case 7:
@@ -99,7 +96,6 @@ module.exports = function ({ $lookup }) {
                                 $buffer[$start++] = $_ >>> $bite * 8 & 0xff
                                 $bite--
                             }
-
 
                             if (++$i[0] != object.value.length) {
                                 $step = 7
@@ -129,7 +125,6 @@ module.exports = function ({ $lookup }) {
                                 $buffer[$start++] = $_ >>> $bite * 8 & 0xff
                                 $bite--
                             }
-
                             if (++$i[0] != object.value.length) {
                                 $step = 10
                                 continue
@@ -166,7 +161,6 @@ module.exports = function ({ $lookup }) {
                                 $buffer[$start++] = $_ >>> $bite * 8 & 0xff
                                 $bite--
                             }
-
 
                         case 16: {
 
@@ -207,7 +201,6 @@ module.exports = function ({ $lookup }) {
                                 $buffer[$start++] = $_ >>> $bite * 8 & 0xff
                                 $bite--
                             }
-
                             if (++$i[0] != object.value.length) {
                                 $step = 18
                                 continue
