@@ -6,16 +6,24 @@ module.exports = function ({ $incremental, $lookup }) {
                     let $_
 
                     let object = {
+                        nudge: 0,
                         header: {
                             one: 0,
                             two: 0,
-                            three: 0
+                            three: 0,
+                            four: 0
                         },
                         sentry: 0
                     }
 
-                    if ($end - $start < 4) {
+                    if ($end - $start < 1) {
                         return $incremental.object(object, 1)($buffer, $start, $end)
+                    }
+
+                    object.nudge = $buffer[$start++]
+
+                    if ($end - $start < 4) {
+                        return $incremental.object(object, 3)($buffer, $start, $end)
                     }
 
                     $_ = (
@@ -31,10 +39,12 @@ module.exports = function ({ $incremental, $lookup }) {
                     object.header.two =
                         object.header.two & 0x4 ? (0x7 - object.header.two + 1) * -1 : object.header.two
 
-                    object.header.three = $_ & 0xfff
+                    object.header.three = $_ >>> 2 & 0x3ff
+
+                    object.header.four = $lookup[0][$_ & 0x3]
 
                     if ($end - $start < 1) {
-                        return $incremental.object(object, 3)($buffer, $start, $end)
+                        return $incremental.object(object, 5)($buffer, $start, $end)
                     }
 
                     object.sentry = $buffer[$start++]

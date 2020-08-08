@@ -9,24 +9,37 @@ module.exports = function ({ $lookup }) {
                     case 0:
 
                         object = {
+                            nudge: 0,
                             header: {
                                 one: 0,
                                 two: 0,
-                                three: 0
+                                three: 0,
+                                four: 0
                             },
                             sentry: 0
                         }
 
                     case 1:
 
+                    case 2:
+
+                        if ($start == $end) {
+                            $step = 2
+                            return { start: $start, object: null, parse: $parse }
+                        }
+
+                        object.nudge = $buffer[$start++]
+
+                    case 3:
+
                         $_ = 0
                         $bite = 3
 
-                    case 2:
+                    case 4:
 
                         while ($bite != -1) {
                             if ($start == $end) {
-                                $step = 2
+                                $step = 4
                                 return { start: $start, object: null, parse: $parse }
                             }
                             $_ += $buffer[$start++] << $bite * 8 >>> 0
@@ -39,14 +52,16 @@ module.exports = function ({ $lookup }) {
                         object.header.two =
                             object.header.two & 0x4 ? (0x7 - object.header.two + 1) * -1 : object.header.two
 
-                        object.header.three = $_ & 0xfff
+                        object.header.three = $_ >>> 2 & 0x3ff
 
-                    case 3:
+                        object.header.four = $lookup[0][$_ & 0x3]
 
-                    case 4:
+                    case 5:
+
+                    case 6:
 
                         if ($start == $end) {
-                            $step = 4
+                            $step = 6
                             return { start: $start, object: null, parse: $parse }
                         }
 

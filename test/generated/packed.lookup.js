@@ -1,1 +1,1 @@
-module.exports = []
+module.exports = [ [ 'zero', 'one', 'two', 'three' ] ]

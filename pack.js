@@ -33,7 +33,8 @@ function flatten (flattened, path, fields, assignment = '=') {
                 type: 'integer',
                 bits: field.bits,
                 compliment: field.compliment,
-                value: path + field.dotted
+                value: path + field.dotted,
+                lookup: field.lookup || null
             })
             break
         case 'conditional':
@@ -72,7 +73,8 @@ module.exports = function (inliner, field, path) {
                         bits: bits,
                         offset: offset,
                         size: field.bits,
-                        value: field.value
+                        value: field.value,
+                        lookup: field.lookup
                     })
                     offset += field.bits
                 }
@@ -154,7 +156,13 @@ module.exports = function (inliner, field, path) {
                 block.push(packed)
             } else if (packed.length != 0) {
                 const fiddles = packed.map(pack => {
-                    return fiddle(pack.bits, pack.offset, pack.size, pack.value)
+                    const value = function () {
+                        if (pack.lookup != null) {
+                            return `$lookup[${pack.lookup.index}].indexOf(${pack.value})`
+                        }
+                        return pack.value
+                    } ()
+                    return fiddle(pack.bits, pack.offset, pack.size, value)
                 })
                 block.push($(`
                     ${stuff} ${assignment}

@@ -27,6 +27,9 @@ module.exports = function (definition) {
                     }
                 }
             }
+            if (field.fields != null) {
+                field.fields.forEach(seek)
+            }
             break
         case 'switch':
             field.cases.forEach(when => when.fields.forEach(seek))

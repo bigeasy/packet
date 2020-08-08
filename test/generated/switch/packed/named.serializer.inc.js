@@ -10,7 +10,7 @@ module.exports = function ({ $lookup }) {
 
                         $bite = 0
                         $_ =
-                            (object.header.type << 6 & 0xc0)
+                            object.header.type << 6 & 0xc0
 
                         switch ((({ $ }) => $.header.type)({
                             $: object
@@ -18,23 +18,23 @@ module.exports = function ({ $lookup }) {
                         case 0:
 
                             $_ |=
-                                (object.header.value & 0x3f)
+                                object.header.value & 0x3f
 
                             break
 
                         case 1:
 
                             $_ |=
-                                (0xa << 2 & 0x3c) |
-                                (object.header.value & 0x3)
+                                0xa << 2 & 0x3c |
+                                object.header.value & 0x3
 
                             break
 
                         default:
 
                             $_ |=
-                                (object.header.value.two << 4 & 0x30) |
-                                (object.header.value.four & 0xf)
+                                object.header.value.two << 4 & 0x30 |
+                                object.header.value.four & 0xf
 
                             break
                         }

@@ -8,12 +8,8 @@ module.exports = function ({ $lookup }) {
                     switch ($step) {
                     case 0:
 
-                        $bite = 3
-                        $_ =
-                            ((0x5eaf << 17 & 0xfffe0000) >>> 0) |
-                            (object.header.one << 15 & 0x18000) |
-                            (object.header.two << 12 & 0x7000) |
-                            (object.header.three & 0xfff)
+                        $bite = 0
+                        $_ = object.nudge
 
                     case 1:
 
@@ -28,14 +24,35 @@ module.exports = function ({ $lookup }) {
 
                     case 2:
 
-                        $bite = 0
-                        $_ = object.sentry
+                        $bite = 3
+                        $_ =
+                            (0x5eaf << 17 & 0xfffe0000) >>> 0 |
+                            object.header.one << 15 & 0x18000 |
+                            object.header.two << 12 & 0x7000 |
+                            object.header.three << 2 & 0xffc |
+                            $lookup[0].indexOf(object.header.four) & 0x3
 
                     case 3:
 
                         while ($bite != -1) {
                             if ($start == $end) {
                                 $step = 3
+                                return { start: $start, serialize: $serialize }
+                            }
+                            $buffer[$start++] = $_ >>> $bite * 8 & 0xff
+                            $bite--
+                        }
+
+                    case 4:
+
+                        $bite = 0
+                        $_ = object.sentry
+
+                    case 5:
+
+                        while ($bite != -1) {
+                            if ($start == $end) {
+                                $step = 5
                                 return { start: $start, serialize: $serialize }
                             }
                             $buffer[$start++] = $_ >>> $bite * 8 & 0xff

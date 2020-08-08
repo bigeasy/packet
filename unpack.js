@@ -32,7 +32,8 @@ function unpack (inliner, root, path, field, packed, offset = 0) {
                     packed: packed,
                     size: field.bits,
                     offset: advance(field.bits),
-                    compliment: field.compliment
+                    compliment: field.compliment,
+                    lookup: field.lookup || null
                 }
             case 'conditional':
                 return {
@@ -66,9 +67,13 @@ function unpack (inliner, root, path, field, packed, offset = 0) {
                     const assign = `${packing.path} = ${fiddled}`
                     if (packing.compliment) {
                         blocks.push($(`
-                            `, assign, `
+                            ${packing.path} = ${fiddled}
                             ${packing.path} =
                                 `, unsign(packing.path, packing.size), `
+                        `))
+                    } else if (packing.lookup) {
+                        blocks.push($(`
+                            ${packing.path} = $lookup[${packing.lookup.index}][${fiddled}]
                         `))
                     } else {
                         blocks.push(assign)
