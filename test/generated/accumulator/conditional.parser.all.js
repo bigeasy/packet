@@ -56,10 +56,9 @@ module.exports = function ({ $lookup }) {
                     $: object,
                     counter: $accumulator['counter']
                 })) {
-                    object.counted.number = (
+                    object.counted.number =
                         $buffer[$start++] << 8 |
                         $buffer[$start++]
-                    ) >>> 0
                 } else {
                     object.counted.number = (
                         $buffer[$start++] << 24 |

@@ -57,10 +57,9 @@ module.exports = function ({ $lookup }) {
                     break
 
                 case 2:
-                    object.counted.number = (
+                    object.counted.number =
                         $buffer[$start++] << 8 |
                         $buffer[$start++]
-                    ) >>> 0
 
                     break
 

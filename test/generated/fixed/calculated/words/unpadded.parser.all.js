@@ -16,10 +16,9 @@ module.exports = function ({ $lookup }) {
 
                 $i[0] = 0
                 do {
-                    object.array[$i[0]] = (
+                    object.array[$i[0]] =
                         $buffer[$start++] << 8 |
                         $buffer[$start++]
-                    ) >>> 0
                 } while (++$i[0] != $I[0])
 
                 object.sentry = $buffer[$start++]

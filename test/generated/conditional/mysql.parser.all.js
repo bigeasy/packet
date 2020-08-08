@@ -16,16 +16,14 @@ module.exports = function ({ $lookup }) {
 
                     object.value = $buffer[$start++]
                 } else if ((sip => sip == 0xfc)($sip[0])) {
-                    object.value = (
+                    object.value =
                         $buffer[$start++] << 8 |
                         $buffer[$start++]
-                    ) >>> 0
                 } else {
-                    object.value = (
+                    object.value =
                         $buffer[$start++] << 16 |
                         $buffer[$start++] << 8 |
                         $buffer[$start++]
-                    ) >>> 0
                 }
 
                 object.sentry = $buffer[$start++]

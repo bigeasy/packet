@@ -24,21 +24,19 @@ module.exports = function ({ $lookup }) {
                     if ((sip => (sip & 0x80) == 0)($sip[1], object)) {
                         $start -= 2
 
-                        object.value = (
+                        object.value =
                             ($buffer[$start++] & 0x7f) << 7 |
                             $buffer[$start++]
-                        ) >>> 0
                     } else {
                         $sip[2] = $buffer[$start++]
 
                         if ((sip => (sip & 0x80) == 0)($sip[2], object)) {
                             $start -= 3
 
-                            object.value = (
+                            object.value =
                                 ($buffer[$start++] & 0x7f) << 14 |
                                 ($buffer[$start++] & 0x7f) << 7 |
                                 $buffer[$start++]
-                            ) >>> 0
                         } else {
                             $start -= 3
 

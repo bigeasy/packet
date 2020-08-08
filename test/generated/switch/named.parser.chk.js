@@ -32,10 +32,9 @@ module.exports = function ({ $incremental, $lookup }) {
                             return $incremental.object(object, 6)($buffer, $start, $end)
                         }
 
-                        object.value = (
+                        object.value =
                             $buffer[$start++] << 8 |
                             $buffer[$start++]
-                        ) >>> 0
 
                         break
 
@@ -44,11 +43,10 @@ module.exports = function ({ $incremental, $lookup }) {
                             return $incremental.object(object, 8)($buffer, $start, $end)
                         }
 
-                        object.value = (
+                        object.value =
                             $buffer[$start++] << 16 |
                             $buffer[$start++] << 8 |
                             $buffer[$start++]
-                        ) >>> 0
 
                         break
                     }

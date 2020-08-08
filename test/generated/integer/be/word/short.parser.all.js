@@ -6,10 +6,9 @@ module.exports = function ({ $lookup }) {
                     value: 0
                 }
 
-                object.value = (
+                object.value =
                     $buffer[$start++] << 8 |
                     $buffer[$start++]
-                ) >>> 0
 
                 return object
             }

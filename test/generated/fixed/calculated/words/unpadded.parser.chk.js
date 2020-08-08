@@ -29,10 +29,9 @@ module.exports = function ({ $incremental, $lookup }) {
                             return $incremental.object(object, 5, $i, $I)($buffer, $start, $end)
                         }
 
-                        object.array[$i[0]] = (
+                        object.array[$i[0]] =
                             $buffer[$start++] << 8 |
                             $buffer[$start++]
-                        ) >>> 0
                     } while (++$i[0] != $I[0])
 
                     if ($end - $start < 1) {

@@ -78,10 +78,9 @@ module.exports = function ({ $incremental, $lookup }) {
                             return $incremental.object(object, 14, $i, $accumulator, $starts)($buffer, $start, $end)
                         }
 
-                        object.counted.number = (
+                        object.counted.number =
                             $buffer[$start++] << 8 |
                             $buffer[$start++]
-                        ) >>> 0
 
                         break
 

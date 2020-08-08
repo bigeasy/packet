@@ -19,19 +19,17 @@ module.exports = function ({ $lookup }) {
                     break
 
                 case 1:
-                    object.value = (
+                    object.value =
                         $buffer[$start++] << 8 |
                         $buffer[$start++]
-                    ) >>> 0
 
                     break
 
                 default:
-                    object.value = (
+                    object.value =
                         $buffer[$start++] << 16 |
                         $buffer[$start++] << 8 |
                         $buffer[$start++]
-                    ) >>> 0
 
                     break
                 }

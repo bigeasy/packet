@@ -45,10 +45,9 @@ module.exports = function ({ $incremental, $lookup }) {
 
                             $start -= 2
 
-                            object.value = (
+                            object.value =
                                 ($buffer[$start++] & 0x7f) << 7 |
                                 $buffer[$start++]
-                            ) >>> 0
                         } else {
                             if ($end - $start < 1) {
                                 return $incremental.object(object, 14, $sip)($buffer, $start, $end)
@@ -63,11 +62,10 @@ module.exports = function ({ $incremental, $lookup }) {
 
                                 $start -= 3
 
-                                object.value = (
+                                object.value =
                                     ($buffer[$start++] & 0x7f) << 14 |
                                     ($buffer[$start++] & 0x7f) << 7 |
                                     $buffer[$start++]
-                                ) >>> 0
                             } else {
                                 if ($end - ($start - 3) < 4) {
                                     return $incremental.object(object, 21, $sip)($buffer, $start - 3, $end)

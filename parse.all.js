@@ -503,14 +503,20 @@ function generate (packet, { require, bff, chk }) {
                 reads.push(`${masked} << ${shift}`)
             }
         }
-        if (reads.length != 1) {
+        if (reads.length == 1) {
+            return read(path, field, `= ${reads[0]}`)
+        }
+        if (reads.length < 4) {
             return read(path, field, $(`
-                = (
+                =
                     `,reads.join(' |\n') , `
-                ) >>> 0
             `))
         }
-        return read(path, field, `= ${reads[0]}`)
+        return read(path, field, $(`
+            = (
+                `,reads.join(' |\n') , `
+            ) >>> 0
+        `))
     }
     //
 

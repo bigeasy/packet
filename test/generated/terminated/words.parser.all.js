@@ -22,10 +22,9 @@ module.exports = function ({ $lookup }) {
                         break
                     }
 
-                    object.array[$i[0]] = (
+                    object.array[$i[0]] =
                         $buffer[$start++] << 8 |
                         $buffer[$start++]
-                    ) >>> 0
 
                     $i[0]++
                 }

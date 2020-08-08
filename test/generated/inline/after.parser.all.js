@@ -7,10 +7,9 @@ module.exports = function ({ $lookup }) {
                     sentry: 0
                 }
 
-                object.value = (
+                object.value =
                     $buffer[$start++] << 8 |
                     $buffer[$start++]
-                ) >>> 0
 
                 object.value = (value => value)(object.value)
 

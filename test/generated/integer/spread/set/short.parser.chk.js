@@ -19,10 +19,9 @@ module.exports = function ({ $incremental, $lookup }) {
                         return $incremental.object(object, 3)($buffer, $start, $end)
                     }
 
-                    object.value = (
+                    object.value =
                         ($buffer[$start++] & 0x7f) << 7 |
                         $buffer[$start++]
-                    ) >>> 0
 
                     if ($end - $start < 1) {
                         return $incremental.object(object, 6)($buffer, $start, $end)

@@ -12,10 +12,9 @@ module.exports = function ({ $lookup }) {
 
                 $start += 6
 
-                object.padded = (
+                object.padded =
                     $buffer[$start++] << 8 |
                     $buffer[$start++]
-                ) >>> 0
 
                 $start += 6
 

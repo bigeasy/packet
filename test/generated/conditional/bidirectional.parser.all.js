@@ -11,16 +11,14 @@ module.exports = function ({ $lookup }) {
                 object.type = $buffer[$start++]
 
                 if (($ => $.type == 0)(object)) {
-                    object.value = (
+                    object.value =
                         $buffer[$start++] << 8 |
                         $buffer[$start++]
-                    ) >>> 0
                 } else if (($ => $.type == 1)(object)) {
-                    object.value = (
+                    object.value =
                         $buffer[$start++] << 16 |
                         $buffer[$start++] << 8 |
                         $buffer[$start++]
-                    ) >>> 0
                 } else {
                     object.value = (
                         $buffer[$start++] << 24 |

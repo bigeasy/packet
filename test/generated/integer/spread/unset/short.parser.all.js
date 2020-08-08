@@ -10,10 +10,9 @@ module.exports = function ({ $lookup }) {
 
                 object.nudge = $buffer[$start++]
 
-                object.value = (
+                object.value =
                     $buffer[$start++] << 7 |
                     $buffer[$start++]
-                ) >>> 0
 
                 object.sentry = $buffer[$start++]
 

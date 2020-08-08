@@ -34,10 +34,9 @@ module.exports = function ({ $lookup }) {
                             break
                         }
 
-                        object.array[$i[0]][$i[1]] = (
+                        object.array[$i[0]][$i[1]] =
                             $buffer[$start++] << 8 |
                             $buffer[$start++]
-                        ) >>> 0
 
                         $i[1]++
                     }

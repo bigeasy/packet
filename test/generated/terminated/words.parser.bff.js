@@ -35,10 +35,9 @@ module.exports = function ({ $incremental, $lookup }) {
                             return $incremental.object(object, 6, $i)($buffer, $start, $end)
                         }
 
-                        object.array[$i[0]] = (
+                        object.array[$i[0]] =
                             $buffer[$start++] << 8 |
                             $buffer[$start++]
-                        ) >>> 0
 
                         $i[0]++
                     }

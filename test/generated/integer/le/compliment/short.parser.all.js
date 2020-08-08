@@ -8,10 +8,9 @@ module.exports = function ({ $lookup }) {
                     value: 0
                 }
 
-                $_ = (
+                $_ =
                     $buffer[$start++] |
                     $buffer[$start++] << 8
-                ) >>> 0
                 object.value = $_ & 0x8000 ? (0xffff - $_ + 1) * -1 : $_
 
                 return object
