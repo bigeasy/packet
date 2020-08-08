@@ -89,6 +89,7 @@ function generate (packet, { require = null }) {
     // both rolled and unrolled `number` and `BigInt` serialization. Convert the
     // object property value if it is a lookup value or a packed integer.
     function assign (path, field) {
+        variables.register = true
         // **TODO** This appears to proibit using a two's compliment value as a
         // lookup value, which is probably okay, since how would you lookup
         // negative values. Well, you could use a map, so...
@@ -108,6 +109,7 @@ function generate (packet, { require = null }) {
     // byte. We use this when the bit size and upper bits are the same for each
     // byte which is the common case &mdash; use all 8 bits, set no bytes.
     function rolled (path, field, write, $_, bite, stop) {
+        variables.bite = true
         const direction = field.endianness == 'big' ?  '--' : '++'
         const { size } = field.bytes[0]
         return $(`
@@ -221,6 +223,8 @@ function generate (packet, { require = null }) {
             if (literal.repeat == 0) {
                 return null
             }
+            variables.register = true
+            variables.bite = true
             return $(`
                 case ${$step++}:
 
@@ -368,6 +372,7 @@ function generate (packet, { require = null }) {
         // and byte-by-byte fixed arrays, not used for terminated. Note that
         // it's a function because of the `$step++`.
         function skip (i) {
+            variables.register = true
             return $(`
                 case ${$step++}: {
 
@@ -395,6 +400,7 @@ function generate (packet, { require = null }) {
             locals['buffers'] = '[]'
             if (field.fixed) {
                 locals['length'] = 0
+                variables.register = true
             }
             const redo = $step + (field.type == 'fixed' ? 1 : 0)
             // **TODO** This is off for a multi-byte terminator that occurs at
@@ -749,6 +755,7 @@ function generate (packet, { require = null }) {
 
         //
         if (element.type == 'buffer') {
+            variables.register = true
             locals['buffers'] = '[]'
             const assign = element.concat
                 ? `${path} = $buffers.length == 1 ? $buffers[0] : Buffer.concat($buffers)`
@@ -788,11 +795,11 @@ function generate (packet, { require = null }) {
         const i = `$i[${++$i}]`
         // The loop return step is after loop index initialization.
         const redo = $step + 1
-        // We sometimes have a vivification step to create an object element.
-        // **TODO** Eliminate vivify step if not used.
+        // TODO Do we need remaining if there is no padding?
         const remaining = field.calculated && field.fixed
             ? `$_ = (${length} - ${i}) * ${element.bits >>> 3} - ${field.pad.length}`
             : null
+        // We sometimes have a vivification step to create an object element.
 
         const vivified = vivify.assignment(`${path}[${i}]`, field)
         const initialization = vivified == null ? $(`
@@ -829,6 +836,9 @@ function generate (packet, { require = null }) {
         // Release the length index from the array of lengths if calculated.
         if (field.calculated) {
             $I--
+        }
+        if (field.pad.length != 0) {
+            variables.register = true
         }
         // Generate skip logic if we are fixed width.
         const skip = field.pad.length != 0 ? $(`
@@ -1084,9 +1094,6 @@ function generate (packet, { require = null }) {
 
         const requires = required(require)
 
-        variables.register = true
-        variables.bite = true
-
         const declarations = {
             register: '$_',
             bite: '$bite',
@@ -1114,7 +1121,7 @@ function generate (packet, { require = null }) {
                 `, requires, -1, `
 
                 return function (`, signature.join(', '), `) {
-                    let ${lets.join(', ')}
+                    let `, lets.length != 0 ? lets.join(', ') : null, `
 
                     return function $parse ($buffer, $start, $end) {
                         `, restart, -1, `

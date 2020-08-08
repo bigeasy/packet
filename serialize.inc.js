@@ -1,5 +1,6 @@
 // Node.js API.
 const util = require('util')
+const assert = require('assert')
 
 // Generate user functions and accumulators.
 const Inline = require('./inline.js')
@@ -56,6 +57,7 @@ function generate (packet, { require = null }) {
     // serialization. Convert the object property value if it is a lookup value
     // or a packed integer.
     function convert (path, field) {
+        variables.register = true
         return field.fields
             ? pack(inliner, field, path)
             : field.lookup != null
@@ -70,6 +72,7 @@ function generate (packet, { require = null }) {
     // next byte. We use this when the bit size and upper bits are the same for
     // each byte which is the common case &mdash; use all 8 bits, set no bytes.
     function rolled (path, field, bite, stop, write) {
+        variables.bite = true
         const direction = field.endianness == 'big' ? '--' : '++'
         return $(`
             case ${$step++}:
@@ -174,6 +177,7 @@ function generate (packet, { require = null }) {
             case 0:
                 return null
             case 1:
+                variables.register = true
                 return $(`
                     case ${$step++}:
 
@@ -254,36 +258,36 @@ function generate (packet, { require = null }) {
         surround = true
         if (element.type == 'buffer') {
             locals['copied'] = 0
-            if (!element.concat) {
-                locals['offset'] = 0
-                locals['index'] = 0
-                locals['length'] = 0
-            }
             // New to you as of this writing is resetting `$index`. We're not
             // proagating an index from the best-foot-forward parser. Should we
             // call this incremental scope versus best-foot-forward scope?
-            return element.concat
-            ? $(`
-                `, map(dispatch, `${path}.length`, field.encoding), `
+            if (element.concat) {
+                return $(`
+                    `, map(dispatch, `${path}.length`, field.encoding), `
 
-                case ${$step++}: {
+                    case ${$step++}: {
 
-                    const $bytes = Math.min($end - $start, ${path}.length - $copied)
-                    ${path}.copy($buffer, $start, $copied, $copied + $bytes)
-                    $copied += $bytes
-                    $start += $bytes
+                        const $bytes = Math.min($end - $start, ${path}.length - $copied)
+                        ${path}.copy($buffer, $start, $copied, $copied + $bytes)
+                        $copied += $bytes
+                        $start += $bytes
 
-                    if ($copied != ${path}.length) {
-                        $step = ${$step - 1}
-                        `, inliner.exit(), `
-                        return { start: $start, serialize: $serialize }
+                        if ($copied != ${path}.length) {
+                            $step = ${$step - 1}
+                            `, inliner.exit(), `
+                            return { start: $start, serialize: $serialize }
+                        }
+
+                        $copied = 0
+
                     }
-
-                    $copied = 0
-
-                }
-            `)
-            : $(`
+                `)
+            }
+            variables.register = true
+            locals['offset'] = 0
+            locals['index'] = 0
+            locals['length'] = 0
+            return $(`
                 case ${$step++}:
 
                     $length = ${path}.reduce((sum, buffer) => sum + buffer.length, 0)
@@ -347,41 +351,38 @@ function generate (packet, { require = null }) {
 
     //
     function copy (path, element, calculation = null) {
-        // If we have an array of buffers, we need a loop index and a variable
-        // to track the offset in the specific buffer.
-        let i
-        if (!element.concat) {
-            locals['offset'] = 0
-            locals['length'] = 0
-            locals['index'] = 0
-        }
-        const source = element.concat
-        // Copy the single buffer using copy.
-        ? $(`
-            case ${$step++}:
+        variables.register = true
+        if (element.concat) {
+            // Copy the single buffer using copy.
+            return $(`
+                case ${$step++}:
 
-                $_ = 0
-                $I[${$I + 1}] = `, calculation, `
+                    $_ = 0
+                    $I[${$I + 1}] = `, calculation, `
 
-            case ${$step++}: {
+                case ${$step++}: {
 
-                    const length = Math.min($end - $start, ${path}.length - $_)
-                    ${path}.copy($buffer, $start, $_, $_ + length)
-                    $start += length
-                    $_ += length
+                        const length = Math.min($end - $start, ${path}.length - $_)
+                        ${path}.copy($buffer, $start, $_, $_ + length)
+                        $start += length
+                        $_ += length
 
-                    if ($_ != ${path}.length) {
-                        $step = ${$step - 1}
-                        `, inliner.exit(), `
-                        return { start: $start, serialize: $serialize }
+                        if ($_ != ${path}.length) {
+                            $step = ${$step - 1}
+                            `, inliner.exit(), `
+                            return { start: $start, serialize: $serialize }
+                        }
+
                     }
-
-                }
-        `)
+            `)
+        }
+        locals['offset'] = 0
+        locals['length'] = 0
+        locals['index'] = 0
         // Loop through an array of buffers copying to the serialization
         // buffer using `Buffer.copy()`. Need to track the index of the
         // current buffer in the array the offset in the current buffer.
-        : $(`
+        return $(`
             case ${$step++}:
 
                 $_ = 0
@@ -418,10 +419,6 @@ function generate (packet, { require = null }) {
 
             }
         `)
-        if (element.concat) {
-            i--
-        }
-        return source
     }
 
     function terminated (path, field) {
@@ -500,6 +497,7 @@ function generate (packet, { require = null }) {
             if (field.pad.length == 0) {
                 return null
             }
+            variables.register = true
             // First step of padding.
             const redo = $step
             // First step of next field.
@@ -837,9 +835,6 @@ function generate (packet, { require = null }) {
             length: '$length = 0'
         }
 
-        variables.register = true
-        variables.bite = true
-
         const lets = Object.keys(declarations)
                            .filter(key => variables[key])
                            .map(key => declarations[key])
@@ -850,7 +845,7 @@ function generate (packet, { require = null }) {
                 `, requires, -1, `
 
                 return function (`, signature.join(', '), `) {
-                    let ${lets.join(', ')}
+                    let `, lets.length != 0 ? lets.join(', ') : null, -1, `
 
                     return function $serialize ($buffer, $start, $end) {
                         `, restart, -1, `

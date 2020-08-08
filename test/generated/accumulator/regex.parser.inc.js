@@ -6,7 +6,6 @@ module.exports = function ({ $lookup }) {
             return function (object, {
                 regex = /^abc$/
             } = {}, $step = 0, $accumulator = []) {
-                let $_, $bite
 
                 return function $parse ($buffer, $start, $end) {
                     switch ($step) {

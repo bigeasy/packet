@@ -2,7 +2,7 @@ module.exports = function ({ $lookup }) {
     return {
         object: function () {
             return function (object, $step = 0, $i = [], $I = []) {
-                let $_, $bite, $index = 0, $buffers = []
+                let $index = 0, $buffers = []
 
                 return function $parse ($buffer, $start, $end) {
                     switch ($step) {
