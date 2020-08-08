@@ -24,6 +24,7 @@ module.exports = function ({ $lookup }) {
                         object.word = $buffer[$start++]
 
                     }
+
                     return { start: $start, object: object, parse: null }
                 }
             }

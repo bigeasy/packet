@@ -31,6 +31,7 @@ module.exports = function ({ $lookup }) {
                         object.value = $_ & 0x8000 ? (0xffff - $_ + 1) * -1 : $_
 
                     }
+
                     return { start: $start, object: object, parse: null }
                 }
             }

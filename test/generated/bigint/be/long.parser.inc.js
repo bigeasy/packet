@@ -55,6 +55,7 @@ module.exports = function ({ $lookup }) {
                         object.sentry = $buffer[$start++]
 
                     }
+
                     return { start: $start, object: object, parse: null }
                 }
             }

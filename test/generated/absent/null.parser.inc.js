@@ -17,6 +17,7 @@ module.exports = function ({ $lookup }) {
                         object.value = null
 
                     }
+
                     return { start: $start, object: object, parse: null }
                 }
             }

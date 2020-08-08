@@ -31,6 +31,7 @@ module.exports = function ({ $lookup }) {
                         object.value = $_
 
                     }
+
                     return { start: $start, object: object, parse: null }
                 }
             }

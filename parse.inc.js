@@ -1039,6 +1039,7 @@ function generate (packet, { require = null }) {
             `, dispatch(packet.name, packet, 0), `
 
             }
+
             return { start: $start, object: ${packet.name}, parse: null }
         `)
 

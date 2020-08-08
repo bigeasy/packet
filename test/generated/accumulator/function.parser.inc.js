@@ -67,6 +67,7 @@ module.exports = function ({ $lookup }) {
                         })
 
                     }
+
                     return { start: $start, object: object, parse: null }
                 }
             }
