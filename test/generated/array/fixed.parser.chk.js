@@ -21,10 +21,9 @@ module.exports = function ({ $incremental, $lookup }) {
                         return $incremental.object(object, 3, $i, $I)($buffer, $start, $end)
                     }
 
-                    $I[0] = (
+                    $I[0] =
                         $buffer[$start++] << 8 |
                         $buffer[$start++]
-                    ) >>> 0
                     $i[0] = 0
 
                     if ($end - $start < 4 * $I[0]) {
@@ -37,15 +36,13 @@ module.exports = function ({ $incremental, $lookup }) {
                             second: 0
                         }
 
-                        object.array[$i[0]].first = (
+                        object.array[$i[0]].first =
                             $buffer[$start++] << 8 |
                             $buffer[$start++]
-                        ) >>> 0
 
-                        object.array[$i[0]].second = (
+                        object.array[$i[0]].second =
                             $buffer[$start++] << 8 |
                             $buffer[$start++]
-                        ) >>> 0
                     }
 
                     if ($end - $start < 1) {

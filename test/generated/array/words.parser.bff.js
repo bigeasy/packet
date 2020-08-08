@@ -17,10 +17,9 @@ module.exports = function ({ $incremental, $lookup }) {
 
                     object.nudge = $buffer[$start++]
 
-                    $I[0] = (
+                    $I[0] =
                         $buffer[$start++] << 8 |
                         $buffer[$start++]
-                    ) >>> 0
                     $i[0] = 0
 
                     if ($end - $start < 1 + 2 * $I[0]) {
@@ -28,10 +27,9 @@ module.exports = function ({ $incremental, $lookup }) {
                     }
 
                     for (; $i[0] < $I[0]; $i[0]++) {
-                        object.array[$i[0]] = (
+                        object.array[$i[0]] =
                             $buffer[$start++] << 8 |
                             $buffer[$start++]
-                        ) >>> 0
                     }
 
                     object.sentry = $buffer[$start++]

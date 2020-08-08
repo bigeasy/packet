@@ -12,10 +12,9 @@ module.exports = function ({ $lookup }) {
 
                 object.nudge = $buffer[$start++]
 
-                $I[0] = (
+                $I[0] =
                     $buffer[$start++] << 8 |
                     $buffer[$start++]
-                ) >>> 0
                 $i[0] = 0
 
                 for (; $i[0] < $I[0]; $i[0]++) {
@@ -24,15 +23,13 @@ module.exports = function ({ $lookup }) {
                         second: 0
                     }
 
-                    object.array[$i[0]].first = (
+                    object.array[$i[0]].first =
                         $buffer[$start++] << 8 |
                         $buffer[$start++]
-                    ) >>> 0
 
-                    object.array[$i[0]].second = (
+                    object.array[$i[0]].second =
                         $buffer[$start++] << 8 |
                         $buffer[$start++]
-                    ) >>> 0
                 }
 
                 object.sentry = $buffer[$start++]
