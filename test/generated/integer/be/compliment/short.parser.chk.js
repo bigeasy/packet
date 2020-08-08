@@ -16,6 +16,7 @@ module.exports = function ({ $incremental, $lookup }) {
                     $_ =
                         $buffer[$start++] << 8 |
                         $buffer[$start++]
+
                     object.value = $_ & 0x8000 ? (0xffff - $_ + 1) * -1 : $_
 
                     return { start: $start, object: object, parse: null }

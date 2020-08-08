@@ -26,6 +26,7 @@ module.exports = function ({ $incremental, $lookup }) {
                         BigInt($buffer[$start++]) << 16n |
                         BigInt($buffer[$start++]) << 8n |
                         BigInt($buffer[$start++])
+
                     object.value = $_ & 0x8000000000000000n ? (0xffffffffffffffffn - $_ + 1n) * -1n : $_
 
                     object.sentry = $buffer[$start++]
