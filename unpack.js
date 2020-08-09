@@ -67,9 +67,9 @@ function unpack (inliner, root, path, field, packed, offset = 0) {
                     const assign = `${packing.path} = ${fiddled}`
                     if (packing.compliment) {
                         blocks.push($(`
-                            ${packing.path} = ${fiddled}
+                            $2s = ${fiddled}
                             ${packing.path} =
-                                `, unsign(packing.path, packing.size), `
+                                `, unsign('$2s', packing.size), `
                         `))
                     } else if (packing.lookup) {
                         blocks.push($(`

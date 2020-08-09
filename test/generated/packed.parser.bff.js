@@ -3,7 +3,7 @@ module.exports = function ({ $incremental, $lookup }) {
         object: function () {
             return function () {
                 return function ($buffer, $start, $end) {
-                    let $_
+                    let $_, $2s
 
                     let object = {
                         nudge: 0,
@@ -31,9 +31,9 @@ module.exports = function ({ $incremental, $lookup }) {
 
                     object.header.one = $_ >>> 15 & 0x3
 
-                    object.header.two = $_ >>> 12 & 0x7
+                    $2s = $_ >>> 12 & 0x7
                     object.header.two =
-                        object.header.two & 0x4 ? (0x7 - object.header.two + 1) * -1 : object.header.two
+                        $2s & 0x4 ? (0x7 - $2s + 1) * -1 : $2s
 
                     object.header.three = $_ >>> 2 & 0x3ff
 

@@ -113,7 +113,7 @@ exports.serialize = function (field) {
 exports.parse = function (field) {
     const variables = { packet: true, step: true }, accumulators = {}, parameters = {}
     let depth = 0
-    function declare (field) {
+    function declare (field, packed) {
         depth++
         switch (field.type) {
         case 'inline': {
@@ -128,7 +128,7 @@ exports.parse = function (field) {
                 if (field.before.length - buffered != 0) {
                     variables.stack = true
                 }
-                field.fields.map(declare)
+                field.fields.map(field => declare(field, packed))
             }
             break
         case 'accumulator': {
@@ -151,11 +151,11 @@ exports.parse = function (field) {
                     }
                 }
                 variables.accumulator = true
-                field.fields.map(declare)
+                field.fields.map(field => declare(field, packed))
             }
             break
         case 'structure': {
-                field.fields.map(declare)
+                field.fields.map(field => declare(field, packed))
             }
             break
         case 'lengthEncoded': {
@@ -170,20 +170,20 @@ exports.parse = function (field) {
                     if (element.type == 'buffer') {
                         variables.register = true
                     } else {
-                        field.fields.map(declare)
+                        field.fields.map(field => declare(field, packed))
                     }
                 } else {
-                    field.fields.map(declare)
+                    field.fields.map(field => declare(field, packed))
                 }
             }
             break
         case 'repeated': {
-                field.fields.map(declare)
+                field.fields.map(field => declare(field, packed))
             }
             break
         case 'switch': {
                 field.cases.forEach(when => {
-                    when.fields.map(declare)
+                    when.fields.map(field => declare(field, packed))
                 })
             }
             break
@@ -192,7 +192,7 @@ exports.parse = function (field) {
                     variables.sip = true
                 }
                 field.serialize.conditions.forEach(condition => {
-                    condition.fields.map(declare)
+                    condition.fields.map(field => declare(field, packed))
                 })
             }
             break
@@ -205,13 +205,19 @@ exports.parse = function (field) {
                 if (field.calculated) {
                     variables.I = true
                 }
-                field.fields.map(declare)
+                field.fields.map(field => declare(field, packed))
             }
             break
         case 'bigint':
         case 'integer': {
                 if (field.fields != null || field.lookup != null) {
                     variables.register = true
+                }
+                if (packed && field.compliment) {
+                    variables.compliment = true
+                }
+                if (field.fields != null) {
+                    field.fields.map(field => declare(field, true))
                 }
             }
             break
@@ -226,6 +232,6 @@ exports.parse = function (field) {
         }
         depth--
     }
-    declare(field)
+    declare(field, false)
     return { variables, accumulators, parameters }
 }

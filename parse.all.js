@@ -1055,6 +1055,7 @@ function generate (packet, { require, bff, chk }) {
         const source = dispatch(packet.name, packet, true)
         const declarations = {
             register: '$_',
+            compliment: '$2s',
             i: '$i = []',
             I: '$I = []',
             sip: '$sip = []',

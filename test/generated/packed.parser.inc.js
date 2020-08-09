@@ -2,7 +2,7 @@ module.exports = function ({ $lookup }) {
     return {
         object: function () {
             return function (object, $step = 0) {
-                let $_, $bite
+                let $_, $2s, $bite
 
                 return function $parse ($buffer, $start, $end) {
                     switch ($step) {
@@ -48,9 +48,9 @@ module.exports = function ({ $lookup }) {
 
                         object.header.one = $_ >>> 15 & 0x3
 
-                        object.header.two = $_ >>> 12 & 0x7
+                        $2s = $_ >>> 12 & 0x7
                         object.header.two =
-                            object.header.two & 0x4 ? (0x7 - object.header.two + 1) * -1 : object.header.two
+                            $2s & 0x4 ? (0x7 - $2s + 1) * -1 : $2s
 
                         object.header.three = $_ >>> 2 & 0x3ff
 

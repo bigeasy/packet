@@ -1096,6 +1096,7 @@ function generate (packet, { require = null }) {
 
         const declarations = {
             register: '$_',
+            compliment: '$2s',
             bite: '$bite',
             starts: '$restart = false',
             buffers: '$buffers = []',
