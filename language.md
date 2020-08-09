@@ -1,3 +1,30 @@
+Packet is a binary serializer and parser generator. If you need to convert
+binary data to and from JSON objects, you can use Packet to generate both
+synchronous and incremental serializers and parsers in JavaScript using a packet
+definition specified in JavaScript. The generated parsers and serializers should
+be as performant as ones you'd write yourself.
+
+Packet will generate serializers and parsers that are either synchronous,
+incremental or best-foot-forward. Packet will also generate sizeof and offsetof
+functions to determine the binary length of an JSON object once serialized and
+the offset of a packet field for a specific JSON object.
+
+Synchronous parsers will return a JSON object when given a `Buffer` that
+contains all the binary data for the packet. Synchronous serializers will write
+a JSON object to a `Buffer` synchronously. The `Buffer` must be large enough
+accommodate the serialized object.
+
+Incremental parsers can accept a series of `Buffer`s from a stream of binary
+data pausing the parse when the end of a `Buffer` is reached, resuming the
+parse when the next `Buffer` is received. Incremental serializers do the same
+for serialization.
+
+Best-foot-forward parsers will attempt to parse a packet from a `Buffer`
+synchronously because synchronous parsers are less complicated and more
+performant, falling back to an incremental parser if the `Buffer` is too short
+to accommodate the entire packet. Best-foot-forward serializers do the same for
+serialization.
+
 Packets are defined using an object. The name of the packet is the object
 property name, the definition is the object property value.
 
@@ -25,14 +52,21 @@ define({
 
 The above is the definition of an IP packet. The name of the packet is `ip`.
 
+### Current Status
+
+Pre-alpha and not quite usable, yet. Working through unit tests of the sundry
+language constructs. Able to generate serializers and parsers that are
+synchronous, incremental, and best-foot-forward, which you could use, but there
+is no API for generation or use with streams.
+
 ### Basic Assumptions
 
 TK: Somewhere, a soliloquy about syntax bashing.
 
 The Packet definition language is a syntax bashed language. It is specified in
-JavaScript and transformed into JavaScript. There is no parsing except for the
-parsing that the JavaScript does itself. This does make a few errors
-undetectable at compile time, unfortunately.
+JavaScript and the definition is transformed into JavaScript. For the most part,
+there is no parsing except for the parsing that the JavaScript does itself. This
+does make a few errors undetectable at compile time, unfortunately.
 
 We expect you to ship the generated serializers and parsers and not to create
 definitions on the fly. Maybe you want to build a general purpose tool of some
@@ -43,51 +77,66 @@ response to data going out or coming in over the wire.
 Packet is written for Node.js 12. It uses features of ES2015 and breaks without
 them. The serializer and parser generator has been tested on Node.js 12 as have
 the generated serializers and parsers. The generator is designed to run in
-Node.js 12. The generated parsers and serializers should run in any modern
+Node.js 12. The generated parsers and serializers should run in any ES2015
 JavaScript interpreter, but I've not built an API for streaming except against
 Node.js streams. (Hmm... WebSockets?)
 
 The generator depends on the order of insertion of the object properties of the
-defintion. This used to be a _de facto_ standard of JavaScript but ES2015 made
+definition. This used to be a _de facto_ standard of JavaScript but ES2015 made
 it official.
 
 With the exception of packed integers, we assume that the underlying protocol
 uses 8-bit bytes and that integers sizes are multiples of 8-bits. There are
 machines from the days of yore with 18-bit words and 9-bit bytes and the like,
-but 8-bits has been the standard since the 1970's.
+but 8-bits has been the standard since the 1970's. Packet can serialize and
+parse integers spread across 8-bit bytes using only a subset of the bits in the
+byte, ala UTF-8, but we expect these subsets to be subsets of 8-bits.
 
 ### Whole Integers
 
-Outside of packed integers we assume that binary integers sizes are multiples of
-8 bits. You specify the size of a whole integer in bits.
-
-In the following defintion `value` is a 16-bit whole integer with valid values
-from 0 to 65535.
+Integers are specified as multiples of 8 bits. You can define an integer to be
+either a JavaScript `number` or a JavaScript `BigInt`.
 
 **Mnemonic**: Number of bits, as opposed to bytes so that numbers remain
 consistent when bit packing.
 
+In the following defintion `value` is a 16-bit `number` with valid integer
+values from 0 to 65,535. The object given to a generated serializer must provide
+a `number` value for `short`, no implicit conversions are performed.
+
 ```javascript
-define({
+const definition = {
     packet: {
         value: 16
     }
-})
+}
 
-serialize({ value: 0xabcd }) // => [ 0xab, 0xcd ]
+const packet = {
+    value: 0xabcd
+}
+
+// [ 0xab, 0xcd ]
 ```
 
-If you define a whole integer as greter than 32-bits it will be parsed and
-serialized as a `BigInt`. The parser will create a `BigInt`. You must provide a
-`BigInt` value to the serializer as the serializer will not perform a `number`
-to `BitInt` conversion.
+Integers smaller than 32-bits _should_ be defined `number`, integers larger than
+32-bits _must_ be defined as `BigInt`.
+
+In the following definition `value` is a 64-bit `BigInt` with a valid integer
+values from 0 to 18,446,744,073,709,551,616.
+
+**Mnemonic**: Number of bits as with `number` definitions but specified using a
+`BigInt` literal.
 
 ```javascript
-define({
+const definition = {
     packet: {
-        value: 64
+        value: 64n
     }
-})
+}
+
+const packet = {
+    value: 0xfedcba9876543210
+}
 ```
 
 ### Negative Integers
@@ -96,7 +145,7 @@ Integers with potential negative values are generally represented as two's
 compliment integers on most machines. To parse and serialize as two's complient
 you preceed the bit length of an integer field with a `-` negative symbol.
 
-In the following defination `value` is a two's compliment 16 bit integer with
+In the following definition `value` is a two's compliment 16-bit integer with
 valid values from -32768 to 32767. Two's compliment is a binary representation
 of negative numbers.
 
@@ -110,6 +159,20 @@ define({
 })
 ```
 
+As with whole integers, you _must_ define an integer larger than 32-bits as a
+`BitInt`.
+
+In the following definition `value` is a two's compliment 16-bit integer with
+valid values from -9,223,372,036,854,775,808 to 9,223,372,036,854,775,807.
+
+```javascript
+const definition = {
+    packet: {
+        value: -64n
+    }
+}
+```
+
 ### Endianness
 
 By default, all numbers are written out big-endian, where the bytes are written
@@ -117,8 +180,8 @@ from the most significant to the least significant. The same order in which
 you'd specify the value as a hexadecimal literal in JavaScript.
 
 Little-endian means that the bytes are serialized from the least significant
-byte to the most significant byte. Note that this is the order of *bytes* and
-not *bits*. This would be the case if you wrote an integer out directly to a
+byte to the most significant byte. Note that this is the order of _bytes_ and
+not _bits_. This would be the case if you wrote an integer out directly to a
 file from a C program on an Intel machine.
 
 To parse and serialize an integer as little-endian you preceed the bit length of
@@ -126,28 +189,72 @@ an integer field with a `~` tilde.
 
 **Mnemonic**: The tilde is curvy and we're mixing up the bits like that.
 
+In the following defintion `value` is a 16-bit `number` with valid integer
+values from 0 to 65,535. A value of `0xabcd` would be serialized in
+little-endian order as `[ 0xcd, 0xab ]`.
+
 ```javascript
-define({
+const definition = {
     packet: {
         value: ~16
     }
-})
+}
+
+const packet = {
+    value: 0xabcd
+}
+
+// [ 0xcd, 0xab ]
 ```
 
 If you want a little-endian negative number combine both `-` and `~`. The
 following defines an object that has two 16-bit two's compliment little-endian
-integers.
+integers. You can combine the `-` and `~` as `-~` and `~-`.
+
+In the following defintion both `first` and `second` are 16-bit `number`
+properties with valid integer values from 0 to 65,535. A value of `0xabcd` would
+be serialized in little-endian order as `[ 0xcd, 0xab ]`.
 
 ```javascript
-define({
+const definition = {
     message: {
         first: ~-16,
         second: -~16
     }
-})
+}
 ```
 
 ### Literals
+
+TK: Literals should come after packed integers.
+
+```
+const definition = {
+    packet: {
+        value: [[ 'fc' ], 16 ]
+    }
+}
+
+const definition = {
+    packet: {
+        value: [[ 'fc', 2 ], 16 ]
+    }
+}
+
+const definition = {
+    packet: {
+        header: [{
+            value: [[ 2, 'fc'], 6 ]
+        }, 8 ]
+    }
+}
+
+const definition = {
+    packet: {
+        beaf: [ 'beaf' ]
+    }
+}
+```
 
 ### Nested Structures
 
