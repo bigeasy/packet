@@ -15,8 +15,9 @@ module.exports = function ({ $incremental, $lookup }) {
                         (0x5eaf << 17 & 0xfffe0000) >>> 0 |
                         object.header.one << 15 & 0x18000 |
                         object.header.two << 12 & 0x7000 |
-                        object.header.three << 2 & 0xffc |
-                        $lookup[0].indexOf(object.header.four) & 0x3
+                        object.header.three << 8 & 0xf00 |
+                        $lookup[0].indexOf(object.header.four) << 6 & 0xc0 |
+                        0xaa & 0x3f
 
                     $buffer[$start++] = $_ >>> 24 & 0xff
                     $buffer[$start++] = $_ >>> 16 & 0xff

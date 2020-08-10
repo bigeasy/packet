@@ -1,5 +1,27 @@
-require('proof')(3, okay => {
+require('proof')(4, okay => {
     const language = require('../../language')
+    okay(language({
+        packet: {
+            literal: [ 'dc' ]
+        }
+    }), [{
+        type: 'structure',
+        name: 'packet',
+        vivify: 'object',
+        dotted: '',
+        fixed: true,
+        bits: 8,
+        fields: [{
+            type: 'literal',
+            dotted: '',
+            fixed: true,
+            vivify: null,
+            bits: 8,
+            before: { repeat: 1, value: 'dc', bits: 8 },
+            after: { repeat: 0, value: '', bits: 0 },
+            fields: []
+        }]
+    }], 'constant')
     okay(language({
         packet: {
             header: [{

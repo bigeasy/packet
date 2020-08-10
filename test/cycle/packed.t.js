@@ -9,10 +9,11 @@ function prove (okay) {
                 header: [{
                     one: [[ 15, '5eaf' ], 2 ],
                     two: -3,
-                    three: 10,
+                    three: 4,
                     four: [ 2, [
                         'zero', 'one', 'two', 'three'
-                    ]]
+                    ]],
+                    five: [ 6, 'aa' ]
                 }, 32 ],
                 sentry: 8
             }

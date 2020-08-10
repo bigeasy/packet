@@ -284,7 +284,10 @@ module.exports = function (packets) {
                     )
                 )
             },
-            field: function (packet) {
+            constant: function (packet) {
+                return is.literal.pattern(packet)
+            },
+            padded: function (packet) {
                 return Array.isArray(packet) &&
                     (
                         packet.length == 2 &&
@@ -559,57 +562,78 @@ module.exports = function (packets) {
             return map(packet[0], { lookup, ...extra }, pack)
         }
 
-        // **Literals**:
-        function literal() {
-            function literal (sliced, index) {
-                if (
-                    typeof sliced[index] == 'string' &&
-                    snippets[sliced[index]] == null
-                ) {
-                    const value = sliced.splice(index, 1).pop()
-                    return {
-                        repeat: 1,
-                        value: value,
-                        bits: value.length * 4
-                    }
-                // **TODO**: Ambiguity if we have literals inside literals.
-                // Would be resolved by insisting on the array surrounding the
-                // literal definition.
-                // **TODO**: Second ambiguity. Includes can be confused with
-                // literals. May have to force literals into arrays, or else
-                // force includes into arrays. Maybe let's force literals into
-                // arrays since arrays are there already.
-                } else if (
-                    Array.isArray(sliced[index]) &
-                    sliced[index].length == 2 &&
-                    typeof sliced[index][1] == 'string' &&
-                    snippets[sliced[index][1]] == null
-                ) {
-                    const packed = sliced.splice(index, 1).pop()
-                    return {
-                        repeat: 1,
-                        value: packed[1],
-                        bits: packed[0]
-                    }
-                } else if (
-                    Array.isArray(sliced[index]) &&
-                    sliced[index].length == 2 &&
-                    typeof sliced[index][0] == 'string' &&
-                    snippets[sliced[index][1]] == null
-                ) {
-                    const repeated = sliced.splice(index, 1).pop()
-                    const value = repeated[1] < 0
-                        ? repeated[0].match(/.{1,2}/g).reverse().join('')
-                        : repeated[0]
-                    return {
-                        repeat: repeated[1] < 0 ? ~repeated[1] : repeated[1],
-                        value: value,
-                        bits: repeated[0].length * 4
-                    }
-                } else {
-                    return { repeat: 0, value: '', bits: 0 }
+        function literal (sliced, index) {
+            if (
+                typeof sliced[index] == 'string' &&
+                snippets[sliced[index]] == null
+            ) {
+                const value = sliced.splice(index, 1).pop()
+                return {
+                    repeat: 1,
+                    value: value,
+                    bits: value.length * 4
                 }
+            // **TODO**: Ambiguity if we have literals inside literals.
+            // Would be resolved by insisting on the array surrounding the
+            // literal definition.
+            // **TODO**: Second ambiguity. Includes can be confused with
+            // literals. May have to force literals into arrays, or else
+            // force includes into arrays. Maybe let's force literals into
+            // arrays since arrays are there already.
+            } else if (
+                Array.isArray(sliced[index]) &
+                sliced[index].length == 2 &&
+                typeof sliced[index][1] == 'string' &&
+                snippets[sliced[index][1]] == null
+            ) {
+                const packed = sliced.splice(index, 1).pop()
+                return {
+                    repeat: 1,
+                    value: packed[1],
+                    bits: packed[0]
+                }
+            } else if (
+                Array.isArray(sliced[index]) &&
+                (
+                    sliced[index].length == 2 ||
+                    sliced[index].length == 1
+                ) &&
+                typeof sliced[index][0] == 'string' &&
+                snippets[sliced[index][0]] == null
+            ) {
+                const repeated = sliced.splice(index, 1).pop()
+                const repeat = repeated[1] || 1
+                const value = repeat < 0
+                    ? repeated[0].match(/.{1,2}/g).reverse().join('')
+                    : repeated[0]
+                return {
+                    repeat: repeat < 0 ? ~repeat : repeat,
+                    value: value,
+                    bits: repeated[0].length * 4
+                }
+            } else {
+                return { repeat: 0, value: '', bits: 0 }
             }
+        }
+
+        function constant () {
+            // TODO Do not want to create and then destroy, but this gets this
+            // done for now.
+            const before = literal([ packet.slice() ], 0)
+            return [{
+                type: 'literal',
+                dotted: '',
+                vivify: null,
+                fixed: true,
+                bits: before.repeat * before.bits,
+                before: before,
+                after: { repeat: 0, value: '', bits: 0 },
+                fields: []
+            }]
+        }
+
+        // **Literals**:
+        function padded() {
             const sliced = packet.slice(0)
             const before = literal(sliced, 0)
             const after = literal(sliced, sliced.length - 1)
@@ -1014,7 +1038,8 @@ module.exports = function (packets) {
             if (is.absent(packet)) return absent([])
             else if (is.spread(packet)) return spread()
             else if (is.mapped(packet)) return mapped()
-            else if (is.literal.field(packet)) return literal()
+            else if (is.literal.constant(packet)) return constant()
+            else if (is.literal.padded(packet)) return padded()
             else if (is.ieee.explicit(packet)) return ieee.explicit()
             else if (is.inline.split(packet)) return inline.split()
             else if (is.inline.mirrored(packet)) return inline.mirrored()

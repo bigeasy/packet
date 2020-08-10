@@ -24,4 +24,16 @@ function prove (okay) {
         },
         objects: [{ nudge: 0xaa, padded: 0xabcd, sentry: 0xaa }]
     })
+    cycle(okay, {
+        name: 'literal/constant',
+        define: {
+            object: {
+                nudge: 8,
+                constant: [ 'fc' ],
+                sentry: 8
+            }
+        },
+        objects: [{ nudge: 0xaa, sentry: 0xaa }],
+        stopAt: 'serialize.all'
+    })
 }

@@ -30,9 +30,9 @@ module.exports = function ({ $lookup }) {
                 object.header.two =
                     $2s & 0x4 ? (0x7 - $2s + 1) * -1 : $2s
 
-                object.header.three = $_ >>> 2 & 0x3ff
+                object.header.three = $_ >>> 8 & 0xf
 
-                object.header.four = $lookup[0][$_ & 0x3]
+                object.header.four = $lookup[0][$_ >>> 6 & 0x3]
 
                 object.sentry = $buffer[$start++]
 

@@ -20,10 +20,11 @@ function unpack (inliner, root, path, field, packed, offset = 0) {
             case 'checkpoint':
                 return field
             case 'literal':
-                bit += field.before.bits || 0
-                const unpacked = unpack(path + field.dotted, field.fields[0])
-                bit += field.after.bits || 0
-                return unpacked
+                bit += field.before.bits + field.after.bits
+                if (field.fields.length == 0) {
+                    return { type: 'constant' }
+                }
+                return unpack(path + field.dotted, field.fields[0])
             case 'integer':
                 return {
                     type: 'integer',
