@@ -5,13 +5,13 @@ require('proof')(5, okay => {
             value: [
                 [
                     value => value < 251, 8,
-                    value => value >= 251, [ 'fc', 16 ],
-                    true, [ 'fd', 24 ]
+                    value => value >= 251, [[ 'fc' ], 16 ],
+                    true, [[ 'fd' ], 24 ]
                 ],
                 [ 8,
                     sip => sip < 251, 8,
-                    sip => sip == 0xfc, [ 'fc', 16 ],
-                    true, [ 'fd', 24 ]
+                    sip => sip == 0xfc, [[ 'fc' ], 16 ],
+                    true, [[ 'fd' ], 24 ]
                 ]
             ]
         }
@@ -574,7 +574,7 @@ require('proof')(5, okay => {
                 flag: 2,
                 body: [
                     $ => $.header.flag == 0, 6,
-                    $ => $.header.flag == 1, [ 'a', 2 ],
+                    $ => $.header.flag == 1, [[ 'a' ], 2 ],
                     $ => $.header.flag == 2, [{
                         two: 2,
                         four: 4

@@ -37,7 +37,7 @@ function prove (okay) {
                     type: 2,
                     value: [ ({ $ }) => $.header.type, [
                         { $_: 0 }, 6,
-                        { $_: 1 }, [ 'a', 2 ],
+                        { $_: 1 }, [[ 'a' ], 2 ],
                         { $_: [] }, [ { two: 2, four: 4 }, 6 ]
                     ]]
                 }, 8 ],
@@ -101,7 +101,7 @@ function prove (okay) {
                     type: 2,
                     value: [ $ => $.header.type, [
                         { $_: 0 }, 6,
-                        { $_: [ 1 ] }, [ 'a', 2 ],
+                        { $_: [ 1 ] }, [[ 'a' ], 2 ],
                         { $_: [] }, [ { two: 2, four: 4 }, 6 ]
                     ]]
                 }, 8 ],

@@ -38,12 +38,12 @@ function prove (okay) {
             object: {
                 value: [[
                     value => value < 251, 8,
-                    value => value >= 251 && value < 2 ** 16, [ 'fc', 16 ],
-                    true, [ 'fd', 24 ]
+                    value => value >= 251 && value < 2 ** 16, [[ 'fc' ], 16 ],
+                    true, [[ 'fd' ], 24 ]
                 ], [ 8,
                     sip => sip < 251, 8,
-                    sip => sip == 0xfc, [ 'fc', 16 ],
-                    true, [ 'fd', 24 ]
+                    sip => sip == 0xfc, [[ 'fc' ], 16 ],
+                    true, [[ 'fd' ], 24 ]
                 ]],
                 sentry: 8
             }
@@ -113,7 +113,7 @@ function prove (okay) {
                     flag: 2,
                     value: [
                         $ => $.header.flag == 0, 6,
-                        $ => $.header.flag == 1, [ 'a', 2 ],
+                        $ => $.header.flag == 1, [[ 'a' ], 2 ],
                         $ => $.header.flag == 2, [{
                             two: 2,
                             four: 4
@@ -165,7 +165,7 @@ function prove (okay) {
                     flag: 2,
                     value: [
                         ({ $ }) => $.header.flag == 0, 6,
-                        ({ $ }) => $.header.flag == 1, [ 'a', 2 ],
+                        ({ $ }) => $.header.flag == 1, [[ 'a' ], 2 ],
                         ({ $ }) => $.header.flag == 2, [{
                             two: 2,
                             four: 4

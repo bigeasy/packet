@@ -170,7 +170,7 @@ module.exports = function (packets) {
             if (typeof packet == 'string') {
                 return is.ultimately(snippets[packet], test)
             }
-            if (is.literal.field(packet)) {
+            if (is.literal.padded(packet)) {
                 if (Array.isArray(packet[0]) && packet[0].some(item => typeof item == 'string')) {
                     return is.ultimately(packet[1], test)
                 }
