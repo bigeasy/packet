@@ -164,13 +164,23 @@ function generate (packet, { require = null }) {
             }
             break
         case 'lengthEncoded': {
-                const encoding = map(dispatch, `${path}.length`, field.encoding)
+                const encoding = function () {
+                    if (field.fields[0].type == 'buffer' && ! field.fields[0].concat) {
+                        variables.length = true
+                        return $(`
+                            $length = ${path}.reduce((sum, buffer) => sum + buffer.length, 0)
+
+                            `, map(dispatch, '$length', field.encoding), `
+                        `)
+                    }
+                    return map(dispatch, `${path}.length`, field.encoding)
+                } ()
                 if (field.fields[0].fixed) {
                     return field.fields[0].type == 'buffer' && !field.fields[0].concat
                     ? $(`
                         `, encoding, `
 
-                        $start += ${path}.reduce((sum, buffer) => sum + buffer.length, 0)
+                        $start += $length
                     `) : $(`
                         `, encoding, `
 
@@ -343,6 +353,7 @@ function generate (packet, { require = null }) {
     const declarations = {
         register: '$start = 0',
         i: '$i = []',
+        length: '$length',
         starts: '$starts = []',
         accumulator: '$accumulator = {}'
     }

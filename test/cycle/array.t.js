@@ -182,4 +182,97 @@ function prove (okay) {
             sentry: 0xaa
         }]
     })
+    cycle(okay, {
+        name: 'array/conditional/chunked',
+        define: {
+            object: {
+                nudge: 8,
+                array: [[
+                    [
+                        value => value < 128, 8,
+                        true, [ 16, 0x80, 7, 0x0, 7 ]
+                    ], [ 8,
+                        sip => (sip & 0x80) == 0, 8,
+                        true, [ 16, 0x80, 7, 0x0, 7 ]
+                    ]
+                ], [[ Buffer ]]],
+                sentry: 8
+            }
+        },
+        objects: [{
+            nudge: 0xaa,
+            array: [ Buffer.from(array) ],
+            sentry: 0xaa
+        }, {
+            nudge: 0xaa,
+            array: [ Buffer.from([ 0x0, 0x1 ]) ],
+            sentry: 0xaa
+        }]
+    })
+    cycle(okay, {
+        name: 'array/switch/bytes',
+        define: {
+            object: {
+                type: 8,
+                array: [[ $ => $.type, [
+                    { $_: 0 }, 8,
+                    { $_: [] }, 16
+                ]], [ 8 ]],
+                sentry: 8
+            }
+        },
+        objects: [{
+            type: 0,
+            array: [ 0x0, 0x1 ],
+            sentry: 0xaa
+        }, {
+            type: 1,
+            array: [ 0x0, 0x1 ],
+            sentry: 0xaa
+        }]
+    })
+    cycle(okay, {
+        name: 'array/switch/concat',
+        define: {
+            object: {
+                type: 8,
+                array: [[ $ => $.type, [
+                    { $_: 0 }, 8,
+                    { $_: [] }, 16
+                ]], [ Buffer ]],
+                sentry: 8
+            }
+        },
+        objects: [{
+            type: 0,
+            array: Buffer.from([ 0x0, 0x1 ]),
+            sentry: 0xaa
+        }, {
+            type: 1,
+            array: Buffer.from([ 0x0, 0x1 ]),
+            sentry: 0xaa
+        }]
+    })
+    cycle(okay, {
+        name: 'array/switch/chunked',
+        define: {
+            object: {
+                type: 8,
+                array: [[ $ => $.type, [
+                    { $_: 0 }, 8,
+                    { $_: [] }, 16
+                ]], [[ Buffer ]]],
+                sentry: 8
+            }
+        },
+        objects: [{
+            type: 0,
+            array: [ Buffer.from([ 0x0, 0x1 ]) ],
+            sentry: 0xaa
+        }, {
+            type: 1,
+            array: [ Buffer.from([ 0x0, 0x1 ]) ],
+            sentry: 0xaa
+        }]
+    })
 }

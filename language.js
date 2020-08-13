@@ -804,7 +804,7 @@ module.exports = function (packets) {
         function lengthEncoded () {
             const fields = []
             assert(Array.isArray(packet[1]))
-            const encoding = map(packet[0], {})
+            const encoding = map(packet[0], { dotted: '' })
             const element = buffered(packet[1][0]) || map(packet[1][0], {})
             assert.equal(element.length, 1, 'badness')
             fields.push({

@@ -7,7 +7,19 @@ module.exports = {
 
             $length = object.array.reduce((sum, buffer) => sum + buffer.length, 0)
 
-            $start += 1
+            switch (($ => $.type)(object)) {
+            case 0:
+
+                $start += 1
+
+                break
+
+            default:
+
+                $start += 2
+
+                break
+            }
 
             $start += $length
 

@@ -436,6 +436,7 @@ require('proof')(11, okay => {
                 bits: 0,
                 fixed: false,
                 vivify: 'number',
+                dotted: '',
                 split: false,
                 serialize: {
                     conditions: [{
@@ -867,6 +868,7 @@ require('proof')(11, okay => {
             encoding: [{
                 type: 'switch',
                 bits: 0,
+                dotted: '',
                 fixed: false,
                 vivify: 'number',
                 stringify: false,

@@ -7,7 +7,12 @@ module.exports = {
 
             $length = object.array.reduce((sum, buffer) => sum + buffer.length, 0)
 
-            $start += 1
+
+            if ((value => value < 128)($length)) {
+                $start += 1
+            } else {
+                $start += 2
+            }
 
             $start += $length
 
