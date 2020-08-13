@@ -37,7 +37,7 @@ module.exports = function ({ $incremental, $lookup }) {
                     })(object.value)
 
                     if ($end - $start < 1) {
-                        return $incremental.object(object, 7, $i, $I)($buffer, $start, $end)
+                        return $incremental.object(object, 8, $i, $I)($buffer, $start, $end)
                     }
 
                     object.sentry = $buffer[$start++]

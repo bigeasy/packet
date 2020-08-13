@@ -286,13 +286,13 @@ function generate (packet, { require = null }) {
             variables.register = true
             locals['offset'] = 0
             locals['index'] = 0
-            locals['length'] = 0
+            const I = `$I[${$I + 1}]`
             return $(`
                 case ${$step++}:
 
-                    $length = ${path}.reduce((sum, buffer) => sum + buffer.length, 0)
+                    ${I} = ${path}.reduce((sum, buffer) => sum + buffer.length, 0)
 
-                `, map(dispatch, '$length', field.encoding), `
+                `, map(dispatch, I, field.encoding), `
 
                     $_ = 0
 
@@ -310,7 +310,7 @@ function generate (packet, { require = null }) {
                             $offset = 0
                         }
 
-                        if ($copied == $length) {
+                        if ($copied == ${I}) {
                             break
                         }
 
@@ -329,10 +329,13 @@ function generate (packet, { require = null }) {
             `)
         }
         const encoding = map(dispatch, `${path}.length`, field.encoding)
-        const redo = $step
+        const redo = $step + 1
         const i = `$i[${++$i}]`
         const source = $(`
             `, encoding, `
+
+            case ${$step++}:
+
                 ${i} = 0
 
             `, map(dispatch, `${path}[${i}]`, field.fields), `

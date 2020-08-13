@@ -17,10 +17,11 @@ module.exports = function ({ $incremental, $lookup }) {
 
                     $buffer[$start++] = object.array.length >>> 8 & 0xff
                     $buffer[$start++] = object.array.length & 0xff
+                    $i[0] = 0
 
-                    for ($i[0] = 0; $i[0] < object.array.length; $i[0]++) {
+                    for (; $i[0] < object.array.length; $i[0]++) {
                         if ($end - $start < 2) {
-                            return $incremental.object(object, 4, $i)($buffer, $start, $end)
+                            return $incremental.object(object, 5, $i)($buffer, $start, $end)
                         }
 
                         $buffer[$start++] = object.array[$i[0]] >>> 8 & 0xff
@@ -28,7 +29,7 @@ module.exports = function ({ $incremental, $lookup }) {
                     }
 
                     if ($end - $start < 1) {
-                        return $incremental.object(object, 6, $i)($buffer, $start, $end)
+                        return $incremental.object(object, 7, $i)($buffer, $start, $end)
                     }
 
                     $buffer[$start++] = object.sentry & 0xff

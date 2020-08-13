@@ -10,8 +10,9 @@ module.exports = function ({ $lookup }) {
                     $buffer[$start++] = object.value.value & 0xff
                 } else if (($ => $.type == 1)(object)) {
                     $buffer[$start++] = object.value.length & 0xff
+                    $i[0] = 0
 
-                    for ($i[0] = 0; $i[0] < object.value.length; $i[0]++) {
+                    for (; $i[0] < object.value.length; $i[0]++) {
                         $buffer[$start++] = object.value[$i[0]] & 0xff
                     }
                 } else if (($ => $.type == 2)(object)) {

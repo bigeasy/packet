@@ -16,17 +16,18 @@ module.exports = function ({ $incremental, $lookup }) {
                     }
 
                     $buffer[$start++] = object.value.length & 0xff
+                    $i[0] = 0
 
-                    for ($i[0] = 0; $i[0] < object.value.length; $i[0]++) {
+                    for (; $i[0] < object.value.length; $i[0]++) {
                         if ($end - $start < 1) {
-                            return $incremental.object(object, 4, $i)($buffer, $start, $end)
+                            return $incremental.object(object, 5, $i)($buffer, $start, $end)
                         }
 
                         $buffer[$start++] = object.value[$i[0]] & 0xff
                     }
 
                     if ($end - $start < 1) {
-                        return $incremental.object(object, 6, $i)($buffer, $start, $end)
+                        return $incremental.object(object, 7, $i)($buffer, $start, $end)
                     }
 
                     $buffer[$start++] = object.sentry & 0xff

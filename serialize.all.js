@@ -225,7 +225,13 @@ function checkpoints (path, fields, $i = 0, $I = 0) {
             break
         case 'lengthEncoding':
             checked.push(field)
-            checkpoint.lengths[0] += field.body.encoding[0].bits / 8
+            if (field.body.encoding[0].fixed == true) {
+                checkpoint.lengths[0] += field.body.encoding[0].bits / 8
+            } else {
+                field.body.encoding = checkpoints(`${path}${field.dotted}.length`, field.body.encoding, $i, $I)
+
+                checked.push(checkpoint = { type: 'checkpoint', lengths: [ 0 ] })
+            }
             break
         case 'literal':
             checked.push(field)
@@ -305,7 +311,11 @@ function inquisition (path, fields, $i = 0, $I = 0) {
             checked.push(field)
             break
         case 'lengthEncoding':
-            checked.push({ type: 'checkpoint', lengths: [ field.body.encoding[0].bits / 8 ]})
+            if (field.body.encoding[0].fixed) {
+                checked.push({ type: 'checkpoint', lengths: [ field.body.encoding[0].bits / 8 ]})
+            } else {
+                field.body.encoding = inquisition(`${path}.length`, field.body.encoding, $i, $I)
+            }
             checked.push(field)
             break
         // When we encounter a length encoded buffer, we still skip the whole
@@ -316,11 +326,11 @@ function inquisition (path, fields, $i = 0, $I = 0) {
             if (field.fixed) {
                 checked.push({ type: 'checkpoint', lengths: [ field.bits / 8 ] })
             } else if (field.fields[field.fields.length - 1].type == 'buffer') {
-                const lengthEncoding = checked[checked.length - 2]
-                lengthEncoding.lengths.push(field.fields[field.fields.length - 1].concat
-                    ? `${path + field.dotted}.length`
-                    : `${path + field.dotted}.reduce((sum, buffer) => sum + buffer.length, 0)`
-                )
+                checked.push({ type: 'checkpoint', lengths: [
+                    0, field.fields[field.fields.length - 1].concat
+                        ? `${path + field.dotted}.length`
+                        : `${path + field.dotted}.reduce((sum, buffer) => sum + buffer.length, 0)`
+                ]})
             } else {
                 field.fields = inquisition(path + field.dotted, field.fields, $i + 1, $I + 1)
             }
@@ -367,7 +377,7 @@ function inquisition (path, fields, $i = 0, $I = 0) {
 function generate (packet, { require = null, bff, chk }) {
     let $step = 0, $i = -1, $I = -1, $$ = -1
 
-    const { variables, parameters, accumulators } = declare (packet)
+    const { variables, parameters, accumulators } = declare(packet)
 
     const inliner = Inliner({
         variables, parameters, accumulators, packet,
@@ -383,6 +393,7 @@ function generate (packet, { require = null, bff, chk }) {
             parameters: '{}',
             step: $step,
             i: '$i',
+            I: '$I',
             stack: '$$',
             accumulator: '$accumulator',
             starts: '$starts'
@@ -557,16 +568,25 @@ function generate (packet, { require = null, bff, chk }) {
         const element = field.body.fields[field.body.fields.length - 1]
         // If we have a chunked buffers, we have to serialize the sum of all the
         // buffers in an array of buffers.
-        if (element.type == 'buffer' && !element.concat) {
+        if (element.type == 'buffer') {
+            if (element.concat) {
+                return map(dispatch, `${path}.length`, field.body.encoding)
+            }
+            $step++
+            // We need to use `$I` in case our length encoding is conditional
+            // and we have a checkpoint following it. When we drop into
+            // incremental we'll have passed the point where it sums the buffer
+            // lengths.
             return $(`
-                {
-                    const length = ${path}.reduce((sum, buffer) => sum + buffer.length, 0)
-                    `, map(dispatch, 'length', field.body.encoding), `
-                }
+                $I[${++$I}] = ${path}.reduce((sum, buffer) => sum + buffer.length, 0)
+                `, map(dispatch, `$I[${$I}]`, field.body.encoding), `
             `)
         }
         // Otherwise serialize the array length.
-        return map(dispatch, `${path}.length`, field.body.encoding)
+        return $(`
+            `, map(dispatch, `${path}.length`, field.body.encoding), `
+            $i[${++$i}] = 0
+        `)
     }
     //
 
@@ -574,17 +594,19 @@ function generate (packet, { require = null, bff, chk }) {
     function lengthEncoded (path, field) {
         const element = field.fields[field.fields.length - 1]
         if (element.type == 'buffer') {
-            $step += element.concat ? 1 : 2
-            return element.concat
-            // Straight up copy the buffer into the serialization buffer.
-            ? $(`
-                ${path}.copy($buffer, $start, 0, ${path}.length)
-                $start += ${path}.length
-            `)
+            $step += element.concat ? 1 : 1
+            if (element.concat) {
+                // Straight up copy the buffer into the serialization buffer.
+                return $(`
+                    ${path}.copy($buffer, $start, 0, ${path}.length)
+                    $start += ${path}.length
+                `)
+            }
+            $I--
             // Copy each buffer in an array of buffer to the serialization
             // buffer. We can use a block scope variable, best-foot-forward
             // checks have already been performed.
-            : $(`
+            return $(`
                 {
                     for (let i = 0, I = ${path}.length; i < I; i++) {
                         ${path}[i].copy($buffer, $start, 0, ${path}[i].length)
@@ -596,9 +618,10 @@ function generate (packet, { require = null, bff, chk }) {
         // Generate serialization for the array body. We loop over the elements
         // using an index we can pass to the incremental parser during
         // best-foot-foward serialization.
-        const i = `$i[${++$i}]`
+        $step++
+        const i = `$i[${$i}]`
         const source = $(`
-            for (${i} = 0; ${i} < ${path}.length; ${i}++) {
+            for (; ${i} < ${path}.length; ${i}++) {
                 `, map(dispatch, `${path}[${i}]`, field.fields), `
             }
         `)

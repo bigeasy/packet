@@ -1,3 +1,12 @@
+## Wed Aug 12 02:38:26 CDT 2020
+
+On occasion you'll worry yourself that there will be some fatal ambiguity that
+will scrap this project, or some missing feature that will not fit within the
+constraints of the language, but at the moment, as you're resolving an ambiguity
+by simply making the test more stringent, you have a strong sense that things
+will always sort themselves out, the project will always be a little peculiar,
+but it will always be okay in the end.
+
 ## Sun Aug  2 02:40:15 CDT 2020
 
 Regarding unsipping in incremental parser. Upon sip, we have all the values in

@@ -6,7 +6,7 @@ module.exports = function ({ $incremental, $lookup }) {
                     let $i = [], $I = []
 
                     if ($end - $start < 1) {
-                        return $incremental.object(object, 0, $i)($buffer, $start, $end)
+                        return $incremental.object(object, 0, $i, $I)($buffer, $start, $end)
                     }
 
                     $buffer[$start++] = object.nudge & 0xff
@@ -15,14 +15,15 @@ module.exports = function ({ $incremental, $lookup }) {
 
                     for ($i[0] = 0; $i[0] < $I[0]; $i[0]++) {
                         if ($end - $start < 1) {
-                            return $incremental.object(object, 3, $i)($buffer, $start, $end)
+                            return $incremental.object(object, 3, $i, $I)($buffer, $start, $end)
                         }
 
                         $buffer[$start++] = object.array[$i[0]].length & 0xff
+                        $i[1] = 0
 
-                        for ($i[1] = 0; $i[1] < object.array[$i[0]].length; $i[1]++) {
+                        for (; $i[1] < object.array[$i[0]].length; $i[1]++) {
                             if ($end - $start < 1) {
-                                return $incremental.object(object, 5, $i)($buffer, $start, $end)
+                                return $incremental.object(object, 6, $i, $I)($buffer, $start, $end)
                             }
 
                             $buffer[$start++] = object.array[$i[0]][$i[1]] & 0xff
@@ -30,7 +31,7 @@ module.exports = function ({ $incremental, $lookup }) {
                     }
 
                     if ($end - $start < 1) {
-                        return $incremental.object(object, 7, $i)($buffer, $start, $end)
+                        return $incremental.object(object, 8, $i, $I)($buffer, $start, $end)
                     }
 
                     $buffer[$start++] = object.sentry & 0xff

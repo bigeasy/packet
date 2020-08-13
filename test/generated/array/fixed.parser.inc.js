@@ -43,24 +43,28 @@ module.exports = function ({ $lookup }) {
                             }
 
                             $I[0] = $_
-                            $i[0] = 0
+
                         case 5:
+
+                            $i[0] = 0
+
+                        case 6:
 
                             object.array[$i[0]] = {
                                 first: 0,
                                 second: 0
                             }
 
-                        case 6:
+                        case 7:
 
                             $_ = 0
                             $bite = 1
 
-                        case 7:
+                        case 8:
 
                             while ($bite != -1) {
                                 if ($start == $end) {
-                                    $step = 7
+                                    $step = 8
                                     return { start: $start, object: null, parse: $parse }
                                 }
                                 $_ += $buffer[$start++] << $bite * 8 >>> 0
@@ -69,16 +73,16 @@ module.exports = function ({ $lookup }) {
 
                             object.array[$i[0]].first = $_
 
-                        case 8:
+                        case 9:
 
                             $_ = 0
                             $bite = 1
 
-                        case 9:
+                        case 10:
 
                             while ($bite != -1) {
                                 if ($start == $end) {
-                                    $step = 9
+                                    $step = 10
                                     return { start: $start, object: null, parse: $parse }
                                 }
                                 $_ += $buffer[$start++] << $bite * 8 >>> 0
@@ -87,16 +91,16 @@ module.exports = function ({ $lookup }) {
 
                             object.array[$i[0]].second = $_
                             if (++$i[0] != $I[0]) {
-                                $step = 5
+                                $step = 6
                                 continue
                             }
 
-                        case 10:
-
                         case 11:
 
+                        case 12:
+
                             if ($start == $end) {
-                                $step = 11
+                                $step = 12
                                 return { start: $start, object: null, parse: $parse }
                             }
 

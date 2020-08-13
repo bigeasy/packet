@@ -5,8 +5,9 @@ module.exports = {
 
             $start += 1
 
-            $start += 1 +
-                1 * object.value.length
+            $start += 1
+
+            $start += 1 * object.value.length
 
             $start += 1
 

@@ -214,7 +214,11 @@ function checkpoints (path, fields, $i = 0, $I = 0) {
             break
         case 'lengthEncoding':
             checked.push(field)
-            checkpoint.lengths[0] += field.body.encoding[0].bits / 8
+            if (field.body.encoding[0].fixed) {
+                checkpoint.lengths[0] += field.body.encoding[0].bits / 8
+            } else {
+                field.body.encoding = checkpoints(`${path}${field.dotted}.length`, field.body.encoding, $i, $I)
+            }
             checked.push(checkpoint = {
                 type: 'checkpoint', lengths: [ 0 ], vivify: null, rewind: 0
             })
@@ -352,12 +356,16 @@ function inquisition (fields, $I = 0) {
             }
             break
         case 'lengthEncoding':
-            checked.push({
-                type: 'checkpoint',
-                lengths: [ field.body.encoding[0].bits / 8 ],
-                vivify: null,
-                rewind: 0
-            })
+            if (field.body.encoding[0].fixed) {
+                checked.push({
+                    type: 'checkpoint',
+                    lengths: [ field.body.encoding[0].bits / 8 ],
+                    vivify: null,
+                    rewind: 0
+                })
+            } else {
+                field.body.encoding = inquisition(field.body.encoding, $I)
+            }
             checked.push(field)
             break
         case 'literal':
@@ -636,6 +644,8 @@ function generate (packet, { require, bff, chk }) {
         // create each element. Indices can be passed to an incremental during
         // best-foot-forward parsing.
         const i = `$i[${$i}]`
+        // Skip index initialization.
+        $step++
         const vivification = vivify.assignment(`${path}[${i}]`, field)
         // Step to skip incremental parser's vivification of the array element.
         if (vivification != null) {

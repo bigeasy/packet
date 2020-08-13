@@ -12,8 +12,9 @@ module.exports = function ({ $incremental, $lookup }) {
                     $buffer[$start++] = object.nudge & 0xff
 
                     $buffer[$start++] = object.value.length & 0xff
+                    $i[0] = 0
 
-                    for ($i[0] = 0; $i[0] < object.value.length; $i[0]++) {
+                    for (; $i[0] < object.value.length; $i[0]++) {
                         $buffer[$start++] = object.value[$i[0]] & 0xff
                     }
 

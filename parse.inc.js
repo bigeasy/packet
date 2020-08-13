@@ -306,6 +306,7 @@ function generate (packet, { require = null }) {
         }
         const i = `$i[${++$i}]`
         surround = true
+        const init = $step++
         const redo = $step
         const vivification = function () {
             const vivification = vivify.assignment(`${path}[${i}]`, field)
@@ -320,7 +321,11 @@ function generate (packet, { require = null }) {
         } ()
         const source = $(`
             `, encoding, `
+
+            case ${init}:
+
                 ${i} = 0
+
             `, vivification, -1, `
 
             `, map(dispatch,`${path}[${i}]`, field.fields), `

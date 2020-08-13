@@ -14,8 +14,9 @@ module.exports = {
 
             case 1:
 
-                $start += 1 +
-                    1 * object.value.length
+                $start += 1
+
+                $start += 1 * object.value.length
 
                 break
 
@@ -27,8 +28,9 @@ module.exports = {
 
             case 3:
 
-                $start += 1 +
-                    1 * object.value.length
+                $start += 1
+
+                $start += 1 * object.value.length
 
                 break
 

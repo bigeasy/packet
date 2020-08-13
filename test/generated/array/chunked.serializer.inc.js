@@ -1,8 +1,8 @@
 module.exports = function ({ $lookup }) {
     return {
         object: function () {
-            return function (object, $step = 0, $i = []) {
-                let $_, $bite, $copied = 0, $offset = 0, $index = 0, $length = 0
+            return function (object, $step = 0, $i = [], $I = []) {
+                let $_, $bite, $copied = 0, $offset = 0, $index = 0
 
                 return function $serialize ($buffer, $start, $end) {
                     for (;;) {
@@ -25,12 +25,12 @@ module.exports = function ({ $lookup }) {
 
                         case 2:
 
-                            $length = object.array.reduce((sum, buffer) => sum + buffer.length, 0)
+                            $I[0] = object.array.reduce((sum, buffer) => sum + buffer.length, 0)
 
                         case 3:
 
                             $bite = 0
-                            $_ = $length
+                            $_ = $I[0]
 
                         case 4:
 
@@ -59,7 +59,7 @@ module.exports = function ({ $lookup }) {
                                     $offset = 0
                                 }
 
-                                if ($copied == $length) {
+                                if ($copied == $I[0]) {
                                     break
                                 }
 

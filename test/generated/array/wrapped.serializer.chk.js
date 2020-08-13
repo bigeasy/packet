@@ -21,17 +21,18 @@ module.exports = function ({ $incremental, $lookup }) {
                     $$[0] = (value => value)(object.array.length)
 
                     $buffer[$start++] = $$[0] & 0xff
+                    $i[0] = 0
 
-                    for ($i[0] = 0; $i[0] < object.array.length; $i[0]++) {
+                    for (; $i[0] < object.array.length; $i[0]++) {
                         if ($end - $start < 1) {
-                            return $incremental.object(object, 7, $i, $$)($buffer, $start, $end)
+                            return $incremental.object(object, 8, $i, $$)($buffer, $start, $end)
                         }
 
                         $buffer[$start++] = object.array[$i[0]] & 0xff
                     }
 
                     if ($end - $start < 1) {
-                        return $incremental.object(object, 9, $i, $$)($buffer, $start, $end)
+                        return $incremental.object(object, 10, $i, $$)($buffer, $start, $end)
                     }
 
                     $buffer[$start++] = object.sentry & 0xff

@@ -182,6 +182,30 @@ module.exports = function (packets) {
             if (is.accumulator(packet)) {
                 return is.ultimately(packet[packet.length - 1], test)
             }
+            if (is.switched(packet)) {
+                return packet[1].filter((_, index) => index % 2 == 1).every(packet => {
+                    return is.ultimately(packet, test)
+                })
+            }
+            if (is.conditional.mirrored(packet)) {
+                return packet.filter((_, index) => index % 2 == 1).every(packet => {
+                    return is.ultimately(packet, test)
+                })
+            }
+            if (is.conditional.split(packet)) {
+                if (!packet[0].filter((_, index) => index % 2 == 1).every(packet => {
+                    return is.ultimately(packet, test)
+                })) {
+                    return false
+                }
+                const sliced = packet[1].slice()
+                if (typeof sliced[0] == 'number') {
+                    sliced.shift()
+                }
+                return sliced.filter((_, index) => index % 2 == 1).every(packet => {
+                    return is.ultimately(packet, test)
+                })
+            }
             return false
         },
         spread: function (packet) {
@@ -345,15 +369,21 @@ module.exports = function (packets) {
         fixed: function (packet) {
             return Array.isArray(packet[0]) &&
                 (
-                    is.integer(packet[0][0]) ||
-                    typeof packet[0][0] == 'function'
+                    packet[0].length == 1 &&
+                    (
+                        is.integer(packet[0][0]) ||
+                        typeof packet[0][0] == 'function'
+                    )
                 ) &&
                 Array.isArray(packet[1]) &&
                 packet[1].length == 1
         },
         // **Length-encoded arrays**: Length encoded by a leading integer.
         lengthEncoded: function (packet) {
-            return packet.length == 2 && is.ultimately(packet[0], is.integer)
+            return packet.length == 2 &&
+                Array.isArray(packet[1]) &&
+                packet[1].length == 1 &&
+                is.ultimately(packet[0], value => is.integer(value) || is.spread(value))
         },
         switched: function (packet) {
             return typeof packet[0] == 'function' &&
@@ -381,6 +411,7 @@ module.exports = function (packets) {
             return Array.isArray(packet) &&
                 packet.length == 2 &&
                 typeof packet[0] == 'object' &&
+                ! Array.isArray(packet[0]) &&
                 ! Array.isArray(packet[0][0])
         },
         // **Conditionals**: TODO Come back and create a set of test functions
@@ -853,6 +884,7 @@ module.exports = function (packets) {
                 // TODO Is fixed if all the alternations are the same length.
                 fields.push({
                     type: 'conditional',
+                    dotted: '',
                     vivify: parse.vivify == 'object' ? 'variant' : parse.vivify,
                     bits: 0,
                     fixed: false,

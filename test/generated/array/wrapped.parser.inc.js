@@ -54,28 +54,32 @@ module.exports = function ({ $lookup }) {
 
                             $I[0] = (value => value)($I[0])
 
-                            $i[0] = 0
+
                         case 7:
+
+                            $i[0] = 0
 
                         case 8:
 
+                        case 9:
+
                             if ($start == $end) {
-                                $step = 8
+                                $step = 9
                                 return { start: $start, object: null, parse: $parse }
                             }
 
                             object.array[$i[0]] = $buffer[$start++]
                             if (++$i[0] != $I[0]) {
-                                $step = 7
+                                $step = 8
                                 continue
                             }
 
-                        case 9:
-
                         case 10:
 
+                        case 11:
+
                             if ($start == $end) {
-                                $step = 10
+                                $step = 11
                                 return { start: $start, object: null, parse: $parse }
                             }
 

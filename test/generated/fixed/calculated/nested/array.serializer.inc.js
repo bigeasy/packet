@@ -45,18 +45,21 @@ module.exports = function ({ $lookup }) {
                                 $buffer[$start++] = $_ >>> $bite * 8 & 0xff
                                 $bite--
                             }
-                            $i[1] = 0
 
                         case 5:
+
+                            $i[1] = 0
+
+                        case 6:
 
                             $bite = 0
                             $_ = object.array[$i[0]][$i[1]]
 
-                        case 6:
+                        case 7:
 
                             while ($bite != -1) {
                                 if ($start == $end) {
-                                    $step = 6
+                                    $step = 7
                                     return { start: $start, serialize: $serialize }
                                 }
                                 $buffer[$start++] = $_ >>> $bite * 8 & 0xff
@@ -64,7 +67,7 @@ module.exports = function ({ $lookup }) {
                             }
 
                             if (++$i[1] != object.array[$i[0]].length) {
-                                $step = 5
+                                $step = 6
                                 continue
                             }
                             if (++$i[0] != object.array.length) {
@@ -72,16 +75,16 @@ module.exports = function ({ $lookup }) {
                                 continue
                             }
 
-                        case 7:
+                        case 8:
 
                             $bite = 0
                             $_ = object.sentry
 
-                        case 8:
+                        case 9:
 
                             while ($bite != -1) {
                                 if ($start == $end) {
-                                    $step = 8
+                                    $step = 9
                                     return { start: $start, serialize: $serialize }
                                 }
                                 $buffer[$start++] = $_ >>> $bite * 8 & 0xff

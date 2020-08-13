@@ -35,28 +35,32 @@ module.exports = function ({ $lookup }) {
                             }
 
                             $I[0] = $buffer[$start++]
-                            $i[0] = 0
+
                         case 5:
+
+                            $i[0] = 0
 
                         case 6:
 
+                        case 7:
+
                             if ($start == $end) {
-                                $step = 6
+                                $step = 7
                                 return { start: $start, object: null, parse: $parse }
                             }
 
                             object.value[$i[0]] = $buffer[$start++]
                             if (++$i[0] != $I[0]) {
-                                $step = 5
+                                $step = 6
                                 continue
                             }
 
-                        case 7:
-
                         case 8:
 
+                        case 9:
+
                             if ($start == $end) {
-                                $step = 8
+                                $step = 9
                                 return { start: $start, object: null, parse: $parse }
                             }
 

@@ -28,7 +28,7 @@ module.exports = function ({ $incremental, $lookup }) {
                         }
 
                         if ($end - $start < 2) {
-                            return $incremental.object(object, 6, $i, $I)($buffer, $start, $end)
+                            return $incremental.object(object, 7, $i, $I)($buffer, $start, $end)
                         }
 
                         $I[1] =
@@ -37,7 +37,7 @@ module.exports = function ({ $incremental, $lookup }) {
                         $i[1] = 0
 
                         if ($end - $start < 2 * $I[1]) {
-                            return $incremental.object(object, 8, $i, $I)($buffer, $start, $end)
+                            return $incremental.object(object, 9, $i, $I)($buffer, $start, $end)
                         }
 
                         for (; $i[1] < $I[1]; $i[1]++) {
@@ -48,7 +48,7 @@ module.exports = function ({ $incremental, $lookup }) {
                     }
 
                     if ($end - $start < 1) {
-                        return $incremental.object(object, 10, $i, $I)($buffer, $start, $end)
+                        return $incremental.object(object, 12, $i, $I)($buffer, $start, $end)
                     }
 
                     object.sentry = $buffer[$start++]

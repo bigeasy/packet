@@ -100,4 +100,86 @@ function prove (okay) {
             sentry: 0xaa
         }]
     })
+    const array = []
+    for (let i = 0; i < 128; i++) {
+        array.push(i)
+    }
+    cycle(okay, {
+        name: 'array/spread',
+        define: {
+            $value: 8,
+            object: {
+                nudge: 8,
+                array: [ [ 16, 0x80, 7, 0x0, 7 ],  [ 8 ] ],
+                // Need to force the best-foot-forward check.
+                sentry: 8
+            }
+        },
+        // Repeat test simply to get the coverage of the generated conditional.
+        objects: [{
+            nudge: 0xaa,
+            array: array,
+            sentry: 0xaa
+        }]
+    })
+    cycle(okay, {
+        name: 'array/conditional/bytes',
+        define: {
+            $value: 8,
+            object: {
+                nudge: 8,
+                array: [[
+                    [
+                        value => value < 128, 8,
+                        true, [ 16, 0x80, 7, 0x0, 7 ]
+                    ], [ 8,
+                        sip => (sip & 0x80) == 0, 8,
+                        true, [ 16, 0x80, 7, 0x0, 7 ]
+                    ]
+                ], [ 8 ]],
+                // Need to force the best-foot-forward check.
+                sentry: 8
+            }
+        },
+        // Repeat test simply to get the coverage of the generated conditional.
+        objects: [{
+            nudge: 0xaa,
+            array: array,
+            sentry: 0xaa
+        }, {
+            nudge: 0xaa,
+            array: [ 0x0, 0x1 ],
+            sentry: 0xaa
+        }]
+    })
+    cycle(okay, {
+        name: 'array/conditional/concat',
+        define: {
+            $value: 8,
+            object: {
+                nudge: 8,
+                array: [[
+                    [
+                        value => value < 128, 8,
+                        true, [ 16, 0x80, 7, 0x0, 7 ]
+                    ], [ 8,
+                        sip => (sip & 0x80) == 0, 8,
+                        true, [ 16, 0x80, 7, 0x0, 7 ]
+                    ]
+                ], [ Buffer ]],
+                // Need to force the best-foot-forward check.
+                sentry: 8
+            }
+        },
+        // Repeat test simply to get the coverage of the generated conditional.
+        objects: [{
+            nudge: 0xaa,
+            array: Buffer.from(array),
+            sentry: 0xaa
+        }, {
+            nudge: 0xaa,
+            array: Buffer.from([ 0x0, 0x1 ]),
+            sentry: 0xaa
+        }]
+    })
 }

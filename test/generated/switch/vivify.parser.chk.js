@@ -57,7 +57,7 @@ module.exports = function ({ $incremental, $lookup }) {
                         $i[0] = 0
                         for (;;) {
                             if ($end - $start < 1) {
-                                return $incremental.object(object, 11, $i, $I)($buffer, $start, $end)
+                                return $incremental.object(object, 12, $i, $I)($buffer, $start, $end)
                             }
 
                             if (
@@ -68,7 +68,7 @@ module.exports = function ({ $incremental, $lookup }) {
                             }
 
                             if ($end - $start < 1) {
-                                return $incremental.object(object, 12, $i, $I)($buffer, $start, $end)
+                                return $incremental.object(object, 13, $i, $I)($buffer, $start, $end)
                             }
 
                             object.value[$i[0]] = $buffer[$start++]
@@ -82,13 +82,13 @@ module.exports = function ({ $incremental, $lookup }) {
                         object.value = []
 
                         if ($end - $start < 1) {
-                            return $incremental.object(object, 16, $i, $I)($buffer, $start, $end)
+                            return $incremental.object(object, 17, $i, $I)($buffer, $start, $end)
                         }
 
                         $I[0] = $buffer[$start++]
 
                         if ($end - $start < 1 * $I[0]) {
-                            return $incremental.object(object, 18, $i, $I)($buffer, $start, $end)
+                            return $incremental.object(object, 19, $i, $I)($buffer, $start, $end)
                         }
 
                         object.value = $buffer.slice($start, $start + $I[0])
@@ -100,7 +100,7 @@ module.exports = function ({ $incremental, $lookup }) {
                         object.value = []
 
                         if ($end - $start < 3) {
-                            return $incremental.object(object, 19, $i, $I)($buffer, $start, $end)
+                            return $incremental.object(object, 20, $i, $I)($buffer, $start, $end)
                         }
 
                         $i[0] = 0
@@ -112,7 +112,7 @@ module.exports = function ({ $incremental, $lookup }) {
 
                     default:
                         if ($end - $start < 3) {
-                            return $incremental.object(object, 23, $i, $I)($buffer, $start, $end)
+                            return $incremental.object(object, 24, $i, $I)($buffer, $start, $end)
                         }
 
                         $slice = $buffer.slice($start, $start + 3)
@@ -123,7 +123,7 @@ module.exports = function ({ $incremental, $lookup }) {
                     }
 
                     if ($end - $start < 1) {
-                        return $incremental.object(object, 25, $i, $I)($buffer, $start, $end)
+                        return $incremental.object(object, 26, $i, $I)($buffer, $start, $end)
                     }
 
                     object.sentry = $buffer[$start++]

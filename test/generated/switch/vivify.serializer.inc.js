@@ -38,22 +38,22 @@ module.exports = function ({ $lookup }) {
 
                             case 2:
 
-                                $step = 9
+                                $step = 10
                                 continue
 
                             case 3:
 
-                                $step = 14
+                                $step = 15
                                 continue
 
                             case 4:
 
-                                $step = 17
+                                $step = 18
                                 continue
 
                             default:
 
-                                $step = 20
+                                $step = 21
                                 continue
                             }
 
@@ -72,7 +72,7 @@ module.exports = function ({ $lookup }) {
                                 $buffer[$start++] = $_ >>> $bite * 8 & 0xff
                                 $bite--
                             }
-                            $step = 22
+                            $step = 23
                             continue
 
                         case 5:
@@ -90,18 +90,21 @@ module.exports = function ({ $lookup }) {
                                 $buffer[$start++] = $_ >>> $bite * 8 & 0xff
                                 $bite--
                             }
-                            $i[0] = 0
 
                         case 7:
 
-                            $bite = 0
-                            $_ = object.value[$i[0]]
+                            $i[0] = 0
 
                         case 8:
 
+                            $bite = 0
+                            $_ = object.value[$i[0]]
+
+                        case 9:
+
                             while ($bite != -1) {
                                 if ($start == $end) {
-                                    $step = 8
+                                    $step = 9
                                     return { start: $start, serialize: $serialize }
                                 }
                                 $buffer[$start++] = $_ >>> $bite * 8 & 0xff
@@ -109,69 +112,69 @@ module.exports = function ({ $lookup }) {
                             }
 
                             if (++$i[0] != object.value.length) {
-                                $step = 7
+                                $step = 8
                                 continue
                             }
-                            $step = 22
+                            $step = 23
                             continue
 
-                        case 9:
+                        case 10:
 
                             $i[0] = 0
-                            $step = 10
+                            $step = 11
 
-                        case 10:
+                        case 11:
 
                             $bite = 0
                             $_ = object.value[$i[0]]
 
-                        case 11:
+                        case 12:
 
                             while ($bite != -1) {
                                 if ($start == $end) {
-                                    $step = 11
+                                    $step = 12
                                     return { start: $start, serialize: $serialize }
                                 }
                                 $buffer[$start++] = $_ >>> $bite * 8 & 0xff
                                 $bite--
                             }
                             if (++$i[0] != object.value.length) {
-                                $step = 10
+                                $step = 11
                                 continue
                             }
 
-                            $step = 12
+                            $step = 13
 
-                        case 12:
+                        case 13:
 
                             if ($start == $end) {
-                                $step = 12
+                                $step = 13
                                 return { start: $start, serialize: $serialize }
                             }
 
                             $buffer[$start++] = 0x0
 
-                        case 13:
-                            $step = 22
+                        case 14:
+                            $step = 23
                             continue
 
-                        case 14:
+                        case 15:
 
                             $bite = 0
                             $_ = object.value.length
 
-                        case 15:
+                        case 16:
 
                             while ($bite != -1) {
                                 if ($start == $end) {
-                                    $step = 15
+                                    $step = 16
                                     return { start: $start, serialize: $serialize }
                                 }
                                 $buffer[$start++] = $_ >>> $bite * 8 & 0xff
                                 $bite--
                             }
 
-                        case 16: {
+                        case 17: {
 
                             const $bytes = Math.min($end - $start, object.value.length - $copied)
                             object.value.copy($buffer, $start, $copied, $copied + $bytes)
@@ -179,48 +182,48 @@ module.exports = function ({ $lookup }) {
                             $start += $bytes
 
                             if ($copied != object.value.length) {
-                                $step = 16
+                                $step = 17
                                 return { start: $start, serialize: $serialize }
                             }
 
                             $copied = 0
 
                         }
-                            $step = 22
+                            $step = 23
                             continue
 
-                        case 17:
+                        case 18:
 
                             $i[0] = 0
-                            $step = 18
+                            $step = 19
 
-                        case 18:
+                        case 19:
 
                             $bite = 0
                             $_ = object.value[$i[0]]
 
-                        case 19:
+                        case 20:
 
                             while ($bite != -1) {
                                 if ($start == $end) {
-                                    $step = 19
+                                    $step = 20
                                     return { start: $start, serialize: $serialize }
                                 }
                                 $buffer[$start++] = $_ >>> $bite * 8 & 0xff
                                 $bite--
                             }
                             if (++$i[0] != object.value.length) {
-                                $step = 18
+                                $step = 19
                                 continue
                             }
-                            $step = 22
+                            $step = 23
                             continue
 
-                        case 20:
+                        case 21:
 
                             $_ = 0
 
-                        case 21: {
+                        case 22: {
 
                                 const length = Math.min($end - $start, object.value.length - $_)
                                 object.value.copy($buffer, $start, $_, $_ + length)
@@ -228,22 +231,22 @@ module.exports = function ({ $lookup }) {
                                 $_ += length
 
                                 if ($_ != object.value.length) {
-                                    $step = 21
+                                    $step = 22
                                     return { start: $start, serialize: $serialize }
                                 }
 
                             }
 
-                        case 22:
+                        case 23:
 
                             $bite = 0
                             $_ = object.sentry
 
-                        case 23:
+                        case 24:
 
                             while ($bite != -1) {
                                 if ($start == $end) {
-                                    $step = 23
+                                    $step = 24
                                     return { start: $start, serialize: $serialize }
                                 }
                                 $buffer[$start++] = $_ >>> $bite * 8 & 0xff

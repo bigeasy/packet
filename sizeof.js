@@ -72,6 +72,7 @@ function generate (packet, { require = null }) {
                     `)
                     keywords = ' else if'
                 }
+                // TODO Remove extra line if no invocations.
                 return $(`
                     `, invocations, `
 
@@ -162,22 +163,25 @@ function generate (packet, { require = null }) {
                 return source
             }
             break
-        case 'lengthEncoded':
-            if (field.fields[0].fixed) {
-                return field.fields[0].type == 'buffer' && !field.fields[0].concat
-                ? $(`
-                    $start += ${path}.reduce((sum, buffer) => sum + buffer.length, 0) +
-                        ${field.fields[0].bits >>> 3} * ${path}.length
-                `) : $(`
-                    $start += ${field.encoding[0].bits >>> 3} +
-                        ${field.fields[0].bits >>> 3} * ${path}.length
-                `)
-            } else {
+        case 'lengthEncoded': {
+                const encoding = map(dispatch, `${path}.length`, field.encoding)
+                if (field.fields[0].fixed) {
+                    return field.fields[0].type == 'buffer' && !field.fields[0].concat
+                    ? $(`
+                        `, encoding, `
+
+                        $start += ${path}.reduce((sum, buffer) => sum + buffer.length, 0)
+                    `) : $(`
+                        `, encoding, `
+
+                        $start += ${field.fields[0].bits >>> 3} * ${path}.length
+                    `)
+                }
                 variables.i = true
                 $i++
                 const i = `$i[${$i}]`
                 const source = $(`
-                    $start += ${field.encoding[0].bits >>> 3}
+                    `, encoding, `
 
                     for (${i} = 0; ${i} < ${path}.length; ${i}++) {
                         `, map(dispatch, `${path}[${i}]`, field.fields), `

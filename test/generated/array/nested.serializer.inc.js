@@ -38,35 +38,41 @@ module.exports = function ({ $lookup }) {
                                 $buffer[$start++] = $_ >>> $bite * 8 & 0xff
                                 $bite--
                             }
-                            $i[0] = 0
 
                         case 4:
+
+                            $i[0] = 0
+
+                        case 5:
 
                             $bite = 1
                             $_ = object.array[$i[0]].length
 
-                        case 5:
+                        case 6:
 
                             while ($bite != -1) {
                                 if ($start == $end) {
-                                    $step = 5
+                                    $step = 6
                                     return { start: $start, serialize: $serialize }
                                 }
                                 $buffer[$start++] = $_ >>> $bite * 8 & 0xff
                                 $bite--
                             }
+
+                        case 7:
+
                             $i[1] = 0
 
-                        case 6:
+                        case 8:
 
                             $bite = 1
                             $_ = object.array[$i[0]][$i[1]]
 
-                        case 7:
+                        case 9:
 
                             while ($bite != -1) {
                                 if ($start == $end) {
-                                    $step = 7
+                                    $step = 9
                                     return { start: $start, serialize: $serialize }
                                 }
                                 $buffer[$start++] = $_ >>> $bite * 8 & 0xff
@@ -74,25 +80,25 @@ module.exports = function ({ $lookup }) {
                             }
 
                             if (++$i[1] != object.array[$i[0]].length) {
-                                $step = 6
+                                $step = 8
                                 continue
                             }
 
                             if (++$i[0] != object.array.length) {
-                                $step = 4
+                                $step = 5
                                 continue
                             }
 
-                        case 8:
+                        case 10:
 
                             $bite = 0
                             $_ = object.sentry
 
-                        case 9:
+                        case 11:
 
                             while ($bite != -1) {
                                 if ($start == $end) {
-                                    $step = 9
+                                    $step = 11
                                     return { start: $start, serialize: $serialize }
                                 }
                                 $buffer[$start++] = $_ >>> $bite * 8 & 0xff

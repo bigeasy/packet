@@ -12,8 +12,9 @@ module.exports = function ({ $lookup }) {
                 $$[0] = (value => value)(object.array.length)
 
                 $buffer[$start++] = $$[0] & 0xff
+                $i[0] = 0
 
-                for ($i[0] = 0; $i[0] < object.array.length; $i[0]++) {
+                for (; $i[0] < object.array.length; $i[0]++) {
                     $buffer[$start++] = object.array[$i[0]] & 0xff
                 }
 

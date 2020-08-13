@@ -48,10 +48,14 @@ exports.serialize = function (field) {
         case 'lengthEncoding': {
                 field.body.encoding.map(declare)
             }
+            break
         case 'lengthEncoded': {
                 variables.i = true
                 if (field.encoding) {
                     field.encoding.map(declare)
+                }
+                if (field.fields[0].type == 'buffer' && ! field.fields[0].concat) {
+                    variables.I = true
                 }
             }
             break
@@ -161,6 +165,8 @@ exports.parse = function (field) {
         case 'lengthEncoded': {
                 variables.i = true
                 variables.I = true
+                field.fields.map(field => declare(field, packed))
+                field.encoding.map(field => declare(field, packed))
             }
             break
         case 'terminated': {
