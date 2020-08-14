@@ -53,6 +53,14 @@ function flatten (flattened, path, fields, assignment = '=') {
                 switched: field
             })
             break
+        case 'inline':
+            flattened.push({
+                type: 'inline',
+                path: path + field.dotted,
+                assignment: assignment,
+                inline: field
+            })
+            break
         }
         assignment = '|='
     }
@@ -77,6 +85,23 @@ module.exports = function (inliner, field, path) {
                         lookup: field.lookup
                     })
                     offset += field.bits
+                }
+                break
+            case 'inline': {
+                    const { path, assignment, inline } = field
+                    const inlined = inliner.inline(path, inline.before)
+                    const source = generate({
+                        bits: bits,
+                        fields: inline.fields[0].type == 'integer' && inline.fields[0].fields
+                            ? inline.fields[0].fields
+                            : inline.fields
+                    }, inlined.path, '$_', assignment, offset)
+                    offset += inline.bits
+                    packed.unshift([], $(`
+                        `, inlined.inlined, `
+
+                        `, source, `
+                    `))
                 }
                 break
             case 'conditional': {
@@ -113,6 +138,8 @@ module.exports = function (inliner, field, path) {
                         keywords = ' else if'
                     }
                     offset += conditional.bits
+                    // Isn't this `packed.unshift([], ladder)`? See inline,
+                    // write tests.
                     packed.unshift(ladder)
                 }
                 break

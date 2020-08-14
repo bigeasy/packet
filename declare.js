@@ -99,6 +99,9 @@ exports.serialize = function (field) {
                 if (field.fields != null || field.lookup != null) {
                     variables.register = true
                 }
+                if (field.fields) {
+                    field.fields.map(declare)
+                }
             }
             break
         case 'absent':

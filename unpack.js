@@ -1,5 +1,6 @@
 // Node.js API.
 const util = require('util')
+const assert = require('assert')
 
 const fiddle = require('./fiddle/unpack')
 const unsign = require('./fiddle/unsign')
@@ -56,6 +57,16 @@ function unpack (inliner, root, path, field, packed, offset = 0) {
                     size: advance(field.bits),
                     switched: field
                 }
+            case 'inline':
+                return {
+                    type: 'inline',
+                    bits: bits,
+                    path: path + field.dotted,
+                    packed: packed,
+                    offset: bit,
+                    size: advance(field.bits),
+                    inline: field
+                }
             }
         }
         const blocks = []
@@ -79,6 +90,24 @@ function unpack (inliner, root, path, field, packed, offset = 0) {
                     } else {
                         blocks.push(assign)
                     }
+                }
+                break
+            case 'inline': {
+                    const { inline, path, offset } = packing
+                    const inlined = inliner.inline(path, inline.after)
+                    assert(inline.starts == null)
+                    const vivifyed = inline.fields[0].type == 'integer' && inline.fields[0].fields
+                    const source = generate(path, {
+                        bits: bits,
+                        fields: vivifyed ? inline.fields[0].fields : inline.fields
+                    }, packed, offset)
+                    blocks.push($(`
+                        `, source, `
+
+                        `, -1, inlined.inlined, `
+
+                        `, -1, inliner.pop(), `
+                    `))
                 }
                 break
             case 'conditional': {

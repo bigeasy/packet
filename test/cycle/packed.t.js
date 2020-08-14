@@ -9,7 +9,7 @@ function prove (okay) {
                 header: [{
                     one: [[ 15, '5eaf' ], 2 ],
                     two: -3,
-                    three: 4,
+                    three: [[[ value => ~value & 0xf ]], 4 ],
                     four: [ 2, [
                         'zero', 'one', 'two', 'three'
                     ]],

@@ -1,7 +1,7 @@
 module.exports = function ({ $lookup }) {
     return {
         object: function () {
-            return function (object, $step = 0) {
+            return function (object, $step = 0, $$ = []) {
                 let $_, $bite
 
                 return function $serialize ($buffer, $start, $end) {
@@ -28,8 +28,14 @@ module.exports = function ({ $lookup }) {
                         $_ =
                             (0x5eaf << 17 & 0xfffe0000) >>> 0 |
                             object.header.one << 15 & 0x18000 |
-                            object.header.two << 12 & 0x7000 |
-                            object.header.three << 8 & 0xf00 |
+                            object.header.two << 12 & 0x7000
+
+                        $$[0] = (value => ~value & 0xf)(object.header.three)
+
+                        $_ |=
+                            $$[0] << 8 & 0xf00
+
+                        $_ |=
                             $lookup[0].indexOf(object.header.four) << 6 & 0xc0 |
                             0xaa & 0x3f
 

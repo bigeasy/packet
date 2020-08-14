@@ -41,6 +41,8 @@ module.exports = function ({ $incremental, $lookup }) {
 
                     object.header.three = $_ >>> 8 & 0xf
 
+                    object.header.three = (value => ~value & 0xf)(object.header.three)
+
                     object.header.four = $lookup[0][$_ >>> 6 & 0x3]
 
                     if ($end - $start < 1) {
