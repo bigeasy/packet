@@ -3,7 +3,7 @@ module.exports = function ({ $incremental, $lookup }) {
         object: function () {
             return function () {
                 return function ($buffer, $start, $end) {
-                    let $i = [], $I = []
+                    let $I = []
 
                     let object = {
                         type: 0,
@@ -12,7 +12,7 @@ module.exports = function ({ $incremental, $lookup }) {
                     }
 
                     if ($end - $start < 1) {
-                        return $incremental.object(object, 1, $i, $I)($buffer, $start, $end)
+                        return $incremental.object(object, 1, $I)($buffer, $start, $end)
                     }
 
                     object.type = $buffer[$start++]
@@ -20,7 +20,7 @@ module.exports = function ({ $incremental, $lookup }) {
                     switch (($ => $.type)(object)) {
                     case 0:
                         if ($end - $start < 1) {
-                            return $incremental.object(object, 4, $i, $I)($buffer, $start, $end)
+                            return $incremental.object(object, 4, $I)($buffer, $start, $end)
                         }
 
                         $I[0] = $buffer[$start++]
@@ -29,7 +29,7 @@ module.exports = function ({ $incremental, $lookup }) {
 
                     default:
                         if ($end - $start < 2) {
-                            return $incremental.object(object, 6, $i, $I)($buffer, $start, $end)
+                            return $incremental.object(object, 6, $I)($buffer, $start, $end)
                         }
 
                         $I[0] =
@@ -40,14 +40,14 @@ module.exports = function ({ $incremental, $lookup }) {
                     }
 
                     if ($end - $start < 1 * $I[0]) {
-                        return $incremental.object(object, 8, $i, $I)($buffer, $start, $end)
+                        return $incremental.object(object, 8, $I)($buffer, $start, $end)
                     }
 
                     object.array = [ $buffer.slice($start, $start + $I[0]) ]
                     $start += $I[0]
 
                     if ($end - $start < 1) {
-                        return $incremental.object(object, 9, $i, $I)($buffer, $start, $end)
+                        return $incremental.object(object, 9, $I)($buffer, $start, $end)
                     }
 
                     object.sentry = $buffer[$start++]

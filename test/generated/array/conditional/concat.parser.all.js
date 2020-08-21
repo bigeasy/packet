@@ -2,7 +2,7 @@ module.exports = function ({ $lookup }) {
     return {
         object: function () {
             return function ($buffer, $start) {
-                let $i = [], $I = [], $sip = []
+                let $I = [], $sip = []
 
                 let object = {
                     nudge: 0,

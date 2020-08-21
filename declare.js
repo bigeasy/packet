@@ -168,8 +168,10 @@ exports.parse = function (field) {
             }
             break
         case 'lengthEncoded': {
-                variables.i = true
                 variables.I = true
+                if (field.fields[0].type != 'buffer') {
+                    variables.i = true
+                }
                 field.fields.map(field => declare(field, packed))
                 field.encoding.map(field => declare(field, packed))
             }

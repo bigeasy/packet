@@ -612,8 +612,6 @@ function generate (packet, { require, bff, chk }) {
     // check that will jump to the loop body of an incremental parser.
     function lengthEncoding (path, field) {
         const element = field.body.fields[field.body.fields.length - 1]
-        variables.i = true
-        variables.I = true
         const I = `$I[${++$I}]`
         if (element.type == 'buffer') {
             return map(dispatch, I, field.body.encoding)

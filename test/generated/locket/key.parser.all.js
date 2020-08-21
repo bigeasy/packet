@@ -2,7 +2,7 @@ module.exports = function ({ $lookup }) {
     return {
         object: function () {
             return function ($buffer, $start) {
-                let $_, $i = [], $I = []
+                let $_, $I = []
 
                 let object = {
                     header: {
