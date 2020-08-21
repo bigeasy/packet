@@ -3,10 +3,8 @@ module.exports = function ({ $incremental, $lookup }) {
         object: function () {
             return function (object) {
                 return function ($buffer, $start, $end) {
-                    let $i = []
-
                     if ($end - $start < 3 + object.array.length * 1) {
-                        return $incremental.object(object, 0, $i)($buffer, $start, $end)
+                        return $incremental.object(object, 0)($buffer, $start, $end)
                     }
 
                     $buffer[$start++] = object.nudge & 0xff

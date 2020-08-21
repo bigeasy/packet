@@ -2,7 +2,7 @@ module.exports = function ({ $lookup }) {
     return {
         object: function () {
             return function (object, $buffer, $start) {
-                let $i = [], $I = []
+                let $I = []
 
                 $buffer[$start++] = object.type & 0xff
 

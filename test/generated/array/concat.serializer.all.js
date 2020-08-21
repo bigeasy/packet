@@ -2,8 +2,6 @@ module.exports = function ({ $lookup }) {
     return {
         object: function () {
             return function (object, $buffer, $start) {
-                let $i = []
-
                 $buffer[$start++] = object.nudge & 0xff
 
                 $buffer[$start++] = object.array.length & 0xff

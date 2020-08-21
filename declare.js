@@ -50,9 +50,11 @@ exports.serialize = function (field) {
             }
             break
         case 'lengthEncoded': {
-                variables.i = true
                 if (field.encoding) {
                     field.encoding.map(declare)
+                }
+                if (field.fields[0].type != 'buffer') {
+                    variables.i = true
                 }
                 if (field.fields[0].type == 'buffer' && ! field.fields[0].concat) {
                     variables.I = true

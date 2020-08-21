@@ -2,7 +2,7 @@ module.exports = function ({ $lookup }) {
     return {
         object: function () {
             return function (object, $buffer, $start) {
-                let $_, $i = []
+                let $_
 
                 $_ =
                     ($lookup[0].indexOf(object.header.method) << 31 & 0x80000000) >>> 0 |

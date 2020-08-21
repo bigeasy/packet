@@ -3,10 +3,8 @@ module.exports = function ({ $incremental, $lookup }) {
         object: function () {
             return function (object) {
                 return function ($buffer, $start, $end) {
-                    let $i = []
-
                     if ($end - $start < 1) {
-                        return $incremental.object(object, 0, $i)($buffer, $start, $end)
+                        return $incremental.object(object, 0)($buffer, $start, $end)
                     }
 
                     $buffer[$start++] = object.type & 0xff
@@ -15,7 +13,7 @@ module.exports = function ({ $incremental, $lookup }) {
                     case 0:
 
                         if ($end - $start < 1) {
-                            return $incremental.object(object, 3, $i)($buffer, $start, $end)
+                            return $incremental.object(object, 3)($buffer, $start, $end)
                         }
 
                         $buffer[$start++] = object.array.length & 0xff
@@ -25,7 +23,7 @@ module.exports = function ({ $incremental, $lookup }) {
                     default:
 
                         if ($end - $start < 2) {
-                            return $incremental.object(object, 5, $i)($buffer, $start, $end)
+                            return $incremental.object(object, 5)($buffer, $start, $end)
                         }
 
                         $buffer[$start++] = object.array.length >>> 8 & 0xff
@@ -35,14 +33,14 @@ module.exports = function ({ $incremental, $lookup }) {
                     }
 
                     if ($end - $start < 0 + object.array.length) {
-                        return $incremental.object(object, 7, $i)($buffer, $start, $end)
+                        return $incremental.object(object, 7)($buffer, $start, $end)
                     }
 
                     object.array.copy($buffer, $start, 0, object.array.length)
                     $start += object.array.length
 
                     if ($end - $start < 1) {
-                        return $incremental.object(object, 8, $i)($buffer, $start, $end)
+                        return $incremental.object(object, 8)($buffer, $start, $end)
                     }
 
                     $buffer[$start++] = object.sentry & 0xff

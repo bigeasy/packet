@@ -1,7 +1,7 @@
 module.exports = function ({ $lookup }) {
     return {
         object: function () {
-            return function (object, $step = 0, $i = []) {
+            return function (object, $step = 0) {
                 let $_, $bite, $copied = 0
 
                 return function $serialize ($buffer, $start, $end) {

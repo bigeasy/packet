@@ -3,10 +3,10 @@ module.exports = function ({ $incremental, $lookup }) {
         object: function () {
             return function (object) {
                 return function ($buffer, $start, $end) {
-                    let $i = [], $I = []
+                    let $I = []
 
                     if ($end - $start < 1) {
-                        return $incremental.object(object, 0, $i, $I)($buffer, $start, $end)
+                        return $incremental.object(object, 0, $I)($buffer, $start, $end)
                     }
 
                     $buffer[$start++] = object.nudge & 0xff
@@ -14,13 +14,13 @@ module.exports = function ({ $incremental, $lookup }) {
                     $I[0] = object.array.reduce((sum, buffer) => sum + buffer.length, 0)
                     if ((value => value < 128)($I[0])) {
                         if ($end - $start < 1) {
-                            return $incremental.object(object, 4, $i, $I)($buffer, $start, $end)
+                            return $incremental.object(object, 4, $I)($buffer, $start, $end)
                         }
 
                         $buffer[$start++] = $I[0] & 0xff
                     } else {
                         if ($end - $start < 2) {
-                            return $incremental.object(object, 6, $i, $I)($buffer, $start, $end)
+                            return $incremental.object(object, 6, $I)($buffer, $start, $end)
                         }
 
                         $buffer[$start++] = $I[0] >>> 7 & 0x7f | 0x80
@@ -28,7 +28,7 @@ module.exports = function ({ $incremental, $lookup }) {
                     }
 
                     if ($end - $start < 1 + object.array.reduce((sum, buffer) => sum + buffer.length, 0)) {
-                        return $incremental.object(object, 9, $i, $I)($buffer, $start, $end)
+                        return $incremental.object(object, 9, $I)($buffer, $start, $end)
                     }
 
                     {

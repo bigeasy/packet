@@ -3,23 +3,23 @@ module.exports = function ({ $incremental, $lookup }) {
         object: function () {
             return function (object) {
                 return function ($buffer, $start, $end) {
-                    let $i = [], $I = []
+                    let $I = []
 
                     if ($end - $start < 1) {
-                        return $incremental.object(object, 0, $i, $I)($buffer, $start, $end)
+                        return $incremental.object(object, 0, $I)($buffer, $start, $end)
                     }
 
                     $buffer[$start++] = object.nudge & 0xff
 
                     if ($end - $start < 1) {
-                        return $incremental.object(object, 2, $i, $I)($buffer, $start, $end)
+                        return $incremental.object(object, 2, $I)($buffer, $start, $end)
                     }
 
                     $I[0] = object.array.reduce((sum, buffer) => sum + buffer.length, 0)
                     $buffer[$start++] = $I[0] & 0xff
 
                     if ($end - $start < 0 + object.array.reduce((sum, buffer) => sum + buffer.length, 0)) {
-                        return $incremental.object(object, 5, $i, $I)($buffer, $start, $end)
+                        return $incremental.object(object, 5, $I)($buffer, $start, $end)
                     }
 
                     {
@@ -30,7 +30,7 @@ module.exports = function ({ $incremental, $lookup }) {
                     }
 
                     if ($end - $start < 1) {
-                        return $incremental.object(object, 6, $i, $I)($buffer, $start, $end)
+                        return $incremental.object(object, 6, $I)($buffer, $start, $end)
                     }
 
                     $buffer[$start++] = object.sentry & 0xff
