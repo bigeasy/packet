@@ -6,21 +6,33 @@ function prove (okay) {
         name: 'locket/key',
         define: {
             object: {
+                version: 64n
+            }
+        },
+        objects: [{
+            version: 1n
+        }],
+        stopAt: 'parse.all'
+    })
+    cycle(okay, {
+        name: 'locket/meta',
+        define: {
+            object: {
                 header: [{
                     method: [ 1, [ 'del', 'put' ] ],
-                    count: 31
+                    index: 31
                 }, 32 ],
-                version: 64n,
-                key: [ 32, [ Buffer ] ]
+                count: 32,
+                version: 64n
             }
         },
         objects: [{
             header: {
                 method: 'put',
-                count: 8
+                index: 3
             },
-            version: 1n,
-            key: Buffer.from('abcd')
+            count: 8,
+            version: 1n
         }],
         stopAt: 'parse.all'
     })
