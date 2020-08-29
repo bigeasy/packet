@@ -5,7 +5,8 @@ definition specified in JavaScript. The generated parsers and serializers should
 be as performant as ones you'd write yourself.
 
 Packet will generate serializers and parsers that are either synchronous,
-incremental or best-foot-forward. Packet will also generate sizeof and offsetof
+incremental or a best-foot-forward combination of synchronous first, then
+incremental if necessary. Packet will also generate sizeof and offsetof
 functions to determine the binary length of an JSON object once serialized and
 the offset of a packet field for a specific JSON object.
 
@@ -57,22 +58,23 @@ The above is the definition of an IP packet. The name of the packet is `ip`.
 Pre-alpha and not quite usable, yet. Working through unit tests of the sundry
 language constructs. Able to generate serializers and parsers that are
 synchronous, incremental, and best-foot-forward, which you could use, but there
-is no API for generation or use with streams.
+is no API for generation or use with streams. I'm currently using the
+synchronous parsers in other projects because they can be used stand-alone.
 
 ### Basic Assumptions
 
-TK: Somewhere, a soliloquy about syntax bashing.
+**TODO**: Somewhere, a soliloquy about syntax bashing.
 
 The Packet definition language is a syntax bashed language. It is specified in
 JavaScript and the definition is transformed into JavaScript. For the most part,
-there is no parsing except for the parsing that the JavaScript does itself. This
+there is no parsing except for the parsing that JavaScript does itself. This
 does make a few errors undetectable at compile time, unfortunately.
 
-We expect you to ship the generated serializers and parsers and not to create
-definitions on the fly. Maybe you want to build a general purpose tool of some
-sort, and maybe Packet can help, or maybe it can only serve as inspiration, but
-we're not going to accommodate headless generation of serializers and parsers in
-response to data going out or coming in over the wire.
+Ship the generated serializers and parsers. Do not to create definitions on the
+fly. Maybe you want to build a general purpose tool of some sort, and maybe
+Packet can help, or maybe it can only serve as inspiration, but we're not going
+to accommodate headless generation of serializers and parsers in response to
+data going out or coming in over the wire.
 
 Packet is written for Node.js 12. It uses features of ES2015 and breaks without
 them. The serializer and parser generator has been tested on Node.js 12 as have
@@ -81,9 +83,9 @@ Node.js 12. The generated parsers and serializers should run in any ES2015
 JavaScript interpreter, but I've not built an API for streaming except against
 Node.js streams. (Hmm... WebSockets?)
 
-The generator depends on the order of insertion of the object properties of the
-definition. This used to be a _de facto_ standard of JavaScript but ES2015 made
-it official.
+Packet definitions depend on the order of insertion of the object properties of
+the definition. This used to be a _de facto_ standard of JavaScript but ES2015
+made it official.
 
 With the exception of packed integers, we assume that the underlying protocol
 uses 8-bit bytes and that integers sizes are multiples of 8-bits. There are
@@ -226,7 +228,7 @@ const definition = {
 
 ### Literals
 
-TK: Literals should come after packed integers.
+**TODO**: Literals should come after packed integers.
 
 ```
 const definition = {
@@ -492,8 +494,8 @@ simple enough, just give them the already existing `$i`. Heh, no make them
 suffer.)
 
 The third argument passed to a transformation function is an array of indices
-indicating the index of each array in the path to the object. TK Move fixed
-arrays above.
+indicating the index of each array in the path to the object. **TODO** Move
+fixed arrays above.
 
 ```javascript
 define({
@@ -784,8 +786,6 @@ functions for transforms or assertions that you perform on more than one . The
 function declaration function will return a function that will be included in
 the serializer or parser. If you give it a meaningful name
 
-
-
 ```javascript
 define({
     packet: {
@@ -820,9 +820,9 @@ operations require accumuators of some sort, we'll
 You are also able to apply functions to the underlying `Buffer` during parse and
 serialization. See Checksums and Running Calculations.
 
-### Importing Modules
-
 ### Fixed Length Arrays
+
+**TODO**: Need first draft.
 
 Fixed length arrays are arrays of a fixed length. They are specified by an array
 containing the numeric length of the array.
@@ -834,8 +834,6 @@ define({
     }
 })
 ```
-
-### Fixed Length Arrays
 
 Calculated length arrays are arrays where the length is determined by a function
 which can read a value from...
@@ -853,6 +851,8 @@ define({
 ```
 
 ### Length-Encoded Arrays
+
+**TODO**: Need first draft.
 
 A length-encoded indicates a series of values
 
@@ -875,6 +875,8 @@ define({
 ```
 
 Here's a common case, though.
+
+**TODO**: Notes to self, done with calculated fixed arrays.
 
 ```javascript
 define({
@@ -944,6 +946,8 @@ define({
 
 ### String Value Maps
 
+**TODO**: Need first draft.
+
 ```javascript
 define ({
     packet: {
@@ -987,6 +991,8 @@ inline functions, maybe serializing to a byte array or `BigInt`. If you
 encounter at 128-bit number in the wild, I'd be curious. Please let me know.
 
 ### Conditionals
+
+**TODO**: Need first draft.
 
 Basic conditionals are expressed as an array of boolean functions paired with
 field definitions. The functions and definitions repeat creating an if/else if
@@ -1035,6 +1041,8 @@ define({
 
 ### Switch Conditionals
 
+**TODO**: Need first draft. Also, example is wrong.
+
 ```javascript
 define ({
     packet: {
@@ -1044,7 +1052,54 @@ define ({
 })
 ```
 
-### References
+### References to Paritals
+
+**TODO**: First draft done.
+
+If you have a complicated type that requires a complicated definition that is
+tedious to repeat, you can reference that definition by name.
+
+References can be used as types and can also be used as length encoding lengths
+if they resolve to an integer type. If you create a type that is only used by
+reference that you do not want available as a packet, prepend and underbar and
+it will not be returned as a packet type.
+
+**Mnemonic**: A string name to name the referenced type.
+
+In the following a definition an encoded integer is defined as a partial that
+will not be presented as a packet due to the `_` prefix to the name. It is
+referneced by the `series` property as a type and used for the length encoding
+of the `data` property.
+
+```javascript
+define ({
+    packet: {
+        _encodedInteger: [
+            [
+                value => value <= 0x7f, 8,
+                value => value <= 0x3fff, [ 16, 0x80, 7, 0x0, 7 ],
+                value => value <= 0x1fffff, [ 24, 0x80, 7, 0x80, 7, 0x0, 7 ],
+                true, [ 32, 0x80, 7, 0x80, 7, 0x80, 7, 0x0, 7 ]
+            ],
+            [ 8,
+                sip => (sip & 0x80) == 0, 8,
+                true, [ 8,
+                    sip => (sip & 0x80) == 0, [ 16, 0x80, 7, 0x0, 7 ],
+                    true, [ 8,
+                        sip => (sip & 0x80) == 0, [ 24, 0x80, 7, 0x80, 7, 0x0, 7 ],
+                        true, [ 32, 0x80, 7, 0x80, 7, 0x80, 7, 0x0, 7 ]
+                    ]
+                ]
+            ]
+        ],
+        packet: {
+            type: 8,
+            series: '_encodedInteger',
+            data: [ '_encodedInteger', [ Buffer ] ]
+        }
+    }
+})
+```
 
 ### Checksums and Running Calcuations
 
@@ -1098,8 +1153,9 @@ of the buffer continguously as possible. In the previous example, the
 
 We use nested structures to group.
 
-**TK**: Simplier calculation example to start. Calculation is important because
-it will allow us to talk about the difference between `sizeof`, `offsetof`.
+**TODO**: Simplier calculation example to start. Calculation is important
+because it will allow us to talk about the difference between `sizeof`,
+`offsetof`.
 
 ```javascript
 define({
@@ -1133,6 +1189,8 @@ define({
 
 ### Parameters
 
+**TODO**: Need first draft, or reread this and see if it is a real first draft.
+
 Accumulators described in the preceding section also define parameters. Any
 accumulator declared on the top most field will create parameters to the
 generated serializes and parsers.
@@ -1146,7 +1204,7 @@ define({
         string: [ [ 8 ], 0x0 ]
     }]]
 })
-// *TK*: API call to get counter.
+// **TODO**: API call to get counter.
 ```
 
 The parameters are available as both arguments that can be passed to inline
@@ -1163,5 +1221,5 @@ define({
         ]]
     }]
 })
-// *TK*: API call to encode string ascii or something.
+// *TODO*: API call to encode string ascii or something.
 ```
