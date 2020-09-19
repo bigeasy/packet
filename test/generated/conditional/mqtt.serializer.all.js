@@ -2,25 +2,23 @@ module.exports = function ({ $lookup }) {
     return {
         object: function () {
             return function (object, $buffer, $start) {
-                $buffer[$start++] = object.nudge & 0xff
+                let $_
 
-                if ((value => value <= 0x7f)(object.value)) {
-                    $buffer[$start++] = object.value & 0xff
-                } else if ((value => value <= 0x3fff)(object.value)) {
-                    $buffer[$start++] = object.value >>> 7 & 0x7f | 0x80
-                    $buffer[$start++] = object.value & 0x7f
-                } else if ((value => value <= 0x1fffff)(object.value)) {
-                    $buffer[$start++] = object.value >>> 14 & 0x7f | 0x80
-                    $buffer[$start++] = object.value >>> 7 & 0x7f | 0x80
-                    $buffer[$start++] = object.value & 0x7f
-                } else {
-                    $buffer[$start++] = object.value >>> 21 & 0x7f | 0x80
-                    $buffer[$start++] = object.value >>> 14 & 0x7f | 0x80
-                    $buffer[$start++] = object.value >>> 7 & 0x7f | 0x80
-                    $buffer[$start++] = object.value & 0x7f
+                $_ =
+                    $lookup[0].indexOf(object.header.type) << 4 & 0xf0
+
+                switch (($ => $.header.type)(object)) {
+                case 'publish':
+
+                    $_ |=
+                        object.header.flags.dup << 3 & 0x8 |
+                        object.header.flags.qos << 1 & 0x6 |
+                        object.header.flags.retain & 0x1
+
+                    break
                 }
 
-                $buffer[$start++] = object.sentry & 0xff
+                $buffer[$start++] = $_ & 0xff
 
                 return { start: $start, serialize: null }
             }
