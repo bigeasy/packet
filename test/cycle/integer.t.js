@@ -7,7 +7,7 @@ function prove (okay) {
         define: {
             object: {
                 nudge: 8,
-                value: [ 16, 0x80, 7, 0x0, 7 ],
+                value: [ 16, [ 0x80, 7 ], [ 0x0, 7 ] ],
                 sentry: 8
             }
         },

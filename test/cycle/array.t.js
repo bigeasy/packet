@@ -110,7 +110,7 @@ function prove (okay) {
             $value: 8,
             object: {
                 nudge: 8,
-                array: [ [ 16, 0x80, 7, 0x0, 7 ],  [ 8 ] ],
+                array: [ [ 16, [ 0x80, 7 ], [ 0x0, 7 ] ],  [ 8 ] ],
                 // Need to force the best-foot-forward check.
                 sentry: 8
             }
@@ -131,10 +131,10 @@ function prove (okay) {
                 array: [[
                     [
                         value => value < 128, 8,
-                        true, [ 16, 0x80, 7, 0x0, 7 ]
+                        true, [ 16, [ 0x80, 7 ], [ 0x0, 7 ] ]
                     ], [ 8,
                         sip => (sip & 0x80) == 0, 8,
-                        true, [ 16, 0x80, 7, 0x0, 7 ]
+                        true, [ 16, [ 0x80, 7 ], [ 0x0, 7 ] ]
                     ]
                 ], [ 8 ]],
                 // Need to force the best-foot-forward check.
@@ -161,10 +161,10 @@ function prove (okay) {
                 array: [[
                     [
                         value => value < 128, 8,
-                        true, [ 16, 0x80, 7, 0x0, 7 ]
+                        true, [ 16, [ 0x80, 7 ], [ 0x0, 7 ] ]
                     ], [ 8,
                         sip => (sip & 0x80) == 0, 8,
-                        true, [ 16, 0x80, 7, 0x0, 7 ]
+                        true, [ 16, [ 0x80, 7 ], [ 0x0, 7 ] ]
                     ]
                 ], [ Buffer ]],
                 // Need to force the best-foot-forward check.
@@ -190,10 +190,10 @@ function prove (okay) {
                 array: [[
                     [
                         value => value < 128, 8,
-                        true, [ 16, 0x80, 7, 0x0, 7 ]
+                        true, [ 16, [ 0x80, 7 ], [ 0x0, 7 ] ]
                     ], [ 8,
                         sip => (sip & 0x80) == 0, 8,
-                        true, [ 16, 0x80, 7, 0x0, 7 ]
+                        true, [ 16, [ 0x80, 7 ], [ 0x0, 7 ] ]
                     ]
                 ], [[ Buffer ]]],
                 sentry: 8

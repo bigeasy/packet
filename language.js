@@ -211,8 +211,19 @@ module.exports = function (packets) {
         spread: function (packet) {
             if (
                 Array.isArray(packet) &&
-                packet.every(number => Number.isInteger(number)) &&
-                packet.slice(1).every(number => number >= 0)
+                Number.isInteger(packet[0]) &&
+                packet[0] % 8 == 0 &&
+                packet[0] > 0 &&
+                packet.slice(1).every(item => {
+                    return (
+                        Number.isInteger(item) && 0 < item && item <= 8
+                    ) || (
+                        Array.isArray(item) &&
+                        item.length == 2 &&
+                        0 <= item[0] && item[0] <= 0xff &&
+                        0 < item[1] && item[1] <= 8
+                    )
+                })
             ) {
                 const spread = packet.slice(1)
                 const abs = Math.abs(packet[0] % 8)
@@ -224,14 +235,12 @@ module.exports = function (packets) {
                         : -~packet[0]
                     : Math.abs(packet[0])
                 const bytes = bits / 8
-                if (bytes == spread.length) {
-                    return bits > packet.slice(1)
-                        .reduce((sum, number) => sum + number, 0)
-                } else if (bytes == spread.length / 2) {
-                    return bits > packet.slice(1)
-                        .filter((number, index) => index % 2 == 1)
-                        .reduce((sum, number) => sum + number, 0)
+                while (bytes < spread.length) {
+                    spread.splice(1, 0, spread[1])
                 }
+                return bits > spread.reduce((sum, item) => {
+                    return sum + (Array.isArray(item) ? item[1] : item)
+                }, 0)
             }
             return false
         },
@@ -552,21 +561,21 @@ module.exports = function (packets) {
                     ? Math.abs(~packet[0])
                     : -~packet[0]
                 : Math.abs(packet[0])
-            const { spread, upper } = bits / 8 * 2 == packet.length - 1
-                ? {
-                    spread: packet.slice(1).filter((_, index) => index % 2 == 1),
-                    upper: packet.slice(1).filter((_, index) => index % 2 == 0)
-                }
-                : {
-                    spread: packet.slice(1),
-                    upper: packet.slice(1).map(() => 0)
-                }
-            const bytes = spread.map((number, index) => {
+            let spread = packet.slice(1)
+            while (spread.length < bits / 8) {
+                spread.splice(1, 0, spread[1])
+            }
+            spread = spread.map((item, index) => {
+                return Array.isArray(item)
+                    ? { upper: item[0], size: item[1] }
+                    : { upper: 0, size: item }
+            })
+            const bytes = spread.map((item, index) => {
                 return {
-                    shift: spread.slice(index + 1).reduce((sum, number) => sum + number, 0),
-                    size: number,
-                    mask: 0xff >>> 8 - number,
-                    upper: upper[index]
+                    shift: spread.slice(index + 1).reduce((sum, item) => sum + item.size, 0),
+                    size: item.size,
+                    mask: 0xff >>> 8 - item.size,
+                    upper: item.upper
                 }
             })
             return [ integer(packet[0], false, { ...extra, bytes }) ]

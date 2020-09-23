@@ -385,8 +385,6 @@ const definition = {
 If we ever want to have a value that is not there, we can just use `null`.
 
 ```javascript
-const definition = {
-    packet: {
         type: 8,
         value: [
             $ => $.type == 1, { first: 16, second: 16 },

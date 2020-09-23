@@ -1,4 +1,4 @@
-require('proof')(1, okay => {
+require('proof')(0, okay => {
     const cycle = require('./cycle')
     cycle(okay, {
         name: 'conditional/mqtt',
@@ -6,21 +6,21 @@ require('proof')(1, okay => {
             $integer: [
                 [
                     value => value <= 0x7f, 8,
-                    value => value <= 0x3fff, [ 16, 0x80, 7, 0x0, 7 ],
-                    value => value <= 0x1fffff, [ 24, 0x80, 7, 0x80, 7, 0x0, 7 ],
+                    value => value <= 0x3fff, [ 16, [ 0x80, 7 ], 7 ],
+                    value => value <= 0x1fffff, [ 24, [ 0x80, 7 ], 7 ],
                     // TODO Assume that we expand the middle, so that if
                     // there are three entries and the size is four or more,
                     // the middle repeated, if there are two entries the end
                     // is repeated.
-                    true, [ 32, 0x80, 7, 0x80, 7, 0x80, 7, 0x0, 7 ]
+                    true, [ 32, [ 0x80, 7 ], 7 ]
                 ],
                 [ 8,
                     sip => (sip & 0x80) == 0, 8,
                     true, [ 8,
-                        sip => (sip & 0x80) == 0, [ 16, 0x80, 7, 0x0, 7 ],
+                        sip => (sip & 0x80) == 0, [ 16, [ 0x80, 7 ] ],
                         true, [ 8,
-                            sip => (sip & 0x80) == 0, [ 24, 0x80, 7, 0x80, 7, 0x0, 7 ],
-                            true, [ 32, 0x80, 7, 0x80, 7, 0x80, 7, 0x0, 7 ]
+                            sip => (sip & 0x80) == 0, [ 24, [ 0x80, 7 ] ],
+                            true, [ 32, [ 0x80, 7 ] ]
                         ]
                     ]
                 ]

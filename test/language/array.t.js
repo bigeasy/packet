@@ -352,7 +352,7 @@ require('proof')(11, okay => {
     okay(language({
         object: {
             type: 8,
-            value: [ [ 16, 0x80, 7, 0x0, 8 ], [ 8 ] ]
+            value: [ [ 16, [ 0x80, 7 ], [ 0x0, 8 ] ], [ 8 ] ]
         }
     }), [{
         type: 'structure',
@@ -699,10 +699,10 @@ require('proof')(11, okay => {
             value: [[
                 [
                     value => value < 128, 8,
-                    true, [ 16, 0x80, 7, 0x0, 8 ]
+                    true, [ 16, [ 0x80, 7 ], [ 0x0, 8 ] ]
                 ], [ 8,
                     sip => sip & 0x80 == 0, 8,
-                    true, [ 16, 0x80, 7, 0x0, 8 ]
+                    true, [ 16, [ 0x80, 7 ], [ 0x0, 8 ] ]
                 ]
             ], [ 8 ] ]
         }
