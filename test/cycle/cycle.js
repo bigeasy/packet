@@ -1,7 +1,7 @@
 const fs = require('fs')
 const path = require('path')
 const util = require('util')
-const coalesce = require('extant')
+const { coalesce } = require('extant')
 const $ = require('programmatic')
 const assert = require('assert')
 

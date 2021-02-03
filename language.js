@@ -2,9 +2,6 @@
 const assert = require('assert')
 const util = require('util')
 
-// Return the first non-null value.
-const coalesce = require('extant')
-
 // Wrapper around Buffer float parsing to exclude from NYC coverage.
 const inlines = require('./inlines')
 

@@ -44,12 +44,12 @@
     },
     "dependencies":
     {
-                            "extant":                       "^1.0.17",
                             "fast-deep-equal":              "3.1.3",
                             "programmatic":                 "2.0.0-alpha.9"
     },
     "devDependencies":
     {
+                            "extant":                       "^2.0.0-alpha.0",
                             "proof":                        "^9.0.3"
     },
     "main":                 "packet.js",
