@@ -1,6 +1,6 @@
 {
     "name":                 "packet",
-    "version":              "0.0.7",
+    "version":              "1.0.0-alpha.0",
     "description":
 
       "Pure JavaScript evented binary parsers and serializers for Node.js.",
@@ -15,21 +15,21 @@
     [{
                             "name":  "J. Ryan Stinnett",
                             "email": "jryans@gmail.com"
-    },
-    {
+                            },
+                            {
                             "name":  "Ben Hockey",
                             "email": "neonstalwart@gmail.com"
-    },
-    {
+                            },
+                            {
                             "name":  "Greg Ose",
                             "email": "neonstalwart@gmail.com",
                             "web":   "http://nullmethod.com/"
-    },
-    {
+                            },
+                            {
                             "name":  "Aaron Qian",
                             "email": "aq1018@gmail.com"
-    },
-    {
+                            },
+                            {
                             "name":  "Demarius Chrite",
                             "email": "chrite.demarius@gmail.com",
                             "web":   "https://github.com/demarius"
@@ -59,6 +59,6 @@
     },
     "nyc":
     {
-                            "exclude": [ "test/**", "!test/generated", "inlines.js" ]
+                            "exclude": ["test/**","!test/generated","inlines.js"]
     }
 }
