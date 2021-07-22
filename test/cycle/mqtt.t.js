@@ -29,14 +29,15 @@ require('proof')(0, okay => {
                 header: [{
                     type: [ 4, [
                         'connect', 'connack',
-                        'publish', 'puback', 'pubrec',
-                        'pubcomp', 'subscribe', 'suback',
+                        'publish', 'puback', 'pubrec', 'pubrel', 'pubcomp',
+                        'subscribe', 'suback',
                         'unsubscribe', 'unsuback',
                         'pingreq', 'pingresp',
                         'disconnect', 'auth'
                     ]],
                     flags: [ $ => $.header.type, [
                         { $_: 'publish' }, [{ dup: 1, qos: 2, retain: 1 }, 4 ]],
+                        { $_: [ 'pubrel', 'subscribe', 'unsubscribe' ] }, [ 4, '2' ],
                         { $_: [] }, [ 4, '0' ]
                     ]
                 }, 8 ]

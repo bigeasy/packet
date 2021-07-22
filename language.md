@@ -65,23 +65,23 @@ synchronous parsers in other projects because they can be used stand-alone.
 
 **TODO**: Somewhere, a soliloquy about syntax bashing.
 
-The Packet definition language is a syntax bashed language. It is specified in
+The Packet definition language is a syntax-bashed language. It is specified in
 JavaScript and the definition is transformed into JavaScript. For the most part,
 there is no parsing except for the parsing that JavaScript does itself. This
 does make a few errors undetectable at compile time, unfortunately.
 
-Ship the generated serializers and parsers. Do not to create definitions on the
-fly. Maybe you want to build a general purpose tool of some sort, and maybe
-Packet can help, or maybe it can only serve as inspiration, but we're not going
-to accommodate headless generation of serializers and parsers in response to
+Packet expects you to ship the generated serializers and parsers. Do not to
+create definitions on the fly. Maybe you want to build a general purpose tool of
+some sort, and maybe Packet can help, or maybe it can only serve as inspiration,
+but Packet isn't dsesigned to generate of serializers and parsers in response to
 data going out or coming in over the wire.
 
-Packet is written for Node.js 12. It uses features of ES2015 and breaks without
-them. The serializer and parser generator has been tested on Node.js 12 as have
-the generated serializers and parsers. The generator is designed to run in
-Node.js 12. The generated parsers and serializers should run in any ES2015
-JavaScript interpreter, but I've not built an API for streaming except against
-Node.js streams. (Hmm... WebSockets?)
+Packet is written for Node.js 12 or greater. It uses features of ES2015 and
+breaks without them. The serializer and parser generator has been tested on
+Node.js 12 through 16 as have the generated serializers and parsers. The
+generator is designed to run in Node.js 12. The generated parsers and
+serializers should run in any ES2015 JavaScript interpreter, but I've not built
+an API for streaming except against Node.js streams. (Hmm... WebSockets?)
 
 Packet definitions depend on the order of insertion of the object properties of
 the definition. This used to be a _de facto_ standard of JavaScript but ES2015
@@ -137,8 +137,10 @@ const definition = {
 }
 
 const packet = {
-    value: 0xfedcba9876543210
+    value: 0xfedcba9876543210n
 }
+
+// [ 0xfe, 0xdc, 0xba, 0x98, 0x76, 0x54, 0x32, 0x10 ]
 ```
 
 ### Negative Integers
@@ -154,11 +156,17 @@ of negative numbers.
 **Mnemonic**: Negative symbol to indicate a negative value.
 
 ```javascript
-define({
+const definition = {
     packet: {
         value: -16
     }
-})
+}
+
+const packet = {
+    value: -1
+}
+
+// TODO
 ```
 
 As with whole integers, you _must_ define an integer larger than 32-bits as a
@@ -173,6 +181,12 @@ const definition = {
         value: -64n
     }
 }
+
+const packet = {
+    value: -1n
+}
+
+// TODO
 ```
 
 ### Endianness
@@ -224,7 +238,13 @@ const definition = {
         second: -~16
     }
 }
+
+const packet = {
+    value: -1
+}
 ```
+
+**TODO**: Repeat that you need to use a big int for greater than 32 bits.
 
 ### Literals
 
