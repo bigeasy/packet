@@ -1,5 +1,5 @@
 const stream = require('stream')
-const { Staccato } = require('staccato')
+const Staccato = require('staccato')
 
 class Parser {
     constructor (definition, stream) {
