@@ -1,8 +1,8 @@
 Packet is a binary serializer and parser generator. If you need to convert
 binary data to and from JSON objects, you can use Packet to generate both
 synchronous and incremental serializers and parsers in JavaScript using a packet
-definition specified in JavaScript. The generated parsers and serializers should
-be as performant as ones you'd write yourself.
+definition specified in JavaScript. The generated parsers and serializers are as
+performant as ones you'd write yourself, probably.
 
 Packet will generate serializers and parsers that are either synchronous,
 incremental or a best-foot-forward combination of synchronous first, then
