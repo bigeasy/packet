@@ -1,3 +1,7 @@
+## Thu Jul 22 00:45:05 CDT 2021
+
+TODO Need warnings for recursive includes.
+
 ## Wed Aug 12 02:38:26 CDT 2020
 
 On occasion you'll worry yourself that there will be some fatal ambiguity that

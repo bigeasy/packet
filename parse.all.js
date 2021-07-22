@@ -250,6 +250,8 @@ function checkpoints (path, fields, $i = 0, $I = 0) {
 // because most of the time the checkpoint will evaluate the buffer for the
 // length of the entire packet.
 
+// That is, this is simply BFF with a checkpoint before every field.
+
 //
 function inquisition (fields, $I = 0) {
     const checked = []
