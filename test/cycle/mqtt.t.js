@@ -1,7 +1,7 @@
 require('proof')(0, okay => {
     const cycle = require('./cycle')
     cycle(okay, {
-        name: 'conditional/mqtt',
+        name: 'mqtt',
         define: {
             $integer: [
                 [
