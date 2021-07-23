@@ -17,6 +17,8 @@ jobs:
       uses: actions/setup-node@v1
       with:
         node-version: ${{ matrix.node-version }}
+    - name: maybe delete stuff
+      run: rm -rf .nyc_output
     - name: npm install
       run: npm install --no-package-lock
     - name: npm ls
