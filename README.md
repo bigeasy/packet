@@ -2,7 +2,7 @@
 [![codecov](https://codecov.io/gh/bigeasy/packet/branch/master/graph/badge.svg)](https://codecov.io/gh/bigeasy/packet)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-A comparator function builder.
+Incremental binary parsers and serializers for Node.js.
 
 | What          | Where                                         |
 | --- | --- |
@@ -18,8 +18,6 @@ A comparator function builder.
 ```
 npm install packet
 ```
-
-Incremental binary parsers and serializers for Node.js.
 
 ### Diary
 
