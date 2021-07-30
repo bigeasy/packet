@@ -24,7 +24,7 @@ require('arguable')(module, async arguable => {
         }
     }
     const intermediate = language(definitions)
-    console.log($(`
+    arguable.stdout.write($(`
     const sizeOf = `, composers.sizeOf(intermediate, { require: {} }), `
 
     const serializer = {
@@ -54,6 +54,8 @@ require('arguable')(module, async arguable => {
             } (parser.inc)
         }
     }
+
     `)
     )
+    return 0
 })
