@@ -110,14 +110,14 @@ pcakets that have JavaScript "fast properties."
 To test our examples below we are going to use the following function.
 
 ```javascript
-//{ "unblock": true, "name": "test" }
+//{ "unblock": true, "name": "test", "code": { "path": "../.." }, "text": { "path": "packet"  } }
 {
     const fs = require('fs')
     const path = require('path')
 
-    const generate = require('packet/generate')
-    const SyncParser = require('packet/sync/parser')
-    const SyncSerializer = require('packet/sync/serializer')
+    const packetize = require('%(path)s/packetize')
+    const SyncParser = require('%(path)s/sync/parser')
+    const SyncSerializer = require('%(path)s/sync/serializer')
 
     // Generate a packet parser and serializer mechnaics module.
 
@@ -128,24 +128,32 @@ To test our examples below we are going to use the following function.
 
     //
     function compile (name, definition) {
-        const source = generate(definition)
-        const file = path.resolve(__dirname, '..', 'generated', 'readme-' + name + '.js')
+        const source = packetize(definition)
+        const file = path.resolve(__dirname, '..', 'readme', name + '.js')
         fs.writeFileSync(file, source)
         return file
     }
 
+    // Load mechanics and run a synchronous serialize and parse.
+
+    // This looks more like production code, except for the part where you call
+    // our for-the-sake-of-testing runtime compile.
+
+    //
     function test (name, definition, object, expected) {
-        const mechanics = require(compile(name, definition))
+        const moduleName = compile(name, definition)
+
+        const mechanics = require(moduleName)
 
         const serializer = new SyncSerializer(mechanics)
-        const buffer = serializer.serializer('object', object)
+        const buffer = serializer.serialize('object', object)
 
         okay(buffer.toJSON().data, expected, `${name} correctly serialized`)
 
         const parser = new SyncParser(mechanics)
         const actual = parser.parse('object', buffer)
 
-        okay(actual, expected, `${name} correctly parsed`)
+        okay(actual, object, `${name} correctly parsed`)
     }
 }
 ```
