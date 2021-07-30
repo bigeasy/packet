@@ -11,7 +11,4 @@ class Serializer {
     }
 }
 
-const serializer = new Serializer(require('../generated'))
-
-const buffer = serializer.write('first', { value: 0xaaaa })
-console.log(buffer.toJSON())
+module.exports = Serializer
