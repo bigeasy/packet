@@ -76,7 +76,7 @@ Proof `okay` function to assert out statements in the readme. A Proof unit test
 generally looks like this.
 
 ```javascript
-//{ "code": { "tests": 2 }, "text": { "tests": 4  } }
+//{ "code": { "tests": 10 }, "text": { "tests": 4  } }
 require('proof')(%(tests)d, async okay => {
     //{ "include": "test", "mode": "code" }
     //{ "include": "testDisplay", "mode": "text" }
@@ -160,6 +160,19 @@ To test our examples below we are going to use the following function.
 
 ### Whole Integers
 
+Integers are specified as multiples of 8 bits. You can define an integer to be
+either a JavaScript `"number"` or a JavaScript `BigInt`.
+
+We use a count of bits as opposed to a count of bytes so that numbers remain
+consistent when bit packing.
+
+In the following defintion `value` is a 16-bit `"number"` with valid integer
+values from 0 to 65,535. Serializes objects with `"number"` fields must provide
+a `"number"` type value and the number must be in range. No type or range
+checking is performed.
+
+**Mnemonic**: A count of bits to serialize or parse.
+
 ```javascript
 //{ "name": "test" }
 const definition = {
@@ -173,4 +186,279 @@ const object = {
 }
 
 test('whole-integer', definition, object, [ 0xab, 0xcd ])
+```
+
+Integers smaller than 32-bits _should_ be defined using a `"number"` to specify
+the count of bits. Integers larger than 32-bits _must_ be defined as `BigInt`.
+
+In the following definition `value` is a 64-bit `BigInt` with a valid integer
+values from 0 to 18,446,744,073,709,551,616. Serializes objects with `BigInt`
+fields must provide a `BigInt` type value and the number must be in range. No
+type or range checking is performed.
+
+**Mnemonic**: The `n` suffix is the same suffix used to indicate a `BigInt`
+literal in JavaScript.
+
+```javascript
+//{ "unblock": true, "name": "test" }
+{
+    const definition = {
+        object: {
+            value: 64n
+        }
+    }
+
+    const object = {
+        value: 0xfedcba9876543210n
+    }
+
+    test('whole-integer-64', definition, object, [
+        0xfe, 0xdc, 0xba, 0x98, 0x76, 0x54, 0x32, 0x10
+    ])
+}
+```
+
+### Negative Integers
+
+Integers with negative values are generally represented as two's compliment
+integers on most machines. To parse and serialize as two's complient you preceed
+the bit length of an integer field with a `-` negative symbol.
+
+In the following definition `value` is a two's compliment 16-bit integer with
+valid values from -32768 to 32767. Two's compliment is a binary representation
+of negative numbers.
+
+**Mnemonic**: Negative symbol to indicate a negative value.
+
+```javascript
+//{ "unblock": true, "name": "test" }
+{
+    const definition = {
+        object: {
+            value: -16
+        }
+    }
+
+    const object = {
+        value: -1
+    }
+
+    test('negative-integer', definition, object, [ 0xff, 0xff ])
+}
+```
+
+As with whole integers, you _must_ define an integer larger than 32-bits as a
+`BitInt`.
+
+In the following definition `value` is a two's compliment 16-bit integer with
+valid values from -9,223,372,036,854,775,808 to 9,223,372,036,854,775,807.
+
+```javascript
+//{ "unblock": true, "name": "test" }
+{
+    const definition = {
+        object: {
+            value: -64n
+        }
+    }
+
+    const object = {
+        value: -1n
+    }
+
+    test('negative-integer-64', definition, object, [
+        0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff
+    ])
+}
+```
+
+### Endianness
+
+By default, all numbers are written out big-endian, where the bytes are written
+from the most significant to the least significant. The same order in which
+you'd specify the value as a hexadecimal literal in JavaScript.
+
+Little-endian means that the bytes are serialized from the least significant
+byte to the most significant byte. Note that this is the order of _bytes_ and
+not _bits_. This would be the case if you wrote an integer out directly to a
+file from a C program on an Intel machine.
+
+To parse and serialize an integer as little-endian you preceed the bit length of
+an integer field with a `~` tilde.
+
+**Mnemonic**: The tilde is curvy and we're mixing up the bits like that.
+
+In the following defintion `value` is a 16-bit `number` with valid integer
+values from 0 to 65,535. A value of `0xabcd` would be serialized in
+little-endian order as `[ 0xcd, 0xab ]`.
+
+```javascript
+//{ "unblock": true, "name": "test" }
+{
+    const definition = {
+        object: {
+            value: ~16
+        }
+    }
+
+    const object = {
+        value: 0xabcd
+    }
+
+    test('little-endian', definition, object, [ 0xcd, 0xab ])
+}
+```
+
+If you want a little-endian negative number combine both `-` and `~`. The
+following defines an object that has two 16-bit two's compliment little-endian
+integers. You can combine the `-` and `~` as `-~` and `~-`.
+
+In the following defintion both `first` and `second` are 16-bit `number`
+properties with valid integer values from 0 to 65,535. A value of `0xabcd` would
+be serialized in little-endian order as `[ 0xcd, 0xab ]`.
+
+```javascript
+//{ "unblock": true, "name": "test" }
+{
+    const definition = {
+        object: {
+            first: ~-16,
+            second: -~16
+        }
+    }
+
+    const object = {
+        first: -1,
+        second: -1
+    }
+}
+```
+
+**TODO**: Repeat that you need to use a big int for greater than 32 bits.
+
+### Nested Structures
+
+You can nest structures arbitrarily. The structure itself is not serialized nor
+parsed in any way. It is merely a way of grouping values extracted from the
+binary stream.
+
+```javascript
+//{ "unblock": true, "name": "test" }
+{
+    const definition = {
+        message: {
+            header: {
+                type: 8,
+                length: 16
+            },
+            options: {
+                encrypted: 8,
+                checksum: 32
+            }
+        }
+    }
+}
+```
+
+### Packed Integers
+
+Packed integers are expressed as nested structures grouped in an `Array`
+followed by an integer definition of the packed integer size. The byte lengths
+in the packed integer must sum to the size of the packed integer.
+
+Packed integer fields are always big-endian and cannot be made little endian.
+Packed integer fields can be made two's compliment by preceeding the field bit
+length with a `-` negative symbol just like whole integers.
+
+A packed 32-bit integer with a single two's compliment (potentially negative)
+value named `volume`.
+
+The bit length values of the packed values sum to 32. Note that we consider
+`volume` to be 11 bits and not -11 bits in this summation of packed field
+values.
+
+```javascript
+//{ "unblock": true, "name": "test" }
+{
+    const definition = {
+        message: {
+            header: [{
+                type: 4,
+                encrypted: 1,
+                volume: -11,
+                length: 16
+            }, 32 ],
+        }
+    }
+}
+```
+
+The packed integer will be serialized as big-endian by default. You can specify
+that the packed integer is serialized as little-endian by proceeding the bit
+length with a `~` tilde.
+
+```javascript
+//{ "unblock": true, "name": "test" }
+{
+    const definition = {
+        message: {
+            header: [{
+                type: 4,
+                encrypted: 1,
+                volume: -11,
+                length: 16
+            }, ~32 ],
+        }
+    }
+}
+```
+
+### Literals
+
+**TODO**: Literals should come after packed integers.
+
+```javascript
+//{ "unblock": true, "name": "test" }
+{
+    const definition = {
+        packet: {
+            value: [[ 'fc' ], 16 ]
+        }
+    }
+}
+```
+
+```javascript
+//{ "unblock": true, "name": "test" }
+{
+    const definition = {
+        packet: {
+            value: [[ 'fc', 2 ], 16 ]
+        }
+    }
+}
+```
+
+```javascript
+//{ "unblock": true, "name": "test" }
+{
+    const definition = {
+        packet: {
+            header: [{
+                value: [[ 2, 'fc'], 6 ]
+            }, 8 ]
+        }
+    }
+}
+```
+
+```javascript
+//{ "unblock": true, "name": "test" }
+{
+    const definition = {
+        packet: {
+            beaf: [ 'beaf' ]
+        }
+    }
+}
 ```
