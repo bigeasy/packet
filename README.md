@@ -265,11 +265,12 @@ file from a C program on an Intel machine.
 To parse and serialize an integer as little-endian you preceed the bit length of
 an integer field with a `~` tilde.
 
-**Mnemonic**: The tilde is curvy and we're mixing up the bits like that.
-
 In the following defintion `value` is a 16-bit `number` with valid integer
 values from 0 to 65,535. A value of `0xabcd` would be serialized in
 little-endian order as `[ 0xcd, 0xab ]`.
+
+**Mnemonic**: The tilde is curvy and we're mixing things up, turning them
+around, vice-versa like.
 
 ```javascript
 const definition = {
@@ -285,13 +286,13 @@ const object = {
 test('little-endian', definition, object, [ 0xcd, 0xab ])
 ```
 
-If you want a little-endian negative number combine both `-` and `~`. The
-following defines an object that has two 16-bit two's compliment little-endian
-integers. You can combine the `-` and `~` as `-~` and `~-`.
+If you want a little-endian negative number combine both `-` and `~`. You can
+combine the `-` and `~` as `-~` and `~-`.
 
-In the following defintion both `first` and `second` are 16-bit `number`
-properties with valid integer values from 0 to 65,535. A value of `0xabcd` would
-be serialized in little-endian order as `[ 0xcd, 0xab ]`.
+In the following definition both `first` and `second` are 16-bit `number` fields
+with valid integer values from -32768 to 32767. A value of `-0x2` would be
+converted to the twos compliment representation 0xfffe and serialized in
+little-endian as `[ 0xfe, 0xff ]`.
 
 ```javascript
 const definition = {
@@ -302,9 +303,13 @@ const definition = {
 }
 
 const object = {
-    first: -1,
-    second: -1
+    first: -2,
+    second: -2
 }
+
+test('little-endian-twos-compliment', definition, object, [
+    0xfe, 0xff, 0xfe, 0xff
+])
 ```
 
 **TODO**: Repeat that you need to use a big int for greater than 32 bits.
