@@ -76,7 +76,7 @@ Proof `okay` function to assert out statements in the readme. A Proof unit test
 generally looks like this.
 
 ```javascript
-//{ "code": { "tests": 12 }, "text": { "tests": 4  } }
+//{ "code": { "tests": 16 }, "text": { "tests": 4  } }
 require('proof')(%(tests)d, async okay => {
     //{ "include": "test", "mode": "code" }
     //{ "include": "testDisplay", "mode": "text" }
@@ -339,19 +339,66 @@ little-endian as `[ 0xfe, 0xff ]`.
 }
 ```
 
-**TODO**: Repeat that you need to use a big int for greater than 32 bits.
-
-### Nested Structures
-
-You can nest structures arbitrarily. The structure itself is not serialized nor
-parsed in any way. It is merely a way of grouping values extracted from the
-binary stream.
+Just as with the default big-endian integer fields, little-endian integer fields
+greater than 32-bits must be specified as `BigInt` fields using a `'bigint'`
+literal.
 
 ```javascript
 //{ "unblock": true, "name": "test" }
 {
     const definition = {
-        message: {
+        object: {
+            value: ~64n,
+        }
+    }
+
+    const object = {
+        value: 0xfedcba9876543210n
+    }
+
+    test('little-endian-64', definition, object, [
+        0x10, 0x32, 0x54, 0x76, 0x98, 0xba, 0xdc, 0xfe
+    ])
+}
+```
+
+Similarly, for little-endian signed number fields greater than 32-bits you
+combine the `-` and `~` with a `BigInt` literal. You can combine the `-` and `~`
+as `-~` and `~-`.
+
+```javascript
+//{ "unblock": true, "name": "test" }
+{
+    const definition = {
+        object: {
+            first: ~-64n,
+            second: -~64n
+        }
+    }
+
+    const object = {
+        first: -2n,
+        second: -2n
+    }
+
+    test('little-endian-twos-compliment-64', definition, object, [
+        0xfe, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, // first
+        0xfe, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff  // second
+    ])
+}
+```
+
+### Nested Structures
+
+You can nest structures arbitrarily. The nesting of structures does not effect
+the serialization or parsing, it will still be a series bytes in the stream, but
+it may help the structure your programs group values in a meaniful way.
+
+```javascript
+//{ "unblock": true, "name": "test" }
+{
+    const definition = {
+        object: {
             header: {
                 type: 8,
                 length: 16

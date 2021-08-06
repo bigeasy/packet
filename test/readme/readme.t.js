@@ -71,7 +71,7 @@
 // Proof `okay` function to assert out statements in the readme. A Proof unit test
 // generally looks like this.
 
-require('proof')(12, async okay => {
+require('proof')(16, async okay => {
     // The `--allow-natives-syntax` switch allows us to test that we are creating
     // pcakets that have JavaScript "fast properties."
     //
@@ -241,8 +241,8 @@ require('proof')(12, async okay => {
     // To parse and serialize an integer as little-endian you preceed the bit length of
     // an integer field with a `~` tilde.
     //
-    // In the following defintion `value` is a 16-bit `number` with valid integer
-    // values from 0 to 65,535. A value of `0xabcd` would be serialized in
+    // In the following definition `value` is a 16-bit `number` field with valid
+    // integer values from 0 to 65,535. A value of `0xabcd` would be serialized in
     // little-endian order as `[ 0xcd, 0xab ]`.
     //
     // **Mnemonic**: The tilde is curvy and we're mixing things up, turning them
@@ -288,17 +288,58 @@ require('proof')(12, async okay => {
         ])
     }
 
-    // **TODO**: Repeat that you need to use a big int for greater than 32 bits.
-    //
-    // ### Nested Structures
-    //
-    // You can nest structures arbitrarily. The structure itself is not serialized nor
-    // parsed in any way. It is merely a way of grouping values extracted from the
-    // binary stream.
+    // Just as with the default big-endian integer fields, little-endian integer fields
+    // greater than 32-bits must be specified as `BigInt` fields using a `'bigint'`
+    // literal.
 
     {
         const definition = {
-            message: {
+            object: {
+                value: ~64n,
+            }
+        }
+
+        const object = {
+            value: 0xfedcba9876543210n
+        }
+
+        test('little-endian-64', definition, object, [
+            0x10, 0x32, 0x54, 0x76, 0x98, 0xba, 0xdc, 0xfe
+        ])
+    }
+
+    // Similarly, for little-endian signed number fields greater than 32-bits you
+    // combine the `-` and `~` with a `BigInt` literal. You can combine the `-` and `~`
+    // as `-~` and `~-`.
+
+    {
+        const definition = {
+            object: {
+                first: ~-64n,
+                second: -~64n
+            }
+        }
+
+        const object = {
+            first: -2n,
+            second: -2n
+        }
+
+        test('little-endian-twos-compliment-64', definition, object, [
+            0xfe, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, // first
+            0xfe, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff  // second
+        ])
+    }
+
+    // ### Nested Structures
+    //
+    // You can nest structures arbitrarily. The nesting of structures does not effect
+    // the serialization or parsing, it will still be a series bytes in the stream, but
+    // it may help the structure your programs group values in a meaniful way.
+
+    {
+        const definition = {
+            object: {
                 header: {
                     type: 8,
                     length: 16
