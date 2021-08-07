@@ -51,7 +51,7 @@
     },
     "devDependencies":
     {
-                            "extant":                       "^2.0.0-alpha.2",
+                            "extant":                       "^2.0.0-alpha.3",
                             "proof":                        "^9.0.3"
     },
     "main":                 "packet.js",
