@@ -350,6 +350,24 @@ require('proof')(16, async okay => {
                 }
             }
         }
+
+        const object = {
+            header: {
+                type: 1,
+                length: 64
+            },
+            options: {
+                encrypted: 0,
+                checksum: 0xaaaaaaaa
+            }
+        }
+
+        test('nested-structures', definition, object, [
+            0x01,                   // header.type
+            0x00, 0x40,             // header.length
+            0x00,                   // options.encrypted
+            0xaa, 0xaa, 0xaa, 0xaa  // options.checksum
+        ])
     }
 
     // ### Packed Integers

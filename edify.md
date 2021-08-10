@@ -76,7 +76,7 @@ Proof `okay` function to assert out statements in the readme. A Proof unit test
 generally looks like this.
 
 ```javascript
-//{ "code": { "tests": 16 }, "text": { "tests": 4  } }
+//{ "code": { "tests": 18 }, "text": { "tests": 4  } }
 require('proof')(%(tests)d, async okay => {
     //{ "include": "test", "mode": "code" }
     //{ "include": "testDisplay", "mode": "text" }
@@ -409,6 +409,24 @@ it may help the structure your programs group values in a meaniful way.
             }
         }
     }
+
+    const object = {
+        header: {
+            type: 1,
+            length: 64
+        },
+        options: {
+            encrypted: 0,
+            checksum: 0xaaaaaaaa
+        }
+    }
+
+    test('nested-structures', definition, object, [
+        0x01,                   // header.type
+        0x00, 0x40,             // header.length
+        0x00,                   // options.encrypted
+        0xaa, 0xaa, 0xaa, 0xaa  // options.checksum
+    ])
 }
 ```
 
