@@ -408,20 +408,36 @@ A packed 32-bit integer with a single two's compliment (potentially negative)
 value named `volume`.
 
 The bit length values of the packed values sum to 32. Note that we consider
-`volume` to be 11 bits and not -11 bits in this summation of packed field
-values.
+`volume` to be 10 bits and not -10 bits in this summation of packed field
+values. The `-` is used to indicate a two's compliment integer field.
 
 ```javascript
 const definition = {
-    message: {
+    object: {
         header: [{
-            type: 4,
+            type: 7,
             encrypted: 1,
-            volume: -11,
-            length: 16
-        }, 32 ],
+            volume: -10,
+            length: 14
+        }, 32 ]
     }
 }
+
+const object = {
+    header: {
+        type: 3,
+        encrypted: 1,
+        volume: -1,
+        length: 1024
+    }
+}
+
+test('packed-integer', definition, object, [
+    0x7,    // type and encrypted packed into ne byte
+    0xff,   // eight bytes of volume
+    0xc4,   // two types of volume and top of length
+    0x0     // rest of length
+])
 ```
 
 The packed integer will be serialized as big-endian by default. You can specify
@@ -430,15 +446,31 @@ length with a `~` tilde.
 
 ```javascript
 const definition = {
-    message: {
+    object: {
         header: [{
-            type: 4,
+            type: 7,
             encrypted: 1,
-            volume: -11,
-            length: 16
-        }, ~32 ],
+            volume: -10,
+            length: 14
+        }, ~32 ]
     }
 }
+
+const object = {
+    header: {
+        type: 3,
+        encrypted: 1,
+        volume: -1,
+        length: 1024
+    }
+}
+
+test('packed-integer-little-endian', definition, object, [
+    0x0,    // rest of length
+    0xc4,   // two types of volume and top of length
+    0xff,   // eight bytes of volume
+    0x7     // type and encrypted packed into ne byte
+])
 ```
 
 ### Literals
