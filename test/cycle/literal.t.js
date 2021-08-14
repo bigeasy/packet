@@ -33,7 +33,6 @@ function prove (okay) {
                 sentry: 8
             }
         },
-        objects: [{ nudge: 0xaa, sentry: 0xaa }],
-        stopAt: 'serialize.all'
+        objects: [{ nudge: 0xaa, sentry: 0xaa }]
     })
 }
