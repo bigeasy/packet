@@ -1,4 +1,3 @@
-
 ### Inline Transforms and Assertions
 
 Inline transforms are specified by wrapping a field definition in an array with
@@ -517,80 +516,6 @@ operations require accumuators of some sort, we'll
 
 You are also able to apply functions to the underlying `Buffer` during parse and
 serialization. See Checksums and Running Calculations.
-
-### Fixed Length Arrays
-
-**TODO**: Need first draft.
-
-Fixed length arrays are arrays of a fixed length. They are specified by an array
-containing the numeric length of the array.
-
-```javascript
-//{ "name": "ignore" }
-define({
-    packet: {
-        fixed: [[ 32 ], [ 8 ]]
-    }
-})
-```
-
-Calculated length arrays are arrays where the length is determined by a function
-which can read a value from...
-
-```javascript
-//{ "name": "ignore" }
-define({
-    packet: {
-        header: {
-            length: 16,
-            type: 16
-        },
-        fixed: [[ $.header.length ], [ 8 ]]
-    }
-})
-```
-
-### Length-Encoded Arrays
-
-**TODO**: Need first draft.
-
-A length-encoded indicates a series of values
-
-```javascript
-//{ "name": "ignore" }
-define({
-    packet: {
-        array: [ 16, [ 8 ] ]
-    }
-})
-```
-
-Is this possible? Yikes. We kind of want it don't we?
-
-```javascript
-//{ "name": "ignore" }
-define({
-    packet: {
-        array: [ [[[ $_ = 0 => max, 1024 ]], 16 ], [ 8 ] ]
-    }
-})
-```
-
-Here's a common case, though.
-
-**TODO**: Notes to self, done with calculated fixed arrays.
-
-```javascript
-//{ "name": "ignore" }
-define({
-    packet: {
-        header: {
-            length: [[ ({ $ }) => $.array.length ], 16, [ max, 1024 ]]
-        }
-        array: [ [[[ $_ = 0 => max, 1024 ]], 16, [ 8 ] ]
-    }
-})
-```
 
 ### Terminated Arrays
 

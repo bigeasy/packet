@@ -76,7 +76,7 @@ Proof `okay` function to assert out statements in the readme. A Proof unit test
 generally looks like this.
 
 ```javascript
-//{ "code": { "tests": 44 }, "text": { "tests": 4  } }
+//{ "code": { "tests": 52 }, "text": { "tests": 4  } }
 require('proof')(%(tests)d, async okay => {
     //{ "include": "test", "mode": "code" }
     //{ "include": "testDisplay", "mode": "text" }
@@ -816,6 +816,141 @@ You can repeat the little-endian serialization more than once.
 
 Unnamed little-endian literals can be appended or prepended. Any unnamed literal
 definition can be appended, prepended or both.
+
+### Length-Encoded Arrays
+
+A common pattern in serialization formats is a series of repeated values
+preceeded by a count of those values.
+
+**Mnemonic**: We enclose the defintion in an array. The first element is an
+integer field defintion for the length. It's scalar appearance indicates that it
+does not repeat. The repeated value is enclosed in an array indicating that it
+will be the value that repeats. The ordering of the scalar followed by the array
+mirrors the binary representation of a length/count followed by repeated values.
+
+```javascript
+//{ "unblock": true, "name": "test" }
+{
+    const definition = {
+        object: {
+            array: [ 16, [ 8 ] ]
+        }
+    }
+
+    const object = {
+        array: [ 0xaa, 0xbb, 0xcc, 0xdd ]
+    }
+
+    test('length-encoded', definition, object, [
+        0x0, 0x4, 0xaa, 0xbb, 0xcc, 0xdd
+    ])
+}
+```
+
+The repeated value can be of any type including structures.
+
+```javascript
+//{ "unblock": true, "name": "test" }
+{
+    const definition = {
+        object: {
+            array: [ 16, [{ key: 16, value: 16 }] ]
+        }
+    }
+
+    const object = {
+        array: [{ key: 0xaa, value: 0xbb }, { key: 0xcc, value: 0xdd }]
+    }
+
+    test('length-encoded-structures', definition, object, [
+        0x0, 0x2,               // length encoding
+        0x0, 0xaa, 0x0, 0xbb,   // first structure
+        0x0, 0xcc, 0x0, 0xdd    // second structure
+    ])
+}
+```
+
+You can even nest length-encoded arrays inside length-encoded arrays.
+
+```javascript
+//{ "unblock": true, "name": "test" }
+{
+    const definition = {
+        object: {
+            array: [ 16, [[ 16, [ 8 ]]] ]
+        }
+    }
+
+    const object = {
+        array: [[ 0xaa, 0xbb ], [ 0xcc, 0xdd ]]
+    }
+
+    test('length-encoded-nested', definition, object, [
+        0x0, 0x2,               // length encoding
+        0x0, 0x2, 0xaa, 0xbb,   // first array length encoding and values
+        0x0, 0x2, 0xcc, 0xdd    // second array length encoding and values
+    ])
+}
+```
+
+Because pure binary data is a special case, instead of an array of `8` bit
+bites, you can specify a length encoded binary data as a `Buffer`.
+
+```javascript
+//{ "unblock": true, "name": "test" }
+{
+    const definition = {
+        object: {
+            array: [ 16, [ Buffer ] ]
+        }
+    }
+
+    const object = {
+        array: Buffer.from([ 0xaa, 0xbb, 0xcc, 0xdd ])
+    }
+
+    test('length-encoded-buffer', definition, object, [
+        0x0, 0x4, 0xaa, 0xbb, 0xcc, 0xdd
+    ])
+}
+```
+
+
+### Fixed Length Arrays
+
+**TODO**: Need first draft.
+
+Fixed length arrays are arrays of a fixed length. They are specified by an array
+containing the numeric length of the array.
+
+```javascript
+//{ "unblock": true, "name": "ignore" }
+{
+    const definition = {
+        packet: {
+            fixed: [[ 32 ], [ 8 ]]
+        }
+    }
+}
+```
+
+Calculated length arrays are arrays where the length is determined by a function
+which can read a value from...
+
+```javascript
+//{ "unblock": true, "name": "ignore" }
+{
+    const definition = 1 || {
+        packet: {
+            header: {
+                length: 16,
+                type: 16
+            },
+            fixed: [[ $.header.length ], [ 8 ]]
+        }
+    }
+}
+```
 
 ## Concerns and Decisions
 
