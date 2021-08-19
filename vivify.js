@@ -36,7 +36,7 @@ function structure (path, field, assignment = ' = ') {
     }
     const properties = field.fields.map(field => vivify(path, field))
                                    .filter(field => !! field)
-    assert(properties.length != 0)
+    // assert(properties.length != 0)
     return $(`
         ${path}${assignment}{
             `, properties.join(',\n'), `

@@ -475,38 +475,276 @@ test('packed-integer-little-endian', definition, object, [
 
 ### Literals
 
-**TODO**: Literals should come after packed integers.
+Literals are bytes written on serialization that are constant and not based on a
+value in the serialized structure.
+
+You define a constant with an array that contains a `String` that describes the
+constant value in hexadecimal digits. There should be two hexadecimal digits for
+every byte. The length of the field is determined by the number of bytes
+necessary to hold the value.
+
+**Mnemonic**: A string literal reminds us this is literal and stands out because
+it is not numeric. Hexadecimal helps distinguish these constant values from
+field sizes and other aspects of the definition language expressed with numbers.
 
 ```javascript
 const definition = {
-    packet: {
-        value: [[ 'fc' ], 16 ]
+    object: {
+        constant: [ 'fc' ],
+        value: 16
     }
 }
+
+const object = {
+    value: 0xabcd
+}
+
+test('constant', definition, object, [
+    0xfc, 0xab, 0xcd
+])
 ```
+
+Generated parsers skip the constant bytes and do not validate the parsed value.
+If you want to perform validation you can define the field as an integer field
+and inspect the parsed field value. This means you will also have to
+consistently set the serialized field value on your own.
+
+A literal is ignored on serialization if it exists. It is not set in the
+generated structure on parsing. In our example the `contsant` property of the
+object is not generated on parse.
+
+**TODO** How about an explicit example that doesn't require as much exposition
+as our `test` definition.
+
+Not much point in naming a literal, is there? The literal it will not be read
+from the serialized object nor will the named literal property be set in a
+parsed parsed object. What if you have multiple literals? Now you have to have
+`constant1` and `constant2`. It starts to look ugly as follows.
 
 ```javascript
 const definition = {
-    packet: {
-        value: [[ 'fc', 2 ], 16 ]
+    object: {
+        constant1: [ 'fc' ],
+        key: 16,
+        constant2: [ 'ab' ],
+        value: 16
     }
 }
+
+const object = {
+    key: 1,
+    value: 0xabcd
+}
+
+test('constants', definition, object, [
+    0xfc, 0x0, 01,
+    0xab, 0xab, 0xcd
+])
 ```
+
+You can forgo naming a literal by defining it as padding before or after a
+field.
+
+To prepend a literal to a field definition in an array where the literal
+definition is the first element and field definition is the second. The literal
+will be written before writing the field value and skipped when parsing the
+field value.
 
 ```javascript
 const definition = {
-    packet: {
-        header: [{
-            value: [[ 2, 'fc'], 6 ]
-        }, 8 ]
+    object: {
+        key: [[ 'fc' ], 16 ],
+        value: [[ 'ab' ], 16 ]
     }
 }
+
+const object = {
+    key: 1,
+    value: 0xabcd
+}
+
+test('unnamed-literals', definition, object, [
+    0xfc, 0x0, 01,
+    0xab, 0xab, 0xcd
+])
 ```
+
+You can specify an unnamed literal that follows a field. Enclose the field
+definition in an array with the field definition as the first element and the
+literal definition as the second element.
 
 ```javascript
 const definition = {
-    packet: {
-        beaf: [ 'beaf' ]
+    object: {
+        value: [ 16, [ 'ea' ] ],
     }
 }
+
+const object = {
+    value: 0xabcd
+}
+
+test('unnamed-literal-after', definition, object, [
+    0xab, 0xcd, 0xea
+])
 ```
+
+You can specify an unnamed literal both before and after a field. Enclose the
+field definition in an array and define preceding literal as the first element
+and following literal as the last element.
+
+The example above can be defined using literals around the `key` property alone.
+
+```javascript
+const definition = {
+    object: {
+        key: [[ 'fc' ], 16, [ 'ab' ] ],
+        value: 16
+    }
+}
+
+const object = {
+    key: 1,
+    value: 0xabcd
+}
+
+test('unnamed-literals-before-and-after', definition, object, [
+    0xfc, 0x0, 01,
+    0xab, 0xab, 0xcd
+])
+```
+
+You can define a literal that repeats its value. The constant value is defined
+using an array that contains a `String` with the literal value as the first
+element and the number of times to repeat the value as the second element.
+
+**Mnemonic**: The repeat count follows the hexadecimal definition, its relation
+to the definition is expressed by its containment in an array.
+
+```javascript
+const definition = {
+    object: {
+        constant: [ 'beaf', 3 ],
+        value: 16
+    }
+}
+
+const object = { value: 0xabcd }
+
+test('literal-repeat', definition, object, [
+    0xbe, 0xaf, 0xbe, 0xaf, 0xbe, 0xaf,
+    0xab, 0xcd
+])
+```
+
+You can express repeated literals as unnamed literals by prepending or appending
+them to a field definition.
+
+```javascript
+const definition = {
+    object: {
+        value: [[ 'beaf', 3 ], 16 ]
+    }
+}
+
+const object = { value: 0xabcd }
+
+test('unamed-literal-repeat', definition, object, [
+    0xbe, 0xaf, 0xbe, 0xaf, 0xbe, 0xaf,
+    0xab, 0xcd
+])
+```
+
+Note that a literal definition without a repeat count is the same as a literal
+definition with a repeate count of `1`.
+
+```javascript
+const definition = {
+    object: {
+        explicit: [[ 'beaf', 1 ], 16 ],
+        implicit: [[ 'beaf' ], 16 ]
+    }
+}
+
+const object = { explicit: 0xabcd, implicit: 0xabcd }
+
+test('unamed-literal-repeat-once', definition, object, [
+    0xbe, 0xaf, 0xab, 0xcd,
+    0xbe, 0xaf, 0xab, 0xcd
+])
+```
+
+Little endian serialization of literals seems like an unlikely use case. One
+would imagine at a specification would specify the bytes in network byte order.
+Often times filler bytes are a repeat of a single byte so endianness doesn't
+matter.
+
+If you want little-endian serialization of a literal value you could simply
+reverse the bits yourself.
+
+Here we write `0xbeaf` little-endian by explicitly flipping `0xbe` and `0xaf`.
+
+```javascript
+const definition = {
+    object: {
+        value: [[ 'afbe' ], 16 ]
+    }
+}
+
+const object = { value: 0xabcd }
+
+test('unamed-literal-little-endian-explicit', definition, object, [
+    0xaf, 0xbe,
+    0xab, 0xcd
+])
+```
+
+Simple enough, however...
+
+If specify a repeat count prepended by a `~` the pattern will be written
+little-endian.
+
+**Mnemonic**: Use use a tilde `~` because it's squiggly and we're swirling the
+bytes around vice-versa. Same mnemonic for little-endian integer fields.
+
+```javascript
+const definition = {
+    object: {
+        value: [[ 'beaf', ~1 ], 16 ]
+    }
+}
+
+const object = { value: 0xabcd }
+
+test('unamed-literal-little-endian', definition, object, [
+    0xaf, 0xbe,
+    0xab, 0xcd
+])
+```
+
+You can repeat the little-endian serialization more than once.
+
+```javascript
+const definition = {
+    object: {
+        value: [[ 'beaf', ~3 ], 16 ]
+    }
+}
+
+const object = { value: 0xabcd }
+
+test('unamed-literal-little-endian-repeat', definition, object, [
+    0xaf, 0xbe, 0xaf, 0xbe, 0xaf, 0xbe,
+    0xab, 0xcd
+])
+```
+
+Unnamed little-endian literals can be appended or prepended. Any unnamed literal
+definition can be appended, prepended or both.
+
+## Concerns and Decisions
+
+I'm returning to document this after a long haitus. Here are questions that I'm
+pretty sure have answers that I've forgotten.
+
+ * Did we support packed `BigInt` integers?
