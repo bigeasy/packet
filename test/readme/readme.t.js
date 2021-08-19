@@ -72,8 +72,13 @@
 // generally looks like this.
 
 require('proof')(52, async okay => {
-    // The `--allow-natives-syntax` switch allows us to test that we are creating
-    // pcakets that have JavaScript "fast properties."
+    // The `--allow-natives-syntax` switch allows us to test that when we parse we are
+    // creating objects that have JavaScript "fast properties."
+    //
+    // ## Parsers and Serializers
+    //
+    // **TODO** Here you need your incremental and whole parser interface with a simple
+    // example. Would be an over view. In the next section we get into the weeds.
     //
     // ## Packet Definition Language
     //
