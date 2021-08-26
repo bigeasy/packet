@@ -138,6 +138,9 @@ module.exports = function ({ variables, packet, direction, accumulators, paramet
             // Positional arguments are simplified, less analysis because special
             // features are indicated by named functions.
             if (inline.properties.length == 0) {
+                const args = [
+                    $_, packet.name, variables.i ? '$i' : '[]', util.inspect(path.split('.')), direction
+                ].slice(0, inline.arity).join(', ')
                 if (inline.defaulted[0] == 0) {
                     inlined.push($(`
                         ; (`, inline.source, `)(${$_})
@@ -147,7 +150,7 @@ module.exports = function ({ variables, packet, direction, accumulators, paramet
                         registers.shift()
                     }
                     inlined.push($(`
-                        ${assignee} = (`, inline.source, `)(${$_})
+                        ${assignee} = (`, inline.source, `)(${args})
                     `))
                 }
             } else {

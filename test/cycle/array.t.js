@@ -3,12 +3,42 @@ require('proof')(0, prove)
 function prove (okay) {
     const cycle = require('./cycle')
     cycle(okay, {
+        name: 'array/objects',
+        define: {
+            object: {
+                array: [ 8, [{
+                    mask: 16,
+                    value: [[
+                        ($_, $, $i) => $_ ^ $.array[$i[0]].mask
+                    ], 16, [
+                        ($_, $, $i) => $_ ^ $.array[$i[0]].mask
+                    ]]
+                }]]
+            }
+        },
+        objects: [{
+            array: [{
+                mask: 0xaaaa, value: 0xabcd
+            }, {
+                mask: 0xffff, value: 0x1234
+            }]
+        }]
+    })
+    cycle(okay, {
         name: 'array/words',
         define: {
             object: { nudge: 8, array: [ 16, [ 16 ] ], sentry: 8  }
         },
         objects: [{ nudge: 0xaa, array: [ 0x1236, 0x4567, 0x890a, 0xcdef ], sentry: 0xaa }]
     })
+    cycle(okay, {
+        name: 'array/object',
+        define: {
+            object: { array: [ 16, [{ value: 16 }] ] }
+        },
+        objects: [{ array: [{ value: 0xaaaa }] }]
+    })
+    return
     cycle(okay, {
         name: 'array/fixed',
         define: {

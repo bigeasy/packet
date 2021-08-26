@@ -51,6 +51,9 @@ module.exports = function (array) {
     function parameters (stop) {
         while (source[0] != stop) {
             const identifier = /^([^=,:\s)}]+)\s*(.*)/.exec(source)
+            if (identifier == null) {
+                throw new SyntaxError('unable to match identifier: ' + source)
+            }
             properties.push(identifier[1])
             source = identifier[2]
             if (source[0] == ':') {

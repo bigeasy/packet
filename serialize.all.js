@@ -409,6 +409,7 @@ function generate (packet, { require = null, bff, chk }) {
                 }
             `)
         }
+        console.log(variables)
         const signature = Object.keys(signatories)
                                 .filter(key => variables[key])
                                 .map(key => signatories[key])
@@ -949,6 +950,7 @@ function generate (packet, { require = null, bff, chk }) {
 
 module.exports = function (definition, options = {}) {
     const expanded = expand(JSON.parse(JSON.stringify(definition)))
+    debugger
     const source = expanded.map(function (packet) {
         if (options.chk) {
             packet.fields = inquisition(packet.name, packet.fields)

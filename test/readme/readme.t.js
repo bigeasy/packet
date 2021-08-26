@@ -71,7 +71,7 @@
 // Proof `okay` function to assert out statements in the readme. A Proof unit test
 // generally looks like this.
 
-require('proof')(52, async okay => {
+require('proof')(77, async okay => {
     // The `--allow-natives-syntax` switch allows us to test that when we parse we are
     // creating objects that have JavaScript "fast properties."
     //
@@ -84,50 +84,48 @@ require('proof')(52, async okay => {
     //
     // To test our examples below we are going to use the following function.
 
-    {
-        const fs = require('fs')
-        const path = require('path')
+    const fs = require('fs')
+    const path = require('path')
 
-        const packetize = require('../../packetize')
-        const SyncParser = require('../../sync/parser')
-        const SyncSerializer = require('../../sync/serializer')
+    const packetize = require('../../packetize')
+    const SyncParser = require('../../sync/parser')
+    const SyncSerializer = require('../../sync/serializer')
 
-        // Generate a packet parser and serializer mechnaics module.
+    // Generate a packet parser and serializer mechnaics module.
 
-        // Please ignore all the synchronous file operations. They are for testing
-        // only. You will not generate packet parsers at runtime. You will use the
-        // `packetizer` executable to generate your packet parser and serializer
-        // mechanics modules and ship them.
+    // Please ignore all the synchronous file operations. They are for testing
+    // only. You will not generate packet parsers at runtime. You will use the
+    // `packetizer` executable to generate your packet parser and serializer
+    // mechanics modules and ship them.
 
-        //
-        function compile (name, definition) {
-            const source = packetize(definition)
-            const file = path.resolve(__dirname, '..', 'readme', name + '.js')
-            fs.writeFileSync(file, source)
-            return file
-        }
+    //
+    function compile (name, definition) {
+        const source = packetize(definition)
+        const file = path.resolve(__dirname, '..', 'readme', name + '.js')
+        fs.writeFileSync(file, source)
+        return file
+    }
 
-        // Load mechanics and run a synchronous serialize and parse.
+    // Load mechanics and run a synchronous serialize and parse.
 
-        // This looks more like production code, except for the part where you call
-        // our for-the-sake-of-testing runtime compile.
+    // This looks more like production code, except for the part where you call
+    // our for-the-sake-of-testing runtime compile.
 
-        //
-        function test (name, definition, object, expected) {
-            const moduleName = compile(name, definition)
+    //
+    function test (name, definition, object, expected) {
+        const moduleName = compile(name, definition)
 
-            const mechanics = require(moduleName)
+        const mechanics = require(moduleName)
 
-            const serializer = new SyncSerializer(mechanics)
-            const buffer = serializer.serialize('object', object)
+        const serializer = new SyncSerializer(mechanics)
+        const buffer = serializer.serialize('object', object)
 
-            okay(buffer.toJSON().data, expected, `${name} correctly serialized`)
+        okay(buffer.toJSON().data, expected, `${name} correctly serialized`)
 
-            const parser = new SyncParser(mechanics)
-            const actual = parser.parse('object', buffer)
+        const parser = new SyncParser(mechanics)
+        const actual = parser.parse('object', buffer)
 
-            okay(actual, object, `${name} correctly parsed`)
-        }
+        okay(actual, object, `${name} correctly parsed`)
     }
 
     // ### Whole Integers
@@ -806,6 +804,393 @@ require('proof')(52, async okay => {
 
         test('length-encoded-buffer', definition, object, [
             0x0, 0x4, 0xaa, 0xbb, 0xcc, 0xdd
+        ])
+    }
+
+    // ### Inline Transforms and Assertions
+    //
+    // Inline transforms are specified by wrapping a field definition in an array with
+    // a pre-serialization function before or a post-parsing function after it or both.
+    // The pre-serialization function and post-parsing function must be encosed in an
+    // array.
+    //
+    // A pre-serialization transformation function takes the value from the JavaScript
+    // object and returns the transfored that is then written to the stream. The
+    // post-parsing transformation function takes a value extracted from the stream and
+    // returns the transformed value that is assigned to the JavaScript object.
+    //
+    // The following transform will convert a hexidecmal string to an integer on
+    // serialization and back to a hexidecimal string on parse.
+    //
+    // **Mnemonic**: A function is obviously a function, it does something to in the
+    // midst of parsing. We used functions elsewhere in the language, so we enclose
+    // them in arrays, The array backets act as parenthesis, these are parenthetical
+    // user actions on the stream.
+
+    {
+        const definition = {
+            object: {
+                value: [[ $_ => parseInt($_, 16) ], 32, [ $_ => $_.toString(16) ]]
+            }
+        }
+
+        const object = {
+            value: '89abcdef'
+        }
+
+        test('transform-basic', definition, object, [
+            0x89, 0xab, 0xcd, 0xef
+        ])
+    }
+
+    // Whoa, what's with the parameter names pal? `$_` violates everything I was ever
+    // taught about naming variables. How would you even pronounce that?
+    //
+    // Well, my first real language was Perl, where this variable is called "dollar
+    // under." It is the default variable for an array value when you loop through an
+    // array with `foreach`. I miss those days, so I thought I revive them. You can
+    // name positional arguments anything you like, but I'll be using these names to
+    // get you used to them, because they're available as named arguments as well.
+    //
+    // You can also use named arguments via object desconstruction. When you do, you
+    // must specify names that are in the current namespace. The namespace will contain
+    // the object properties in the current path.
+
+    {
+        const definition = {
+            object: {
+                value: [[ ({ value }) => parseInt(value, 16) ], 32, [ ({ value }) => value.toString(16) ]]
+            }
+        }
+
+        const object = {
+            value: '89abcdef'
+        }
+
+        test('transform-by-name', definition, object, [
+            0x89, 0xab, 0xcd, 0xef
+        ])
+    }
+
+    // You can also refer to the curent variable using the Perl-esque "dollar under"
+    // variable. Perl-esque variables can make your code more concise. If used
+    // consistently it will still be human readable.
+
+    {
+        const definition = {
+            object: {
+                value: [[ ({ $_ }) => parseInt($_, 16) ], 32, [ ({ $_ }) => $_.toString(16) ]]
+            }
+        }
+
+        const object = {
+            value: '89abcdef'
+        }
+
+        test('transform-dollar-under', definition, object, [
+            0x89, 0xab, 0xcd, 0xef
+        ])
+    }
+
+    // There are two Perl-esque variable names `$_` for the immediate property value,
+    // and `$` for the root object. Any other system provided names such as `$i`,
+    // `$buffer`, `$start` and `$end` will begin with a `$` do distinguish them from
+    // user specified names and to avoid namespace collisions.
+    //
+    // **Mnemonic**: Borrowed from Perl `foreach` loop, `$_` is the immediate property
+    // value, useful for its brevity. `$` is the root variable, the shortest special
+    // variable because if you're starting from the root, you have a path ahead of you.
+    //
+    // A transform or assertion is always defined with an array with three elements. If
+    // you only want to define a pre-serialization action, the last element will be an
+    // empty array. If you only want to define a post-parsing action, the first element
+    // will be an empty array.
+    //
+    // In the following example we do not want to perform a post-parsing action, so we
+    // leave the post-parsing array empty, but we do not neglect to add it.
+
+    {
+        const definition = {
+            object: {
+                value: [[ $_ => typeof $_ == 'string' ? parseInt($_, 16) : $_ ], 32, []]
+            }
+        }
+
+        const moduleName = compile('transform-pre-only', definition)
+        const mechanics = require(moduleName)
+
+        {
+            const buffer = new SyncSerializer(mechanics).serialize('object', { value: '89abcdef' })
+            const object = new SyncParser(mechanics).parse('object', buffer)
+            okay(object, { value: 0x89abcdef }, 'transform-pre-only-convert')
+        }
+
+        {
+            const buffer = new SyncSerializer(mechanics).serialize('object', { value: 0x89abcdef })
+            const object = new SyncParser(mechanics).parse('object', buffer)
+            okay(object, { value: 0x89abcdef }, 'transform-pre-only-no-convert')
+        }
+    }
+
+    // Named arguments have limitations. We're using a simple regex based parser to
+    // extract the arguments from the function source, not a complete JavaScript
+    // parser. We are able to parse object destructuring, array destructuring, and
+    // default argument values of numbers, single quoted strings and double quoted
+    // strings.
+    //
+    // Do not use regular expressions, interpolated strings or function calls, in your
+    // default argument assignments. You can use any valid javascript in your function
+    // bodies.
+    //
+    // In the following definition we've added an unused named variable that is default
+    // assigned a value extracted from a literal string by a regular expression. The
+    // right curly brace in the literal string won't confuse our simple argument
+    // parser, but the right curly brace in the regular expression will.
+
+    {
+        const definition = {
+            object: {
+                value: [[
+                    ({ $_, packet: { extra = /^([}])/.exec("}")[1] } }) => parseInt($_, 16)
+                ], 32, [
+                    ({ $_ }) => $_.toString(16)
+                ]]
+            }
+        }
+
+        const _definition = {
+            object: {
+                value: [[ $_ => typeof $_ == 'string' ? parseInt($_, 16) : $_ ], 32, []]
+            }
+        }
+
+        try {
+            packetize(definition)
+        } catch (error) {
+            okay(error instanceof SyntaxError, 'unable to parse regex')
+        }
+    }
+
+    // As you can see it's an unlinkly use case. Basically, if you find yourself
+    // writing logic in your named arguments, stop and place it in a function in a
+    // module and invoke that module function from the inline function.
+    //
+    // We'll continue to use `$_` and `$` in positional argument examples so we can all
+    // get used to them.
+    //
+    // The first argument to a transformation function with positional arguments is the
+    // transformed value, the second argument is the root object being transformed.
+    //
+    // The following WebSockets inspired example xors a value with a `mask` property in
+    // the packet.
+
+    {
+        const definition = {
+            object: {
+                mask: 16,
+                value: [[ ($_, $) => $_ ^ $.mask ], 16, [ ($_, $) => $_ ^ $.mask ]]
+            }
+        }
+
+        const object = {
+            mask: 0xaaaa,
+            value: 0xabcd
+        }
+
+        test('transform-mask-positional', definition, object, [
+            0xaa, 0xaa, 0x1, 0x67
+        ])
+    }
+
+    // This can be expressed using named arguments. Note how we can order the arguments
+    // any way we like.
+
+    {
+        const definition = {
+            object: {
+                mask: 16,
+                value: [[ ({ $, $_ }) => $_ ^ $.mask ], 16, [ ({ $_, $ }) => $_ ^ $.mask ]]
+            }
+        }
+
+        const object = {
+            mask: 0xaaaa,
+            value: 0xabcd
+        }
+
+        test('transform-mask-named', definition, object, [
+            0xaa, 0xaa, 0x1, 0x67
+        ])
+    }
+
+    // You can also name the names of the object properties in the current path. Again,
+    // note that the order of names does not matter with named arguments.
+
+    {
+        const definition = {
+            object: {
+                mask: 16,
+                value: [[
+                    ({ object, value }) => value ^ object.mask
+                ], 16, [
+                    ({ value, object }) => value ^ object.mask
+                ]]
+            }
+        }
+
+        const object = {
+            mask: 0xaaaa,
+            value: 0xabcd
+        }
+
+        test('transform-mask-long-named', definition, object, [
+            0xaa, 0xaa, 0x1, 0x67
+        ])
+    }
+
+    // (Not to self: Seems like it might also be useful to be able to reference the
+    // current object in a loop, which could be `$0` for the current object, `$1` for a
+    // parent. This would be simplier than passing in the indicies, but that would be
+    // simple enough, just give them the already existing `$i`. Heh, no make them
+    // suffer.)
+    //
+    // The third argument passed to a transformation function is an array of indices
+    // indicating the index of each array in the path to the object. **TODO** Move
+    // fixed arrays above.
+
+    {
+        const definition = {
+            object: {
+                array: [ 16, [{
+                    mask: 16,
+                    value: [[
+                        ($_, $, $i) => $_ ^ $.array[$i[0]].mask
+                    ], 16, [
+                        ($_, $, $i) => $_ ^ $.array[$i[0]].mask
+                    ]]
+                }]]
+            }
+        }
+
+        const object = {
+            array: [{
+                mask: 0xaaaa, value: 0xabcd
+            }, {
+                mask: 0xffff, value: 0x1234
+            }]
+        }
+
+        test('transform-mask-array-positional', definition, object, [
+            0x0, 0x2,                   // length encoded count of elements
+            0xaa, 0xaa, 0x1, 0x67,      // first element
+            0xff, 0xff, 0xed, 0xcb      // second element
+        ])
+    }
+
+    // We can use named arguments as well.
+
+    {
+        const definition = {
+            object: {
+                array: [ 16, [{
+                    mask: 16,
+                    value: [[
+                        ({ $_, $, $i }) => $_ ^ $.array[$i[0]].mask
+                    ], 16, [
+                        ({ $_, $, $i }) => $_ ^ $.array[$i[0]].mask
+                    ]]
+                }]]
+            }
+        }
+
+        const object = {
+            array: [{
+                mask: 0xaaaa, value: 0xabcd
+            }, {
+                mask: 0xffff, value: 0x1234
+            }]
+        }
+
+        test('transform-mask-array-named', definition, object, [
+            0x0, 0x2,                   // length encoded count of elements
+            0xaa, 0xaa, 0x1, 0x67,      // first element
+            0xff, 0xff, 0xed, 0xcb      // second element
+        ])
+    }
+
+    // We can also use the names of the object properties in the current path. The `$i`
+    // array variable of is a special system property and it therefore retains its
+    // dollar sign prepended name.
+
+    {
+        const definition = {
+            object: {
+                array: [ 16, [{
+                    mask: 16,
+                    value: [[
+                        ({ value, object, $i }) => value ^ object.array[$i[0]].mask
+                    ], 16, [
+                        ({ value, object, $i }) => value ^ object.array[$i[0]].mask
+                    ]]
+                }]]
+            }
+        }
+
+        const object = {
+            array: [{
+                mask: 0xaaaa, value: 0xabcd
+            }, {
+                mask: 0xffff, value: 0x1234
+            }]
+        }
+
+        test('transform-mask-array-full-named', definition, object, [
+            0x0, 0x2,                   // length encoded count of elements
+            0xaa, 0xaa, 0x1, 0x67,      // first element
+            0xff, 0xff, 0xed, 0xcb      // second element
+        ])
+    }
+
+    // If your pre-serialization function and post-parsing function are the same you
+    // can specify it once and use it for both serialization and parsing by surrounding
+    // it with an additional array.
+
+    {
+        const definition = {
+            object: {
+                mask: 16,
+                value: [[[ ($_, $) => $_ ^ $.mask ]], 16 ]
+            }
+        }
+
+        const object = {
+            mask: 0xaaaa, value: 0xabcd
+        }
+
+        test('transform-mask-same', definition, object, [
+            0xaa, 0xaa, 0x1, 0x67
+        ])
+    }
+
+    // Note that the above functions can also be defined using `function` syntax. Arrow
+    // functions are generally more concise, however.
+
+    {
+        const definition = {
+            object: {
+                mask: 16,
+                value: [[[ function ({ value, object }) {
+                    return value ^ object.mask
+                } ]], 16 ]
+            }
+        }
+
+        const object = {
+            mask: 0xaaaa, value: 0xabcd
+        }
+
+        test('transform-mask-function-syntax', definition, object, [
+            0xaa, 0xaa, 0x1, 0x67
         ])
     }
 })

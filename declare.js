@@ -59,6 +59,7 @@ exports.serialize = function (field) {
                 if (field.fields[0].type == 'buffer' && ! field.fields[0].concat) {
                     variables.I = true
                 }
+                field.fields.map(declare)
             }
             break
         case 'terminated': {
