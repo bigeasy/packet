@@ -409,7 +409,6 @@ function generate (packet, { require = null, bff, chk }) {
                 }
             `)
         }
-        console.log(variables)
         const signature = Object.keys(signatories)
                                 .filter(key => variables[key])
                                 .map(key => signatories[key])

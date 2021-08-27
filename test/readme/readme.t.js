@@ -71,9 +71,17 @@
 // Proof `okay` function to assert out statements in the readme. A Proof unit test
 // generally looks like this.
 
-require('proof')(77, async okay => {
+require('proof')(81, async okay => {
     // The `--allow-natives-syntax` switch allows us to test that when we parse we are
     // creating objects that have JavaScript "fast properties."
+    //
+    // ## Concerns and Decisions
+    //
+    // Notes to self as I'm writing the documetnation. I'm returning to document this
+    // after a long haitus. Here are questions that I'm pretty sure have answers that
+    // I've forgotten.
+    //
+    //  * Did we support packed `BigInt` integers?
     //
     // ## Parsers and Serializers
     //
@@ -1193,44 +1201,63 @@ require('proof')(77, async okay => {
             0xaa, 0xaa, 0x1, 0x67
         ])
     }
+
+    // ### Fixed Length Arrays
+    //
+    // Fixed length arrays are arrays of a fixed length. They are specified by an array
+    // containing the numeric length of the array.
+    //
+    // **Mnemonic**: Like a length encoded definition the element definition is placed
+    // inside an array because it is the array element. Like a length encoded defintion
+    // the length of the array preceeds the element definition. It is the length of the
+    // array enclosed in an array like C array declaration.
+
+    {
+        const definition = {
+            object: {
+                fixed: [[ 2 ], [ 16 ]]
+            }
+        }
+
+        const object = {
+            fixed: [ 0xabcd, 0xdcba ]
+        }
+
+        test('fixed', definition, object, [
+            0xab, 0xcd, 0xdc, 0xba
+        ])
+    }
+
+    // Calculated length arrays are fixed length arrays where the fixed length is
+    // specified by function. The length is, therefore, not fixed at all. It is
+    // calculated.
+
+    {
+        const definition = {
+            object: {
+                header: {
+                    length: 16,
+                    type: 8
+                },
+                array: [[ $ => $.header.length ], [ 16 ]]
+            }
+        }
+
+        const object = {
+            header: {
+                length: 2,
+                type: 1
+            },
+            array: [ 0xabcd, 0xdcba ]
+        }
+
+        test('fixed-calculated', definition, object, [
+            0x0, 0x2,               // header.length
+            0x1,                    // header.type
+            0xab, 0xcd, 0xdc, 0xba
+        ])
+    }
 })
 
 // You can run this unit test yourself to see the output from the various
 // code sections of the readme.
-
-// ### Fixed Length Arrays
-//
-// **TODO**: Need first draft.
-//
-// Fixed length arrays are arrays of a fixed length. They are specified by an array
-// containing the numeric length of the array.
-
-{
-    const definition = {
-        packet: {
-            fixed: [[ 32 ], [ 8 ]]
-        }
-    }
-}
-
-// Calculated length arrays are arrays where the length is determined by a function
-// which can read a value from...
-
-{
-    const definition = 1 || {
-        packet: {
-            header: {
-                length: 16,
-                type: 16
-            },
-            fixed: [[ $.header.length ], [ 8 ]]
-        }
-    }
-}
-
-// ## Concerns and Decisions
-//
-// I'm returning to document this after a long haitus. Here are questions that I'm
-// pretty sure have answers that I've forgotten.
-//
-//  * Did we support packed `BigInt` integers?
