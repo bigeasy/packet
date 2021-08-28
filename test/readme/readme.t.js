@@ -1208,9 +1208,9 @@ require('proof')(81, async okay => {
     // containing the numeric length of the array.
     //
     // **Mnemonic**: Like a length encoded definition the element definition is placed
-    // inside an array because it is the array element. Like a length encoded defintion
-    // the length of the array preceeds the element definition. It is the length of the
-    // array enclosed in an array like C array declaration.
+    // inside an array because it is the array element. Like a length encoded
+    // definition the length of the array precedes the element definition. It is the
+    // length of the array enclosed in an array like C array declaration.
 
     {
         const definition = {
@@ -1231,6 +1231,14 @@ require('proof')(81, async okay => {
     // Calculated length arrays are fixed length arrays where the fixed length is
     // specified by function. The length is, therefore, not fixed at all. It is
     // calculated.
+    //
+    // In the following example we have a length encoding that is in a header and there
+    // is a field between the length encoding and the array so we can't use a
+    // length-encoded array definition. We use a calculated length that references the
+    // header's length field.
+    //
+    // **Mnemonic** Same as fixed length arrays replacing the fixed length with a
+    // function indicating that the function will calculate the length.
 
     {
         const definition = {
