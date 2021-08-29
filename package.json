@@ -51,6 +51,7 @@
     },
     "devDependencies":
     {
+                            "ip":                           "1.1.5",
                             "extant":                       "^2.0.0-alpha.3",
                             "proof":                        "^9.0.3"
     },

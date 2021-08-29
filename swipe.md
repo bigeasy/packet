@@ -1,36 +1,3 @@
-### Requiring Modules
-
-The functions in our packet parser may depend on external libraries. We can
-
-```javascript
-//{ "name": "ignore" }
-define({
-    packet: {
-        value: [[ $value => ip.toLong($value) ], 32, [ $value => ip.fromLong($value) ]]
-    }
-}, {
-    require: { ip: 'ip' }
-})
-```
-
-When can also use modules local to the current project using relative paths, but
-we face a problem; we're not going to ship language definition with our
-completed project, we're going to ship the generated software. Therefore,
-relative must be relative to the generated file. Your relative paths much be
-relative to the output directory... (eh, whatever. Maybe I can fix that up for
-you.)
-
-```javascript
-//{ "name": "ignore" }
-define({
-    packet: {
-        value: [[ $value => ip.toLong($value) ], 32, [ $value => ip.fromLong($value) ]]
-    }
-}, {
-    require: { ip: '../ip' }
-})
-```
-
 ### Assertions
 
 We can also perform inline assertions. You specify an assertion the same way you

@@ -76,7 +76,7 @@ Proof `okay` function to assert out statements in the readme. A Proof unit test
 generally looks like this.
 
 ```javascript
-//{ "code": { "tests": 81 }, "text": { "tests": 4  } }
+//{ "code": { "tests": 83 }, "text": { "tests": 4  } }
 require('proof')(%(tests)d, async okay => {
     //{ "include": "test", "mode": "code" }
     //{ "include": "testDisplay", "mode": "text" }
@@ -1420,5 +1420,58 @@ function indicating that the function will calculate the length.
         0x1,                    // header.type
         0xab, 0xcd, 0xdc, 0xba
     ])
+}
+```
+
+### Requiring Modules
+
+The functions in our packet parser may depend on external libraries. We can
+
+```javascript
+//{ "unblock": true, "name": "test" }
+{
+    const definition = {
+        object: {
+            value: [[ value => ip.toLong(value) ], 32, [ value => ip.fromLong(value) ]]
+        }
+    }
+
+    const source = packetize(definition, { require: { ip: 'ip' } })
+
+    const moduleName = path.resolve(__dirname, 'require.js')
+    fs.writeFileSync(moduleName, source)
+
+    const mechanics = require(moduleName)
+
+    const object = { value: '127.0.0.1' }
+
+    const buffer = new SyncSerializer(mechanics).serialize('object', object)
+
+    okay(buffer.toJSON().data, [
+        127, 0, 0, 1
+    ], 'require serialized')
+
+    const parsed = new SyncParser(mechanics).parse('object', buffer)
+    okay(parsed, object, 'require parsed')
+}
+```
+
+When can also use modules local to the current project using relative paths, but
+we face a problem; we're not going to ship language definition with our
+completed project, we're going to ship the generated software. Therefore,
+relative must be relative to the generated file. Your relative paths much be
+relative to the output directory... (eh, whatever. Maybe I can fix that up for
+you.)
+
+```javascript
+//{ "name": "ignore" }
+{
+    ; ({
+        packet: {
+            value: [[ $value => ip.toLong($value) ], 32, [ $value => ip.fromLong($value) ]]
+        }
+    }, {
+        require: { ip: '../ip' }
+    })
 }
 ```

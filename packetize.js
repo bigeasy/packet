@@ -1,3 +1,5 @@
+const { coalesce } = require('extant')
+
 const composers = {
     parser: {
         inc: require('./parse.inc'),
@@ -14,19 +16,19 @@ const composers = {
 const $ = require('programmatic')
 const language = require('./language')
 
-module.exports = function (definitions) {
+module.exports = function (definitions, options = { require: {} }) {
     const intermediate = language(definitions)
     return $(`
-    const sizeOf = `, composers.sizeOf(intermediate, { require: {} }), `
+    const sizeOf = `, composers.sizeOf(intermediate, { require: options.require }), `
 
     const serializer = {
-        all: `, composers.serializer.all(intermediate, { require: {} }), `,
-        inc: `, composers.serializer.inc(intermediate, { require: {} }), `
+        all: `, composers.serializer.all(intermediate, { require: options.require }), `,
+        inc: `, composers.serializer.inc(intermediate, { require: options.require }), `
     }
 
     const parser = {
-        all: `, composers.parser.all(intermediate, { require: {} }), `,
-        inc: `, composers.parser.inc(intermediate, { require: {} }), `
+        all: `, composers.parser.all(intermediate, { require: options.require }), `,
+        inc: `, composers.parser.inc(intermediate, { require: options.require }), `
     }
 
     module.exports = {
