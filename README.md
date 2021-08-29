@@ -99,8 +99,8 @@ creating objects that have JavaScript "fast properties."
 
 ## Concerns and Decisions
 
-Notes to self as I'm writing the documetnation. I'm returning to document this
-after a long haitus. Here are questions that I'm pretty sure have answers that
+Notes to self as I'm writing the documentation. I'm returning to document this
+after a long hiatus. Here are questions that I'm pretty sure have answers that
 I've forgotten.
 
  * Did we support packed `BigInt` integers?
@@ -168,7 +168,7 @@ either a JavaScript `"number"` or a JavaScript `BigInt`.
 We use a count of bits as opposed to a count of bytes so that numbers remain
 consistent when bit packing.
 
-In the following defintion `value` is a 16-bit `"number"` with valid integer
+In the following definition `value` is a 16-bit `"number"` with valid integer
 values from 0 to 65,535. Serializes objects with `"number"` fields must provide
 a `"number"` type value and the number must be in range. No type or range
 checking is performed.
@@ -219,8 +219,8 @@ test('whole-integer-64', definition, object, [
 ### Negative Integers
 
 Integers with negative values are generally represented as two's compliment
-integers on most machines. To parse and serialize as two's complient you preceed
-the bit length of an integer field with a `-` negative symbol.
+integers on most machines. To parse and serialize as two's compliment you
+precede the bit length of an integer field with a `-` negative symbol.
 
 In the following definition `value` is a two's compliment 16-bit integer with
 valid values from -32768 to 32767. Two's compliment is a binary representation
@@ -275,7 +275,7 @@ byte to the most significant byte. Note that this is the order of _bytes_ and
 not _bits_. This would be the case if you wrote an integer out directly to a
 file from a C program on an Intel machine.
 
-To parse and serialize an integer as little-endian you preceed the bit length of
+To parse and serialize an integer as little-endian you precede the bit length of
 an integer field with a `~` tilde.
 
 In the following definition `value` is a 16-bit `number` field with valid
@@ -372,7 +372,7 @@ test('little-endian-twos-compliment-64', definition, object, [
 
 You can nest structures arbitrarily. The nesting of structures does not effect
 the serialization or parsing, it will still be a series bytes in the stream, but
-it may help the structure your programs group values in a meaniful way.
+it may help the structure your programs group values in a meaningful way.
 
 ```javascript
 const definition = {
@@ -414,7 +414,7 @@ followed by an integer definition of the packed integer size. The byte lengths
 in the packed integer must sum to the size of the packed integer.
 
 Packed integer fields are always big-endian and cannot be made little endian.
-Packed integer fields can be made two's compliment by preceeding the field bit
+Packed integer fields can be made two's compliment by preceding the field bit
 length with a `-` negative symbol just like whole integers.
 
 A packed 32-bit integer with a single two's compliment (potentially negative)
@@ -669,7 +669,7 @@ test('unamed-literal-repeat', definition, object, [
 ```
 
 Note that a literal definition without a repeat count is the same as a literal
-definition with a repeate count of `1`.
+definition with a repeat count of `1`.
 
 ```javascript
 const definition = {
@@ -758,13 +758,14 @@ definition can be appended, prepended or both.
 ### Length-Encoded Arrays
 
 A common pattern in serialization formats is a series of repeated values
-preceeded by a count of those values.
+preceded by a count of those values.
 
-**Mnemonic**: We enclose the defintion in an array. The first element is an
-integer field defintion for the length. It's scalar appearance indicates that it
-does not repeat. The repeated value is enclosed in an array indicating that it
-will be the value that repeats. The ordering of the scalar followed by the array
-mirrors the binary representation of a length/count followed by repeated values.
+**Mnemonic**: We enclose the definition in an array. The first element is an
+integer field definition for the length. It's scalar appearance indicates that
+it does not repeat. The repeated value is enclosed in an array indicating that
+it will be the value that repeats. The ordering of the scalar followed by the
+array mirrors the binary representation of a length/count followed by repeated
+values.
 
 ```javascript
 const definition = {
@@ -845,20 +846,20 @@ test('length-encoded-buffer', definition, object, [
 
 Inline transforms are specified by wrapping a field definition in an array with
 a pre-serialization function before or a post-parsing function after it or both.
-The pre-serialization function and post-parsing function must be encosed in an
+The pre-serialization function and post-parsing function must be enclosed in an
 array.
 
 A pre-serialization transformation function takes the value from the JavaScript
-object and returns the transfored that is then written to the stream. The
+object and returns the transformed that is then written to the stream. The
 post-parsing transformation function takes a value extracted from the stream and
 returns the transformed value that is assigned to the JavaScript object.
 
-The following transform will convert a hexidecmal string to an integer on
-serialization and back to a hexidecimal string on parse.
+The following transform will convert a hexadecimal string to an integer on
+serialization and back to a hexadecimal string on parse.
 
 **Mnemonic**: A function is obviously a function, it does something to in the
 midst of parsing. We used functions elsewhere in the language, so we enclose
-them in arrays, The array backets act as parenthesis, these are parenthetical
+them in arrays, The array brackets act as parenthesis, these are parenthetical
 user actions on the stream.
 
 ```javascript
@@ -886,7 +887,7 @@ array with `foreach`. I miss those days, so I thought I revive them. You can
 name positional arguments anything you like, but I'll be using these names to
 get you used to them, because they're available as named arguments as well.
 
-You can also use named arguments via object desconstruction. When you do, you
+You can also use named arguments via object deconstruction. When you do, you
 must specify names that are in the current namespace. The namespace will contain
 the object properties in the current path.
 
@@ -906,7 +907,7 @@ test('transform-by-name', definition, object, [
 ])
 ```
 
-You can also refer to the curent variable using the Perl-esque "dollar under"
+You can also refer to the current variable using the Perl-esque "dollar under"
 variable. Perl-esque variables can make your code more concise. If used
 consistently it will still be human readable.
 
@@ -973,7 +974,7 @@ default argument values of numbers, single quoted strings and double quoted
 strings.
 
 Do not use regular expressions, interpolated strings or function calls, in your
-default argument assignments. You can use any valid javascript in your function
+default argument assignments. You can use any valid JavaScript in your function
 bodies.
 
 In the following definition we've added an unused named variable that is default
@@ -1005,7 +1006,7 @@ try {
 }
 ```
 
-As you can see it's an unlinkly use case. Basically, if you find yourself
+As you can see it's an unlikely use case. Basically, if you find yourself
 writing logic in your named arguments, stop and place it in a function in a
 module and invoke that module function from the inline function.
 
@@ -1084,7 +1085,7 @@ test('transform-mask-long-named', definition, object, [
 
 (Not to self: Seems like it might also be useful to be able to reference the
 current object in a loop, which could be `$0` for the current object, `$1` for a
-parent. This would be simplier than passing in the indicies, but that would be
+parent. This would be simpler than passing in the indices, but that would be
 simple enough, just give them the already existing `$i`. Heh, no make them
 suffer.)
 
