@@ -130,8 +130,8 @@ const SyncSerializer = require('packet/sync/serializer')
 // mechanics modules and ship them.
 
 //
-function compile (name, definition) {
-    const source = packetize(definition)
+function compile (name, definition, options) {
+    const source = packetize(definition, options)
     const file = path.resolve(__dirname, '..', 'readme', name + '.js')
     fs.writeFileSync(file, source)
     return file
@@ -143,8 +143,8 @@ function compile (name, definition) {
 // our for-the-sake-of-testing runtime compile.
 
 //
-function test (name, definition, object, expected) {
-    const moduleName = compile(name, definition)
+function test (name, definition, object, expected, options = {}) {
+    const moduleName = compile(name, definition, options)
 
     const mechanics = require(moduleName)
 
@@ -1366,20 +1366,24 @@ serialization for the pre-serialization function nor assignment for the
 post-parsing function.
 
 ```javascript
-{
-    const definition = {
-        object: {
-            value: [[
-                ($_ = 0) => assert($_ < 1000, 'excedes max value')
-            ], 16, [
-                ($_ = 0) => assert($_ < 1000, 'excedes max value')
-            ]]
-        }
-    }
-    const required = {
-        assert: require('assert')
+const definition = {
+    object: {
+        value: [[
+            ($_ = 0) => assert($_ < 1000, 'excedes max value')
+        ], 16, [
+            ($_ = 0) => assert($_ < 1000, 'excedes max value')
+        ]]
     }
 }
+const required = {
+    assert: 'assert'
+}
+const object = {
+    value: 1
+}
+test('assertion', definition, object, [
+    0x0, 0x1
+], { require: { assert: 'assert' } })
 ```
 
 (I assume I'll implement this in this way:) The execption will propagate to the

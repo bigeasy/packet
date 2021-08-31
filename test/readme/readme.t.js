@@ -107,8 +107,8 @@ require('proof')(83, async okay => {
     // mechanics modules and ship them.
 
     //
-    function compile (name, definition) {
-        const source = packetize(definition)
+    function compile (name, definition, options) {
+        const source = packetize(definition, options)
         const file = path.resolve(__dirname, '..', 'readme', name + '.js')
         fs.writeFileSync(file, source)
         return file
@@ -120,8 +120,8 @@ require('proof')(83, async okay => {
     // our for-the-sake-of-testing runtime compile.
 
     //
-    function test (name, definition, object, expected) {
-        const moduleName = compile(name, definition)
+    function test (name, definition, object, expected, options = {}) {
+        const moduleName = compile(name, definition, options)
 
         const mechanics = require(moduleName)
 
@@ -1296,6 +1296,50 @@ require('proof')(83, async okay => {
         const parsed = new SyncParser(mechanics).parse('object', buffer)
         okay(parsed, object, 'require parsed')
     }
+
+    // ### Assertions
+    //
+    // We can also perform inline assertions. You specify an assertion the same way you
+    // specify a transformation. You wrap your definition in an array.
+    // A pre-serialization assertion is a function within an array in the element
+    // before the definition. A post-parsing assertions is a function within an array
+    // in the element after the definition.
+    //
+    // When performing inline assertions, we are not transforming a value, we're simply
+    // checking it's validity and raising an exception if a value is invalid. You could
+    // use a transformation to do this, but you would end up returning the value as is.
+    //
+    // With an assertion function the return value is ignored. It is not used as the
+    // serialization or assignment value.
+    //
+    // To declare an assertion function you assign a default value of `0` or `null` to
+    // the immediate property argument.
+    //
+    // In the following definition we use a `0` default value for the immediate
+    // property argument which indicates that the value and should not be used for
+    // serialization for the pre-serialization function nor assignment for the
+    // post-parsing function.
+
+    {
+        const definition = {
+            object: {
+                value: [[
+                    ($_ = 0) => assert($_ < 1000, 'excedes max value')
+                ], 16, [
+                    ($_ = 0) => assert($_ < 1000, 'excedes max value')
+                ]]
+            }
+        }
+        const required = {
+            assert: 'assert'
+        }
+        const object = {
+            value: 1
+        }
+        test('assertion', definition, object, [
+            0x0, 0x1
+        ], { require: { assert: 'assert' } })
+    }
 })
 
 // You can run this unit test yourself to see the output from the various
@@ -1316,44 +1360,6 @@ require('proof')(83, async okay => {
     }, {
         require: { ip: '../ip' }
     })
-}
-
-// ### Assertions
-//
-// We can also perform inline assertions. You specify an assertion the same way you
-// specify a transformation. You wrap your definition in an array.
-// A pre-serialization assertion is a function within an array in the element
-// before the definition. A post-parsing assertions is a function within an array
-// in the element after the definition.
-//
-// When performing inline assertions, we are not transforming a value, we're simply
-// checking it's validity and raising an exception if a value is invalid. You could
-// use a transformation to do this, but you would end up returning the value as is.
-//
-// With an assertion function the return value is ignored. It is not used as the
-// serialization or assignment value.
-//
-// To declare an assertion function you assign a default value of `0` or `null` to
-// the immediate property argument.
-//
-// In the following definition we use a `0` default value for the immediate
-// property argument which indicates that the value and should not be used for
-// serialization for the pre-serialization function nor assignment for the
-// post-parsing function.
-
-{
-    const definition = {
-        object: {
-            value: [[
-                ($_ = 0) => assert($_ < 1000, 'excedes max value')
-            ], 16, [
-                ($_ = 0) => assert($_ < 1000, 'excedes max value')
-            ]]
-        }
-    }
-    const required = {
-        assert: require('assert')
-    }
 }
 
 // (I assume I'll implement this in this way:) The execption will propagate to the

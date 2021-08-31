@@ -16,19 +16,19 @@ const composers = {
 const $ = require('programmatic')
 const language = require('./language')
 
-module.exports = function (definitions, options = { require: {} }) {
+module.exports = function (definitions, { require = {} } = {}) {
     const intermediate = language(definitions)
     return $(`
-    const sizeOf = `, composers.sizeOf(intermediate, { require: options.require }), `
+    const sizeOf = `, composers.sizeOf(intermediate, { require: require }), `
 
     const serializer = {
-        all: `, composers.serializer.all(intermediate, { require: options.require }), `,
-        inc: `, composers.serializer.inc(intermediate, { require: options.require }), `
+        all: `, composers.serializer.all(intermediate, { require: require }), `,
+        inc: `, composers.serializer.inc(intermediate, { require: require }), `
     }
 
     const parser = {
-        all: `, composers.parser.all(intermediate, { require: options.require }), `,
-        inc: `, composers.parser.inc(intermediate, { require: options.require }), `
+        all: `, composers.parser.all(intermediate, { require: require }), `,
+        inc: `, composers.parser.inc(intermediate, { require: require }), `
     }
 
     module.exports = {

@@ -76,7 +76,7 @@ Proof `okay` function to assert out statements in the readme. A Proof unit test
 generally looks like this.
 
 ```javascript
-//{ "code": { "tests": 83 }, "text": { "tests": 4  } }
+//{ "code": { "tests": 85 }, "text": { "tests": 4  } }
 require('proof')(%(tests)d, async okay => {
     //{ "include": "test", "mode": "code" }
     //{ "include": "testDisplay", "mode": "text" }
@@ -139,8 +139,8 @@ const SyncSerializer = require('%(path)s/sync/serializer')
 // mechanics modules and ship them.
 
 //
-function compile (name, definition) {
-    const source = packetize(definition)
+function compile (name, definition, options) {
+    const source = packetize(definition, options)
     const file = path.resolve(__dirname, '..', 'readme', name + '.js')
     fs.writeFileSync(file, source)
     return file
@@ -152,8 +152,8 @@ function compile (name, definition) {
 // our for-the-sake-of-testing runtime compile.
 
 //
-function test (name, definition, object, expected) {
-    const moduleName = compile(name, definition)
+function test (name, definition, object, expected, options = {}) {
+    const moduleName = compile(name, definition, options)
 
     const mechanics = require(moduleName)
 
@@ -1500,7 +1500,7 @@ serialization for the pre-serialization function nor assignment for the
 post-parsing function.
 
 ```javascript
-//{ "name": "ignore" }
+//{ "unblock": true, "name": "test" }
 {
     const definition = {
         object: {
@@ -1512,8 +1512,14 @@ post-parsing function.
         }
     }
     const required = {
-        assert: require('assert')
+        assert: 'assert'
     }
+    const object = {
+        value: 1
+    }
+    test('assertion', definition, object, [
+        0x0, 0x1
+    ], { require: { assert: 'assert' } })
 }
 ```
 
