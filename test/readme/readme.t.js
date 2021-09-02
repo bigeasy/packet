@@ -71,7 +71,7 @@
 // Proof `okay` function to assert out statements in the readme. A Proof unit test
 // generally looks like this.
 
-require('proof')(83, async okay => {
+require('proof')(87, async okay => {
     // The `--allow-natives-syntax` switch allows us to test that when we parse we are
     // creating objects that have JavaScript "fast properties."
     //
@@ -1340,6 +1340,41 @@ require('proof')(83, async okay => {
             0x0, 0x1
         ], { require: { assert: 'assert' } })
     }
+
+    // (I assume I'll implement this in this way:) The execption will propagate to the
+    // API caller so that you can catch it in your code and cancel the serialization or
+    // parse. (However, if I do wrap the assertion in a try/catch and rethrow it
+    // somehow, then the following example is moot.
+    //
+    // If you where to use a transform, you would have to return the value and your
+    // definition would be more verbose.
+
+    {
+        const definition = {
+            packet: {
+                value: [[
+                    $_ => {
+                        assert($_ < 1000, 'excedes max value')
+                        return $_
+                    }
+                ], 16, [
+                    $_ => {
+                        assert($_ < 1000, 'execdes max value')
+                        return $_
+                    }
+                ]]
+            }
+        }
+        const required = {
+            assert: 'assert'
+        }
+        const object = {
+            value: 1
+        }
+        test('assertion', definition, object, [
+            0x0, 0x1
+        ], { require: { assert: 'assert' } })
+    }
 })
 
 // You can run this unit test yourself to see the output from the various
@@ -1360,36 +1395,6 @@ require('proof')(83, async okay => {
     }, {
         require: { ip: '../ip' }
     })
-}
-
-// (I assume I'll implement this in this way:) The execption will propagate to the
-// API caller so that you can catch it in your code and cancel the serialization or
-// parse. (However, if I do wrap the assertion in a try/catch and rethrow it
-// somehow, then the following example is moot.
-//
-// If you where to use a transform, you would have to return the value and your
-// definition would be more verbose.
-
-{
-    const definition = {
-        packet: {
-            value: [[
-                $_ => {
-                    assert($_ < 1000, 'excedes max value')
-                    return $_
-                }
-            ], 16, [
-                $_ => {
-                    assert($_ < 1000, 'execdes max value')
-                    return $_
-                }
-            ]]
-        }
-    }
-
-    const required = {
-        require: { assert: require('assert') }
-    }
 }
 
 // You can use the name function for both pre-serialization and post-parsing by

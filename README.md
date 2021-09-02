@@ -1395,27 +1395,30 @@ If you where to use a transform, you would have to return the value and your
 definition would be more verbose.
 
 ```javascript
-{
-    const definition = {
-        packet: {
-            value: [[
-                $_ => {
-                    assert($_ < 1000, 'excedes max value')
-                    return $_
-                }
-            ], 16, [
-                $_ => {
-                    assert($_ < 1000, 'execdes max value')
-                    return $_
-                }
-            ]]
-        }
-    }
-
-    const required = {
-        require: { assert: require('assert') }
+const definition = {
+    packet: {
+        value: [[
+            $_ => {
+                assert($_ < 1000, 'excedes max value')
+                return $_
+            }
+        ], 16, [
+            $_ => {
+                assert($_ < 1000, 'execdes max value')
+                return $_
+            }
+        ]]
     }
 }
+const required = {
+    assert: 'assert'
+}
+const object = {
+    value: 1
+}
+test('assertion', definition, object, [
+    0x0, 0x1
+], { require: { assert: 'assert' } })
 ```
 
 You can use the name function for both pre-serialization and post-parsing by

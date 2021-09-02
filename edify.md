@@ -76,7 +76,7 @@ Proof `okay` function to assert out statements in the readme. A Proof unit test
 generally looks like this.
 
 ```javascript
-//{ "code": { "tests": 85 }, "text": { "tests": 4  } }
+//{ "code": { "tests": 87 }, "text": { "tests": 4  } }
 require('proof')(%(tests)d, async okay => {
     //{ "include": "test", "mode": "code" }
     //{ "include": "testDisplay", "mode": "text" }
@@ -1532,7 +1532,7 @@ If you where to use a transform, you would have to return the value and your
 definition would be more verbose.
 
 ```javascript
-//{ "name": "ignore" }
+//{ "unblock": true, "name": "test" }
 {
     const definition = {
         packet: {
@@ -1549,10 +1549,15 @@ definition would be more verbose.
             ]]
         }
     }
-
     const required = {
-        require: { assert: require('assert') }
+        assert: 'assert'
     }
+    const object = {
+        value: 1
+    }
+    test('assertion', definition, object, [
+        0x0, 0x1
+    ], { require: { assert: 'assert' } })
 }
 ```
 

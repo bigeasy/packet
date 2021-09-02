@@ -1,8 +1,8 @@
 const sizeOf = {
-    object: function () {
+    packet: function () {
         const assert = require('assert')
 
-        return function (object) {
+        return function (packet) {
             let $start = 0
 
             $start += 2
@@ -14,38 +14,44 @@ const sizeOf = {
 
 const serializer = {
     all: {
-        object: function () {
+        packet: function () {
             const assert = require('assert')
 
-            return function (object, $buffer, $start) {
+            return function (packet, $buffer, $start) {
                 let $$ = []
 
-                ; (($_ = 0) => assert($_ < 1000, 'excedes max value'))(object.value)
+                $$[0] = ($_ => {
+                    assert($_ < 1000, 'excedes max value')
+                    return $_
+                })(packet.value, packet, [], [ 'packet', 'value' ], serialize)
 
-                $buffer[$start++] = object.value >>> 8 & 0xff
-                $buffer[$start++] = object.value & 0xff
+                $buffer[$start++] = $$[0] >>> 8 & 0xff
+                $buffer[$start++] = $$[0] & 0xff
 
                 return { start: $start, serialize: null }
             }
         } ()
     },
     inc: {
-        object: function () {
+        packet: function () {
             const assert = require('assert')
 
-            return function (object, $step = 0, $$ = []) {
+            return function (packet, $step = 0, $$ = []) {
                 let $_, $bite
 
                 return function $serialize ($buffer, $start, $end) {
                     switch ($step) {
                     case 0:
 
-                        ; (($_ = 0) => assert($_ < 1000, 'excedes max value'))(object.value)
+                        $$[0] = ($_ => {
+                            assert($_ < 1000, 'excedes max value')
+                            return $_
+                        })(packet.value, packet, [], [ 'packet', 'value' ], serialize)
 
                     case 1:
 
                         $bite = 1
-                        $_ = object.value
+                        $_ = $$[0]
 
                     case 2:
 
@@ -69,36 +75,39 @@ const serializer = {
 
 const parser = {
     all: {
-        object: function () {
+        packet: function () {
             const assert = require('assert')
 
             return function ($buffer, $start) {
-                let object = {
+                let packet = {
                     value: 0
                 }
 
-                object.value =
+                packet.value =
                     $buffer[$start++] << 8 |
                     $buffer[$start++]
 
-                ; (($_ = 0) => assert($_ < 1000, 'excedes max value'))(object.value)
+                packet.value = ($_ => {
+                    assert($_ < 1000, 'execdes max value')
+                    return $_
+                })(packet.value, packet, [], [ 'packet', 'value' ], parse)
 
-                return object
+                return packet
             }
         } ()
     },
     inc: {
-        object: function () {
+        packet: function () {
             const assert = require('assert')
 
-            return function (object, $step = 0) {
+            return function (packet, $step = 0) {
                 let $_, $bite
 
                 return function $parse ($buffer, $start, $end) {
                     switch ($step) {
                     case 0:
 
-                        object = {
+                        packet = {
                             value: 0
                         }
 
@@ -118,13 +127,16 @@ const parser = {
                             $bite--
                         }
 
-                        object.value = $_
+                        packet.value = $_
 
-                        ; (($_ = 0) => assert($_ < 1000, 'excedes max value'))(object.value)
+                        packet.value = ($_ => {
+                            assert($_ < 1000, 'execdes max value')
+                            return $_
+                        })(packet.value, packet, [], [ 'packet', 'value' ], parse)
 
                     }
 
-                    return { start: $start, object: object, parse: null }
+                    return { start: $start, object: packet, parse: null }
                 }
             }
         } ()
@@ -138,19 +150,22 @@ module.exports = {
         inc: serializer.inc,
         bff: function ($incremental) {
             return {
-                object: function () {
-                    return function (object) {
+                packet: function () {
+                    return function (packet) {
                         return function ($buffer, $start, $end) {
                             let $$ = []
 
                             if ($end - $start < 2) {
-                                return $incremental.object(object, 0, $$)($buffer, $start, $end)
+                                return $incremental.packet(packet, 0, $$)($buffer, $start, $end)
                             }
 
-                            ; (($_ = 0) => assert($_ < 1000, 'excedes max value'))(object.value)
+                            $$[0] = ($_ => {
+                                assert($_ < 1000, 'excedes max value')
+                                return $_
+                            })(packet.value, packet, [], [ 'packet', 'value' ], serialize)
 
-                            $buffer[$start++] = object.value >>> 8 & 0xff
-                            $buffer[$start++] = object.value & 0xff
+                            $buffer[$start++] = $$[0] >>> 8 & 0xff
+                            $buffer[$start++] = $$[0] & 0xff
 
                             return { start: $start, serialize: null }
                         }
@@ -164,22 +179,25 @@ module.exports = {
         inc: parser.inc,
         bff: function ($incremental) {
             return {
-                object: function () {
+                packet: function () {
                     return function () {
                         return function ($buffer, $start, $end) {
-                            let object = {
+                            let packet = {
                                 value: 0
                             }
 
                             if ($end - $start < 2) {
-                                return $incremental.object(object, 1)($buffer, $start, $end)
+                                return $incremental.packet(packet, 1)($buffer, $start, $end)
                             }
 
-                            object.value =
+                            packet.value =
                                 $buffer[$start++] << 8 |
                                 $buffer[$start++]
 
-                            ; (($_ = 0) => assert($_ < 1000, 'excedes max value'))(object.value)
+                            packet.value = ($_ => {
+                                assert($_ < 1000, 'execdes max value')
+                                return $_
+                            })(packet.value, packet, [], [ 'packet', 'value' ], parse)
 
                             return { start: $start, object: object, parse: null }
                         }
