@@ -76,7 +76,7 @@ Proof `okay` function to assert out statements in the readme. A Proof unit test
 generally looks like this.
 
 ```javascript
-//{ "code": { "tests": 87 }, "text": { "tests": 4  } }
+//{ "code": { "tests": 89 }, "text": { "tests": 4  } }
 require('proof')(%(tests)d, async okay => {
     //{ "include": "test", "mode": "code" }
     //{ "include": "testDisplay", "mode": "text" }
@@ -1511,9 +1511,6 @@ post-parsing function.
             ]]
         }
     }
-    const required = {
-        assert: 'assert'
-    }
     const object = {
         value: 1
     }
@@ -1535,7 +1532,7 @@ definition would be more verbose.
 //{ "unblock": true, "name": "test" }
 {
     const definition = {
-        packet: {
+        object: {
             value: [[
                 $_ => {
                     assert($_ < 1000, 'excedes max value')
@@ -1549,13 +1546,10 @@ definition would be more verbose.
             ]]
         }
     }
-    const required = {
-        assert: 'assert'
-    }
     const object = {
         value: 1
     }
-    test('assertion', definition, object, [
+    test('assertion-not-assertion', definition, object, [
         0x0, 0x1
     ], { require: { assert: 'assert' } })
 }
@@ -1565,17 +1559,19 @@ You can use the name function for both pre-serialization and post-parsing by
 surrounding the function in an additional array.
 
 ```javascript
-//{ "name": "ignore" }
+//{ "unblock": true, "name": "test" }
 {
     const definition = {
-        packet: {
+        object: {
             value: [[[ ($_ = 0) => assert($_ < 1000, 'excedes max value') ]], 16 ]
         }
     }
-
-    const required = {
-        assert: require('assert')
+    const object = {
+        value: 1
     }
+    test('assertion-mirrored', definition, object, [
+        0x0, 0x1
+    ], { require: { assert: 'assert' } })
 }
 ```
 
@@ -1585,11 +1581,10 @@ You can use named arguments to declare an assertion function.
 //{ "name": "ignore" }
 {
     const definition = {
-        packet: {
+        object: {
             value: [[[ ({ $_ = 0 }) => assert($_ < 1000, 'excedes max value') ]], 16 ]
         }
     }
-
     const required = {
         assert: require('assert')
     }

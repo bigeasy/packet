@@ -1375,9 +1375,6 @@ const definition = {
         ]]
     }
 }
-const required = {
-    assert: 'assert'
-}
 const object = {
     value: 1
 }
@@ -1396,7 +1393,7 @@ definition would be more verbose.
 
 ```javascript
 const definition = {
-    packet: {
+    object: {
         value: [[
             $_ => {
                 assert($_ < 1000, 'excedes max value')
@@ -1410,13 +1407,10 @@ const definition = {
         ]]
     }
 }
-const required = {
-    assert: 'assert'
-}
 const object = {
     value: 1
 }
-test('assertion', definition, object, [
+test('assertion-not-assertion', definition, object, [
     0x0, 0x1
 ], { require: { assert: 'assert' } })
 ```
@@ -1425,17 +1419,17 @@ You can use the name function for both pre-serialization and post-parsing by
 surrounding the function in an additional array.
 
 ```javascript
-{
-    const definition = {
-        packet: {
-            value: [[[ ($_ = 0) => assert($_ < 1000, 'excedes max value') ]], 16 ]
-        }
-    }
-
-    const required = {
-        assert: require('assert')
+const definition = {
+    object: {
+        value: [[[ ($_ = 0) => assert($_ < 1000, 'excedes max value') ]], 16 ]
     }
 }
+const object = {
+    value: 1
+}
+test('assertion-mirrored', definition, object, [
+    0x0, 0x1
+], { require: { assert: 'assert' } })
 ```
 
 You can use named arguments to declare an assertion function.
@@ -1443,11 +1437,10 @@ You can use named arguments to declare an assertion function.
 ```javascript
 {
     const definition = {
-        packet: {
+        object: {
             value: [[[ ({ $_ = 0 }) => assert($_ < 1000, 'excedes max value') ]], 16 ]
         }
     }
-
     const required = {
         assert: require('assert')
     }

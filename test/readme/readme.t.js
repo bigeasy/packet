@@ -71,7 +71,7 @@
 // Proof `okay` function to assert out statements in the readme. A Proof unit test
 // generally looks like this.
 
-require('proof')(87, async okay => {
+require('proof')(89, async okay => {
     // The `--allow-natives-syntax` switch allows us to test that when we parse we are
     // creating objects that have JavaScript "fast properties."
     //
@@ -1330,9 +1330,6 @@ require('proof')(87, async okay => {
                 ]]
             }
         }
-        const required = {
-            assert: 'assert'
-        }
         const object = {
             value: 1
         }
@@ -1351,7 +1348,7 @@ require('proof')(87, async okay => {
 
     {
         const definition = {
-            packet: {
+            object: {
                 value: [[
                     $_ => {
                         assert($_ < 1000, 'excedes max value')
@@ -1365,13 +1362,27 @@ require('proof')(87, async okay => {
                 ]]
             }
         }
-        const required = {
-            assert: 'assert'
+        const object = {
+            value: 1
+        }
+        test('assertion-not-assertion', definition, object, [
+            0x0, 0x1
+        ], { require: { assert: 'assert' } })
+    }
+
+    // You can use the name function for both pre-serialization and post-parsing by
+    // surrounding the function in an additional array.
+
+    {
+        const definition = {
+            object: {
+                value: [[[ ($_ = 0) => assert($_ < 1000, 'excedes max value') ]], 16 ]
+            }
         }
         const object = {
             value: 1
         }
-        test('assertion', definition, object, [
+        test('assertion-mirrored', definition, object, [
             0x0, 0x1
         ], { require: { assert: 'assert' } })
     }
@@ -1397,30 +1408,14 @@ require('proof')(87, async okay => {
     })
 }
 
-// You can use the name function for both pre-serialization and post-parsing by
-// surrounding the function in an additional array.
-
-{
-    const definition = {
-        packet: {
-            value: [[[ ($_ = 0) => assert($_ < 1000, 'excedes max value') ]], 16 ]
-        }
-    }
-
-    const required = {
-        assert: require('assert')
-    }
-}
-
 // You can use named arguments to declare an assertion function.
 
 {
     const definition = {
-        packet: {
+        object: {
             value: [[[ ({ $_ = 0 }) => assert($_ < 1000, 'excedes max value') ]], 16 ]
         }
     }
-
     const required = {
         assert: require('assert')
     }

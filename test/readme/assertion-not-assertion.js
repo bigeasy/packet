@@ -20,10 +20,13 @@ const serializer = {
             return function (object, $buffer, $start) {
                 let $$ = []
 
-                ; (($_ = 0) => assert($_ < 1000, 'excedes max value'))(object.value)
+                $$[0] = ($_ => {
+                    assert($_ < 1000, 'excedes max value')
+                    return $_
+                })(object.value, object, [], [ 'object', 'value' ], 'serialize')
 
-                $buffer[$start++] = object.value >>> 8 & 0xff
-                $buffer[$start++] = object.value & 0xff
+                $buffer[$start++] = $$[0] >>> 8 & 0xff
+                $buffer[$start++] = $$[0] & 0xff
 
                 return { start: $start, serialize: null }
             }
@@ -40,12 +43,15 @@ const serializer = {
                     switch ($step) {
                     case 0:
 
-                        ; (($_ = 0) => assert($_ < 1000, 'excedes max value'))(object.value)
+                        $$[0] = ($_ => {
+                            assert($_ < 1000, 'excedes max value')
+                            return $_
+                        })(object.value, object, [], [ 'object', 'value' ], 'serialize')
 
                     case 1:
 
                         $bite = 1
-                        $_ = object.value
+                        $_ = $$[0]
 
                     case 2:
 
@@ -81,7 +87,10 @@ const parser = {
                     $buffer[$start++] << 8 |
                     $buffer[$start++]
 
-                ; (($_ = 0) => assert($_ < 1000, 'excedes max value'))(object.value)
+                object.value = ($_ => {
+                    assert($_ < 1000, 'execdes max value')
+                    return $_
+                })(object.value, object, [], [ 'object', 'value' ], 'parse')
 
                 return object
             }
@@ -120,7 +129,10 @@ const parser = {
 
                         object.value = $_
 
-                        ; (($_ = 0) => assert($_ < 1000, 'excedes max value'))(object.value)
+                        object.value = ($_ => {
+                            assert($_ < 1000, 'execdes max value')
+                            return $_
+                        })(object.value, object, [], [ 'object', 'value' ], 'parse')
 
                     }
 
@@ -147,10 +159,13 @@ module.exports = {
                                 return $incremental.object(object, 0, $$)($buffer, $start, $end)
                             }
 
-                            ; (($_ = 0) => assert($_ < 1000, 'excedes max value'))(object.value)
+                            $$[0] = ($_ => {
+                                assert($_ < 1000, 'excedes max value')
+                                return $_
+                            })(object.value, object, [], [ 'object', 'value' ], 'serialize')
 
-                            $buffer[$start++] = object.value >>> 8 & 0xff
-                            $buffer[$start++] = object.value & 0xff
+                            $buffer[$start++] = $$[0] >>> 8 & 0xff
+                            $buffer[$start++] = $$[0] & 0xff
 
                             return { start: $start, serialize: null }
                         }
@@ -179,7 +194,10 @@ module.exports = {
                                 $buffer[$start++] << 8 |
                                 $buffer[$start++]
 
-                            ; (($_ = 0) => assert($_ < 1000, 'excedes max value'))(object.value)
+                            object.value = ($_ => {
+                                assert($_ < 1000, 'execdes max value')
+                                return $_
+                            })(object.value, object, [], [ 'object', 'value' ], 'parse')
 
                             return { start: $start, object: object, parse: null }
                         }
