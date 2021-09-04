@@ -138,10 +138,10 @@ module.exports = function ({ variables, packet, direction, accumulators, paramet
             // Positional arguments are simplified, less analysis because special
             // features are indicated by named functions.
             if (inline.properties.length == 0) {
-                const args = [
+                const args = inline.vargs.concat([
                     $_, packet.name, variables.i ? '$i' : '[]', util.inspect(path.split('.')), util.inspect(direction)
-                ].slice(0, inline.arity).join(', ')
-                if (inline.defaulted[0] == 0) {
+                ]).slice(0, inline.arity).join(', ')
+                if (~inline.defaulted.indexOf(inline.vargs.length)) {
                     inlined.push($(`
                         ; (`, inline.source, `)(${$_})
                     `))

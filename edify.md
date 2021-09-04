@@ -76,7 +76,7 @@ Proof `okay` function to assert out statements in the readme. A Proof unit test
 generally looks like this.
 
 ```javascript
-//{ "code": { "tests": 91 }, "text": { "tests": 4  } }
+//{ "code": { "tests": 93 }, "text": { "tests": 4  } }
 require('proof')(%(tests)d, async okay => {
     //{ "include": "test", "mode": "code" }
     //{ "include": "testDisplay", "mode": "text" }
@@ -1478,6 +1478,8 @@ you.)
 
 ### Assertions
 
+**TODO** Needs examples of failed assertions.
+
 We can also perform inline assertions. You specify an assertion the same way you
 specify a transformation. You wrap your definition in an array.
 A pre-serialization assertion is a function within an array in the element
@@ -1589,6 +1591,33 @@ You can use named arguments to declare an assertion function.
         value: 1
     }
     test('assertion-named', definition, object, [
+        0x0, 0x1
+    ], { require: { assert: 'assert' } })
+}
+```
+
+### Assertion and Transformation Arguments
+
+You can pass arguments to assertions and transforms. Any value in the array that
+follows the function that is not itself a `function` is considered an argument
+to the function. The arguments are passed in the order in which they are
+specified preceding the immediate property value.
+
+In the following definition the function is followed by a `number` argument
+which is passed as the first parameter to the function in serializer or parser.
+
+```javascript
+//{ "unblock": true, "name": "test" }
+{
+    const definition = {
+        object: {
+            value: [[[ (max, $_ = 0) => assert($_ < max, `value excedes ${max}`), 1024 ]], 16 ]
+        }
+    }
+    const object = {
+        value: 1
+    }
+    test('assertion-parameter', definition, object, [
         0x0, 0x1
     ], { require: { assert: 'assert' } })
 }

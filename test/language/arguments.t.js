@@ -1,4 +1,4 @@
-require('proof')(16, okay => {
+require('proof')(17, okay => {
     const args = require('../../arguments')
 
     class Foo {
@@ -117,4 +117,13 @@ require('proof')(16, okay => {
         arity: 1,
         vargs: [ 1 ]
     }, 'vargs function')
+    // TODO Assert that argument is provided when not beginning with dollar
+    // under or the name of the field.
+    okay(args([ (max, $_ = 0) => $_, 10 ]), {
+        defaulted: [ 1 ],
+        properties: [],
+        source: '(max, $_ = 0) => $_',
+        arity: 2,
+        vargs: [ 10 ]
+    }, 'defaulted with arguments')
 })

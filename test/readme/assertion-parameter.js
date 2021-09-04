@@ -1,9 +1,11 @@
 const sizeOf = {
     object: function () {
+        const assert = require('assert')
+
         return function (object) {
             let $start = 0
 
-            $start += 4
+            $start += 2
 
             return $start
         }
@@ -13,16 +15,15 @@ const sizeOf = {
 const serializer = {
     all: {
         object: function () {
+            const assert = require('assert')
+
             return function (object, $buffer, $start) {
                 let $$ = []
 
-                $buffer[$start++] = object.mask >>> 8 & 0xff
-                $buffer[$start++] = object.mask & 0xff
+                ; ((max, $_ = 0) => assert($_ < max, `value excedes ${max}`))(object.value)
 
-                $$[0] = (($_, $) => $_ ^ $.mask)(object.value, object)
-
-                $buffer[$start++] = $$[0] >>> 8 & 0xff
-                $buffer[$start++] = $$[0] & 0xff
+                $buffer[$start++] = object.value >>> 8 & 0xff
+                $buffer[$start++] = object.value & 0xff
 
                 return { start: $start, serialize: null }
             }
@@ -30,6 +31,8 @@ const serializer = {
     },
     inc: {
         object: function () {
+            const assert = require('assert')
+
             return function (object, $step = 0, $$ = []) {
                 let $_, $bite
 
@@ -37,34 +40,18 @@ const serializer = {
                     switch ($step) {
                     case 0:
 
-                        $bite = 1
-                        $_ = object.mask
+                        ; ((max, $_ = 0) => assert($_ < max, `value excedes ${max}`))(object.value)
 
                     case 1:
 
-                        while ($bite != -1) {
-                            if ($start == $end) {
-                                $step = 1
-                                return { start: $start, serialize: $serialize }
-                            }
-                            $buffer[$start++] = $_ >>> $bite * 8 & 0xff
-                            $bite--
-                        }
+                        $bite = 1
+                        $_ = object.value
 
                     case 2:
 
-                        $$[0] = (($_, $) => $_ ^ $.mask)(object.value, object)
-
-                    case 3:
-
-                        $bite = 1
-                        $_ = $$[0]
-
-                    case 4:
-
                         while ($bite != -1) {
                             if ($start == $end) {
-                                $step = 4
+                                $step = 2
                                 return { start: $start, serialize: $serialize }
                             }
                             $buffer[$start++] = $_ >>> $bite * 8 & 0xff
@@ -83,21 +70,18 @@ const serializer = {
 const parser = {
     all: {
         object: function () {
+            const assert = require('assert')
+
             return function ($buffer, $start) {
                 let object = {
-                    mask: 0,
                     value: 0
                 }
-
-                object.mask =
-                    $buffer[$start++] << 8 |
-                    $buffer[$start++]
 
                 object.value =
                     $buffer[$start++] << 8 |
                     $buffer[$start++]
 
-                object.value = (($_, $) => $_ ^ $.mask)(object.value, object)
+                ; ((max, $_ = 0) => assert($_ < max, `value excedes ${max}`))(object.value)
 
                 return object
             }
@@ -105,6 +89,8 @@ const parser = {
     },
     inc: {
         object: function () {
+            const assert = require('assert')
+
             return function (object, $step = 0) {
                 let $_, $bite
 
@@ -113,7 +99,6 @@ const parser = {
                     case 0:
 
                         object = {
-                            mask: 0,
                             value: 0
                         }
 
@@ -133,27 +118,9 @@ const parser = {
                             $bite--
                         }
 
-                        object.mask = $_
-
-                    case 3:
-
-                        $_ = 0
-                        $bite = 1
-
-                    case 4:
-
-                        while ($bite != -1) {
-                            if ($start == $end) {
-                                $step = 4
-                                return { start: $start, object: null, parse: $parse }
-                            }
-                            $_ += $buffer[$start++] << $bite * 8 >>> 0
-                            $bite--
-                        }
-
                         object.value = $_
 
-                        object.value = (($_, $) => $_ ^ $.mask)(object.value, object)
+                        ; ((max, $_ = 0) => assert($_ < max, `value excedes ${max}`))(object.value)
 
                     }
 
@@ -176,17 +143,14 @@ module.exports = {
                         return function ($buffer, $start, $end) {
                             let $$ = []
 
-                            if ($end - $start < 2 + 2) {
+                            if ($end - $start < 2) {
                                 return $incremental.object(object, 0, $$)($buffer, $start, $end)
                             }
 
-                            $buffer[$start++] = object.mask >>> 8 & 0xff
-                            $buffer[$start++] = object.mask & 0xff
+                            ; ((max, $_ = 0) => assert($_ < max, `value excedes ${max}`))(object.value)
 
-                            $$[0] = (($_, $) => $_ ^ $.mask)(object.value, object)
-
-                            $buffer[$start++] = $$[0] >>> 8 & 0xff
-                            $buffer[$start++] = $$[0] & 0xff
+                            $buffer[$start++] = object.value >>> 8 & 0xff
+                            $buffer[$start++] = object.value & 0xff
 
                             return { start: $start, serialize: null }
                         }
@@ -204,23 +168,18 @@ module.exports = {
                     return function () {
                         return function ($buffer, $start, $end) {
                             let object = {
-                                mask: 0,
                                 value: 0
                             }
 
-                            if ($end - $start < 4) {
+                            if ($end - $start < 2) {
                                 return $incremental.object(object, 1)($buffer, $start, $end)
                             }
-
-                            object.mask =
-                                $buffer[$start++] << 8 |
-                                $buffer[$start++]
 
                             object.value =
                                 $buffer[$start++] << 8 |
                                 $buffer[$start++]
 
-                            object.value = (($_, $) => $_ ^ $.mask)(object.value, object)
+                            ; ((max, $_ = 0) => assert($_ < max, `value excedes ${max}`))(object.value)
 
                             return { start: $start, object: object, parse: null }
                         }

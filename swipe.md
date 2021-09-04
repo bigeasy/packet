@@ -1,24 +1,3 @@
-### Assertion and Transformation Arguments
-
-You can pass arguments to assertions and transforms. Any value in the array that
-follows the function that is not itself a `function` is considered an argument
-to the function. The arguments are passed in the order in which they are
-specified preceding the immediate property value.
-
-In the following definition the function is followed by a `number` argument
-which is passed as the first parameter to the function in serializer or parser.
-
-```javascript
-//{ "name": "ignore" }
-define({
-    packet: {
-        value: [[[ (max, $_ = 0) => assert($_ < max, `value excedes ${max}`), 1024 ]], 16 ]
-    }
-}, {
-    require: { assert: require('assert') }
-})
-```
-
 This is useful when defining a function that you use more than once in your
 definition.
 

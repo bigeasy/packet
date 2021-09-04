@@ -71,7 +71,7 @@
 // Proof `okay` function to assert out statements in the readme. A Proof unit test
 // generally looks like this.
 
-require('proof')(91, async okay => {
+require('proof')(93, async okay => {
     // The `--allow-natives-syntax` switch allows us to test that when we parse we are
     // creating objects that have JavaScript "fast properties."
     //
@@ -1299,6 +1299,8 @@ require('proof')(91, async okay => {
 
     // ### Assertions
     //
+    // **TODO** Needs examples of failed assertions.
+    //
     // We can also perform inline assertions. You specify an assertion the same way you
     // specify a transformation. You wrap your definition in an array.
     // A pre-serialization assertion is a function within an array in the element
@@ -1399,6 +1401,30 @@ require('proof')(91, async okay => {
             value: 1
         }
         test('assertion-named', definition, object, [
+            0x0, 0x1
+        ], { require: { assert: 'assert' } })
+    }
+
+    // ### Assertion and Transformation Arguments
+    //
+    // You can pass arguments to assertions and transforms. Any value in the array that
+    // follows the function that is not itself a `function` is considered an argument
+    // to the function. The arguments are passed in the order in which they are
+    // specified preceding the immediate property value.
+    //
+    // In the following definition the function is followed by a `number` argument
+    // which is passed as the first parameter to the function in serializer or parser.
+
+    {
+        const definition = {
+            object: {
+                value: [[[ (max, $_ = 0) => assert($_ < max, `value excedes ${max}`), 1024 ]], 16 ]
+            }
+        }
+        const object = {
+            value: 1
+        }
+        test('assertion-parameter', definition, object, [
             0x0, 0x1
         ], { require: { assert: 'assert' } })
     }
