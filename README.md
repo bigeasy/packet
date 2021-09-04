@@ -1473,3 +1473,26 @@ test('assertion-parameter', definition, object, [
     0x0, 0x1
 ], { require: { assert: 'assert' } })
 ```
+
+This is useful when defining a function that you use more than once in your
+definition.
+
+```javascript
+{
+    const max = (max, $_ = 0) => assert($_ < max, `value excedes ${max}`)
+
+    const definition = {
+        object: {
+            length: [[[ max, 1024 ]], 16 ],
+            type: [[[ max, 12 ]], 8 ]
+        }
+    }
+    const object = {
+        length: 256,
+        type: 3
+    }
+    test('assertion-parameter-reuse', definition, object, [
+        0x1, 0x0, 0x3
+    ], { require: { assert: 'assert' } })
+}
+```

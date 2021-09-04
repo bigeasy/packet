@@ -71,7 +71,7 @@
 // Proof `okay` function to assert out statements in the readme. A Proof unit test
 // generally looks like this.
 
-require('proof')(93, async okay => {
+require('proof')(95, async okay => {
     // The `--allow-natives-syntax` switch allows us to test that when we parse we are
     // creating objects that have JavaScript "fast properties."
     //
@@ -1426,6 +1426,27 @@ require('proof')(93, async okay => {
         }
         test('assertion-parameter', definition, object, [
             0x0, 0x1
+        ], { require: { assert: 'assert' } })
+    }
+
+    // This is useful when defining a function that you use more than once in your
+    // definition.
+
+    {
+        const max = (max, $_ = 0) => assert($_ < max, `value excedes ${max}`)
+
+        const definition = {
+            object: {
+                length: [[[ max, 1024 ]], 16 ],
+                type: [[[ max, 12 ]], 8 ]
+            }
+        }
+        const object = {
+            length: 256,
+            type: 3
+        }
+        test('assertion-parameter-reuse', definition, object, [
+            0x1, 0x0, 0x3
         ], { require: { assert: 'assert' } })
     }
 })

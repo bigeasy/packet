@@ -1,19 +1,3 @@
-This is useful when defining a function that you use more than once in your
-definition.
-
-```javascript
-//{ "name": "ignore" }
-const max = (max, $_ = 0) => assert($_ < max, `value excedes ${max}`)
-
-define({
-    packet: {
-        length: [[[ max, 1024 ]], 16 ],
-        type: [[[ max, 12 ]], 8 ]
-    }
-}, {
-    require: { assert: require('assert') }
-})
-```
 
 When using named arguments, the argument values are assigned to the named
 parameters preceding the first variable that is defined in the current scope.

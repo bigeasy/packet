@@ -76,7 +76,7 @@ Proof `okay` function to assert out statements in the readme. A Proof unit test
 generally looks like this.
 
 ```javascript
-//{ "code": { "tests": 93 }, "text": { "tests": 4  } }
+//{ "code": { "tests": 95 }, "text": { "tests": 4  } }
 require('proof')(%(tests)d, async okay => {
     //{ "include": "test", "mode": "code" }
     //{ "include": "testDisplay", "mode": "text" }
@@ -1619,6 +1619,30 @@ which is passed as the first parameter to the function in serializer or parser.
     }
     test('assertion-parameter', definition, object, [
         0x0, 0x1
+    ], { require: { assert: 'assert' } })
+}
+```
+
+This is useful when defining a function that you use more than once in your
+definition.
+
+```javascript
+//{ "name": "test" }
+{
+    const max = (max, $_ = 0) => assert($_ < max, `value excedes ${max}`)
+
+    const definition = {
+        object: {
+            length: [[[ max, 1024 ]], 16 ],
+            type: [[[ max, 12 ]], 8 ]
+        }
+    }
+    const object = {
+        length: 256,
+        type: 3
+    }
+    test('assertion-parameter-reuse', definition, object, [
+        0x1, 0x0, 0x3
     ], { require: { assert: 'assert' } })
 }
 ```
