@@ -71,7 +71,7 @@
 // Proof `okay` function to assert out statements in the readme. A Proof unit test
 // generally looks like this.
 
-require('proof')(89, async okay => {
+require('proof')(91, async okay => {
     // The `--allow-natives-syntax` switch allows us to test that when we parse we are
     // creating objects that have JavaScript "fast properties."
     //
@@ -1386,6 +1386,22 @@ require('proof')(89, async okay => {
             0x0, 0x1
         ], { require: { assert: 'assert' } })
     }
+
+    // You can use named arguments to declare an assertion function.
+
+    {
+        const definition = {
+            object: {
+                value: [[[ ({ $_ = 0 }) => assert($_ < 1000, 'excedes max value') ]], 16 ]
+            }
+        }
+        const object = {
+            value: 1
+        }
+        test('assertion-named', definition, object, [
+            0x0, 0x1
+        ], { require: { assert: 'assert' } })
+    }
 })
 
 // You can run this unit test yourself to see the output from the various
@@ -1406,17 +1422,4 @@ require('proof')(89, async okay => {
     }, {
         require: { ip: '../ip' }
     })
-}
-
-// You can use named arguments to declare an assertion function.
-
-{
-    const definition = {
-        object: {
-            value: [[[ ({ $_ = 0 }) => assert($_ < 1000, 'excedes max value') ]], 16 ]
-        }
-    }
-    const required = {
-        assert: require('assert')
-    }
 }

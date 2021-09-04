@@ -1435,14 +1435,15 @@ test('assertion-mirrored', definition, object, [
 You can use named arguments to declare an assertion function.
 
 ```javascript
-{
-    const definition = {
-        object: {
-            value: [[[ ({ $_ = 0 }) => assert($_ < 1000, 'excedes max value') ]], 16 ]
-        }
-    }
-    const required = {
-        assert: require('assert')
+const definition = {
+    object: {
+        value: [[[ ({ $_ = 0 }) => assert($_ < 1000, 'excedes max value') ]], 16 ]
     }
 }
+const object = {
+    value: 1
+}
+test('assertion-named', definition, object, [
+    0x0, 0x1
+], { require: { assert: 'assert' } })
 ```

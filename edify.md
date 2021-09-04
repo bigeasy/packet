@@ -76,7 +76,7 @@ Proof `okay` function to assert out statements in the readme. A Proof unit test
 generally looks like this.
 
 ```javascript
-//{ "code": { "tests": 89 }, "text": { "tests": 4  } }
+//{ "code": { "tests": 91 }, "text": { "tests": 4  } }
 require('proof')(%(tests)d, async okay => {
     //{ "include": "test", "mode": "code" }
     //{ "include": "testDisplay", "mode": "text" }
@@ -1578,15 +1578,18 @@ surrounding the function in an additional array.
 You can use named arguments to declare an assertion function.
 
 ```javascript
-//{ "name": "ignore" }
+//{ "unblock": true, "name": "test" }
 {
     const definition = {
         object: {
             value: [[[ ({ $_ = 0 }) => assert($_ < 1000, 'excedes max value') ]], 16 ]
         }
     }
-    const required = {
-        assert: require('assert')
+    const object = {
+        value: 1
     }
+    test('assertion-named', definition, object, [
+        0x0, 0x1
+    ], { require: { assert: 'assert' } })
 }
 ```
