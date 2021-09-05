@@ -60,6 +60,7 @@ module.exports = function ({ variables, packet, direction, accumulators, paramet
         }
         const properties = {}, name = path.split('.').pop()
         let type = 'transform'
+        const vargs = source.vargs.slice()
         for (const property of source.properties) {
             if (property == '$_' || property == name) {
                 if (source.defaulted.includes(property)) {
@@ -86,6 +87,8 @@ module.exports = function ({ variables, packet, direction, accumulators, paramet
             } else if (property == '$end') {
                 is.buffered = true
                 properties[property] = '$start'
+            } else {
+                properties[property] = vargs.shift()
             }
         }
         return {

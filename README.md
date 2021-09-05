@@ -1478,21 +1478,69 @@ This is useful when defining a function that you use more than once in your
 definition.
 
 ```javascript
-{
-    const max = (max, $_ = 0) => assert($_ < max, `value excedes ${max}`)
+const max = (max, $_ = 0) => assert($_ < max, `value excedes ${max}`)
 
+const definition = {
+    object: {
+        length: [[[ max, 1024 ]], 16 ],
+        type: [[[ max, 12 ]], 8 ]
+    }
+}
+const object = {
+    length: 256,
+    type: 3
+}
+test('assertion-parameter-reuse', definition, object, [
+    0x1, 0x0, 0x3
+], { require: { assert: 'assert' } })
+```
+
+When using named arguments, the argument values are assigned to the named
+parameters preceding the first variable that is defined in the current scope.
+That is, the first occurrence of a variable name that is either the name of a
+property in the current path or a system name beginning with `$` dollar sign.
+
+In the following definition the first argument to the `max` function will be
+assigned to the `max` named argument. The positional argument mapping stops at
+the `$path` parameter since it is a system parameter beginning with `$` dollar
+sign. The `'oops'` parameter of the `max` function call for the `type` property
+will be ignored.
+
+```javascript
+const max = ({ max, $path, $_ = 0 }) => assert($_ < max, `${$path.pop()} excedes ${max}`)
+
+const definition = {
+    object: {
+        length: [[[ max, 1024 ]], 16 ],
+        type: [[[ max, 12, 'oops' ]], 8 ]
+    }
+}
+const object = {
+    length: 256,
+    type: 3
+}
+test('assertion-parameter-named-reuse', definition, object, [
+    0x1, 0x0, 0x3
+], { require: { assert: 'assert' } })
+```
+
+### Terminated Arrays
+
+In the following example, we terminate the array when we encounter a `0` value.
+The `0` is not included in the array result.
+
+```javascript
+{
     const definition = {
         object: {
-            length: [[[ max, 1024 ]], 16 ],
-            type: [[[ max, 12 ]], 8 ]
+            array: [[ 8 ], 0x0 ]
         }
     }
     const object = {
-        length: 256,
-        type: 3
+        array: [ 0xab, 0xcd ]
     }
-    test('assertion-parameter-reuse', definition, object, [
-        0x1, 0x0, 0x3
+    test('terminated', definition, object, [
+        0xab, 0xcd, 0x0
     ], { require: { assert: 'assert' } })
 }
 ```

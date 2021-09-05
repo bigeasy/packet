@@ -1,110 +1,4 @@
 
-When using named arguments, the argument values are assigned to the named
-parameters preceding the first variable that is defined in the current scope.
-That is, the first occurrence of a variable name that is either the name of a
-property in the current path or a system name beginning with `$` dollar sign.
-
-In the following definition the first argument to the `max` function will be
-assigned to the `max` named argument. The positional argument mapping stops at
-the `$path` parameter since it is a system parameter beginning with `$` dollar
-sign. The `'oops'` parameter of the `max` function call for the `type` property
-will be ignored.
-
-```javascript
-//{ "name": "ignore" }
-const max = ({ max, $path, $_ = 0 }) => assert($_ < max, `${$path.pop()} excedes ${max}`)
-
-define({
-    packet: {
-        length: [[[ max, 1024 ]], 16 ],
-        type: [[[ max, 12, 'oops' ]], 8 ]
-    }
-}, {
-    require: { assert: require('assert') }
-})
-```
-
-In the following definition the first argument to the `max` function will be
-assigned to the `max` named argument. The positional argument mapping stops at
-the `packet` parameter since it is the name of a property &mdash; actually the
-name of the root object &mdash; in the current path.
-
-```javascript
-//{ "name": "ignore" }
-function max ({ max, packet, $path, $_ = 0 }) {
-    assert($_ < max, `${$path.pop()} excedes ${max} in packet ${packet.series}`)
-}
-
-define({
-    packet: {
-        series: [ 32 ],
-        length: [[[ max, 1024 ]], 16 ],
-        type: [[[ max, 12, 'oops' ]], 8 ]
-    }
-}, {
-    require: { assert: require('assert') }
-})
-```
-
-Note that you cannot use closures to define functions because we're using the
-function source in the seiralizer and parser generation so the encoded value is
-lost. You'll end up with global variables with undefined values.
-
-You can reduce the verbosity of your code by creating functions that declare
-functions for transforms or assertions that you perform on more than one . The
-function declaration function will return a function that will be included in
-the serializer or parser. If you give it a meaningful name
-
-```javascript
-//{ "name": "ignore" }
-define({
-    packet: {
-        value [[ ({ value = 0 })
-    }
-}, {
-    require: { assert: 'assert' }
-})
-```
-
-If you want to perform an assertion you can do so without returning a value
-Transforms expect a return value and use that value for serialization or
-assignment to the parsed object. You won't want to
-
-If you want to perform an assertion and not
-return a value you can
-
-You can specify a function to be performed both before serializtion and after
-parsing by surrounding the function with an additional set of parenthesis.
-
-```javascript
-//{ "name": "ignore" }
-define({
-    packet: {
-        value [[[ value => ~value ]]], 32 ]
-    }
-})
-```
-
-These are more useful for running checksums and counting bytes, but since these
-operations require accumuators of some sort, we'll
-
-You are also able to apply functions to the underlying `Buffer` during parse and
-serialization. See Checksums and Running Calculations.
-
-### Terminated Arrays
-
-In the following example, we terminate the array when we encounter a `0` value.
-The `0` is not included in the array result.
-
-```javascript
-//{ "name": "ignore" }
-define({
-    packet: {
-        array: [[ 8 ], 0x0 ]
-    }
-})
-```
-
 #### Multi-byte Terminators
 
 You can specify multi-byte terminators by specifying the multi-byte terminator
@@ -440,3 +334,50 @@ define({
 })
 // *TODO*: API call to encode string ascii or something.
 ```
+
+## Orphaned
+
+Note that you cannot use closures to define functions because we're using the
+function source in the seiralizer and parser generation so the encoded value is
+lost. You'll end up with global variables with undefined values.
+
+You can reduce the verbosity of your code by creating functions that declare
+functions for transforms or assertions that you perform on more than one . The
+function declaration function will return a function that will be included in
+the serializer or parser. If you give it a meaningful name
+
+```javascript
+//{ "name": "ignore" }
+define({
+    packet: {
+        value [[ ({ value = 0 })
+    }
+}, {
+    require: { assert: 'assert' }
+})
+```
+
+If you want to perform an assertion you can do so without returning a value
+Transforms expect a return value and use that value for serialization or
+assignment to the parsed object. You won't want to
+
+If you want to perform an assertion and not
+return a value you can
+
+You can specify a function to be performed both before serializtion and after
+parsing by surrounding the function with an additional set of parenthesis.
+
+```javascript
+//{ "name": "ignore" }
+define({
+    packet: {
+        value [[[ value => ~value ]]], 32 ]
+    }
+})
+```
+
+These are more useful for running checksums and counting bytes, but since these
+operations require accumuators of some sort, we'll
+
+You are also able to apply functions to the underlying `Buffer` during parse and
+serialization. See Checksums and Running Calculations.
