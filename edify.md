@@ -1727,3 +1727,37 @@ The `0` is not included in the array result.
     ])
 }
 ```
+
+### String Value Maps
+
+**TODO**: Need first draft.
+
+```javascript
+//{ "name": "test" }
+{
+    const definition = {
+        object: {
+            header: [{ type: [ 8, [ 'off', 'on' ] ] }, 8 ]
+        }
+    }
+    const object = {
+        header: {
+            type: 'on'
+        }
+    }
+    test('string-value-map', definition, object, [
+        0x1
+    ])
+}
+```
+
+```javascript
+//{ "name": "ignore" }
+{
+    const description = {
+        packet: {
+            type: [ 8, { 0: 'off', 1: 'on', null: 'unknown' } ]
+        }
+    }
+}
+```

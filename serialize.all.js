@@ -374,7 +374,8 @@ function inquisition (path, fields, $i = 0, $I = 0) {
     return checked
 }
 
-function generate (packet, { require = null, bff, chk }) {
+// TODO lookup just got weird, normalize it across packetize and cycle.
+function generate (packet, { require = null, bff, chk, lookup }) {
     let $step = 0, $i = -1, $I = -1, $$ = -1
 
     const { variables, parameters, accumulators } = declare(packet)
@@ -912,7 +913,7 @@ function generate (packet, { require = null, bff, chk }) {
         if (bff || chk) {
             signature.unshift(packet.name)
             return $(`
-                function () {
+                function (${lookup ? '$lookup' : ''}) {
                     `, requires, -1, `
 
                     return function (`, signature.join(', '), `) {
@@ -924,13 +925,13 @@ function generate (packet, { require = null, bff, chk }) {
                             return { start: $start, serialize: null }
                         }
                     }
-                } ()
+                } (${lookup})
             `)
         }
 
         signature.unshift(packet.name, '$buffer', '$start')
         return $(`
-            function () {
+            function (${lookup ? '$lookup' : ''}) {
                 `, requires, -1, `
 
                 return function (`, signature.join(', '), `) {
@@ -940,7 +941,7 @@ function generate (packet, { require = null, bff, chk }) {
 
                     return { start: $start, serialize: null }
                 }
-            } ()
+            } (${lookup})
         `)
     }
 
@@ -949,13 +950,13 @@ function generate (packet, { require = null, bff, chk }) {
 
 module.exports = function (definition, options = {}) {
     const expanded = expand(JSON.parse(JSON.stringify(definition)))
-    debugger
     const source = expanded.map(function (packet) {
         if (options.chk) {
             packet.fields = inquisition(packet.name, packet.fields)
         } else if (options.bff) {
             packet.fields = checkpoints(packet.name, packet.fields)
         }
+        console.log('???', options)
         const source = generate(packet, options)
         return $(`
             ${packet.name}: `, source, `

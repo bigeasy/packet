@@ -1568,3 +1568,35 @@ test('terminated-multibyte', definition, object, [
     0xab, 0xcd, 0xd, 0xa
 ])
 ```
+
+### String Value Maps
+
+**TODO**: Need first draft.
+
+```javascript
+{
+    const definition = {
+        object: {
+            header: [{ type: [ 8, [ 'off', 'on' ] ] }, 8 ]
+        }
+    }
+    const object = {
+        header: {
+            type: 'on'
+        }
+    }
+    test('string-value-map', definition, object, [
+        0x1
+    ])
+}
+```
+
+```javascript
+{
+    const description = {
+        packet: {
+            type: [ 8, { 0: 'off', 1: 'on', null: 'unknown' } ]
+        }
+    }
+}
+```
