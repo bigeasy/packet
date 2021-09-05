@@ -1495,7 +1495,7 @@ require('proof')(101, async okay => {
         }
         test('terminated', definition, object, [
             0xab, 0xcd, 0x0
-        ], { require: { assert: 'assert' } })
+        ])
     }
 
     // #### Multi-byte Terminators
@@ -1519,7 +1519,7 @@ require('proof')(101, async okay => {
         }
         test('terminated-multibyte', definition, object, [
             0xab, 0xcd, 0xd, 0xa
-        ], { require: { assert: 'assert' } })
+        ])
     }
 })
 

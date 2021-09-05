@@ -1,7 +1,5 @@
 const sizeOf = {
     object: function () {
-        const assert = require('assert')
-
         return function (object) {
             let $start = 0
 
@@ -15,8 +13,6 @@ const sizeOf = {
 const serializer = {
     all: {
         object: function () {
-            const assert = require('assert')
-
             return function (object, $buffer, $start) {
                 let $i = []
 
@@ -33,8 +29,6 @@ const serializer = {
     },
     inc: {
         object: function () {
-            const assert = require('assert')
-
             return function (object, $step = 0, $i = []) {
                 let $_, $bite
 
@@ -103,8 +97,6 @@ const serializer = {
 const parser = {
     all: {
         object: function () {
-            const assert = require('assert')
-
             return function ($buffer, $start) {
                 let $i = []
 
@@ -133,8 +125,6 @@ const parser = {
     },
     inc: {
         object: function () {
-            const assert = require('assert')
-
             return function (object, $step = 0, $i = []) {
                 let $length = 0
 

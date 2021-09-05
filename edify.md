@@ -1697,7 +1697,7 @@ The `0` is not included in the array result.
     }
     test('terminated', definition, object, [
         0xab, 0xcd, 0x0
-    ], { require: { assert: 'assert' } })
+    ])
 }
 ```
 
@@ -1724,6 +1724,6 @@ The `0` is not included in the array result.
     }
     test('terminated-multibyte', definition, object, [
         0xab, 0xcd, 0xd, 0xa
-    ], { require: { assert: 'assert' } })
+    ])
 }
 ```
