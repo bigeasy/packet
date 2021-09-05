@@ -1544,3 +1544,27 @@ The `0` is not included in the array result.
     ], { require: { assert: 'assert' } })
 }
 ```
+
+#### Multi-byte Terminators
+
+You can specify multi-byte terminators by specifying the multi-byte terminator
+byte by byte in the end of the definition array.
+
+In the following example, we terminate the array when we encounter a `0xa` value
+followed by a `0xd` value, carriage return followed by line feed.
+
+The `0` is not included in the array result.
+
+```javascript
+const definition = {
+    object: {
+        array: [[ 8 ], 0xd, 0xa ]
+    }
+}
+const object = {
+    array: [ 0xab, 0xcd ]
+}
+test('terminated-multibyte', definition, object, [
+    0xab, 0xcd, 0xd, 0xa
+], { require: { assert: 'assert' } })
+```

@@ -1,23 +1,4 @@
 
-#### Multi-byte Terminators
-
-You can specify multi-byte terminators by specifying the multi-byte terminator
-byte by byte in the end of the definition array.
-
-In the following example, we terminate the array when we encounter a `0xa` value
-followed by a `0xd` value, carriage return followed by line feed.
-
-The `0` is not included in the array result.
-
-```javascript
-//{ "name": "ignore" }
-define({
-    packet: {
-        array: [[ 8 ], 0xd, 0xa ]
-    }
-})
-```
-
 #### Calculated Terminators
 
 In the following example, we terminate when the result ends with a new line.
