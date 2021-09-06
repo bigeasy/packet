@@ -71,7 +71,7 @@
 // Proof `okay` function to assert out statements in the readme. A Proof unit test
 // generally looks like this.
 
-require('proof')(103, async okay => {
+require('proof')(105, async okay => {
     // The `--allow-natives-syntax` switch allows us to test that when we parse we are
     // creating objects that have JavaScript "fast properties."
     //
@@ -1541,6 +1541,36 @@ require('proof')(103, async okay => {
             0x1
         ])
     }
+
+    // ### Floating Point Values
+    //
+    // Packet supports serializing and parsing IEEE754 floating point numbers. This is
+    // the respsentation common to C.
+    //
+    // A floating point number is is specified by specifying the value as a floating
+    // the point number as `number` with the bit size repeated in the decimal digits of
+    // the number.
+    //
+    // **TODO** Values of `1.1` and `-1.5` are not serializing and restoring correctly.
+    // I can't remember if this is expected.
+
+    {
+        const definition = {
+            object: {
+                doubled: 64.64,
+                float: 32.32
+            }
+        }
+        const object = {
+            doubled: 1.2,
+            float: -1.5
+        }
+        test('float', definition, object, [
+            0x3f, 0xf3, 0x33, 0x33,
+            0x33, 0x33, 0x33, 0x33,
+            0xbf, 0xc0, 0x0, 0x0
+        ])
+    }
 })
 
 // You can run this unit test yourself to see the output from the various
@@ -1570,3 +1600,13 @@ require('proof')(103, async okay => {
         }
     }
 }
+
+// There are only two sizes of floating point number available, 64-bit and 32-bit.
+// These are based on the IEEE 754 standard. As of 2008, the standard defines a
+// [128-bit quad precision floating
+// point](https://en.wikipedia.org/wiki/Quadruple-precision_floating-point_format)
+// but the JavaScript `number` is itself a 64-bit IEEE 754 double-precision float,
+// so we'd have to introduce one of the big decimal libraries from NPM to support
+// it, so it's probably best you sort out a solution for your application using
+// inline functions, maybe serializing to a byte array or `BigInt`. If you
+// encounter at 128-bit number in the wild, I'd be curious. Please let me know.

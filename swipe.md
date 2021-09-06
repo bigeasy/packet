@@ -1,31 +1,4 @@
 
-### Floating Point Values
-
-Packet supports serializing and parsing IEEE754 floating point numbers. This is
-the respsentation common to C.
-
-A floating point number is is specified by specifying the value as a floating
-the point number as `number` with the bit size repeated in the decimal digits of
-the number.
-
-```javascript
-//{ "name": "ignore" }
-define({
-    double: 64.64,
-    float: 32.32
-})
-```
-
-There are only two sizes of floating point number available, 64-bit and 32-bit.
-These are based on the IEEE 754 standard. As of 2008, the standard defines a
-[128-bit quad precision floating
-point](https://en.wikipedia.org/wiki/Quadruple-precision_floating-point_format)
-but the JavaScript `number` is itself a 64-bit IEEE 754 double-precision float,
-so we'd have to introduce one of the big decimal libraries from NPM to support
-it, so it's probably best you sort out a solution for your application using
-inline functions, maybe serializing to a byte array or `BigInt`. If you
-encounter at 128-bit number in the wild, I'd be curious. Please let me know.
-
 ### Conditionals
 
 **TODO**: Need first draft.
