@@ -71,7 +71,7 @@
 // Proof `okay` function to assert out statements in the readme. A Proof unit test
 // generally looks like this.
 
-require('proof')(101, async okay => {
+require('proof')(103, async okay => {
     // The `--allow-natives-syntax` switch allows us to test that when we parse we are
     // creating objects that have JavaScript "fast properties."
     //

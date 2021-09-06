@@ -392,7 +392,7 @@ function inquisition (fields, $I = 0) {
     return checked
 }
 
-function generate (packet, { require, bff, chk, lookup }) {
+function generate (packet, { require, bff, chk, lookup = '' }) {
     let $i = -1, $I = -1, $step = 1, $sip = -1
 
     const { variables, accumulators, parameters } = declare(packet)

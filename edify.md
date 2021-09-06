@@ -76,7 +76,7 @@ Proof `okay` function to assert out statements in the readme. A Proof unit test
 generally looks like this.
 
 ```javascript
-//{ "code": { "tests": 101 }, "text": { "tests": 4  } }
+//{ "code": { "tests": 103 }, "text": { "tests": 4  } }
 require('proof')(%(tests)d, async okay => {
     //{ "include": "test", "mode": "code" }
     //{ "include": "testDisplay", "mode": "text" }
