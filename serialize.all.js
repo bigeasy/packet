@@ -374,8 +374,7 @@ function inquisition (path, fields, $i = 0, $I = 0) {
     return checked
 }
 
-// TODO lookup just got weird, normalize it across packetize and cycle.
-function generate (packet, { require = null, bff, chk, lookup = '' }) {
+function generate (packet, { require = null, bff, chk }) {
     let $step = 0, $i = -1, $I = -1, $$ = -1
 
     const { variables, parameters, accumulators } = declare(packet)
@@ -913,7 +912,7 @@ function generate (packet, { require = null, bff, chk, lookup = '' }) {
         if (bff || chk) {
             signature.unshift(packet.name)
             return $(`
-                function (${lookup ? '$lookup' : ''}) {
+                function () {
                     `, requires, -1, `
 
                     return function (`, signature.join(', '), `) {
@@ -925,13 +924,13 @@ function generate (packet, { require = null, bff, chk, lookup = '' }) {
                             return { start: $start, serialize: null }
                         }
                     }
-                } (${lookup || ''})
+                } ()
             `)
         }
 
         signature.unshift(packet.name, '$buffer', '$start')
         return $(`
-            function (${lookup ? '$lookup' : ''}) {
+            function () {
                 `, requires, -1, `
 
                 return function (`, signature.join(', '), `) {
@@ -941,7 +940,7 @@ function generate (packet, { require = null, bff, chk, lookup = '' }) {
 
                     return { start: $start, serialize: null }
                 }
-            } (${lookup})
+            } ()
         `)
     }
 

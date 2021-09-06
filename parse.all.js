@@ -392,7 +392,7 @@ function inquisition (fields, $I = 0) {
     return checked
 }
 
-function generate (packet, { require, bff, chk, lookup = '' }) {
+function generate (packet, { require, bff, chk }) {
     let $i = -1, $I = -1, $step = 1, $sip = -1
 
     const { variables, accumulators, parameters } = declare(packet)
@@ -1115,7 +1115,7 @@ function generate (packet, { require, bff, chk, lookup = '' }) {
 
         signature.unshift('$buffer', '$start')
         return $(`
-            function (${lookup ? '$lookup' : ''}) {
+            function () {
                 `, requires, -1, `
 
                 return function (`, signature.join(', '), `) {
@@ -1127,7 +1127,7 @@ function generate (packet, { require, bff, chk, lookup = '' }) {
 
                     return ${packet.name}
                 }
-            } (${lookup})
+            } ()
         `)
     }
 
