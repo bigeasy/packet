@@ -1,18 +1,4 @@
 
-### Switch Conditionals
-
-**TODO**: Need first draft. Also, example is wrong.
-
-```javascript
-//{ "name": "ignore" }
-define ({
-    packet: {
-        type: [ 8, [ 'off', 'on' ] ],
-        value: [ $ = $.type, { off: 8, on: 16 } ]
-    }
-})
-```
-
 ### References to Paritals
 
 **TODO**: First draft done.

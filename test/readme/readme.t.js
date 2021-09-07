@@ -71,7 +71,7 @@
 // Proof `okay` function to assert out statements in the readme. A Proof unit test
 // generally looks like this.
 
-require('proof')(109, async okay => {
+require('proof')(111, async okay => {
     // The `--allow-natives-syntax` switch allows us to test that when we parse we are
     // creating objects that have JavaScript "fast properties."
     //
@@ -1645,6 +1645,32 @@ require('proof')(109, async okay => {
         }
         test('conditional-packed', definition, object, [
             0x2f, 0x0, 0x0, 0x1
+        ])
+    }
+
+    // ### Switch Conditionals
+    //
+    // **TODO**: Need first draft. Also, example is wrong.
+
+    {
+        const definition = {
+            object: {
+                type: 8,
+                value: [
+                    ($) => $.type, [
+                        { $_: 1 },          8,
+                        { $_: [ 2, 3 ] },   16,
+                        { $_: [] },         32
+                    ]
+                ]
+            }
+        }
+        const object = {
+            type: 2,
+            value: 1
+        }
+        test('switch', definition, object, [
+            0x2, 0x0, 0x1
         ])
     }
 })

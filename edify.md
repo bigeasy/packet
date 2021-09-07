@@ -76,7 +76,7 @@ Proof `okay` function to assert out statements in the readme. A Proof unit test
 generally looks like this.
 
 ```javascript
-//{ "code": { "tests": 109 }, "text": { "tests": 4  } }
+//{ "code": { "tests": 111 }, "text": { "tests": 4  } }
 require('proof')(%(tests)d, async okay => {
     //{ "include": "test", "mode": "code" }
     //{ "include": "testDisplay", "mode": "text" }
@@ -1873,6 +1873,35 @@ You can use conditionals in bit-packed integers as well.
     }
     test('conditional-packed', definition, object, [
         0x2f, 0x0, 0x0, 0x1
+    ])
+}
+```
+
+### Switch Conditionals
+
+**TODO**: Need first draft. Also, example is wrong.
+
+```javascript
+//{ "unblock": true, "name": "test" }
+{
+    const definition = {
+        object: {
+            type: 8,
+            value: [
+                ($) => $.type, [
+                    { $_: 1 },          8,
+                    { $_: [ 2, 3 ] },   16,
+                    { $_: [] },         32
+                ]
+            ]
+        }
+    }
+    const object = {
+        type: 2,
+        value: 1
+    }
+    test('switch', definition, object, [
+        0x2, 0x0, 0x1
     ])
 }
 ```

@@ -1710,3 +1710,29 @@ You can use conditionals in bit-packed integers as well.
     ])
 }
 ```
+
+### Switch Conditionals
+
+**TODO**: Need first draft. Also, example is wrong.
+
+```javascript
+const definition = {
+    object: {
+        type: 8,
+        value: [
+            ($) => $.type, [
+                { $_: 1 },          8,
+                { $_: [ 2, 3 ] },   16,
+                { $_: [] },         32
+            ]
+        ]
+    }
+}
+const object = {
+    type: 2,
+    value: 1
+}
+test('switch', definition, object, [
+    0x2, 0x0, 0x1
+])
+```
