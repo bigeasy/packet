@@ -71,7 +71,7 @@
 // Proof `okay` function to assert out statements in the readme. A Proof unit test
 // generally looks like this.
 
-require('proof')(105, async okay => {
+require('proof')(109, async okay => {
     // The `--allow-natives-syntax` switch allows us to test that when we parse we are
     // creating objects that have JavaScript "fast properties."
     //
@@ -1571,6 +1571,82 @@ require('proof')(105, async okay => {
             0xbf, 0xc0, 0x0, 0x0
         ])
     }
+
+    // There are only two sizes of floating point number available, 64-bit and 32-bit.
+    // These are based on the IEEE 754 standard. As of 2008, the standard defines a
+    // [128-bit quad precision floating
+    // point](https://en.wikipedia.org/wiki/Quadruple-precision_floating-point_format)
+    // but the JavaScript `number` is itself a 64-bit IEEE 754 double-precision float,
+    // so we'd have to introduce one of the big decimal libraries from NPM to support
+    // it, so it's probably best you sort out a solution for your application using
+    // inline functions, maybe serializing to a byte array or `BigInt`. If you
+    // encounter at 128-bit number in the wild, I'd be curious. Please let me know.
+    //
+    // ### Conditionals
+    //
+    // **TODO**: Need first draft.
+    //
+    // Basic conditionals are expressed as an array of boolean functions paired with
+    // field definitions. The functions and definitions repeat creating an if/else if
+    // conditional. The array can end with a feild definition that acts as the `else`
+    // condition.
+    //
+    // If the function has positional arguments, the function is called with the root
+    // object, followed by an array of indices into any arrays the current path,
+    // followed by an array of names of the properties in the current path.
+    //
+    // In the following definition the bit size of value is 8 bits of the `type`
+    // property is `1`, 16 bits if the type property is `2`, 24 bits if the `type`
+    // property `3` and `32` bits for any other value of `type`.
+
+    {
+        const definition = {
+            object: {
+                type: 8,
+                value: [
+                    $ => $.type == 1, 8,
+                    $ => $.type == 2, 16,
+                    $ => $.type == 3, 24,
+                    true, 32
+                ]
+            }
+        }
+        const object = {
+            type: 2,
+            value: 1
+        }
+        test('conditional', definition, object, [
+            0x2,
+            0x0, 0x1
+        ])
+    }
+
+    // You can use conditionals in bit-packed integers as well.
+
+    {
+        const definition = {
+            object: {
+                header: [{
+                    type: 4,
+                    value: [
+                        $ => $.header.type == 1, 28,
+                        $ => $.header.type == 2, [{ first: 4, second: 24 }, 28 ],
+                        $ => $.header.type == 3, [{ first: 14, second: 14 }, 28 ],
+                        true, [[ 24, 'ffffff' ], 4 ]
+                    ]
+                }, 32 ]
+            }
+        }
+        const object = {
+            header: {
+                type: 2,
+                value: { first: 0xf, second: 0x1 }
+            }
+        }
+        test('conditional-packed', definition, object, [
+            0x2f, 0x0, 0x0, 0x1
+        ])
+    }
 })
 
 // You can run this unit test yourself to see the output from the various
@@ -1600,13 +1676,3 @@ require('proof')(105, async okay => {
         }
     }
 }
-
-// There are only two sizes of floating point number available, 64-bit and 32-bit.
-// These are based on the IEEE 754 standard. As of 2008, the standard defines a
-// [128-bit quad precision floating
-// point](https://en.wikipedia.org/wiki/Quadruple-precision_floating-point_format)
-// but the JavaScript `number` is itself a 64-bit IEEE 754 double-precision float,
-// so we'd have to introduce one of the big decimal libraries from NPM to support
-// it, so it's probably best you sort out a solution for your application using
-// inline functions, maybe serializing to a byte array or `BigInt`. If you
-// encounter at 128-bit number in the wild, I'd be curious. Please let me know.
