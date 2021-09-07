@@ -1106,6 +1106,7 @@ module.exports = function (packets) {
         case 'object': return object()
         }
 
+        console.log(packet)
         throw new Error
     }
     // TODO If I'm ever able to parse from root, then I'll go ahead and add all

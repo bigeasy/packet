@@ -76,7 +76,7 @@ Proof `okay` function to assert out statements in the readme. A Proof unit test
 generally looks like this.
 
 ```javascript
-//{ "code": { "tests": 111 }, "text": { "tests": 4  } }
+//{ "code": { "tests": 113 }, "text": { "tests": 4  } }
 require('proof')(%(tests)d, async okay => {
     //{ "include": "test", "mode": "code" }
     //{ "include": "testDisplay", "mode": "text" }
@@ -1902,6 +1902,62 @@ You can use conditionals in bit-packed integers as well.
     }
     test('switch', definition, object, [
         0x2, 0x0, 0x1
+    ])
+}
+```
+
+### References to Paritals
+
+**TODO**: First draft done.
+
+If you have a complicated type that requires a complicated definition that is
+tedious to repeat, you can reference that definition by name.
+
+References can be used as types and can also be used as length encoding lengths
+if they resolve to an integer type. If you create a type that is only used by
+reference that you do not want available as a packet, prepend and underbar and
+it will not be returned as a packet type.
+
+**Mnemonic**: A string name to name the referenced type.
+
+In the following a definition an encoded integer is defined as a partial that
+will not be presented as a packet due to the `_` prefix to the name. It is
+referneced by the `series` property as a type and used for the length encoding
+of the `data` property.
+
+```javascript
+//{ "unblock": true, "name": "test" }
+{
+    const definition = {
+        $encodedInteger: [
+            [
+                value => value <= 0x7f, 8,
+                value => value <= 0x3fff, [ 16, [ 0x80, 7 ], [ 0x0, 7 ] ],
+                value => value <= 0x1fffff, [ 24, [ 0x80, 7 ], [ 0x80, 7 ], [ 0x0, 7 ] ],
+                true, [ 32, [ 0x80, 7 ], [ 0x80, 7 ], [ 0x80, 7 ], [ 0x0, 7 ] ]
+            ],
+            [ 8,
+                sip => (sip & 0x80) == 0, 8,
+                true, [ 8,
+                    sip => (sip & 0x80) == 0, [ 16, [ 0x80, 7 ], [ 0x0, 7 ] ],
+                    true, [ 8,
+                        sip => (sip & 0x80) == 0, [ 24, [ 0x80, 7 ], [ 0x80, 7 ], [ 0x0, 7 ] ],
+                        true, [ 32, [ 0x80, 7 ], [ 0x80, 7 ], [ 0x80, 7 ], [ 0x0, 7 ] ]
+                    ]
+                ]
+            ]
+        ],
+        object: {
+            value: '$encodedInteger',
+            // array: [ '$encodedInteger', [ 8 ] ] ~ I haven't done this, requires using conditionals in length encoded arrays or calculated arrays.
+        }
+    }
+    const object = {
+        value: 1,
+//        array: [ 1 ]
+    }
+    test('partial', definition, object, [
+        0x1 // , 0x1, 0x1
     ])
 }
 ```
