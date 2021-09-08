@@ -224,7 +224,6 @@ function generate (packet, { require = null }) {
                     }).length != 0
                 })
                 const inlined = inliner.inline(path, inlines)
-                console.log(inlined)
                 const source = map(dispatch, path, field.fields)
                 // TODO Exclude if not externally referenced.
                 return $(`

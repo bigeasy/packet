@@ -76,7 +76,7 @@ Proof `okay` function to assert out statements in the readme. A Proof unit test
 generally looks like this.
 
 ```javascript
-//{ "code": { "tests": 113 }, "text": { "tests": 4  } }
+//{ "code": { "tests": 115 }, "text": { "tests": 4  } }
 require('proof')(%(tests)d, async okay => {
     //{ "include": "test", "mode": "code" }
     //{ "include": "testDisplay", "mode": "text" }
@@ -1959,5 +1959,56 @@ of the `data` property.
     test('partial', definition, object, [
         0x1 // , 0x1, 0x1
     ])
+}
+```
+
+### Checksums and Running Calcuations
+
+Some protocols perform checksums on the body of message. Others require tracking
+the remaining bytes in a message based on a length property in a header and
+making decisions about the contents of the message based on the bytes remaining.
+
+To perform runnign calculations like buffers and remaining bytes we can use
+accumlators, lexically scoped object variables that can be used to store the
+state of a running calculation.
+
+The following defintion creates an MD5 checksum of the body of a packet and
+stores the result in a checksum property that follows the body of the message.
+
+```javascript
+//{ "name": "test" }
+{
+    const definition = {
+        object: [{ hash: () => crypto.createHash('md5') }, {
+            body: [[[
+                ({ $buffer, $start, $end, hash }) => hash.update($buffer.slice($start, $end))
+            ]], {
+                value: 32,
+                string: [[ 8 ], 0x0 ]
+            }],
+            checksum: [[
+                ({ hash }) => hash.digest()
+            ], [[ 16 ], [ Buffer ]], [
+                ({ checksum = 0, hash }) => {
+                    assert.deepEqual(hash.digest().toJSON(), checksum.toJSON())
+                }
+            ]]
+        }]
+    }
+    const object = {
+        body: {
+            value: 1,
+            string: [ 0x41, 0x42, 0x43 ]
+        },
+        checksum: Buffer.from([ 0xc9, 0xd0, 0x87, 0xbd, 0x2f, 0x8f, 0x4a, 0x33, 0xd4, 0xeb, 0x2d, 0xe4, 0x47, 0xc0, 0x40, 0x28 ])
+    }
+    test('checksum', definition, object, [
+        0x0, 0x0, 0x0, 0x1,
+        0x41, 0x42, 0x43, 0x0,
+        0xc9, 0xd0, 0x87, 0xbd,
+        0x2f, 0x8f, 0x4a, 0x33,
+        0xd4, 0xeb, 0x2d, 0xe4,
+        0x47, 0xc0, 0x40, 0x28
+    ], { require: { assert: 'assert', crypto: 'crypto' } })
 }
 ```

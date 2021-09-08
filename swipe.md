@@ -1,43 +1,4 @@
 
-### Checksums and Running Calcuations
-
-Some protocols perform checksums on the body of message. Others require tracking
-the remaining bytes in a message based on a length property in a header and
-making decisions about the contents of the message based on the bytes remaining.
-
-To perform runnign calculations like buffers and remaining bytes we can use
-accumlators, lexically scoped object variables that can be used to store the
-state of a running calculation.
-
-The following defintion creates an MD5 checksum of the body of a packet and
-stores the result in a checksum property that follows the body of the message.
-
-```javascript
-//{ "name": "ignore" }
-define({
-    packet: [{ hash: () => crypto.createHash('md5') }, {
-        body: [[[
-            ({ $buffer, $start, $end, hash }) => hash.update($buffer, $start, $end)
-        ]], {
-            value: 32,
-            string: [[ 8 ], 0x0 ]
-        }],
-        checksum: [[
-            ({ hash }) => hash.digest()
-        ], [[ 40 ], [ Buffer ]], [
-            ({ value = 0, hash }) => {
-                assert.deepEqual(hash.digest(binary).toJSON(), value.toJSON())
-            }
-        ]]
-    }]
-}, {
-    require: {
-        assert: 'assert',
-        crypto: 'crypto'
-    }
-})
-```
-
 Here we also introduce the concept of buffer inlines. These are inlines that
 operate not on the serialized or parsed value, but instead on the underlying
 buffer. In the above example the `hash.update()` inline is not called once for
@@ -58,33 +19,35 @@ because it will allow us to talk about the difference between `sizeof`,
 
 ```javascript
 //{ "name": "ignore" }
-define({
-    packet: [{ counter: () => [] }, {
-        header: {
-            type: 8,
-            length: [[
-                ({ $, counter }) => {
-                    return counter[0] = $sizeof.packet($) - $offsetof.packet($, 'body')
-                }
-            ], 16, [
-                ({ $_, counter }) => {
-                    return counter[0] = $_
-                }
-            ]]
-        },
-        body: [[[
-            ({ $start, $end, counter }) => counter[0] -= $end - $start
-        ]], {
-            value: 32,
-            string: [[ 8 ], 0x0 ]
-            variable: [
-                ({ counter }) => counter[0] == 4, 32
-                ({ counter }) => counter[0] == 2, 16
-                8
-            ]
-        }],
-    }]
-})
+{
+    const definition = {
+        packet: [{ counter: () => [] }, {
+            header: {
+                type: 8,
+                length: [[
+                    ({ $, counter }) => {
+                        return counter[0] = $sizeof.packet($) - $offsetof.packet($, 'body')
+                    }
+                ], 16, [
+                    ({ $_, counter }) => {
+                        return counter[0] = $_
+                    }
+                ]]
+            },
+            body: [[[
+                ({ $start, $end, counter }) => counter[0] -= $end - $start
+            ]], {
+                value: 32,
+                string: [[ 8 ], 0x0 ],
+                variable: [
+                    ({ counter }) => counter[0] == 4, 32,
+                    ({ counter }) => counter[0] == 2, 16,
+                    8
+                ]
+            }],
+        }]
+    }
+}
 ```
 
 ### Parameters
