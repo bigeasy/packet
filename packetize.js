@@ -16,8 +16,8 @@ const composers = {
 const $ = require('programmatic')
 const language = require('./language')
 
-module.exports = function (definitions, { require = {} } = {}) {
-    const intermediate = language(definitions)
+module.exports = function ({ packet, require = {} }) {
+    const intermediate = language(packet)
     const lookup = composers.lookup(intermediate)
     const synchronous = lookup == '[]' ? $(`
         const sizeOf = `, composers.sizeOf(intermediate, { require: require }), `

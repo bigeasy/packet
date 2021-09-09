@@ -3,10 +3,10 @@ class Serializer {
         this._definition = definition
     }
 
-    serialize (defintion, object) {
-        const size = this._definition.sizeOf[defintion](object)
+    serialize (definition, object) {
+        const size = this._definition.sizeOf[definition](object)
         const buffer = Buffer.alloc(size)
-        this._definition.serializer.all[defintion](object, buffer, 0)
+        this._definition.serializer.all[definition](object, buffer, 0)
         return buffer
     }
 }

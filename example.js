@@ -1,4 +1,4 @@
-module.exports = {
+exports.packet = {
     first: {
         value: 16
     },
@@ -6,3 +6,10 @@ module.exports = {
         value: -32
     }
 }
+
+exports.require = {
+}
+
+exports.bff = false
+
+exports.inc = false

@@ -110,6 +110,72 @@ I've forgotten.
 **TODO** Here you need your incremental and whole parser interface with a simple
 example. Would be an over view. In the next section we get into the weeds.
 
+```javascript
+const fs = require('fs')
+const path = require('path')
+
+const packetize = require('packet/packetize')
+const SyncSerializer = require('packet/sync/serializer')
+const SyncParser = require('packet/sync/parser')
+// const AsyncParser = require('packet/async/parser')
+
+const definition = {
+    object: {
+        value: 32,
+        array: [ 16, [ 8 ] ]
+    }
+}
+
+fs.writeFileSync(path.join(__dirname, 'sync.js'), packetize(definition))
+
+const mechanics = require('./sync')
+```
+
+Packet definitions live in a Node.js module. The module must export a `packet`
+property that is a packet definition map. For each packet defintion there is an
+entry in the packet definition map.
+
+The following definition is stored in a file named `basic.js`.
+
+Before you can use this definition you need to convert it into serializer and
+parser mechanics. You can do this using the `packetizer` utility.
+
+```text
+ $ packetizer ./test/readme/definition/basic.js > ./test/readme/basic.js
+```
+
+We do not generate serializer and packet mechanics on the fly. You should be
+able to express your packet serializers and parsers using the packet definition
+language wihtout having to generate and compile definitions in your program.
+
+```javascript
+const mechanics = require('./basic')
+
+const SyncSerializer = require('packet/sync/serializer')
+const SyncParser = require('packet/sync/parser')
+
+const object = {
+    value: 0x89abcdef,
+    array: 'ABC'
+}
+
+const serializer = new SyncSerializer(mechanics)
+const parser = new SyncParser(mechanics)
+
+const buffer = serializer.serialize('object', object)
+
+okay(buffer.toJSON().data, [
+    0x89, 0xab, 0xcd, 0xef,
+    0x0, 0x3,
+    0x1, 0x2, 0x3
+], 'basic serialized')
+
+const parsed = parser.parse('object', buffer)
+console.log(parsed)
+okay(parsed, object, 'basic parsed')
+return
+```
+
 ## Packet Definition Language
 
 To test our examples below we are going to use the following function.
@@ -130,8 +196,8 @@ const SyncSerializer = require('packet/sync/serializer')
 // mechanics modules and ship them.
 
 //
-function compile (name, definition, options) {
-    const source = packetize(definition, options)
+function compile (name, definition, options = {}) {
+    const source = packetize({ packet: definition, require: options.require || {} })
     const file = path.resolve(__dirname, '..', 'readme', name + '.js')
     fs.writeFileSync(file, source)
     return file
@@ -1000,7 +1066,7 @@ const _definition = {
 }
 
 try {
-    packetize(definition)
+    packetize({ packet: definition })
 } catch (error) {
     okay(error instanceof SyntaxError, 'unable to parse regex')
 }
@@ -1304,7 +1370,7 @@ const definition = {
     }
 }
 
-const source = packetize(definition, { require: { ip: 'ip' } })
+const source = packetize({ packet: definition, require: { ip: 'ip' } })
 
 const moduleName = path.resolve(__dirname, 'require.js')
 fs.writeFileSync(moduleName, source)

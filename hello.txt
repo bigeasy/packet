@@ -1,0 +1,4 @@
+object: {
+    value: 32,
+    array: [ 16, [ 8 ] ]
+}
