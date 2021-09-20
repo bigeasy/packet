@@ -52,7 +52,7 @@
     "devDependencies":
     {
                             "ip":                           "1.1.5",
-                            "extant":                       "^2.0.0-alpha.3",
+                            "extant":                       "^2.0.0-alpha.4",
                             "proof":                        "^9.0.3"
     },
     "main":                 "packet.js",
