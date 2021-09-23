@@ -1,3 +1,84 @@
+## Wed Sep 22 21:20:27 CDT 2021
+
+Regarding `offsetof`. Could be a function that calculates on an object or it
+could be an class that takes a transformed object and calculates if necessary,
+so getters, or has static values. Creating the object assigns the values. If the
+values are all constant then we could have a single object, or the constant
+values could be in a superclass.
+
+Could make the user request specific offsets.
+
+```
+({ value, $offset: { header: { encoding } } }) => {}
+```
+
+It would also be useful to have `$size` in this case which may make doing goofy
+length encodings easier.
+
+The parser based solution means more parsing, but we can insist that the
+contents of the `$offset` destructuring be kept simple, no defaults, they
+wouldn't be honored.
+
+This parser based solution also requires a long hard think about what to do if
+the value is nested in an array. Any solution requires a long hard think about
+what to do if the value is nested in an array. It may make the offset class
+expensive to generate and calculated array getters require `Proxy`.
+
+```
+({ value, $offset: { header: { encoding } } }) => {}
+```
+
+That creates a path with a depth and we can assume that we're not looking inside
+a previous object, so we can avoid creating a complete path language and just
+move upward or else...
+
+Yeah, imagine a header for the root packet and a header in each object, which
+one wins. We'd have to do some sort of pattern matching. No full paths without
+array indices.
+
+```
+({ value, $offset: { header: { encoding }, array: { header: { encoding } } } }) => {}
+```
+
+An object, well, imagine we have an array of 1000 items to serialize, we'd have
+to create 1000 entries in an array of offsets. We could assume that it would be
+used once for each entry in the array.
+
+```
+({ value, $offset, $i }) => {
+    return $offset.array[$[0]].value - $offset.array[$i[0]].header.encoding
+}
+```
+
+This generates code that never gets executed though. If there is an array and
+the offsets within are not referenced there is a getter that does not get
+covered in the unit tests.
+
+```
+({ value, $offset, $i }) => {
+    return $offset('value') - $offset('header.encoding')
+}
+```
+
+And now we've introduced a path language.
+
+```
+({ value, $offset, $i }) => {
+    return $offset('value') - $offset('array', $i[0], 'header', 'encoding')
+}
+```
+
+Could make that move faster using maps to get values, so that if the first three
+fields are constant you can just pull the it out of map. You could get this unit
+tested by calling the `$offsetof` mechanics independently. You could specify
+which offsets you need in the definition language.
+
+Or you could use an accumulator to snag the offset as needed, which we can use
+as an example in the interim.
+
+You really need to implement like a dozen protocols before you try to optimize
+the language.
+
 ## Thu Sep 22 12:59:14 CDT 2021
 
 Transforms are distrubing my assumptions about performance. The `sizeof`
