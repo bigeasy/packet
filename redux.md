@@ -1,3 +1,40 @@
+## Thu Sep 22 12:59:14 CDT 2021
+
+Transforms are distrubing my assumptions about performance. The `sizeof`
+functionality is important because synchronous serialization is probably the
+norm, but perhaps that is a mistake. Perhaps it should always be incremental.
+
+If you do transforms on arrays, it is necessary to run the transform to
+determine the size of the array. It could be the case that the transform does
+not alter the length of the array, but it is more likely that the transform will
+surprise users when they transform a string to a UTF8 buffer, their tests will
+pass and their code will work in production until they serialize an emoji.
+
+A buffer transform is relatively expensive and should not be performed twice.
+
+We do not have to duplicate any tests that perform assertions. For `sizeof` we
+do not have to include an transforms for fixed length items. Difficult to say if
+we should perform the assertions in sizeof or wait until serialization. Perhaps
+the assertion is supposed to assert a condition before a transformation, but the
+`sizeof` forgos the assertion and then performs the transformation.
+
+We could separate transformation and make it a gerate a transformed object that
+is then used in `sizeof` or synchronous serialize.
+
+If we just want `sizeof` we still do not need to transform any fixed with
+objects, but it is unlikely that this is a common use case, I just want to know
+how big this would be if I serialize it, I have no intention of doing so.
+
+At this point I am leaning toward a transform, but having things be as they are
+encountered during asynchronous serialization. There are problems their too with
+strangely length encoded formats, where the length is in a header and in advance
+of the body of a packet. I'd use an accumulator for that but it would better to
+have some sort of `$sizeof` object or `sizeof` function that you could call to
+get the length, and that would require an entirely transformed object.
+
+Parsing cannot transform and if someone has developed a protocol that needs to
+seek back and forth on the wire that really isn't my problem.
+
 ## Thu Jul 22 00:45:05 CDT 2021
 
 TODO Need warnings for recursive includes.
