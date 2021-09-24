@@ -65,8 +65,9 @@ module.exports = function ({ variables, packet, direction, accumulators, paramet
             if (property == '$_' || property == name) {
                 if (source.defaulted.includes(property)) {
                     is.assertion = true
+                } else {
+                    is.transform = true
                 }
-                is.transform = true
                 properties[property] = $_
             } else if (property == '$direction') {
                 properties[property] = util.inspect(direction)
@@ -171,7 +172,7 @@ module.exports = function ({ variables, packet, direction, accumulators, paramet
                         })
                     }
                 } else {
-                    if (is.assertion) {
+                    if (! is.transform) {
                         inlined.push($(`
                             ; (`, inline.source, `)(`, properties, `)
                         `))

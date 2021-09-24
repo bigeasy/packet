@@ -50,7 +50,8 @@ const serializer = {
                     hash: $accumulator['hash']
                 })
 
-                $$[0] = (({ hash }) => hash.digest())({
+                $$[0] = (({ $_, hash }) => $_ = hash.digest())({
+                    $_: object.checksum,
                     hash: $accumulator['hash']
                 })
 
@@ -172,7 +173,8 @@ const serializer = {
 
                         case 9:
 
-                            $$[0] = (({ hash }) => hash.digest())({
+                            $$[0] = (({ $_, hash }) => $_ = hash.digest())({
+                                $_: object.checksum,
                                 hash: $accumulator['hash']
                             })
 
@@ -479,7 +481,8 @@ module.exports = {
                                 }, 9, $i, $$, $accumulator, $starts)($buffer, $start, $end)
                             }
 
-                            $$[0] = (({ hash }) => hash.digest())({
+                            $$[0] = (({ $_, hash }) => $_ = hash.digest())({
+                                $_: object.checksum,
                                 hash: $accumulator['hash']
                             })
 

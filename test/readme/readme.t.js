@@ -1750,7 +1750,7 @@ require('proof')(115, async okay => {
                     string: [[ 8 ], 0x0 ]
                 }],
                 checksum: [[
-                    ({ hash }) => hash.digest()
+                    ({ $_, hash }) => $_ = hash.digest()
                 ], [[ 16 ], [ Buffer ]], [
                     ({ checksum = 0, hash }) => {
                         assert.deepEqual(hash.digest().toJSON(), checksum.toJSON())

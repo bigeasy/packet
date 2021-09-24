@@ -1814,7 +1814,7 @@ stores the result in a checksum property that follows the body of the message.
                 string: [[ 8 ], 0x0 ]
             }],
             checksum: [[
-                ({ hash }) => hash.digest()
+                ({ $_, hash }) => $_ = hash.digest()
             ], [[ 16 ], [ Buffer ]], [
                 ({ checksum = 0, hash }) => {
                     assert.deepEqual(hash.digest().toJSON(), checksum.toJSON())
