@@ -1,3 +1,98 @@
+## Sat Sep 25 03:33:00 CDT 2021
+
+Revisiting thougths on `sizeof`.
+
+Seems that asynchronous serialization works as expected. The `sizeof` function
+presents a problem in that any transforms will have to be run, then when we
+serialize they will be run again.
+
+I'm at the point where this simply needs to be documented and someone will have
+to decide for themselves if this is what they want to have happen. If not, then
+can provide an object with the conversion already performed. That's somewhat
+disappointing. The transforms are clever. Wish they would always Just Work™.
+
+The idea of having a transform step that creates an intermediate object is a no
+go. The checksum accumulator wouldn't work, because you need to transform the
+checksum value based on the buffered writes.
+
+Synchronous writes could be implemented with the incremental serializer, but
+then you never have a use for the whole serializer.
+
+We could create an intermediate object that transforms only those entities that
+need to be transformed, but do you run assertions in that case?
+
+Seems that `sizeof` needs to have caveats and limitaitons. It also seems that
+there are only a handful of cases where it might matter.
+
+Also, we could do this...
+
+```javascript
+const definition = {
+    value [[
+        [ $_ => Buffer.byteLength($_), $_ => Buffer.from($_) ]
+    ], [ 32, [ Buffer ]], [
+        $_ => $_.toString()
+    ]
+}
+
+const object = {
+    value: 'string'
+}
+```
+
+But that makes me wonder why we can't copy the buffer ourselves. That is, we're
+creating a buffer, then copying the buffer. Wasted step. Obviously because we
+can't easily define a function that would work incrementally, and we're moving
+to just having a bunch of functions we call.
+
+But anyway, in the above we've combined a sizeof function with a transform
+function.
+
+Can't think ahead to what it means to create an intermediate object where we run
+some transforms and not others. Did have this in mind though...
+
+```javascript
+const definition = {
+    value [[
+        ($_ = []) => Buffer.from('x' + $_)
+    ], [ 32, [ Buffer ]], [
+        $_ => $_.toString().substring(1)
+    ]
+}
+
+const object = {
+    value: 'string'
+}
+```
+
+The `[]` means that this creates a variable length object, an array or a buffer,
+and that you need to run it to determine the size, you can't use the underlying
+object to determine the size.
+
+Again, not sure what it means to have some functions run in `sizeof` or a
+pre-transform while others do not. What if the assertion is neecssary to perform
+the conversion for `sizeof`?
+
+Maybe the intermediate object is explained to the user an a default of `{}` is
+used to indicate that it needs to be a part of the intermediate object?
+
+```javascript
+const definition = {
+    value [[
+        ($_ = {}) => assert(/^\d+$/.test($_)),
+        ($_ = {}) => Buffer.from($_)
+    ], [ 32, [ Buffer ]], [
+        $_ => $_.toString()
+    ]
+}
+
+const object = {
+    value: 'string'
+}
+```
+
+This might be the least worst idea you've had so far.
+
 ## Wed Sep 22 21:20:27 CDT 2021
 
 Regarding `offsetof`. Could be a function that calculates on an object or it
