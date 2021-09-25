@@ -1,3 +1,80 @@
+## Sat Sep 25 04:01:30 CDT 2021
+
+```
+const definition = {
+    '$mqtt': [
+        ({ $_, $count, $buffer, $start }) => {
+            const value = $_ >>> (7 * $count) & 0x7f
+            if ($count == 0 || value != 0) {
+                return value
+            }
+            return 256
+        },
+        () => {
+            let multiplier = 1, value = 0
+            return function ($buffer, $start) => {
+                const bite = $buffer[$start]
+                value += (bite & 0x7f) * multiplier
+                if (multiplier > 128 * 128 * 128) {
+                    throw new Error
+                }
+                return bite & 128 ? null : value
+            }
+        }
+    ]
+}
+```
+
+Idea for an encoding that goes byte by byte so I don't have to write a loop
+declaratively, which is ugly. Could add an initial function that is `sizeof`.
+
+Okay, if there are no arguments, then we are returning a function. This allows
+for the initialzation of any local variables and we can detect this from the
+argument parsing, and invoke it to get the inner function.
+
+The user may perhaps want an accumulator passed to the function builder function
+at some point, but let's hope not, because then we are going to have a much
+harder time getting to that inner function.
+
+```
+const definition = {
+    '$mqtt': [
+        $_ => {
+            return [
+                ($buffer, $start) => {
+                    bite = $_ & 0x7f
+                    $_ = $_ >>> 7
+                    return bite
+                },
+                ($buffer, $start) => {
+                    if ($_ == 0) {
+                        return 256
+                    }
+                    bite = $_ & 0x7f
+                    $_ = $_ >>> 7
+                    return bite
+                },
+            ]
+        },
+        () => {
+            let multiplier = 1, value = 0
+            return function ($buffer, $start) => {
+                const bite = $buffer[$start]
+                value += (bite & 0x7f) * multiplier
+                if (multiplier > 128 * 128 * 128) {
+                    throw new Error
+                }
+                return bite & 128 ? null : value
+            }
+        }
+    ]
+}
+```
+
+Look how ugly it gets, though. Trying to get rid of that test for the first
+`$count`. Would only solve one problem encoutered with MQTT at this point, but
+perhaps also a UTF8 encoding.
+
 ## Sat Sep 25 03:33:00 CDT 2021
 
 Revisiting thougths on `sizeof`.
@@ -92,6 +169,27 @@ const object = {
 ```
 
 This might be the least worst idea you've had so far.
+
+Regarding this use case, which is probably common, encoding UTF8.
+
+```javascript
+const definition = {
+    lengthEncoded: [ 32, [ 'utf8' ] ],
+    terminated: [ [ 'utf8' ], 0x0 ]
+}
+```
+
+However the `Buffer.write()` method will not write a partial character. We would
+have to serialize UTF8 ourselves, probably very slow, or else find the character
+that was cut off, but that would also be very slow. Also, we need to know the
+byte length to check to see if the write was truncated. Nothing about this is
+cheap. Copy is probably cheaper.
+
+We can use write in a whole serialize, though, and in best foot forward, so if
+we have an internal implemenation, yes, we can use write for the best case, we
+can create buffers for the incremental parser.
+
+Okay, that's worth doing.
 
 ## Wed Sep 22 21:20:27 CDT 2021
 
