@@ -85,4 +85,15 @@ function prove (okay) {
         },
         objects: [{ value: 1, sentry: 0xaa }]
     })
+    // Issue: https://github.com/bigeasy/packet/issues/601
+    cycle(okay, {
+        name: 'inline/converted',
+        define: {
+            object: {
+                value: [[ (value) => Buffer.from(String(value)) ], [ [ Buffer ], 0x0 ], [ (value) => parseInt(value.toString(), 10) ] ],
+                sentry: 8
+            }
+        },
+        objects: [{ value: 32, sentry: 0xaa }]
+    })
 }
