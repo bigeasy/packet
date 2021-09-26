@@ -1,7 +1,7 @@
 module.exports = {
     object: function () {
         return function (object) {
-            let $start = 0, $starts = [], $accumulator = {}
+            let $start = 0, $starts = [], $accumulator = {}, $$ = []
 
             $accumulator['counter'] = [ 0 ]
 

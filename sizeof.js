@@ -218,6 +218,29 @@ function generate (packet, { require = null }) {
             }
             break
         case 'inline': {
+                // Here is logic that only runs the inline if the value is
+                // referenced by one of the conditionals. The idea being that the
+                // transformations do not matter because the size is fixed. Of
+                // course, it is not fixed if it an array, and the transformation
+                // could be transforming an integer to an array. It wasn't obvious
+                // because in my tests I was transforming a string of characters
+                // within the ASCII range to a UTF-8 buffer, so that checking the
+                // length of the string would work to determine the length of the
+                // buffer, but it would not work for a string of emoji.
+                //
+                // TODO What's to do about this is to determine if the nested value
+                // is fixed length. If so we can skip the transform.
+                //
+                // You have a notion that you could separate transformation into a
+                // separate machine, so that you could run it once and use it for
+                // both size of and serialization. You can imagine that it would
+                // create problems somehow, but it would save on doubled assertions,
+                // once for size of and once for serialization. Also, makes offset
+                // of difficult.
+                //
+                // Could use `({ $_, $offset: { value } }) => {}` to get a running
+                // offset, then the pre-conversion would not be as bad. We'd do this
+                // instead of an offset of function.
                 const inlines = field.before.filter(inline => {
                     return inline.properties.filter(property => {
                         return referenced[property]
@@ -226,16 +249,21 @@ function generate (packet, { require = null }) {
                 if (field.fixed) {
                     inlines.length = 0
                 }
+                variables.stack = true
                 const inlined = inliner.inline(path, inlines)
-                const source = map(dispatch, path, field.fields)
+                const source = map(dispatch, inlined.path, field.fields)
                 // TODO Exclude if not externally referenced.
-                return $(`
+                const x =  $(`
+                    `, inlined.inlined, -1, `
+
                     `, inlined.starts, -1, `
 
                     `, source, `
 
                     `, -1, inliner.pop(), `
                 `)
+                console.log(x)
+                return x
             }
             break
         case 'literal':
@@ -312,6 +340,7 @@ function generate (packet, { require = null }) {
             }
             break
         case 'inline': {
+                console.log('yes inline')
                 field.before.forEach(inline => {
                     if (
                         inline.properties.filter(property => {
@@ -357,7 +386,8 @@ function generate (packet, { require = null }) {
         i: '$i = []',
         length: '$length',
         starts: '$starts = []',
-        accumulator: '$accumulator = {}'
+        accumulator: '$accumulator = {}',
+        stack: '$$ = []'
     }
 
     const lets = Object.keys(declarations)

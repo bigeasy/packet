@@ -1,7 +1,7 @@
 const sizeOf = {
     object: function () {
         return function (object) {
-            let $start = 0, $accumulator = {}
+            let $start = 0, $accumulator = {}, $$ = []
 
             $start += 1 * object.string.length + 1
 

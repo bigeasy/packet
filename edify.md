@@ -1983,8 +1983,8 @@ stores the result in a checksum property that follows the body of the message.
             body: [[[
                 ({ $buffer, $start, $end, hash }) => hash.update($buffer.slice($start, $end))
             ]], {
-                value: 32,
-                string: [[ 8 ], 0x0 ]
+                number: 32,
+                data: [[ 8 ], 0x0 ]
             }],
             checksum: [[
                 ({ $_, hash }) => $_ = hash.digest()
@@ -1997,8 +1997,8 @@ stores the result in a checksum property that follows the body of the message.
     }
     const object = {
         body: {
-            value: 1,
-            string: [ 0x41, 0x42, 0x43 ]
+            number: 1,
+            data: [ 0x41, 0x42, 0x43 ]
         },
         checksum: Buffer.from([ 0xc9, 0xd0, 0x87, 0xbd, 0x2f, 0x8f, 0x4a, 0x33, 0xd4, 0xeb, 0x2d, 0xe4, 0x47, 0xc0, 0x40, 0x28 ])
     }
@@ -2053,7 +2053,7 @@ what it is supposed to illustrate.
                 ]]
             },
             body: [[[
-                ({ $start, $end, counter }) => counter[0] -= $end - $start
+                ({ $_ = 0, $start, $end, counter }) => counter[0] -= $end - $start
             ]], {
                 value: 32,
                 string: [[ 8 ], 0x0 ],

@@ -4,11 +4,11 @@ const sizeOf = {
         const crypto = require('crypto')
 
         return function (object) {
-            let $start = 0, $accumulator = {}
+            let $start = 0, $accumulator = {}, $$ = []
 
             $start += 4
 
-            $start += 1 * object.body.string.length + 1
+            $start += 1 * object.body.body.length + 1
 
             $start += 16
 
@@ -37,8 +37,8 @@ const serializer = {
                 $buffer[$start++] = object.body.value >>> 8 & 0xff
                 $buffer[$start++] = object.body.value & 0xff
 
-                for ($i[0] = 0; $i[0] < object.body.string.length; $i[0]++) {
-                    $buffer[$start++] = object.body.string[$i[0]] & 0xff
+                for ($i[0] = 0; $i[0] < object.body.body.length; $i[0]++) {
+                    $buffer[$start++] = object.body.body[$i[0]] & 0xff
                 }
 
                 $buffer[$start++] = 0x0
@@ -122,7 +122,7 @@ const serializer = {
                         case 5:
 
                             $bite = 0
-                            $_ = object.body.string[$i[0]]
+                            $_ = object.body.body[$i[0]]
 
                         case 6:
 
@@ -140,7 +140,7 @@ const serializer = {
                                 $buffer[$start++] = $_ >>> $bite * 8 & 0xff
                                 $bite--
                             }
-                            if (++$i[0] != object.body.string.length) {
+                            if (++$i[0] != object.body.body.length) {
                                 $step = 5
                                 continue
                             }
@@ -222,7 +222,7 @@ const parser = {
                 let object = {
                     body: {
                         value: 0,
-                        string: []
+                        body: []
                     },
                     checksum: null
                 }
@@ -247,7 +247,7 @@ const parser = {
                         break
                     }
 
-                    object.body.string[$i[0]] = $buffer[$start++]
+                    object.body.body[$i[0]] = $buffer[$start++]
 
                     $i[0]++
                 }
@@ -299,7 +299,7 @@ const parser = {
                             object = {
                                 body: {
                                     value: 0,
-                                    string: []
+                                    body: []
                                 },
                                 checksum: null
                             }
@@ -377,7 +377,7 @@ const parser = {
                                 return { start: $start, object: null, parse: $parse }
                             }
 
-                            object.body.string[$i[0]] = $buffer[$start++]
+                            object.body.body[$i[0]] = $buffer[$start++]
 
                         case 9:
 
@@ -451,7 +451,7 @@ module.exports = {
 
                             $starts[0] = $start
 
-                            if ($end - $start < 5 + object.body.string.length * 1) {
+                            if ($end - $start < 5 + object.body.body.length * 1) {
                                 return $incremental.object(object, {
                                     hash: hash
                                 }, 2, $i, $$, $accumulator, $starts)($buffer, $start, $end)
@@ -462,8 +462,8 @@ module.exports = {
                             $buffer[$start++] = object.body.value >>> 8 & 0xff
                             $buffer[$start++] = object.body.value & 0xff
 
-                            for ($i[0] = 0; $i[0] < object.body.string.length; $i[0]++) {
-                                $buffer[$start++] = object.body.string[$i[0]] & 0xff
+                            for ($i[0] = 0; $i[0] < object.body.body.length; $i[0]++) {
+                                $buffer[$start++] = object.body.body[$i[0]] & 0xff
                             }
 
                             $buffer[$start++] = 0x0
@@ -513,7 +513,7 @@ module.exports = {
                             let object = {
                                 body: {
                                     value: 0,
-                                    string: []
+                                    body: []
                                 },
                                 checksum: null
                             }
@@ -556,7 +556,7 @@ module.exports = {
                                     }, 7, $i, $accumulator, $starts)($buffer, $start, $end)
                                 }
 
-                                object.body.string[$i[0]] = $buffer[$start++]
+                                object.body.body[$i[0]] = $buffer[$start++]
 
                                 $i[0]++
                             }

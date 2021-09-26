@@ -272,8 +272,11 @@ function inquisition (path, fields, $i = 0, $I = 0) {
     const checked = []
     for (const field of fields) {
         switch (field.type) {
-        case 'accumulator':
         case 'inline':
+            field.fields = inquisition(path + field.dotted, field.fields, $i, $I)
+            checked.push(field)
+            break
+        case 'accumulator':
         case 'structure':
             field.fields = inquisition(path + field.dotted, field.fields, $i, $I)
             checked.push(field)
