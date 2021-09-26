@@ -15,7 +15,7 @@ module.exports = function ({ $incremental, $lookup }) {
                         return $_.slice().reverse()
                     })(object.value)
 
-                    if ($end - $start < 1 + object.value.length * 1) {
+                    if ($end - $start < 1 + $$[0].length * 1) {
                         return $incremental.object(object, 3, $i, $$)($buffer, $start, $end)
                     }
 

@@ -96,6 +96,7 @@ require('proof')(3, okay => {
         fixed: true,
         accumulators: [{
             type: 'function',
+            positional: true,
             name: 'f',
             defaulted: [],
             properties: [],

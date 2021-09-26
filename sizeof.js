@@ -242,9 +242,14 @@ function generate (packet, { require = null }) {
                 // offset, then the pre-conversion would not be as bad. We'd do this
                 // instead of an offset of function.
                 const inlines = field.before.filter(inline => {
-                    return inline.properties.filter(property => {
-                        return referenced[property]
-                    }).length != 0
+                    return (
+                        (
+                            inline.positional && inline.arity > 0
+                        ) ||
+                        inline.properties.filter(property => {
+                            return referenced[property]
+                        }).length != 0
+                    )
                 })
                 if (field.fixed) {
                     inlines.length = 0
@@ -253,7 +258,7 @@ function generate (packet, { require = null }) {
                 const inlined = inliner.inline(path, inlines)
                 const source = map(dispatch, inlined.path, field.fields)
                 // TODO Exclude if not externally referenced.
-                const x =  $(`
+                return $(`
                     `, inlined.inlined, -1, `
 
                     `, inlined.starts, -1, `
@@ -262,8 +267,6 @@ function generate (packet, { require = null }) {
 
                     `, -1, inliner.pop(), `
                 `)
-                console.log(x)
-                return x
             }
             break
         case 'literal':
@@ -340,7 +343,6 @@ function generate (packet, { require = null }) {
             }
             break
         case 'inline': {
-                console.log('yes inline')
                 field.before.forEach(inline => {
                     if (
                         inline.properties.filter(property => {

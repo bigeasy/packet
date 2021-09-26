@@ -18,6 +18,7 @@ require('proof')(2, okay => {
             bits: 16,
             before: [{
                 defaulted: [],
+                positional: true,
                 properties: [],
                 source: 'value => -value',
                 arity: 1,
@@ -58,6 +59,7 @@ require('proof')(2, okay => {
             bits: 16,
             before: [{
                 defaulted: [],
+                positional: true,
                 properties: [],
                 source: 'value => -value',
                 arity: 1,
@@ -79,6 +81,7 @@ require('proof')(2, okay => {
             }],
             after: [{
                 defaulted: [],
+                positional: true,
                 properties: [],
                 source: 'value => -value',
                 arity: 1,

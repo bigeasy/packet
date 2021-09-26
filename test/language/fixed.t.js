@@ -174,6 +174,7 @@ require('proof')(5, okay => {
             calculated: true,
             length: {
                 defaulted: [],
+                positional: true,
                 properties: [],
                 source: '() => 8',
                 arity: 0,

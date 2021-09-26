@@ -86,7 +86,6 @@ function prove (okay) {
         objects: [{ value: 1, sentry: 0xaa }]
     })
     // Issue: https://github.com/bigeasy/packet/issues/601
-    return
     cycle(okay, {
         name: 'inline/converted',
         define: {

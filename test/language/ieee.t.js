@@ -14,6 +14,7 @@ require('proof')(1, okay => {
             fixed: true,
             before: [{
                 defaulted: [],
+                positional: true,
                 properties: [],
                 source: 'function (value) {\n' +
                   '    const buffer = Buffer.alloc(8)\n' +
@@ -46,6 +47,7 @@ require('proof')(1, okay => {
             }],
             after: [{
                 defaulted: [],
+                positional: true,
                 properties: [],
                 source: 'function (value) {\n    return value.readDoubleLE()\n}',
                 arity: 1,

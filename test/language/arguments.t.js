@@ -6,6 +6,7 @@ require('proof')(17, okay => {
     }
     okay(args([ ({ checksum: md5, $buffer }) => {} ]), {
         defaulted: [],
+        positional: false,
         properties: [ 'checksum', '$buffer' ],
         source: '({ checksum: md5, $buffer }) => {}',
         arity: 1,
@@ -13,6 +14,7 @@ require('proof')(17, okay => {
     }, 'destructured')
     okay(args([ ({ max, value = 0 }) => {} ]), {
         defaulted: [ 'value' ],
+        positional: false,
         properties: [ 'max', 'value' ],
         source: '({ max, value = 0 }) => {}',
         arity: 1,
@@ -20,6 +22,7 @@ require('proof')(17, okay => {
     }, 'assertion with zero')
     okay(args([ ({ max, value = null }) => {} ]), {
         defaulted: [ 'value' ],
+        positional: false,
         properties: [ 'max', 'value' ],
         source: '({ max, value = null }) => {}',
         arity: 1,
@@ -27,6 +30,7 @@ require('proof')(17, okay => {
     }, 'assertion with null')
     okay(args([ ({ max, value: renamed = 0 }) => {} ]), {
         defaulted: [ 'value' ],
+        positional: false,
         properties: [ 'max', 'value' ],
         source: '({ max, value: renamed = 0 }) => {}',
         arity: 1,
@@ -34,6 +38,7 @@ require('proof')(17, okay => {
     }, 'assertion destructured')
     okay(args([ (value, $) => {} ]), {
         defaulted: [],
+        positional: true,
         properties: [],
         source: '(value, $) => {}',
         arity: 2,
@@ -41,6 +46,7 @@ require('proof')(17, okay => {
     }, 'arrow')
     okay(args([ new Foo().foo ]), {
         defaulted: [],
+        positional: true,
         properties: [],
         source: 'foo ($) {}',
         arity: 1,
@@ -48,6 +54,7 @@ require('proof')(17, okay => {
     }, 'object member')
     okay(args([ Foo.prototype.foo ]), {
         defaulted: [],
+        positional: true,
         properties: [],
         source: 'foo ($) {}',
         arity: 1,
@@ -55,6 +62,7 @@ require('proof')(17, okay => {
     }, 'class member')
     okay(args([ value => {} ]), {
         defaulted: [],
+        positional: true,
         properties: [],
         source: 'value => {}',
         arity: 1,
@@ -63,6 +71,7 @@ require('proof')(17, okay => {
     okay(args([ function ($) {
     } ]), {
         defaulted: [],
+        positional: true,
         properties: [],
         source: 'function ($) {\n}',
         arity: 1,
@@ -70,6 +79,7 @@ require('proof')(17, okay => {
     }, 'trimmed')
     okay(args([ ({ value = 0 }) => {} ]), {
         defaulted: [ 'value' ],
+        positional: false,
         properties: [ 'value' ],
         source: '({ value = 0 }) => {}',
         arity: 1,
@@ -77,6 +87,7 @@ require('proof')(17, okay => {
     }, 'assertion')
     okay(args([ (value = 0) => {} ]), {
         defaulted: [ 0 ],
+        positional: true,
         properties: [],
         source: '(value = 0) => {}',
         arity: 1,
@@ -84,6 +95,7 @@ require('proof')(17, okay => {
     }, 'assertion positional')
     okay(args([ ({ value, init = 1 }) => {} ]), {
         defaulted: [],
+        positional: false,
         properties: [ 'value', 'init' ],
         source: '({ value, init = 1 }) => {}',
         arity: 1,
@@ -91,6 +103,7 @@ require('proof')(17, okay => {
     }, 'non default')
     okay(args([ (value=0,init={string:'\''}) => {} ]), {
         defaulted: [ 0 ],
+        positional: true,
         properties: [],
         source: "(value=0,init={string:'\\''}) => {}",
         arity: 2,
@@ -98,6 +111,7 @@ require('proof')(17, okay => {
     }, 'skip single quoted in object')
     okay(args([ ({ $: { header: { mask: m = 0, string = "\"\}" } }, value = 0 }) => { return value } ]), {
         defaulted: [ 'value' ],
+        positional: false,
         properties: [ '$', 'value' ],
         source: '({ $: { header: { mask: m = 0, string = "\\"\\}" } }, value = 0 }) => { return value }',
         arity: 1,
@@ -105,6 +119,7 @@ require('proof')(17, okay => {
     }, 'super ugly')
     okay(args([ value => value, 1 ]), {
         defaulted: [],
+        positional: true,
         properties: [],
         source: 'value => value',
         arity: 1,
@@ -112,6 +127,7 @@ require('proof')(17, okay => {
     }, 'vargs length')
     okay(args([ value => value, 1, value => value ]), {
         defaulted: [],
+        positional: true,
         properties: [],
         source: 'value => value',
         arity: 1,
@@ -121,6 +137,7 @@ require('proof')(17, okay => {
     // under or the name of the field.
     okay(args([ (max, $_ = 0) => $_, 10 ]), {
         defaulted: [ 1 ],
+        positional: true,
         properties: [],
         source: '(max, $_ = 0) => $_',
         arity: 2,

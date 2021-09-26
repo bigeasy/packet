@@ -442,6 +442,7 @@ require('proof')(11, okay => {
                     conditions: [{
                         test: {
                             defaulted: [],
+                            positional: true,
                             properties: [],
                             source: '$ => $.type == 0',
                             arity: 1,
@@ -460,6 +461,7 @@ require('proof')(11, okay => {
                     }, {
                         test: {
                             defaulted: [],
+                            positional: true,
                             properties: [],
                             source: '$ => $.type == 1',
                             arity: 1,
@@ -488,6 +490,7 @@ require('proof')(11, okay => {
                   conditions: [{
                       test: {
                           defaulted: [],
+                          positional: true,
                           properties: [],
                           source: '$ => $.type == 0',
                           arity: 1,
@@ -506,6 +509,7 @@ require('proof')(11, okay => {
                   }, {
                       test: {
                           defaulted: [],
+                          positional: true,
                           properties: [],
                           source: '$ => $.type == 1',
                           arity: 1,
@@ -588,6 +592,7 @@ require('proof')(11, okay => {
                     conditions: [{
                         test: {
                             defaulted: [],
+                            positional: true,
                             properties: [],
                             source: '$ => $.type == 0',
                             arity: 1,
@@ -606,6 +611,7 @@ require('proof')(11, okay => {
                     }, {
                         test: {
                             defaulted: [],
+                            positional: true,
                             properties: [],
                             source: '$ => $.type == 1',
                             arity: 1,
@@ -636,6 +642,7 @@ require('proof')(11, okay => {
                     conditions: [{
                         test: {
                             defaulted: [],
+                            positional: true,
                             properties: [],
                             source: '$ => $.type == 0',
                             arity: 1,
@@ -654,6 +661,7 @@ require('proof')(11, okay => {
                     }, {
                         test: {
                             defaulted: [],
+                            positional: true,
                             properties: [],
                             source: '$ => $.type == 1',
                             arity: 1,
@@ -736,6 +744,7 @@ require('proof')(11, okay => {
                     conditions: [{
                         test: {
                             defaulted: [],
+                            positional: true,
                             properties: [],
                             source: 'value => value < 128',
                             arity: 1,
@@ -787,6 +796,7 @@ require('proof')(11, okay => {
                     conditions: [{
                         test: {
                             defaulted: [],
+                            positional: true,
                             properties: [],
                             source: 'sip => sip & 0x80 == 0',
                             arity: 1,
@@ -874,6 +884,7 @@ require('proof')(11, okay => {
                 stringify: false,
                 select: {
                     defaulted: [],
+                    positional: true,
                     properties: [],
                     source: '$ => $.type == 0',
                     arity: 1,

@@ -126,7 +126,7 @@ function expand (fields) {
 // element in it's `lengths` property with a value of `0`.
 
 //
-function checkpoints (path, fields, $i = 0, $I = 0) {
+function checkpoints (path, fields, $i = 0, $I = 0, $$ = 0) {
     let checkpoint
     const checked = [ checkpoint = { type: 'checkpoint', lengths: [ 0 ] } ]
     for (const field of fields) {
@@ -138,7 +138,24 @@ function checkpoints (path, fields, $i = 0, $I = 0) {
             if (field.fixed) {
                 checkpoint.lengths.push(field.bits / 8)
             }  else {
-                field.fields = checkpoints(path + field.dotted, field.fields, $i + 1, $I)
+                const subPath = function () {
+                    if (
+                        field.type == 'inline' &&
+                        field.before.filter(inline => {
+                            return (
+                                inline.positional && inline.arity > 0
+                            ) || (
+                                inline.properties.filter(property => {
+                                    return property == '$_' || property == field.dotted.substring(1)
+                                }).length != 0
+                            )
+                        }).length != 0
+                    ) {
+                        return `$$[${$$}]`
+                    }
+                    return path + field.dotted
+                } ()
+                field.fields = checkpoints(subPath, field.fields, $i + 1, $I)
                 checked.push(checkpoint = { type: 'checkpoint', lengths: [ 0 ] })
             }
             break
@@ -268,28 +285,28 @@ function checkpoints (path, fields, $i = 0, $I = 0) {
 // length of the entire packet.
 
 //
-function inquisition (path, fields, $i = 0, $I = 0) {
+function inquisition (path, fields, $i = 0, $I = 0, $$ = 0) {
     const checked = []
     for (const field of fields) {
         switch (field.type) {
         case 'inline':
-            field.fields = inquisition(path + field.dotted, field.fields, $i, $I)
+            field.fields = inquisition(`$$[${$$}]`, field.fields, $i, $I, $$ + 1)
             checked.push(field)
             break
         case 'accumulator':
         case 'structure':
-            field.fields = inquisition(path + field.dotted, field.fields, $i, $I)
+            field.fields = inquisition(path + field.dotted, field.fields, $i, $I, $$)
             checked.push(field)
             break
         case 'conditional':
             for (const condition of field.serialize.conditions) {
-                condition.fields = inquisition(path + field.dotted, condition.fields, $i, $I)
+                condition.fields = inquisition(path + field.dotted, condition.fields, $i, $I, $$)
             }
             checked.push(field)
             break
         case 'switch':
             for (const when of field.cases) {
-                when.fields = inquisition(path + field.dotted, when.fields, $i, $I)
+                when.fields = inquisition(path + field.dotted, when.fields, $i, $I, $$)
             }
             checked.push(field)
             break
@@ -301,7 +318,7 @@ function inquisition (path, fields, $i = 0, $I = 0) {
                         : `${path + field.dotted}.reduce((sum, buffer) => sum + buffer.length, 0)`
                 ]})
             } else {
-                field.fields = inquisition(path + field.dotted, field.fields, $i + 1, $I)
+                field.fields = inquisition(path + field.dotted, field.fields, $i + 1, $I, $$)
             }
             checked.push(field)
             break
@@ -317,7 +334,7 @@ function inquisition (path, fields, $i = 0, $I = 0) {
             if (field.body.encoding[0].fixed) {
                 checked.push({ type: 'checkpoint', lengths: [ field.body.encoding[0].bits / 8 ]})
             } else {
-                field.body.encoding = inquisition(`${path}.length`, field.body.encoding, $i, $I)
+                field.body.encoding = inquisition(`${path}.length`, field.body.encoding, $i, $I, $$)
             }
             checked.push(field)
             break
@@ -335,7 +352,7 @@ function inquisition (path, fields, $i = 0, $I = 0) {
                         : `${path + field.dotted}.reduce((sum, buffer) => sum + buffer.length, 0)`
                 ]})
             } else {
-                field.fields = inquisition(path + field.dotted, field.fields, $i + 1, $I + 1)
+                field.fields = inquisition(path + field.dotted, field.fields, $i + 1, $I + 1, $$)
             }
             checked.push(field)
             break
@@ -356,9 +373,9 @@ function inquisition (path, fields, $i = 0, $I = 0) {
                 checked.push(field)
             } else {
                 if (field.calculated) {
-                    field.fields = inquisition(path + field.dotted, field.fields, $i + 1, $I + 1)
+                    field.fields = inquisition(path + field.dotted, field.fields, $i + 1, $I + 1, $$)
                 } else {
-                    field.fields = inquisition(path + field.dotted, field.fields, $i + 1, $I)
+                    field.fields = inquisition(path + field.dotted, field.fields, $i + 1, $I, $$)
                 }
                 checked.push(field)
             }

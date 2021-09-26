@@ -3,7 +3,9 @@ const sizeOf = {
         return function (object) {
             let $start = 0, $accumulator = {}, $$ = []
 
-            $start += 1 * object.string.length + 1
+            $$[0] = (value => Buffer.from(value, encoding))(object.string, object)
+
+            $start += 1 * $$[0].length + 1
 
             return $start
         }
@@ -186,7 +188,7 @@ module.exports = {
 
                             $$[0] = (value => Buffer.from(value, encoding))(object.string, object)
 
-                            if ($end - $start < 1 + object.string.length * 1) {
+                            if ($end - $start < 1 + $$[0].length * 1) {
                                 return $incremental.object(object, {
                                     encoding: encoding
                                 }, 2, $i, $$, $accumulator)($buffer, $start, $end)

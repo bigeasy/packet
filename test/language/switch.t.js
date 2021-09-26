@@ -34,6 +34,7 @@ require('proof')(2, okay => {
             stringify: false,
             select: {
                 properties: [],
+                positional: true,
                 defaulted: [],
                 source: '$ => $.type',
                 arity: 1,
@@ -144,6 +145,7 @@ require('proof')(2, okay => {
                 stringify: false,
                 select: {
                     defaulted: [],
+                    positional: true,
                     properties: [],
                     source: '$ => $.type',
                     arity: 1,

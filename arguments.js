@@ -100,8 +100,10 @@ module.exports = function (array) {
     const length = source.length
     const args = /^(?:function)?[^(]*\(\s*/
     source = source.replace(args, '')
+    let positional = true
     if (source.length == length) {
     } else if (source[0] == '{') {
+        positional = false
         source = next()
         parameters('}')
     } else {
@@ -120,6 +122,7 @@ module.exports = function (array) {
     const $ = /[^(]*\(\s*{\s*(.*?)\s*}/.exec(f.toString())
     return {
         defaulted,
+        positional,
         properties: properties,
         source: trim(f.toString()).replace(/^function\s*[^(]+\s*\(/, 'function ('),
         arity: arity,

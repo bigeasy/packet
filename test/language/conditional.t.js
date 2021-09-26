@@ -34,6 +34,7 @@ require('proof')(5, okay => {
                 conditions: [{
                     test: {
                         defaulted: [],
+                        positional: true,
                         properties: [],
                         vargs: [],
                         source: 'value => value < 251',
@@ -52,6 +53,7 @@ require('proof')(5, okay => {
                 }, {
                     test: {
                         defaulted: [],
+                        positional: true,
                         properties: [],
                         vargs: [],
                         source: 'value => value >= 251',
@@ -127,6 +129,7 @@ require('proof')(5, okay => {
                 conditions: [{
                     test: {
                         defaulted: [],
+                        positional: true,
                         properties: [],
                         vargs: [],
                         source: 'sip => sip < 251',
@@ -147,6 +150,7 @@ require('proof')(5, okay => {
                 }, {
                     test: {
                         defaulted: [],
+                        positional: true,
                         properties: [],
                         vargs: [],
                         source: 'sip => sip == 0xfc',
@@ -252,6 +256,7 @@ require('proof')(5, okay => {
                 conditions: [{
                     test: {
                         defaulted: [],
+                        positional: true,
                         properties: [],
                         vargs: [],
                         source: '$ => $.type == 0',
@@ -274,6 +279,7 @@ require('proof')(5, okay => {
                 }, {
                     test: {
                         defaulted: [],
+                        positional: true,
                         properties: [],
                         vargs: [],
                         source: '$ => $.type == 1',
@@ -324,6 +330,7 @@ require('proof')(5, okay => {
                 conditions: [{
                     test: {
                         defaulted: [],
+                        positional: true,
                         properties: [],
                         vargs: [],
                         source: '$ => $.type == 0',
@@ -346,6 +353,7 @@ require('proof')(5, okay => {
                 }, {
                     test: {
                         defaulted: [],
+                        positional: true,
                         properties: [],
                         vargs: [],
                         source: '$ => $.type == 1',
@@ -431,6 +439,7 @@ require('proof')(5, okay => {
                 conditions: [{
                     test: {
                         defaulted: [],
+                        positional: true,
                         properties: [],
                         vargs: [],
                         source: '$ => $.type == 0',
@@ -453,6 +462,7 @@ require('proof')(5, okay => {
                 }, {
                     test: {
                         defaulted: [],
+                        positional: true,
                         properties: [],
                         vargs: [],
                         source: '$ => $.type == 1',
@@ -501,6 +511,7 @@ require('proof')(5, okay => {
                 conditions: [{
                     test: {
                         defaulted: [],
+                        positional: true,
                         properties: [],
                         vargs: [],
                         source: '$ => $.type == 0',
@@ -523,6 +534,7 @@ require('proof')(5, okay => {
                 }, {
                     test: {
                         defaulted: [],
+                        positional: true,
                         properties: [],
                         vargs: [],
                         source: '$ => $.type == 1',
@@ -622,6 +634,7 @@ require('proof')(5, okay => {
                     conditions: [{
                         test: {
                             defaulted: [],
+                            positional: true,
                             properties: [],
                             vargs: [],
                             source: '$ => $.header.flag == 0',
@@ -639,6 +652,7 @@ require('proof')(5, okay => {
                     }, {
                         test: {
                             defaulted: [],
+                            positional: true,
                             properties: [],
                             vargs: [],
                             source: '$ => $.header.flag == 1',
@@ -666,6 +680,7 @@ require('proof')(5, okay => {
                     }, {
                         test: {
                             defaulted: [],
+                            positional: true,
                             properties: [],
                             vargs: [],
                             source: '$ => $.header.flag == 2',
@@ -736,6 +751,7 @@ require('proof')(5, okay => {
                     conditions: [{
                         test: {
                             defaulted: [],
+                            positional: true,
                             properties: [],
                             vargs: [],
                             source: '$ => $.header.flag == 0',
@@ -753,6 +769,7 @@ require('proof')(5, okay => {
                     }, {
                         test: {
                             defaulted: [],
+                            positional: true,
                             properties: [],
                             vargs: [],
                             source: '$ => $.header.flag == 1',
@@ -779,6 +796,7 @@ require('proof')(5, okay => {
                     }, {
                         test: {
                             defaulted: [],
+                            positional: true,
                             properties: [],
                             vargs: [],
                             source: '$ => $.header.flag == 2',
@@ -889,6 +907,7 @@ require('proof')(5, okay => {
             conditions: [{
                 test: {
                     defaulted: [],
+                    positional: true,
                     properties: [],
                     source: 'value => value <= 0x7f',
                     arity: 1,
@@ -909,6 +928,7 @@ require('proof')(5, okay => {
             }, {
                 test: {
                     defaulted: [],
+                    positional: true,
                     properties: [],
                     source: 'value => value <= 0x3fff',
                     arity: 1,
@@ -931,6 +951,7 @@ require('proof')(5, okay => {
             }, {
                 test: {
                     defaulted: [],
+                    positional: true,
                     properties: [],
                     source: 'value => value <= 0x1fffff',
                     arity: 1,
@@ -992,6 +1013,7 @@ require('proof')(5, okay => {
             conditions: [{
                 test: {
                     defaulted: [],
+                    positional: true,
                     properties: [],
                     source: 'sip => sip & 0x80 == 0',
                     arity: 1,
@@ -1029,6 +1051,7 @@ require('proof')(5, okay => {
                     conditions: [{
                         test: {
                             defaulted: [],
+                            positional: true,
                             properties: [],
                             source: 'sip => sip & 0x80 == 0',
                             arity: 1,
@@ -1068,6 +1091,7 @@ require('proof')(5, okay => {
                             conditions: [{
                                 test: {
                                     defaulted: [],
+                                    positional: true,
                                     properties: [],
                                     source: 'sip => sip & 0x80 == 0',
                                     arity: 1,
