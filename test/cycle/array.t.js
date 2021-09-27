@@ -38,7 +38,6 @@ function prove (okay) {
         },
         objects: [{ array: [{ value: 0xaaaa }] }]
     })
-    return
     cycle(okay, {
         name: 'array/fixed',
         define: {
