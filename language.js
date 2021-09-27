@@ -158,7 +158,7 @@ module.exports = function (packets) {
     // maintainence and expansion. Outer array.
 
     const is = {
-        ultimately: function (packet, test) {
+        ultimately: function (packet, test, sip = false) {
             if (test(packet)) {
                 return true
             // **TODO**: See literal ambiguities. We're going to assume we've
@@ -200,7 +200,12 @@ module.exports = function (packets) {
                     sliced.shift()
                 }
                 return sliced.filter((_, index) => index % 2 == 1).every(packet => {
-                    return is.ultimately(packet, test)
+                    return is.ultimately(packet, test, true)
+                })
+            }
+            if (sip && is.conditional.sip(packet)) {
+                return packet.slice(1).filter((_, index) => index % 2 == 1).every(packet => {
+                    return is.ultimately(packet, test, true)
                 })
             }
             return false
@@ -441,6 +446,7 @@ module.exports = function (packets) {
                 }).length == array.length
             },
             sip: function (array) {
+                console.error('yes split')
                 return typeof array[0] == 'number' &&
                     is.conditional.ladder(array.slice(1))
             },
@@ -670,7 +676,7 @@ module.exports = function (packets) {
         }
 
         // **Literals**:
-        function padded() {
+        function padded () {
             const sliced = packet.slice(0)
             const before = literal(sliced, 0)
             const after = literal(sliced, sliced.length - 1)
@@ -1089,7 +1095,10 @@ module.exports = function (packets) {
             else if (is.conditional.mirrored(packet)) return conditional.mirrored()
             else if (is.accumulator(packet)) return accumulator()
             else if (is.switched(packet)) return switched()
-            else throw new Error('unknown')
+            else {
+                console.error(packet)
+                throw new Error('unknown')
+            }
         }
 
         function object () {
