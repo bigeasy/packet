@@ -164,9 +164,6 @@ module.exports = function (packets) {
             // **TODO**: See literal ambiguities. We're going to assume we've
             // forced them into arrays.
             }
-            if (typeof packet == 'string') {
-                return is.ultimately(snippets[packet], test)
-            }
             if (is.literal.padded(packet)) {
                 if (Array.isArray(packet[0]) && packet[0].some(item => typeof item == 'string')) {
                     return is.ultimately(packet[1], test)
@@ -302,22 +299,19 @@ module.exports = function (packets) {
         // string hexdecimal value followed by a repeat count as number.
         literal: {
             pattern: function (part) {
-                return (
-                    typeof part == 'string' &&
-                    snippets[part[0]] == null
-                ) ||
-                (
-                    Array.isArray(part) &&
+                return typeof part == 'string' ||
                     (
-                        part.length == 1 &&
-                        typeof part[0] == 'string'
-                    ) ||
-                    (
-                        part.length == 2 &&
-                        part.filter(item => typeof item == 'string').length == 1 &&
-                        part.filter(item => typeof item == 'number').length == 1
+                        Array.isArray(part) &&
+                        (
+                            part.length == 1 &&
+                            typeof part[0] == 'string'
+                        ) ||
+                        (
+                            part.length == 2 &&
+                            part.filter(item => typeof item == 'string').length == 1 &&
+                            part.filter(item => typeof item == 'number').length == 1
+                        )
                     )
-                )
             },
             constant: function (packet) {
                 return is.literal.pattern(packet)
@@ -466,11 +460,6 @@ module.exports = function (packets) {
     }
 
     function map (packet, extra = {}, pack = false) {
-        // **References**: References to existing packet definitions.
-        function string () {
-            return map(snippets[packet], extra, pack)
-        }
-
         const ieee = {
             shorthand: function () {
                 const fractional = packet - Math.floor(packet) != 0
@@ -608,8 +597,7 @@ module.exports = function (packets) {
 
         function literal (sliced, index) {
             if (
-                typeof sliced[index] == 'string' &&
-                snippets[sliced[index]] == null
+                typeof sliced[index] == 'string'
             ) {
                 const value = sliced.splice(index, 1).pop()
                 return {
@@ -627,8 +615,7 @@ module.exports = function (packets) {
             } else if (
                 Array.isArray(sliced[index]) &
                 sliced[index].length == 2 &&
-                typeof sliced[index][1] == 'string' &&
-                snippets[sliced[index][1]] == null
+                typeof sliced[index][1] == 'string'
             ) {
                 const packed = sliced.splice(index, 1).pop()
                 return {
@@ -642,8 +629,7 @@ module.exports = function (packets) {
                     sliced[index].length == 2 ||
                     sliced[index].length == 1
                 ) &&
-                typeof sliced[index][0] == 'string' &&
-                snippets[sliced[index][0]] == null
+                typeof sliced[index][0] == 'string'
             ) {
                 const repeated = sliced.splice(index, 1).pop()
                 const repeat = repeated[1] || 1
@@ -1110,7 +1096,6 @@ module.exports = function (packets) {
         }
 
         switch (typeof packet) {
-        case 'string': return string()
         case 'number': return number()
         case 'bigint': return bigint()
         case 'object': return object()
