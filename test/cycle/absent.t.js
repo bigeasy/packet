@@ -19,4 +19,16 @@ function prove (okay) {
         },
         objects: [{ value: [] }]
     })
+    require('./cycle')(okay, {
+        name: 'absent/switch',
+        define: {
+            object: {
+                value: [ $ => 0, [
+                    { $_: 0 }, null,
+                    {}, null
+                ]]
+            }
+        },
+        objects: [{ value: null }]
+    })
 }

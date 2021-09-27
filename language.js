@@ -545,12 +545,13 @@ module.exports = function (packets) {
         // conditionals to implement optional fields.
         function absent (value) {
             return [{
-                ...extra,
                 type: 'absent',
                 vivify: value == null ? 'variant' : 'array',
                 value: value,
+                dotted: '',
                 bits: 0,
-                fixed: true
+                fixed: true,
+                ...extra
             }]
         }
         //
@@ -1041,14 +1042,14 @@ module.exports = function (packets) {
                     : 'variant'
             }, cases[0].fields[0].vivify)
             return [{
-                ...extra,
                 type: 'switch',
                 select: { ...args([ packet[0] ]) },
                 vivify: vivify == 'object' ? 'variant' : vivify,
                 stringify: ! Array.isArray(packet[1]),
                 bits: bits < 0 ? 0 : bits,
                 fixed: bits > 0,
-                cases: cases
+                cases: cases,
+                ...extra
             }]
         }
         //
