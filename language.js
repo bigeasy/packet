@@ -1160,7 +1160,7 @@ module.exports = function (packets) {
         if (packet[0] == '$') {
             snippets[packet] = packets[packet]
         } else {
-            console.log(require('util').inspect({
+            console.error(require('util').inspect({
                 original: packets[packet],
                 included: include(packets[packet])
             }, { depth: null }))
