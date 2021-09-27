@@ -440,7 +440,6 @@ module.exports = function (packets) {
                 }).length == array.length
             },
             sip: function (array) {
-                console.error('yes split')
                 return typeof array[0] == 'number' &&
                     is.conditional.ladder(array.slice(1))
             },
@@ -1145,10 +1144,6 @@ module.exports = function (packets) {
         if (packet[0] == '$') {
             snippets[packet] = packets[packet]
         } else {
-            console.error(require('util').inspect({
-                original: packets[packet],
-                included: include(packets[packet])
-            }, { depth: null }))
             definitions.push(map(include(packets[packet]), { name: packet }).shift())
         }
     }
