@@ -344,4 +344,13 @@ function prove (okay) {
             sentry: 0xaa
         }]
     })
+    // # Issue: https://github.com/bigeasy/packet/issues/610
+    cycle(okay, {
+        name: 'array/include',
+        define: {
+            $include: 16,
+            object: { nudge: 8, array: [ '$include', [ 16 ] ], sentry: 8  }
+        },
+        objects: [{ nudge: 0xaa, array: [ 0x1236, 0x4567, 0x890a, 0xcdef ], sentry: 0xaa }]
+    })
 }

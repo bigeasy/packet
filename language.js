@@ -617,13 +617,13 @@ module.exports = function (packets) {
                     value: value,
                     bits: value.length * 4
                 }
-            // **TODO**: Ambiguity if we have literals inside literals.
-            // Would be resolved by insisting on the array surrounding the
-            // literal definition.
+            // **TODO**: Ambiguity if we have literals inside literals. Would be
+            // resolved by insisting on the array surrounding the literal
+            // definition.
             // **TODO**: Second ambiguity. Includes can be confused with
-            // literals. May have to force literals into arrays, or else
-            // force includes into arrays. Maybe let's force literals into
-            // arrays since arrays are there already.
+            // literals. May have to force literals into arrays, or else force
+            // includes into arrays. Maybe let's force literals into arrays
+            // since arrays are there already.
             } else if (
                 Array.isArray(sliced[index]) &
                 sliced[index].length == 2 &&
@@ -1119,13 +1119,52 @@ module.exports = function (packets) {
         console.log(packet)
         throw new Error
     }
+
+    function include (packet) {
+        switch (typeof packet) {
+        case 'object': {
+                if (packet == null) {
+                    return null
+                }
+                if (packet instanceof RegExp) {
+                    return packet
+                }
+                if (Array.isArray(packet)) {
+                    const copy = []
+                    for (const element of packet) {
+                        copy.push(include(element))
+                    }
+                    return copy
+                }
+                const copy = {}
+                for (const name in packet) {
+                    copy[name] = include(packet[name])
+                }
+                return copy
+            }
+        case 'string': {
+                if (packet in snippets) {
+                    return include(snippets[packet])
+                }
+                return packet
+            }
+        default: {
+                return packet
+            }
+        }
+    }
+
     // TODO If I'm ever able to parse from root, then I'll go ahead and add all
     // the snippets as well.
     for (const packet in packets) {
         if (packet[0] == '$') {
             snippets[packet] = packets[packet]
         } else {
-            definitions.push(map(packets[packet], { name: packet }).shift())
+            console.log(require('util').inspect({
+                original: packets[packet],
+                included: include(packets[packet])
+            }, { depth: null }))
+            definitions.push(map(include(packets[packet]), { name: packet }).shift())
         }
     }
     return definitions
