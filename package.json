@@ -51,9 +51,10 @@
     },
     "devDependencies":
     {
-                            "ip":                           "1.1.5",
                             "extant":                       "^2.0.0-alpha.4",
-                            "proof":                        "^9.0.3"
+                            "ip":                           "1.1.5",
+                            "proof":                        "^9.0.3",
+                            "mqtt-packet":                  "7.1.1"
     },
     "main":                 "packet.js",
     "scripts":
