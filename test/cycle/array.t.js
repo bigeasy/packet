@@ -353,4 +353,22 @@ function prove (okay) {
         },
         objects: [{ nudge: 0xaa, array: [ 0x1236, 0x4567, 0x890a, 0xcdef ], sentry: 0xaa }]
     })
+    // # Issue: https://github.com/bigeasy/packet/issues/611
+    cycle(okay, {
+        name: 'array/multiple',
+        define: {
+            object: { nudge: 8, first: [ 16, [ Buffer ] ], second: [ 16, [ Buffer ] ], sentry: 8  }
+        },
+        objects: [{ nudge: 0xaa, first: Buffer.from([ 0x1 ]), second: Buffer.from([ 0x2 ]), sentry: 0xaa }]
+    })
+    /*
+    cycle(okay, {
+        name: 'array/multiple',
+        define: {
+            $select: [ $ => 0, [ { $_: 0 }, 8 ] ],
+            object: { nudge: 8, first: [ '$select', [ 8 ] ], second: [ '$select', [ 8 ] ], sentry: 8  }
+        },
+        objects: [{ nudge: 0xaa, first: [ 0x1 ], second: [ 0x2 ], sentry: 0xaa }]
+    })
+    */
 }

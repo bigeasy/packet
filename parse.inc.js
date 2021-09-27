@@ -286,11 +286,12 @@ function generate (packet, { require = null }) {
                 `, encoding, `
 
                 case ${$step++}:
-
-                    const $length = Math.min(${I} - $index, $end - $start)
-                    $buffers.push($buffer.slice($start, $start + $length))
-                    $index += $length
-                    $start += $length
+                    {
+                        const $length = Math.min(${I} - $index, $end - $start)
+                        $buffers.push($buffer.slice($start, $start + $length))
+                        $index += $length
+                        $start += $length
+                    }
 
                     if ($index != ${I}) {
                         $step = ${$step - 1}

@@ -162,11 +162,12 @@ module.exports = function ({ $lookup }) {
                             $I[0] = $buffer[$start++]
 
                         case 19:
-
-                            const $length = Math.min($I[0] - $index, $end - $start)
-                            $buffers.push($buffer.slice($start, $start + $length))
-                            $index += $length
-                            $start += $length
+                            {
+                                const $length = Math.min($I[0] - $index, $end - $start)
+                                $buffers.push($buffer.slice($start, $start + $length))
+                                $index += $length
+                                $start += $length
+                            }
 
                             if ($index != $I[0]) {
                                 $step = 19
