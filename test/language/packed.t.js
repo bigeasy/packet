@@ -5,7 +5,8 @@ require('proof')(1, okay => {
             header: [{
                 one: [[ 16, 'deaf' ], 1 ],
                 two: -3,
-                three: 12
+                three: [ [ $_ => $_ ],  4, [ $_ => $_ ] ],
+                four: 8
             }, 32 ]
         }
     }), [{
@@ -62,13 +63,46 @@ require('proof')(1, okay => {
                 compliment: true
             }, {
                 name: 'three',
+                type: 'inline',
+                vivify: 'descend',
                 dotted: '.three',
+                bits: 4,
+                fixed: true,
+                before: [{
+                    defaulted: [],
+                    positional: true,
+                    properties: [],
+                    source: '$_ => $_',
+                    arity: 1,
+                    vargs: []
+                }],
+                fields: [{
+                    dotted: '',
+                    type: 'integer',
+                    vivify: 'number',
+                    bytes: [{ mask: 255, size: 8, shift: -3, upper: 0 }],
+                    bits: 4,
+                    fixed: true,
+                    endianness: 'big',
+                    compliment: false
+                }],
+                after: [{
+                    defaulted: [],
+                    positional: true,
+                    properties: [],
+                    source: '$_ => $_',
+                    arity: 1,
+                    vargs: []
+                }]
+            }, {
                 type: 'integer',
                 vivify: 'number',
-                bits: 12,
+                dotted: '.four',
                 fixed: true,
+                bits: 8,
                 endianness: 'big',
-                compliment: false
+                compliment: false,
+                name: 'four'
             }]
         }]
     }], 'packed')
