@@ -1,7 +1,8 @@
 require('proof')(0, prove)
 
 function prove (okay) {
-    require('./cycle')(okay, {
+    const cycle = require('./cycle')
+    cycle(okay, {
         name: 'packed',
         define: {
             object: {
@@ -9,8 +10,8 @@ function prove (okay) {
                 header: [{
                     one: [[ 15, '5eaf' ], 2 ],
                     two: -3,
-                    three: [[[ value => ~value & 0xf ]], 4 ],
-                    four: [ 2, [
+                    three: [[[ value => value ]], 1 ],
+                    four: [ 5, [
                         'zero', 'one', 'two', 'three'
                     ]],
                     five: [ 6, 'aa' ]

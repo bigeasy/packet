@@ -701,7 +701,7 @@ module.exports = function (packets) {
                 inline.inliner(before, define.shift().slice())
                 const after = []
                 inline.inliner(after, define.pop().slice())
-                const fields = map(define[0], {})
+                const fields = map(define[0], {}, pack)
                 return [{
                     type: 'inline',
                     // TODO Test with a structure member.
@@ -722,7 +722,7 @@ module.exports = function (packets) {
                 inline.inliner(before, inlines.slice())
                 const after = []
                 inline.inliner(after, inlines.slice())
-                const fields = map(packet[1], {})
+                const fields = map(packet[1], {}, pack)
                 return [{
                     type: 'inline',
                     // TODO Test with a structure member.
@@ -976,6 +976,7 @@ module.exports = function (packets) {
                     }
                 }
             })
+            // TODO Would you put an accumulator aroudn a single packed field?
             const fields = map(packet[1], {})
             return [{
                 type: 'accumulator',

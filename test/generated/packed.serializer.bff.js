@@ -16,13 +16,13 @@ module.exports = function ({ $incremental, $lookup }) {
                         object.header.one << 15 & 0x18000 |
                         object.header.two << 12 & 0x7000
 
-                    $$[0] = (value => ~value & 0xf)(object.header.three)
+                    $$[0] = (value => value)(object.header.three)
 
                     $_ |=
-                        $$[0] << 8 & 0xf00
+                        $$[0] << 11 & 0x800
 
                     $_ |=
-                        $lookup[0].indexOf(object.header.four) << 6 & 0xc0 |
+                        $lookup[0].indexOf(object.header.four) << 6 & 0x7c0 |
                         0xaa & 0x3f
 
                     $buffer[$start++] = $_ >>> 24 & 0xff

@@ -80,7 +80,6 @@ require('proof')(1, okay => {
                     dotted: '',
                     type: 'integer',
                     vivify: 'number',
-                    bytes: [{ mask: 255, size: 8, shift: -3, upper: 0 }],
                     bits: 4,
                     fixed: true,
                     endianness: 'big',

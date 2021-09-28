@@ -39,11 +39,11 @@ module.exports = function ({ $incremental, $lookup }) {
                     object.header.two =
                         $2s & 0x4 ? (0x7 - $2s + 1) * -1 : $2s
 
-                    object.header.three = $_ >>> 8 & 0xf
+                    object.header.three = $_ >>> 11 & 0x1
 
-                    object.header.three = (value => ~value & 0xf)(object.header.three)
+                    object.header.three = (value => value)(object.header.three)
 
-                    object.header.four = $lookup[0][$_ >>> 6 & 0x3]
+                    object.header.four = $lookup[0][$_ >>> 6 & 0x1f]
 
                     if ($end - $start < 1) {
                         return $incremental.object(object, 5)($buffer, $start, $end)
