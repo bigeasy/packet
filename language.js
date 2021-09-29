@@ -847,7 +847,6 @@ module.exports = function (packets) {
                     return { conditions }
                 } ()
                 function descend (parse) {
-                    console.error('descend', parse)
                     const sip = []
                     if (typeof parse[0] == 'number') {
                         sip.push(map(parse.shift(), {}).shift())

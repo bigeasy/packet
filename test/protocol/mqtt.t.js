@@ -1,4 +1,4 @@
-require('proof')(4, okay => {
+require('proof')(6, okay => {
     const mqtt = require('mqtt-packet')
     const parser = mqtt.parser({ protocolVersion: 5 })
 
@@ -45,6 +45,23 @@ require('proof')(4, okay => {
         }).toJSON(),
         mqtt.generate({ cmd: 'connect', clientId: 'a', username: 'a' }).toJSON(),
         'connect with username'
+    )
+
+    okay(
+        serialize({
+            fixed: { header: { type: 'connect' } },
+            variable: { flags: { cleanStart: 1 }, clientId: 'a', username: 'a', password: Buffer.from('b') },
+        }).toJSON(),
+        mqtt.generate({ cmd: 'connect', clientId: 'a', username: 'a', password: Buffer.from('b') }).toJSON(),
+        'connect with username and password'
+    )
+    okay(
+        serialize({
+            fixed: { header: { type: 'connect' } },
+            variable: { flags: { cleanStart: 1 }, clientId: 'a', topic: 'c', message: Buffer.from('d'), username: 'a', password: Buffer.from('b') },
+        }).toJSON(),
+        mqtt.generate({ cmd: 'connect', clientId: 'a', will: { topic: 'c', payload: Buffer.from('d') }, username: 'a', password: Buffer.from('b') }).toJSON(),
+        'connect with topic, username and password'
     )
 
     console.log(serialize({

@@ -58,6 +58,28 @@ const sizeOf = {
                 $start += 1 * $$[0].length
 
 
+                if ((({ $ }) => $.variable.topic != null)({
+                    $: variable
+                })) {
+                    $$[0] = ($_ => Buffer.from($_))(variable.variable.topic)
+
+                    $start += 2
+
+                    $start += 1 * $$[0].length
+                } else {
+                }
+
+
+                if ((({ $ }) => $.variable.topic != null)({
+                    $: variable
+                })) {
+                    $start += 2
+
+                    $start += 1 * variable.variable.message.length
+                } else {
+                }
+
+
                 if ((({ $ }) => $.variable.username != null)({
                     $: variable
                 })) {
@@ -66,6 +88,16 @@ const sizeOf = {
                     $start += 2
 
                     $start += 1 * $$[0].length
+                } else {
+                }
+
+
+                if ((({ $ }) => $.variable.password != null)({
+                    $: variable
+                })) {
+                    $start += 2
+
+                    $start += 1 * variable.variable.password.length
                 } else {
                 }
 
@@ -188,8 +220,14 @@ const serializer = {
 
                         $_ |=
                             variable.variable.flags.wilRetain << 5 & 0x20 |
-                            variable.variable.flags.willQoS << 3 & 0x18 |
-                            variable.variable.flags.willFlag << 2 & 0x4 |
+                            variable.variable.flags.willQoS << 3 & 0x18
+
+                        $$[0] = (($_, $) => $.variable.topic == null ? 0 : 1)(variable.variable.flags.willFlag, variable)
+
+                        $_ |=
+                            $$[0] << 2 & 0x4
+
+                        $_ |=
                             variable.variable.flags.cleanStart << 1 & 0x2 |
                             0x0 & 0x1
 
@@ -206,6 +244,30 @@ const serializer = {
                         $$[0].copy($buffer, $start, 0, $$[0].length)
                         $start += $$[0].length
 
+                        if ((({ $ }) => $.variable.topic != null)({
+                            $: variable
+                        })) {
+                            $$[0] = ($_ => Buffer.from($_))(variable.variable.topic)
+
+                            $buffer[$start++] = $$[0].length >>> 8 & 0xff
+                            $buffer[$start++] = $$[0].length & 0xff
+
+                            $$[0].copy($buffer, $start, 0, $$[0].length)
+                            $start += $$[0].length
+                        } else {
+                        }
+
+                        if ((({ $ }) => $.variable.topic != null)({
+                            $: variable
+                        })) {
+                            $buffer[$start++] = variable.variable.message.length >>> 8 & 0xff
+                            $buffer[$start++] = variable.variable.message.length & 0xff
+
+                            variable.variable.message.copy($buffer, $start, 0, variable.variable.message.length)
+                            $start += variable.variable.message.length
+                        } else {
+                        }
+
                         if ((({ $ }) => $.variable.username != null)({
                             $: variable
                         })) {
@@ -216,6 +278,17 @@ const serializer = {
 
                             $$[0].copy($buffer, $start, 0, $$[0].length)
                             $start += $$[0].length
+                        } else {
+                        }
+
+                        if ((({ $ }) => $.variable.password != null)({
+                            $: variable
+                        })) {
+                            $buffer[$start++] = variable.variable.password.length >>> 8 & 0xff
+                            $buffer[$start++] = variable.variable.password.length & 0xff
+
+                            variable.variable.password.copy($buffer, $start, 0, variable.variable.password.length)
+                            $start += variable.variable.password.length
                         } else {
                         }
 
@@ -462,12 +535,12 @@ const serializer = {
 
                                 case 'pingreq':
 
-                                    $step = 22
+                                    $step = 38
                                     continue
 
                                 case 'pingresp':
 
-                                    $step = 23
+                                    $step = 39
                                     continue
                                 }
 
@@ -542,8 +615,14 @@ const serializer = {
 
                                 $_ |=
                                     variable.variable.flags.wilRetain << 5 & 0x20 |
-                                    variable.variable.flags.willQoS << 3 & 0x18 |
-                                    variable.variable.flags.willFlag << 2 & 0x4 |
+                                    variable.variable.flags.willQoS << 3 & 0x18
+
+                                $$[0] = (($_, $) => $.variable.topic == null ? 0 : 1)(variable.variable.flags.willFlag, variable)
+
+                                $_ |=
+                                    $$[0] << 2 & 0x4
+
+                                $_ |=
                                     variable.variable.flags.cleanStart << 1 & 0x2 |
                                     0x0 & 0x1
 
@@ -612,7 +691,7 @@ const serializer = {
 
                             case 16:
 
-                                if ((({ $ }) => $.variable.username != null)({
+                                if ((({ $ }) => $.variable.topic != null)({
                                     $: variable
                                 })) {
                                     $step = 17
@@ -624,7 +703,7 @@ const serializer = {
 
                             case 17:
 
-                                $$[0] = ($_ => Buffer.from($_))(variable.variable.username)
+                                $$[0] = ($_ => Buffer.from($_))(variable.variable.topic)
 
                             case 18:
 
@@ -662,14 +741,165 @@ const serializer = {
                                 continue
 
                             case 21:
-                                $step = 24
-                                continue
 
                             case 22:
-                                $step = 24
-                                continue
+
+                                if ((({ $ }) => $.variable.topic != null)({
+                                    $: variable
+                                })) {
+                                    $step = 23
+                                    continue
+                                } else {
+                                    $step = 26
+                                    continue
+                                }
 
                             case 23:
+
+                                $bite = 1
+                                $_ = variable.variable.message.length
+
+                            case 24:
+
+                                while ($bite != -1) {
+                                    if ($start == $end) {
+                                        $step = 24
+                                        return { start: $start, serialize: $serialize }
+                                    }
+                                    $buffer[$start++] = $_ >>> $bite * 8 & 0xff
+                                    $bite--
+                                }
+
+                            case 25: {
+
+                                const $bytes = Math.min($end - $start, variable.variable.message.length - $copied)
+                                variable.variable.message.copy($buffer, $start, $copied, $copied + $bytes)
+                                $copied += $bytes
+                                $start += $bytes
+
+                                if ($copied != variable.variable.message.length) {
+                                    $step = 25
+                                    return { start: $start, serialize: $serialize }
+                                }
+
+                                $copied = 0
+
+                            }
+
+                                $step = 27
+                                continue
+
+                            case 26:
+
+                            case 27:
+
+                                if ((({ $ }) => $.variable.username != null)({
+                                    $: variable
+                                })) {
+                                    $step = 28
+                                    continue
+                                } else {
+                                    $step = 32
+                                    continue
+                                }
+
+                            case 28:
+
+                                $$[0] = ($_ => Buffer.from($_))(variable.variable.username)
+
+                            case 29:
+
+                                $bite = 1
+                                $_ = $$[0].length
+
+                            case 30:
+
+                                while ($bite != -1) {
+                                    if ($start == $end) {
+                                        $step = 30
+                                        return { start: $start, serialize: $serialize }
+                                    }
+                                    $buffer[$start++] = $_ >>> $bite * 8 & 0xff
+                                    $bite--
+                                }
+
+                            case 31: {
+
+                                const $bytes = Math.min($end - $start, $$[0].length - $copied)
+                                $$[0].copy($buffer, $start, $copied, $copied + $bytes)
+                                $copied += $bytes
+                                $start += $bytes
+
+                                if ($copied != $$[0].length) {
+                                    $step = 31
+                                    return { start: $start, serialize: $serialize }
+                                }
+
+                                $copied = 0
+
+                            }
+
+                                $step = 33
+                                continue
+
+                            case 32:
+
+                            case 33:
+
+                                if ((({ $ }) => $.variable.password != null)({
+                                    $: variable
+                                })) {
+                                    $step = 34
+                                    continue
+                                } else {
+                                    $step = 37
+                                    continue
+                                }
+
+                            case 34:
+
+                                $bite = 1
+                                $_ = variable.variable.password.length
+
+                            case 35:
+
+                                while ($bite != -1) {
+                                    if ($start == $end) {
+                                        $step = 35
+                                        return { start: $start, serialize: $serialize }
+                                    }
+                                    $buffer[$start++] = $_ >>> $bite * 8 & 0xff
+                                    $bite--
+                                }
+
+                            case 36: {
+
+                                const $bytes = Math.min($end - $start, variable.variable.password.length - $copied)
+                                variable.variable.password.copy($buffer, $start, $copied, $copied + $bytes)
+                                $copied += $bytes
+                                $start += $bytes
+
+                                if ($copied != variable.variable.password.length) {
+                                    $step = 36
+                                    return { start: $start, serialize: $serialize }
+                                }
+
+                                $copied = 0
+
+                            }
+
+                                $step = 38
+                                continue
+
+                            case 37:
+                                $step = 40
+                                continue
+
+                            case 38:
+                                $step = 40
+                                continue
+
+                            case 39:
 
                             }
 
@@ -802,7 +1032,10 @@ const parser = {
                             },
                             keepAlive: 0,
                             clientId: [],
-                            username: null
+                            topic: null,
+                            message: null,
+                            username: null,
+                            password: null
                         }
 
                         $I[0] =
@@ -845,6 +1078,38 @@ const parser = {
 
                         variable.variable.clientId = ($_ => $_.toString())()
 
+                        if ((({ $ }) => $.variable.flags.topic == 1)({
+                            $: variable
+                        })) {
+                            variable.variable.topic = []
+
+                            $I[0] =
+                                $buffer[$start++] << 8 |
+                                $buffer[$start++]
+
+                            variable.variable.topic = $buffer.slice($start, $start + $I[0])
+                            $start += $I[0]
+
+                            variable.variable.topic = ($_ => $_.toString())()
+                        } else {
+                            variable.variable.topic = null
+                        }
+
+                        if ((({ $ }) => $.variable.flags.topic == 1)({
+                            $: variable
+                        })) {
+                            variable.variable.message = []
+
+                            $I[0] =
+                                $buffer[$start++] << 8 |
+                                $buffer[$start++]
+
+                            variable.variable.message = $buffer.slice($start, $start + $I[0])
+                            $start += $I[0]
+                        } else {
+                            variable.variable.message = null
+                        }
+
                         if ((({ $ }) => $.variable.flags.username == 1)({
                             $: variable
                         })) {
@@ -860,6 +1125,21 @@ const parser = {
                             variable.variable.username = ($_ => $_.toString())()
                         } else {
                             variable.variable.username = null
+                        }
+
+                        if ((({ $ }) => $.variable.flags.password == 1)({
+                            $: variable
+                        })) {
+                            variable.variable.password = []
+
+                            $I[0] =
+                                $buffer[$start++] << 8 |
+                                $buffer[$start++]
+
+                            variable.variable.password = $buffer.slice($start, $start + $I[0])
+                            $start += $I[0]
+                        } else {
+                            variable.variable.password = null
                         }
 
                         break
@@ -1193,7 +1473,10 @@ const parser = {
                                         },
                                         keepAlive: 0,
                                         clientId: [],
-                                        username: null
+                                        topic: null,
+                                        message: null,
+                                        username: null,
+                                        password: null
                                     }
 
                                     $step = 2
@@ -1201,12 +1484,12 @@ const parser = {
 
                                 case 'pingreq':
 
-                                    $step = 19
+                                    $step = 34
                                     continue
 
                                 case 'pingresp':
 
-                                    $step = 20
+                                    $step = 35
                                     continue
                                 }
 
@@ -1348,10 +1631,10 @@ const parser = {
 
                             case 14:
 
-                                if ((({ $ }) => $.variable.flags.username == 1)({
+                                if ((({ $ }) => $.variable.flags.topic == 1)({
                                     $: variable
                                 })) {
-                                    variable.variable.username = []
+                                    variable.variable.topic = []
 
                                     $step = 15
                                     continue
@@ -1391,6 +1674,126 @@ const parser = {
                                     return { start: $start, parse: $parse }
                                 }
 
+                                variable.variable.topic = $buffers.length == 1 ? $buffers[0] : Buffer.concat($buffers)
+
+                                $index = 0
+                                $buffers = []
+
+                                variable.variable.topic = ($_ => $_.toString())()
+
+                                $step = 19
+                                continue
+
+                            case 18:
+
+                                variable.variable.topic = null
+
+
+
+                            case 19:
+
+                                if ((({ $ }) => $.variable.flags.topic == 1)({
+                                    $: variable
+                                })) {
+                                    variable.variable.message = []
+
+                                    $step = 20
+                                    continue
+                                } else {
+                                    $step = 23
+                                    continue
+                                }
+
+                            case 20:
+
+                                $_ = 0
+                                $bite = 1
+
+                            case 21:
+
+                                while ($bite != -1) {
+                                    if ($start == $end) {
+                                        $step = 21
+                                        return { start: $start, object: null, parse: $parse }
+                                    }
+                                    $_ += $buffer[$start++] << $bite * 8 >>> 0
+                                    $bite--
+                                }
+
+                                $I[0] = $_
+
+                            case 22:
+                                {
+                                    const $length = Math.min($I[0] - $index, $end - $start)
+                                    $buffers.push($buffer.slice($start, $start + $length))
+                                    $index += $length
+                                    $start += $length
+                                }
+
+                                if ($index != $I[0]) {
+                                    $step = 22
+                                    return { start: $start, parse: $parse }
+                                }
+
+                                variable.variable.message = $buffers.length == 1 ? $buffers[0] : Buffer.concat($buffers)
+
+                                $index = 0
+                                $buffers = []
+
+                                $step = 24
+                                continue
+
+                            case 23:
+
+                                variable.variable.message = null
+
+
+
+                            case 24:
+
+                                if ((({ $ }) => $.variable.flags.username == 1)({
+                                    $: variable
+                                })) {
+                                    variable.variable.username = []
+
+                                    $step = 25
+                                    continue
+                                } else {
+                                    $step = 28
+                                    continue
+                                }
+
+                            case 25:
+
+                                $_ = 0
+                                $bite = 1
+
+                            case 26:
+
+                                while ($bite != -1) {
+                                    if ($start == $end) {
+                                        $step = 26
+                                        return { start: $start, object: null, parse: $parse }
+                                    }
+                                    $_ += $buffer[$start++] << $bite * 8 >>> 0
+                                    $bite--
+                                }
+
+                                $I[0] = $_
+
+                            case 27:
+                                {
+                                    const $length = Math.min($I[0] - $index, $end - $start)
+                                    $buffers.push($buffer.slice($start, $start + $length))
+                                    $index += $length
+                                    $start += $length
+                                }
+
+                                if ($index != $I[0]) {
+                                    $step = 27
+                                    return { start: $start, parse: $parse }
+                                }
+
                                 variable.variable.username = $buffers.length == 1 ? $buffers[0] : Buffer.concat($buffers)
 
                                 $index = 0
@@ -1398,23 +1801,82 @@ const parser = {
 
                                 variable.variable.username = ($_ => $_.toString())()
 
-                                $step = 19
+                                $step = 29
                                 continue
 
-                            case 18:
+                            case 28:
 
                                 variable.variable.username = null
 
-                                $step = 21
+
+
+                            case 29:
+
+                                if ((({ $ }) => $.variable.flags.password == 1)({
+                                    $: variable
+                                })) {
+                                    variable.variable.password = []
+
+                                    $step = 30
+                                    continue
+                                } else {
+                                    $step = 33
+                                    continue
+                                }
+
+                            case 30:
+
+                                $_ = 0
+                                $bite = 1
+
+                            case 31:
+
+                                while ($bite != -1) {
+                                    if ($start == $end) {
+                                        $step = 31
+                                        return { start: $start, object: null, parse: $parse }
+                                    }
+                                    $_ += $buffer[$start++] << $bite * 8 >>> 0
+                                    $bite--
+                                }
+
+                                $I[0] = $_
+
+                            case 32:
+                                {
+                                    const $length = Math.min($I[0] - $index, $end - $start)
+                                    $buffers.push($buffer.slice($start, $start + $length))
+                                    $index += $length
+                                    $start += $length
+                                }
+
+                                if ($index != $I[0]) {
+                                    $step = 32
+                                    return { start: $start, parse: $parse }
+                                }
+
+                                variable.variable.password = $buffers.length == 1 ? $buffers[0] : Buffer.concat($buffers)
+
+                                $index = 0
+                                $buffers = []
+
+                                $step = 34
                                 continue
 
-                            case 19:
+                            case 33:
+
+                                variable.variable.password = null
+
+                                $step = 36
+                                continue
+
+                            case 34:
 
                                 variable.variable = null
-                                $step = 21
+                                $step = 36
                                 continue
 
-                            case 20:
+                            case 35:
 
                                 variable.variable = null
 
@@ -1566,8 +2028,14 @@ module.exports = {
 
                                 $_ |=
                                     variable.variable.flags.wilRetain << 5 & 0x20 |
-                                    variable.variable.flags.willQoS << 3 & 0x18 |
-                                    variable.variable.flags.willFlag << 2 & 0x4 |
+                                    variable.variable.flags.willQoS << 3 & 0x18
+
+                                $$[0] = (($_, $) => $.variable.topic == null ? 0 : 1)(variable.variable.flags.willFlag, variable)
+
+                                $_ |=
+                                    $$[0] << 2 & 0x4
+
+                                $_ |=
                                     variable.variable.flags.cleanStart << 1 & 0x2 |
                                     0x0 & 0x1
 
@@ -1588,10 +2056,10 @@ module.exports = {
                                 $$[0].copy($buffer, $start, 0, $$[0].length)
                                 $start += $$[0].length
 
-                                if ((({ $ }) => $.variable.username != null)({
+                                if ((({ $ }) => $.variable.topic != null)({
                                     $: variable
                                 })) {
-                                    $$[0] = ($_ => Buffer.from($_))(variable.variable.username)
+                                    $$[0] = ($_ => Buffer.from($_))(variable.variable.topic)
 
                                     if ($end - $start < 2 + $$[0].length * 1) {
                                         return $incremental.variable(variable, 18, $$)($buffer, $start, $end)
@@ -1602,6 +2070,53 @@ module.exports = {
 
                                     $$[0].copy($buffer, $start, 0, $$[0].length)
                                     $start += $$[0].length
+                                } else {
+                                }
+
+                                if ((({ $ }) => $.variable.topic != null)({
+                                    $: variable
+                                })) {
+                                    if ($end - $start < 2 + variable.variable.message.length * 1) {
+                                        return $incremental.variable(variable, 23, $$)($buffer, $start, $end)
+                                    }
+
+                                    $buffer[$start++] = variable.variable.message.length >>> 8 & 0xff
+                                    $buffer[$start++] = variable.variable.message.length & 0xff
+
+                                    variable.variable.message.copy($buffer, $start, 0, variable.variable.message.length)
+                                    $start += variable.variable.message.length
+                                } else {
+                                }
+
+                                if ((({ $ }) => $.variable.username != null)({
+                                    $: variable
+                                })) {
+                                    $$[0] = ($_ => Buffer.from($_))(variable.variable.username)
+
+                                    if ($end - $start < 2 + $$[0].length * 1) {
+                                        return $incremental.variable(variable, 29, $$)($buffer, $start, $end)
+                                    }
+
+                                    $buffer[$start++] = $$[0].length >>> 8 & 0xff
+                                    $buffer[$start++] = $$[0].length & 0xff
+
+                                    $$[0].copy($buffer, $start, 0, $$[0].length)
+                                    $start += $$[0].length
+                                } else {
+                                }
+
+                                if ((({ $ }) => $.variable.password != null)({
+                                    $: variable
+                                })) {
+                                    if ($end - $start < 2 + variable.variable.password.length * 1) {
+                                        return $incremental.variable(variable, 34, $$)($buffer, $start, $end)
+                                    }
+
+                                    $buffer[$start++] = variable.variable.password.length >>> 8 & 0xff
+                                    $buffer[$start++] = variable.variable.password.length & 0xff
+
+                                    variable.variable.password.copy($buffer, $start, 0, variable.variable.password.length)
+                                    $start += variable.variable.password.length
                                 } else {
                                 }
 
@@ -1780,7 +2295,10 @@ module.exports = {
                                     },
                                     keepAlive: 0,
                                     clientId: [],
-                                    username: null
+                                    topic: null,
+                                    message: null,
+                                    username: null,
+                                    password: null
                                 }
 
                                 if ($end - $start < 2) {
@@ -1843,10 +2361,10 @@ module.exports = {
 
                                 variable.variable.clientId = ($_ => $_.toString())()
 
-                                if ((({ $ }) => $.variable.flags.username == 1)({
+                                if ((({ $ }) => $.variable.flags.topic == 1)({
                                     $: variable
                                 })) {
-                                    variable.variable.username = []
+                                    variable.variable.topic = []
 
                                     if ($end - $start < 2) {
                                         return $incremental.variable(variable, 15, $I)($buffer, $start, $end)
@@ -1860,12 +2378,83 @@ module.exports = {
                                         return $incremental.variable(variable, 17, $I)($buffer, $start, $end)
                                     }
 
+                                    variable.variable.topic = $buffer.slice($start, $start + $I[0])
+                                    $start += $I[0]
+
+                                    variable.variable.topic = ($_ => $_.toString())()
+                                } else {
+                                    variable.variable.topic = null
+                                }
+
+                                if ((({ $ }) => $.variable.flags.topic == 1)({
+                                    $: variable
+                                })) {
+                                    variable.variable.message = []
+
+                                    if ($end - $start < 2) {
+                                        return $incremental.variable(variable, 20, $I)($buffer, $start, $end)
+                                    }
+
+                                    $I[0] =
+                                        $buffer[$start++] << 8 |
+                                        $buffer[$start++]
+
+                                    if ($end - $start < 1 * $I[0]) {
+                                        return $incremental.variable(variable, 22, $I)($buffer, $start, $end)
+                                    }
+
+                                    variable.variable.message = $buffer.slice($start, $start + $I[0])
+                                    $start += $I[0]
+                                } else {
+                                    variable.variable.message = null
+                                }
+
+                                if ((({ $ }) => $.variable.flags.username == 1)({
+                                    $: variable
+                                })) {
+                                    variable.variable.username = []
+
+                                    if ($end - $start < 2) {
+                                        return $incremental.variable(variable, 25, $I)($buffer, $start, $end)
+                                    }
+
+                                    $I[0] =
+                                        $buffer[$start++] << 8 |
+                                        $buffer[$start++]
+
+                                    if ($end - $start < 1 * $I[0]) {
+                                        return $incremental.variable(variable, 27, $I)($buffer, $start, $end)
+                                    }
+
                                     variable.variable.username = $buffer.slice($start, $start + $I[0])
                                     $start += $I[0]
 
                                     variable.variable.username = ($_ => $_.toString())()
                                 } else {
                                     variable.variable.username = null
+                                }
+
+                                if ((({ $ }) => $.variable.flags.password == 1)({
+                                    $: variable
+                                })) {
+                                    variable.variable.password = []
+
+                                    if ($end - $start < 2) {
+                                        return $incremental.variable(variable, 30, $I)($buffer, $start, $end)
+                                    }
+
+                                    $I[0] =
+                                        $buffer[$start++] << 8 |
+                                        $buffer[$start++]
+
+                                    if ($end - $start < 1 * $I[0]) {
+                                        return $incremental.variable(variable, 32, $I)($buffer, $start, $end)
+                                    }
+
+                                    variable.variable.password = $buffer.slice($start, $start + $I[0])
+                                    $start += $I[0]
+                                } else {
+                                    variable.variable.password = null
                                 }
 
                                 break

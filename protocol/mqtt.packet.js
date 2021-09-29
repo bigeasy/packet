@@ -49,7 +49,7 @@ exports.packet = {
                     password: [ [ ($_, $) => $.variable.password == null ? 0 : 1 ], 1, [] ],
                     wilRetain: 1,
                     willQoS: 2,
-                    willFlag: 1,
+                    willFlag: [ [ ($_, $) => $.variable.topic == null ? 0 : 1 ], 1, [] ],
                     cleanStart: 1,
                     reserved: [ 1, '0' ]
                 }, 8 ],
@@ -58,6 +58,26 @@ exports.packet = {
                 // TODO I know that transforms do not modify the given object, but
                 // maybe they should? We could have a mirrored conditional here if
                 // that was the case.
+                topic: [
+                    [
+                        ({ $ }) => $.variable.topic != null, '$string',
+                        true, null
+                    ],
+                    [
+                        ({ $ }) => $.variable.flags.topic == 1, '$string',
+                        true, null
+                    ]
+                ],
+                message: [
+                    [
+                        ({ $ }) => $.variable.topic != null, [ 16, [ Buffer ] ],
+                        true, null
+                    ],
+                    [
+                        ({ $ }) => $.variable.flags.topic == 1, [ 16, [ Buffer ] ],
+                        true, null
+                    ]
+                ],
                 username: [
                     [
                         ({ $ }) => $.variable.username != null, '$string',
@@ -65,6 +85,16 @@ exports.packet = {
                     ],
                     [
                         ({ $ }) => $.variable.flags.username == 1, '$string',
+                        true, null
+                    ]
+                ],
+                password: [
+                    [
+                        ({ $ }) => $.variable.password != null, [ 16, [ Buffer ] ],
+                        true, null
+                    ],
+                    [
+                        ({ $ }) => $.variable.flags.password == 1, [ 16, [ Buffer ] ],
                         true, null
                     ]
                 ]

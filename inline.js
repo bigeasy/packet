@@ -124,10 +124,6 @@ module.exports = function ({ variables, packet, direction, accumulators, paramet
 
     //
     function inline (path, inlines) {
-        if (direction == 'serialize') {
-            debugger
-            console.error('push')
-        }
         const registers = direction == 'serialize'
             ? [ path, `$$[${++$$}]` ]
             : [ path ]
@@ -213,8 +209,6 @@ module.exports = function ({ variables, packet, direction, accumulators, paramet
     function pop () {
         const popped = stack.pop()
         if (direction == 'serialize') {
-            debugger
-            console.error('pop')
             $$--
         }
         const spliced = buffered
