@@ -1,3 +1,43 @@
+## Wed Sep 29 02:52:53 CDT 2021
+
+Limiting parsers. Would like to limit the length of a parser so it will stop and
+we already have length checks, but how would use the language to limit?
+
+```
+const definition = {
+    object: [[ $ => $.header.length ], {
+    }]
+}
+```
+
+The mnmonic could be that we are using the array to represent a constraint. This
+would require a whole bunch of new code generation, though. We can start by
+seeing if it fits in the language or creates ambiguities.
+
+## Wed Sep 29 02:49:59 CDT 2021
+
+Partial arguments would allow for the reuse of the variable MQTT body in a whole
+parser.
+
+```
+const definition = {
+    $object: [{ counter: [ 0 ] }, [[[
+        ({ $start, $end, counter }) => counter[0] += $end - $start
+    ]], {
+        number: 8,
+        string: [ [ 8 ], 0x0 ]
+    }]],
+    composed: {
+        value: 8,
+        object: [ '$object', $ => $.value ]
+    }
+}
+```
+
+So an array with an accumulator as a first argument is a parameterized
+accumulator, which also defined parameters, and we can pass those parameters
+using functions or constants, but probably functions.
+
 ## Sat Sep 25 04:01:30 CDT 2021
 
 ```
