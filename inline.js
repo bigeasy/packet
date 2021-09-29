@@ -124,13 +124,17 @@ module.exports = function ({ variables, packet, direction, accumulators, paramet
 
     //
     function inline (path, inlines) {
-        if (inlines.length == 0) {
-            stack.push({ offset: 0, length: 0 })
-            return { path: path, inlined: null, starts: null }
+        if (direction == 'serialize') {
+            debugger
+            console.error('push')
         }
         const registers = direction == 'serialize'
             ? [ path, `$$[${++$$}]` ]
             : [ path ]
+        if (inlines.length == 0) {
+            stack.push({ offset: 0, length: 0 })
+            return { path: path, inlined: null, starts: null }
+        }
         // Array of functions that operate on the underlying buffer.
         const offset = buffered.length
         const assignee = registers[registers.length - 1]
@@ -209,6 +213,8 @@ module.exports = function ({ variables, packet, direction, accumulators, paramet
     function pop () {
         const popped = stack.pop()
         if (direction == 'serialize') {
+            debugger
+            console.error('pop')
             $$--
         }
         const spliced = buffered

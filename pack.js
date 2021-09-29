@@ -101,6 +101,8 @@ module.exports = function (inliner, field, path) {
                         `, inlined.inlined, `
 
                         `, source, `
+
+                        `, -1, inliner.pop(), `
                     `))
                 }
                 break

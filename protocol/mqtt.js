@@ -51,21 +51,21 @@ const sizeOf = {
 
                 $start += 2
 
-                $$[-1] = ($_ => Buffer.from($_))(variable.variable.clientId)
+                $$[0] = ($_ => Buffer.from($_))(variable.variable.clientId)
 
                 $start += 2
 
-                $start += 1 * $$[-1].length
+                $start += 1 * $$[0].length
 
 
                 if ((({ $ }) => $.variable.username != null)({
                     $: variable
                 })) {
-                    $$[-1] = ($_ => Buffer.from($_))(variable.variable.username)
+                    $$[0] = ($_ => Buffer.from($_))(variable.variable.username)
 
                     $start += 2
 
-                    $start += 1 * $$[-1].length
+                    $start += 1 * $$[0].length
                 } else {
                 }
 
@@ -181,10 +181,10 @@ const serializer = {
                         $_ =
                             $$[0] << 7 & 0x80
 
-                        $$[1] = (($_, $) => $.variable.password == null ? 0 : 1)(variable.variable.flags.password, variable)
+                        $$[0] = (($_, $) => $.variable.password == null ? 0 : 1)(variable.variable.flags.password, variable)
 
                         $_ |=
-                            $$[1] << 6 & 0x40
+                            $$[0] << 6 & 0x40
 
                         $_ |=
                             variable.variable.flags.wilRetain << 5 & 0x20 |
@@ -198,24 +198,24 @@ const serializer = {
                         $buffer[$start++] = variable.variable.keepAlive >>> 8 & 0xff
                         $buffer[$start++] = variable.variable.keepAlive & 0xff
 
-                        $$[2] = ($_ => Buffer.from($_))(variable.variable.clientId)
+                        $$[0] = ($_ => Buffer.from($_))(variable.variable.clientId)
 
-                        $buffer[$start++] = $$[2].length >>> 8 & 0xff
-                        $buffer[$start++] = $$[2].length & 0xff
+                        $buffer[$start++] = $$[0].length >>> 8 & 0xff
+                        $buffer[$start++] = $$[0].length & 0xff
 
-                        $$[2].copy($buffer, $start, 0, $$[2].length)
-                        $start += $$[2].length
+                        $$[0].copy($buffer, $start, 0, $$[0].length)
+                        $start += $$[0].length
 
                         if ((({ $ }) => $.variable.username != null)({
                             $: variable
                         })) {
-                            $$[2] = ($_ => Buffer.from($_))(variable.variable.username)
+                            $$[0] = ($_ => Buffer.from($_))(variable.variable.username)
 
-                            $buffer[$start++] = $$[2].length >>> 8 & 0xff
-                            $buffer[$start++] = $$[2].length & 0xff
+                            $buffer[$start++] = $$[0].length >>> 8 & 0xff
+                            $buffer[$start++] = $$[0].length & 0xff
 
-                            $$[2].copy($buffer, $start, 0, $$[2].length)
-                            $start += $$[2].length
+                            $$[0].copy($buffer, $start, 0, $$[0].length)
+                            $start += $$[0].length
                         } else {
                         }
 
@@ -535,10 +535,10 @@ const serializer = {
                                 $_ =
                                     $$[0] << 7 & 0x80
 
-                                $$[1] = (($_, $) => $.variable.password == null ? 0 : 1)(variable.variable.flags.password, variable)
+                                $$[0] = (($_, $) => $.variable.password == null ? 0 : 1)(variable.variable.flags.password, variable)
 
                                 $_ |=
-                                    $$[1] << 6 & 0x40
+                                    $$[0] << 6 & 0x40
 
                                 $_ |=
                                     variable.variable.flags.wilRetain << 5 & 0x20 |
@@ -576,12 +576,12 @@ const serializer = {
 
                             case 12:
 
-                                $$[2] = ($_ => Buffer.from($_))(variable.variable.clientId)
+                                $$[0] = ($_ => Buffer.from($_))(variable.variable.clientId)
 
                             case 13:
 
                                 $bite = 1
-                                $_ = $$[2].length
+                                $_ = $$[0].length
 
                             case 14:
 
@@ -596,12 +596,12 @@ const serializer = {
 
                             case 15: {
 
-                                const $bytes = Math.min($end - $start, $$[2].length - $copied)
-                                $$[2].copy($buffer, $start, $copied, $copied + $bytes)
+                                const $bytes = Math.min($end - $start, $$[0].length - $copied)
+                                $$[0].copy($buffer, $start, $copied, $copied + $bytes)
                                 $copied += $bytes
                                 $start += $bytes
 
-                                if ($copied != $$[2].length) {
+                                if ($copied != $$[0].length) {
                                     $step = 15
                                     return { start: $start, serialize: $serialize }
                                 }
@@ -624,12 +624,12 @@ const serializer = {
 
                             case 17:
 
-                                $$[2] = ($_ => Buffer.from($_))(variable.variable.username)
+                                $$[0] = ($_ => Buffer.from($_))(variable.variable.username)
 
                             case 18:
 
                                 $bite = 1
-                                $_ = $$[2].length
+                                $_ = $$[0].length
 
                             case 19:
 
@@ -644,12 +644,12 @@ const serializer = {
 
                             case 20: {
 
-                                const $bytes = Math.min($end - $start, $$[2].length - $copied)
-                                $$[2].copy($buffer, $start, $copied, $copied + $bytes)
+                                const $bytes = Math.min($end - $start, $$[0].length - $copied)
+                                $$[0].copy($buffer, $start, $copied, $copied + $bytes)
                                 $copied += $bytes
                                 $start += $bytes
 
-                                if ($copied != $$[2].length) {
+                                if ($copied != $$[0].length) {
                                     $step = 20
                                     return { start: $start, serialize: $serialize }
                                 }
@@ -1559,10 +1559,10 @@ module.exports = {
                                 $_ =
                                     $$[0] << 7 & 0x80
 
-                                $$[1] = (($_, $) => $.variable.password == null ? 0 : 1)(variable.variable.flags.password, variable)
+                                $$[0] = (($_, $) => $.variable.password == null ? 0 : 1)(variable.variable.flags.password, variable)
 
                                 $_ |=
-                                    $$[1] << 6 & 0x40
+                                    $$[0] << 6 & 0x40
 
                                 $_ |=
                                     variable.variable.flags.wilRetain << 5 & 0x20 |
@@ -1576,32 +1576,32 @@ module.exports = {
                                 $buffer[$start++] = variable.variable.keepAlive >>> 8 & 0xff
                                 $buffer[$start++] = variable.variable.keepAlive & 0xff
 
-                                $$[2] = ($_ => Buffer.from($_))(variable.variable.clientId)
+                                $$[0] = ($_ => Buffer.from($_))(variable.variable.clientId)
 
                                 if ($end - $start < 2 + $$[0].length * 1) {
                                     return $incremental.variable(variable, 13, $$)($buffer, $start, $end)
                                 }
 
-                                $buffer[$start++] = $$[2].length >>> 8 & 0xff
-                                $buffer[$start++] = $$[2].length & 0xff
+                                $buffer[$start++] = $$[0].length >>> 8 & 0xff
+                                $buffer[$start++] = $$[0].length & 0xff
 
-                                $$[2].copy($buffer, $start, 0, $$[2].length)
-                                $start += $$[2].length
+                                $$[0].copy($buffer, $start, 0, $$[0].length)
+                                $start += $$[0].length
 
                                 if ((({ $ }) => $.variable.username != null)({
                                     $: variable
                                 })) {
-                                    $$[2] = ($_ => Buffer.from($_))(variable.variable.username)
+                                    $$[0] = ($_ => Buffer.from($_))(variable.variable.username)
 
                                     if ($end - $start < 2 + $$[0].length * 1) {
                                         return $incremental.variable(variable, 18, $$)($buffer, $start, $end)
                                     }
 
-                                    $buffer[$start++] = $$[2].length >>> 8 & 0xff
-                                    $buffer[$start++] = $$[2].length & 0xff
+                                    $buffer[$start++] = $$[0].length >>> 8 & 0xff
+                                    $buffer[$start++] = $$[0].length & 0xff
 
-                                    $$[2].copy($buffer, $start, 0, $$[2].length)
-                                    $start += $$[2].length
+                                    $$[0].copy($buffer, $start, 0, $$[0].length)
+                                    $start += $$[0].length
                                 } else {
                                 }
 
