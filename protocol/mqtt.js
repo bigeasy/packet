@@ -116,6 +116,104 @@ const sizeOf = {
 
             return $start
         }
+    } (),
+    mqtt: function () {
+        return function (mqtt) {
+            let $start = 0, $$ = []
+
+            $start += 1
+
+
+            if ((value => value < 0x7f)(mqtt.fixed.length)) {
+                $start += 1
+            } else if ((value => value < 0x3fff)(mqtt.fixed.length)) {
+                $start += 2
+            } else if ((value => value < 0x1fffff)(mqtt.fixed.length)) {
+                $start += 3
+            } else {
+                $start += 4
+            }
+
+            switch (($ => $.fixed.header.type)(mqtt)) {
+            case 'connect':
+
+                $$[0] = ($_ => Buffer.from('MQTT'))(mqtt.variable.protocol)
+
+                $start += 2
+
+                $start += 1 * $$[0].length
+
+                $start += 1
+
+                $start += 1
+
+                $start += 2
+
+                $$[0] = ($_ => Buffer.from($_))(mqtt.variable.clientId)
+
+                $start += 2
+
+                $start += 1 * $$[0].length
+
+
+                if ((({ $ }) => $.variable.topic != null)({
+                    $: mqtt
+                })) {
+                    $$[0] = ($_ => Buffer.from($_))(mqtt.variable.topic)
+
+                    $start += 2
+
+                    $start += 1 * $$[0].length
+                } else {
+                }
+
+
+                if ((({ $ }) => $.variable.topic != null)({
+                    $: mqtt
+                })) {
+                    $start += 2
+
+                    $start += 1 * mqtt.variable.message.length
+                } else {
+                }
+
+
+                if ((({ $ }) => $.variable.username != null)({
+                    $: mqtt
+                })) {
+                    $$[0] = ($_ => Buffer.from($_))(mqtt.variable.username)
+
+                    $start += 2
+
+                    $start += 1 * $$[0].length
+                } else {
+                }
+
+
+                if ((({ $ }) => $.variable.password != null)({
+                    $: mqtt
+                })) {
+                    $start += 2
+
+                    $start += 1 * mqtt.variable.password.length
+                } else {
+                }
+
+                break
+
+            case 'pingreq':
+
+
+                break
+
+            case 'pingresp':
+
+
+                break
+            }
+
+            return $start
+        }
     } ()
 }
 
@@ -124,7 +222,7 @@ const serializer = {
         return {
             fixed: function () {
                 return function (fixed, $buffer, $start) {
-                    let $_
+                    let $_, $$ = []
 
                     $_ =
                         $lookup[0].indexOf(fixed.fixed.header.type) << 4 & 0xf0
@@ -141,29 +239,37 @@ const serializer = {
 
                     case 'pubrel':
 
+                        $$[0] = ($_ => 2)(fixed.fixed.header.flags)
+
                         $_ |=
-                            0x2 & 0xf
+                            $$[0] & 0xf
 
                         break
 
                     case 'subscribe':
 
+                        $$[0] = ($_ => 2)(fixed.fixed.header.flags)
+
                         $_ |=
-                            0x2 & 0xf
+                            $$[0] & 0xf
 
                         break
 
                     case 'unsubscribe':
 
+                        $$[0] = ($_ => 2)(fixed.fixed.header.flags)
+
                         $_ |=
-                            0x2 & 0xf
+                            $$[0] & 0xf
 
                         break
 
                     default:
 
+                        $$[0] = ($_ => 0)(fixed.fixed.header.flags)
+
                         $_ |=
-                            0x0 & 0xf
+                            $$[0] & 0xf
 
                         break
                     }
@@ -307,13 +413,200 @@ const serializer = {
 
                     return { start: $start, serialize: null }
                 }
+            } (),
+            mqtt: function () {
+                return function (mqtt, $buffer, $start) {
+                    let $_, $$ = []
+
+                    $_ =
+                        $lookup[0].indexOf(mqtt.fixed.header.type) << 4 & 0xf0
+
+                    switch (($ => $.fixed.header.type)(mqtt)) {
+                    case 'publish':
+
+                        $_ |=
+                            mqtt.fixed.header.flags.dup << 3 & 0x8 |
+                            mqtt.fixed.header.flags.qos << 1 & 0x6 |
+                            mqtt.fixed.header.flags.retain & 0x1
+
+                        break
+
+                    case 'pubrel':
+
+                        $$[0] = ($_ => 2)(mqtt.fixed.header.flags)
+
+                        $_ |=
+                            $$[0] & 0xf
+
+                        break
+
+                    case 'subscribe':
+
+                        $$[0] = ($_ => 2)(mqtt.fixed.header.flags)
+
+                        $_ |=
+                            $$[0] & 0xf
+
+                        break
+
+                    case 'unsubscribe':
+
+                        $$[0] = ($_ => 2)(mqtt.fixed.header.flags)
+
+                        $_ |=
+                            $$[0] & 0xf
+
+                        break
+
+                    default:
+
+                        $$[0] = ($_ => 0)(mqtt.fixed.header.flags)
+
+                        $_ |=
+                            $$[0] & 0xf
+
+                        break
+                    }
+
+                    $buffer[$start++] = $_ & 0xff
+
+                    if ((value => value < 0x7f)(mqtt.fixed.length)) {
+                        $buffer[$start++] = mqtt.fixed.length & 0xff
+                    } else if ((value => value < 0x3fff)(mqtt.fixed.length)) {
+                        $buffer[$start++] = mqtt.fixed.length >>> 7 & 0x7f | 0x80
+                        $buffer[$start++] = mqtt.fixed.length & 0x7f
+                    } else if ((value => value < 0x1fffff)(mqtt.fixed.length)) {
+                        $buffer[$start++] = mqtt.fixed.length >>> 14 & 0x7f | 0x80
+                        $buffer[$start++] = mqtt.fixed.length >>> 7 & 0x7f | 0x80
+                        $buffer[$start++] = mqtt.fixed.length & 0x7f
+                    } else {
+                        $buffer[$start++] = mqtt.fixed.length >>> 21 & 0x7f | 0x80
+                        $buffer[$start++] = mqtt.fixed.length >>> 14 & 0x7f | 0x80
+                        $buffer[$start++] = mqtt.fixed.length >>> 7 & 0x7f | 0x80
+                        $buffer[$start++] = mqtt.fixed.length & 0x7f
+                    }
+
+                    switch (($ => $.fixed.header.type)(mqtt)) {
+                    case 'connect':
+
+                        $$[0] = ($_ => Buffer.from('MQTT'))(mqtt.variable.protocol)
+
+                        $buffer[$start++] = $$[0].length >>> 8 & 0xff
+                        $buffer[$start++] = $$[0].length & 0xff
+
+                        $$[0].copy($buffer, $start, 0, $$[0].length)
+                        $start += $$[0].length
+
+                        $$[0] = ($_ => 4)(mqtt.variable.version)
+
+                        $buffer[$start++] = $$[0] & 0xff
+
+                        $$[0] = (($_, $) => $.variable.username == null ? 0 : 1)(mqtt.variable.flags.username, mqtt)
+
+                        $_ =
+                            $$[0] << 7 & 0x80
+
+                        $$[0] = (($_, $) => $.variable.password == null ? 0 : 1)(mqtt.variable.flags.password, mqtt)
+
+                        $_ |=
+                            $$[0] << 6 & 0x40
+
+                        $_ |=
+                            mqtt.variable.flags.wilRetain << 5 & 0x20 |
+                            mqtt.variable.flags.willQoS << 3 & 0x18
+
+                        $$[0] = (($_, $) => $.variable.topic == null ? 0 : 1)(mqtt.variable.flags.willFlag, mqtt)
+
+                        $_ |=
+                            $$[0] << 2 & 0x4
+
+                        $_ |=
+                            mqtt.variable.flags.cleanStart << 1 & 0x2 |
+                            0x0 & 0x1
+
+                        $buffer[$start++] = $_ & 0xff
+
+                        $buffer[$start++] = mqtt.variable.keepAlive >>> 8 & 0xff
+                        $buffer[$start++] = mqtt.variable.keepAlive & 0xff
+
+                        $$[0] = ($_ => Buffer.from($_))(mqtt.variable.clientId)
+
+                        $buffer[$start++] = $$[0].length >>> 8 & 0xff
+                        $buffer[$start++] = $$[0].length & 0xff
+
+                        $$[0].copy($buffer, $start, 0, $$[0].length)
+                        $start += $$[0].length
+
+                        if ((({ $ }) => $.variable.topic != null)({
+                            $: mqtt
+                        })) {
+                            $$[0] = ($_ => Buffer.from($_))(mqtt.variable.topic)
+
+                            $buffer[$start++] = $$[0].length >>> 8 & 0xff
+                            $buffer[$start++] = $$[0].length & 0xff
+
+                            $$[0].copy($buffer, $start, 0, $$[0].length)
+                            $start += $$[0].length
+                        } else {
+                        }
+
+                        if ((({ $ }) => $.variable.topic != null)({
+                            $: mqtt
+                        })) {
+                            $buffer[$start++] = mqtt.variable.message.length >>> 8 & 0xff
+                            $buffer[$start++] = mqtt.variable.message.length & 0xff
+
+                            mqtt.variable.message.copy($buffer, $start, 0, mqtt.variable.message.length)
+                            $start += mqtt.variable.message.length
+                        } else {
+                        }
+
+                        if ((({ $ }) => $.variable.username != null)({
+                            $: mqtt
+                        })) {
+                            $$[0] = ($_ => Buffer.from($_))(mqtt.variable.username)
+
+                            $buffer[$start++] = $$[0].length >>> 8 & 0xff
+                            $buffer[$start++] = $$[0].length & 0xff
+
+                            $$[0].copy($buffer, $start, 0, $$[0].length)
+                            $start += $$[0].length
+                        } else {
+                        }
+
+                        if ((({ $ }) => $.variable.password != null)({
+                            $: mqtt
+                        })) {
+                            $buffer[$start++] = mqtt.variable.password.length >>> 8 & 0xff
+                            $buffer[$start++] = mqtt.variable.password.length & 0xff
+
+                            mqtt.variable.password.copy($buffer, $start, 0, mqtt.variable.password.length)
+                            $start += mqtt.variable.password.length
+                        } else {
+                        }
+
+                        break
+
+                    case 'pingreq':
+
+
+                        break
+
+                    case 'pingresp':
+
+
+                        break
+                    }
+
+                    return { start: $start, serialize: null }
+                }
             } ()
         }
     } (lookup),
     inc: function ($lookup) {
         return {
             fixed: function () {
-                return function (fixed, $step = 0) {
+                return function (fixed, $step = 0, $$ = []) {
                     let $_, $bite
 
                     return function $serialize ($buffer, $start, $end) {
@@ -337,29 +630,37 @@ const serializer = {
 
                                 case 'pubrel':
 
+                                    $$[0] = ($_ => 2)(fixed.fixed.header.flags)
+
                                     $_ |=
-                                        0x2 & 0xf
+                                        $$[0] & 0xf
 
                                     break
 
                                 case 'subscribe':
 
+                                    $$[0] = ($_ => 2)(fixed.fixed.header.flags)
+
                                     $_ |=
-                                        0x2 & 0xf
+                                        $$[0] & 0xf
 
                                     break
 
                                 case 'unsubscribe':
 
+                                    $$[0] = ($_ => 2)(fixed.fixed.header.flags)
+
                                     $_ |=
-                                        0x2 & 0xf
+                                        $$[0] & 0xf
 
                                     break
 
                                 default:
 
+                                    $$[0] = ($_ => 0)(fixed.fixed.header.flags)
+
                                     $_ |=
-                                        0x0 & 0xf
+                                        $$[0] & 0xf
 
                                     break
                                 }
@@ -909,6 +1210,596 @@ const serializer = {
                         return { start: $start, serialize: null }
                     }
                 }
+            } (),
+            mqtt: function () {
+                return function (mqtt, $step = 0, $$ = []) {
+                    let $_, $bite, $copied = 0
+
+                    return function $serialize ($buffer, $start, $end) {
+                        for (;;) {
+                            switch ($step) {
+                            case 0:
+
+                                $bite = 0
+                                $_ =
+                                    $lookup[0].indexOf(mqtt.fixed.header.type) << 4 & 0xf0
+
+                                switch (($ => $.fixed.header.type)(mqtt)) {
+                                case 'publish':
+
+                                    $_ |=
+                                        mqtt.fixed.header.flags.dup << 3 & 0x8 |
+                                        mqtt.fixed.header.flags.qos << 1 & 0x6 |
+                                        mqtt.fixed.header.flags.retain & 0x1
+
+                                    break
+
+                                case 'pubrel':
+
+                                    $$[0] = ($_ => 2)(mqtt.fixed.header.flags)
+
+                                    $_ |=
+                                        $$[0] & 0xf
+
+                                    break
+
+                                case 'subscribe':
+
+                                    $$[0] = ($_ => 2)(mqtt.fixed.header.flags)
+
+                                    $_ |=
+                                        $$[0] & 0xf
+
+                                    break
+
+                                case 'unsubscribe':
+
+                                    $$[0] = ($_ => 2)(mqtt.fixed.header.flags)
+
+                                    $_ |=
+                                        $$[0] & 0xf
+
+                                    break
+
+                                default:
+
+                                    $$[0] = ($_ => 0)(mqtt.fixed.header.flags)
+
+                                    $_ |=
+                                        $$[0] & 0xf
+
+                                    break
+                                }
+
+                            case 1:
+
+                                while ($bite != -1) {
+                                    if ($start == $end) {
+                                        $step = 1
+                                        return { start: $start, serialize: $serialize }
+                                    }
+                                    $buffer[$start++] = $_ >>> $bite * 8 & 0xff
+                                    $bite--
+                                }
+
+                            case 2:
+
+                                if ((value => value < 0x7f)(mqtt.fixed.length)) {
+                                    $step = 3
+                                    continue
+                                } else if ((value => value < 0x3fff)(mqtt.fixed.length)) {
+                                    $step = 5
+                                    continue
+                                } else if ((value => value < 0x1fffff)(mqtt.fixed.length)) {
+                                    $step = 8
+                                    continue
+                                } else {
+                                    $step = 12
+                                    continue
+                                }
+
+                            case 3:
+
+                                $bite = 0
+                                $_ = mqtt.fixed.length
+
+                            case 4:
+
+                                while ($bite != -1) {
+                                    if ($start == $end) {
+                                        $step = 4
+                                        return { start: $start, serialize: $serialize }
+                                    }
+                                    $buffer[$start++] = $_ >>> $bite * 8 & 0xff
+                                    $bite--
+                                }
+
+                                $step = 17
+                                continue
+
+                            case 5:
+
+                                $_ = mqtt.fixed.length
+
+                            case 6:
+
+                                if ($start == $end) {
+                                    $step = 6
+                                    return { start: $start, serialize: $serialize }
+                                }
+
+                                $buffer[$start++] = $_ >>> 7 & 0x7f | 0x80
+
+                            case 7:
+
+                                if ($start == $end) {
+                                    $step = 7
+                                    return { start: $start, serialize: $serialize }
+                                }
+
+                                $buffer[$start++] = $_ >>> 0 & 0x7f
+
+                                $step = 17
+                                continue
+
+                            case 8:
+
+                                $_ = mqtt.fixed.length
+
+                            case 9:
+
+                                if ($start == $end) {
+                                    $step = 9
+                                    return { start: $start, serialize: $serialize }
+                                }
+
+                                $buffer[$start++] = $_ >>> 14 & 0x7f | 0x80
+
+                            case 10:
+
+                                if ($start == $end) {
+                                    $step = 10
+                                    return { start: $start, serialize: $serialize }
+                                }
+
+                                $buffer[$start++] = $_ >>> 7 & 0x7f | 0x80
+
+                            case 11:
+
+                                if ($start == $end) {
+                                    $step = 11
+                                    return { start: $start, serialize: $serialize }
+                                }
+
+                                $buffer[$start++] = $_ >>> 0 & 0x7f
+
+                                $step = 17
+                                continue
+
+                            case 12:
+
+                                $_ = mqtt.fixed.length
+
+                            case 13:
+
+                                if ($start == $end) {
+                                    $step = 13
+                                    return { start: $start, serialize: $serialize }
+                                }
+
+                                $buffer[$start++] = $_ >>> 21 & 0x7f | 0x80
+
+                            case 14:
+
+                                if ($start == $end) {
+                                    $step = 14
+                                    return { start: $start, serialize: $serialize }
+                                }
+
+                                $buffer[$start++] = $_ >>> 14 & 0x7f | 0x80
+
+                            case 15:
+
+                                if ($start == $end) {
+                                    $step = 15
+                                    return { start: $start, serialize: $serialize }
+                                }
+
+                                $buffer[$start++] = $_ >>> 7 & 0x7f | 0x80
+
+                            case 16:
+
+                                if ($start == $end) {
+                                    $step = 16
+                                    return { start: $start, serialize: $serialize }
+                                }
+
+                                $buffer[$start++] = $_ >>> 0 & 0x7f
+
+                            case 17:
+
+                                switch (($ => $.fixed.header.type)(mqtt)) {
+                                case 'connect':
+
+                                    $step = 18
+                                    continue
+
+                                case 'pingreq':
+
+                                    $step = 55
+                                    continue
+
+                                case 'pingresp':
+
+                                    $step = 56
+                                    continue
+                                }
+
+                            case 18:
+
+                                $$[0] = ($_ => Buffer.from('MQTT'))(mqtt.variable.protocol)
+
+                            case 19:
+
+                                $bite = 1
+                                $_ = $$[0].length
+
+                            case 20:
+
+                                while ($bite != -1) {
+                                    if ($start == $end) {
+                                        $step = 20
+                                        return { start: $start, serialize: $serialize }
+                                    }
+                                    $buffer[$start++] = $_ >>> $bite * 8 & 0xff
+                                    $bite--
+                                }
+
+                            case 21: {
+
+                                const $bytes = Math.min($end - $start, $$[0].length - $copied)
+                                $$[0].copy($buffer, $start, $copied, $copied + $bytes)
+                                $copied += $bytes
+                                $start += $bytes
+
+                                if ($copied != $$[0].length) {
+                                    $step = 21
+                                    return { start: $start, serialize: $serialize }
+                                }
+
+                                $copied = 0
+
+                            }
+
+                            case 22:
+
+                                $$[0] = ($_ => 4)(mqtt.variable.version)
+
+                            case 23:
+
+                                $bite = 0
+                                $_ = $$[0]
+
+                            case 24:
+
+                                while ($bite != -1) {
+                                    if ($start == $end) {
+                                        $step = 24
+                                        return { start: $start, serialize: $serialize }
+                                    }
+                                    $buffer[$start++] = $_ >>> $bite * 8 & 0xff
+                                    $bite--
+                                }
+
+                            case 25:
+
+                                $bite = 0
+                                $$[0] = (($_, $) => $.variable.username == null ? 0 : 1)(mqtt.variable.flags.username, mqtt)
+
+                                $_ =
+                                    $$[0] << 7 & 0x80
+
+                                $$[0] = (($_, $) => $.variable.password == null ? 0 : 1)(mqtt.variable.flags.password, mqtt)
+
+                                $_ |=
+                                    $$[0] << 6 & 0x40
+
+                                $_ |=
+                                    mqtt.variable.flags.wilRetain << 5 & 0x20 |
+                                    mqtt.variable.flags.willQoS << 3 & 0x18
+
+                                $$[0] = (($_, $) => $.variable.topic == null ? 0 : 1)(mqtt.variable.flags.willFlag, mqtt)
+
+                                $_ |=
+                                    $$[0] << 2 & 0x4
+
+                                $_ |=
+                                    mqtt.variable.flags.cleanStart << 1 & 0x2 |
+                                    0x0 & 0x1
+
+                            case 26:
+
+                                while ($bite != -1) {
+                                    if ($start == $end) {
+                                        $step = 26
+                                        return { start: $start, serialize: $serialize }
+                                    }
+                                    $buffer[$start++] = $_ >>> $bite * 8 & 0xff
+                                    $bite--
+                                }
+
+                            case 27:
+
+                                $bite = 1
+                                $_ = mqtt.variable.keepAlive
+
+                            case 28:
+
+                                while ($bite != -1) {
+                                    if ($start == $end) {
+                                        $step = 28
+                                        return { start: $start, serialize: $serialize }
+                                    }
+                                    $buffer[$start++] = $_ >>> $bite * 8 & 0xff
+                                    $bite--
+                                }
+
+                            case 29:
+
+                                $$[0] = ($_ => Buffer.from($_))(mqtt.variable.clientId)
+
+                            case 30:
+
+                                $bite = 1
+                                $_ = $$[0].length
+
+                            case 31:
+
+                                while ($bite != -1) {
+                                    if ($start == $end) {
+                                        $step = 31
+                                        return { start: $start, serialize: $serialize }
+                                    }
+                                    $buffer[$start++] = $_ >>> $bite * 8 & 0xff
+                                    $bite--
+                                }
+
+                            case 32: {
+
+                                const $bytes = Math.min($end - $start, $$[0].length - $copied)
+                                $$[0].copy($buffer, $start, $copied, $copied + $bytes)
+                                $copied += $bytes
+                                $start += $bytes
+
+                                if ($copied != $$[0].length) {
+                                    $step = 32
+                                    return { start: $start, serialize: $serialize }
+                                }
+
+                                $copied = 0
+
+                            }
+
+                            case 33:
+
+                                if ((({ $ }) => $.variable.topic != null)({
+                                    $: mqtt
+                                })) {
+                                    $step = 34
+                                    continue
+                                } else {
+                                    $step = 38
+                                    continue
+                                }
+
+                            case 34:
+
+                                $$[0] = ($_ => Buffer.from($_))(mqtt.variable.topic)
+
+                            case 35:
+
+                                $bite = 1
+                                $_ = $$[0].length
+
+                            case 36:
+
+                                while ($bite != -1) {
+                                    if ($start == $end) {
+                                        $step = 36
+                                        return { start: $start, serialize: $serialize }
+                                    }
+                                    $buffer[$start++] = $_ >>> $bite * 8 & 0xff
+                                    $bite--
+                                }
+
+                            case 37: {
+
+                                const $bytes = Math.min($end - $start, $$[0].length - $copied)
+                                $$[0].copy($buffer, $start, $copied, $copied + $bytes)
+                                $copied += $bytes
+                                $start += $bytes
+
+                                if ($copied != $$[0].length) {
+                                    $step = 37
+                                    return { start: $start, serialize: $serialize }
+                                }
+
+                                $copied = 0
+
+                            }
+
+                                $step = 39
+                                continue
+
+                            case 38:
+
+                            case 39:
+
+                                if ((({ $ }) => $.variable.topic != null)({
+                                    $: mqtt
+                                })) {
+                                    $step = 40
+                                    continue
+                                } else {
+                                    $step = 43
+                                    continue
+                                }
+
+                            case 40:
+
+                                $bite = 1
+                                $_ = mqtt.variable.message.length
+
+                            case 41:
+
+                                while ($bite != -1) {
+                                    if ($start == $end) {
+                                        $step = 41
+                                        return { start: $start, serialize: $serialize }
+                                    }
+                                    $buffer[$start++] = $_ >>> $bite * 8 & 0xff
+                                    $bite--
+                                }
+
+                            case 42: {
+
+                                const $bytes = Math.min($end - $start, mqtt.variable.message.length - $copied)
+                                mqtt.variable.message.copy($buffer, $start, $copied, $copied + $bytes)
+                                $copied += $bytes
+                                $start += $bytes
+
+                                if ($copied != mqtt.variable.message.length) {
+                                    $step = 42
+                                    return { start: $start, serialize: $serialize }
+                                }
+
+                                $copied = 0
+
+                            }
+
+                                $step = 44
+                                continue
+
+                            case 43:
+
+                            case 44:
+
+                                if ((({ $ }) => $.variable.username != null)({
+                                    $: mqtt
+                                })) {
+                                    $step = 45
+                                    continue
+                                } else {
+                                    $step = 49
+                                    continue
+                                }
+
+                            case 45:
+
+                                $$[0] = ($_ => Buffer.from($_))(mqtt.variable.username)
+
+                            case 46:
+
+                                $bite = 1
+                                $_ = $$[0].length
+
+                            case 47:
+
+                                while ($bite != -1) {
+                                    if ($start == $end) {
+                                        $step = 47
+                                        return { start: $start, serialize: $serialize }
+                                    }
+                                    $buffer[$start++] = $_ >>> $bite * 8 & 0xff
+                                    $bite--
+                                }
+
+                            case 48: {
+
+                                const $bytes = Math.min($end - $start, $$[0].length - $copied)
+                                $$[0].copy($buffer, $start, $copied, $copied + $bytes)
+                                $copied += $bytes
+                                $start += $bytes
+
+                                if ($copied != $$[0].length) {
+                                    $step = 48
+                                    return { start: $start, serialize: $serialize }
+                                }
+
+                                $copied = 0
+
+                            }
+
+                                $step = 50
+                                continue
+
+                            case 49:
+
+                            case 50:
+
+                                if ((({ $ }) => $.variable.password != null)({
+                                    $: mqtt
+                                })) {
+                                    $step = 51
+                                    continue
+                                } else {
+                                    $step = 54
+                                    continue
+                                }
+
+                            case 51:
+
+                                $bite = 1
+                                $_ = mqtt.variable.password.length
+
+                            case 52:
+
+                                while ($bite != -1) {
+                                    if ($start == $end) {
+                                        $step = 52
+                                        return { start: $start, serialize: $serialize }
+                                    }
+                                    $buffer[$start++] = $_ >>> $bite * 8 & 0xff
+                                    $bite--
+                                }
+
+                            case 53: {
+
+                                const $bytes = Math.min($end - $start, mqtt.variable.password.length - $copied)
+                                mqtt.variable.password.copy($buffer, $start, $copied, $copied + $bytes)
+                                $copied += $bytes
+                                $start += $bytes
+
+                                if ($copied != mqtt.variable.password.length) {
+                                    $step = 53
+                                    return { start: $start, serialize: $serialize }
+                                }
+
+                                $copied = 0
+
+                            }
+
+                                $step = 55
+                                continue
+
+                            case 54:
+                                $step = 57
+                                continue
+
+                            case 55:
+                                $step = 57
+                                continue
+
+                            case 56:
+
+                            }
+
+                            break
+                        }
+
+                        return { start: $start, serialize: null }
+                    }
+                }
             } ()
         }
     } (lookup)
@@ -952,32 +1843,36 @@ const parser = {
                         break
 
                     case 'pubrel':
+                        fixed.fixed.header.flags = $_ & 0xf
 
                         break
 
                     case 'subscribe':
+                        fixed.fixed.header.flags = $_ & 0xf
 
                         break
 
                     case 'unsubscribe':
+                        fixed.fixed.header.flags = $_ & 0xf
 
                         break
 
                     default:
+                        fixed.fixed.header.flags = $_ & 0xf
 
                         break
                     }
 
                     $sip[0] = $buffer[$start++]
 
-                    if ((sip => (sip & 0x80) == 0)($sip[0], fixed)) {
+                    if ((sip => (sip & 0x80) == 0)($sip[0])) {
                         $start -= 1
 
                         fixed.fixed.length = $buffer[$start++]
                     } else {
                         $sip[1] = $buffer[$start++]
 
-                        if ((sip => (sip & 0x80) == 0)($sip[1], fixed)) {
+                        if ((sip => (sip & 0x80) == 0)($sip[1])) {
                             $start -= 2
 
                             fixed.fixed.length =
@@ -986,7 +1881,7 @@ const parser = {
                         } else {
                             $sip[2] = $buffer[$start++]
 
-                            if ((sip => (sip & 0x80) == 0)($sip[2], fixed)) {
+                            if ((sip => (sip & 0x80) == 0)($sip[2])) {
                                 $start -= 3
 
                                 fixed.fixed.length =
@@ -1045,7 +1940,7 @@ const parser = {
                         variable.variable.protocol = $buffer.slice($start, $start + $I[0])
                         $start += $I[0]
 
-                        variable.variable.protocol = ($_ => $_.toString())()
+                        variable.variable.protocol = ($_ => $_.toString())(variable.variable.protocol)
 
                         variable.variable.version = $buffer[$start++]
 
@@ -1076,9 +1971,9 @@ const parser = {
                         variable.variable.clientId = $buffer.slice($start, $start + $I[0])
                         $start += $I[0]
 
-                        variable.variable.clientId = ($_ => $_.toString())()
+                        variable.variable.clientId = ($_ => $_.toString())(variable.variable.clientId)
 
-                        if ((({ $ }) => $.variable.flags.topic == 1)({
+                        if ((({ $ }) => $.variable.flags.willFlag == 1)({
                             $: variable
                         })) {
                             variable.variable.topic = []
@@ -1090,12 +1985,12 @@ const parser = {
                             variable.variable.topic = $buffer.slice($start, $start + $I[0])
                             $start += $I[0]
 
-                            variable.variable.topic = ($_ => $_.toString())()
+                            variable.variable.topic = ($_ => $_.toString())(variable.variable.topic)
                         } else {
                             variable.variable.topic = null
                         }
 
-                        if ((({ $ }) => $.variable.flags.topic == 1)({
+                        if ((({ $ }) => $.variable.flags.willFlag == 1)({
                             $: variable
                         })) {
                             variable.variable.message = []
@@ -1122,7 +2017,7 @@ const parser = {
                             variable.variable.username = $buffer.slice($start, $start + $I[0])
                             $start += $I[0]
 
-                            variable.variable.username = ($_ => $_.toString())()
+                            variable.variable.username = ($_ => $_.toString())(variable.variable.username)
                         } else {
                             variable.variable.username = null
                         }
@@ -1156,6 +2051,241 @@ const parser = {
                     }
 
                     return variable
+                }
+            } (),
+            mqtt: function () {
+                return function ($buffer, $start) {
+                    let $_, $I = [], $sip = []
+
+                    let mqtt = {
+                        fixed: {
+                            header: {
+                                type: 0,
+                                flags: null
+                            },
+                            length: 0
+                        },
+                        variable: null
+                    }
+
+                    $_ = $buffer[$start++]
+
+                    mqtt.fixed.header.type = $lookup[0][$_ >>> 4 & 0xf]
+
+                    switch (($ => $.fixed.header.type)(mqtt)) {
+                    case 'publish':
+                        mqtt.fixed.header.flags = {
+                            dup: 0,
+                            qos: 0,
+                            retain: 0
+                        }
+
+                        mqtt.fixed.header.flags.dup = $_ >>> 3 & 0x1
+
+                        mqtt.fixed.header.flags.qos = $_ >>> 1 & 0x3
+
+                        mqtt.fixed.header.flags.retain = $_ & 0x1
+
+                        break
+
+                    case 'pubrel':
+                        mqtt.fixed.header.flags = $_ & 0xf
+
+                        break
+
+                    case 'subscribe':
+                        mqtt.fixed.header.flags = $_ & 0xf
+
+                        break
+
+                    case 'unsubscribe':
+                        mqtt.fixed.header.flags = $_ & 0xf
+
+                        break
+
+                    default:
+                        mqtt.fixed.header.flags = $_ & 0xf
+
+                        break
+                    }
+
+                    $sip[0] = $buffer[$start++]
+
+                    if ((sip => (sip & 0x80) == 0)($sip[0])) {
+                        $start -= 1
+
+                        mqtt.fixed.length = $buffer[$start++]
+                    } else {
+                        $sip[1] = $buffer[$start++]
+
+                        if ((sip => (sip & 0x80) == 0)($sip[1])) {
+                            $start -= 2
+
+                            mqtt.fixed.length =
+                                ($buffer[$start++] & 0x7f) << 7 |
+                                $buffer[$start++]
+                        } else {
+                            $sip[2] = $buffer[$start++]
+
+                            if ((sip => (sip & 0x80) == 0)($sip[2])) {
+                                $start -= 3
+
+                                mqtt.fixed.length =
+                                    ($buffer[$start++] & 0x7f) << 14 |
+                                    ($buffer[$start++] & 0x7f) << 7 |
+                                    $buffer[$start++]
+                            } else {
+                                $start -= 3
+
+                                mqtt.fixed.length = (
+                                    ($buffer[$start++] & 0x7f) << 21 |
+                                    ($buffer[$start++] & 0x7f) << 14 |
+                                    ($buffer[$start++] & 0x7f) << 7 |
+                                    $buffer[$start++]
+                                ) >>> 0
+                            }
+                        }
+                    }
+
+                    switch (($ => $.fixed.header.type)(mqtt)) {
+                    case 'connect':
+                        mqtt.variable = {
+                            protocol: [],
+                            version: 0,
+                            flags: {
+                                username: 0,
+                                password: 0,
+                                wilRetain: 0,
+                                willQoS: 0,
+                                willFlag: 0,
+                                cleanStart: 0
+                            },
+                            keepAlive: 0,
+                            clientId: [],
+                            topic: null,
+                            message: null,
+                            username: null,
+                            password: null
+                        }
+
+                        $I[0] =
+                            $buffer[$start++] << 8 |
+                            $buffer[$start++]
+
+                        mqtt.variable.protocol = $buffer.slice($start, $start + $I[0])
+                        $start += $I[0]
+
+                        mqtt.variable.protocol = ($_ => $_.toString())(mqtt.variable.protocol)
+
+                        mqtt.variable.version = $buffer[$start++]
+
+                        $_ = $buffer[$start++]
+
+                        mqtt.variable.flags.username = $_ >>> 7 & 0x1
+
+                        mqtt.variable.flags.username = ($_ => $_)(mqtt.variable.flags.username)
+
+                        mqtt.variable.flags.password = $_ >>> 6 & 0x1
+
+                        mqtt.variable.flags.wilRetain = $_ >>> 5 & 0x1
+
+                        mqtt.variable.flags.willQoS = $_ >>> 3 & 0x3
+
+                        mqtt.variable.flags.willFlag = $_ >>> 2 & 0x1
+
+                        mqtt.variable.flags.cleanStart = $_ >>> 1 & 0x1
+
+                        mqtt.variable.keepAlive =
+                            $buffer[$start++] << 8 |
+                            $buffer[$start++]
+
+                        $I[0] =
+                            $buffer[$start++] << 8 |
+                            $buffer[$start++]
+
+                        mqtt.variable.clientId = $buffer.slice($start, $start + $I[0])
+                        $start += $I[0]
+
+                        mqtt.variable.clientId = ($_ => $_.toString())(mqtt.variable.clientId)
+
+                        if ((({ $ }) => $.variable.flags.willFlag == 1)({
+                            $: mqtt
+                        })) {
+                            mqtt.variable.topic = []
+
+                            $I[0] =
+                                $buffer[$start++] << 8 |
+                                $buffer[$start++]
+
+                            mqtt.variable.topic = $buffer.slice($start, $start + $I[0])
+                            $start += $I[0]
+
+                            mqtt.variable.topic = ($_ => $_.toString())(mqtt.variable.topic)
+                        } else {
+                            mqtt.variable.topic = null
+                        }
+
+                        if ((({ $ }) => $.variable.flags.willFlag == 1)({
+                            $: mqtt
+                        })) {
+                            mqtt.variable.message = []
+
+                            $I[0] =
+                                $buffer[$start++] << 8 |
+                                $buffer[$start++]
+
+                            mqtt.variable.message = $buffer.slice($start, $start + $I[0])
+                            $start += $I[0]
+                        } else {
+                            mqtt.variable.message = null
+                        }
+
+                        if ((({ $ }) => $.variable.flags.username == 1)({
+                            $: mqtt
+                        })) {
+                            mqtt.variable.username = []
+
+                            $I[0] =
+                                $buffer[$start++] << 8 |
+                                $buffer[$start++]
+
+                            mqtt.variable.username = $buffer.slice($start, $start + $I[0])
+                            $start += $I[0]
+
+                            mqtt.variable.username = ($_ => $_.toString())(mqtt.variable.username)
+                        } else {
+                            mqtt.variable.username = null
+                        }
+
+                        if ((({ $ }) => $.variable.flags.password == 1)({
+                            $: mqtt
+                        })) {
+                            mqtt.variable.password = []
+
+                            $I[0] =
+                                $buffer[$start++] << 8 |
+                                $buffer[$start++]
+
+                            mqtt.variable.password = $buffer.slice($start, $start + $I[0])
+                            $start += $I[0]
+                        } else {
+                            mqtt.variable.password = null
+                        }
+
+                        break
+
+                    case 'pingreq':
+                        mqtt.variable = null
+
+                        break
+
+                    case 'pingresp':
+                        mqtt.variable = null
+
+                        break
+                    }
+
+                    return mqtt
                 }
             } ()
         }
@@ -1216,18 +2346,22 @@ const parser = {
                                     break
 
                                 case 'pubrel':
+                                    fixed.fixed.header.flags = $_ & 0xf
 
                                     break
 
                                 case 'subscribe':
+                                    fixed.fixed.header.flags = $_ & 0xf
 
                                     break
 
                                 case 'unsubscribe':
+                                    fixed.fixed.header.flags = $_ & 0xf
 
                                     break
 
                                 default:
+                                    fixed.fixed.header.flags = $_ & 0xf
 
                                     break
                                 }
@@ -1245,7 +2379,7 @@ const parser = {
 
                             case 5:
 
-                                if ((sip => (sip & 0x80) == 0)($sip[0], fixed, fixed)) {
+                                if ((sip => (sip & 0x80) == 0)($sip[0])) {
                                     $step = 6
                                     $parse(Buffer.from([
                                         $sip[0] & 0xff
@@ -1283,7 +2417,7 @@ const parser = {
 
                             case 10:
 
-                                if ((sip => (sip & 0x80) == 0)($sip[1], fixed, fixed)) {
+                                if ((sip => (sip & 0x80) == 0)($sip[1])) {
                                     $step = 11
                                     $parse(Buffer.from([
                                         $sip[0] & 0xff,
@@ -1335,7 +2469,7 @@ const parser = {
 
                             case 16:
 
-                                if ((sip => (sip & 0x80) == 0)($sip[2], fixed, fixed)) {
+                                if ((sip => (sip & 0x80) == 0)($sip[2])) {
                                     $step = 17
                                     $parse(Buffer.from([
                                         $sip[0] & 0xff,
@@ -1529,7 +2663,7 @@ const parser = {
                                 $index = 0
                                 $buffers = []
 
-                                variable.variable.protocol = ($_ => $_.toString())()
+                                variable.variable.protocol = ($_ => $_.toString())(variable.variable.protocol)
 
                             case 5:
 
@@ -1626,12 +2760,12 @@ const parser = {
                                 $index = 0
                                 $buffers = []
 
-                                variable.variable.clientId = ($_ => $_.toString())()
+                                variable.variable.clientId = ($_ => $_.toString())(variable.variable.clientId)
 
 
                             case 14:
 
-                                if ((({ $ }) => $.variable.flags.topic == 1)({
+                                if ((({ $ }) => $.variable.flags.willFlag == 1)({
                                     $: variable
                                 })) {
                                     variable.variable.topic = []
@@ -1679,7 +2813,7 @@ const parser = {
                                 $index = 0
                                 $buffers = []
 
-                                variable.variable.topic = ($_ => $_.toString())()
+                                variable.variable.topic = ($_ => $_.toString())(variable.variable.topic)
 
                                 $step = 19
                                 continue
@@ -1692,7 +2826,7 @@ const parser = {
 
                             case 19:
 
-                                if ((({ $ }) => $.variable.flags.topic == 1)({
+                                if ((({ $ }) => $.variable.flags.willFlag == 1)({
                                     $: variable
                                 })) {
                                     variable.variable.message = []
@@ -1799,7 +2933,7 @@ const parser = {
                                 $index = 0
                                 $buffers = []
 
-                                variable.variable.username = ($_ => $_.toString())()
+                                variable.variable.username = ($_ => $_.toString())(variable.variable.username)
 
                                 $step = 29
                                 continue
@@ -1887,6 +3021,716 @@ const parser = {
                         }
                     }
                 }
+            } (),
+            mqtt: function () {
+                return function (mqtt, $step = 0, $I = [], $sip = []) {
+                    let $_, $bite, $index = 0, $buffers = []
+
+                    return function $parse ($buffer, $start, $end) {
+                        for (;;) {
+                            switch ($step) {
+                            case 0:
+
+                                mqtt = {
+                                    fixed: {
+                                        header: {
+                                            type: 0,
+                                            flags: null
+                                        },
+                                        length: 0
+                                    },
+                                    variable: null
+                                }
+
+                            case 1:
+
+                                $_ = 0
+                                $bite = 0
+
+                            case 2:
+
+                                while ($bite != -1) {
+                                    if ($start == $end) {
+                                        $step = 2
+                                        return { start: $start, object: null, parse: $parse }
+                                    }
+                                    $_ += $buffer[$start++] << $bite * 8 >>> 0
+                                    $bite--
+                                }
+
+                                mqtt.fixed.header.type = $lookup[0][$_ >>> 4 & 0xf]
+
+                                switch (($ => $.fixed.header.type)(mqtt)) {
+                                case 'publish':
+                                    mqtt.fixed.header.flags = {
+                                        dup: 0,
+                                        qos: 0,
+                                        retain: 0
+                                    }
+
+                                    mqtt.fixed.header.flags.dup = $_ >>> 3 & 0x1
+
+                                    mqtt.fixed.header.flags.qos = $_ >>> 1 & 0x3
+
+                                    mqtt.fixed.header.flags.retain = $_ & 0x1
+
+                                    break
+
+                                case 'pubrel':
+                                    mqtt.fixed.header.flags = $_ & 0xf
+
+                                    break
+
+                                case 'subscribe':
+                                    mqtt.fixed.header.flags = $_ & 0xf
+
+                                    break
+
+                                case 'unsubscribe':
+                                    mqtt.fixed.header.flags = $_ & 0xf
+
+                                    break
+
+                                default:
+                                    mqtt.fixed.header.flags = $_ & 0xf
+
+                                    break
+                                }
+
+                            case 3:
+
+                            case 4:
+
+                                if ($start == $end) {
+                                    $step = 4
+                                    return { start: $start, object: null, parse: $parse }
+                                }
+
+                                $sip[0] = $buffer[$start++]
+
+                            case 5:
+
+                                if ((sip => (sip & 0x80) == 0)($sip[0])) {
+                                    $step = 6
+                                    $parse(Buffer.from([
+                                        $sip[0] & 0xff
+                                    ]), 0, 1)
+                                    continue
+                                } else {
+                                    $step = 8
+                                    continue
+                                }
+
+                            case 6:
+
+                            case 7:
+
+                                if ($start == $end) {
+                                    $step = 7
+                                    return { start: $start, object: null, parse: $parse }
+                                }
+
+                                mqtt.fixed.length = $buffer[$start++]
+
+                                $step = 26
+                                continue
+
+                            case 8:
+
+                            case 9:
+
+                                if ($start == $end) {
+                                    $step = 9
+                                    return { start: $start, object: null, parse: $parse }
+                                }
+
+                                $sip[1] = $buffer[$start++]
+
+                            case 10:
+
+                                if ((sip => (sip & 0x80) == 0)($sip[1])) {
+                                    $step = 11
+                                    $parse(Buffer.from([
+                                        $sip[0] & 0xff,
+                                        $sip[1] & 0xff
+                                    ]), 0, 2)
+                                    continue
+                                } else {
+                                    $step = 14
+                                    continue
+                                }
+
+                            case 11:
+
+                                $_ = 0
+
+                            case 12:
+
+                                if ($start == $end) {
+                                    $step = 12
+                                    return { start: $start, object: null, parse: $parse }
+                                }
+
+                                $_ += $buffer[$start++] & 127 << 7
+
+                            case 13:
+
+                                if ($start == $end) {
+                                    $step = 13
+                                    return { start: $start, object: null, parse: $parse }
+                                }
+
+                                $_ += $buffer[$start++] << 0
+
+                                mqtt.fixed.length = $_
+
+                                $step = 26
+                                continue
+
+                            case 14:
+
+                            case 15:
+
+                                if ($start == $end) {
+                                    $step = 15
+                                    return { start: $start, object: null, parse: $parse }
+                                }
+
+                                $sip[2] = $buffer[$start++]
+
+                            case 16:
+
+                                if ((sip => (sip & 0x80) == 0)($sip[2])) {
+                                    $step = 17
+                                    $parse(Buffer.from([
+                                        $sip[0] & 0xff,
+                                        $sip[1] & 0xff,
+                                        $sip[2] & 0xff
+                                    ]), 0, 3)
+                                    continue
+                                } else {
+                                    $step = 21
+                                    $parse(Buffer.from([
+                                        $sip[0] & 0xff,
+                                        $sip[1] & 0xff,
+                                        $sip[2] & 0xff
+                                    ]), 0, 3)
+                                    continue
+                                }
+
+                            case 17:
+
+                                $_ = 0
+
+                            case 18:
+
+                                if ($start == $end) {
+                                    $step = 18
+                                    return { start: $start, object: null, parse: $parse }
+                                }
+
+                                $_ += $buffer[$start++] & 127 << 14
+
+                            case 19:
+
+                                if ($start == $end) {
+                                    $step = 19
+                                    return { start: $start, object: null, parse: $parse }
+                                }
+
+                                $_ += $buffer[$start++] & 127 << 7
+
+                            case 20:
+
+                                if ($start == $end) {
+                                    $step = 20
+                                    return { start: $start, object: null, parse: $parse }
+                                }
+
+                                $_ += $buffer[$start++] << 0
+
+                                mqtt.fixed.length = $_
+
+                                $step = 26
+                                continue
+
+                            case 21:
+
+                                $_ = 0
+
+                            case 22:
+
+                                if ($start == $end) {
+                                    $step = 22
+                                    return { start: $start, object: null, parse: $parse }
+                                }
+
+                                $_ += $buffer[$start++] & 127 << 21
+
+                            case 23:
+
+                                if ($start == $end) {
+                                    $step = 23
+                                    return { start: $start, object: null, parse: $parse }
+                                }
+
+                                $_ += $buffer[$start++] & 127 << 14
+
+                            case 24:
+
+                                if ($start == $end) {
+                                    $step = 24
+                                    return { start: $start, object: null, parse: $parse }
+                                }
+
+                                $_ += $buffer[$start++] & 127 << 7
+
+                            case 25:
+
+                                if ($start == $end) {
+                                    $step = 25
+                                    return { start: $start, object: null, parse: $parse }
+                                }
+
+                                $_ += $buffer[$start++] << 0
+
+                                mqtt.fixed.length = $_
+
+
+
+
+                            case 26:
+
+                                switch (($ => $.fixed.header.type)(mqtt)) {
+                                case 'connect':
+
+                                    mqtt.variable = {
+                                        protocol: [],
+                                        version: 0,
+                                        flags: {
+                                            username: 0,
+                                            password: 0,
+                                            wilRetain: 0,
+                                            willQoS: 0,
+                                            willFlag: 0,
+                                            cleanStart: 0
+                                        },
+                                        keepAlive: 0,
+                                        clientId: [],
+                                        topic: null,
+                                        message: null,
+                                        username: null,
+                                        password: null
+                                    }
+
+                                    $step = 27
+                                    continue
+
+                                case 'pingreq':
+
+                                    $step = 59
+                                    continue
+
+                                case 'pingresp':
+
+                                    $step = 60
+                                    continue
+                                }
+
+                            case 27:
+
+                                $_ = 0
+                                $bite = 1
+
+                            case 28:
+
+                                while ($bite != -1) {
+                                    if ($start == $end) {
+                                        $step = 28
+                                        return { start: $start, object: null, parse: $parse }
+                                    }
+                                    $_ += $buffer[$start++] << $bite * 8 >>> 0
+                                    $bite--
+                                }
+
+                                $I[0] = $_
+
+                            case 29:
+                                {
+                                    const $length = Math.min($I[0] - $index, $end - $start)
+                                    $buffers.push($buffer.slice($start, $start + $length))
+                                    $index += $length
+                                    $start += $length
+                                }
+
+                                if ($index != $I[0]) {
+                                    $step = 29
+                                    return { start: $start, parse: $parse }
+                                }
+
+                                mqtt.variable.protocol = $buffers.length == 1 ? $buffers[0] : Buffer.concat($buffers)
+
+                                $index = 0
+                                $buffers = []
+
+                                mqtt.variable.protocol = ($_ => $_.toString())(mqtt.variable.protocol)
+
+                            case 30:
+
+                            case 31:
+
+                                if ($start == $end) {
+                                    $step = 31
+                                    return { start: $start, object: null, parse: $parse }
+                                }
+
+                                mqtt.variable.version = $buffer[$start++]
+
+                            case 32:
+
+                                $_ = 0
+                                $bite = 0
+
+                            case 33:
+
+                                while ($bite != -1) {
+                                    if ($start == $end) {
+                                        $step = 33
+                                        return { start: $start, object: null, parse: $parse }
+                                    }
+                                    $_ += $buffer[$start++] << $bite * 8 >>> 0
+                                    $bite--
+                                }
+
+                                mqtt.variable.flags.username = $_ >>> 7 & 0x1
+
+                                mqtt.variable.flags.username = ($_ => $_)(mqtt.variable.flags.username)
+
+                                mqtt.variable.flags.password = $_ >>> 6 & 0x1
+
+                                mqtt.variable.flags.wilRetain = $_ >>> 5 & 0x1
+
+                                mqtt.variable.flags.willQoS = $_ >>> 3 & 0x3
+
+                                mqtt.variable.flags.willFlag = $_ >>> 2 & 0x1
+
+                                mqtt.variable.flags.cleanStart = $_ >>> 1 & 0x1
+
+                            case 34:
+
+                                $_ = 0
+                                $bite = 1
+
+                            case 35:
+
+                                while ($bite != -1) {
+                                    if ($start == $end) {
+                                        $step = 35
+                                        return { start: $start, object: null, parse: $parse }
+                                    }
+                                    $_ += $buffer[$start++] << $bite * 8 >>> 0
+                                    $bite--
+                                }
+
+                                mqtt.variable.keepAlive = $_
+
+                            case 36:
+
+                                $_ = 0
+                                $bite = 1
+
+                            case 37:
+
+                                while ($bite != -1) {
+                                    if ($start == $end) {
+                                        $step = 37
+                                        return { start: $start, object: null, parse: $parse }
+                                    }
+                                    $_ += $buffer[$start++] << $bite * 8 >>> 0
+                                    $bite--
+                                }
+
+                                $I[0] = $_
+
+                            case 38:
+                                {
+                                    const $length = Math.min($I[0] - $index, $end - $start)
+                                    $buffers.push($buffer.slice($start, $start + $length))
+                                    $index += $length
+                                    $start += $length
+                                }
+
+                                if ($index != $I[0]) {
+                                    $step = 38
+                                    return { start: $start, parse: $parse }
+                                }
+
+                                mqtt.variable.clientId = $buffers.length == 1 ? $buffers[0] : Buffer.concat($buffers)
+
+                                $index = 0
+                                $buffers = []
+
+                                mqtt.variable.clientId = ($_ => $_.toString())(mqtt.variable.clientId)
+
+
+                            case 39:
+
+                                if ((({ $ }) => $.variable.flags.willFlag == 1)({
+                                    $: mqtt
+                                })) {
+                                    mqtt.variable.topic = []
+
+                                    $step = 40
+                                    continue
+                                } else {
+                                    $step = 43
+                                    continue
+                                }
+
+                            case 40:
+
+                                $_ = 0
+                                $bite = 1
+
+                            case 41:
+
+                                while ($bite != -1) {
+                                    if ($start == $end) {
+                                        $step = 41
+                                        return { start: $start, object: null, parse: $parse }
+                                    }
+                                    $_ += $buffer[$start++] << $bite * 8 >>> 0
+                                    $bite--
+                                }
+
+                                $I[0] = $_
+
+                            case 42:
+                                {
+                                    const $length = Math.min($I[0] - $index, $end - $start)
+                                    $buffers.push($buffer.slice($start, $start + $length))
+                                    $index += $length
+                                    $start += $length
+                                }
+
+                                if ($index != $I[0]) {
+                                    $step = 42
+                                    return { start: $start, parse: $parse }
+                                }
+
+                                mqtt.variable.topic = $buffers.length == 1 ? $buffers[0] : Buffer.concat($buffers)
+
+                                $index = 0
+                                $buffers = []
+
+                                mqtt.variable.topic = ($_ => $_.toString())(mqtt.variable.topic)
+
+                                $step = 44
+                                continue
+
+                            case 43:
+
+                                mqtt.variable.topic = null
+
+
+
+                            case 44:
+
+                                if ((({ $ }) => $.variable.flags.willFlag == 1)({
+                                    $: mqtt
+                                })) {
+                                    mqtt.variable.message = []
+
+                                    $step = 45
+                                    continue
+                                } else {
+                                    $step = 48
+                                    continue
+                                }
+
+                            case 45:
+
+                                $_ = 0
+                                $bite = 1
+
+                            case 46:
+
+                                while ($bite != -1) {
+                                    if ($start == $end) {
+                                        $step = 46
+                                        return { start: $start, object: null, parse: $parse }
+                                    }
+                                    $_ += $buffer[$start++] << $bite * 8 >>> 0
+                                    $bite--
+                                }
+
+                                $I[0] = $_
+
+                            case 47:
+                                {
+                                    const $length = Math.min($I[0] - $index, $end - $start)
+                                    $buffers.push($buffer.slice($start, $start + $length))
+                                    $index += $length
+                                    $start += $length
+                                }
+
+                                if ($index != $I[0]) {
+                                    $step = 47
+                                    return { start: $start, parse: $parse }
+                                }
+
+                                mqtt.variable.message = $buffers.length == 1 ? $buffers[0] : Buffer.concat($buffers)
+
+                                $index = 0
+                                $buffers = []
+
+                                $step = 49
+                                continue
+
+                            case 48:
+
+                                mqtt.variable.message = null
+
+
+
+                            case 49:
+
+                                if ((({ $ }) => $.variable.flags.username == 1)({
+                                    $: mqtt
+                                })) {
+                                    mqtt.variable.username = []
+
+                                    $step = 50
+                                    continue
+                                } else {
+                                    $step = 53
+                                    continue
+                                }
+
+                            case 50:
+
+                                $_ = 0
+                                $bite = 1
+
+                            case 51:
+
+                                while ($bite != -1) {
+                                    if ($start == $end) {
+                                        $step = 51
+                                        return { start: $start, object: null, parse: $parse }
+                                    }
+                                    $_ += $buffer[$start++] << $bite * 8 >>> 0
+                                    $bite--
+                                }
+
+                                $I[0] = $_
+
+                            case 52:
+                                {
+                                    const $length = Math.min($I[0] - $index, $end - $start)
+                                    $buffers.push($buffer.slice($start, $start + $length))
+                                    $index += $length
+                                    $start += $length
+                                }
+
+                                if ($index != $I[0]) {
+                                    $step = 52
+                                    return { start: $start, parse: $parse }
+                                }
+
+                                mqtt.variable.username = $buffers.length == 1 ? $buffers[0] : Buffer.concat($buffers)
+
+                                $index = 0
+                                $buffers = []
+
+                                mqtt.variable.username = ($_ => $_.toString())(mqtt.variable.username)
+
+                                $step = 54
+                                continue
+
+                            case 53:
+
+                                mqtt.variable.username = null
+
+
+
+                            case 54:
+
+                                if ((({ $ }) => $.variable.flags.password == 1)({
+                                    $: mqtt
+                                })) {
+                                    mqtt.variable.password = []
+
+                                    $step = 55
+                                    continue
+                                } else {
+                                    $step = 58
+                                    continue
+                                }
+
+                            case 55:
+
+                                $_ = 0
+                                $bite = 1
+
+                            case 56:
+
+                                while ($bite != -1) {
+                                    if ($start == $end) {
+                                        $step = 56
+                                        return { start: $start, object: null, parse: $parse }
+                                    }
+                                    $_ += $buffer[$start++] << $bite * 8 >>> 0
+                                    $bite--
+                                }
+
+                                $I[0] = $_
+
+                            case 57:
+                                {
+                                    const $length = Math.min($I[0] - $index, $end - $start)
+                                    $buffers.push($buffer.slice($start, $start + $length))
+                                    $index += $length
+                                    $start += $length
+                                }
+
+                                if ($index != $I[0]) {
+                                    $step = 57
+                                    return { start: $start, parse: $parse }
+                                }
+
+                                mqtt.variable.password = $buffers.length == 1 ? $buffers[0] : Buffer.concat($buffers)
+
+                                $index = 0
+                                $buffers = []
+
+                                $step = 59
+                                continue
+
+                            case 58:
+
+                                mqtt.variable.password = null
+
+                                $step = 61
+                                continue
+
+                            case 59:
+
+                                mqtt.variable = null
+                                $step = 61
+                                continue
+
+                            case 60:
+
+                                mqtt.variable = null
+
+                            }
+
+                            return { start: $start, object: mqtt, parse: null }
+                            break
+                        }
+                    }
+                }
             } ()
         }
     } (lookup)
@@ -1902,10 +3746,10 @@ module.exports = {
                 fixed: function () {
                     return function (fixed) {
                         return function ($buffer, $start, $end) {
-                            let $_
+                            let $_, $$ = []
 
                             if ($end - $start < 1) {
-                                return $incremental.fixed(fixed, 0)($buffer, $start, $end)
+                                return $incremental.fixed(fixed, 0, $$)($buffer, $start, $end)
                             }
 
                             $_ =
@@ -1923,29 +3767,37 @@ module.exports = {
 
                             case 'pubrel':
 
+                                $$[0] = ($_ => 2)(fixed.fixed.header.flags)
+
                                 $_ |=
-                                    0x2 & 0xf
+                                    $$[0] & 0xf
 
                                 break
 
                             case 'subscribe':
 
+                                $$[0] = ($_ => 2)(fixed.fixed.header.flags)
+
                                 $_ |=
-                                    0x2 & 0xf
+                                    $$[0] & 0xf
 
                                 break
 
                             case 'unsubscribe':
 
+                                $$[0] = ($_ => 2)(fixed.fixed.header.flags)
+
                                 $_ |=
-                                    0x2 & 0xf
+                                    $$[0] & 0xf
 
                                 break
 
                             default:
 
+                                $$[0] = ($_ => 0)(fixed.fixed.header.flags)
+
                                 $_ |=
-                                    0x0 & 0xf
+                                    $$[0] & 0xf
 
                                 break
                             }
@@ -1954,20 +3806,20 @@ module.exports = {
 
                             if ((value => value < 0x7f)(fixed.fixed.length)) {
                                 if ($end - $start < 1) {
-                                    return $incremental.fixed(fixed, 3)($buffer, $start, $end)
+                                    return $incremental.fixed(fixed, 3, $$)($buffer, $start, $end)
                                 }
 
                                 $buffer[$start++] = fixed.fixed.length & 0xff
                             } else if ((value => value < 0x3fff)(fixed.fixed.length)) {
                                 if ($end - $start < 2) {
-                                    return $incremental.fixed(fixed, 5)($buffer, $start, $end)
+                                    return $incremental.fixed(fixed, 5, $$)($buffer, $start, $end)
                                 }
 
                                 $buffer[$start++] = fixed.fixed.length >>> 7 & 0x7f | 0x80
                                 $buffer[$start++] = fixed.fixed.length & 0x7f
                             } else if ((value => value < 0x1fffff)(fixed.fixed.length)) {
                                 if ($end - $start < 3) {
-                                    return $incremental.fixed(fixed, 8)($buffer, $start, $end)
+                                    return $incremental.fixed(fixed, 8, $$)($buffer, $start, $end)
                                 }
 
                                 $buffer[$start++] = fixed.fixed.length >>> 14 & 0x7f | 0x80
@@ -1975,7 +3827,7 @@ module.exports = {
                                 $buffer[$start++] = fixed.fixed.length & 0x7f
                             } else {
                                 if ($end - $start < 4) {
-                                    return $incremental.fixed(fixed, 12)($buffer, $start, $end)
+                                    return $incremental.fixed(fixed, 12, $$)($buffer, $start, $end)
                                 }
 
                                 $buffer[$start++] = fixed.fixed.length >>> 21 & 0x7f | 0x80
@@ -2136,6 +3988,243 @@ module.exports = {
                             return { start: $start, serialize: null }
                         }
                     }
+                } (),
+                mqtt: function () {
+                    return function (mqtt) {
+                        return function ($buffer, $start, $end) {
+                            let $_, $$ = []
+
+                            if ($end - $start < 1) {
+                                return $incremental.mqtt(mqtt, 0, $$)($buffer, $start, $end)
+                            }
+
+                            $_ =
+                                $lookup[0].indexOf(mqtt.fixed.header.type) << 4 & 0xf0
+
+                            switch (($ => $.fixed.header.type)(mqtt)) {
+                            case 'publish':
+
+                                $_ |=
+                                    mqtt.fixed.header.flags.dup << 3 & 0x8 |
+                                    mqtt.fixed.header.flags.qos << 1 & 0x6 |
+                                    mqtt.fixed.header.flags.retain & 0x1
+
+                                break
+
+                            case 'pubrel':
+
+                                $$[0] = ($_ => 2)(mqtt.fixed.header.flags)
+
+                                $_ |=
+                                    $$[0] & 0xf
+
+                                break
+
+                            case 'subscribe':
+
+                                $$[0] = ($_ => 2)(mqtt.fixed.header.flags)
+
+                                $_ |=
+                                    $$[0] & 0xf
+
+                                break
+
+                            case 'unsubscribe':
+
+                                $$[0] = ($_ => 2)(mqtt.fixed.header.flags)
+
+                                $_ |=
+                                    $$[0] & 0xf
+
+                                break
+
+                            default:
+
+                                $$[0] = ($_ => 0)(mqtt.fixed.header.flags)
+
+                                $_ |=
+                                    $$[0] & 0xf
+
+                                break
+                            }
+
+                            $buffer[$start++] = $_ & 0xff
+
+                            if ((value => value < 0x7f)(mqtt.fixed.length)) {
+                                if ($end - $start < 1) {
+                                    return $incremental.mqtt(mqtt, 3, $$)($buffer, $start, $end)
+                                }
+
+                                $buffer[$start++] = mqtt.fixed.length & 0xff
+                            } else if ((value => value < 0x3fff)(mqtt.fixed.length)) {
+                                if ($end - $start < 2) {
+                                    return $incremental.mqtt(mqtt, 5, $$)($buffer, $start, $end)
+                                }
+
+                                $buffer[$start++] = mqtt.fixed.length >>> 7 & 0x7f | 0x80
+                                $buffer[$start++] = mqtt.fixed.length & 0x7f
+                            } else if ((value => value < 0x1fffff)(mqtt.fixed.length)) {
+                                if ($end - $start < 3) {
+                                    return $incremental.mqtt(mqtt, 8, $$)($buffer, $start, $end)
+                                }
+
+                                $buffer[$start++] = mqtt.fixed.length >>> 14 & 0x7f | 0x80
+                                $buffer[$start++] = mqtt.fixed.length >>> 7 & 0x7f | 0x80
+                                $buffer[$start++] = mqtt.fixed.length & 0x7f
+                            } else {
+                                if ($end - $start < 4) {
+                                    return $incremental.mqtt(mqtt, 12, $$)($buffer, $start, $end)
+                                }
+
+                                $buffer[$start++] = mqtt.fixed.length >>> 21 & 0x7f | 0x80
+                                $buffer[$start++] = mqtt.fixed.length >>> 14 & 0x7f | 0x80
+                                $buffer[$start++] = mqtt.fixed.length >>> 7 & 0x7f | 0x80
+                                $buffer[$start++] = mqtt.fixed.length & 0x7f
+                            }
+
+                            switch (($ => $.fixed.header.type)(mqtt)) {
+                            case 'connect':
+
+                                $$[0] = ($_ => Buffer.from('MQTT'))(mqtt.variable.protocol)
+
+                                if ($end - $start < 2 + $$[0].length * 1) {
+                                    return $incremental.mqtt(mqtt, 19, $$)($buffer, $start, $end)
+                                }
+
+                                $buffer[$start++] = $$[0].length >>> 8 & 0xff
+                                $buffer[$start++] = $$[0].length & 0xff
+
+                                $$[0].copy($buffer, $start, 0, $$[0].length)
+                                $start += $$[0].length
+
+                                if ($end - $start < 3 + 1) {
+                                    return $incremental.mqtt(mqtt, 22, $$)($buffer, $start, $end)
+                                }
+
+                                $$[0] = ($_ => 4)(mqtt.variable.version)
+
+                                $buffer[$start++] = $$[0] & 0xff
+
+                                $$[0] = (($_, $) => $.variable.username == null ? 0 : 1)(mqtt.variable.flags.username, mqtt)
+
+                                $_ =
+                                    $$[0] << 7 & 0x80
+
+                                $$[0] = (($_, $) => $.variable.password == null ? 0 : 1)(mqtt.variable.flags.password, mqtt)
+
+                                $_ |=
+                                    $$[0] << 6 & 0x40
+
+                                $_ |=
+                                    mqtt.variable.flags.wilRetain << 5 & 0x20 |
+                                    mqtt.variable.flags.willQoS << 3 & 0x18
+
+                                $$[0] = (($_, $) => $.variable.topic == null ? 0 : 1)(mqtt.variable.flags.willFlag, mqtt)
+
+                                $_ |=
+                                    $$[0] << 2 & 0x4
+
+                                $_ |=
+                                    mqtt.variable.flags.cleanStart << 1 & 0x2 |
+                                    0x0 & 0x1
+
+                                $buffer[$start++] = $_ & 0xff
+
+                                $buffer[$start++] = mqtt.variable.keepAlive >>> 8 & 0xff
+                                $buffer[$start++] = mqtt.variable.keepAlive & 0xff
+
+                                $$[0] = ($_ => Buffer.from($_))(mqtt.variable.clientId)
+
+                                if ($end - $start < 2 + $$[0].length * 1) {
+                                    return $incremental.mqtt(mqtt, 30, $$)($buffer, $start, $end)
+                                }
+
+                                $buffer[$start++] = $$[0].length >>> 8 & 0xff
+                                $buffer[$start++] = $$[0].length & 0xff
+
+                                $$[0].copy($buffer, $start, 0, $$[0].length)
+                                $start += $$[0].length
+
+                                if ((({ $ }) => $.variable.topic != null)({
+                                    $: mqtt
+                                })) {
+                                    $$[0] = ($_ => Buffer.from($_))(mqtt.variable.topic)
+
+                                    if ($end - $start < 2 + $$[0].length * 1) {
+                                        return $incremental.mqtt(mqtt, 35, $$)($buffer, $start, $end)
+                                    }
+
+                                    $buffer[$start++] = $$[0].length >>> 8 & 0xff
+                                    $buffer[$start++] = $$[0].length & 0xff
+
+                                    $$[0].copy($buffer, $start, 0, $$[0].length)
+                                    $start += $$[0].length
+                                } else {
+                                }
+
+                                if ((({ $ }) => $.variable.topic != null)({
+                                    $: mqtt
+                                })) {
+                                    if ($end - $start < 2 + mqtt.variable.message.length * 1) {
+                                        return $incremental.mqtt(mqtt, 40, $$)($buffer, $start, $end)
+                                    }
+
+                                    $buffer[$start++] = mqtt.variable.message.length >>> 8 & 0xff
+                                    $buffer[$start++] = mqtt.variable.message.length & 0xff
+
+                                    mqtt.variable.message.copy($buffer, $start, 0, mqtt.variable.message.length)
+                                    $start += mqtt.variable.message.length
+                                } else {
+                                }
+
+                                if ((({ $ }) => $.variable.username != null)({
+                                    $: mqtt
+                                })) {
+                                    $$[0] = ($_ => Buffer.from($_))(mqtt.variable.username)
+
+                                    if ($end - $start < 2 + $$[0].length * 1) {
+                                        return $incremental.mqtt(mqtt, 46, $$)($buffer, $start, $end)
+                                    }
+
+                                    $buffer[$start++] = $$[0].length >>> 8 & 0xff
+                                    $buffer[$start++] = $$[0].length & 0xff
+
+                                    $$[0].copy($buffer, $start, 0, $$[0].length)
+                                    $start += $$[0].length
+                                } else {
+                                }
+
+                                if ((({ $ }) => $.variable.password != null)({
+                                    $: mqtt
+                                })) {
+                                    if ($end - $start < 2 + mqtt.variable.password.length * 1) {
+                                        return $incremental.mqtt(mqtt, 51, $$)($buffer, $start, $end)
+                                    }
+
+                                    $buffer[$start++] = mqtt.variable.password.length >>> 8 & 0xff
+                                    $buffer[$start++] = mqtt.variable.password.length & 0xff
+
+                                    mqtt.variable.password.copy($buffer, $start, 0, mqtt.variable.password.length)
+                                    $start += mqtt.variable.password.length
+                                } else {
+                                }
+
+                                break
+
+                            case 'pingreq':
+
+
+                                break
+
+                            case 'pingresp':
+
+
+                                break
+                            }
+
+                            return { start: $start, serialize: null }
+                        }
+                    }
                 } ()
             }
         } (serializer.inc)
@@ -2185,18 +4274,22 @@ module.exports = {
                                 break
 
                             case 'pubrel':
+                                fixed.fixed.header.flags = $_ & 0xf
 
                                 break
 
                             case 'subscribe':
+                                fixed.fixed.header.flags = $_ & 0xf
 
                                 break
 
                             case 'unsubscribe':
+                                fixed.fixed.header.flags = $_ & 0xf
 
                                 break
 
                             default:
+                                fixed.fixed.header.flags = $_ & 0xf
 
                                 break
                             }
@@ -2207,7 +4300,7 @@ module.exports = {
 
                             $sip[0] = $buffer[$start++]
 
-                            if ((sip => (sip & 0x80) == 0)($sip[0], fixed)) {
+                            if ((sip => (sip & 0x80) == 0)($sip[0])) {
                                 if ($end - ($start - 1) < 1) {
                                     return $incremental.fixed(fixed, 6, $sip)($buffer, $start - 1, $end)
                                 }
@@ -2222,7 +4315,7 @@ module.exports = {
 
                                 $sip[1] = $buffer[$start++]
 
-                                if ((sip => (sip & 0x80) == 0)($sip[1], fixed)) {
+                                if ((sip => (sip & 0x80) == 0)($sip[1])) {
                                     if ($end - ($start - 2) < 2) {
                                         return $incremental.fixed(fixed, 11, $sip)($buffer, $start - 2, $end)
                                     }
@@ -2239,7 +4332,7 @@ module.exports = {
 
                                     $sip[2] = $buffer[$start++]
 
-                                    if ((sip => (sip & 0x80) == 0)($sip[2], fixed)) {
+                                    if ((sip => (sip & 0x80) == 0)($sip[2])) {
                                         if ($end - ($start - 3) < 3) {
                                             return $incremental.fixed(fixed, 17, $sip)($buffer, $start - 3, $end)
                                         }
@@ -2316,7 +4409,7 @@ module.exports = {
                                 variable.variable.protocol = $buffer.slice($start, $start + $I[0])
                                 $start += $I[0]
 
-                                variable.variable.protocol = ($_ => $_.toString())()
+                                variable.variable.protocol = ($_ => $_.toString())(variable.variable.protocol)
 
                                 if ($end - $start < 4) {
                                     return $incremental.variable(variable, 5, $I)($buffer, $start, $end)
@@ -2359,9 +4452,9 @@ module.exports = {
                                 variable.variable.clientId = $buffer.slice($start, $start + $I[0])
                                 $start += $I[0]
 
-                                variable.variable.clientId = ($_ => $_.toString())()
+                                variable.variable.clientId = ($_ => $_.toString())(variable.variable.clientId)
 
-                                if ((({ $ }) => $.variable.flags.topic == 1)({
+                                if ((({ $ }) => $.variable.flags.willFlag == 1)({
                                     $: variable
                                 })) {
                                     variable.variable.topic = []
@@ -2381,12 +4474,12 @@ module.exports = {
                                     variable.variable.topic = $buffer.slice($start, $start + $I[0])
                                     $start += $I[0]
 
-                                    variable.variable.topic = ($_ => $_.toString())()
+                                    variable.variable.topic = ($_ => $_.toString())(variable.variable.topic)
                                 } else {
                                     variable.variable.topic = null
                                 }
 
-                                if ((({ $ }) => $.variable.flags.topic == 1)({
+                                if ((({ $ }) => $.variable.flags.willFlag == 1)({
                                     $: variable
                                 })) {
                                     variable.variable.message = []
@@ -2429,7 +4522,7 @@ module.exports = {
                                     variable.variable.username = $buffer.slice($start, $start + $I[0])
                                     $start += $I[0]
 
-                                    variable.variable.username = ($_ => $_.toString())()
+                                    variable.variable.username = ($_ => $_.toString())(variable.variable.username)
                                 } else {
                                     variable.variable.username = null
                                 }
@@ -2466,6 +4559,327 @@ module.exports = {
 
                             case 'pingresp':
                                 variable.variable = null
+
+                                break
+                            }
+
+                            return { start: $start, object: object, parse: null }
+                        }
+                    } ()
+                },
+                mqtt: function () {
+                    return function () {
+                        return function ($buffer, $start, $end) {
+                            let $_, $I = [], $sip = []
+
+                            let mqtt = {
+                                fixed: {
+                                    header: {
+                                        type: 0,
+                                        flags: null
+                                    },
+                                    length: 0
+                                },
+                                variable: null
+                            }
+
+                            if ($end - $start < 1) {
+                                return $incremental.mqtt(mqtt, 1, $I, $sip)($buffer, $start, $end)
+                            }
+
+                            $_ = $buffer[$start++]
+
+                            mqtt.fixed.header.type = $lookup[0][$_ >>> 4 & 0xf]
+
+                            switch (($ => $.fixed.header.type)(mqtt)) {
+                            case 'publish':
+                                mqtt.fixed.header.flags = {
+                                    dup: 0,
+                                    qos: 0,
+                                    retain: 0
+                                }
+
+                                mqtt.fixed.header.flags.dup = $_ >>> 3 & 0x1
+
+                                mqtt.fixed.header.flags.qos = $_ >>> 1 & 0x3
+
+                                mqtt.fixed.header.flags.retain = $_ & 0x1
+
+                                break
+
+                            case 'pubrel':
+                                mqtt.fixed.header.flags = $_ & 0xf
+
+                                break
+
+                            case 'subscribe':
+                                mqtt.fixed.header.flags = $_ & 0xf
+
+                                break
+
+                            case 'unsubscribe':
+                                mqtt.fixed.header.flags = $_ & 0xf
+
+                                break
+
+                            default:
+                                mqtt.fixed.header.flags = $_ & 0xf
+
+                                break
+                            }
+
+                            if ($end - $start < 1) {
+                                return $incremental.mqtt(mqtt, 3, $I, $sip)($buffer, $start, $end)
+                            }
+
+                            $sip[0] = $buffer[$start++]
+
+                            if ((sip => (sip & 0x80) == 0)($sip[0])) {
+                                if ($end - ($start - 1) < 1) {
+                                    return $incremental.mqtt(mqtt, 6, $I, $sip)($buffer, $start - 1, $end)
+                                }
+
+                                $start -= 1
+
+                                mqtt.fixed.length = $buffer[$start++]
+                            } else {
+                                if ($end - $start < 1) {
+                                    return $incremental.mqtt(mqtt, 8, $I, $sip)($buffer, $start, $end)
+                                }
+
+                                $sip[1] = $buffer[$start++]
+
+                                if ((sip => (sip & 0x80) == 0)($sip[1])) {
+                                    if ($end - ($start - 2) < 2) {
+                                        return $incremental.mqtt(mqtt, 11, $I, $sip)($buffer, $start - 2, $end)
+                                    }
+
+                                    $start -= 2
+
+                                    mqtt.fixed.length =
+                                        ($buffer[$start++] & 0x7f) << 7 |
+                                        $buffer[$start++]
+                                } else {
+                                    if ($end - $start < 1) {
+                                        return $incremental.mqtt(mqtt, 14, $I, $sip)($buffer, $start, $end)
+                                    }
+
+                                    $sip[2] = $buffer[$start++]
+
+                                    if ((sip => (sip & 0x80) == 0)($sip[2])) {
+                                        if ($end - ($start - 3) < 3) {
+                                            return $incremental.mqtt(mqtt, 17, $I, $sip)($buffer, $start - 3, $end)
+                                        }
+
+                                        $start -= 3
+
+                                        mqtt.fixed.length =
+                                            ($buffer[$start++] & 0x7f) << 14 |
+                                            ($buffer[$start++] & 0x7f) << 7 |
+                                            $buffer[$start++]
+                                    } else {
+                                        if ($end - ($start - 3) < 4) {
+                                            return $incremental.mqtt(mqtt, 21, $I, $sip)($buffer, $start - 3, $end)
+                                        }
+
+                                        $start -= 3
+
+                                        mqtt.fixed.length = (
+                                            ($buffer[$start++] & 0x7f) << 21 |
+                                            ($buffer[$start++] & 0x7f) << 14 |
+                                            ($buffer[$start++] & 0x7f) << 7 |
+                                            $buffer[$start++]
+                                        ) >>> 0
+                                    }
+                                }
+                            }
+
+                            switch (($ => $.fixed.header.type)(mqtt)) {
+                            case 'connect':
+                                mqtt.variable = {
+                                    protocol: [],
+                                    version: 0,
+                                    flags: {
+                                        username: 0,
+                                        password: 0,
+                                        wilRetain: 0,
+                                        willQoS: 0,
+                                        willFlag: 0,
+                                        cleanStart: 0
+                                    },
+                                    keepAlive: 0,
+                                    clientId: [],
+                                    topic: null,
+                                    message: null,
+                                    username: null,
+                                    password: null
+                                }
+
+                                if ($end - $start < 2) {
+                                    return $incremental.mqtt(mqtt, 27, $I, $sip)($buffer, $start, $end)
+                                }
+
+                                $I[0] =
+                                    $buffer[$start++] << 8 |
+                                    $buffer[$start++]
+
+                                if ($end - $start < 1 * $I[0]) {
+                                    return $incremental.mqtt(mqtt, 29, $I, $sip)($buffer, $start, $end)
+                                }
+
+                                mqtt.variable.protocol = $buffer.slice($start, $start + $I[0])
+                                $start += $I[0]
+
+                                mqtt.variable.protocol = ($_ => $_.toString())(mqtt.variable.protocol)
+
+                                if ($end - $start < 4) {
+                                    return $incremental.mqtt(mqtt, 30, $I, $sip)($buffer, $start, $end)
+                                }
+
+                                mqtt.variable.version = $buffer[$start++]
+
+                                $_ = $buffer[$start++]
+
+                                mqtt.variable.flags.username = $_ >>> 7 & 0x1
+
+                                mqtt.variable.flags.username = ($_ => $_)(mqtt.variable.flags.username)
+
+                                mqtt.variable.flags.password = $_ >>> 6 & 0x1
+
+                                mqtt.variable.flags.wilRetain = $_ >>> 5 & 0x1
+
+                                mqtt.variable.flags.willQoS = $_ >>> 3 & 0x3
+
+                                mqtt.variable.flags.willFlag = $_ >>> 2 & 0x1
+
+                                mqtt.variable.flags.cleanStart = $_ >>> 1 & 0x1
+
+                                mqtt.variable.keepAlive =
+                                    $buffer[$start++] << 8 |
+                                    $buffer[$start++]
+
+                                if ($end - $start < 2) {
+                                    return $incremental.mqtt(mqtt, 36, $I, $sip)($buffer, $start, $end)
+                                }
+
+                                $I[0] =
+                                    $buffer[$start++] << 8 |
+                                    $buffer[$start++]
+
+                                if ($end - $start < 1 * $I[0]) {
+                                    return $incremental.mqtt(mqtt, 38, $I, $sip)($buffer, $start, $end)
+                                }
+
+                                mqtt.variable.clientId = $buffer.slice($start, $start + $I[0])
+                                $start += $I[0]
+
+                                mqtt.variable.clientId = ($_ => $_.toString())(mqtt.variable.clientId)
+
+                                if ((({ $ }) => $.variable.flags.willFlag == 1)({
+                                    $: mqtt
+                                })) {
+                                    mqtt.variable.topic = []
+
+                                    if ($end - $start < 2) {
+                                        return $incremental.mqtt(mqtt, 40, $I, $sip)($buffer, $start, $end)
+                                    }
+
+                                    $I[0] =
+                                        $buffer[$start++] << 8 |
+                                        $buffer[$start++]
+
+                                    if ($end - $start < 1 * $I[0]) {
+                                        return $incremental.mqtt(mqtt, 42, $I, $sip)($buffer, $start, $end)
+                                    }
+
+                                    mqtt.variable.topic = $buffer.slice($start, $start + $I[0])
+                                    $start += $I[0]
+
+                                    mqtt.variable.topic = ($_ => $_.toString())(mqtt.variable.topic)
+                                } else {
+                                    mqtt.variable.topic = null
+                                }
+
+                                if ((({ $ }) => $.variable.flags.willFlag == 1)({
+                                    $: mqtt
+                                })) {
+                                    mqtt.variable.message = []
+
+                                    if ($end - $start < 2) {
+                                        return $incremental.mqtt(mqtt, 45, $I, $sip)($buffer, $start, $end)
+                                    }
+
+                                    $I[0] =
+                                        $buffer[$start++] << 8 |
+                                        $buffer[$start++]
+
+                                    if ($end - $start < 1 * $I[0]) {
+                                        return $incremental.mqtt(mqtt, 47, $I, $sip)($buffer, $start, $end)
+                                    }
+
+                                    mqtt.variable.message = $buffer.slice($start, $start + $I[0])
+                                    $start += $I[0]
+                                } else {
+                                    mqtt.variable.message = null
+                                }
+
+                                if ((({ $ }) => $.variable.flags.username == 1)({
+                                    $: mqtt
+                                })) {
+                                    mqtt.variable.username = []
+
+                                    if ($end - $start < 2) {
+                                        return $incremental.mqtt(mqtt, 50, $I, $sip)($buffer, $start, $end)
+                                    }
+
+                                    $I[0] =
+                                        $buffer[$start++] << 8 |
+                                        $buffer[$start++]
+
+                                    if ($end - $start < 1 * $I[0]) {
+                                        return $incremental.mqtt(mqtt, 52, $I, $sip)($buffer, $start, $end)
+                                    }
+
+                                    mqtt.variable.username = $buffer.slice($start, $start + $I[0])
+                                    $start += $I[0]
+
+                                    mqtt.variable.username = ($_ => $_.toString())(mqtt.variable.username)
+                                } else {
+                                    mqtt.variable.username = null
+                                }
+
+                                if ((({ $ }) => $.variable.flags.password == 1)({
+                                    $: mqtt
+                                })) {
+                                    mqtt.variable.password = []
+
+                                    if ($end - $start < 2) {
+                                        return $incremental.mqtt(mqtt, 55, $I, $sip)($buffer, $start, $end)
+                                    }
+
+                                    $I[0] =
+                                        $buffer[$start++] << 8 |
+                                        $buffer[$start++]
+
+                                    if ($end - $start < 1 * $I[0]) {
+                                        return $incremental.mqtt(mqtt, 57, $I, $sip)($buffer, $start, $end)
+                                    }
+
+                                    mqtt.variable.password = $buffer.slice($start, $start + $I[0])
+                                    $start += $I[0]
+                                } else {
+                                    mqtt.variable.password = null
+                                }
+
+                                break
+
+                            case 'pingreq':
+                                mqtt.variable = null
+
+                                break
+
+                            case 'pingresp':
+                                mqtt.variable = null
 
                                 break
                             }

@@ -6,7 +6,8 @@ require('proof')(1, okay => {
                 one: [[ 16, 'deaf' ], 1 ],
                 two: -3,
                 three: [ [ $_ => $_ ],  4, [ $_ => $_ ] ],
-                four: 8
+                four: 3,
+                five: [ 5, 'aa' ]
             }, 32 ]
         }
     }), [{
@@ -98,10 +99,20 @@ require('proof')(1, okay => {
                 vivify: 'number',
                 dotted: '.four',
                 fixed: true,
-                bits: 8,
+                bits: 3,
                 endianness: 'big',
                 compliment: false,
                 name: 'four'
+            }, {
+                type: 'literal',
+                vivify: null,
+                dotted: '.four',
+                fixed: true,
+                before: { repeat: 1, value: 'aa', bits: 5 },
+                after: { repeat: 0, value: '', bits: 0 },
+                fields: [],
+                bits: 5,
+                dotted: ''
             }]
         }]
     }], 'packed')
