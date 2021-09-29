@@ -1,4 +1,4 @@
-require('proof')(3, okay => {
+require('proof')(4, okay => {
     const mqtt = require('mqtt-packet')
     const parser = mqtt.parser({ protocolVersion: 5 })
 
@@ -38,13 +38,23 @@ require('proof')(3, okay => {
         'connect no additional payload'
     )
 
+    okay(
+        serialize({
+            fixed: { header: { type: 'connect' } },
+            variable: { flags: { cleanStart: 1 }, clientId: 'a', username: 'a' },
+        }).toJSON(),
+        mqtt.generate({ cmd: 'connect', clientId: 'a', username: 'a' }).toJSON(),
+        'connect with username'
+    )
+
     console.log(serialize({
         fixed: { header: { type: 'connect' } },
-        variable: { flags: { cleanStart: 1 }, clientId: 'a' },
+        variable: { flags: { cleanStart: 1 }, username: 'a', clientId: 'a' },
     }))
     console.log(mqtt.generate({
         cmd: 'connect',
-        clientId: 'a'
+        clientId: 'a',
+        username: 'a'
     }))
     parser.on('packet', packet => console.log(packet))
     parser.parse(mqtt.generate({

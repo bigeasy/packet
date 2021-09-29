@@ -16,6 +16,7 @@ exports.packet = {
             ]
         ]
     ],
+    $string: [ [ $_ => Buffer.from($_) ], [ 16, [ Buffer ] ], [ $_ => $_.toString() ] ],
     $fixed: {
         fixed: {
             header: [{
@@ -53,7 +54,20 @@ exports.packet = {
                     reserved: [ 1, '0' ]
                 }, 8 ],
                 keepAlive: 16,
-                clientId: [ [ $_ => Buffer.from($_ == null ? '' : $_) ], [ 16, [ Buffer ] ], [ $_ => $_.toString() ] ]
+                clientId: '$string',
+                // TODO I know that transforms do not modify the given object, but
+                // maybe they should? We could have a mirrored conditional here if
+                // that was the case.
+                username: [
+                    [
+                        ({ $ }) => $.variable.username != null, '$string',
+                        true, null
+                    ],
+                    [
+                        ({ $ }) => $.variable.flags.username == 1, '$string',
+                        true, null
+                    ]
+                ]
             },
             { $_: [ 'pingreq', 'pingresp' ] }, null
         ]]

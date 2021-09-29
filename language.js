@@ -440,7 +440,8 @@ module.exports = function (packets) {
                 }).length == array.length
             },
             sip: function (array) {
-                return typeof array[0] == 'number' &&
+                return Array.isArray(array) &&
+                    typeof array[0] == 'number' &&
                     is.conditional.ladder(array.slice(1))
             },
             split: function (packet) {
@@ -846,6 +847,7 @@ module.exports = function (packets) {
                     return { conditions }
                 } ()
                 function descend (parse) {
+                    console.error('descend', parse)
                     const sip = []
                     if (typeof parse[0] == 'number') {
                         sip.push(map(parse.shift(), {}).shift())
@@ -1101,7 +1103,7 @@ module.exports = function (packets) {
         case 'object': return object()
         }
 
-        console.log(packet)
+        console.error(packet)
         throw new Error
     }
 
