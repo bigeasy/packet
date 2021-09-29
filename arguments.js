@@ -98,10 +98,11 @@ module.exports = function (array) {
     }
 
     const length = source.length
-    const args = /^(?:function)?[^(]*\(\s*/
+    const args = /^(?:function)?\s*\(\s*/
     source = source.replace(args, '')
     let positional = true
     if (source.length == length) {
+        arity = f.length
     } else if (source[0] == '{') {
         positional = false
         source = next()

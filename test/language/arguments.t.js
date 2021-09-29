@@ -1,4 +1,4 @@
-require('proof')(17, okay => {
+require('proof')(19, okay => {
     const args = require('../../arguments')
 
     class Foo {
@@ -143,4 +143,21 @@ require('proof')(17, okay => {
         arity: 2,
         vargs: [ 10 ]
     }, 'defaulted with arguments')
+    // Issue: https://github.com/bigeasy/packet/issues/615
+    okay(args([ $_ => $_.toString() ]), {
+        defaulted: [],
+        positional: true,
+        properties: [],
+        source: '$_ => $_.toString()',
+        arity: 1,
+        vargs: []
+    }, 'arrow with no parenthesis')
+    okay(args([ () => 1 ]), {
+        defaulted: [],
+        positional: true,
+        properties: [],
+        source: '() => 1',
+        arity: 0,
+        vargs: []
+    }, 'arrow with no arguments')
 })
