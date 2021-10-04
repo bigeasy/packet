@@ -10,8 +10,8 @@ const definition = {
 }
 ```
 
-The mnmonic could be that we are using the array to represent a constraint. This
-would require a whole bunch of new code generation, though. We can start by
+The mnemonic could be that we are using the array to represent a constraint.
+This would require a whole bunch of new code generation, though. We can start by
 seeing if it fits in the language or creates ambiguities.
 
 ## Wed Sep 29 02:49:59 CDT 2021
@@ -69,7 +69,7 @@ Idea for an encoding that goes byte by byte so I don't have to write a loop
 declaratively, which is ugly. Could add an initial function that is `sizeof`.
 
 Okay, if there are no arguments, then we are returning a function. This allows
-for the initialzation of any local variables and we can detect this from the
+for the initialization of any local variables and we can detect this from the
 argument parsing, and invoke it to get the inner function.
 
 The user may perhaps want an accumulator passed to the function builder function
@@ -112,12 +112,12 @@ const definition = {
 ```
 
 Look how ugly it gets, though. Trying to get rid of that test for the first
-`$count`. Would only solve one problem encoutered with MQTT at this point, but
+`$count`. Would only solve one problem encountered with MQTT at this point, but
 perhaps also a UTF8 encoding.
 
 ## Sat Sep 25 03:33:00 CDT 2021
 
-Revisiting thougths on `sizeof`.
+Revisiting thoughts on `sizeof`.
 
 Seems that asynchronous serialization works as expected. The `sizeof` function
 presents a problem in that any transforms will have to be run, then when we
@@ -138,7 +138,7 @@ then you never have a use for the whole serializer.
 We could create an intermediate object that transforms only those entities that
 need to be transformed, but do you run assertions in that case?
 
-Seems that `sizeof` needs to have caveats and limitaitons. It also seems that
+Seems that `sizeof` needs to have caveats and limitations. It also seems that
 there are only a handful of cases where it might matter.
 
 Also, we could do this...
@@ -187,11 +187,11 @@ and that you need to run it to determine the size, you can't use the underlying
 object to determine the size.
 
 Again, not sure what it means to have some functions run in `sizeof` or a
-pre-transform while others do not. What if the assertion is neecssary to perform
+pre-transform while others do not. What if the assertion is necessary to perform
 the conversion for `sizeof`?
 
-Maybe the intermediate object is explained to the user an a default of `{}` is
-used to indicate that it needs to be a part of the intermediate object?
+Maybe the intermediate object is explained to the user a default of `{}` is used
+to indicate that it needs to be a part of the intermediate object?
 
 ```javascript
 const definition = {
@@ -226,7 +226,7 @@ byte length to check to see if the write was truncated. Nothing about this is
 cheap. Copy is probably cheaper.
 
 We can use write in a whole serialize, though, and in best foot forward, so if
-we have an internal implemenation, yes, we can use write for the best case, we
+we have an internal implementation, yes, we can use write for the best case, we
 can create buffers for the incremental parser.
 
 Okay, that's worth doing.
@@ -314,7 +314,7 @@ the language.
 
 ## Thu Sep 22 12:59:14 CDT 2021
 
-Transforms are distrubing my assumptions about performance. The `sizeof`
+Transforms are disturbing my assumptions about performance. The `sizeof`
 functionality is important because synchronous serialization is probably the
 norm, but perhaps that is a mistake. Perhaps it should always be incremental.
 
@@ -332,7 +332,7 @@ we should perform the assertions in sizeof or wait until serialization. Perhaps
 the assertion is supposed to assert a condition before a transformation, but the
 `sizeof` forgos the assertion and then performs the transformation.
 
-We could separate transformation and make it a gerate a transformed object that
+We could separate transformation and make it generate a transformed object that
 is then used in `sizeof` or synchronous serialize.
 
 If we just want `sizeof` we still do not need to transform any fixed with
@@ -382,7 +382,7 @@ that can consume the sip, we can recurse. This is frightfully complicated
 though. It wouldn't be so daunting if there was a function you could write on
 the tree that would tell you the number of fixed bits that are consumed by
 integers of any sort starting from a node in the tree. If it consumes the sip,
-then procede with unwinding the sip.
+then proceed with unwinding the sip.
 
 If we do unwind the sip, we now have to pass the sip in from the
 best-foot-forward parser.
@@ -438,7 +438,7 @@ anyway, so they would be available to implement this. The same logic as parsing
 a sipped integer, a byte reader object in the generator that would shift bytes
 off the integer until it was empty then fallback to incrementing the buffer.
 This same object could shift from an accumulator array. We would have a separate
-stack, imagine reading four bytes into a caculated terminator buffer, then
+stack, imagine reading four bytes into a calculated terminator buffer, then
 terminating, sipping a 16-bit integer for a conditional, then when you enter the
 conditional branch you have a stack sources, sipped integer, terminator buffer,
 and underlying buffer.
@@ -519,7 +519,7 @@ things to do.
 
 ## Sun Jul 19 11:28:29 CDT 2020
 
-Literal and include amgibuity. Could resolve by requiring the `$`. However array
+Literal and include ambiguity. Could resolve by requiring the `$`. However array
 wrapping makes the problem go away quickly, and I don't have special naming
 conventions that disambiguate yet.
 
@@ -533,7 +533,7 @@ const defintion = {
 ```
 ## Sat Jul 18 10:11:44 CDT 2020
 
-Should the calculation of accumlators be everywhere?
+Should the calculation of accumulators be everywhere?
 
 ## Wed Jul 15 12:45:09 CDT 2020 ~ todo
 
@@ -546,7 +546,7 @@ resume a stream in this case.
 
 ## Wed Jul 15 02:41:25 CDT 2020 ~ todo
 
-Easiest way to resolve the double jump on termianted incremental parse would be
+Easiest way to resolve the double jump on terminated incremental parse would be
 to count the steps in a conditional first, then pass a done property to the
 decent, or maintain a stack, so that the terminated parse would use that done
 instead of using one it calculated itself.
@@ -555,12 +555,12 @@ Fun problem to consider, nested if statements so we probably have to jump to the
 outer end.
 
 Only nested jump that should be reset appears to be within conditionals. Nested
-termianted arrays need to jump to their terminator check.
+terminated arrays need to jump to their terminator check.
 
 ## Tue Jul 14 03:26:09 CDT 2020 ~ todo
 
 Another little thing to fix. If the size of a condition is less than or equal to
-the size of a sip, we can remove the checkpoint from the condidition.
+the size of a sip, we can remove the checkpoint from the condition.
 
 ## Mon Jul 13 23:01:43 CDT 2020
 
@@ -681,7 +681,7 @@ const definition = {
 }
 ```
 
-That would be a 24-bit UTF-8 encoded charcter, which is really 15 bits. It's
+That would be a 24-bit UTF-8 encoded character, which is really 15 bits. It's
 saying a 24-bit integer but using 3 bits from the first, 6 from the rest of the
 bytes.
 
@@ -801,7 +801,7 @@ However, it occurs to me that the ugliness comes from duplicating the
 termination code. My latest foray into this mess is to implement special
 handling for buffers. Padded fixed termination is implemented as terminated, but
 with checking to see if we've reached the of the width of the field in addition
-to checking for the terminator. This was bascially copy and paste from the
+to checking for the terminator. This was basically copy and paste from the
 terminator implementation.
 
 Rather than having the padding be a property of a fixed field, why not make the
@@ -811,21 +811,20 @@ not zero, then we adjust the generated terminator code to stop at a limit.
 Note that we do not want to use this limit to prevent starvation from a client
 sending us a terminated field without a terminator. That sort of checking should
 be external to the parser. You'll want to add that to the documentation. That is
-maxiumum length terminated verusus fixed length padded. We could add a counter
-to the API externally counting how many bytes have been fed to a particular
-parser.
+maximum length terminated versus fixed length padded. We could add a counter to
+the API externally counting how many bytes have been fed to a particular parser.
 
 So, the documentation and language will call this a fixed length padded, but the
 AST calls it terminated and I can corral this mess into a single generator
 function. The direction I was going was making helper functions that both
 functions call. This was getting so very ugly. Actually routing everything to
 the single terminator function would probably be more both more performant, in
-theory, cancelling a continuation of the parse, proceding to skip.
+theory, cancelling a continuation of the parse, proceeding to skip.
 
 Seems like this should be done during expansion since when we are doing a
 synchronous parse we can slice out the full buffer always, or else we'd already
-gone incremental, and then slice out anything after the teminator. The existing
-implemenation works fine.
+gone incremental, and then slice out anything after the terminator. The existing
+implementation works fine.
 
 Should note that you should test that you don't overrun by placing a field
 afterward that has the terminator character in it.
@@ -886,7 +885,7 @@ the deserialized structure. Do this instead of inferring `BigInt`.
 
 ## Fri Jul  3 19:30:25 CDT 2020
 
-Felt I had a challenge where I'd have to maintian an counter and that counter
+Felt I had a challenge where I'd have to maintain an counter and that counter
 would have to update in order to implement MySQL integers, but I realize now
 that I only need to get the header value and the start of particular field.
 
@@ -934,7 +933,7 @@ it in a conditional or switch, and maybe not in a transform or assertion.
 
 ## Sun Jun 28 20:49:02 CDT 2020
 
-Disambguation.
+Disambiguation.
 
 ```javascript
 const define = {
@@ -1020,7 +1019,7 @@ in blind helpers functions.
 
 Thought I'd resolved ambiguities because length-encoded and terminated arrays
 are both identified by an array with a single element at a certain position, but
-switch statements that use maps are going to be indistinquishable from a fixup
+switch statements that use maps are going to be indistinguishable from a fixup
 only. Could decided to put the switch condition in an array, but then putting an
 array around a fixup for coming and going doesn't work.
 
@@ -1116,8 +1115,8 @@ I'd added an issue to create string constants that would be added to packets to
 indicate the packet type determined at parse, but don't see a need for it. With
 mapped translations, we can turn a flag into a string, and sips that are used to
 determine the length of a variable length integer, or otherwise the binary type
-of a an integer, as in UTF-8 or MySQL integers, do not convey information that
-is useful to the parse. Plus, what do you do during serialization?
+of an integer, as in UTF-8 or MySQL integers, do not convey information that is
+useful to the parse. Plus, what do you do during serialization?
 
 https://github.com/bigeasy/packet/issues/9
 
@@ -1261,7 +1260,7 @@ out your own tools and not minify a particular file, still be able to source it
 somehow.
 
 Whew. UTF-8 is a beast. Yes, we have to have separate parse and serialize. Yes,
-we have to have some way of referencing parsers stored as functions. Yike, how
+we have to have some way of referencing parsers stored as functions. Yikes, how
 are you going to do best-foot-forward parsers with this mess?
 
 With some rules, we could parse the function bodies and convert the logic to
