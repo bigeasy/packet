@@ -96,6 +96,13 @@ exports.packet = {
                 ]
             ]
         },
+        { $_: 'connack' }, {
+            flags: [{
+                reserved: [ 7, '0' ],
+                sessionPresent: 1
+            }, 8 ],
+            reasonCode: 8
+        },
         { $_: [ 'pingreq', 'pingresp' ] }, null
     ]],
     fixed: {

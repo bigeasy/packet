@@ -103,6 +103,12 @@ const sizeOf = {
 
                 break
 
+            case 'connack':
+
+                $start += 2
+
+                break
+
             case 'pingreq':
 
 
@@ -198,6 +204,12 @@ const sizeOf = {
                     $start += 1 * mqtt.variable.password.length
                 } else {
                 }
+
+                break
+
+            case 'connack':
+
+                $start += 2
 
                 break
 
@@ -400,6 +412,18 @@ const serializer = {
 
                         break
 
+                    case 'connack':
+
+                        $_ =
+                            0x0 << 1 & 0xfe |
+                            variable.variable.flags.sessionPresent & 0x1
+
+                        $buffer[$start++] = $_ & 0xff
+
+                        $buffer[$start++] = variable.variable.reasonCode & 0xff
+
+                        break
+
                     case 'pingreq':
 
 
@@ -584,6 +608,18 @@ const serializer = {
                             $start += mqtt.variable.password.length
                         } else {
                         }
+
+                        break
+
+                    case 'connack':
+
+                        $_ =
+                            0x0 << 1 & 0xfe |
+                            mqtt.variable.flags.sessionPresent & 0x1
+
+                        $buffer[$start++] = $_ & 0xff
+
+                        $buffer[$start++] = mqtt.variable.reasonCode & 0xff
 
                         break
 
@@ -834,14 +870,19 @@ const serializer = {
                                     $step = 1
                                     continue
 
-                                case 'pingreq':
+                                case 'connack':
 
                                     $step = 38
                                     continue
 
+                                case 'pingreq':
+
+                                    $step = 42
+                                    continue
+
                                 case 'pingresp':
 
-                                    $step = 39
+                                    $step = 43
                                     continue
                                 }
 
@@ -1193,14 +1234,50 @@ const serializer = {
                                 continue
 
                             case 37:
-                                $step = 40
+                                $step = 44
                                 continue
 
                             case 38:
-                                $step = 40
-                                continue
+
+                                $bite = 0
+                                $_ =
+                                    0x0 << 1 & 0xfe |
+                                    variable.variable.flags.sessionPresent & 0x1
 
                             case 39:
+
+                                while ($bite != -1) {
+                                    if ($start == $end) {
+                                        $step = 39
+                                        return { start: $start, serialize: $serialize }
+                                    }
+                                    $buffer[$start++] = $_ >>> $bite * 8 & 0xff
+                                    $bite--
+                                }
+
+                            case 40:
+
+                                $bite = 0
+                                $_ = variable.variable.reasonCode
+
+                            case 41:
+
+                                while ($bite != -1) {
+                                    if ($start == $end) {
+                                        $step = 41
+                                        return { start: $start, serialize: $serialize }
+                                    }
+                                    $buffer[$start++] = $_ >>> $bite * 8 & 0xff
+                                    $bite--
+                                }
+                                $step = 44
+                                continue
+
+                            case 42:
+                                $step = 44
+                                continue
+
+                            case 43:
 
                             }
 
@@ -1424,14 +1501,19 @@ const serializer = {
                                     $step = 18
                                     continue
 
-                                case 'pingreq':
+                                case 'connack':
 
                                     $step = 55
                                     continue
 
+                                case 'pingreq':
+
+                                    $step = 59
+                                    continue
+
                                 case 'pingresp':
 
-                                    $step = 56
+                                    $step = 60
                                     continue
                                 }
 
@@ -1783,14 +1865,50 @@ const serializer = {
                                 continue
 
                             case 54:
-                                $step = 57
+                                $step = 61
                                 continue
 
                             case 55:
-                                $step = 57
-                                continue
+
+                                $bite = 0
+                                $_ =
+                                    0x0 << 1 & 0xfe |
+                                    mqtt.variable.flags.sessionPresent & 0x1
 
                             case 56:
+
+                                while ($bite != -1) {
+                                    if ($start == $end) {
+                                        $step = 56
+                                        return { start: $start, serialize: $serialize }
+                                    }
+                                    $buffer[$start++] = $_ >>> $bite * 8 & 0xff
+                                    $bite--
+                                }
+
+                            case 57:
+
+                                $bite = 0
+                                $_ = mqtt.variable.reasonCode
+
+                            case 58:
+
+                                while ($bite != -1) {
+                                    if ($start == $end) {
+                                        $step = 58
+                                        return { start: $start, serialize: $serialize }
+                                    }
+                                    $buffer[$start++] = $_ >>> $bite * 8 & 0xff
+                                    $bite--
+                                }
+                                $step = 61
+                                continue
+
+                            case 59:
+                                $step = 61
+                                continue
+
+                            case 60:
 
                             }
 
@@ -2039,6 +2157,22 @@ const parser = {
 
                         break
 
+                    case 'connack':
+                        variable.variable = {
+                            flags: {
+                                sessionPresent: 0
+                            },
+                            reasonCode: 0
+                        }
+
+                        $_ = $buffer[$start++]
+
+                        variable.variable.flags.sessionPresent = $_ & 0x1
+
+                        variable.variable.reasonCode = $buffer[$start++]
+
+                        break
+
                     case 'pingreq':
                         variable.variable = null
 
@@ -2271,6 +2405,22 @@ const parser = {
                         } else {
                             mqtt.variable.password = null
                         }
+
+                        break
+
+                    case 'connack':
+                        mqtt.variable = {
+                            flags: {
+                                sessionPresent: 0
+                            },
+                            reasonCode: 0
+                        }
+
+                        $_ = $buffer[$start++]
+
+                        mqtt.variable.flags.sessionPresent = $_ & 0x1
+
+                        mqtt.variable.reasonCode = $buffer[$start++]
 
                         break
 
@@ -2616,14 +2766,26 @@ const parser = {
                                     $step = 2
                                     continue
 
-                                case 'pingreq':
+                                case 'connack':
+
+                                    variable.variable = {
+                                        flags: {
+                                            sessionPresent: 0
+                                        },
+                                        reasonCode: 0
+                                    }
 
                                     $step = 34
                                     continue
 
+                                case 'pingreq':
+
+                                    $step = 38
+                                    continue
+
                                 case 'pingresp':
 
-                                    $step = 35
+                                    $step = 39
                                     continue
                                 }
 
@@ -3001,16 +3163,47 @@ const parser = {
 
                                 variable.variable.password = null
 
-                                $step = 36
+                                $step = 40
                                 continue
 
                             case 34:
 
-                                variable.variable = null
-                                $step = 36
-                                continue
+                                $_ = 0
+                                $bite = 0
 
                             case 35:
+
+                                while ($bite != -1) {
+                                    if ($start == $end) {
+                                        $step = 35
+                                        return { start: $start, object: null, parse: $parse }
+                                    }
+                                    $_ += $buffer[$start++] << $bite * 8 >>> 0
+                                    $bite--
+                                }
+
+                                variable.variable.flags.sessionPresent = $_ & 0x1
+
+                            case 36:
+
+                            case 37:
+
+                                if ($start == $end) {
+                                    $step = 37
+                                    return { start: $start, object: null, parse: $parse }
+                                }
+
+                                variable.variable.reasonCode = $buffer[$start++]
+                                $step = 40
+                                continue
+
+                            case 38:
+
+                                variable.variable = null
+                                $step = 40
+                                continue
+
+                            case 39:
 
                                 variable.variable = null
 
@@ -3326,14 +3519,26 @@ const parser = {
                                     $step = 27
                                     continue
 
-                                case 'pingreq':
+                                case 'connack':
+
+                                    mqtt.variable = {
+                                        flags: {
+                                            sessionPresent: 0
+                                        },
+                                        reasonCode: 0
+                                    }
 
                                     $step = 59
                                     continue
 
+                                case 'pingreq':
+
+                                    $step = 63
+                                    continue
+
                                 case 'pingresp':
 
-                                    $step = 60
+                                    $step = 64
                                     continue
                                 }
 
@@ -3711,16 +3916,47 @@ const parser = {
 
                                 mqtt.variable.password = null
 
-                                $step = 61
+                                $step = 65
                                 continue
 
                             case 59:
 
-                                mqtt.variable = null
-                                $step = 61
-                                continue
+                                $_ = 0
+                                $bite = 0
 
                             case 60:
+
+                                while ($bite != -1) {
+                                    if ($start == $end) {
+                                        $step = 60
+                                        return { start: $start, object: null, parse: $parse }
+                                    }
+                                    $_ += $buffer[$start++] << $bite * 8 >>> 0
+                                    $bite--
+                                }
+
+                                mqtt.variable.flags.sessionPresent = $_ & 0x1
+
+                            case 61:
+
+                            case 62:
+
+                                if ($start == $end) {
+                                    $step = 62
+                                    return { start: $start, object: null, parse: $parse }
+                                }
+
+                                mqtt.variable.reasonCode = $buffer[$start++]
+                                $step = 65
+                                continue
+
+                            case 63:
+
+                                mqtt.variable = null
+                                $step = 65
+                                continue
+
+                            case 64:
 
                                 mqtt.variable = null
 
@@ -3974,6 +4210,22 @@ module.exports = {
 
                                 break
 
+                            case 'connack':
+
+                                if ($end - $start < 2) {
+                                    return $incremental.variable(variable, 38, $$)($buffer, $start, $end)
+                                }
+
+                                $_ =
+                                    0x0 << 1 & 0xfe |
+                                    variable.variable.flags.sessionPresent & 0x1
+
+                                $buffer[$start++] = $_ & 0xff
+
+                                $buffer[$start++] = variable.variable.reasonCode & 0xff
+
+                                break
+
                             case 'pingreq':
 
 
@@ -4208,6 +4460,22 @@ module.exports = {
                                     $start += mqtt.variable.password.length
                                 } else {
                                 }
+
+                                break
+
+                            case 'connack':
+
+                                if ($end - $start < 2) {
+                                    return $incremental.mqtt(mqtt, 55, $$)($buffer, $start, $end)
+                                }
+
+                                $_ =
+                                    0x0 << 1 & 0xfe |
+                                    mqtt.variable.flags.sessionPresent & 0x1
+
+                                $buffer[$start++] = $_ & 0xff
+
+                                $buffer[$start++] = mqtt.variable.reasonCode & 0xff
 
                                 break
 
@@ -4552,6 +4820,26 @@ module.exports = {
 
                                 break
 
+                            case 'connack':
+                                variable.variable = {
+                                    flags: {
+                                        sessionPresent: 0
+                                    },
+                                    reasonCode: 0
+                                }
+
+                                if ($end - $start < 2) {
+                                    return $incremental.variable(variable, 34, $I)($buffer, $start, $end)
+                                }
+
+                                $_ = $buffer[$start++]
+
+                                variable.variable.flags.sessionPresent = $_ & 0x1
+
+                                variable.variable.reasonCode = $buffer[$start++]
+
+                                break
+
                             case 'pingreq':
                                 variable.variable = null
 
@@ -4870,6 +5158,26 @@ module.exports = {
                                 } else {
                                     mqtt.variable.password = null
                                 }
+
+                                break
+
+                            case 'connack':
+                                mqtt.variable = {
+                                    flags: {
+                                        sessionPresent: 0
+                                    },
+                                    reasonCode: 0
+                                }
+
+                                if ($end - $start < 2) {
+                                    return $incremental.mqtt(mqtt, 59, $I, $sip)($buffer, $start, $end)
+                                }
+
+                                $_ = $buffer[$start++]
+
+                                mqtt.variable.flags.sessionPresent = $_ & 0x1
+
+                                mqtt.variable.reasonCode = $buffer[$start++]
 
                                 break
 

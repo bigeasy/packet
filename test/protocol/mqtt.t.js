@@ -1,4 +1,4 @@
-require('proof')(24, okay => {
+require('proof')(32, okay => {
     const mqtt = require('mqtt-packet')
     const parser = mqtt.parser({ protocolVersion: 5 })
 
@@ -294,6 +294,81 @@ require('proof')(24, okay => {
         }
     }, 'connect with topic, username and password')
 
+    test({
+        actual: {
+            input: {
+                fixed: { header: { type: 'connack' } },
+                variable: {
+                    flags: { sessionPresent: 1 },
+                    reasonCode: 128
+                },
+            },
+            output: {
+                fixed: { header: { type: 'connack', flags: 0 }, length: 2 },
+                variable: {
+                    flags: { sessionPresent: 1 },
+                    reasonCode: 128
+                }
+            }
+        },
+        expected: {
+            input: {
+                cmd: 'connack',
+                sessionPresent: true,
+                returnCode: 128
+            },
+            output: {
+                cmd: 'connack',
+                retain: false,
+                qos: 0,
+                dup: false,
+                length: 2,
+                topic: null,
+                payload: null,
+                sessionPresent: true,
+                returnCode: 128
+            }
+        }
+    }, 'connack session present')
+
+    test({
+        actual: {
+            input: {
+                fixed: { header: { type: 'connack' } },
+                variable: {
+                    flags: { sessionPresent: 0 },
+                    reasonCode: 0
+                },
+            },
+            output: {
+                fixed: { header: { type: 'connack', flags: 0 }, length: 2 },
+                variable: {
+                    flags: { sessionPresent: 0 },
+                    reasonCode: 0
+                }
+            }
+        },
+        expected: {
+            input: {
+                cmd: 'connack',
+                sessionPresent: false,
+                returnCode: 0
+            },
+            output: {
+                cmd: 'connack',
+                retain: false,
+                qos: 0,
+                dup: false,
+                length: 2,
+                topic: null,
+                payload: null,
+                sessionPresent: false,
+                returnCode: 0
+            }
+        }
+    }, 'connack session present')
+
+    console.log(mqtt.generate({ cmd: 'connack', sessionPresent: true, returnCode: 1 }))
     console.log(serialize({
         fixed: { header: { type: 'connect' } },
         variable: { flags: { cleanStart: 1 }, username: 'a', clientId: 'a' },
