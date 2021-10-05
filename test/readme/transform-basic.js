@@ -16,7 +16,7 @@ const serializer = {
             return function (object, $buffer, $start) {
                 let $$ = []
 
-                $$[0] = ($_ => parseInt($_, 16))(object.value, object)
+                $$[0] = ($_ => parseInt($_, 16))(object.value)
 
                 $buffer[$start++] = $$[0] >>> 24 & 0xff
                 $buffer[$start++] = $$[0] >>> 16 & 0xff
@@ -36,7 +36,7 @@ const serializer = {
                     switch ($step) {
                     case 0:
 
-                        $$[0] = ($_ => parseInt($_, 16))(object.value, object)
+                        $$[0] = ($_ => parseInt($_, 16))(object.value)
 
                     case 1:
 
@@ -142,7 +142,7 @@ module.exports = {
                                 return $incremental.object(object, 0, $$)($buffer, $start, $end)
                             }
 
-                            $$[0] = ($_ => parseInt($_, 16))(object.value, object)
+                            $$[0] = ($_ => parseInt($_, 16))(object.value)
 
                             $buffer[$start++] = $$[0] >>> 24 & 0xff
                             $buffer[$start++] = $$[0] >>> 16 & 0xff

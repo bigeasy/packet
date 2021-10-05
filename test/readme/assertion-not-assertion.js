@@ -23,7 +23,7 @@ const serializer = {
                 $$[0] = ($_ => {
                     assert($_ < 1000, 'excedes max value')
                     return $_
-                })(object.value, object, [], [ 'object', 'value' ], 'serialize')
+                })(object.value)
 
                 $buffer[$start++] = $$[0] >>> 8 & 0xff
                 $buffer[$start++] = $$[0] & 0xff
@@ -46,7 +46,7 @@ const serializer = {
                         $$[0] = ($_ => {
                             assert($_ < 1000, 'excedes max value')
                             return $_
-                        })(object.value, object, [], [ 'object', 'value' ], 'serialize')
+                        })(object.value)
 
                     case 1:
 
@@ -90,7 +90,7 @@ const parser = {
                 object.value = ($_ => {
                     assert($_ < 1000, 'execdes max value')
                     return $_
-                })(object.value, object, [], [ 'object', 'value' ], 'parse')
+                })(object.value)
 
                 return object
             }
@@ -132,7 +132,7 @@ const parser = {
                         object.value = ($_ => {
                             assert($_ < 1000, 'execdes max value')
                             return $_
-                        })(object.value, object, [], [ 'object', 'value' ], 'parse')
+                        })(object.value)
 
                     }
 
@@ -162,7 +162,7 @@ module.exports = {
                             $$[0] = ($_ => {
                                 assert($_ < 1000, 'excedes max value')
                                 return $_
-                            })(object.value, object, [], [ 'object', 'value' ], 'serialize')
+                            })(object.value)
 
                             $buffer[$start++] = $$[0] >>> 8 & 0xff
                             $buffer[$start++] = $$[0] & 0xff
@@ -197,7 +197,7 @@ module.exports = {
                             object.value = ($_ => {
                                 assert($_ < 1000, 'execdes max value')
                                 return $_
-                            })(object.value, object, [], [ 'object', 'value' ], 'parse')
+                            })(object.value)
 
                             return { start: $start, object: object, parse: null }
                         }

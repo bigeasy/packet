@@ -14,7 +14,7 @@ module.exports = function ({ $lookup }) {
 
                 $sip[0] = $buffer[$start++]
 
-                if ((sip => (sip & 0x80) == 0)($sip[0], object)) {
+                if ((sip => (sip & 0x80) == 0)($sip[0])) {
                     $start -= 1
 
                     $I[0] = $buffer[$start++]

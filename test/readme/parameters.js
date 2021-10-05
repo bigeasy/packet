@@ -3,7 +3,7 @@ const sizeOf = {
         return function (object) {
             let $start = 0, $accumulator = {}, $$ = []
 
-            $$[0] = (value => Buffer.from(value, encoding))(object.string, object)
+            $$[0] = (value => Buffer.from(value, encoding))(object.string)
 
             $start += 1 * $$[0].length + 1
 
@@ -22,7 +22,7 @@ const serializer = {
 
                 $accumulator['encoding'] = encoding
 
-                $$[0] = (value => Buffer.from(value, encoding))(object.string, object)
+                $$[0] = (value => Buffer.from(value, encoding))(object.string)
 
                 $$[0].copy($buffer, $start, 0, $$[0].length)
                 $start += $$[0].length
@@ -49,7 +49,7 @@ const serializer = {
 
                         case 1:
 
-                            $$[0] = (value => Buffer.from(value, encoding))(object.string, object)
+                            $$[0] = (value => Buffer.from(value, encoding))(object.string)
 
                         case 2:
 
@@ -186,7 +186,7 @@ module.exports = {
 
                             $accumulator['encoding'] = encoding
 
-                            $$[0] = (value => Buffer.from(value, encoding))(object.string, object)
+                            $$[0] = (value => Buffer.from(value, encoding))(object.string)
 
                             if ($end - $start < 1 + $$[0].length * 1) {
                                 return $incremental.object(object, {

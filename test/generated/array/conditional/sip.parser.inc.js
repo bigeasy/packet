@@ -39,7 +39,7 @@ module.exports = function ({ $lookup }) {
 
                         case 5:
 
-                            if ((sip => (sip & 0x80) == 0)($sip[0], object, object)) {
+                            if ((sip => (sip & 0x80) == 0)($sip[0])) {
                                 $step = 6
                                 $parse(Buffer.from([
                                     $sip[0] & 0xff
@@ -77,7 +77,7 @@ module.exports = function ({ $lookup }) {
 
                         case 10:
 
-                            if ((sip => (sip & 0x80) == 0)($sip[1], object, object)) {
+                            if ((sip => (sip & 0x80) == 0)($sip[1])) {
                                 $step = 11
                                 $parse(Buffer.from([
                                     $sip[0] & 0xff,

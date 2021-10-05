@@ -209,14 +209,14 @@ const parser = {
 
                 $sip[0] = $buffer[$start++]
 
-                if ((sip => (sip & 0x80) == 0)($sip[0], object)) {
+                if ((sip => (sip & 0x80) == 0)($sip[0])) {
                     $start -= 1
 
                     object.value = $buffer[$start++]
                 } else {
                     $sip[1] = $buffer[$start++]
 
-                    if ((sip => (sip & 0x80) == 0)($sip[1], object)) {
+                    if ((sip => (sip & 0x80) == 0)($sip[1])) {
                         $start -= 2
 
                         object.value =
@@ -225,7 +225,7 @@ const parser = {
                     } else {
                         $sip[2] = $buffer[$start++]
 
-                        if ((sip => (sip & 0x80) == 0)($sip[2], object)) {
+                        if ((sip => (sip & 0x80) == 0)($sip[2])) {
                             $start -= 3
 
                             object.value =
@@ -276,7 +276,7 @@ const parser = {
 
                         case 3:
 
-                            if ((sip => (sip & 0x80) == 0)($sip[0], object, object)) {
+                            if ((sip => (sip & 0x80) == 0)($sip[0])) {
                                 $step = 4
                                 $parse(Buffer.from([
                                     $sip[0] & 0xff
@@ -314,7 +314,7 @@ const parser = {
 
                         case 8:
 
-                            if ((sip => (sip & 0x80) == 0)($sip[1], object, object)) {
+                            if ((sip => (sip & 0x80) == 0)($sip[1])) {
                                 $step = 9
                                 $parse(Buffer.from([
                                     $sip[0] & 0xff,
@@ -366,7 +366,7 @@ const parser = {
 
                         case 14:
 
-                            if ((sip => (sip & 0x80) == 0)($sip[2], object, object)) {
+                            if ((sip => (sip & 0x80) == 0)($sip[2])) {
                                 $step = 15
                                 $parse(Buffer.from([
                                     $sip[0] & 0xff,
@@ -545,7 +545,7 @@ module.exports = {
 
                             $sip[0] = $buffer[$start++]
 
-                            if ((sip => (sip & 0x80) == 0)($sip[0], object)) {
+                            if ((sip => (sip & 0x80) == 0)($sip[0])) {
                                 if ($end - ($start - 1) < 1) {
                                     return $incremental.object(object, 4, $sip)($buffer, $start - 1, $end)
                                 }
@@ -560,7 +560,7 @@ module.exports = {
 
                                 $sip[1] = $buffer[$start++]
 
-                                if ((sip => (sip & 0x80) == 0)($sip[1], object)) {
+                                if ((sip => (sip & 0x80) == 0)($sip[1])) {
                                     if ($end - ($start - 2) < 2) {
                                         return $incremental.object(object, 9, $sip)($buffer, $start - 2, $end)
                                     }
@@ -577,7 +577,7 @@ module.exports = {
 
                                     $sip[2] = $buffer[$start++]
 
-                                    if ((sip => (sip & 0x80) == 0)($sip[2], object)) {
+                                    if ((sip => (sip & 0x80) == 0)($sip[2])) {
                                         if ($end - ($start - 3) < 3) {
                                             return $incremental.object(object, 15, $sip)($buffer, $start - 3, $end)
                                         }

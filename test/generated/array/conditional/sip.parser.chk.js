@@ -23,7 +23,7 @@ module.exports = function ({ $incremental, $lookup }) {
 
                     $sip[0] = $buffer[$start++]
 
-                    if ((sip => (sip & 0x80) == 0)($sip[0], object)) {
+                    if ((sip => (sip & 0x80) == 0)($sip[0])) {
                         if ($end - ($start - 1) < 1) {
                             return $incremental.object(object, 6, $i, $I, $sip)($buffer, $start - 1, $end)
                         }
@@ -38,7 +38,7 @@ module.exports = function ({ $incremental, $lookup }) {
 
                         $sip[1] = $buffer[$start++]
 
-                        if ((sip => (sip & 0x80) == 0)($sip[1], object)) {
+                        if ((sip => (sip & 0x80) == 0)($sip[1])) {
                             if ($end - ($start - 2) < 2) {
                                 return $incremental.object(object, 11, $i, $I, $sip)($buffer, $start - 2, $end)
                             }
