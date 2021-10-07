@@ -8,7 +8,7 @@ const sizeOf = {
 
             $start += 4
 
-            $start += 1 * object.body.body.length + 1
+            $start += 1 * object.body.data.length + 1
 
             $start += 16
 
@@ -32,13 +32,13 @@ const serializer = {
 
                 $starts[0] = $start
 
-                $buffer[$start++] = object.body.value >>> 24 & 0xff
-                $buffer[$start++] = object.body.value >>> 16 & 0xff
-                $buffer[$start++] = object.body.value >>> 8 & 0xff
-                $buffer[$start++] = object.body.value & 0xff
+                $buffer[$start++] = object.body.number >>> 24 & 0xff
+                $buffer[$start++] = object.body.number >>> 16 & 0xff
+                $buffer[$start++] = object.body.number >>> 8 & 0xff
+                $buffer[$start++] = object.body.number & 0xff
 
-                for ($i[0] = 0; $i[0] < object.body.body.length; $i[0]++) {
-                    $buffer[$start++] = object.body.body[$i[0]] & 0xff
+                for ($i[0] = 0; $i[0] < object.body.data.length; $i[0]++) {
+                    $buffer[$start++] = object.body.data[$i[0]] & 0xff
                 }
 
                 $buffer[$start++] = 0x0
@@ -95,7 +95,7 @@ const serializer = {
                         case 2:
 
                             $bite = 3
-                            $_ = object.body.value
+                            $_ = object.body.number
 
                         case 3:
 
@@ -122,7 +122,7 @@ const serializer = {
                         case 5:
 
                             $bite = 0
-                            $_ = object.body.body[$i[0]]
+                            $_ = object.body.data[$i[0]]
 
                         case 6:
 
@@ -140,7 +140,7 @@ const serializer = {
                                 $buffer[$start++] = $_ >>> $bite * 8 & 0xff
                                 $bite--
                             }
-                            if (++$i[0] != object.body.body.length) {
+                            if (++$i[0] != object.body.data.length) {
                                 $step = 5
                                 continue
                             }
@@ -221,8 +221,8 @@ const parser = {
 
                 let object = {
                     body: {
-                        value: 0,
-                        body: []
+                        number: 0,
+                        data: []
                     },
                     checksum: null
                 }
@@ -231,7 +231,7 @@ const parser = {
 
                 $starts[0] = $start
 
-                object.body.value = (
+                object.body.number = (
                     $buffer[$start++] << 24 |
                     $buffer[$start++] << 16 |
                     $buffer[$start++] << 8 |
@@ -247,7 +247,7 @@ const parser = {
                         break
                     }
 
-                    object.body.body[$i[0]] = $buffer[$start++]
+                    object.body.data[$i[0]] = $buffer[$start++]
 
                     $i[0]++
                 }
@@ -298,8 +298,8 @@ const parser = {
 
                             object = {
                                 body: {
-                                    value: 0,
-                                    body: []
+                                    number: 0,
+                                    data: []
                                 },
                                 checksum: null
                             }
@@ -334,7 +334,7 @@ const parser = {
                                 $bite--
                             }
 
-                            object.body.value = $_
+                            object.body.number = $_
 
                         case 5:
 
@@ -377,7 +377,7 @@ const parser = {
                                 return { start: $start, object: null, parse: $parse }
                             }
 
-                            object.body.body[$i[0]] = $buffer[$start++]
+                            object.body.data[$i[0]] = $buffer[$start++]
 
                         case 9:
 
@@ -451,19 +451,19 @@ module.exports = {
 
                             $starts[0] = $start
 
-                            if ($end - $start < 5 + object.body.body.length * 1) {
+                            if ($end - $start < 5 + object.body.data.length * 1) {
                                 return $incremental.object(object, {
                                     hash: hash
                                 }, 2, $i, $$, $accumulator, $starts)($buffer, $start, $end)
                             }
 
-                            $buffer[$start++] = object.body.value >>> 24 & 0xff
-                            $buffer[$start++] = object.body.value >>> 16 & 0xff
-                            $buffer[$start++] = object.body.value >>> 8 & 0xff
-                            $buffer[$start++] = object.body.value & 0xff
+                            $buffer[$start++] = object.body.number >>> 24 & 0xff
+                            $buffer[$start++] = object.body.number >>> 16 & 0xff
+                            $buffer[$start++] = object.body.number >>> 8 & 0xff
+                            $buffer[$start++] = object.body.number & 0xff
 
-                            for ($i[0] = 0; $i[0] < object.body.body.length; $i[0]++) {
-                                $buffer[$start++] = object.body.body[$i[0]] & 0xff
+                            for ($i[0] = 0; $i[0] < object.body.data.length; $i[0]++) {
+                                $buffer[$start++] = object.body.data[$i[0]] & 0xff
                             }
 
                             $buffer[$start++] = 0x0
@@ -512,8 +512,8 @@ module.exports = {
 
                             let object = {
                                 body: {
-                                    value: 0,
-                                    body: []
+                                    number: 0,
+                                    data: []
                                 },
                                 checksum: null
                             }
@@ -528,7 +528,7 @@ module.exports = {
                                 }, 3, $i, $accumulator, $starts)($buffer, $start, $end)
                             }
 
-                            object.body.value = (
+                            object.body.number = (
                                 $buffer[$start++] << 24 |
                                 $buffer[$start++] << 16 |
                                 $buffer[$start++] << 8 |
@@ -556,7 +556,7 @@ module.exports = {
                                     }, 7, $i, $accumulator, $starts)($buffer, $start, $end)
                                 }
 
-                                object.body.body[$i[0]] = $buffer[$start++]
+                                object.body.data[$i[0]] = $buffer[$start++]
 
                                 $i[0]++
                             }
