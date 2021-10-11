@@ -24,18 +24,14 @@ designed solely for binary network protocols, but it is also great for reading
 and writing binary file formats.
 
 **Incremental** &mdash; Node packet creates incremental parsers and serializers
-that are almost as fast as the parser you'd write by hand, but a lot easier to
+that are almost as fast as the parser you'd write by hand, but a easier to
 define and maintain.
 
-**Declarative** &mdash; Packet defines a binary structure using a pattern
-language inspired by Perl's `pack`. The binary patterns are used to define both
+**Declarative** &mdash; Packet defines a binary structure using a syntax-bashed
+JavaScript definition langauge. A single definition is used to define both
 parsers and serializers. If you have a protocol specification, or even just a C
 header file with structures that define your binary data, you can probably
-translate that directly into Packet patterns.
-
-For parsers, you associate the patterns to callbacks invoked with captured
-values when the pattern is extracted from the stream. For serializers you simply
-give the values to write along with the pattern to follow when writing them.
+translate that directly into a Packet definition.
 
 **Expressive** &mdash; The pattern language can express
 
@@ -48,27 +44,22 @@ give the values to write along with the pattern to follow when writing them.
   * said strings terminated any fixed length terminator you specify,
   * padding of said strings with any padding value you specify,
   * signed and unsigned integers extracted from bit packed integers,
-  * conditions based on bit patterns,
+  * string to integer value mappings,
+  * if/then/else conditionals,
+  * switch conditions,
   * character encodings,
   * custom transformations,
-  * and pipelines of character encodings and custom transformations.
-
-## Installing
+  * assertions,
+  * and pipelines of custom transformations and assertions.
 
 Packet installs from NPM.
 
-```text
+```
 //{ "mode": "text" }
 npm install packet
 ```
-Memento is a database that supports atomic, isolated transactions, written to a
-write-ahead log and synced for durability in the event of system crash, and
-merged into b-trees for fast retrieval. It reads from an in memory page cache
-and evicts pages from the cache when they reach a user specified memory limit.
 
-Memento is written in pure JavaScript.
-
-Memento provides a contemporary `async`/`await` interface.
+## Living `README.md`
 
 This `README.md` is also a unit test using the
 [Proof](https://github.com/bigeasy/proof) unit test framework. We'll use the
@@ -77,14 +68,14 @@ generally looks like this.
 
 ```javascript
 //{ "code": { "tests": 115 }, "text": { "tests": 4  } }
-require('proof')(%(tests)d, async okay => {
+require('proof')(%(tests)d, okay => {
     //{ "include": "test", "mode": "code" }
-    //{ "include": "testDisplay", "mode": "text" }
+    //{ "include": "proof" }
 })
 ```
 
 ```javascript
-//{ "name": "testDisplay", "mode": "text" }
+//{ "name": "proof", "mode": "text" }
 okay('always okay')
 okay(true, 'okay if true')
 okay(1, 1, 'okay if equal')
@@ -100,9 +91,12 @@ git clone git@github.com:bigeasy/packet.git
 cd packet
 npm install --no-package-lock --no-save
 node --allow-natives-syntax test/readme/readme.t.js
+
+npm install packet
 ```
 
-The `--allow-natives-syntax` switch allows us to test that when we parse we are
+Be sure to run the unit test with the `--allow-natives-syntax` switch. The
+`--allow-natives-syntax` switch allows us to test that when we parse we are
 creating objects that have JavaScript "fast properties."
 
 ## Concerns and Decisions
