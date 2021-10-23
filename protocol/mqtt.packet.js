@@ -103,6 +103,16 @@ exports.packet = {
             }, 8 ],
             reasonCode: 8
         },
+        { $_: 'publish' }, {
+            topic: '$string',
+            id: [
+                ({ $ }) => $.fixed.header.flags.qos > 0, 16,
+                true, null
+            ],
+            /*
+            payload: [[ $ => $.variable.payload.length - $.variable.topic.length - 2 - $.fixed.header.flags.qos > 0 ? 2 : 0 ], [ Buffer ] ]
+            */
+        },
         { $_: [ 'pingreq', 'pingresp' ] }, null
     ]],
     fixed: {

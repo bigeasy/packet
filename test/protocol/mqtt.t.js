@@ -1,4 +1,4 @@
-require('proof')(32, okay => {
+require('proof')(36, okay => {
     const mqtt = require('mqtt-packet')
     const parser = mqtt.parser({ protocolVersion: 5 })
 
@@ -368,7 +368,46 @@ require('proof')(32, okay => {
         }
     }, 'connack session present')
 
-    console.log(mqtt.generate({ cmd: 'connack', sessionPresent: true, returnCode: 1 }))
+    test({
+        actual: {
+            input: {
+                fixed: { header: { type: 'publish', flags: { qos: 2, dup: 0, retain: 0 } } },
+                variable: {
+                    topic: 'test',
+                    id: 42,
+                    payload: Buffer.alloc(0)
+                },
+            },
+            output: {
+                fixed: { header: { type: 'publish', flags: { qos: 2, dup: 0, retain: 0 } }, length: 8 },
+                variable: {
+                    topic: 'test',
+                    id: 42,
+                },
+            }
+        },
+        expected: {
+            input: {
+                cmd: 'publish',
+                qos: 2,
+                messageId: 42,
+                dup: false,
+                topic: 'test',
+                retain: false,
+                payload: Buffer.alloc(0)
+            },
+            output: {
+                cmd: 'publish',
+                qos: 2,
+                messageId: 42,
+                length: 8,
+                dup: false,
+                topic: 'test',
+                retain: false,
+                payload: { type: 'Buffer', data: [] }
+            }
+        }
+    }, 'no payload publish')
     console.log(serialize({
         fixed: { header: { type: 'connect' } },
         variable: { flags: { cleanStart: 1 }, username: 'a', clientId: 'a' },
