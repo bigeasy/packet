@@ -125,6 +125,13 @@ const sizeOf = {
                 } else {
                 }
 
+
+                if ((() => false)()) {
+                    $start += 4
+                } else {
+                    $start += ($ => $.variable.payload.length)(variable) * 1
+                }
+
                 break
 
             case 'pingreq':
@@ -247,6 +254,13 @@ const sizeOf = {
                 } else {
                 }
 
+
+                if ((() => false)()) {
+                    $start += 4
+                } else {
+                    $start += ($ => $.variable.payload.length)(mqtt) * 1
+                }
+
                 break
 
             case 'pingreq':
@@ -345,7 +359,7 @@ const serializer = {
             } (),
             variable: function () {
                 return function (variable, $buffer, $start) {
-                    let $_, $$ = []
+                    let $_, $i = [], $I = [], $$ = []
 
                     switch (($ => $.fixed.header.type)(variable)) {
                     case 'connect':
@@ -478,6 +492,20 @@ const serializer = {
                         } else {
                         }
 
+                        if ((() => false)()) {
+                            $buffer[$start++] = variable.variable.payload >>> 24 & 0xff
+                            $buffer[$start++] = variable.variable.payload >>> 16 & 0xff
+                            $buffer[$start++] = variable.variable.payload >>> 8 & 0xff
+                            $buffer[$start++] = variable.variable.payload & 0xff
+                        } else {
+                            $I[0] = ($ => $.variable.payload.length)(variable)
+
+                            $_ = 0
+                            variable.variable.payload.copy($buffer, $start)
+                            $start += variable.variable.payload.length
+                            $_ += variable.variable.payload.length
+                        }
+
                         break
 
                     case 'pingreq':
@@ -496,7 +524,7 @@ const serializer = {
             } (),
             mqtt: function () {
                 return function (mqtt, $buffer, $start) {
-                    let $_, $$ = []
+                    let $_, $i = [], $I = [], $$ = []
 
                     $_ =
                         $lookup[0].indexOf(mqtt.fixed.header.type) << 4 & 0xf0
@@ -695,6 +723,20 @@ const serializer = {
                             $buffer[$start++] = mqtt.variable.id >>> 8 & 0xff
                             $buffer[$start++] = mqtt.variable.id & 0xff
                         } else {
+                        }
+
+                        if ((() => false)()) {
+                            $buffer[$start++] = mqtt.variable.payload >>> 24 & 0xff
+                            $buffer[$start++] = mqtt.variable.payload >>> 16 & 0xff
+                            $buffer[$start++] = mqtt.variable.payload >>> 8 & 0xff
+                            $buffer[$start++] = mqtt.variable.payload & 0xff
+                        } else {
+                            $I[0] = ($ => $.variable.payload.length)(mqtt)
+
+                            $_ = 0
+                            mqtt.variable.payload.copy($buffer, $start)
+                            $start += mqtt.variable.payload.length
+                            $_ += mqtt.variable.payload.length
                         }
 
                         break
@@ -932,7 +974,7 @@ const serializer = {
                 }
             } (),
             variable: function () {
-                return function (variable, $step = 0, $$ = []) {
+                return function (variable, $step = 0, $i = [], $I = [], $$ = []) {
                     let $_, $bite, $copied = 0
 
                     return function $serialize ($buffer, $start, $end) {
@@ -958,12 +1000,12 @@ const serializer = {
 
                                 case 'pingreq':
 
-                                    $step = 50
+                                    $step = 55
                                     continue
 
                                 case 'pingresp':
 
-                                    $step = 51
+                                    $step = 56
                                     continue
                                 }
 
@@ -1315,7 +1357,7 @@ const serializer = {
                                 continue
 
                             case 37:
-                                $step = 52
+                                $step = 57
                                 continue
 
                             case 38:
@@ -1351,7 +1393,7 @@ const serializer = {
                                     $buffer[$start++] = $_ >>> $bite * 8 & 0xff
                                     $bite--
                                 }
-                                $step = 52
+                                $step = 57
                                 continue
 
                             case 42:
@@ -1422,14 +1464,62 @@ const serializer = {
                                 continue
 
                             case 49:
-                                $step = 52
-                                continue
 
                             case 50:
-                                $step = 52
-                                continue
+
+                                if ((() => false)()) {
+                                    $step = 51
+                                    continue
+                                } else {
+                                    $step = 53
+                                    continue
+                                }
 
                             case 51:
+
+                                $bite = 3
+                                $_ = variable.variable.payload
+
+                            case 52:
+
+                                while ($bite != -1) {
+                                    if ($start == $end) {
+                                        $step = 52
+                                        return { start: $start, serialize: $serialize }
+                                    }
+                                    $buffer[$start++] = $_ >>> $bite * 8 & 0xff
+                                    $bite--
+                                }
+
+                                $step = 55
+                                continue
+
+                            case 53:
+
+                                $_ = 0
+                                $I[0] = ($ => $.variable.payload.length)(variable)
+
+                            case 54: {
+
+                                    const length = Math.min($end - $start, variable.variable.payload.length - $_)
+                                    variable.variable.payload.copy($buffer, $start, $_, $_ + length)
+                                    $start += length
+                                    $_ += length
+
+                                    if ($_ != variable.variable.payload.length) {
+                                        $step = 54
+                                        return { start: $start, serialize: $serialize }
+                                    }
+
+                                }
+                                $step = 57
+                                continue
+
+                            case 55:
+                                $step = 57
+                                continue
+
+                            case 56:
 
                             }
 
@@ -1441,7 +1531,7 @@ const serializer = {
                 }
             } (),
             mqtt: function () {
-                return function (mqtt, $step = 0, $$ = []) {
+                return function (mqtt, $step = 0, $i = [], $I = [], $$ = []) {
                     let $_, $bite, $copied = 0
 
                     return function $serialize ($buffer, $start, $end) {
@@ -1665,12 +1755,12 @@ const serializer = {
 
                                 case 'pingreq':
 
-                                    $step = 67
+                                    $step = 72
                                     continue
 
                                 case 'pingresp':
 
-                                    $step = 68
+                                    $step = 73
                                     continue
                                 }
 
@@ -2022,7 +2112,7 @@ const serializer = {
                                 continue
 
                             case 54:
-                                $step = 69
+                                $step = 74
                                 continue
 
                             case 55:
@@ -2058,7 +2148,7 @@ const serializer = {
                                     $buffer[$start++] = $_ >>> $bite * 8 & 0xff
                                     $bite--
                                 }
-                                $step = 69
+                                $step = 74
                                 continue
 
                             case 59:
@@ -2129,14 +2219,62 @@ const serializer = {
                                 continue
 
                             case 66:
-                                $step = 69
-                                continue
 
                             case 67:
-                                $step = 69
-                                continue
+
+                                if ((() => false)()) {
+                                    $step = 68
+                                    continue
+                                } else {
+                                    $step = 70
+                                    continue
+                                }
 
                             case 68:
+
+                                $bite = 3
+                                $_ = mqtt.variable.payload
+
+                            case 69:
+
+                                while ($bite != -1) {
+                                    if ($start == $end) {
+                                        $step = 69
+                                        return { start: $start, serialize: $serialize }
+                                    }
+                                    $buffer[$start++] = $_ >>> $bite * 8 & 0xff
+                                    $bite--
+                                }
+
+                                $step = 72
+                                continue
+
+                            case 70:
+
+                                $_ = 0
+                                $I[0] = ($ => $.variable.payload.length)(mqtt)
+
+                            case 71: {
+
+                                    const length = Math.min($end - $start, mqtt.variable.payload.length - $_)
+                                    mqtt.variable.payload.copy($buffer, $start, $_, $_ + length)
+                                    $start += length
+                                    $_ += length
+
+                                    if ($_ != mqtt.variable.payload.length) {
+                                        $step = 71
+                                        return { start: $start, serialize: $serialize }
+                                    }
+
+                                }
+                                $step = 74
+                                continue
+
+                            case 72:
+                                $step = 74
+                                continue
+
+                            case 73:
 
                             }
 
@@ -2252,7 +2390,7 @@ const parser = {
             } (),
             variable: function () {
                 return function ($buffer, $start) {
-                    let $_, $I = []
+                    let $_, $i = [], $I = [], $slice = null
 
                     let variable = {
                         variable: null
@@ -2404,7 +2542,8 @@ const parser = {
                     case 'publish':
                         variable.variable = {
                             topic: [],
-                            id: null
+                            id: null,
+                            payload: null
                         }
 
                         $I[0] =
@@ -2426,6 +2565,21 @@ const parser = {
                             variable.variable.id = null
                         }
 
+                        if ((() => false)()) {
+                            variable.variable.payload = (
+                                $buffer[$start++] << 24 |
+                                $buffer[$start++] << 16 |
+                                $buffer[$start++] << 8 |
+                                $buffer[$start++]
+                            ) >>> 0
+                        } else {
+                            $I[0] = ($ => $.fixed.length - ($.variable.topic.length + 2 + $.fixed.header.flags.qos > 0 ? 2 : 0))(variable)
+
+                            $slice = $buffer.slice($start, $start + $I[0])
+                            $start += $I[0]
+                            variable.variable.payload = $slice
+                        }
+
                         break
 
                     case 'pingreq':
@@ -2444,7 +2598,7 @@ const parser = {
             } (),
             mqtt: function () {
                 return function ($buffer, $start) {
-                    let $_, $I = [], $sip = []
+                    let $_, $i = [], $I = [], $sip = [], $slice = null
 
                     let mqtt = {
                         fixed: {
@@ -2682,7 +2836,8 @@ const parser = {
                     case 'publish':
                         mqtt.variable = {
                             topic: [],
-                            id: null
+                            id: null,
+                            payload: null
                         }
 
                         $I[0] =
@@ -2702,6 +2857,21 @@ const parser = {
                                 $buffer[$start++]
                         } else {
                             mqtt.variable.id = null
+                        }
+
+                        if ((() => false)()) {
+                            mqtt.variable.payload = (
+                                $buffer[$start++] << 24 |
+                                $buffer[$start++] << 16 |
+                                $buffer[$start++] << 8 |
+                                $buffer[$start++]
+                            ) >>> 0
+                        } else {
+                            $I[0] = ($ => $.fixed.length - ($.variable.topic.length + 2 + $.fixed.header.flags.qos > 0 ? 2 : 0))(mqtt)
+
+                            $slice = $buffer.slice($start, $start + $I[0])
+                            $start += $I[0]
+                            mqtt.variable.payload = $slice
                         }
 
                         break
@@ -3009,7 +3179,7 @@ const parser = {
                 }
             } (),
             variable: function () {
-                return function (variable, $step = 0, $I = []) {
+                return function (variable, $step = 0, $i = [], $I = []) {
                     let $_, $bite, $index = 0, $buffers = []
 
                     return function $parse ($buffer, $start, $end) {
@@ -3064,7 +3234,8 @@ const parser = {
 
                                     variable.variable = {
                                         topic: [],
-                                        id: null
+                                        id: null,
+                                        payload: null
                                     }
 
                                     $step = 38
@@ -3072,12 +3243,12 @@ const parser = {
 
                                 case 'pingreq':
 
-                                    $step = 45
+                                    $step = 50
                                     continue
 
                                 case 'pingresp':
 
-                                    $step = 46
+                                    $step = 51
                                     continue
                                 }
 
@@ -3455,7 +3626,7 @@ const parser = {
 
                                 variable.variable.password = null
 
-                                $step = 47
+                                $step = 52
                                 continue
 
                             case 34:
@@ -3486,7 +3657,7 @@ const parser = {
                                 }
 
                                 variable.variable.reasonCode = $buffer[$start++]
-                                $step = 47
+                                $step = 52
                                 continue
 
                             case 38:
@@ -3565,16 +3736,71 @@ const parser = {
 
                                 variable.variable.id = null
 
-                                $step = 47
-                                continue
+
 
                             case 45:
 
-                                variable.variable = null
-                                $step = 47
-                                continue
+                                if ((() => false)()) {
+                                    $step = 46
+                                    continue
+                                } else {
+                                    $step = 48
+                                    continue
+                                }
 
                             case 46:
+
+                                $_ = 0
+                                $bite = 3
+
+                            case 47:
+
+                                while ($bite != -1) {
+                                    if ($start == $end) {
+                                        $step = 47
+                                        return { start: $start, object: null, parse: $parse }
+                                    }
+                                    $_ += $buffer[$start++] << $bite * 8 >>> 0
+                                    $bite--
+                                }
+
+                                variable.variable.payload = $_
+
+                                $step = 50
+                                continue
+
+                            case 48:
+
+                                $_ = 0
+                                $I[0] = ($ => $.fixed.length - ($.variable.topic.length + 2 + $.fixed.header.flags.qos > 0 ? 2 : 0))(variable)
+
+                            case 49: {
+
+                                const length = Math.min($end - $start, $I[0] - $_)
+                                $buffers.push($buffer.slice($start, $start + length))
+                                $start += length
+                                $_ += length
+
+                                if ($_ != $I[0]) {
+                                    $step = 49
+                                    return { start: $start, object: null, parse: $parse }
+                                }
+
+                                variable.variable.payload = $buffers.length == 1 ? $buffers[0] : Buffer.concat($buffers)
+                                $buffers = []
+
+                            }
+
+                                $step = 52
+                                continue
+
+                            case 50:
+
+                                variable.variable = null
+                                $step = 52
+                                continue
+
+                            case 51:
 
                                 variable.variable = null
 
@@ -3587,7 +3813,7 @@ const parser = {
                 }
             } (),
             mqtt: function () {
-                return function (mqtt, $step = 0, $I = [], $sip = []) {
+                return function (mqtt, $step = 0, $i = [], $I = [], $sip = []) {
                     let $_, $bite, $index = 0, $buffers = []
 
                     return function $parse ($buffer, $start, $end) {
@@ -3906,7 +4132,8 @@ const parser = {
 
                                     mqtt.variable = {
                                         topic: [],
-                                        id: null
+                                        id: null,
+                                        payload: null
                                     }
 
                                     $step = 63
@@ -3914,12 +4141,12 @@ const parser = {
 
                                 case 'pingreq':
 
-                                    $step = 70
+                                    $step = 75
                                     continue
 
                                 case 'pingresp':
 
-                                    $step = 71
+                                    $step = 76
                                     continue
                                 }
 
@@ -4297,7 +4524,7 @@ const parser = {
 
                                 mqtt.variable.password = null
 
-                                $step = 72
+                                $step = 77
                                 continue
 
                             case 59:
@@ -4328,7 +4555,7 @@ const parser = {
                                 }
 
                                 mqtt.variable.reasonCode = $buffer[$start++]
-                                $step = 72
+                                $step = 77
                                 continue
 
                             case 63:
@@ -4407,16 +4634,71 @@ const parser = {
 
                                 mqtt.variable.id = null
 
-                                $step = 72
-                                continue
+
 
                             case 70:
 
-                                mqtt.variable = null
-                                $step = 72
-                                continue
+                                if ((() => false)()) {
+                                    $step = 71
+                                    continue
+                                } else {
+                                    $step = 73
+                                    continue
+                                }
 
                             case 71:
+
+                                $_ = 0
+                                $bite = 3
+
+                            case 72:
+
+                                while ($bite != -1) {
+                                    if ($start == $end) {
+                                        $step = 72
+                                        return { start: $start, object: null, parse: $parse }
+                                    }
+                                    $_ += $buffer[$start++] << $bite * 8 >>> 0
+                                    $bite--
+                                }
+
+                                mqtt.variable.payload = $_
+
+                                $step = 75
+                                continue
+
+                            case 73:
+
+                                $_ = 0
+                                $I[0] = ($ => $.fixed.length - ($.variable.topic.length + 2 + $.fixed.header.flags.qos > 0 ? 2 : 0))(mqtt)
+
+                            case 74: {
+
+                                const length = Math.min($end - $start, $I[0] - $_)
+                                $buffers.push($buffer.slice($start, $start + length))
+                                $start += length
+                                $_ += length
+
+                                if ($_ != $I[0]) {
+                                    $step = 74
+                                    return { start: $start, object: null, parse: $parse }
+                                }
+
+                                mqtt.variable.payload = $buffers.length == 1 ? $buffers[0] : Buffer.concat($buffers)
+                                $buffers = []
+
+                            }
+
+                                $step = 77
+                                continue
+
+                            case 75:
+
+                                mqtt.variable = null
+                                $step = 77
+                                continue
+
+                            case 76:
 
                                 mqtt.variable = null
 
@@ -4539,7 +4821,7 @@ module.exports = {
                 variable: function () {
                     return function (variable) {
                         return function ($buffer, $start, $end) {
-                            let $_, $$ = []
+                            let $_, $i = [], $I = [], $$ = []
 
                             switch (($ => $.fixed.header.type)(variable)) {
                             case 'connect':
@@ -4547,7 +4829,7 @@ module.exports = {
                                 $$[0] = ($_ => Buffer.from('MQTT'))(variable.variable.protocol)
 
                                 if ($end - $start < 2 + $$[0].length * 1) {
-                                    return $incremental.variable(variable, 2, $$)($buffer, $start, $end)
+                                    return $incremental.variable(variable, 2, $i, $I, $$)($buffer, $start, $end)
                                 }
 
                                 $buffer[$start++] = $$[0].length >>> 8 & 0xff
@@ -4557,7 +4839,7 @@ module.exports = {
                                 $start += $$[0].length
 
                                 if ($end - $start < 3 + 1) {
-                                    return $incremental.variable(variable, 5, $$)($buffer, $start, $end)
+                                    return $incremental.variable(variable, 5, $i, $I, $$)($buffer, $start, $end)
                                 }
 
                                 $$[0] = ($_ => 4)(variable.variable.version)
@@ -4595,7 +4877,7 @@ module.exports = {
                                 $$[0] = ($_ => Buffer.from($_))(variable.variable.clientId)
 
                                 if ($end - $start < 2 + $$[0].length * 1) {
-                                    return $incremental.variable(variable, 13, $$)($buffer, $start, $end)
+                                    return $incremental.variable(variable, 13, $i, $I, $$)($buffer, $start, $end)
                                 }
 
                                 $buffer[$start++] = $$[0].length >>> 8 & 0xff
@@ -4610,7 +4892,7 @@ module.exports = {
                                     $$[0] = ($_ => Buffer.from($_))(variable.variable.topic)
 
                                     if ($end - $start < 2 + $$[0].length * 1) {
-                                        return $incremental.variable(variable, 18, $$)($buffer, $start, $end)
+                                        return $incremental.variable(variable, 18, $i, $I, $$)($buffer, $start, $end)
                                     }
 
                                     $buffer[$start++] = $$[0].length >>> 8 & 0xff
@@ -4625,7 +4907,7 @@ module.exports = {
                                     $: variable
                                 })) {
                                     if ($end - $start < 2 + variable.variable.message.length * 1) {
-                                        return $incremental.variable(variable, 23, $$)($buffer, $start, $end)
+                                        return $incremental.variable(variable, 23, $i, $I, $$)($buffer, $start, $end)
                                     }
 
                                     $buffer[$start++] = variable.variable.message.length >>> 8 & 0xff
@@ -4642,7 +4924,7 @@ module.exports = {
                                     $$[0] = ($_ => Buffer.from($_))(variable.variable.username)
 
                                     if ($end - $start < 2 + $$[0].length * 1) {
-                                        return $incremental.variable(variable, 29, $$)($buffer, $start, $end)
+                                        return $incremental.variable(variable, 29, $i, $I, $$)($buffer, $start, $end)
                                     }
 
                                     $buffer[$start++] = $$[0].length >>> 8 & 0xff
@@ -4657,7 +4939,7 @@ module.exports = {
                                     $: variable
                                 })) {
                                     if ($end - $start < 2 + variable.variable.password.length * 1) {
-                                        return $incremental.variable(variable, 34, $$)($buffer, $start, $end)
+                                        return $incremental.variable(variable, 34, $i, $I, $$)($buffer, $start, $end)
                                     }
 
                                     $buffer[$start++] = variable.variable.password.length >>> 8 & 0xff
@@ -4673,7 +4955,7 @@ module.exports = {
                             case 'connack':
 
                                 if ($end - $start < 2) {
-                                    return $incremental.variable(variable, 38, $$)($buffer, $start, $end)
+                                    return $incremental.variable(variable, 38, $i, $I, $$)($buffer, $start, $end)
                                 }
 
                                 $_ =
@@ -4691,7 +4973,7 @@ module.exports = {
                                 $$[0] = ($_ => Buffer.from($_))(variable.variable.topic)
 
                                 if ($end - $start < 2 + $$[0].length * 1) {
-                                    return $incremental.variable(variable, 43, $$)($buffer, $start, $end)
+                                    return $incremental.variable(variable, 43, $i, $I, $$)($buffer, $start, $end)
                                 }
 
                                 $buffer[$start++] = $$[0].length >>> 8 & 0xff
@@ -4704,12 +4986,34 @@ module.exports = {
                                     $: variable
                                 })) {
                                     if ($end - $start < 2) {
-                                        return $incremental.variable(variable, 47, $$)($buffer, $start, $end)
+                                        return $incremental.variable(variable, 47, $i, $I, $$)($buffer, $start, $end)
                                     }
 
                                     $buffer[$start++] = variable.variable.id >>> 8 & 0xff
                                     $buffer[$start++] = variable.variable.id & 0xff
                                 } else {
+                                }
+
+                                if ((() => false)()) {
+                                    if ($end - $start < 4) {
+                                        return $incremental.variable(variable, 51, $i, $I, $$)($buffer, $start, $end)
+                                    }
+
+                                    $buffer[$start++] = variable.variable.payload >>> 24 & 0xff
+                                    $buffer[$start++] = variable.variable.payload >>> 16 & 0xff
+                                    $buffer[$start++] = variable.variable.payload >>> 8 & 0xff
+                                    $buffer[$start++] = variable.variable.payload & 0xff
+                                } else {
+                                    $I[0] = ($ => $.variable.payload.length)(variable)
+
+                                    if ($end - $start < $I[0] * 1) {
+                                        return $incremental.variable(variable, 53, $i, $I, $$)($buffer, $start, $end)
+                                    }
+
+                                    $_ = 0
+                                    variable.variable.payload.copy($buffer, $start)
+                                    $start += variable.variable.payload.length
+                                    $_ += variable.variable.payload.length
                                 }
 
                                 break
@@ -4732,10 +5036,10 @@ module.exports = {
                 mqtt: function () {
                     return function (mqtt) {
                         return function ($buffer, $start, $end) {
-                            let $_, $$ = []
+                            let $_, $i = [], $I = [], $$ = []
 
                             if ($end - $start < 1) {
-                                return $incremental.mqtt(mqtt, 0, $$)($buffer, $start, $end)
+                                return $incremental.mqtt(mqtt, 0, $i, $I, $$)($buffer, $start, $end)
                             }
 
                             $_ =
@@ -4792,20 +5096,20 @@ module.exports = {
 
                             if ((value => value < 0x7f)(mqtt.fixed.length)) {
                                 if ($end - $start < 1) {
-                                    return $incremental.mqtt(mqtt, 3, $$)($buffer, $start, $end)
+                                    return $incremental.mqtt(mqtt, 3, $i, $I, $$)($buffer, $start, $end)
                                 }
 
                                 $buffer[$start++] = mqtt.fixed.length & 0xff
                             } else if ((value => value < 0x3fff)(mqtt.fixed.length)) {
                                 if ($end - $start < 2) {
-                                    return $incremental.mqtt(mqtt, 5, $$)($buffer, $start, $end)
+                                    return $incremental.mqtt(mqtt, 5, $i, $I, $$)($buffer, $start, $end)
                                 }
 
                                 $buffer[$start++] = mqtt.fixed.length >>> 7 & 0x7f | 0x80
                                 $buffer[$start++] = mqtt.fixed.length & 0x7f
                             } else if ((value => value < 0x1fffff)(mqtt.fixed.length)) {
                                 if ($end - $start < 3) {
-                                    return $incremental.mqtt(mqtt, 8, $$)($buffer, $start, $end)
+                                    return $incremental.mqtt(mqtt, 8, $i, $I, $$)($buffer, $start, $end)
                                 }
 
                                 $buffer[$start++] = mqtt.fixed.length >>> 14 & 0x7f | 0x80
@@ -4813,7 +5117,7 @@ module.exports = {
                                 $buffer[$start++] = mqtt.fixed.length & 0x7f
                             } else {
                                 if ($end - $start < 4) {
-                                    return $incremental.mqtt(mqtt, 12, $$)($buffer, $start, $end)
+                                    return $incremental.mqtt(mqtt, 12, $i, $I, $$)($buffer, $start, $end)
                                 }
 
                                 $buffer[$start++] = mqtt.fixed.length >>> 21 & 0x7f | 0x80
@@ -4828,7 +5132,7 @@ module.exports = {
                                 $$[0] = ($_ => Buffer.from('MQTT'))(mqtt.variable.protocol)
 
                                 if ($end - $start < 2 + $$[0].length * 1) {
-                                    return $incremental.mqtt(mqtt, 19, $$)($buffer, $start, $end)
+                                    return $incremental.mqtt(mqtt, 19, $i, $I, $$)($buffer, $start, $end)
                                 }
 
                                 $buffer[$start++] = $$[0].length >>> 8 & 0xff
@@ -4838,7 +5142,7 @@ module.exports = {
                                 $start += $$[0].length
 
                                 if ($end - $start < 3 + 1) {
-                                    return $incremental.mqtt(mqtt, 22, $$)($buffer, $start, $end)
+                                    return $incremental.mqtt(mqtt, 22, $i, $I, $$)($buffer, $start, $end)
                                 }
 
                                 $$[0] = ($_ => 4)(mqtt.variable.version)
@@ -4876,7 +5180,7 @@ module.exports = {
                                 $$[0] = ($_ => Buffer.from($_))(mqtt.variable.clientId)
 
                                 if ($end - $start < 2 + $$[0].length * 1) {
-                                    return $incremental.mqtt(mqtt, 30, $$)($buffer, $start, $end)
+                                    return $incremental.mqtt(mqtt, 30, $i, $I, $$)($buffer, $start, $end)
                                 }
 
                                 $buffer[$start++] = $$[0].length >>> 8 & 0xff
@@ -4891,7 +5195,7 @@ module.exports = {
                                     $$[0] = ($_ => Buffer.from($_))(mqtt.variable.topic)
 
                                     if ($end - $start < 2 + $$[0].length * 1) {
-                                        return $incremental.mqtt(mqtt, 35, $$)($buffer, $start, $end)
+                                        return $incremental.mqtt(mqtt, 35, $i, $I, $$)($buffer, $start, $end)
                                     }
 
                                     $buffer[$start++] = $$[0].length >>> 8 & 0xff
@@ -4906,7 +5210,7 @@ module.exports = {
                                     $: mqtt
                                 })) {
                                     if ($end - $start < 2 + mqtt.variable.message.length * 1) {
-                                        return $incremental.mqtt(mqtt, 40, $$)($buffer, $start, $end)
+                                        return $incremental.mqtt(mqtt, 40, $i, $I, $$)($buffer, $start, $end)
                                     }
 
                                     $buffer[$start++] = mqtt.variable.message.length >>> 8 & 0xff
@@ -4923,7 +5227,7 @@ module.exports = {
                                     $$[0] = ($_ => Buffer.from($_))(mqtt.variable.username)
 
                                     if ($end - $start < 2 + $$[0].length * 1) {
-                                        return $incremental.mqtt(mqtt, 46, $$)($buffer, $start, $end)
+                                        return $incremental.mqtt(mqtt, 46, $i, $I, $$)($buffer, $start, $end)
                                     }
 
                                     $buffer[$start++] = $$[0].length >>> 8 & 0xff
@@ -4938,7 +5242,7 @@ module.exports = {
                                     $: mqtt
                                 })) {
                                     if ($end - $start < 2 + mqtt.variable.password.length * 1) {
-                                        return $incremental.mqtt(mqtt, 51, $$)($buffer, $start, $end)
+                                        return $incremental.mqtt(mqtt, 51, $i, $I, $$)($buffer, $start, $end)
                                     }
 
                                     $buffer[$start++] = mqtt.variable.password.length >>> 8 & 0xff
@@ -4954,7 +5258,7 @@ module.exports = {
                             case 'connack':
 
                                 if ($end - $start < 2) {
-                                    return $incremental.mqtt(mqtt, 55, $$)($buffer, $start, $end)
+                                    return $incremental.mqtt(mqtt, 55, $i, $I, $$)($buffer, $start, $end)
                                 }
 
                                 $_ =
@@ -4972,7 +5276,7 @@ module.exports = {
                                 $$[0] = ($_ => Buffer.from($_))(mqtt.variable.topic)
 
                                 if ($end - $start < 2 + $$[0].length * 1) {
-                                    return $incremental.mqtt(mqtt, 60, $$)($buffer, $start, $end)
+                                    return $incremental.mqtt(mqtt, 60, $i, $I, $$)($buffer, $start, $end)
                                 }
 
                                 $buffer[$start++] = $$[0].length >>> 8 & 0xff
@@ -4985,12 +5289,34 @@ module.exports = {
                                     $: mqtt
                                 })) {
                                     if ($end - $start < 2) {
-                                        return $incremental.mqtt(mqtt, 64, $$)($buffer, $start, $end)
+                                        return $incremental.mqtt(mqtt, 64, $i, $I, $$)($buffer, $start, $end)
                                     }
 
                                     $buffer[$start++] = mqtt.variable.id >>> 8 & 0xff
                                     $buffer[$start++] = mqtt.variable.id & 0xff
                                 } else {
+                                }
+
+                                if ((() => false)()) {
+                                    if ($end - $start < 4) {
+                                        return $incremental.mqtt(mqtt, 68, $i, $I, $$)($buffer, $start, $end)
+                                    }
+
+                                    $buffer[$start++] = mqtt.variable.payload >>> 24 & 0xff
+                                    $buffer[$start++] = mqtt.variable.payload >>> 16 & 0xff
+                                    $buffer[$start++] = mqtt.variable.payload >>> 8 & 0xff
+                                    $buffer[$start++] = mqtt.variable.payload & 0xff
+                                } else {
+                                    $I[0] = ($ => $.variable.payload.length)(mqtt)
+
+                                    if ($end - $start < $I[0] * 1) {
+                                        return $incremental.mqtt(mqtt, 70, $i, $I, $$)($buffer, $start, $end)
+                                    }
+
+                                    $_ = 0
+                                    mqtt.variable.payload.copy($buffer, $start)
+                                    $start += mqtt.variable.payload.length
+                                    $_ += mqtt.variable.payload.length
                                 }
 
                                 break
@@ -5151,7 +5477,7 @@ module.exports = {
                 variable: function () {
                     return function () {
                         return function ($buffer, $start, $end) {
-                            let $_, $I = []
+                            let $_, $i = [], $I = [], $slice = null
 
                             let variable = {
                                 variable: null
@@ -5179,7 +5505,7 @@ module.exports = {
                                 }
 
                                 if ($end - $start < 2) {
-                                    return $incremental.variable(variable, 2, $I)($buffer, $start, $end)
+                                    return $incremental.variable(variable, 2, $i, $I)($buffer, $start, $end)
                                 }
 
                                 $I[0] =
@@ -5187,7 +5513,7 @@ module.exports = {
                                     $buffer[$start++]
 
                                 if ($end - $start < 1 * $I[0]) {
-                                    return $incremental.variable(variable, 4, $I)($buffer, $start, $end)
+                                    return $incremental.variable(variable, 4, $i, $I)($buffer, $start, $end)
                                 }
 
                                 variable.variable.protocol = $buffer.slice($start, $start + $I[0])
@@ -5196,7 +5522,7 @@ module.exports = {
                                 variable.variable.protocol = ($_ => $_.toString())(variable.variable.protocol)
 
                                 if ($end - $start < 4) {
-                                    return $incremental.variable(variable, 5, $I)($buffer, $start, $end)
+                                    return $incremental.variable(variable, 5, $i, $I)($buffer, $start, $end)
                                 }
 
                                 variable.variable.version = $buffer[$start++]
@@ -5222,7 +5548,7 @@ module.exports = {
                                     $buffer[$start++]
 
                                 if ($end - $start < 2) {
-                                    return $incremental.variable(variable, 11, $I)($buffer, $start, $end)
+                                    return $incremental.variable(variable, 11, $i, $I)($buffer, $start, $end)
                                 }
 
                                 $I[0] =
@@ -5230,7 +5556,7 @@ module.exports = {
                                     $buffer[$start++]
 
                                 if ($end - $start < 1 * $I[0]) {
-                                    return $incremental.variable(variable, 13, $I)($buffer, $start, $end)
+                                    return $incremental.variable(variable, 13, $i, $I)($buffer, $start, $end)
                                 }
 
                                 variable.variable.clientId = $buffer.slice($start, $start + $I[0])
@@ -5244,7 +5570,7 @@ module.exports = {
                                     variable.variable.topic = []
 
                                     if ($end - $start < 2) {
-                                        return $incremental.variable(variable, 15, $I)($buffer, $start, $end)
+                                        return $incremental.variable(variable, 15, $i, $I)($buffer, $start, $end)
                                     }
 
                                     $I[0] =
@@ -5252,7 +5578,7 @@ module.exports = {
                                         $buffer[$start++]
 
                                     if ($end - $start < 1 * $I[0]) {
-                                        return $incremental.variable(variable, 17, $I)($buffer, $start, $end)
+                                        return $incremental.variable(variable, 17, $i, $I)($buffer, $start, $end)
                                     }
 
                                     variable.variable.topic = $buffer.slice($start, $start + $I[0])
@@ -5269,7 +5595,7 @@ module.exports = {
                                     variable.variable.message = []
 
                                     if ($end - $start < 2) {
-                                        return $incremental.variable(variable, 20, $I)($buffer, $start, $end)
+                                        return $incremental.variable(variable, 20, $i, $I)($buffer, $start, $end)
                                     }
 
                                     $I[0] =
@@ -5277,7 +5603,7 @@ module.exports = {
                                         $buffer[$start++]
 
                                     if ($end - $start < 1 * $I[0]) {
-                                        return $incremental.variable(variable, 22, $I)($buffer, $start, $end)
+                                        return $incremental.variable(variable, 22, $i, $I)($buffer, $start, $end)
                                     }
 
                                     variable.variable.message = $buffer.slice($start, $start + $I[0])
@@ -5292,7 +5618,7 @@ module.exports = {
                                     variable.variable.username = []
 
                                     if ($end - $start < 2) {
-                                        return $incremental.variable(variable, 25, $I)($buffer, $start, $end)
+                                        return $incremental.variable(variable, 25, $i, $I)($buffer, $start, $end)
                                     }
 
                                     $I[0] =
@@ -5300,7 +5626,7 @@ module.exports = {
                                         $buffer[$start++]
 
                                     if ($end - $start < 1 * $I[0]) {
-                                        return $incremental.variable(variable, 27, $I)($buffer, $start, $end)
+                                        return $incremental.variable(variable, 27, $i, $I)($buffer, $start, $end)
                                     }
 
                                     variable.variable.username = $buffer.slice($start, $start + $I[0])
@@ -5317,7 +5643,7 @@ module.exports = {
                                     variable.variable.password = []
 
                                     if ($end - $start < 2) {
-                                        return $incremental.variable(variable, 30, $I)($buffer, $start, $end)
+                                        return $incremental.variable(variable, 30, $i, $I)($buffer, $start, $end)
                                     }
 
                                     $I[0] =
@@ -5325,7 +5651,7 @@ module.exports = {
                                         $buffer[$start++]
 
                                     if ($end - $start < 1 * $I[0]) {
-                                        return $incremental.variable(variable, 32, $I)($buffer, $start, $end)
+                                        return $incremental.variable(variable, 32, $i, $I)($buffer, $start, $end)
                                     }
 
                                     variable.variable.password = $buffer.slice($start, $start + $I[0])
@@ -5345,7 +5671,7 @@ module.exports = {
                                 }
 
                                 if ($end - $start < 2) {
-                                    return $incremental.variable(variable, 34, $I)($buffer, $start, $end)
+                                    return $incremental.variable(variable, 34, $i, $I)($buffer, $start, $end)
                                 }
 
                                 $_ = $buffer[$start++]
@@ -5359,11 +5685,12 @@ module.exports = {
                             case 'publish':
                                 variable.variable = {
                                     topic: [],
-                                    id: null
+                                    id: null,
+                                    payload: null
                                 }
 
                                 if ($end - $start < 2) {
-                                    return $incremental.variable(variable, 38, $I)($buffer, $start, $end)
+                                    return $incremental.variable(variable, 38, $i, $I)($buffer, $start, $end)
                                 }
 
                                 $I[0] =
@@ -5371,7 +5698,7 @@ module.exports = {
                                     $buffer[$start++]
 
                                 if ($end - $start < 1 * $I[0]) {
-                                    return $incremental.variable(variable, 40, $I)($buffer, $start, $end)
+                                    return $incremental.variable(variable, 40, $i, $I)($buffer, $start, $end)
                                 }
 
                                 variable.variable.topic = $buffer.slice($start, $start + $I[0])
@@ -5383,7 +5710,7 @@ module.exports = {
                                     $: variable
                                 })) {
                                     if ($end - $start < 2) {
-                                        return $incremental.variable(variable, 42, $I)($buffer, $start, $end)
+                                        return $incremental.variable(variable, 42, $i, $I)($buffer, $start, $end)
                                     }
 
                                     variable.variable.id =
@@ -5391,6 +5718,29 @@ module.exports = {
                                         $buffer[$start++]
                                 } else {
                                     variable.variable.id = null
+                                }
+
+                                if ((() => false)()) {
+                                    if ($end - $start < 4) {
+                                        return $incremental.variable(variable, 46, $i, $I)($buffer, $start, $end)
+                                    }
+
+                                    variable.variable.payload = (
+                                        $buffer[$start++] << 24 |
+                                        $buffer[$start++] << 16 |
+                                        $buffer[$start++] << 8 |
+                                        $buffer[$start++]
+                                    ) >>> 0
+                                } else {
+                                    $I[0] = ($ => $.fixed.length - ($.variable.topic.length + 2 + $.fixed.header.flags.qos > 0 ? 2 : 0))(variable)
+
+                                    if ($end - $start < $I[0] * 1) {
+                                        return $incremental.variable(variable, 48, $i, $I)($buffer, $start, $end)
+                                    }
+
+                                    $slice = $buffer.slice($start, $start + $I[0])
+                                    $start += $I[0]
+                                    variable.variable.payload = $slice
                                 }
 
                                 break
@@ -5413,7 +5763,7 @@ module.exports = {
                 mqtt: function () {
                     return function () {
                         return function ($buffer, $start, $end) {
-                            let $_, $I = [], $sip = []
+                            let $_, $i = [], $I = [], $sip = [], $slice = null
 
                             let mqtt = {
                                 fixed: {
@@ -5427,7 +5777,7 @@ module.exports = {
                             }
 
                             if ($end - $start < 1) {
-                                return $incremental.mqtt(mqtt, 1, $I, $sip)($buffer, $start, $end)
+                                return $incremental.mqtt(mqtt, 1, $i, $I, $sip)($buffer, $start, $end)
                             }
 
                             $_ = $buffer[$start++]
@@ -5472,14 +5822,14 @@ module.exports = {
                             }
 
                             if ($end - $start < 1) {
-                                return $incremental.mqtt(mqtt, 3, $I, $sip)($buffer, $start, $end)
+                                return $incremental.mqtt(mqtt, 3, $i, $I, $sip)($buffer, $start, $end)
                             }
 
                             $sip[0] = $buffer[$start++]
 
                             if ((sip => (sip & 0x80) == 0)($sip[0])) {
                                 if ($end - ($start - 1) < 1) {
-                                    return $incremental.mqtt(mqtt, 6, $I, $sip)($buffer, $start - 1, $end)
+                                    return $incremental.mqtt(mqtt, 6, $i, $I, $sip)($buffer, $start - 1, $end)
                                 }
 
                                 $start -= 1
@@ -5487,14 +5837,14 @@ module.exports = {
                                 mqtt.fixed.length = $buffer[$start++]
                             } else {
                                 if ($end - $start < 1) {
-                                    return $incremental.mqtt(mqtt, 8, $I, $sip)($buffer, $start, $end)
+                                    return $incremental.mqtt(mqtt, 8, $i, $I, $sip)($buffer, $start, $end)
                                 }
 
                                 $sip[1] = $buffer[$start++]
 
                                 if ((sip => (sip & 0x80) == 0)($sip[1])) {
                                     if ($end - ($start - 2) < 2) {
-                                        return $incremental.mqtt(mqtt, 11, $I, $sip)($buffer, $start - 2, $end)
+                                        return $incremental.mqtt(mqtt, 11, $i, $I, $sip)($buffer, $start - 2, $end)
                                     }
 
                                     $start -= 2
@@ -5504,14 +5854,14 @@ module.exports = {
                                         $buffer[$start++]
                                 } else {
                                     if ($end - $start < 1) {
-                                        return $incremental.mqtt(mqtt, 14, $I, $sip)($buffer, $start, $end)
+                                        return $incremental.mqtt(mqtt, 14, $i, $I, $sip)($buffer, $start, $end)
                                     }
 
                                     $sip[2] = $buffer[$start++]
 
                                     if ((sip => (sip & 0x80) == 0)($sip[2])) {
                                         if ($end - ($start - 3) < 3) {
-                                            return $incremental.mqtt(mqtt, 17, $I, $sip)($buffer, $start - 3, $end)
+                                            return $incremental.mqtt(mqtt, 17, $i, $I, $sip)($buffer, $start - 3, $end)
                                         }
 
                                         $start -= 3
@@ -5522,7 +5872,7 @@ module.exports = {
                                             $buffer[$start++]
                                     } else {
                                         if ($end - ($start - 3) < 4) {
-                                            return $incremental.mqtt(mqtt, 21, $I, $sip)($buffer, $start - 3, $end)
+                                            return $incremental.mqtt(mqtt, 21, $i, $I, $sip)($buffer, $start - 3, $end)
                                         }
 
                                         $start -= 3
@@ -5559,7 +5909,7 @@ module.exports = {
                                 }
 
                                 if ($end - $start < 2) {
-                                    return $incremental.mqtt(mqtt, 27, $I, $sip)($buffer, $start, $end)
+                                    return $incremental.mqtt(mqtt, 27, $i, $I, $sip)($buffer, $start, $end)
                                 }
 
                                 $I[0] =
@@ -5567,7 +5917,7 @@ module.exports = {
                                     $buffer[$start++]
 
                                 if ($end - $start < 1 * $I[0]) {
-                                    return $incremental.mqtt(mqtt, 29, $I, $sip)($buffer, $start, $end)
+                                    return $incremental.mqtt(mqtt, 29, $i, $I, $sip)($buffer, $start, $end)
                                 }
 
                                 mqtt.variable.protocol = $buffer.slice($start, $start + $I[0])
@@ -5576,7 +5926,7 @@ module.exports = {
                                 mqtt.variable.protocol = ($_ => $_.toString())(mqtt.variable.protocol)
 
                                 if ($end - $start < 4) {
-                                    return $incremental.mqtt(mqtt, 30, $I, $sip)($buffer, $start, $end)
+                                    return $incremental.mqtt(mqtt, 30, $i, $I, $sip)($buffer, $start, $end)
                                 }
 
                                 mqtt.variable.version = $buffer[$start++]
@@ -5602,7 +5952,7 @@ module.exports = {
                                     $buffer[$start++]
 
                                 if ($end - $start < 2) {
-                                    return $incremental.mqtt(mqtt, 36, $I, $sip)($buffer, $start, $end)
+                                    return $incremental.mqtt(mqtt, 36, $i, $I, $sip)($buffer, $start, $end)
                                 }
 
                                 $I[0] =
@@ -5610,7 +5960,7 @@ module.exports = {
                                     $buffer[$start++]
 
                                 if ($end - $start < 1 * $I[0]) {
-                                    return $incremental.mqtt(mqtt, 38, $I, $sip)($buffer, $start, $end)
+                                    return $incremental.mqtt(mqtt, 38, $i, $I, $sip)($buffer, $start, $end)
                                 }
 
                                 mqtt.variable.clientId = $buffer.slice($start, $start + $I[0])
@@ -5624,7 +5974,7 @@ module.exports = {
                                     mqtt.variable.topic = []
 
                                     if ($end - $start < 2) {
-                                        return $incremental.mqtt(mqtt, 40, $I, $sip)($buffer, $start, $end)
+                                        return $incremental.mqtt(mqtt, 40, $i, $I, $sip)($buffer, $start, $end)
                                     }
 
                                     $I[0] =
@@ -5632,7 +5982,7 @@ module.exports = {
                                         $buffer[$start++]
 
                                     if ($end - $start < 1 * $I[0]) {
-                                        return $incremental.mqtt(mqtt, 42, $I, $sip)($buffer, $start, $end)
+                                        return $incremental.mqtt(mqtt, 42, $i, $I, $sip)($buffer, $start, $end)
                                     }
 
                                     mqtt.variable.topic = $buffer.slice($start, $start + $I[0])
@@ -5649,7 +5999,7 @@ module.exports = {
                                     mqtt.variable.message = []
 
                                     if ($end - $start < 2) {
-                                        return $incremental.mqtt(mqtt, 45, $I, $sip)($buffer, $start, $end)
+                                        return $incremental.mqtt(mqtt, 45, $i, $I, $sip)($buffer, $start, $end)
                                     }
 
                                     $I[0] =
@@ -5657,7 +6007,7 @@ module.exports = {
                                         $buffer[$start++]
 
                                     if ($end - $start < 1 * $I[0]) {
-                                        return $incremental.mqtt(mqtt, 47, $I, $sip)($buffer, $start, $end)
+                                        return $incremental.mqtt(mqtt, 47, $i, $I, $sip)($buffer, $start, $end)
                                     }
 
                                     mqtt.variable.message = $buffer.slice($start, $start + $I[0])
@@ -5672,7 +6022,7 @@ module.exports = {
                                     mqtt.variable.username = []
 
                                     if ($end - $start < 2) {
-                                        return $incremental.mqtt(mqtt, 50, $I, $sip)($buffer, $start, $end)
+                                        return $incremental.mqtt(mqtt, 50, $i, $I, $sip)($buffer, $start, $end)
                                     }
 
                                     $I[0] =
@@ -5680,7 +6030,7 @@ module.exports = {
                                         $buffer[$start++]
 
                                     if ($end - $start < 1 * $I[0]) {
-                                        return $incremental.mqtt(mqtt, 52, $I, $sip)($buffer, $start, $end)
+                                        return $incremental.mqtt(mqtt, 52, $i, $I, $sip)($buffer, $start, $end)
                                     }
 
                                     mqtt.variable.username = $buffer.slice($start, $start + $I[0])
@@ -5697,7 +6047,7 @@ module.exports = {
                                     mqtt.variable.password = []
 
                                     if ($end - $start < 2) {
-                                        return $incremental.mqtt(mqtt, 55, $I, $sip)($buffer, $start, $end)
+                                        return $incremental.mqtt(mqtt, 55, $i, $I, $sip)($buffer, $start, $end)
                                     }
 
                                     $I[0] =
@@ -5705,7 +6055,7 @@ module.exports = {
                                         $buffer[$start++]
 
                                     if ($end - $start < 1 * $I[0]) {
-                                        return $incremental.mqtt(mqtt, 57, $I, $sip)($buffer, $start, $end)
+                                        return $incremental.mqtt(mqtt, 57, $i, $I, $sip)($buffer, $start, $end)
                                     }
 
                                     mqtt.variable.password = $buffer.slice($start, $start + $I[0])
@@ -5725,7 +6075,7 @@ module.exports = {
                                 }
 
                                 if ($end - $start < 2) {
-                                    return $incremental.mqtt(mqtt, 59, $I, $sip)($buffer, $start, $end)
+                                    return $incremental.mqtt(mqtt, 59, $i, $I, $sip)($buffer, $start, $end)
                                 }
 
                                 $_ = $buffer[$start++]
@@ -5739,11 +6089,12 @@ module.exports = {
                             case 'publish':
                                 mqtt.variable = {
                                     topic: [],
-                                    id: null
+                                    id: null,
+                                    payload: null
                                 }
 
                                 if ($end - $start < 2) {
-                                    return $incremental.mqtt(mqtt, 63, $I, $sip)($buffer, $start, $end)
+                                    return $incremental.mqtt(mqtt, 63, $i, $I, $sip)($buffer, $start, $end)
                                 }
 
                                 $I[0] =
@@ -5751,7 +6102,7 @@ module.exports = {
                                     $buffer[$start++]
 
                                 if ($end - $start < 1 * $I[0]) {
-                                    return $incremental.mqtt(mqtt, 65, $I, $sip)($buffer, $start, $end)
+                                    return $incremental.mqtt(mqtt, 65, $i, $I, $sip)($buffer, $start, $end)
                                 }
 
                                 mqtt.variable.topic = $buffer.slice($start, $start + $I[0])
@@ -5763,7 +6114,7 @@ module.exports = {
                                     $: mqtt
                                 })) {
                                     if ($end - $start < 2) {
-                                        return $incremental.mqtt(mqtt, 67, $I, $sip)($buffer, $start, $end)
+                                        return $incremental.mqtt(mqtt, 67, $i, $I, $sip)($buffer, $start, $end)
                                     }
 
                                     mqtt.variable.id =
@@ -5771,6 +6122,29 @@ module.exports = {
                                         $buffer[$start++]
                                 } else {
                                     mqtt.variable.id = null
+                                }
+
+                                if ((() => false)()) {
+                                    if ($end - $start < 4) {
+                                        return $incremental.mqtt(mqtt, 71, $i, $I, $sip)($buffer, $start, $end)
+                                    }
+
+                                    mqtt.variable.payload = (
+                                        $buffer[$start++] << 24 |
+                                        $buffer[$start++] << 16 |
+                                        $buffer[$start++] << 8 |
+                                        $buffer[$start++]
+                                    ) >>> 0
+                                } else {
+                                    $I[0] = ($ => $.fixed.length - ($.variable.topic.length + 2 + $.fixed.header.flags.qos > 0 ? 2 : 0))(mqtt)
+
+                                    if ($end - $start < $I[0] * 1) {
+                                        return $incremental.mqtt(mqtt, 73, $i, $I, $sip)($buffer, $start, $end)
+                                    }
+
+                                    $slice = $buffer.slice($start, $start + $I[0])
+                                    $start += $I[0]
+                                    mqtt.variable.payload = $slice
                                 }
 
                                 break

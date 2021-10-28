@@ -375,14 +375,15 @@ require('proof')(36, okay => {
                 variable: {
                     topic: 'test',
                     id: 42,
-                    payload: Buffer.alloc(0)
+                    payload: Buffer.from('test')
                 },
             },
             output: {
-                fixed: { header: { type: 'publish', flags: { qos: 2, dup: 0, retain: 0 } }, length: 8 },
+                fixed: { header: { type: 'publish', flags: { qos: 2, dup: 0, retain: 0 } }, length: 12 },
                 variable: {
                     topic: 'test',
                     id: 42,
+                    payload: Buffer.from('test')
                 },
             }
         },
@@ -394,20 +395,20 @@ require('proof')(36, okay => {
                 dup: false,
                 topic: 'test',
                 retain: false,
-                payload: Buffer.alloc(0)
+                payload: Buffer.from('test')
             },
             output: {
                 cmd: 'publish',
                 qos: 2,
                 messageId: 42,
-                length: 8,
+                length: 12,
                 dup: false,
                 topic: 'test',
                 retain: false,
-                payload: { type: 'Buffer', data: [] }
+                payload: { type: 'Buffer', data: [ 116, 101, 115, 116 ] }
             }
         }
-    }, 'no payload publish')
+    }, 'publish')
     console.log(serialize({
         fixed: { header: { type: 'connect' } },
         variable: { flags: { cleanStart: 1 }, username: 'a', clientId: 'a' },
