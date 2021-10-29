@@ -31,7 +31,6 @@ require('proof')(1, okay => {
                 dotted: '',
                 pad: [],
                 fixed: true,
-                align: 'left',
                 calculated: false,
                 bits: 64,
                 fields: [{

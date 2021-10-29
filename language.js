@@ -793,7 +793,6 @@ module.exports = function (packets) {
                 pad,
                 calculated,
                 fixed: calculated ? false : fixed,
-                align: 'left',
                 length: length,
                 bits: calculated ? 0 : bits * packet[0][0],
                 fields
