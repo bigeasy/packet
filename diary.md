@@ -14,8 +14,7 @@ In split conditionals parse comes before serialize, because Packet is a packet
 *parser*, but when I write one I assume serialize comes first because you have
 to serialize a packet in order to have something parsed.
 
-**TODO** Maybe consider changing this or else update this entry with the reason
-you chose not to.
+UPDATE: You goof. It is serialize first.
 
 ## Fri Oct 29 00:18:34 CDT 2021
 
