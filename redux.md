@@ -1,3 +1,97 @@
+## Fri Oct 29 00:18:34 CDT 2021
+
+Need a way to have a separate parse and serialize path, but we currently do not
+have any good way of saying this except to create a two conditionals.
+
+Something that is simply two arrays is ambiguous.
+
+```javascript
+const definition = {
+    object: [[ 16 ], [ 8 ]]
+}
+```
+
+We should allow an always true split conditional and just put it inline.
+
+The specific problem I'm facing is an MQTT header which has a remaining length
+variable. We get this by first serializing the variable part of the message,
+then formatting a header that has the remaining length. This means two separate
+serializes, but we can combine them into a parser. The variable serialize
+simply writes the remaining buffer calculating the length by getting the payload
+length, not writing a length encoding. When parsing we get the length by
+subtracting an offset from the header length property.
+
+```javascript
+const definition = {
+    object: [
+        [ true, [ $ => $.header.length - 8, [ Buffer ] ],
+        [ true, [ $ => $.body.length, [ Buffer ] ]
+    ]
+}
+```
+
+**TODO** Create an issue and then remove this comment.
+
+## Fri Oct 29 00:11:40 CDT 2021
+
+The suggested language for limits will not work. We already use the array
+wrapping for calculated lengths which are already proving useful.
+
+However, a calculated length takes this form.
+
+```
+const definition = {
+    object: [[ $ => $.header.length ], [ 8 ]]
+}
+```
+
+The second element is always an array with a single element.
+
+Provided there is no other root language element that is an array with a single
+element, they all seem to be arrays with multiple elements, we can define a test
+for a function followed by an array with a single element. A switch body will
+always have elements divisible by 2.
+
+What is needed is a language.js file that has an example of everything, or
+perhaps a `language.md` and you can scan it for space in the language.
+
+You should allow yourself language hacks, something like.
+
+```
+const definition = {
+    object: { hack: 'length', get: $ => $.header.length }
+}
+```
+
+So you can start work on the feature and see if it does or does not make life
+easier.
+
+**TODO** Create an issue and then remove this comment.
+
+Furthermore, some thoughts on the implementation.
+
+We will only implement the length checking on the parser side, initially at
+least. It is assumed that the application is not trying to resource starve
+itself, or that that would be a programming error and would be resolved by
+debugging and testing, whereas someone could feed our parser with an endless
+terminated array, making for a simple DDoS attack.
+
+We can use the existing checkpoint logic to generate checkpoints that instead of
+breaking into an incremental parser, raise an exception.
+
+An ugly rough draft of the incremental parser would add a test to every one of
+the parsing looks that compares the `$offset` to a limit. Then a wiser
+implementation would skip this test for fixed length fields checking that there
+are bytes enough remaining, smarter still and we check once for a sum of a series
+of fixed width fields and the smartest of them all would adjust the limit
+decreasing it by the number of bytes necessary to contain the smallest possible
+remaining packet, a sum of fixed width fields, encodings, terminators, the
+smallest option in a conditional, etc. Note that this smallest field can be
+calculated in the language and made a property of the AST and you can sum the
+remaining entries in the tree as you process, but it may mean now that we have
+to return up the tree. Or, no, we can pass a parent minimum as we descend the
+tree.
+
 ## Wed Sep 29 02:52:53 CDT 2021
 
 Limiting parsers. Would like to limit the length of a parser so it will stop and
