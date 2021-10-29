@@ -1,3 +1,11 @@
+For an earlier diary not as well kept view
+[diary.md](https://github.com/bigeasy/packet/blob/e581c829d08659baba39643f6aae3d37f4863623/diary.md).
+Removed it to replace it with this diary which covers the development of the
+syntax bashed definition language. Removed since I know my way around this diary
+and most of the older diary discusses the Perl `pack` inspired language.
+
+---
+
 ## Fri Oct 29 00:18:34 CDT 2021
 
 Need a way to have a separate parse and serialize path, but we currently do not
