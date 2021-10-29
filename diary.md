@@ -49,8 +49,6 @@ const definition = {
 }
 ```
 
-**TODO** Create an issue and then remove this comment.
-
 ## Fri Oct 29 00:11:40 CDT 2021
 
 The suggested language for limits will not work. We already use the array
