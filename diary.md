@@ -8,6 +8,15 @@ inspired language.
 
 ---
 
+## Fri Oct 29 02:07:47 CDT 2021
+
+In split conditionals parse comes before serialize, because Packet is a packet
+*parser*, but when I write one I assume serialize comes first because you have
+to serialize a packet in order to have something parsed.
+
+**TODO** Maybe consider changing this or else update this entry with the reason
+you chose not to.
+
 ## Fri Oct 29 00:18:34 CDT 2021
 
 Need a way to have a separate parse and serialize path, but we currently do not
