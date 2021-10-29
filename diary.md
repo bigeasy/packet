@@ -1,8 +1,10 @@
 For an earlier diary not as well kept view
-[diary.md](https://github.com/bigeasy/packet/blob/e581c829d08659baba39643f6aae3d37f4863623/diary.md).
-Removed it to replace it with this diary which covers the development of the
-syntax bashed definition language. Removed since I know my way around this diary
-and most of the older diary discusses the Perl `pack` inspired language.
+[diary.md](https://github.com/bigeasy/packet/tree/e6ab11d6fc010cd879cd22c27455407cf1047d53).
+In the same tree you will find `redux.md` which is this document moved over it.
+Removed the old `diary.md` to replace it with this diary which covers the
+development of the syntax bashed definition language. Removed since I know my
+way around this diary and most of the older diary discusses the Perl `pack`
+inspired language.
 
 ---
 
