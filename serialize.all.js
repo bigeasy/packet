@@ -824,6 +824,9 @@ function generate (packet, { require = null, bff, chk }) {
     }
 
     function conditional (path, field) {
+        if (field.serialize.unconditional) {
+            return join(field.serialize.conditions[0].fields.map(field => dispatch(path, field)))
+        }
         const block = []
         const tests = field.serialize.conditions.filter(condition => condition.test != null)
                                                 .map(condition => condition.test)

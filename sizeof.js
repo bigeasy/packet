@@ -49,6 +49,10 @@ function generate (packet, { require = null }) {
             break
         case 'conditional': {
                 // TODO Only referenced, right?
+                if (field.serialize.unconditional) {
+                    return map(dispatch, path, field.serialize.conditions[0].fields)
+                    break
+                }
                 const tests = field.serialize.conditions
                                              .filter(condition => condition.test != null)
                                              .map(condition => condition.test)

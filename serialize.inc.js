@@ -689,6 +689,9 @@ function generate (packet, { require = null }) {
     }
 
     function conditional (path, field) {
+        if (field.serialize.unconditional) {
+            return map(dispatch, path, field.serialize.conditions[0].fields)
+        }
         surround = true
         const tests = field.serialize.conditions.filter(condition => condition.test != null)
                                                 .map(condition => condition.test)

@@ -439,6 +439,7 @@ require('proof')(11, okay => {
                 dotted: '',
                 split: false,
                 serialize: {
+                    unconditional: false,
                     conditions: [{
                         test: {
                             defaulted: [],
@@ -487,6 +488,7 @@ require('proof')(11, okay => {
                 },
                 parse: {
                   sip: null,
+                  unconditional: false,
                   conditions: [{
                       test: {
                           defaulted: [],
@@ -589,6 +591,7 @@ require('proof')(11, okay => {
                 dotted: '',
                 split: true,
                 serialize: {
+                    unconditional: false,
                     conditions: [{
                         test: {
                             defaulted: [],
@@ -636,9 +639,9 @@ require('proof')(11, okay => {
                     ]
                 },
                 parse: {
-                    type: 'parse',
                     vivify: 'number',
                     sip: null,
+                    unconditional: false,
                     conditions: [{
                         test: {
                             defaulted: [],
@@ -741,6 +744,7 @@ require('proof')(11, okay => {
                 dotted: '',
                 split: true,
                 serialize: {
+                    unconditional: false,
                     conditions: [{
                         test: {
                             defaulted: [],
@@ -781,7 +785,6 @@ require('proof')(11, okay => {
                     ]
                 },
                 parse: {
-                    type: 'parse',
                     vivify: 'number',
                     sip: [{
                         type: 'integer',
@@ -793,6 +796,7 @@ require('proof')(11, okay => {
                         endianness: 'big',
                         compliment: false
                     }],
+                    unconditional: false,
                     conditions: [{
                         test: {
                             defaulted: [],

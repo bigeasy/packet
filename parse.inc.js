@@ -873,7 +873,39 @@ function generate (packet, { require = null }) {
         return conditions(path, field.parse, [])
     }
 
+    // It is going to annoy you that an initial special case that tests and
+    // returns and you have it within `conditional` everywhere, so you'll want
+    // to create an `'unconditional'` type so you can have an `'unconditional'`
+    // case or an `unconditional` function. However, that would be the type
+    // within either the `parse` or `conditional` property of the
+    // `'conditional'` AST node. You still have a sub-condition unless you
+    // flatten the AST so that the parse or serialize node becomes the
+    // 'conditional' node depending. So, now you add another transformation from
+    // the language. You must flatten in a transform unless the AST tree
+    // produced is entirely a parse AST tree and a serialize AST tree and you
+    // would do it only for split conditionals that are used solely to
+    // distinguish between parse and serialize.
+
+    // Furthermore you remove unconditional sips in the language parsing since
+    // they they are no-ops and the sip is unnecessary, so you may feel like
+    // you're halfway there to fixing everything in the language, but no, you
+    // would have to provide two AST trees. You can't have `'unconditional'` as
+    // a new type because only one side of the split conditional may be
+    // unconditional.
+
+    // This morning, with a clear mind, you reason quite reasonably that the
+    // unconditional is a hack for the syntax bashed language — using a an
+    // unconditional conditional to implement parse or serialize conditionals
+    // — and the hack in the language is properly modeled by a hack in code.
+
+    // And here we are.
+
+    //
     function conditions (path, parse, rewound) {
+        // **TODO** Not certain what happens with an unconditional sip.
+        if (parse.unconditional) {
+            return map(dispatch, path, parse.conditions[0].fields)
+        }
         surround = true
         const signature = []
         const sip = function () {
@@ -926,7 +958,7 @@ function generate (packet, { require = null }) {
         const start = $step++
         const steps = parse.conditions.map(({ test, fields }) =>  {
             const step = $step
-            const sip = fields[0].type == 'parse'
+            const sip = fields[0].type == 'sip'
             const source = sip
                 ? conditions(path, fields[0], rewound)
                 : map(dispatch, path, fields)
@@ -945,6 +977,12 @@ function generate (packet, { require = null }) {
                     `, sip ? null : rewind, `
                     continue
                 }
+            `) : parse.unconditional ? $(`
+                    `, vivified, -1, `
+
+                    $step = ${step}
+                    `, sip ? null : rewind, `
+                    continue
             `) : $(`
                 `, ladder, ` else {
                     `, vivified, -1, `

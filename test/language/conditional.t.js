@@ -1,5 +1,278 @@
-require('proof')(5, okay => {
+require('proof')(8, okay => {
     const language = require('../../language')
+    okay(language({
+        packet: {
+            value: [
+                [ true, [ [ $ => $.body.length ], [ 8 ] ] ],
+                [ true, [ [ $ => $.header.length - 8 ], [ 8 ] ] ]
+            ]
+        }
+    }), [{
+        name: 'packet',
+        fixed: false,
+        bits: 0,
+        type: 'structure',
+        vivify: 'object',
+        dotted: '',
+        fields: [{
+            name: 'value',
+            dotted: '.value',
+            type: 'conditional',
+            vivify: 'array',
+            fixed: false,
+            bits: 0,
+            split: true,
+            serialize: {
+                unconditional: true,
+                conditions: [{
+                    test: null,
+                    fields: [{
+                        type: 'fixed',
+                        vivify: 'array',
+                        dotted: '',
+                        pad: [],
+                        calculated: true,
+                        fixed: false,
+                        length: {
+                            defaulted: [],
+                            positional: true,
+                            properties: [],
+                            source: '$ => $.body.length',
+                            arity: 1,
+                            vargs: []
+                        },
+                        bits: 0,
+                        fields: [{
+                            type: 'integer',
+                            vivify: 'number',
+                            dotted: '',
+                            fixed: true,
+                            bytes: [{ mask: 255, size: 8, shift: 0, upper: 0 }],
+                            bits: 8,
+                            endianness: 'big',
+                            compliment: false
+                        }]
+                    }]
+                }]
+            },
+            parse: {
+                vivify: 'array',
+                sip: null,
+                unconditional: true,
+                conditions: [{
+                    test: null,
+                    fields: [{
+                        type: 'fixed',
+                        vivify: 'array',
+                        dotted: '',
+                        pad: [],
+                        calculated: true,
+                        fixed: false,
+                        length: {
+                            defaulted: [],
+                            positional: true,
+                            properties: [],
+                            source: '$ => $.header.length - 8',
+                            arity: 1,
+                            vargs: []
+                        },
+                        bits: 0,
+                        fields: [{
+                            type: 'integer',
+                            vivify: 'number',
+                            dotted: '',
+                            fixed: true,
+                            bytes: [{ mask: 255, size: 8, shift: 0, upper: 0 }],
+                            bits: 8,
+                            endianness: 'big',
+                            compliment: false
+                        }]
+                    }]
+                }]
+            }
+        }]
+    }], 'unconditional split')
+    okay(language({
+        packet: {
+            value: [ true, 8 ]
+        }
+    }), [{
+        name: 'packet',
+        fixed: true,
+        bits: 8,
+        type: 'structure',
+        vivify: 'object',
+        dotted: '',
+        fields: [{
+            name: 'value',
+            dotted: '.value',
+            type: 'conditional',
+            vivify: 'number',
+            fixed: true,
+            bits: 8,
+            split: false,
+            serialize: {
+                unconditional: true,
+                conditions: [{
+                    test: null,
+                    fields: [{
+                        type: 'integer',
+                        vivify: 'number',
+                        dotted: '',
+                        fixed: true,
+                        bytes: [{ mask: 255, size: 8, shift: 0, upper: 0 }],
+                        bits: 8,
+                        endianness: 'big',
+                        compliment: false
+                    }]
+                }]
+            },
+            parse: {
+                sip: null,
+                unconditional: true,
+                conditions: [{
+                    test: null,
+                    fields: [{
+                        type: 'integer',
+                        vivify: 'number',
+                        dotted: '',
+                        fixed: true,
+                        bytes: [{ mask: 255, size: 8, shift: 0, upper: 0 }],
+                        bits: 8,
+                        endianness: 'big',
+                        compliment: false
+                    }]
+                }]
+            }
+        }]
+    }], 'unconditional mirrored')
+    okay(language({
+        packet: {
+            value: [[
+                value => value & 0x80, [ [ 2 ], [ 8 ] ],
+                true, 16
+            ], [
+                value => value & 0x80, [ [ 2 ], [ 8 ] ],
+                true, [ 8, true, 16 ]
+            ]]
+        }
+    }), [{
+        name: 'packet',
+        fixed: false,
+        bits: 0,
+        type: 'structure',
+        vivify: 'object',
+        dotted: '',
+        fields: [{
+            name: 'value',
+            dotted: '.value',
+            type: 'conditional',
+            vivify: 'variant',
+            fixed: false,
+            bits: 0,
+            split: true,
+            serialize: {
+                unconditional: false,
+                conditions: [{
+                    test: {
+                        defaulted: [],
+                        positional: true,
+                        properties: [],
+                        source: 'value => value & 0x80',
+                        arity: 1,
+                        vargs: []
+                    },
+                    fields: [{
+                        type: 'fixed',
+                        vivify: 'array',
+                        dotted: '',
+                        pad: [],
+                        calculated: false,
+                        fixed: true,
+                        length: 2,
+                        bits: 16,
+                        fields: [{
+                            type: 'integer',
+                            vivify: 'number',
+                            dotted: '',
+                            fixed: true,
+                            bytes: [{ mask: 255, size: 8, shift: 0, upper: 0 }],
+                            bits: 8,
+                            endianness: 'big',
+                            compliment: false
+                        }]
+                    }]
+                }, {
+                    test: null,
+                    fields: [{
+                        type: 'integer',
+                        vivify: 'number',
+                        dotted: '',
+                        fixed: true,
+                        bytes: [{
+                            mask: 255, size: 8, shift: 8, upper: 0
+                        }, {
+                            mask: 255, size: 8, shift: 0, upper: 0
+                        }],
+                        bits: 16,
+                        endianness: 'big',
+                        compliment: false
+                    }]
+                }]
+            },
+            parse: {
+                vivify: 'variant',
+                sip: null,
+                unconditional: false,
+                conditions: [{
+                    test: {
+                        defaulted: [],
+                        positional: true,
+                        properties: [],
+                        source: 'value => value & 0x80',
+                        arity: 1,
+                        vargs: []
+                    },
+                    fields: [{
+                        type: 'fixed',
+                        vivify: 'array',
+                        dotted: '',
+                        pad: [],
+                        calculated: false,
+                        fixed: true,
+                        length: 2,
+                        bits: 16,
+                        fields: [{
+                            type: 'integer',
+                            vivify: 'number',
+                            dotted: '',
+                            fixed: true,
+                            bytes: [{ mask: 255, size: 8, shift: 0, upper: 0 }],
+                            bits: 8,
+                            endianness: 'big',
+                            compliment: false
+                        }]
+                    }]
+                }, {
+                    test: null,
+                    fields: [{
+                        type: 'integer',
+                        vivify: 'number',
+                        dotted: '',
+                        fixed: true,
+                        bytes: [{
+                            mask: 255, size: 8, shift: 8, upper: 0
+                        }, {
+                            mask: 255, size: 8, shift: 0, upper: 0
+                        }],
+                        bits: 16,
+                        endianness: 'big',
+                        compliment: false
+                    }]
+                }]
+            }
+        }]
+    }], 'unconditional sip')
     okay(language({
         packet: {
             value: [
@@ -31,6 +304,7 @@ require('proof')(5, okay => {
             bits: 0,
             split: true,
             serialize: {
+                unconditional: false,
                 conditions: [{
                     test: {
                         defaulted: [],
@@ -112,7 +386,6 @@ require('proof')(5, okay => {
                 }]
             },
             parse: {
-                type: 'parse',
                 vivify: 'number',
                 sip: [{
                     type: 'integer',
@@ -126,6 +399,7 @@ require('proof')(5, okay => {
                     endianness: 'big',
                     compliment: false
                 }],
+                unconditional: false,
                 conditions: [{
                     test: {
                         defaulted: [],
@@ -253,6 +527,7 @@ require('proof')(5, okay => {
             dotted: '.value',
             split: true,
             serialize: {
+                unconditional: false,
                 conditions: [{
                     test: {
                         defaulted: [],
@@ -325,8 +600,8 @@ require('proof')(5, okay => {
             },
             parse: {
                 sip: null,
-                type: 'parse',
                 vivify: 'number',
+                unconditional: false,
                 conditions: [{
                     test: {
                         defaulted: [],
@@ -436,6 +711,7 @@ require('proof')(5, okay => {
             dotted: '.value',
             split: false,
             serialize: {
+                unconditional: false,
                 conditions: [{
                     test: {
                         defaulted: [],
@@ -508,6 +784,7 @@ require('proof')(5, okay => {
             },
             parse: {
                 sip: null,
+                unconditional: false,
                 conditions: [{
                     test: {
                         defaulted: [],
@@ -631,6 +908,7 @@ require('proof')(5, okay => {
                 fixed: true,
                 split: false,
                 serialize: {
+                    unconditional: false,
                     conditions: [{
                         test: {
                             defaulted: [],
@@ -748,6 +1026,7 @@ require('proof')(5, okay => {
                 },
                 parse: {
                     sip: null,
+                    unconditional: false,
                     conditions: [{
                         test: {
                             defaulted: [],
@@ -904,6 +1183,7 @@ require('proof')(5, okay => {
         fixed: false,
         split: true,
         serialize: {
+            unconditional: false,
             conditions: [{
                 test: {
                     defaulted: [],
@@ -996,7 +1276,6 @@ require('proof')(5, okay => {
             }]
         },
         parse: {
-            type: 'parse',
             sip: [{
                 type: 'integer',
                 vivify: 'number',
@@ -1010,6 +1289,7 @@ require('proof')(5, okay => {
                 compliment: false
             }],
             vivify: 'number',
+            unconditional: false,
             conditions: [{
                 test: {
                     defaulted: [],
@@ -1034,7 +1314,7 @@ require('proof')(5, okay => {
             }, {
                 test: null,
                 fields: [{
-                    type: 'parse',
+                    type: 'sip',
                     sip: [{
                         type: 'integer',
                         vivify: 'number',
@@ -1048,6 +1328,7 @@ require('proof')(5, okay => {
                         compliment: false
                     }],
                     vivify: 'number',
+                    unconditional: false,
                     conditions: [{
                         test: {
                             defaulted: [],
@@ -1074,7 +1355,7 @@ require('proof')(5, okay => {
                     }, {
                         test: null,
                         fields: [{
-                            type: 'parse',
+                            type: 'sip',
                             sip: [{
                                 type: 'integer',
                                 vivify: 'number',
@@ -1088,6 +1369,7 @@ require('proof')(5, okay => {
                                 compliment: false
                             }],
                             vivify: 'number',
+                            unconditional: false,
                             conditions: [{
                                 test: {
                                     defaulted: [],

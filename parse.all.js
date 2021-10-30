@@ -42,7 +42,7 @@ function expand (fields) {
             field.fields = expand(field.fields)
             expanded.push(field)
             break
-        case 'parse':
+        case 'sip':
             for (const condition of field.conditions) {
                 condition.fields = expand(condition.fields)
             }
@@ -128,7 +128,7 @@ function checkpoints (path, fields, $i = 0, $I = 0) {
                 type: 'checkpoint', lengths: [ 0 ], vivify: null, rewind: 0
             })
             break
-        case 'parse': {
+        case 'sip': {
                 checked.push(field)
                 field.sip = checkpoints(path + field.dotted, field.sip, $i, $I)
                 for (const condition of field.conditions) {
@@ -263,8 +263,7 @@ function inquisition (fields, $I = 0) {
             field.fields = inquisition(field.fields)
             checked.push(field)
             break
-        // TODO Make the type 'sip' and have it be similar.
-        case 'parse':
+        case 'sip':
             if (field.sip != null) {
                 field.sip = inquisition(field.sip)
             }
@@ -923,7 +922,11 @@ function generate (packet, { require, bff, chk }) {
         `)
     }
 
+
     function conditional (path, field, rewound = 0) {
+        if (field.parse.unconditional) {
+            return map(dispatch, path, field.parse.conditions[0].fields)
+        }
         const tests = field.parse.conditions.filter(condition => condition.test != null)
                                              .map(condition => condition.test)
         const invocations = inliner.accumulations(tests)
@@ -981,7 +984,7 @@ function generate (packet, { require, bff, chk }) {
             } ()
             const vivified = vivify.assignment(path, condition)
             let source = null
-            if (condition.fields[condition.fields.length - 1].type == 'parse') {
+            if (condition.fields[condition.fields.length - 1].type == 'sip') {
                 const parse = condition.fields.pop()
                 const rewind = condition.fields.pop()
                 source = conditional(path, { parse }, rewind.bytes)

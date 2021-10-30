@@ -843,9 +843,12 @@ module.exports = function (packets) {
                             break
                         }
                     }
-                    return { conditions }
+                    return {
+                        conditions: conditions,
+                        unconditional: conditions.length == 1 && conditions[0].test == null
+                    }
                 } ()
-                function descend (parse) {
+                function descend (parse, sipping = {}) {
                     const sip = []
                     if (typeof parse[0] == 'number') {
                         sip.push(map(parse.shift(), {}).shift())
@@ -854,9 +857,17 @@ module.exports = function (packets) {
                     while (parse.length) {
                         const test = parse.shift()
                         const field = parse.shift()
-                        const fields = is.conditional.sip(field)
-                            ? [ descend(field.slice(0)) ]
-                            : map(field, {}, pack)
+                        const fields = function () {
+                            // Described this hack in `parse.inc.js` over `conditional`.
+                            if (is.conditional.sip(field)) {
+                                const sip = descend(field.slice(0), { type: 'sip' })
+                                if (sip.conditions.length == 1 && sip.conditions[0].test == null) {
+                                    return sip.conditions[0].fields
+                                }
+                                return [ sip ]
+                            }
+                            return map(field, {}, pack)
+                        } ()
                         switch (typeof test) {
                         case 'function':
                             conditions.push({ test: { ...args([ test ]) }, fields: fields })
@@ -872,9 +883,10 @@ module.exports = function (packets) {
                             : 'variant'
                     }, conditions[0].fields[0].vivify)
                     return {
-                        type: 'parse',
+                        ...sipping,
                         sip: sip.length ? sip : null,
                         vivify: vivify,
+                        unconditional: conditions.length == 1 && conditions[0].test == null,
                         conditions: conditions
                     }
                 }
@@ -933,6 +945,7 @@ module.exports = function (packets) {
                         ? vivify
                         : 'variant'
                 }, conditions[0].body.fields[0].vivify)
+                const unconditional = conditions.length == 1 && conditions[0].body.test == null
                 return [{
                     type: 'conditional',
                     bits: fixed == -1 ? 0 : conditions[0].bits,
@@ -940,11 +953,13 @@ module.exports = function (packets) {
                     vivify: vivify == 'object' ? 'variant' : vivify,
                     split: false,
                     serialize: {
-                        conditions: conditions.map(cond => cond.body)
+                        conditions: conditions.map(cond => cond.body),
+                        unconditional: unconditional
                     },
                     parse: {
                         sip: null,
-                        conditions: JSON.parse(JSON.stringify(conditions)).map(cond => cond.body)
+                        conditions: JSON.parse(JSON.stringify(conditions)).map(cond => cond.body),
+                        unconditional: unconditional
                     },
                     ...extra
                 }]

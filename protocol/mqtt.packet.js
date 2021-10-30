@@ -113,11 +113,9 @@ exports.packet = {
                 // **TODO** Offset of rears its ugly head again.
                 // ({ $, $offset: { payload: payloadOffset } }) => $.fixed.length - $offsetPayload
                 [
-                    () => false, 32,
                     true, [[ $ => $.variable.payload.length ], [ Buffer ]]
                 ],
                 [
-                    () => false, 32,
                     true, [[ $ => $.fixed.length - ($.variable.topic.length + 2 + $.fixed.header.flags.qos > 0 ? 2 : 0) ], [ Buffer ]]
                 ]
             ]

@@ -3,6 +3,40 @@ require('proof')(0, prove)
 function prove (okay) {
     const cycle = require('./cycle')
     cycle(okay, {
+        name: 'conditional/unconditional/sip',
+        define: {
+            object: {
+                nudge: 8,
+                value: [
+                    [ true, 16 ],
+                    // **TODO** Your incremental jumps, are they propertly aligned?
+                    [ 8, true, 16 ]
+                ],
+                sentry: 8
+            }
+        },
+        objects: [{
+            nudge: 0xaa, value: 0xaaaa, sentry: 0xaa
+        }]
+    })
+    return
+    cycle(okay, {
+        name: 'conditional/unconditional/split',
+        define: {
+            object: {
+                nudge: 8,
+                value: [
+                    [ true, 8 ],
+                    [ true, 8 ]
+                ],
+                sentry: 8
+            }
+        },
+        objects: [{
+            nudge: 0xaa, value: 0xaa, sentry: 0xaa
+        }]
+    })
+    cycle(okay, {
         name: 'conditional/mqtt',
         define: {
             object: {
