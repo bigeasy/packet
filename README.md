@@ -18,7 +18,7 @@ Packet creates **pre-compiled**, **pure-JavaScript**, **binary parsers** and
 **serializers** that are **incremental** through a packet definition pattern
 language that is **declarative** and very **expressive**.
 
-Packet simplifies the construction an maintenance of libraries that convert
+Packet simplifies the construction and maintenance of libraries that convert
 binary to JavaScript and back. The name Packet may make you think that it is
 designed solely for binary network protocols, but it is also great for reading
 and writing binary file formats.
@@ -54,7 +54,7 @@ translate that directly into a Packet definition.
 
 Packet installs from NPM.
 
-```
+```text
 npm install packet
 ```
 
@@ -82,21 +82,11 @@ git clone git@github.com:bigeasy/packet.git
 cd packet
 npm install --no-package-lock --no-save
 node --allow-natives-syntax test/readme/readme.t.js
-
-npm install packet
 ```
 
 Be sure to run the unit test with the `--allow-natives-syntax` switch. The
 `--allow-natives-syntax` switch allows us to test that when we parse we are
 creating objects that have JavaScript "fast properties."
-
-## Concerns and Decisions
-
-Notes to self as I'm writing the documentation. I'm returning to document this
-after a long hiatus. Here are questions that I'm pretty sure have answers that
-I've forgotten.
-
- * Did we support packed `BigInt` integers?
 
 ## Parsers and Serializers
 
@@ -155,18 +145,20 @@ function test (name, definition, object, expected, options = {}) {
 
 ### Whole Integers
 
-Integers are specified as multiples of 8 bits. You can define an integer to be
-either a JavaScript `"number"` or a JavaScript `BigInt`.
+Integers are specified as multiples of 8 bits. For integers less than 48 bits
+you can define the integer field as a JavaScript `typeof === 'number'`. If the
+integer is larger than 48 bits you should define the field as JavaScript
+`BigInt`.
 
-We use a count of bits as opposed to a count of bytes so that numbers remain
-consistent when bit packing.
+**Mnemonic**: A count of bits to serialize or parse defined as a JavaScript
+`'number'` or `BigInt` since that's the type it will produce. We use a count of
+bits as opposed to a count of bytes so that our code looks consistent when when
+we define bit packed integers which need to be defined in bits and not bytes.
 
-In the following definition `value` is a 16-bit `"number"` with valid integer
-values from 0 to 65,535. Serializes objects with `"number"` fields must provide
-a `"number"` type value and the number must be in range. No type or range
+In the following definition `value` is a 16-bit `'number'` with valid integer
+values from 0 to 65,535. Serializes objects with `'number'` fields must provide
+a `'number'` type value and the number must be in range. No type or range
 checking is performed.
-
-**Mnemonic**: A count of bits to serialize or parse.
 
 ```javascript
 const definition = {
@@ -182,8 +174,8 @@ const object = {
 test('whole-integer', definition, object, [ 0xab, 0xcd ])
 ```
 
-Integers smaller than 32-bits _should_ be defined using a `"number"` to specify
-the count of bits. Integers larger than 32-bits _must_ be defined as `BigInt`.
+Integers smaller than 48 bits _should_ be defined using a `'number'` to specify
+the count of bits. Integers larger than 48 bits _must_ be defined as `BigInt`.
 
 In the following definition `value` is a 64-bit `BigInt` with a valid integer
 values from 0 to 18,446,744,073,709,551,616. Serializes objects with `BigInt`
@@ -219,7 +211,7 @@ In the following definition `value` is a two's compliment 16-bit integer with
 valid values from -32768 to 32767. Two's compliment is a binary representation
 of negative numbers.
 
-**Mnemonic**: Negative symbol to indicate a negative value.
+**Mnemonic**: Negative symbol to indicate a potentially negative value.
 
 ```javascript
 const definition = {
@@ -400,6 +392,12 @@ test('nested-structures', definition, object, [
 ])
 ```
 
+You can define a nested structure and then elide it by defining the structure
+with a name that begins with a `_`. This is silly so don't do it. It is
+available merely to be consistent with packet integers, accumulators and limits.
+
+**TODO** Short example.
+
 ### Packed Integers
 
 Packed integers are expressed as nested structures grouped in an `Array`
@@ -478,6 +476,17 @@ test('packed-integer-little-endian', definition, object, [
     0x7     // type and encrypted packed into ne byte
 ])
 ```
+
+You many not want the nested structure of the packed header to appear in your
+parsed object. You can elide the nested structure by giving it a name that
+begins with an `_`.
+
+**TODO** Example.
+
+Elide only works for packet integers, accumulators, limits and structures. If
+you name a field of any other type it will be defined with the underscore.
+
+**TODO** Example.
 
 ### Literals
 
@@ -874,11 +883,12 @@ test('transform-basic', definition, object, [
 Whoa, what's with the parameter names pal? `$_` violates everything I was ever
 taught about naming variables. How would you even pronounce that?
 
-Well, my first real language was Perl, where this variable is called "dollar
-under." It is the default variable for an array value when you loop through an
-array with `foreach`. I miss those days, so I thought I revive them. You can
-name positional arguments anything you like, but I'll be using these names to
-get you used to them, because they're available as named arguments as well.
+Well, once upon a time I wrote me a lot of Perl. In Perl this variable is called
+"dollar under." It is the default variable for an array value when you loop
+through an array with `foreach`. I miss those days, so I thought I revive them.
+You can name positional arguments anything you like, but I'll be using these
+names to get you used to them, because they're available as named arguments as
+well.
 
 You can also use named arguments via object deconstruction. When you do, you
 must specify names that are in the current namespace. The namespace will contain
@@ -1378,7 +1388,7 @@ test('assertion', definition, object, [
 ], { require: { assert: 'assert' } })
 ```
 
-(I assume I'll implement this in this way:) The execption will propagate to the
+(I assume I'll implement this in this way:) The exception will propagate to the
 API caller so that you can catch it in your code and cancel the serialization or
 parse. (However, if I do wrap the assertion in a try/catch and rethrow it
 somehow, then the following example is moot.
@@ -1451,7 +1461,7 @@ to the function. The arguments are passed in the order in which they are
 specified preceding the immediate property value.
 
 In the following definition the function is followed by a `number` argument
-which is passed as the first parameter to the function in serializer or parser.
+which is passed as the first parameter to the function in serialize or parser.
 
 ```javascript
 const definition = {
@@ -1597,7 +1607,7 @@ test('terminated-multibyte', definition, object, [
 ### Floating Point Values
 
 Packet supports serializing and parsing IEEE754 floating point numbers. This is
-the respsentation common to C.
+the representation common to C.
 
 A floating point number is is specified by specifying the value as a floating
 the point number as `number` with the bit size repeated in the decimal digits of
@@ -1640,7 +1650,7 @@ encounter at 128-bit number in the wild, I'd be curious. Please let me know.
 
 Basic conditionals are expressed as an array of boolean functions paired with
 field definitions. The functions and definitions repeat creating an if/else if
-conditional. The array can end with a feild definition that acts as the `else`
+conditional. The array can end with a field definition that acts as the `else`
 condition.
 
 If the function has positional arguments, the function is called with the root
@@ -1730,7 +1740,7 @@ test('switch', definition, object, [
 ])
 ```
 
-### References to Paritals
+### References to Parietals
 
 **TODO**: First draft done.
 
@@ -1739,14 +1749,14 @@ tedious to repeat, you can reference that definition by name.
 
 References can be used as types and can also be used as length encoding lengths
 if they resolve to an integer type. If you create a type that is only used by
-reference that you do not want available as a packet, prepend and underbar and
+reference that you do not want available as a packet, prepend and underscore and
 it will not be returned as a packet type.
 
 **Mnemonic**: A string name to name the referenced type.
 
 In the following a definition an encoded integer is defined as a partial that
 will not be presented as a packet due to the `_` prefix to the name. It is
-referneced by the `series` property as a type and used for the length encoding
+referenced by the `series` property as a type and used for the length encoding
 of the `data` property.
 
 ```javascript
@@ -1783,17 +1793,17 @@ test('partial', definition, object, [
 ])
 ```
 
-### Checksums and Running Calcuations
+### Checksums and Running Calculations
 
 Some protocols perform checksums on the body of message. Others require tracking
 the remaining bytes in a message based on a length property in a header and
 making decisions about the contents of the message based on the bytes remaining.
 
-To perform runnign calculations like buffers and remaining bytes we can use
-accumlators, lexically scoped object variables that can be used to store the
+To perform running calculations like buffers and remaining bytes we can use
+accumulators, lexically scoped object variables that can be used to store the
 state of a running calculation.
 
-The following defintion creates an MD5 checksum of the body of a packet and
+The following definition creates an MD5 checksum of the body of a packet and
 stores the result in a checksum property that follows the body of the message.
 
 ```javascript
@@ -1836,19 +1846,19 @@ stores the result in a checksum property that follows the body of the message.
 Here we also introduce the concept of buffer inlines. These are inlines that
 operate not on the serialized or parsed value, but instead on the underlying
 buffer. In the above example the `hash.update()` inline is not called once for
-each property in the `body`, it is called for each buffer chunk that contians the
-binary data for the `body`.
+each property in the `body`, it is called for each buffer chunk that contains
+the binary data for the `body`.
 
-Unlike odinary inline functions, a buffer inline is not called prior to
+Unlike ordinary inline functions, a buffer inline is not called prior to
 serialization. Buffer inlines are called as late as possible to process as much
-of the buffer continguously as possible. In the previous example, the
+of the buffer continuously as possible. In the previous example, the
 `hash.update()` inline is applied to the binary data that defines the entire
 `body` which it encapsulates.
 
 We use nested structures to group.
 
-**TODO**: Simplier calculation example to start. Calculation is important
-because it will allow us to talk about the difference between `sizeof`,
+**TODO**: Simpler calculation example to start. Calculation is important because
+it will allow us to talk about the difference between `sizeof`,
 `offsetof`.
 
 **TODO**: Come back and implement this by finding a way to extract sizeof and
@@ -1922,3 +1932,12 @@ const definition = {
 const moduleName = compile('parameters', definition, {})
 // *TODO*: API call to encode string ascii or something.
 ```
+
+### What's Missing
+
+A section of things that need to be written.
+
+ * **TODO** Did we support packed `BigInt` integers?
+ * **TODO** Absent values.
+ * **TODO** Switch statements.
+ * **TODO** Composition.
