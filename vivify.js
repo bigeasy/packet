@@ -12,6 +12,9 @@ function structure (path, field, assignment = ' = ') {
         } else {
             const name = (path + field.dotted).split('.').pop()
             switch (field.vivify) {
+            case 'elide':
+                return field.fields.map(field => vivify(path, field))
+                                   .filter(field => !! field).join(',\n')
             case 'object':
                 return structure((path + field.dotted).split('.').pop(), field, ': ')
             case 'array':

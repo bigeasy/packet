@@ -50,7 +50,7 @@ require('proof')(2, okay => {
     }], 'structure')
     okay(language({
         object: {
-            value: {
+            _value: {
                 first: 8,
                 second: 8
             }
@@ -63,8 +63,9 @@ require('proof')(2, okay => {
         bits: 16,
         fields: [{
             type: 'structure',
-            vivify: 'object',
-            dotted: '.value',
+            vivify: 'elide',
+            name: '',
+            dotted: '',
             fixed: true,
             bits: 16,
             fields: [{
@@ -91,8 +92,7 @@ require('proof')(2, okay => {
                 endianness: 'big',
                 compliment: false,
                 name: 'second'
-            }],
-            name: 'value'
+            }]
         }],
         name: 'object'
     }], 'elided structure')

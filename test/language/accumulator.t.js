@@ -1,4 +1,4 @@
-require('proof')(3, okay => {
+require('proof')(5, okay => {
     const language = require('../../language')
     okay(language({
         packet: [{
@@ -132,4 +132,110 @@ require('proof')(3, okay => {
         }],
         name: 'packet'
     }], 'function accumulator')
+    okay(language({
+        packet: {
+            accumulator: [{
+                counter: [ 0 ]
+            }, {
+                value: 32
+            }]
+        }
+    }), [{
+        type: 'structure',
+        dotted: '',
+        vivify: 'object',
+        bits: 32,
+        fixed: true,
+        fields: [{
+            type: 'accumulator',
+            dotted: '.accumulator',
+            name: 'accumulator',
+            vivify: 'descend',
+            bits: 32,
+            fixed: true,
+            accumulators: [{
+                type: 'object', name: 'counter', source: '[ 0 ]'
+            }],
+            fields: [{
+                type: 'structure',
+                vivify: 'object',
+                dotted: '',
+                fixed: true,
+                bits: 32,
+                fields: [{
+                    type: 'integer',
+                    vivify: 'number',
+                    dotted: '.value',
+                    fixed: true,
+                    bits: 32,
+                    bytes: [{
+                        mask: 255, size: 8, shift: 24, upper: 0
+                    }, {
+                        mask: 255, size: 8, shift: 16, upper: 0
+                    }, {
+                        mask: 255, size: 8, shift: 8, upper: 0
+                    }, {
+                        mask: 255, size: 8, shift: 0, upper: 0
+                    }],
+                    endianness: 'big',
+                    compliment: false,
+                    name: 'value'
+                }]
+            }]
+        }],
+        name: 'packet'
+    }], 'accumulator')
+    okay(language({
+        packet: {
+            _accumulator: [{
+                counter: [ 0 ]
+            }, {
+                value: 32
+            }]
+        }
+    }), [{
+        type: 'structure',
+        dotted: '',
+        vivify: 'object',
+        bits: 32,
+        fixed: true,
+        fields: [{
+            type: 'accumulator',
+            dotted: '._accumulator',
+            name: '_accumulator',
+            vivify: 'descend',
+            bits: 32,
+            fixed: true,
+            accumulators: [{
+                type: 'object', name: 'counter', source: '[ 0 ]'
+            }],
+            fields: [{
+                type: 'structure',
+                vivify: 'object',
+                dotted: '',
+                fixed: true,
+                bits: 32,
+                fields: [{
+                    type: 'integer',
+                    vivify: 'number',
+                    dotted: '.value',
+                    fixed: true,
+                    bits: 32,
+                    bytes: [{
+                        mask: 255, size: 8, shift: 24, upper: 0
+                    }, {
+                        mask: 255, size: 8, shift: 16, upper: 0
+                    }, {
+                        mask: 255, size: 8, shift: 8, upper: 0
+                    }, {
+                        mask: 255, size: 8, shift: 0, upper: 0
+                    }],
+                    endianness: 'big',
+                    compliment: false,
+                    name: 'value'
+                }]
+            }]
+        }],
+        name: 'packet'
+    }], 'accumulator elided')
 })
