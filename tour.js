@@ -1,3 +1,5 @@
+// **TODO** Should it be `[ 32, [ Buffer ] ]` or `[ 32, Buffer ]`?
+// **TODO** Should it be `[ [ $ => $.length ], [ 8 ] ]` or `[ $ => $.length, [ 8 ] ]`?
 module.exports = {
     first: 16,
  // ^^^^^ field name
