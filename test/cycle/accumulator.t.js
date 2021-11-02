@@ -167,4 +167,32 @@ function prove (okay) {
         }],
         require: { crypto: 'crypto', assert: 'assert' }
     })
+    cycle(okay, {
+        name: 'accumulator/elided',
+        define: {
+            object: [{ hash: () => crypto.createHash('md5') }, {
+                body: [[[
+                    ({ $buffer, $start, $end, hash }) => hash.update($buffer.slice($start, $end))
+                ]], {
+                    number: 32,
+                    data: [[ 8 ], 0x0 ]
+                }],
+                checksum: [[
+                    ({ $_, hash }) => $_ = hash.digest()
+                ], [[ 16 ], [ Buffer ]], [
+                    ({ checksum = 0, hash }) => {
+                        assert.deepEqual(hash.digest().toJSON(), checksum.toJSON())
+                    }
+                ]]
+            }]
+        },
+        objects: [{
+            body: {
+                number: 1,
+                data: [ 0x41, 0x42, 0x43 ]
+            },
+            checksum: Buffer.from([ 0xc9, 0xd0, 0x87, 0xbd, 0x2f, 0x8f, 0x4a, 0x33, 0xd4, 0xeb, 0x2d, 0xe4, 0x47, 0xc0, 0x40, 0x28 ])
+        }],
+        require: { crypto: 'crypto', assert: 'assert' }
+    })
 }
