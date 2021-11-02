@@ -1,5 +1,9 @@
 // **TODO** Should it be `[ 32, [ Buffer ] ]` or `[ 32, Buffer ]`?
 // **TODO** Should it be `[ [ $ => $.length ], [ 8 ] ]` or `[ $ => $.length, [ 8 ] ]`?
+//          Note that the former allows for "arguments" and would be more or
+//          less consistent. We do not allow arguments to conditionals. Could
+//          use an accumulator to set an argument. Could be array with at least
+//          one argument and the first argument is a function.
 module.exports = {
     first: 16,
  // ^^^^^ field name
