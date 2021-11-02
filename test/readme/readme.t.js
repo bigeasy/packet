@@ -1897,7 +1897,7 @@ require('proof')(115, okay => {
     }
 }
 
-// ### What's Missing
+// ## What's Missing
 //
 // A section of things that need to be written.
 //
@@ -1906,3 +1906,32 @@ require('proof')(115, okay => {
 //  * **TODO** Switch statements.
 //  * **TODO** Composition.
 //  * **TODO** Parse or serialize conditionals, i.e. unconditionals.
+//
+// ## Outline
+//
+//  * Living `README.md`.
+//  * Parsers and Serializers
+//  * Packet Definition Language
+//     * Integers
+//         * Negative Integers
+//         * Endianness
+//     * Nested Structures
+//     * Packed Integers
+//     * Literals
+//     * Length-Encoded Arrays
+//     * Inline Transforms and Assertions
+//     * Fixed Length Arrays
+//     * Requiring Modules
+//     * Assertions
+//     * Assertion and Transformation Arguments
+//     * Terminated Arrays
+//         * Multi-byte Terminators
+//     * String Value Maps
+//     * Floating Point Values
+//     * Conditionals
+//     * Switch Conditionals
+//     * References to Partials
+//     * Accumulators
+//     * Parameters
+//  * What's Missing
+//  * Outline
