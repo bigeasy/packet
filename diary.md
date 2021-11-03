@@ -8,6 +8,17 @@ inspired language.
 
 ---
 
+## Wed Nov  3 16:01:24 CDT 2021
+
+We're starting to get into the weeds with this now. I'm wondering about
+literals, we want to have them parsed so we can assert their value, but do we
+want them to become part of the object? Can we have a way to get the value and
+perform an assertion, but not create a property in the object? Should this just
+be an option of the parser specified by, perhaps, adding `Error` to the
+definition? Would be more consistent to pass it to the user, so maybe we add
+`'null'` to the definition or maybe we can add a parse side only function to the
+definition.
+
 ## Fri Oct 29 02:07:47 CDT 2021
 
 In split conditionals parse comes before serialize, because Packet is a packet
