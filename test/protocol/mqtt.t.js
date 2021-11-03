@@ -36,8 +36,8 @@ require('proof')(36, okay => {
 
     test({
         actual: {
-            input: { fixed: { header: { type: 'pingreq' } }, variable: {} },
-            output: { fixed: { header: { type: 'pingreq', flags: 0 }, length: 0 }, variable: null }
+            input: { fixed: { type: 'pingreq' }, variable: {} },
+            output: { fixed: { type: 'pingreq', flags: 0, length: 0 }, variable: null }
         },
         expected: {
             input: { cmd: 'pingreq' },
@@ -55,8 +55,8 @@ require('proof')(36, okay => {
 
     test({
         actual: {
-            input: { fixed: { header: { type: 'pingresp' } }, variable: {} },
-            output: { fixed: { header: { type: 'pingresp', flags: 0 }, length: 0 }, variable: null }
+            input: { fixed: { type: 'pingresp' }, variable: {} },
+            output: { fixed: { type: 'pingresp', flags: 0, length: 0 }, variable: null }
         },
         expected: {
             input: { cmd: 'pingresp' },
@@ -75,11 +75,11 @@ require('proof')(36, okay => {
     test({
         actual: {
             input: {
-                fixed: { header: { type: 'connect' } },
+                fixed: { type: 'connect' },
                 variable: { flags: { cleanStart: 1 }, clientId: 'a' },
             },
             output: {
-                fixed: { header: { type: 'connect', flags: 0 }, length: 13 },
+                fixed: { type: 'connect', flags: 0, length: 13 },
                 variable: {
                     protocol: 'MQTT',
                     version: 4,
@@ -122,11 +122,11 @@ require('proof')(36, okay => {
     test({
         actual: {
             input: {
-                fixed: { header: { type: 'connect' } },
+                fixed: { type: 'connect' },
                 variable: { flags: { cleanStart: 1 }, clientId: 'a', username: 'b' },
             },
             output: {
-                fixed: { header: { type: 'connect', flags: 0 }, length: 16 },
+                fixed: { type: 'connect', flags: 0, length: 16 },
                 variable: {
                     protocol: 'MQTT',
                     version: 4,
@@ -170,7 +170,7 @@ require('proof')(36, okay => {
     test({
         actual: {
             input: {
-                fixed: { header: { type: 'connect' } },
+                fixed: { type: 'connect' },
                 variable: {
                     flags: { cleanStart: 1 },
                     clientId: 'a',
@@ -179,7 +179,7 @@ require('proof')(36, okay => {
                 },
             },
             output: {
-                fixed: { header: { type: 'connect', flags: 0 }, length: 19 },
+                fixed: { type: 'connect', flags: 0, length: 19 },
                 variable: {
                     protocol: 'MQTT',
                     version: 4,
@@ -224,7 +224,7 @@ require('proof')(36, okay => {
     test({
         actual: {
             input: {
-                fixed: { header: { type: 'connect' } },
+                fixed: { type: 'connect' },
                 variable: {
                     flags: { cleanStart: 1 },
                     clientId: 'a',
@@ -235,7 +235,7 @@ require('proof')(36, okay => {
                 },
             },
             output: {
-                fixed: { header: { type: 'connect', flags: 0 }, length: 25 },
+                fixed: { type: 'connect', flags: 0, length: 25 },
                 variable: {
                     protocol: 'MQTT',
                     version: 4,
@@ -297,14 +297,14 @@ require('proof')(36, okay => {
     test({
         actual: {
             input: {
-                fixed: { header: { type: 'connack' } },
+                fixed: { type: 'connack' },
                 variable: {
                     flags: { sessionPresent: 1 },
                     reasonCode: 128
                 },
             },
             output: {
-                fixed: { header: { type: 'connack', flags: 0 }, length: 2 },
+                fixed: { type: 'connack', flags: 0, length: 2 },
                 variable: {
                     flags: { sessionPresent: 1 },
                     reasonCode: 128
@@ -334,14 +334,14 @@ require('proof')(36, okay => {
     test({
         actual: {
             input: {
-                fixed: { header: { type: 'connack' } },
+                fixed: { type: 'connack' },
                 variable: {
                     flags: { sessionPresent: 0 },
                     reasonCode: 0
                 },
             },
             output: {
-                fixed: { header: { type: 'connack', flags: 0 }, length: 2 },
+                fixed: { type: 'connack', flags: 0, length: 2 },
                 variable: {
                     flags: { sessionPresent: 0 },
                     reasonCode: 0
@@ -371,7 +371,7 @@ require('proof')(36, okay => {
     test({
         actual: {
             input: {
-                fixed: { header: { type: 'publish', flags: { qos: 2, dup: 0, retain: 0 } } },
+                fixed: { type: 'publish', flags: { qos: 2, dup: 0, retain: 0 } },
                 variable: {
                     topic: 'test',
                     id: 42,
@@ -379,7 +379,7 @@ require('proof')(36, okay => {
                 },
             },
             output: {
-                fixed: { header: { type: 'publish', flags: { qos: 2, dup: 0, retain: 0 } }, length: 12 },
+                fixed: { type: 'publish', flags: { qos: 2, dup: 0, retain: 0 }, length: 12 },
                 variable: {
                     topic: 'test',
                     id: 42,
@@ -410,7 +410,7 @@ require('proof')(36, okay => {
         }
     }, 'publish')
     console.log(serialize({
-        fixed: { header: { type: 'connect' } },
+        fixed: { type: 'connect' },
         variable: { flags: { cleanStart: 1 }, username: 'a', clientId: 'a' },
     }))
     console.log(mqtt.generate({

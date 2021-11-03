@@ -36,7 +36,7 @@ const sizeOf = {
         return function (variable) {
             let $start = 0, $$ = []
 
-            switch (($ => $.fixed.header.type)(variable)) {
+            switch (($ => $.fixed.type)(variable)) {
             case 'connect':
 
                 $$[0] = ($_ => Buffer.from('MQTT'))(variable.variable.protocol)
@@ -118,7 +118,7 @@ const sizeOf = {
                 $start += 1 * $$[0].length
 
 
-                if ((({ $ }) => $.fixed.header.flags.qos > 0)({
+                if ((({ $ }) => $.fixed.flags.qos > 0)({
                     $: variable
                 })) {
                     $start += 2
@@ -160,7 +160,7 @@ const sizeOf = {
                 $start += 4
             }
 
-            switch (($ => $.fixed.header.type)(mqtt)) {
+            switch (($ => $.fixed.type)(mqtt)) {
             case 'connect':
 
                 $$[0] = ($_ => Buffer.from('MQTT'))(mqtt.variable.protocol)
@@ -242,7 +242,7 @@ const sizeOf = {
                 $start += 1 * $$[0].length
 
 
-                if ((({ $ }) => $.fixed.header.flags.qos > 0)({
+                if ((({ $ }) => $.fixed.flags.qos > 0)({
                     $: mqtt
                 })) {
                     $start += 2
@@ -277,21 +277,21 @@ const serializer = {
                     let $_, $$ = []
 
                     $_ =
-                        $lookup[0].indexOf(fixed.fixed.header.type) << 4 & 0xf0
+                        $lookup[0].indexOf(fixed.fixed.type) << 4 & 0xf0
 
-                    switch (($ => $.fixed.header.type)(fixed)) {
+                    switch (($ => $.fixed.type)(fixed)) {
                     case 'publish':
 
                         $_ |=
-                            fixed.fixed.header.flags.dup << 3 & 0x8 |
-                            fixed.fixed.header.flags.qos << 1 & 0x6 |
-                            fixed.fixed.header.flags.retain & 0x1
+                            fixed.fixed.flags.dup << 3 & 0x8 |
+                            fixed.fixed.flags.qos << 1 & 0x6 |
+                            fixed.fixed.flags.retain & 0x1
 
                         break
 
                     case 'pubrel':
 
-                        $$[0] = ($_ => 2)(fixed.fixed.header.flags)
+                        $$[0] = ($_ => 2)(fixed.fixed.flags)
 
                         $_ |=
                             $$[0] & 0xf
@@ -300,7 +300,7 @@ const serializer = {
 
                     case 'subscribe':
 
-                        $$[0] = ($_ => 2)(fixed.fixed.header.flags)
+                        $$[0] = ($_ => 2)(fixed.fixed.flags)
 
                         $_ |=
                             $$[0] & 0xf
@@ -309,7 +309,7 @@ const serializer = {
 
                     case 'unsubscribe':
 
-                        $$[0] = ($_ => 2)(fixed.fixed.header.flags)
+                        $$[0] = ($_ => 2)(fixed.fixed.flags)
 
                         $_ |=
                             $$[0] & 0xf
@@ -318,7 +318,7 @@ const serializer = {
 
                     default:
 
-                        $$[0] = ($_ => 0)(fixed.fixed.header.flags)
+                        $$[0] = ($_ => 0)(fixed.fixed.flags)
 
                         $_ |=
                             $$[0] & 0xf
@@ -351,7 +351,7 @@ const serializer = {
                 return function (variable, $buffer, $start) {
                     let $_, $i = [], $I = [], $$ = []
 
-                    switch (($ => $.fixed.header.type)(variable)) {
+                    switch (($ => $.fixed.type)(variable)) {
                     case 'connect':
 
                         $$[0] = ($_ => Buffer.from('MQTT'))(variable.variable.protocol)
@@ -474,7 +474,7 @@ const serializer = {
                         $$[0].copy($buffer, $start, 0, $$[0].length)
                         $start += $$[0].length
 
-                        if ((({ $ }) => $.fixed.header.flags.qos > 0)({
+                        if ((({ $ }) => $.fixed.flags.qos > 0)({
                             $: variable
                         })) {
                             $buffer[$start++] = variable.variable.id >>> 8 & 0xff
@@ -510,21 +510,21 @@ const serializer = {
                     let $_, $i = [], $I = [], $$ = []
 
                     $_ =
-                        $lookup[0].indexOf(mqtt.fixed.header.type) << 4 & 0xf0
+                        $lookup[0].indexOf(mqtt.fixed.type) << 4 & 0xf0
 
-                    switch (($ => $.fixed.header.type)(mqtt)) {
+                    switch (($ => $.fixed.type)(mqtt)) {
                     case 'publish':
 
                         $_ |=
-                            mqtt.fixed.header.flags.dup << 3 & 0x8 |
-                            mqtt.fixed.header.flags.qos << 1 & 0x6 |
-                            mqtt.fixed.header.flags.retain & 0x1
+                            mqtt.fixed.flags.dup << 3 & 0x8 |
+                            mqtt.fixed.flags.qos << 1 & 0x6 |
+                            mqtt.fixed.flags.retain & 0x1
 
                         break
 
                     case 'pubrel':
 
-                        $$[0] = ($_ => 2)(mqtt.fixed.header.flags)
+                        $$[0] = ($_ => 2)(mqtt.fixed.flags)
 
                         $_ |=
                             $$[0] & 0xf
@@ -533,7 +533,7 @@ const serializer = {
 
                     case 'subscribe':
 
-                        $$[0] = ($_ => 2)(mqtt.fixed.header.flags)
+                        $$[0] = ($_ => 2)(mqtt.fixed.flags)
 
                         $_ |=
                             $$[0] & 0xf
@@ -542,7 +542,7 @@ const serializer = {
 
                     case 'unsubscribe':
 
-                        $$[0] = ($_ => 2)(mqtt.fixed.header.flags)
+                        $$[0] = ($_ => 2)(mqtt.fixed.flags)
 
                         $_ |=
                             $$[0] & 0xf
@@ -551,7 +551,7 @@ const serializer = {
 
                     default:
 
-                        $$[0] = ($_ => 0)(mqtt.fixed.header.flags)
+                        $$[0] = ($_ => 0)(mqtt.fixed.flags)
 
                         $_ |=
                             $$[0] & 0xf
@@ -577,7 +577,7 @@ const serializer = {
                         $buffer[$start++] = mqtt.fixed.length & 0x7f
                     }
 
-                    switch (($ => $.fixed.header.type)(mqtt)) {
+                    switch (($ => $.fixed.type)(mqtt)) {
                     case 'connect':
 
                         $$[0] = ($_ => Buffer.from('MQTT'))(mqtt.variable.protocol)
@@ -700,7 +700,7 @@ const serializer = {
                         $$[0].copy($buffer, $start, 0, $$[0].length)
                         $start += $$[0].length
 
-                        if ((({ $ }) => $.fixed.header.flags.qos > 0)({
+                        if ((({ $ }) => $.fixed.flags.qos > 0)({
                             $: mqtt
                         })) {
                             $buffer[$start++] = mqtt.variable.id >>> 8 & 0xff
@@ -746,21 +746,21 @@ const serializer = {
 
                                 $bite = 0
                                 $_ =
-                                    $lookup[0].indexOf(fixed.fixed.header.type) << 4 & 0xf0
+                                    $lookup[0].indexOf(fixed.fixed.type) << 4 & 0xf0
 
-                                switch (($ => $.fixed.header.type)(fixed)) {
+                                switch (($ => $.fixed.type)(fixed)) {
                                 case 'publish':
 
                                     $_ |=
-                                        fixed.fixed.header.flags.dup << 3 & 0x8 |
-                                        fixed.fixed.header.flags.qos << 1 & 0x6 |
-                                        fixed.fixed.header.flags.retain & 0x1
+                                        fixed.fixed.flags.dup << 3 & 0x8 |
+                                        fixed.fixed.flags.qos << 1 & 0x6 |
+                                        fixed.fixed.flags.retain & 0x1
 
                                     break
 
                                 case 'pubrel':
 
-                                    $$[0] = ($_ => 2)(fixed.fixed.header.flags)
+                                    $$[0] = ($_ => 2)(fixed.fixed.flags)
 
                                     $_ |=
                                         $$[0] & 0xf
@@ -769,7 +769,7 @@ const serializer = {
 
                                 case 'subscribe':
 
-                                    $$[0] = ($_ => 2)(fixed.fixed.header.flags)
+                                    $$[0] = ($_ => 2)(fixed.fixed.flags)
 
                                     $_ |=
                                         $$[0] & 0xf
@@ -778,7 +778,7 @@ const serializer = {
 
                                 case 'unsubscribe':
 
-                                    $$[0] = ($_ => 2)(fixed.fixed.header.flags)
+                                    $$[0] = ($_ => 2)(fixed.fixed.flags)
 
                                     $_ |=
                                         $$[0] & 0xf
@@ -787,7 +787,7 @@ const serializer = {
 
                                 default:
 
-                                    $$[0] = ($_ => 0)(fixed.fixed.header.flags)
+                                    $$[0] = ($_ => 0)(fixed.fixed.flags)
 
                                     $_ |=
                                         $$[0] & 0xf
@@ -958,7 +958,7 @@ const serializer = {
                             switch ($step) {
                             case 0:
 
-                                switch (($ => $.fixed.header.type)(variable)) {
+                                switch (($ => $.fixed.type)(variable)) {
                                 case 'connect':
 
                                     $step = 1
@@ -1410,7 +1410,7 @@ const serializer = {
 
                             case 46:
 
-                                if ((({ $ }) => $.fixed.header.flags.qos > 0)({
+                                if ((({ $ }) => $.fixed.flags.qos > 0)({
                                     $: variable
                                 })) {
                                     $step = 47
@@ -1488,21 +1488,21 @@ const serializer = {
 
                                 $bite = 0
                                 $_ =
-                                    $lookup[0].indexOf(mqtt.fixed.header.type) << 4 & 0xf0
+                                    $lookup[0].indexOf(mqtt.fixed.type) << 4 & 0xf0
 
-                                switch (($ => $.fixed.header.type)(mqtt)) {
+                                switch (($ => $.fixed.type)(mqtt)) {
                                 case 'publish':
 
                                     $_ |=
-                                        mqtt.fixed.header.flags.dup << 3 & 0x8 |
-                                        mqtt.fixed.header.flags.qos << 1 & 0x6 |
-                                        mqtt.fixed.header.flags.retain & 0x1
+                                        mqtt.fixed.flags.dup << 3 & 0x8 |
+                                        mqtt.fixed.flags.qos << 1 & 0x6 |
+                                        mqtt.fixed.flags.retain & 0x1
 
                                     break
 
                                 case 'pubrel':
 
-                                    $$[0] = ($_ => 2)(mqtt.fixed.header.flags)
+                                    $$[0] = ($_ => 2)(mqtt.fixed.flags)
 
                                     $_ |=
                                         $$[0] & 0xf
@@ -1511,7 +1511,7 @@ const serializer = {
 
                                 case 'subscribe':
 
-                                    $$[0] = ($_ => 2)(mqtt.fixed.header.flags)
+                                    $$[0] = ($_ => 2)(mqtt.fixed.flags)
 
                                     $_ |=
                                         $$[0] & 0xf
@@ -1520,7 +1520,7 @@ const serializer = {
 
                                 case 'unsubscribe':
 
-                                    $$[0] = ($_ => 2)(mqtt.fixed.header.flags)
+                                    $$[0] = ($_ => 2)(mqtt.fixed.flags)
 
                                     $_ |=
                                         $$[0] & 0xf
@@ -1529,7 +1529,7 @@ const serializer = {
 
                                 default:
 
-                                    $$[0] = ($_ => 0)(mqtt.fixed.header.flags)
+                                    $$[0] = ($_ => 0)(mqtt.fixed.flags)
 
                                     $_ |=
                                         $$[0] & 0xf
@@ -1684,7 +1684,7 @@ const serializer = {
 
                             case 17:
 
-                                switch (($ => $.fixed.header.type)(mqtt)) {
+                                switch (($ => $.fixed.type)(mqtt)) {
                                 case 'connect':
 
                                     $step = 18
@@ -2136,7 +2136,7 @@ const serializer = {
 
                             case 63:
 
-                                if ((({ $ }) => $.fixed.header.flags.qos > 0)({
+                                if ((({ $ }) => $.fixed.flags.qos > 0)({
                                     $: mqtt
                                 })) {
                                     $step = 64
@@ -2216,51 +2216,49 @@ const parser = {
 
                     let fixed = {
                         fixed: {
-                            header: {
-                                type: 0,
-                                flags: null
-                            },
+                            type: 0,
+                            flags: null,
                             length: 0
                         }
                     }
 
                     $_ = $buffer[$start++]
 
-                    fixed.fixed.header.type = $lookup[0][$_ >>> 4 & 0xf]
+                    fixed.fixed.type = $lookup[0][$_ >>> 4 & 0xf]
 
-                    switch (($ => $.fixed.header.type)(fixed)) {
+                    switch (($ => $.fixed.type)(fixed)) {
                     case 'publish':
-                        fixed.fixed.header.flags = {
+                        fixed.fixed.flags = {
                             dup: 0,
                             qos: 0,
                             retain: 0
                         }
 
-                        fixed.fixed.header.flags.dup = $_ >>> 3 & 0x1
+                        fixed.fixed.flags.dup = $_ >>> 3 & 0x1
 
-                        fixed.fixed.header.flags.qos = $_ >>> 1 & 0x3
+                        fixed.fixed.flags.qos = $_ >>> 1 & 0x3
 
-                        fixed.fixed.header.flags.retain = $_ & 0x1
+                        fixed.fixed.flags.retain = $_ & 0x1
 
                         break
 
                     case 'pubrel':
-                        fixed.fixed.header.flags = $_ & 0xf
+                        fixed.fixed.flags = $_ & 0xf
 
                         break
 
                     case 'subscribe':
-                        fixed.fixed.header.flags = $_ & 0xf
+                        fixed.fixed.flags = $_ & 0xf
 
                         break
 
                     case 'unsubscribe':
-                        fixed.fixed.header.flags = $_ & 0xf
+                        fixed.fixed.flags = $_ & 0xf
 
                         break
 
                     default:
-                        fixed.fixed.header.flags = $_ & 0xf
+                        fixed.fixed.flags = $_ & 0xf
 
                         break
                     }
@@ -2314,7 +2312,7 @@ const parser = {
                         variable: null
                     }
 
-                    switch (($ => $.fixed.header.type)(variable)) {
+                    switch (($ => $.fixed.type)(variable)) {
                     case 'connect':
                         variable.variable = {
                             protocol: [],
@@ -2473,7 +2471,7 @@ const parser = {
 
                         variable.variable.topic = ($_ => $_.toString())(variable.variable.topic)
 
-                        if ((({ $ }) => $.fixed.header.flags.qos > 0)({
+                        if ((({ $ }) => $.fixed.flags.qos > 0)({
                             $: variable
                         })) {
                             variable.variable.id =
@@ -2483,7 +2481,7 @@ const parser = {
                             variable.variable.id = null
                         }
 
-                        $I[0] = ($ => $.fixed.length - ($.variable.topic.length + 2 + $.fixed.header.flags.qos > 0 ? 2 : 0))(variable)
+                        $I[0] = ($ => $.fixed.length - ($.variable.topic.length + 2 + $.fixed.flags.qos > 0 ? 2 : 0))(variable)
 
                         $slice = $buffer.slice($start, $start + $I[0])
                         $start += $I[0]
@@ -2511,10 +2509,8 @@ const parser = {
 
                     let mqtt = {
                         fixed: {
-                            header: {
-                                type: 0,
-                                flags: null
-                            },
+                            type: 0,
+                            flags: null,
                             length: 0
                         },
                         variable: null
@@ -2522,41 +2518,41 @@ const parser = {
 
                     $_ = $buffer[$start++]
 
-                    mqtt.fixed.header.type = $lookup[0][$_ >>> 4 & 0xf]
+                    mqtt.fixed.type = $lookup[0][$_ >>> 4 & 0xf]
 
-                    switch (($ => $.fixed.header.type)(mqtt)) {
+                    switch (($ => $.fixed.type)(mqtt)) {
                     case 'publish':
-                        mqtt.fixed.header.flags = {
+                        mqtt.fixed.flags = {
                             dup: 0,
                             qos: 0,
                             retain: 0
                         }
 
-                        mqtt.fixed.header.flags.dup = $_ >>> 3 & 0x1
+                        mqtt.fixed.flags.dup = $_ >>> 3 & 0x1
 
-                        mqtt.fixed.header.flags.qos = $_ >>> 1 & 0x3
+                        mqtt.fixed.flags.qos = $_ >>> 1 & 0x3
 
-                        mqtt.fixed.header.flags.retain = $_ & 0x1
+                        mqtt.fixed.flags.retain = $_ & 0x1
 
                         break
 
                     case 'pubrel':
-                        mqtt.fixed.header.flags = $_ & 0xf
+                        mqtt.fixed.flags = $_ & 0xf
 
                         break
 
                     case 'subscribe':
-                        mqtt.fixed.header.flags = $_ & 0xf
+                        mqtt.fixed.flags = $_ & 0xf
 
                         break
 
                     case 'unsubscribe':
-                        mqtt.fixed.header.flags = $_ & 0xf
+                        mqtt.fixed.flags = $_ & 0xf
 
                         break
 
                     default:
-                        mqtt.fixed.header.flags = $_ & 0xf
+                        mqtt.fixed.flags = $_ & 0xf
 
                         break
                     }
@@ -2599,7 +2595,7 @@ const parser = {
                         }
                     }
 
-                    switch (($ => $.fixed.header.type)(mqtt)) {
+                    switch (($ => $.fixed.type)(mqtt)) {
                     case 'connect':
                         mqtt.variable = {
                             protocol: [],
@@ -2758,7 +2754,7 @@ const parser = {
 
                         mqtt.variable.topic = ($_ => $_.toString())(mqtt.variable.topic)
 
-                        if ((({ $ }) => $.fixed.header.flags.qos > 0)({
+                        if ((({ $ }) => $.fixed.flags.qos > 0)({
                             $: mqtt
                         })) {
                             mqtt.variable.id =
@@ -2768,7 +2764,7 @@ const parser = {
                             mqtt.variable.id = null
                         }
 
-                        $I[0] = ($ => $.fixed.length - ($.variable.topic.length + 2 + $.fixed.header.flags.qos > 0 ? 2 : 0))(mqtt)
+                        $I[0] = ($ => $.fixed.length - ($.variable.topic.length + 2 + $.fixed.flags.qos > 0 ? 2 : 0))(mqtt)
 
                         $slice = $buffer.slice($start, $start + $I[0])
                         $start += $I[0]
@@ -2805,10 +2801,8 @@ const parser = {
 
                                 fixed = {
                                     fixed: {
-                                        header: {
-                                            type: 0,
-                                            flags: null
-                                        },
+                                        type: 0,
+                                        flags: null,
                                         length: 0
                                     }
                                 }
@@ -2829,41 +2823,41 @@ const parser = {
                                     $bite--
                                 }
 
-                                fixed.fixed.header.type = $lookup[0][$_ >>> 4 & 0xf]
+                                fixed.fixed.type = $lookup[0][$_ >>> 4 & 0xf]
 
-                                switch (($ => $.fixed.header.type)(fixed)) {
+                                switch (($ => $.fixed.type)(fixed)) {
                                 case 'publish':
-                                    fixed.fixed.header.flags = {
+                                    fixed.fixed.flags = {
                                         dup: 0,
                                         qos: 0,
                                         retain: 0
                                     }
 
-                                    fixed.fixed.header.flags.dup = $_ >>> 3 & 0x1
+                                    fixed.fixed.flags.dup = $_ >>> 3 & 0x1
 
-                                    fixed.fixed.header.flags.qos = $_ >>> 1 & 0x3
+                                    fixed.fixed.flags.qos = $_ >>> 1 & 0x3
 
-                                    fixed.fixed.header.flags.retain = $_ & 0x1
+                                    fixed.fixed.flags.retain = $_ & 0x1
 
                                     break
 
                                 case 'pubrel':
-                                    fixed.fixed.header.flags = $_ & 0xf
+                                    fixed.fixed.flags = $_ & 0xf
 
                                     break
 
                                 case 'subscribe':
-                                    fixed.fixed.header.flags = $_ & 0xf
+                                    fixed.fixed.flags = $_ & 0xf
 
                                     break
 
                                 case 'unsubscribe':
-                                    fixed.fixed.header.flags = $_ & 0xf
+                                    fixed.fixed.flags = $_ & 0xf
 
                                     break
 
                                 default:
-                                    fixed.fixed.header.flags = $_ & 0xf
+                                    fixed.fixed.flags = $_ & 0xf
 
                                     break
                                 }
@@ -3093,7 +3087,7 @@ const parser = {
 
                             case 1:
 
-                                switch (($ => $.fixed.header.type)(variable)) {
+                                switch (($ => $.fixed.type)(variable)) {
                                 case 'connect':
 
                                     variable.variable = {
@@ -3601,7 +3595,7 @@ const parser = {
 
                             case 41:
 
-                                if ((({ $ }) => $.fixed.header.flags.qos > 0)({
+                                if ((({ $ }) => $.fixed.flags.qos > 0)({
                                     $: variable
                                 })) {
                                     $step = 42
@@ -3640,7 +3634,7 @@ const parser = {
                             case 45:
 
                                 $_ = 0
-                                $I[0] = ($ => $.fixed.length - ($.variable.topic.length + 2 + $.fixed.header.flags.qos > 0 ? 2 : 0))(variable)
+                                $I[0] = ($ => $.fixed.length - ($.variable.topic.length + 2 + $.fixed.flags.qos > 0 ? 2 : 0))(variable)
 
                             case 46: {
 
@@ -3690,10 +3684,8 @@ const parser = {
 
                                 mqtt = {
                                     fixed: {
-                                        header: {
-                                            type: 0,
-                                            flags: null
-                                        },
+                                        type: 0,
+                                        flags: null,
                                         length: 0
                                     },
                                     variable: null
@@ -3715,41 +3707,41 @@ const parser = {
                                     $bite--
                                 }
 
-                                mqtt.fixed.header.type = $lookup[0][$_ >>> 4 & 0xf]
+                                mqtt.fixed.type = $lookup[0][$_ >>> 4 & 0xf]
 
-                                switch (($ => $.fixed.header.type)(mqtt)) {
+                                switch (($ => $.fixed.type)(mqtt)) {
                                 case 'publish':
-                                    mqtt.fixed.header.flags = {
+                                    mqtt.fixed.flags = {
                                         dup: 0,
                                         qos: 0,
                                         retain: 0
                                     }
 
-                                    mqtt.fixed.header.flags.dup = $_ >>> 3 & 0x1
+                                    mqtt.fixed.flags.dup = $_ >>> 3 & 0x1
 
-                                    mqtt.fixed.header.flags.qos = $_ >>> 1 & 0x3
+                                    mqtt.fixed.flags.qos = $_ >>> 1 & 0x3
 
-                                    mqtt.fixed.header.flags.retain = $_ & 0x1
+                                    mqtt.fixed.flags.retain = $_ & 0x1
 
                                     break
 
                                 case 'pubrel':
-                                    mqtt.fixed.header.flags = $_ & 0xf
+                                    mqtt.fixed.flags = $_ & 0xf
 
                                     break
 
                                 case 'subscribe':
-                                    mqtt.fixed.header.flags = $_ & 0xf
+                                    mqtt.fixed.flags = $_ & 0xf
 
                                     break
 
                                 case 'unsubscribe':
-                                    mqtt.fixed.header.flags = $_ & 0xf
+                                    mqtt.fixed.flags = $_ & 0xf
 
                                     break
 
                                 default:
-                                    mqtt.fixed.header.flags = $_ & 0xf
+                                    mqtt.fixed.flags = $_ & 0xf
 
                                     break
                                 }
@@ -3958,7 +3950,7 @@ const parser = {
 
                             case 26:
 
-                                switch (($ => $.fixed.header.type)(mqtt)) {
+                                switch (($ => $.fixed.type)(mqtt)) {
                                 case 'connect':
 
                                     mqtt.variable = {
@@ -4466,7 +4458,7 @@ const parser = {
 
                             case 66:
 
-                                if ((({ $ }) => $.fixed.header.flags.qos > 0)({
+                                if ((({ $ }) => $.fixed.flags.qos > 0)({
                                     $: mqtt
                                 })) {
                                     $step = 67
@@ -4505,7 +4497,7 @@ const parser = {
                             case 70:
 
                                 $_ = 0
-                                $I[0] = ($ => $.fixed.length - ($.variable.topic.length + 2 + $.fixed.header.flags.qos > 0 ? 2 : 0))(mqtt)
+                                $I[0] = ($ => $.fixed.length - ($.variable.topic.length + 2 + $.fixed.flags.qos > 0 ? 2 : 0))(mqtt)
 
                             case 71: {
 
@@ -4565,21 +4557,21 @@ module.exports = {
                             }
 
                             $_ =
-                                $lookup[0].indexOf(fixed.fixed.header.type) << 4 & 0xf0
+                                $lookup[0].indexOf(fixed.fixed.type) << 4 & 0xf0
 
-                            switch (($ => $.fixed.header.type)(fixed)) {
+                            switch (($ => $.fixed.type)(fixed)) {
                             case 'publish':
 
                                 $_ |=
-                                    fixed.fixed.header.flags.dup << 3 & 0x8 |
-                                    fixed.fixed.header.flags.qos << 1 & 0x6 |
-                                    fixed.fixed.header.flags.retain & 0x1
+                                    fixed.fixed.flags.dup << 3 & 0x8 |
+                                    fixed.fixed.flags.qos << 1 & 0x6 |
+                                    fixed.fixed.flags.retain & 0x1
 
                                 break
 
                             case 'pubrel':
 
-                                $$[0] = ($_ => 2)(fixed.fixed.header.flags)
+                                $$[0] = ($_ => 2)(fixed.fixed.flags)
 
                                 $_ |=
                                     $$[0] & 0xf
@@ -4588,7 +4580,7 @@ module.exports = {
 
                             case 'subscribe':
 
-                                $$[0] = ($_ => 2)(fixed.fixed.header.flags)
+                                $$[0] = ($_ => 2)(fixed.fixed.flags)
 
                                 $_ |=
                                     $$[0] & 0xf
@@ -4597,7 +4589,7 @@ module.exports = {
 
                             case 'unsubscribe':
 
-                                $$[0] = ($_ => 2)(fixed.fixed.header.flags)
+                                $$[0] = ($_ => 2)(fixed.fixed.flags)
 
                                 $_ |=
                                     $$[0] & 0xf
@@ -4606,7 +4598,7 @@ module.exports = {
 
                             default:
 
-                                $$[0] = ($_ => 0)(fixed.fixed.header.flags)
+                                $$[0] = ($_ => 0)(fixed.fixed.flags)
 
                                 $_ |=
                                     $$[0] & 0xf
@@ -4657,7 +4649,7 @@ module.exports = {
                         return function ($buffer, $start, $end) {
                             let $_, $i = [], $I = [], $$ = []
 
-                            switch (($ => $.fixed.header.type)(variable)) {
+                            switch (($ => $.fixed.type)(variable)) {
                             case 'connect':
 
                                 $$[0] = ($_ => Buffer.from('MQTT'))(variable.variable.protocol)
@@ -4816,7 +4808,7 @@ module.exports = {
                                 $$[0].copy($buffer, $start, 0, $$[0].length)
                                 $start += $$[0].length
 
-                                if ((({ $ }) => $.fixed.header.flags.qos > 0)({
+                                if ((({ $ }) => $.fixed.flags.qos > 0)({
                                     $: variable
                                 })) {
                                     if ($end - $start < 2) {
@@ -4866,21 +4858,21 @@ module.exports = {
                             }
 
                             $_ =
-                                $lookup[0].indexOf(mqtt.fixed.header.type) << 4 & 0xf0
+                                $lookup[0].indexOf(mqtt.fixed.type) << 4 & 0xf0
 
-                            switch (($ => $.fixed.header.type)(mqtt)) {
+                            switch (($ => $.fixed.type)(mqtt)) {
                             case 'publish':
 
                                 $_ |=
-                                    mqtt.fixed.header.flags.dup << 3 & 0x8 |
-                                    mqtt.fixed.header.flags.qos << 1 & 0x6 |
-                                    mqtt.fixed.header.flags.retain & 0x1
+                                    mqtt.fixed.flags.dup << 3 & 0x8 |
+                                    mqtt.fixed.flags.qos << 1 & 0x6 |
+                                    mqtt.fixed.flags.retain & 0x1
 
                                 break
 
                             case 'pubrel':
 
-                                $$[0] = ($_ => 2)(mqtt.fixed.header.flags)
+                                $$[0] = ($_ => 2)(mqtt.fixed.flags)
 
                                 $_ |=
                                     $$[0] & 0xf
@@ -4889,7 +4881,7 @@ module.exports = {
 
                             case 'subscribe':
 
-                                $$[0] = ($_ => 2)(mqtt.fixed.header.flags)
+                                $$[0] = ($_ => 2)(mqtt.fixed.flags)
 
                                 $_ |=
                                     $$[0] & 0xf
@@ -4898,7 +4890,7 @@ module.exports = {
 
                             case 'unsubscribe':
 
-                                $$[0] = ($_ => 2)(mqtt.fixed.header.flags)
+                                $$[0] = ($_ => 2)(mqtt.fixed.flags)
 
                                 $_ |=
                                     $$[0] & 0xf
@@ -4907,7 +4899,7 @@ module.exports = {
 
                             default:
 
-                                $$[0] = ($_ => 0)(mqtt.fixed.header.flags)
+                                $$[0] = ($_ => 0)(mqtt.fixed.flags)
 
                                 $_ |=
                                     $$[0] & 0xf
@@ -4949,7 +4941,7 @@ module.exports = {
                                 $buffer[$start++] = mqtt.fixed.length & 0x7f
                             }
 
-                            switch (($ => $.fixed.header.type)(mqtt)) {
+                            switch (($ => $.fixed.type)(mqtt)) {
                             case 'connect':
 
                                 $$[0] = ($_ => Buffer.from('MQTT'))(mqtt.variable.protocol)
@@ -5108,7 +5100,7 @@ module.exports = {
                                 $$[0].copy($buffer, $start, 0, $$[0].length)
                                 $start += $$[0].length
 
-                                if ((({ $ }) => $.fixed.header.flags.qos > 0)({
+                                if ((({ $ }) => $.fixed.flags.qos > 0)({
                                     $: mqtt
                                 })) {
                                     if ($end - $start < 2) {
@@ -5163,10 +5155,8 @@ module.exports = {
 
                             let fixed = {
                                 fixed: {
-                                    header: {
-                                        type: 0,
-                                        flags: null
-                                    },
+                                    type: 0,
+                                    flags: null,
                                     length: 0
                                 }
                             }
@@ -5177,41 +5167,41 @@ module.exports = {
 
                             $_ = $buffer[$start++]
 
-                            fixed.fixed.header.type = $lookup[0][$_ >>> 4 & 0xf]
+                            fixed.fixed.type = $lookup[0][$_ >>> 4 & 0xf]
 
-                            switch (($ => $.fixed.header.type)(fixed)) {
+                            switch (($ => $.fixed.type)(fixed)) {
                             case 'publish':
-                                fixed.fixed.header.flags = {
+                                fixed.fixed.flags = {
                                     dup: 0,
                                     qos: 0,
                                     retain: 0
                                 }
 
-                                fixed.fixed.header.flags.dup = $_ >>> 3 & 0x1
+                                fixed.fixed.flags.dup = $_ >>> 3 & 0x1
 
-                                fixed.fixed.header.flags.qos = $_ >>> 1 & 0x3
+                                fixed.fixed.flags.qos = $_ >>> 1 & 0x3
 
-                                fixed.fixed.header.flags.retain = $_ & 0x1
+                                fixed.fixed.flags.retain = $_ & 0x1
 
                                 break
 
                             case 'pubrel':
-                                fixed.fixed.header.flags = $_ & 0xf
+                                fixed.fixed.flags = $_ & 0xf
 
                                 break
 
                             case 'subscribe':
-                                fixed.fixed.header.flags = $_ & 0xf
+                                fixed.fixed.flags = $_ & 0xf
 
                                 break
 
                             case 'unsubscribe':
-                                fixed.fixed.header.flags = $_ & 0xf
+                                fixed.fixed.flags = $_ & 0xf
 
                                 break
 
                             default:
-                                fixed.fixed.header.flags = $_ & 0xf
+                                fixed.fixed.flags = $_ & 0xf
 
                                 break
                             }
@@ -5295,7 +5285,7 @@ module.exports = {
                                 variable: null
                             }
 
-                            switch (($ => $.fixed.header.type)(variable)) {
+                            switch (($ => $.fixed.type)(variable)) {
                             case 'connect':
                                 variable.variable = {
                                     protocol: [],
@@ -5518,7 +5508,7 @@ module.exports = {
 
                                 variable.variable.topic = ($_ => $_.toString())(variable.variable.topic)
 
-                                if ((({ $ }) => $.fixed.header.flags.qos > 0)({
+                                if ((({ $ }) => $.fixed.flags.qos > 0)({
                                     $: variable
                                 })) {
                                     if ($end - $start < 2) {
@@ -5532,7 +5522,7 @@ module.exports = {
                                     variable.variable.id = null
                                 }
 
-                                $I[0] = ($ => $.fixed.length - ($.variable.topic.length + 2 + $.fixed.header.flags.qos > 0 ? 2 : 0))(variable)
+                                $I[0] = ($ => $.fixed.length - ($.variable.topic.length + 2 + $.fixed.flags.qos > 0 ? 2 : 0))(variable)
 
                                 if ($end - $start < $I[0] * 1) {
                                     return $incremental.variable(variable, 45, $i, $I)($buffer, $start, $end)
@@ -5566,10 +5556,8 @@ module.exports = {
 
                             let mqtt = {
                                 fixed: {
-                                    header: {
-                                        type: 0,
-                                        flags: null
-                                    },
+                                    type: 0,
+                                    flags: null,
                                     length: 0
                                 },
                                 variable: null
@@ -5581,41 +5569,41 @@ module.exports = {
 
                             $_ = $buffer[$start++]
 
-                            mqtt.fixed.header.type = $lookup[0][$_ >>> 4 & 0xf]
+                            mqtt.fixed.type = $lookup[0][$_ >>> 4 & 0xf]
 
-                            switch (($ => $.fixed.header.type)(mqtt)) {
+                            switch (($ => $.fixed.type)(mqtt)) {
                             case 'publish':
-                                mqtt.fixed.header.flags = {
+                                mqtt.fixed.flags = {
                                     dup: 0,
                                     qos: 0,
                                     retain: 0
                                 }
 
-                                mqtt.fixed.header.flags.dup = $_ >>> 3 & 0x1
+                                mqtt.fixed.flags.dup = $_ >>> 3 & 0x1
 
-                                mqtt.fixed.header.flags.qos = $_ >>> 1 & 0x3
+                                mqtt.fixed.flags.qos = $_ >>> 1 & 0x3
 
-                                mqtt.fixed.header.flags.retain = $_ & 0x1
+                                mqtt.fixed.flags.retain = $_ & 0x1
 
                                 break
 
                             case 'pubrel':
-                                mqtt.fixed.header.flags = $_ & 0xf
+                                mqtt.fixed.flags = $_ & 0xf
 
                                 break
 
                             case 'subscribe':
-                                mqtt.fixed.header.flags = $_ & 0xf
+                                mqtt.fixed.flags = $_ & 0xf
 
                                 break
 
                             case 'unsubscribe':
-                                mqtt.fixed.header.flags = $_ & 0xf
+                                mqtt.fixed.flags = $_ & 0xf
 
                                 break
 
                             default:
-                                mqtt.fixed.header.flags = $_ & 0xf
+                                mqtt.fixed.flags = $_ & 0xf
 
                                 break
                             }
@@ -5686,7 +5674,7 @@ module.exports = {
                                 }
                             }
 
-                            switch (($ => $.fixed.header.type)(mqtt)) {
+                            switch (($ => $.fixed.type)(mqtt)) {
                             case 'connect':
                                 mqtt.variable = {
                                     protocol: [],
@@ -5909,7 +5897,7 @@ module.exports = {
 
                                 mqtt.variable.topic = ($_ => $_.toString())(mqtt.variable.topic)
 
-                                if ((({ $ }) => $.fixed.header.flags.qos > 0)({
+                                if ((({ $ }) => $.fixed.flags.qos > 0)({
                                     $: mqtt
                                 })) {
                                     if ($end - $start < 2) {
@@ -5923,7 +5911,7 @@ module.exports = {
                                     mqtt.variable.id = null
                                 }
 
-                                $I[0] = ($ => $.fixed.length - ($.variable.topic.length + 2 + $.fixed.header.flags.qos > 0 ? 2 : 0))(mqtt)
+                                $I[0] = ($ => $.fixed.length - ($.variable.topic.length + 2 + $.fixed.flags.qos > 0 ? 2 : 0))(mqtt)
 
                                 if ($end - $start < $I[0] * 1) {
                                     return $incremental.mqtt(mqtt, 70, $i, $I, $sip)($buffer, $start, $end)

@@ -18,7 +18,7 @@ exports.packet = {
     ],
     $string: [ [ $_ => Buffer.from($_) ], [ 16, [ Buffer ] ], [ $_ => $_.toString() ] ],
     $fixed: {
-        header: [{
+        _header: [{
             type: [ 4, [
                 '\u0000',
                 'connect', 'connack',
@@ -28,7 +28,7 @@ exports.packet = {
                 'pingreq', 'pingresp',
                 'disconnect', 'auth'
             ]],
-            flags: [ $ => $.fixed.header.type, [
+            flags: [ $ => $.fixed.type, [
                 { $_: 'publish' }, [{ dup: 1, qos: 2, retain: 1 }, 4 ],
                 { $_: [ 'pubrel', 'subscribe', 'unsubscribe' ] }, [ [ $_ => 2 ],  4, [] ],
                 { $_: [] }, [ [ $_ => 0 ], 4, [] ]
@@ -36,7 +36,7 @@ exports.packet = {
         }, 8 ],
         length: '$integer'
     },
-    $variable: [ $ => $.fixed.header.type, [
+    $variable: [ $ => $.fixed.type, [
         { $_: 'connect' }, {
             // TODO Can we nest the definitions?
             protocol: [ [ $_ => Buffer.from('MQTT') ], [ 16, [ Buffer ] ], [ $_ => $_.toString() ] ],
@@ -106,7 +106,7 @@ exports.packet = {
         { $_: 'publish' }, {
             topic: '$string',
             id: [
-                ({ $ }) => $.fixed.header.flags.qos > 0, 16,
+                ({ $ }) => $.fixed.flags.qos > 0, 16,
                 true, null
             ],
             payload: [
@@ -116,7 +116,7 @@ exports.packet = {
                     true, [[ $ => $.variable.payload.length ], [ Buffer ]]
                 ],
                 [
-                    true, [[ $ => $.fixed.length - ($.variable.topic.length + 2 + $.fixed.header.flags.qos > 0 ? 2 : 0) ], [ Buffer ]]
+                    true, [[ $ => $.fixed.length - ($.variable.topic.length + 2 + $.fixed.flags.qos > 0 ? 2 : 0) ], [ Buffer ]]
                 ]
             ]
         },
