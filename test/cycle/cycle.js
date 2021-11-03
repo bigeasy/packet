@@ -60,7 +60,6 @@ module.exports = function (okay, options) {
         packet.$lookup = require(`${filename}.lookup.js`)
 
         if (options.stopAt == 'lookup') {
-            okay.inc(1)
             okay(true, `${options.name} lookup`)
             return
         }
@@ -77,7 +76,6 @@ module.exports = function (okay, options) {
 
         if (options.stopAt == 'sizeof') {
             console.log('sizeof', sizeOf)
-            okay.inc(1)
             okay(true, `${options.name} sizeof`)
             return
         }
@@ -94,7 +92,6 @@ module.exports = function (okay, options) {
         const expected = Buffer.alloc(sizeOf)
 
         const cursor = packet.serializers.all.object(actual, expected, 0)
-        okay.inc(1)
         okay(cursor, {
             start: expected.length,
             serialize: null
@@ -113,8 +110,6 @@ module.exports = function (okay, options) {
             })
         }
         packet.parsers.all = require(`${filename}.parser.all.js`)(packet)
-
-        okay.inc(1)
 
         function fast (object) {
             if (typeof object == 'object' && object != null) {
@@ -173,8 +168,6 @@ module.exports = function (okay, options) {
         }
         packet.serializers.inc = require(`${filename}.serializer.inc.js`)(packet)
 
-        okay.inc(sizeOf + 1)
-
         try {
             for (let i = 0; i <= expected.length; i++) {
                 const buffer = Buffer.alloc(sizeOf)
@@ -203,8 +196,6 @@ module.exports = function (okay, options) {
         if (options.stopAt == 'serialize.inc') {
             return
         }
-
-        okay.inc(sizeOf + 1)
 
         if (compile) {
             compiler({
@@ -259,8 +250,6 @@ module.exports = function (okay, options) {
             $lookup: packet.$lookup, $incremental: packet.serializers.inc
         })
 
-        okay.inc(sizeOf + 1)
-
         try {
             for (let i = 0; i <= expected.length; i++) {
                 const buffer = Buffer.alloc(sizeOf)
@@ -303,8 +292,6 @@ module.exports = function (okay, options) {
         packet.parsers.bff = require(`${filename}.parser.bff.js`)({
             $lookup: packet.$lookup, $incremental: packet.parsers.inc
         })
-
-        okay.inc(sizeOf + 1)
 
         try {
             for (let i = 0; i <= expected.length; i++) {
@@ -350,8 +337,6 @@ module.exports = function (okay, options) {
             $lookup: packet.$lookup, $incremental: packet.serializers.inc
         })
 
-        okay.inc(sizeOf + 1)
-
         try {
             for (let i = 0; i <= expected.length; i++) {
                 const buffer = Buffer.alloc(sizeOf)
@@ -394,8 +379,6 @@ module.exports = function (okay, options) {
         packet.parsers.chk = require(`${filename}.parser.chk.js`)({
             $lookup: packet.$lookup, $incremental: packet.parsers.inc
         })
-
-        okay.inc(sizeOf + 1)
 
         try {
             for (let i = 0; i <= expected.length; i++) {

@@ -1,4 +1,4 @@
-require('proof')(0, prove)
+require('proof')(88, prove)
 
 function prove (okay) {
     require('./cycle')(okay, {

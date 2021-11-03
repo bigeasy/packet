@@ -1,4 +1,4 @@
-require('proof')(0, prove)
+require('proof')(286, prove)
 
 function prove (okay) {
     const cycle = require('./cycle')

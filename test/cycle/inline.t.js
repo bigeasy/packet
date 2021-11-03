@@ -1,4 +1,4 @@
-require('proof')(0, prove)
+require('proof')(256, prove)
 
 function prove (okay) {
     const cycle = require('./cycle')
@@ -13,7 +13,6 @@ function prove (okay) {
         },
         objects: [{ value: 1 }]
     })
-    return
     cycle(okay, {
         name: 'inline/both',
         define: {

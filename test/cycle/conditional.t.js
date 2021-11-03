@@ -1,4 +1,4 @@
-require('proof')(0, prove)
+require('proof')(802, prove)
 
 function prove (okay) {
     const cycle = require('./cycle')
@@ -19,7 +19,6 @@ function prove (okay) {
             nudge: 0xaa, value: 0xaaaa, sentry: 0xaa
         }]
     })
-    return
     cycle(okay, {
         name: 'conditional/unconditional/split',
         define: {
