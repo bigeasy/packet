@@ -201,7 +201,7 @@ require('proof')(5, okay => {
         fixed: true,
         fields: [{
             type: 'accumulator',
-            dotted: '._accumulator',
+            dotted: '',
             name: '_accumulator',
             vivify: 'descend',
             bits: 32,

@@ -742,9 +742,8 @@ module.exports = function (packets) {
 
         function packed () {
             if (extra.name != null && extra.name[0] == '_') {
-                extra = { vivify: 'elide', name: '', dotted: '' }
+                extra = { name: '', dotted: '', vivify: 'elide' }
             }
-            console.log(extra)
             const fields = []
             for (const name in packet[0]) {
                 fields.push.apply(fields, map(packet[0][name], {
@@ -1066,16 +1065,13 @@ module.exports = function (packets) {
             const fields = []
             for (const name in packet) {
                 fields.push.apply(fields, map(packet[name], {
-                    name, dotted: `.${name}`
+                    name, dotted: name[0] == '_' ? '' : `.${name}`
                 }))
             }
             const fixed = fields.reduce((fixed, field) => {
                 return fixed && field.fixed
             }, true)
             const bits = fields.reduce((sum, field) => sum + field.bits, 0)
-            if (extra.name != null && extra.name[0] == '_') {
-                extra = { ...extra, name: '', dotted: '', vivify: 'elide' }
-            }
             return [{
                 type: 'structure',
                 vivify: 'object',

@@ -5,11 +5,9 @@ module.exports = function ({ $lookup }) {
                 let $i = [], $accumulator = {}, $starts = []
 
                 let object = {
-                    counted: {
-                        length: 0,
-                        string: [],
-                        number: 0
-                    },
+                    length: 0,
+                    string: [],
+                    number: 0,
                     sentry: 0
                 }
 
@@ -17,7 +15,7 @@ module.exports = function ({ $lookup }) {
 
                 $starts[0] = $start
 
-                object.counted.length = (
+                object.length = (
                     $buffer[$start++] << 24 |
                     $buffer[$start++] << 16 |
                     $buffer[$start++] << 8 |
@@ -33,7 +31,7 @@ module.exports = function ({ $lookup }) {
                         break
                     }
 
-                    object.counted.string[$i[0]] = $buffer[$start++]
+                    object.string[$i[0]] = $buffer[$start++]
 
                     $i[0]++
                 }
@@ -47,20 +45,20 @@ module.exports = function ({ $lookup }) {
                 })
                 $starts[0] = $start
 
-                if ((({ $, counter }) => $.counted.length - counter[0] == 1)({
+                if ((({ $, counter }) => $.length - counter[0] == 1)({
                     $: object,
                     counter: $accumulator['counter']
                 })) {
-                    object.counted.number = $buffer[$start++]
-                } else if ((({ $, counter }) => $.counted.length - counter[0] == 2)({
+                    object.number = $buffer[$start++]
+                } else if ((({ $, counter }) => $.length - counter[0] == 2)({
                     $: object,
                     counter: $accumulator['counter']
                 })) {
-                    object.counted.number =
+                    object.number =
                         $buffer[$start++] << 8 |
                         $buffer[$start++]
                 } else {
-                    object.counted.number = (
+                    object.number = (
                         $buffer[$start++] << 24 |
                         $buffer[$start++] << 16 |
                         $buffer[$start++] << 8 |

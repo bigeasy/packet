@@ -9,7 +9,7 @@ module.exports = {
 
             $start += 4
 
-            $start += 1 * object.counted.string.length + 1
+            $start += 1 * object.string.length + 1
 
             ; (function ({ $start, $end, counter }) {
                 counter[0] += $end - $start
@@ -20,12 +20,12 @@ module.exports = {
             })
             $starts[0] = $start
 
-            if ((({ $, counter }) => $.counted.length - counter[0] == 1)({
+            if ((({ $, counter }) => $.length - counter[0] == 1)({
                 $: object,
                 counter: $accumulator['counter']
             })) {
                 $start += 1
-            } else if ((({ $, counter }) => $.counted.length - counter[0] == 2)({
+            } else if ((({ $, counter }) => $.length - counter[0] == 2)({
                 $: object,
                 counter: $accumulator['counter']
             })) {

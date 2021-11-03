@@ -3,46 +3,59 @@ const assert = require('assert')
 
 const $ = require('programmatic')
 
-function structure (path, field, assignment = ' = ') {
-    function vivify (path, field) {
-        if (field.vivify == 'descend') {
-            return vivify(path + field.dotted, field.fields.filter(field => {
-                return field.vivify != null
-            }).pop())
-        } else {
-            const name = (path + field.dotted).split('.').pop()
-            switch (field.vivify) {
-            case 'elide':
-                return field.fields.map(field => vivify(path, field))
-                                   .filter(field => !! field).join(',\n')
-            case 'object':
-                return structure((path + field.dotted).split('.').pop(), field, ': ')
-            case 'array':
-                return `${name}: []`
-            case 'bigint':
-                return `${name}: 0n`
-            case 'number':
-                return `${name}: 0`
-            case 'variant':
-                return `${name}: null`
-            case null:
-                return null
-            // TODO Remove when tests pass.
-            default:
-                console.log(field)
-                throw new Error
+function structure (path, field, assignment = ' = ', elided = false) {
+    function vivify (field, elided, name = null) {
+        // **TODO** This is a mess. Elision should descend, but the name should
+        // be a property of the field in the AST. The name is what is
+        // propagating up here, not downward, rather the dotted name is
+        // propagating up. Might want to work on some error reporting before
+        // going through the hard work of fixing everything.
+        elided = elided ||
+            field.type == 'structure' && field.dotted == '' && name == null ||
+            field.type == 'integer' && field.fields != null && field.dotted == ''
+        name = field.name && field.name[0] != '_' ? field.name : null || name
+        switch (field.vivify) {
+        case 'descend': {
+                return vivify(field.fields.filter(field => {
+                    return field.vivify != null
+                }).pop(), elided, name)
             }
+            break
+        case 'elide':
+        case 'object': {
+                const properties = field.fields.map(field => vivify(field, false))
+                                   .filter(js => !! js)
+                if (elided) {
+                    return properties.join(',\n')
+                }
+                return $(`
+                    ${name}: {
+                        `, properties.join(',\n'), `
+                    }
+                `)
+            }
+            break
+        case 'number': {
+                return `${name}: 0`
+            }
+            break
+        case 'bigint': {
+                return `${name}: 0n`
+            }
+            break
+        case 'array': {
+                return `${name}: []`
+            }
+            break
+        case 'variant': {
+                return `${name}: null`
+            }
+            break
         }
     }
-    while (field.vivify == 'descend') {
-        field = field.fields[field.fields.length - 1]
-    }
-    const properties = field.fields.map(field => vivify(path, field))
-                                   .filter(field => !! field)
-    // assert(properties.length != 0)
     return $(`
         ${path}${assignment}{
-            `, properties.join(',\n'), `
+            `, vivify(field, true), `
         }
     `)
 }
@@ -66,7 +79,7 @@ function assignment (path, field) {
     return vivify(path, field.fields)
 }
 
-function step (field) {
+function __TODO_dead_step (field) {
     function vivify (fields) {
         const field = fields[fields.length - 1]
         switch (field.vivify) {
@@ -87,4 +100,3 @@ function step (field) {
 // TODO Rename declaration.
 exports.structure = structure
 exports.assignment = assignment
-exports.step = step

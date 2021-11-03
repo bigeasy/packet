@@ -3,6 +3,18 @@ require('proof')(0, prove)
 function prove (okay) {
     const cycle = require('./cycle')
     cycle(okay, {
+        name: 'inline/elided',
+        define: {
+            object: {
+                _elided: [[[ value => value ]], {
+                    value: 16
+                }]
+            }
+        },
+        objects: [{ value: 1 }]
+    })
+    return
+    cycle(okay, {
         name: 'inline/both',
         define: {
             object: {

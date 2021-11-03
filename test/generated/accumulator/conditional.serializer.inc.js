@@ -25,7 +25,7 @@ module.exports = function ({ $lookup }) {
                         case 2:
 
                             $bite = 3
-                            $_ = object.counted.length
+                            $_ = object.length
 
                         case 3:
 
@@ -53,7 +53,7 @@ module.exports = function ({ $lookup }) {
                         case 5:
 
                             $bite = 0
-                            $_ = object.counted.string[$i[0]]
+                            $_ = object.string[$i[0]]
 
                         case 6:
 
@@ -72,7 +72,7 @@ module.exports = function ({ $lookup }) {
                                 $buffer[$start++] = $_ >>> $bite * 8 & 0xff
                                 $bite--
                             }
-                            if (++$i[0] != object.counted.string.length) {
+                            if (++$i[0] != object.string.length) {
                                 $step = 5
                                 continue
                             }
@@ -108,13 +108,13 @@ module.exports = function ({ $lookup }) {
                             })
                             $starts[0] = $start
 
-                            if ((({ $, counter }) => $.counted.length - counter[0] == 1)({
+                            if ((({ $, counter }) => $.length - counter[0] == 1)({
                                 $: object,
                                 counter: $accumulator['counter']
                             })) {
                                 $step = 10
                                 continue
-                            } else if ((({ $, counter }) => $.counted.length - counter[0] == 2)({
+                            } else if ((({ $, counter }) => $.length - counter[0] == 2)({
                                 $: object,
                                 counter: $accumulator['counter']
                             })) {
@@ -128,7 +128,7 @@ module.exports = function ({ $lookup }) {
                         case 10:
 
                             $bite = 0
-                            $_ = object.counted.number
+                            $_ = object.number
 
                         case 11:
 
@@ -154,7 +154,7 @@ module.exports = function ({ $lookup }) {
                         case 12:
 
                             $bite = 1
-                            $_ = object.counted.number
+                            $_ = object.number
 
                         case 13:
 
@@ -180,7 +180,7 @@ module.exports = function ({ $lookup }) {
                         case 14:
 
                             $bite = 3
-                            $_ = object.counted.number
+                            $_ = object.number
 
                         case 15:
 

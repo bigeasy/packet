@@ -8,13 +8,13 @@ module.exports = function ({ $lookup }) {
 
                 $starts[0] = $start
 
-                $buffer[$start++] = object.counted.length >>> 24 & 0xff
-                $buffer[$start++] = object.counted.length >>> 16 & 0xff
-                $buffer[$start++] = object.counted.length >>> 8 & 0xff
-                $buffer[$start++] = object.counted.length & 0xff
+                $buffer[$start++] = object.length >>> 24 & 0xff
+                $buffer[$start++] = object.length >>> 16 & 0xff
+                $buffer[$start++] = object.length >>> 8 & 0xff
+                $buffer[$start++] = object.length & 0xff
 
-                for ($i[0] = 0; $i[0] < object.counted.string.length; $i[0]++) {
-                    $buffer[$start++] = object.counted.string[$i[0]] & 0xff
+                for ($i[0] = 0; $i[0] < object.string.length; $i[0]++) {
+                    $buffer[$start++] = object.string[$i[0]] & 0xff
                 }
 
                 $buffer[$start++] = 0x0
@@ -28,22 +28,22 @@ module.exports = function ({ $lookup }) {
                 })
                 $starts[0] = $start
 
-                if ((({ $, counter }) => $.counted.length - counter[0] == 1)({
+                if ((({ $, counter }) => $.length - counter[0] == 1)({
                     $: object,
                     counter: $accumulator['counter']
                 })) {
-                    $buffer[$start++] = object.counted.number & 0xff
-                } else if ((({ $, counter }) => $.counted.length - counter[0] == 2)({
+                    $buffer[$start++] = object.number & 0xff
+                } else if ((({ $, counter }) => $.length - counter[0] == 2)({
                     $: object,
                     counter: $accumulator['counter']
                 })) {
-                    $buffer[$start++] = object.counted.number >>> 8 & 0xff
-                    $buffer[$start++] = object.counted.number & 0xff
+                    $buffer[$start++] = object.number >>> 8 & 0xff
+                    $buffer[$start++] = object.number & 0xff
                 } else {
-                    $buffer[$start++] = object.counted.number >>> 24 & 0xff
-                    $buffer[$start++] = object.counted.number >>> 16 & 0xff
-                    $buffer[$start++] = object.counted.number >>> 8 & 0xff
-                    $buffer[$start++] = object.counted.number & 0xff
+                    $buffer[$start++] = object.number >>> 24 & 0xff
+                    $buffer[$start++] = object.number >>> 16 & 0xff
+                    $buffer[$start++] = object.number >>> 8 & 0xff
+                    $buffer[$start++] = object.number & 0xff
                 }
 
                 ; (function ({ $start, $end, counter }) {

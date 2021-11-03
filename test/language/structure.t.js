@@ -63,8 +63,8 @@ require('proof')(2, okay => {
         bits: 16,
         fields: [{
             type: 'structure',
-            vivify: 'elide',
-            name: '',
+            vivify: 'object',
+            name: '_value',
             dotted: '',
             fixed: true,
             bits: 16,
