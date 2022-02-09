@@ -8,6 +8,26 @@ inspired language.
 
 ---
 
+## Thu Nov  4 13:38:24 CDT 2021
+
+Beginning to see that it is all pretty much covered using inlines and
+accumulators so it may be worth while to consider how you might name those as a
+more fundimental type. Inlines is probably fine, but accumulators, we could just
+call them variables and talk about their limitations. Perhaps `$$` is a variable
+stack, because are you not already using `$$` for something stack like anyway?
+
+Want to note that I'm still wondering about transforms. Perhaps we can talk
+about the value of transformation without providing a generator for it. Inlines
+are nice but there are times when you should just adjust your structure before
+it goes into the serializer. I mean, if people can accept this, as they should,
+then we can have a simpiler module.
+
+Also, reading some Flux documentation where someone is saying something won't be
+implemented, basta, and really you should explain why, or try to make the case
+that Flux is more like `git`. A step learning curve usually just means that
+their is a tree structure involved or something that is really not that hard to
+grasp.
+
 ## Wed Nov  3 16:01:24 CDT 2021
 
 We're starting to get into the weeds with this now. I'm wondering about
