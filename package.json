@@ -54,7 +54,7 @@
                             "extant":                       "^2.0.0-alpha.5",
                             "ip":                           "1.1.5",
                             "proof":                        "^9.0.3",
-                            "mqtt-packet":                  "7.1.1"
+                            "mqtt-packet":                  "7.1.2"
     },
     "main":                 "packet.js",
     "scripts":
