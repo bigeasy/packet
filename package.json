@@ -1,6 +1,6 @@
 {
     "name":                 "packet",
-    "version":              "1.0.0-alpha.3",
+    "version":              "1.0.0-alpha.4",
     "description":
 
       "Pure JavaScript evented binary parsers and serializers for Node.js.",
@@ -53,8 +53,8 @@
     {
                             "extant":                       "^2.0.0-alpha.5",
                             "ip":                           "1.1.5",
-                            "proof":                        "^9.0.3",
-                            "mqtt-packet":                  "7.1.2"
+                            "mqtt-packet":                  "7.1.2",
+                            "proof":                        "^9.0.3"
     },
     "main":                 "packet.js",
     "scripts":
