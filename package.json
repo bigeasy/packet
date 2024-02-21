@@ -52,7 +52,7 @@
     "devDependencies":
     {
                             "extant":                       "^2.0.0-alpha.5",
-                            "ip":                           "1.1.5",
+                            "ip":                           "1.1.9",
                             "mqtt-packet":                  "7.1.2",
                             "proof":                        "^9.0.3"
     },
